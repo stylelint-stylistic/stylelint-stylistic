@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [v0.1.2] — 2023–03–28
+
+### Fixed
+
+- `Error [ERR_REQUIRE_ESM]: require() of ES Module`.
+
 ## [v0.1.1] — 2023–03–28
 
 ### Added
@@ -93,6 +99,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/firefoxic/gulp-stacksvg/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/firefoxic/gulp-stacksvg/compare/v0.1.2...HEAD
+[v0.1.2]: https://github.com/firefoxic/gulp-stacksvg/releases/tag/v0.1.2
 [v0.1.1]: https://github.com/firefoxic/gulp-stacksvg/releases/tag/v0.1.1
 [v0.1.0]: https://github.com/firefoxic/gulp-stacksvg/releases/tag/v0.1.0

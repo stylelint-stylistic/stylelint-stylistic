@@ -72,6 +72,5 @@
 		"test": "NODE_OPTIONS=--experimental-vm-modules jest",
 		"test:coverage": "npm t --coverage",
 		"test:watch": "npm t --watch"
-	},
-	"type": "module"
+	}
 }
