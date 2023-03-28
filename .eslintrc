@@ -1,0 +1,111 @@
+{
+	"globals": {
+		"dedent": true,
+		"testRule": true
+	},
+	"env": {
+		"node": true,
+		"browser": true,
+		"es2021": true,
+		"jest": true
+	},
+	"extends": "eslint:recommended",
+	"parserOptions": {
+		"ecmaVersion": "latest",
+		"sourceType": "module"
+	},
+	"rules": {
+		// Possible Errors
+		// https://eslint.org/docs/latest/rules/#possible-problems
+		// -------------------------------------------------------
+		"no-template-curly-in-string": "error",
+		"no-use-before-define": [
+			"error",
+			{
+				"functions": false
+			}
+		],
+		// Suggestions
+		// https://eslint.org/docs/rules/#suggestions
+		// ------------------------------------------
+		"accessor-pairs": "error",
+		"arrow-body-style": [
+			"error",
+			"as-needed"
+		],
+		"camelcase": "error",
+		"curly": "error",
+		"eqeqeq": [
+			"error",
+			"always"
+		],
+		"no-alert": "error",
+		// "no-console": "error",
+		// "no-nested-ternary": "error",
+		"no-return-assign": "error",
+		"no-shadow": [
+			"error",
+			{
+				"hoist": "all"
+			}
+		],
+		"no-unneeded-ternary": "error",
+		"no-unused-expressions": "error",
+		"no-useless-concat": "error",
+		"no-useless-return": "error",
+		"no-var": "error",
+		"object-shorthand": "error",
+		"prefer-arrow-callback": "error",
+		"prefer-template": "error",
+		"radix": "error",
+		"strict": [
+			"error",
+			"global"
+		],
+		// Layout & Formatting
+		// https://eslint.org/docs/latest/rules/#layout--formatting
+		// --------------------------------------------------------
+		"arrow-parens": "error",
+		"arrow-spacing": "error",
+		"comma-dangle": [
+			"error",
+			"never"
+		],
+		"eol-last": "error",
+		"indent": [
+			"error",
+			"tab"
+		],
+		"lines-between-class-members": [
+			"error",
+			"always",
+			{
+				"exceptAfterSingleLine": true
+			}
+		],
+		"linebreak-style": [
+			"error",
+			"unix"
+		],
+		"no-multi-spaces": "error",
+		"no-multiple-empty-lines": "error",
+		"no-trailing-spaces": "error",
+		"quotes": [
+			"error",
+			"backtick"
+		],
+		"semi": [
+			"error",
+			"never",
+			{
+				"beforeStatementContinuationChars": "never"
+			}
+		],
+		"semi-style": "error",
+		"space-infix-ops": "error",
+		"template-curly-spacing": [
+			"error",
+			"always"
+		]
+	}
+}

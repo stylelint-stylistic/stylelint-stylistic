@@ -1,0 +1,107 @@
+# selector-pseudo-element-case
+
+Specify lowercase or uppercase for pseudo-element selectors.
+
+```css
+  a::before {}
+/**  ↑
+ * This pseudo-element selector */
+```
+
+The [`fix` option](../../../docs/user-guide/options.md#fix) can automatically fix all of the problems reported by this rule.
+
+## Options
+
+`string`: `"lower"|"upper"`
+
+### `"lower"`
+
+The following patterns are considered problems:
+
+```css
+a:Before {}
+```
+
+```css
+a:bEfOrE {}
+```
+
+```css
+a:BEFORE {}
+```
+
+```css
+a::Before {}
+```
+
+```css
+a::bEfOrE {}
+```
+
+```css
+a::BEFORE {}
+```
+
+```css
+input::-MOZ-PLACEHOLDER {}
+```
+
+The following patterns are _not_ considered problems:
+
+```css
+a:before {}
+```
+
+```css
+a::before {}
+```
+
+```css
+input::-moz-placeholder {}
+```
+
+### `"upper"`
+
+The following patterns are considered problems:
+
+```css
+a:Before {}
+```
+
+```css
+a:bEfOrE {}
+```
+
+```css
+a:BEFORE {}
+```
+
+```css
+a::Before {}
+```
+
+```css
+a::bEfOrE {}
+```
+
+```css
+a::before {}
+```
+
+```css
+input::-moz-placeholder {}
+```
+
+The following patterns are _not_ considered problems:
+
+```css
+a:BEFORE {}
+```
+
+```css
+a::BEFORE {}
+```
+
+```css
+input::-MOZ-PLACEHOLDER {}
+```

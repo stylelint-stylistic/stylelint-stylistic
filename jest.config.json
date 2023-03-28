@@ -1,0 +1,25 @@
+{
+	"preset": "jest-preset-stylelint",
+	"clearMocks": true,
+	"collectCoverage": false,
+	"collectCoverageFrom": [
+		"lib/**/*.js"
+	],
+	"coverageDirectory": "./.coverage/",
+	"coverageReporters": [
+		"text"
+	],
+	"coverageThreshold": {
+		"global": {
+			"branches": 75,
+			"functions": 75,
+			"lines": 75,
+			"statements": 75
+		}
+	},
+	"testEnvironment": "node",
+	"roots": [
+		"lib"
+	],
+	"testRegex": ".*\\.test\\.js$|lib/.*/__tests__/.*\\.js$"
+}

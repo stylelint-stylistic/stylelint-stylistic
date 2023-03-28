@@ -1,0 +1,65 @@
+{
+	"name": "stylelint-codeguide",
+	"description": "A collection of codeguide-specific rules for Stylelint",
+	"version": "0.0.1",
+	"author": {
+		"name": "Sergey Artemov",
+		"email": "firefoxic.dev@gmail.com"
+	},
+	"dependencies": {
+		"is-plain-object": "^5.0.0",
+		"postcss-media-query-parser": "^0.2.3",
+		"postcss-selector-parser": "^6.0.11",
+		"postcss-value-parser": "^4.2.0",
+		"style-search": "^0.1.0"
+	},
+	"devDependencies": {
+		"common-tags": "^1.8.2",
+		"deepmerge": "^4.3.1",
+		"eslint": "^8.36.0",
+		"jest": "^29.5.0",
+		"jest-cli": "^29.5.0",
+		"jest-preset-stylelint": "^6.1.0",
+		"np": "^7.6.4",
+		"postcss": "^8.4.21",
+		"postcss-html": "^1.5.0",
+		"postcss-less": "^6.0.0",
+		"postcss-scss": "^4.0.6",
+		"stylelint": "^15.3.0"
+	},
+	"peerDependencies": {
+		"stylelint": "^14.16.1 || ^15.0.0"
+	},
+	"main": "lib/index.js",
+	"files": [
+		"lib/**/*.js",
+		"!**/__tests__/**"
+	],
+	"keywords": [
+		"codeguide",
+		"css",
+		"csslint",
+		"lint",
+		"linter",
+		"stylelint",
+		"stylelint-plugin"
+	],
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/firefoxic/stylelint-codeguide"
+	},
+	"bugs": {
+		"url": "https://github.com/firefoxic/stylelint-codeguide/issues"
+	},
+	"homepage": "https://github.com/firefoxic/stylelint-codeguide",
+	"scripts": {
+		"lint": "eslint . --ignore-path .gitignore",
+		"pretest": "npm run lint",
+		"release": "np",
+		"test": "NODE_OPTIONS=--experimental-vm-modules jest",
+		"test:coverage": "npm t --coverage",
+		"test:watch": "npm t --watch"
+	},
+	"type": "module"
+}
