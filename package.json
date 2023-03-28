@@ -1,7 +1,7 @@
 {
 	"name": "stylelint-codeguide",
 	"description": "A collection of codeguide-specific rules for Stylelint",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"author": {
 		"name": "Sergey Artemov",
 		"email": "firefoxic.dev@gmail.com"
