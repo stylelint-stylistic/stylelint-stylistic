@@ -7,11 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [v0.1.4] — 2023–05–20
+
 ### Changed
 
 - Set up a chain of publishing scripts instead of using the `np` package.
 - Replaced `npm` lockfile with `pnpm` lockfile.
 - Reorganized `package.json`.
+
+### Updated
+
+- Dependencies.
 
 ## [v0.1.3] — 2023–03–28
 
@@ -112,7 +118,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/firefoxic/gulp-stacksvg/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/firefoxic/gulp-stacksvg/compare/v0.1.4...HEAD
+[v0.1.4]: https://github.com/firefoxic/gulp-stacksvg/releases/tag/v0.1.4
 [v0.1.3]: https://github.com/firefoxic/gulp-stacksvg/releases/tag/v0.1.3
 [v0.1.2]: https://github.com/firefoxic/gulp-stacksvg/releases/tag/v0.1.2
 [v0.1.1]: https://github.com/firefoxic/gulp-stacksvg/releases/tag/v0.1.1
