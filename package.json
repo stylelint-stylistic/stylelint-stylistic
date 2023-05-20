@@ -72,5 +72,8 @@
 		"linter",
 		"stylelint",
 		"stylelint-plugin"
-	]
+	],
+	"volta": {
+		"node": "18.16.0"
+	}
 }

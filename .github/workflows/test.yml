@@ -8,19 +8,31 @@ on:
 
 jobs:
   npm-test:
+    name: Test
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version-file: 'package.json'
+
+      - name: Restore cache
+        uses: actions/cache@v3
+        with:
+          path: /home/runner/.local/share/pnpm/store/v3
+          key: cache-pnpm-${{ hashFiles('./pnpn-lock.yaml') }}
+          restore-keys: cache-pnpm-
+
+      - name: Install pnpm
+        run: corepack enable; corepack prepare pnpm@latest --activate
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm i --ignore-scripts
 
       - name: Run test
         run: npm t
