@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
+- Set up a chain of publishing scripts instead of using the `np` package.
 - Replaced `npm` lockfile with `pnpm` lockfile.
 - Reorganized `package.json`.
 
