@@ -15,7 +15,7 @@
 		"style-search": "^0.1.0"
 	},
 	"peerDependencies": {
-		"stylelint": "^14.16.1 || ^15.0.0"
+		"stylelint": "^15.9.0"
 	},
 	"engines": {
 		"node": "^18.16.1"
