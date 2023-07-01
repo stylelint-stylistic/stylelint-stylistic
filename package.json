@@ -45,15 +45,15 @@
 	"scripts": {
 		"prebuild": "rm -rf dist",
 		"build": "babel lib --out-dir dist",
-		"prepublishOnly": "npm run build",
+		"prepublishOnly": "pnpm build",
 		"lint": "eslint . --ignore-path .gitignore",
-		"pretest": "npm run lint",
+		"pretest": "pnpm --silent lint",
 		"test": "NODE_OPTIONS=--experimental-vm-modules jest",
-		"test:coverage": "npm t --coverage",
-		"test:watch": "npm t --watch",
-		"preversion": "npm test",
-		"postversion": "npm publish",
-		"postpublish": "git push origin --all; git push origin --tags"
+		"test:coverage": "pnpm test --coverage",
+		"test:watch": "pnpm test --watch",
+		"preversion": "pnpm test",
+		"postversion": "pnpm publish",
+		"postpublish": "git push origin --all && git push origin --tags"
 	},
 	"babel": {
 		"presets": [
