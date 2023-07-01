@@ -1,43 +1,43 @@
 <!-- markdownlint-disable MD024 -->
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [v0.1.4] — 2023–05–20
+## [0.1.5] — 2023–07–01
+
+### Fixed
+
+- All paths to docs.
+
+## [0.1.4] — 2023–05–20
 
 ### Changed
 
-- Set up a chain of publishing scripts instead of using the `np` package.
-- Replaced `npm` lockfile with `pnpm` lockfile.
 - Reorganized `package.json`.
 
-### Updated
-
-- Dependencies.
-
-## [v0.1.3] — 2023–03–28
+## [0.1.3] — 2023–03–28
 
 ### Removed
 
 - The `deprecated` flag from the `meta` of each rule.
 
-## [v0.1.2] — 2023–03–28
+## [0.1.2] — 2023–03–28
 
 ### Fixed
 
 - `Error [ERR_REQUIRE_ESM]: require() of ES Module`.
 
-## [v0.1.1] — 2023–03–28
+## [0.1.1] — 2023–03–28
 
 ### Added
 
 - `babel` until stylelint is converted to es-modules.
 
-## [v0.1.0] — 2023–03–28
+## [0.1.0] — 2023–03–28
 
 ### Added
 
@@ -118,9 +118,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/firefoxic/gulp-stacksvg/compare/v0.1.4...HEAD
-[v0.1.4]: https://github.com/firefoxic/gulp-stacksvg/releases/tag/v0.1.4
-[v0.1.3]: https://github.com/firefoxic/gulp-stacksvg/releases/tag/v0.1.3
-[v0.1.2]: https://github.com/firefoxic/gulp-stacksvg/releases/tag/v0.1.2
-[v0.1.1]: https://github.com/firefoxic/gulp-stacksvg/releases/tag/v0.1.1
-[v0.1.0]: https://github.com/firefoxic/gulp-stacksvg/releases/tag/v0.1.0
+[Unreleased]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.1.5...HEAD
+[0.1.5]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.1.4...v0.1.5
+[0.1.4]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.1.3...v0.1.4
+[0.1.3]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/firefoxic/stylelint-codeguide/releases/tag/v0.1.0

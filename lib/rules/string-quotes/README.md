@@ -22,7 +22,7 @@ Single quotes in a charset @-rule are ignored as using single quotes in this con
 /* fine regardless of configuration */
 ```
 
-The [`fix` option](../../../docs/user-guide/options.md#fix) can automatically fix most of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule.
 
 ## Options
 

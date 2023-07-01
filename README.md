@@ -17,7 +17,7 @@ This plugin was based (it seems that the word “fork” is not very suitable he
 
 stylelint-codeguide returns these rules to keep styles consistent with your codeguide. In addition, new rules may be added in the future.
 
-The plugin follows Stylelint's guidelines (about [rule names](https://stylelint.io/user-guide/about-rules), testing and [so on](https://github.com/stylelint/stylelint/tree/master/docs/developer-guide)).
+The plugin follows [Stylelint's guidelines](https://stylelint.io/developer-guide/rules).
 
 ## Installation and usage
 
