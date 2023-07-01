@@ -43,6 +43,7 @@
 		"stylelint-plugin"
 	],
 	"scripts": {
+		"prepare": "husky install",
 		"prebuild": "rm -rf dist",
 		"build": "babel lib --out-dir dist",
 		"prepublishOnly": "pnpm build",
@@ -67,6 +68,7 @@
 		"common-tags": "^1.8.2",
 		"deepmerge": "^4.3.1",
 		"eslint": "^8.44.0",
+		"husky": "^8.0.3",
 		"jest": "^29.5.0",
 		"jest-cli": "^29.5.0",
 		"jest-preset-stylelint": "^6.1.0",

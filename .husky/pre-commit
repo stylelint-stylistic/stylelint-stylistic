@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+git stash -ku
+
+trap "git stash pop" EXIT
+
+pnpm --silent test
