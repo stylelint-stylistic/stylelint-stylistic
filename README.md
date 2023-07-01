@@ -65,4 +65,4 @@ Please refer to [Stylelint docs](https://stylelint.io/user-guide/get-started) f
 [license-image]: https://img.shields.io/badge/License-MIT-limegreen.svg
 
 [vulnerabilities-url]: https://snyk.io/test/github/firefoxic/stylelint-codeguide
-[vulnerabilities-image]: https://img.shields.io/snyk/vulnerabilities/npm/stylelint-codeguide
+[vulnerabilities-image]: https://snyk.io/test/github/firefoxic/stylelint-codeguide/badge.svg
