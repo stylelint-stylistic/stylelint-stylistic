@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 ### Fixed
 
 - Any LTS version of Node.js on the 18th branch is now required (i.e. at least `18.12.0`), not the latest.
+- Any version of Stylelint on the 15th branch is now required (i.e. at least `15.0.0`), not the latest.
 
 ## [0.2.0] — 2023–07–01
 
