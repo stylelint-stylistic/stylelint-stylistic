@@ -1,6 +1,5 @@
 {
 	"globals": {
-		"dedent": true,
 		"testRule": true
 	},
 	"env": {
@@ -15,66 +14,34 @@
 		"sourceType": "module"
 	},
 	"rules": {
-		// Possible Errors
-		// https://eslint.org/docs/latest/rules/#possible-problems
-		// -------------------------------------------------------
-		"no-template-curly-in-string": "error",
-		"no-use-before-define": [
-			"error",
-			{
-				"functions": false
-			}
-		],
-		// Suggestions
-		// https://eslint.org/docs/rules/#suggestions
-		// ------------------------------------------
 		"accessor-pairs": "error",
+		"array-bracket-spacing": [
+			"error",
+			"never"
+		],
 		"arrow-body-style": [
 			"error",
 			"as-needed"
 		],
+		"arrow-parens": "error",
 		"camelcase": "error",
+		"comma-dangle": [
+			"error",
+			"always-multiline"
+		],
 		"curly": "error",
+		"eol-last": "error",
 		"eqeqeq": [
 			"error",
 			"always"
 		],
-		"no-alert": "error",
-		// "no-console": "error",
-		// "no-nested-ternary": "error",
-		"no-return-assign": "error",
-		"no-shadow": [
-			"error",
-			{
-				"hoist": "all"
-			}
-		],
-		"no-unneeded-ternary": "error",
-		"no-unused-expressions": "error",
-		"no-useless-concat": "error",
-		"no-useless-return": "error",
-		"no-var": "error",
-		"object-shorthand": "error",
-		"prefer-arrow-callback": "error",
-		"prefer-template": "error",
-		"radix": "error",
-		"strict": [
-			"error",
-			"global"
-		],
-		// Layout & Formatting
-		// https://eslint.org/docs/latest/rules/#layout--formatting
-		// --------------------------------------------------------
-		"arrow-parens": "error",
-		"arrow-spacing": "error",
-		"comma-dangle": [
-			"error",
-			"never"
-		],
-		"eol-last": "error",
 		"indent": [
 			"error",
 			"tab"
+		],
+		"linebreak-style": [
+			"error",
+			"unix"
 		],
 		"lines-between-class-members": [
 			"error",
@@ -83,17 +50,51 @@
 				"exceptAfterSingleLine": true
 			}
 		],
-		"linebreak-style": [
+		"one-var": [
 			"error",
-			"unix"
+			"never"
 		],
+		"no-alert": "error",
 		"no-multi-spaces": "error",
 		"no-multiple-empty-lines": "error",
+		// "no-console": "error",
+		"no-nested-ternary": "error",
+		"no-return-assign": "error",
+		"no-shadow": [
+			"error",
+			{
+				"hoist": "all"
+			}
+		],
+		"no-template-curly-in-string": "error",
 		"no-trailing-spaces": "error",
+		"no-unneeded-ternary": "error",
+		"no-unused-expressions": "error",
+		"no-use-before-define": [
+			"error",
+			{
+				"functions": false
+			}
+		],
+		"no-useless-concat": "error",
+		"no-useless-return": "error",
+		"no-var": "error",
+		"object-curly-spacing": [
+			"error",
+			"always"
+		],
+		"object-shorthand": "error",
+		"operator-linebreak": [
+			"error",
+			"none"
+		],
+		"prefer-arrow-callback": "error",
+		"prefer-template": "error",
 		"quotes": [
 			"error",
 			"backtick"
 		],
+		"radix": "error",
 		"semi": [
 			"error",
 			"never",
@@ -102,10 +103,12 @@
 			}
 		],
 		"semi-style": "error",
+		"space-before-function-paren": "error",
 		"space-infix-ops": "error",
-		"template-curly-spacing": [
+		"strict": [
 			"error",
-			"always"
-		]
+			"global"
+		],
+		"template-curly-spacing": "error"
 	}
 }
