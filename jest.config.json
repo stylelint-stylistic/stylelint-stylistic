@@ -1,5 +1,7 @@
 {
-	"preset": "jest-preset-stylelint",
+	"setupFiles": [
+		"./lib/testUtils/testRule.js"
+	],
 	"clearMocks": true,
 	"collectCoverage": false,
 	"collectCoverageFrom": [
