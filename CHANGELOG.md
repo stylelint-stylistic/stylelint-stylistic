@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ### Updated
 
-- Peer dependency `stylelint` to 15.9.0.
+- Peer dependency Stylelint to `15.9.0`.
 
 ## [0.1.5] — 2023–07–01
 
@@ -46,7 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ### Added
 
-- `babel` until stylelint is converted to es-modules.
+- Babel until Stylelint is converted to ES Modules.
 
 ## [0.1.0] — 2023–03–28
 
