@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+### Fixed
+
+- The path to the internal module.
+
 ## [0.2.1] — 2023–07–08
 
 ### Fixed
