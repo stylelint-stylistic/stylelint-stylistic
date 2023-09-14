@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+## [0.2.2] — 2023–09–14
+
 ### Fixed
 
 - The path to the internal module.
@@ -135,7 +137,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.1.5...v0.2.0
 [0.1.5]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.1.4...v0.1.5
