@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+### Updated
+
+- All code according to `stylelint@15.10.3`.
+- Peer dependency — `stylelint@15.10.3`.
+
 ## [0.2.2] — 2023–09–14
 
 ### Fixed
