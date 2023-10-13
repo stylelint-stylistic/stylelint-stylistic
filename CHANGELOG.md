@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+## [0.3.0] — 2023–10–13
+
+### Changed
+
+- Along with updating the plugin to this release, Stylelint needs to be updated to `v15.10.3` as well.
+
 ### Updated
 
 - All code according to `stylelint@15.10.3`.
@@ -142,7 +148,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.1.5...v0.2.0
