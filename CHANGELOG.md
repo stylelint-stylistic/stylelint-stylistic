@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+## [0.3.1] — 2023–10–13
+
+No meaningful changes.
+
 ## [0.3.0] — 2023–10–13
 
 ### Changed
