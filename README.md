@@ -56,7 +56,7 @@ Please refer to [Stylelint docs](https://stylelint.io/user-guide/get-started) f
 - [License](./LICENSE)
 
 [test-url]: https://github.com/firefoxic/stylelint-codeguide/actions?workflow=Test
-[test-image]: https://github.com/firefoxic/stylelint-codeguide/actions/workflows/test.yml/badge.svg?branch=main
+[test-image]: https://github.com/firefoxic/stylelint-codeguide/actions/workflows/test.yaml/badge.svg?branch=main
 
 [npm-url]: https://www.npmjs.com/package/stylelint-codeguide
 [npm-image]: https://img.shields.io/npm/v/stylelint-codeguide?logo=npm&logoColor=fff
