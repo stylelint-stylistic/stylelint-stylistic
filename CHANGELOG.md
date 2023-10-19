@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ### Updated
 
+- Stylelint to `^15.11.0`.
 - Node.js to `>=18.16`.
 
 ## [0.3.1] — 2023–10–13
