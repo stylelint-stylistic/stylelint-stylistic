@@ -1,7 +1,7 @@
 {
 	"name": "stylelint-codeguide",
 	"description": "A collection of codeguide-specific rules for Stylelint",
-	"version": "0.3.1",
+	"version": "0.3.2",
 	"main": "dist/index.js",
 	"files": [
 		"dist/**/*.js",
