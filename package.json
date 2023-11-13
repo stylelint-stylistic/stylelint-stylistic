@@ -51,7 +51,7 @@
 		"build": "babel lib --out-dir dist",
 		"prepublishOnly": "pnpm build",
 		"lint": "eslint . --ignore-path .gitignore",
-		"pretest": "pnpm --silent lint",
+		"pretest": "pnpm lint",
 		"test": "NODE_OPTIONS=--experimental-vm-modules jest",
 		"test:coverage": "pnpm test --coverage",
 		"test:watch": "pnpm test --watch",

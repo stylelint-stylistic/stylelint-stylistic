@@ -5,4 +5,4 @@ git stash -ku
 
 trap "git stash pop" EXIT
 
-pnpm --silent test
+pnpm test
