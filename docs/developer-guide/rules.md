@@ -164,7 +164,7 @@ function rule(primary, secondary) {
 
 rule.primaryOptionArray = true;
 
-module.exports = rule;
+export rule;
 ```
 
 There is one caveat here: If your rule accepts a primary option array, it cannot also accept a primary option object. Whenever possible, if you want your rule to accept a primary option array, you should make an array the only possibility, instead of allowing for various data structures.
