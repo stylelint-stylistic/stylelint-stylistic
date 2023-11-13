@@ -5,23 +5,30 @@
 	"clearMocks": true,
 	"collectCoverage": false,
 	"collectCoverageFrom": [
-		"lib/**/*.js"
+		"lib/**/*.js",
+		"!lib/**/{__tests__,testUtils}/**/*.js"
 	],
 	"coverageDirectory": "./.coverage/",
+	"coverageProvider": "v8",
 	"coverageReporters": [
-		"text"
+		"lcov",
+		"text-summary"
 	],
 	"coverageThreshold": {
 		"global": {
-			"branches": 75,
-			"functions": 75,
-			"lines": 75,
-			"statements": 75
+			"branches": 90,
+			"functions": 90,
+			"lines": 90,
+			"statements": 90
 		}
 	},
 	"testEnvironment": "node",
 	"roots": [
 		"lib"
 	],
-	"testRegex": ".*\\.test\\.js$|lib/.*/__tests__/.*\\.js$"
+	"testRegex": ".*\\.test\\.js$|lib/.*/__tests__/.*\\.js$",
+	"watchPlugins": [
+		"jest-watch-typeahead/filename",
+		"jest-watch-typeahead/testname"
+	]
 }
