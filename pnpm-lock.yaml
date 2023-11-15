@@ -77,8 +77,8 @@ devDependencies:
     specifier: ^4.0.9
     version: 4.0.9(postcss@8.4.31)
   stylelint:
-    specifier: ^16.0.0-1
-    version: 16.0.0-1
+    specifier: ^16.0.0-2
+    version: 16.0.0-2
 
 packages:
 
@@ -4071,8 +4071,8 @@ packages:
     resolution: {integrity: sha512-Dj1Okke1C3uKKwQcetra4jSuk0DqbzbYtXipzFlFMZtowbF1x7BKJwB9AayVMyFARvU8EDrZdcax4At/452cAg==}
     dev: false
 
-  /stylelint@16.0.0-1:
-    resolution: {integrity: sha512-V8WxsNlOBjPEb1yphrjC0dP35urT87bEhiR5qrh7t96duCU5qrVXdkfUBC7ZOmaEWceV806o5AMSjMblOnOxfw==}
+  /stylelint@16.0.0-2:
+    resolution: {integrity: sha512-8t4fRQ3uxmZCQyaYCmf+qGCglM5wwX2QHz79zyOZhtrPxafGsaA8K9jC+tNWa2fRNaGqfT16GPh0gAzbfvNRBw==}
     engines: {node: '>=18.12.0'}
     hasBin: true
     dependencies:

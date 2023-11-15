@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ### Changed
 
-- The required version of **Stylelint** is now at least `v16.0.0-1`.
+- The required version of **Stylelint** is now at least `v16.0.0-2`.
 - The required version of **Node.js** is now **LTS** at least `v18.12`, or at least `v20.9`.
 
 ## [0.3.2] — 2023–10–19
