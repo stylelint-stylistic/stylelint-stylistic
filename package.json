@@ -2,9 +2,10 @@
 	"name": "stylelint-codeguide",
 	"description": "A collection of codeguide-specific rules for Stylelint",
 	"version": "0.3.2",
-	"main": "dist/index.js",
+	"type": "module",
+	"exports": "./lib/index.js",
 	"files": [
-		"dist/**/*.js",
+		"lib/**/*.js",
 		"!**/__tests__/**"
 	],
 	"dependencies": {
@@ -47,9 +48,6 @@
 	],
 	"scripts": {
 		"prepare": "husky install",
-		"prebuild": "rm -rf dist",
-		"build": "babel lib --out-dir dist",
-		"prepublishOnly": "pnpm build",
 		"lint": "eslint . --ignore-path .gitignore",
 		"pretest": "pnpm lint",
 		"test": "NODE_OPTIONS=--experimental-vm-modules jest",
@@ -59,15 +57,7 @@
 		"postversion": "pnpm publish",
 		"postpublish": "git push origin --all && git push origin --tags"
 	},
-	"babel": {
-		"presets": [
-			"@babel/env"
-		]
-	},
 	"devDependencies": {
-		"@babel/cli": "^7.23.0",
-		"@babel/core": "^7.23.3",
-		"@babel/preset-env": "^7.23.3",
 		"@jest/globals": "^29.7.0",
 		"common-tags": "^1.8.2",
 		"deepmerge": "^4.3.1",
