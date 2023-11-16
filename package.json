@@ -1,7 +1,7 @@
 {
 	"name": "stylelint-codeguide",
 	"description": "A collection of codeguide-specific rules for Stylelint",
-	"version": "1.0.0-alpha.0",
+	"version": "1.0.0-alpha.1",
 	"type": "module",
 	"exports": "./lib/index.js",
 	"files": [
