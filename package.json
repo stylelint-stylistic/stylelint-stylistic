@@ -19,7 +19,7 @@
 		"style-search": "^0.1.0"
 	},
 	"peerDependencies": {
-		"stylelint": "^16.0.0"
+		"stylelint": "^16.0.1"
 	},
 	"engines": {
 		"node": "^18.12 || ^20.9"
@@ -70,6 +70,6 @@
 		"postcss-html": "^1.5.0",
 		"postcss-less": "^6.0.0",
 		"postcss-scss": "^4.0.9",
-		"stylelint": "^16.0.0"
+		"stylelint": "^16.0.1"
 	}
 }
