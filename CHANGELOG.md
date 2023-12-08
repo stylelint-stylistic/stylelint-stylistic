@@ -7,14 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
-## [1.0.0-alpha.2] — 2023–12–08
-
-> [!CAUTION]
-> This pre-release is only for testing the transition to the next version of `stylelint@16`, not for production.
+## [1.0.0] — 2023–12–08
 
 ### Changed
 
-- The required version of **Stylelint** is now at least `v16.0.0`.
+- The required version of **Stylelint** is now at least `v16.0.1`.
 - The required version of **Node.js** is now **LTS** at least `v18.12`, or at least `v20.9`.
 - The plugin is now converted to a pure ES module.
 
@@ -170,8 +167,8 @@ No meaningful changes.
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/firefoxic/stylelint-codeguide/compare/v1.0.0-alpha.2...HEAD
-[1.0.0-alpha.2]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.3.2...v1.0.0-alpha.2
+[Unreleased]: https://github.com/firefoxic/stylelint-codeguide/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.3.2...v1.0.0
 [0.3.2]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.2.2...v0.3.1
 [0.3.0]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.2.2...v0.3.0

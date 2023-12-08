@@ -13,7 +13,7 @@ This plugin was based on the [stylelint-scss](https://github.com/stylelint-scs
 
 ## Purpose
 
-[Stylelint has deprecated 76 of the rules](https://stylelint.io/migration-guide/to-15/#deprecated-stylistic-rules) that enforce stylistic conventions.
+[Stylelint has removed 76 rules](https://stylelint.io/migration-guide/to-16#removed-deprecated-stylistic-rules) that enforce stylistic conventions.
 
 stylelint-codeguide returns these rules to keep styles consistent with your codeguide. In addition, new rules may be added in the future.
 
