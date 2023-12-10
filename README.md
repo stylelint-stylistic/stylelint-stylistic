@@ -7,11 +7,7 @@
 
 An updatable collection of stylistic rules for [Stylelint](https://github.com/stylelint/stylelint) (in plugin form).
 
-## About
-
-This plugin was based on the [stylelint-scss](https://github.com/stylelint-scss/stylelint-scss/) plugin with the replacement of its rules with the removed rules of stylelint itself, and a few other changes.
-
-## Purpose
+## About and purpose
 
 [Stylelint has removed 76 rules](https://stylelint.io/migration-guide/to-16#removed-deprecated-stylistic-rules) that enforce stylistic conventions.
 
