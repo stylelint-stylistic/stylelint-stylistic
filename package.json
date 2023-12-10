@@ -23,7 +23,7 @@
 		"stylelint": "^16.0.1"
 	},
 	"engines": {
-		"node": "^18.12 || ^20.9"
+		"node": "^18.12 || >=20.9"
 	},
 	"license": "MIT",
 	"author": {
