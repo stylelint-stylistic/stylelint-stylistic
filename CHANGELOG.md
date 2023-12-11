@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+### Updated
+
+- **Stylelint** to version `16.0.2`, which fixes the use of plugins in Windows.
+
 ## [1.0.1] — 2023–12–10
 
 ### Fixed
@@ -173,7 +177,7 @@ No meaningful changes.
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/firefoxic/stylelint-codeguide/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/firefoxic/stylelint-codeguide/compare/v1.0.2...HEAD
 [1.0.1]: https://github.com/firefoxic/stylelint-codeguide/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.3.2...v1.0.0
 [0.3.2]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.3.1...v0.3.2
