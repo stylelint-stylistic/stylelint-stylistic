@@ -6,7 +6,7 @@
 	"exports": "./lib/index.js",
 	"files": [
 		"lib/**/*.js",
-		"!**/test/**"
+		"!**/*.test.js"
 	],
 	"dependencies": {
 		"@csstools/css-parser-algorithms": "^2.3.2",
