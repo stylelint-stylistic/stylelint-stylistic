@@ -39,7 +39,10 @@ jobs:
           restore-keys: cache-pnpm-
 
       - name: Install dependencies
-        run: corepack enable && pnpm i
+        run: corepack enable && pnpm i && pnpm add -D @reporters/github
+
+      - name: Run lint
+        run: pnpm lint
 
       - name: Run tests
-        run: pnpm t
+        run: node --test --test-reporter=@reporters/github --test-reporter-destination=stdout --test-reporter=spec --test-reporter-destination=stdout
