@@ -23,7 +23,7 @@ Add `stylelint-codeguide` and `stylelint` itself to your project:
 npm install --save-dev stylelint stylelint-codeguide
 ```
 
-Create the `.stylelintrc` config file (or open the existing one), add `stylelint-codeguide` to the plugins array and the rules you need to the rules list. [All rules from stylelint-codeguide](./docs/user-guide/rules.md) need to be namespaced with `codeguide/`:
+Create the `.stylelintrc` config file (or open the existing one), add `stylelint-codeguide` to the plugins array and the rules you need to the rules list. [All rules from stylelint-codeguide](https://github.com/firefoxic/stylelint-codeguide/blob/main/docs/user-guide/rules.md) need to be namespaced with `codeguide/`:
 
 ```json
 {
@@ -47,8 +47,8 @@ Please refer to [Stylelint docs](https://stylelint.io/user-guide/get-started) f
 
 ## Important documents
 
-- [Changelog](./CHANGELOG.md)
-- [Contributing](./CONTRIBUTING.md)
+- [Changelog](https://github.com/firefoxic/stylelint-codeguide/blob/main/CHANGELOG.md)
+- [Contributing](https://github.com/firefoxic/stylelint-codeguide/blob/main/CONTRIBUTING.md)
 - [License](./LICENSE)
 
 [test-url]: https://github.com/firefoxic/stylelint-codeguide/actions?workflow=Test

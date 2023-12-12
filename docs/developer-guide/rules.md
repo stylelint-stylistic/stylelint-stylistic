@@ -4,7 +4,7 @@ Please help us create, enhance, and debug our rules!
 
 ## Add a rule
 
-You should get yourself ready to [contribute code](../../CONTRIBUTING.md#code-contributions).
+You should get yourself ready to [contribute code](../../CONTRIBUTING.md).
 
 ### Define the rule
 
@@ -262,7 +262,7 @@ The final step is to add references to the new rule in the following places:
 
 You should:
 
-1. Get ready to [contribute code](../../CONTRIBUTING.md#code-contributions).
+1. Get ready to [contribute code](../../CONTRIBUTING.md).
 2. Add new unit tests to test the option.
 3. Change the rule's validation to allow for the new option.
 4. Add (as little as possible) logic to the rule to make the tests pass.
@@ -272,7 +272,7 @@ You should:
 
 You should:
 
-1. Get ready to [contribute code](../../CONTRIBUTING.md#code-contributions).
+1. Get ready to [contribute code](../../CONTRIBUTING.md).
 2. Write failing unit tests that exemplify the bug.
 3. Fiddle with the rule until those new tests pass.
 

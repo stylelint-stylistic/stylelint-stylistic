@@ -4,7 +4,7 @@ We manage issues consistently for the benefit of ourselves and our users.
 
 ## Labels
 
-Use [labels](https://github.com/stylelint/stylelint/labels).
+Use [labels](https://github.com/firefoxic/stylelint-codeguide/labels).
 
 When you first triage an issue, you should:
 
@@ -20,7 +20,7 @@ After triage, you should add:
 
 ## Milestones
 
-Use [milestones](https://github.com/stylelint/stylelint/milestones).
+Use [milestones](https://github.com/firefoxic/stylelint-codeguide/milestones).
 
 You should:
 
@@ -52,13 +52,13 @@ That doesn't use a template:
 ```md
 Thank you for creating this issue. However, issues need to follow one of our templates so that we can clearly understand your particular circumstances.
 
-Please help us help you by [recreating the issue](https://github.com/stylelint/stylelint/issues/new/choose) using one of our templates.
+Please help us help you by [recreating the issue](https://github.com/firefoxic/stylelint-codeguide/issues/new/choose) using one of our templates.
 ```
 
 That is best suited as a plugin:
 
 ```md
-Thank you for your suggestion. I think this is best-suited as a [plugin](https://stylelint.io/developer-guide/plugins).
+Thank you for your suggestion. I think this is best-suited as another [plugin](https://stylelint.io/developer-guide/plugins).
 ```
 
 ### Label as ready to implement
@@ -66,29 +66,29 @@ Thank you for your suggestion. I think this is best-suited as a [plugin](https:/
 That fixes a bug in a rule:
 
 ```md
-I've labeled the issue as ready to implement. Please consider [contributing](https://stylelint.io/contributing) if you have time.
+I've labeled the issue as ready to implement. Please consider [contributing](https://github.com/firefoxic/stylelint-codeguide/blob/main/CONTRIBUTING.md) if you have time.
 
-There are [steps on how to fix a bug in a rule](https://stylelint.io/developer-guide/rules#fix-a-bug-in-a-rule) in the Developer guide.
+There are [steps on how to fix a bug in a rule](../developer-guide/rules#fix-a-bug-in-a-rule) in the Developer guide.
 ```
 
 That adds a new option to a rule:
 
 ```md
-I've labeled the issue as ready to implement. Please consider [contributing](https://stylelint.io/contributing) if you have time.
+I've labeled the issue as ready to implement. Please consider [contributing](https://github.com/firefoxic/stylelint-codeguide/blob/main/CONTRIBUTING.md) if you have time.
 
-There are [steps on how to add a new option](https://stylelint.io/developer-guide/rules#add-an-option-to-a-rule) in the Developer guide.
+There are [steps on how to add a new option](../developer-guide/rules#add-an-option-to-a-rule) in the Developer guide.
 ```
 
 That adds a new rule:
 
 ```md
-I've labeled the issue as ready to implement. Please consider [contributing](https://stylelint.io/contributing) if you have time.
+I've labeled the issue as ready to implement. Please consider [contributing](https://github.com/firefoxic/stylelint-codeguide/blob/main/CONTRIBUTING.md) if you have time.
 
-There are [steps on how to add a new rule](https://stylelint.io/developer-guide/rules#add-a-rule) in the Developer guide.
+There are [steps on how to add a new rule](../developer-guide/rules#add-a-rule) in the Developer guide.
 ```
 
 That is another type of improvement:
 
 ```md
-I've labeled the issue as ready to implement. Please consider [contributing](https://stylelint.io/contributing) if you have time.
+I've labeled the issue as ready to implement. Please consider [contributing](https://github.com/firefoxic/stylelint-codeguide/blob/main/CONTRIBUTING.md) if you have time.
 ```

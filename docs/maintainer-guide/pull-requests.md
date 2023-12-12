@@ -5,7 +5,7 @@ You should:
 - use [GitHub reviews](https://help.github.com/articles/about-pull-request-reviews/)
 - review against the [Developer guide criteria](../developer-guide/rules.md)
 - resolve conflicts by [rebasing](https://www.atlassian.com/git/tutorials/rewriting-history/git-rebase)
-- assign _zero or more_ [`pr: *`](https://github.com/stylelint/stylelint/labels) labels
+- assign _zero or more_ [`pr: *`](https://github.com/firefoxic/stylelint-codeguide/labels) labels
 
 You should not use any:
 
