@@ -53,8 +53,8 @@ devDependencies:
     specifier: ^4.0.9
     version: 4.0.9(postcss@8.4.32)
   stylelint-test-rule-node:
-    specifier: ^0.2.0
-    version: 0.2.0(stylelint@16.0.2)
+    specifier: ^0.2.1
+    version: 0.2.1(stylelint@16.0.2)
 
 packages:
 
@@ -1098,11 +1098,11 @@ packages:
     resolution: {integrity: sha512-Dj1Okke1C3uKKwQcetra4jSuk0DqbzbYtXipzFlFMZtowbF1x7BKJwB9AayVMyFARvU8EDrZdcax4At/452cAg==}
     dev: false
 
-  /stylelint-test-rule-node@0.2.0(stylelint@16.0.2):
-    resolution: {integrity: sha512-LCT6GDMF+fEHonpVjExMy6S4nFBsZ66RqcdWEEyZjWLDdNck6bHOwTJmD7O2Ut9C3dA61QhHJgjyjrEkus9/kg==}
+  /stylelint-test-rule-node@0.2.1(stylelint@16.0.2):
+    resolution: {integrity: sha512-+/CVfxp6MhXTRe9rA21j2DA8VoiZyU4gnK4soADWhV95e0KC6XQ9YoP8cvWNjWqjRIrebL+fc7ZNoBqnTnfeYA==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
-      stylelint: ^16.0.0
+      stylelint: ^16.0.1
     dependencies:
       stylelint: 16.0.2
     dev: true
