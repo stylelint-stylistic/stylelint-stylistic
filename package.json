@@ -52,7 +52,7 @@
 		"pretest": "pnpm lint",
 		"test": "node --test",
 		"test:coverage": "node --test --experimental-test-coverage",
-		"test:watch": "pnpm --ignore-scripts test -- --watch",
+		"test:watch": "node --test --watch",
 		"preversion": "pnpm test",
 		"postversion": "pnpm publish",
 		"postpublish": "git push origin --all && git push origin --tags"
