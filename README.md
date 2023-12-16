@@ -5,6 +5,13 @@
 [![NPM version][npm-image]][npm-url]
 [![Vulnerabilities count][vulnerabilities-image]][vulnerabilities-url]
 
+---
+
+> [!WARNING]  
+> ⚠️ This package has been deprecated in favor of [`@stylistic/stylelint-plugin`](https://www.npmjs.com/package/@stylistic/stylelint-plugin).
+
+---
+
 An updatable collection of stylistic rules for [Stylelint](https://github.com/stylelint/stylelint) (in plugin form).
 
 ## About and purpose
