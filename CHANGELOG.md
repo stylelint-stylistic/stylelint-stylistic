@@ -7,11 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+### Changed
+
+- The namespace of plugin rules has been renamed. Therefore, you should change the rules prefix from `codeguide/` to `@stylistic/` in the config.
+
 ## [1.0.2] — 2023–12–12
 
 ### Updated
 
-- **Stylelint** to version `16.0.2`, which fixes the use of plugins in Windows.
+- **Stylelint** to version `16.0.2`, which fixes the use of plugins in Windows.
 
 ## [1.0.1] — 2023–12–10
 
