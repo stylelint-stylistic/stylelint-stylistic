@@ -1,4 +1,4 @@
-# stylelint-codeguide
+# Stylelint Stylistic
 
 [![License: MIT][license-image]][license-url]
 [![Test Status][test-image]][test-url]
@@ -9,33 +9,29 @@ An updatable collection of stylistic rules for [Stylelint](https://github.com
 
 ## About and purpose
 
-[Stylelint has removed 76 rules](https://stylelint.io/migration-guide/to-16#removed-deprecated-stylistic-rules) that enforce stylistic conventions.
-
-stylelint-codeguide returns these rules to keep styles consistent with your codeguide. In addition, new rules may be added in the future.
-
-The plugin follows [Stylelint's guidelines](https://stylelint.io/developer-guide/rules).
+[Stylelint has removed 76 rules](https://stylelint.io/migration-guide/to-16#removed-deprecated-stylistic-rules) that enforce stylistic conventions. This project returns these rules to keep styles consistent with your codeguide. In addition, new rules may be added in the future.
 
 ## Installation and usage
 
-Add `stylelint-codeguide` and `stylelint` itself to your project:
+Add `@stylistic/stylelint-plugin` and `stylelint` itself to your project:
 
 ```shell
-npm install --save-dev stylelint stylelint-codeguide
+npm add -D stylelint @stylistic/stylelint-plugin
 ```
 
-Create the `.stylelintrc` config file (or open the existing one), add `stylelint-codeguide` to the plugins array and the rules you need to the rules list. [All rules from stylelint-codeguide](https://github.com/firefoxic/stylelint-codeguide/blob/main/docs/user-guide/rules.md) need to be namespaced with `@stylistic/`:
+Create the `.stylelintrc` config file (or open the existing one), add `@stylistic/stylelint-plugin` to the plugins array and the rules you need to the rules list. [All rules from `@stylistic/stylelint-plugin`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/docs/user-guide/rules.md) need to be namespaced with `@stylistic/`:
 
 ```json
 {
 	"plugins": [
-		"stylelint-codeguide"
+		"@stylistic/stylelint-plugin"
 	],
 	"rules": {
 		// syntax rules from stylelint:
 		"color-function-notation": "modern",
 		"selector-max-compound-selectors": 2,
-		// ...
-		// stylistic rules from stylelint-codeguide:
+
+		// stylistic rules from @stylistic/stylelint-plugin:
 		"@stylistic/color-hex-case": "lower",
 		"@stylistic/number-leading-zero": "always",
 		"@stylistic/unit-case": "lower"
@@ -47,18 +43,18 @@ Please refer to [Stylelint docs](https://stylelint.io/user-guide/get-started) f
 
 ## Important documents
 
-- [Changelog](https://github.com/firefoxic/stylelint-codeguide/blob/main/CHANGELOG.md)
-- [Contributing](https://github.com/firefoxic/stylelint-codeguide/blob/main/CONTRIBUTING.md)
+- [Changelog](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/CHANGELOG.md)
+- [Contributing](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/CONTRIBUTING.md)
 - [License](./LICENSE)
 
-[test-url]: https://github.com/firefoxic/stylelint-codeguide/actions?workflow=Test
-[test-image]: https://github.com/firefoxic/stylelint-codeguide/actions/workflows/test.yaml/badge.svg?branch=main
+[test-url]: https://github.com/stylelint-stylistic/stylelint-stylistic/actions?workflow=Test
+[test-image]: https://github.com/stylelint-stylistic/stylelint-stylistic/actions/workflows/test.yaml/badge.svg?branch=main
 
-[npm-url]: https://www.npmjs.com/package/stylelint-codeguide
-[npm-image]: https://img.shields.io/npm/v/stylelint-codeguide?logo=npm&logoColor=fff
+[npm-url]: https://www.npmjs.com/package/@stylistic/stylelint-plugin
+[npm-image]: https://img.shields.io/npm/v/@stylistic/stylelint-plugin?logo=npm&logoColor=fff
 
-[license-url]: https://github.com/firefoxic/stylelint-codeguide/blob/main/LICENSE
+[license-url]: https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/LICENSE
 [license-image]: https://img.shields.io/badge/License-MIT-limegreen.svg
 
-[vulnerabilities-url]: https://snyk.io/test/github/firefoxic/stylelint-codeguide
-[vulnerabilities-image]: https://snyk.io/test/github/firefoxic/stylelint-codeguide/badge.svg
+[vulnerabilities-url]: https://snyk.io/test/github/stylelint-stylistic/stylelint-stylistic
+[vulnerabilities-image]: https://snyk.io/test/github/stylelint-stylistic/stylelint-stylistic/badge.svg

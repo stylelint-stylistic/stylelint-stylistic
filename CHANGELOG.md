@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ### Changed
 
+- The repository renamed to `stylelint-stylistic` and moved to the organization of the same name.
+- The plugin is published in `npm` under the new name `@stylistic/stylelint-plugin`. Therefore, you should:
+  - change the former plugin name `stylelint-codeguide` to the new one in the config,
+  - remove the old `stylelint-codeguide` package from dependencies
+  - install the new `@stylistic/stylelint-plugin` package.
 - The namespace of plugin rules has been renamed. Therefore, you should change the rules prefix from `codeguide/` to `@stylistic/` in the config.
 
 ## [1.0.2] — 2023–12–12
@@ -183,19 +188,19 @@ No meaningful changes.
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/firefoxic/stylelint-codeguide/compare/v1.0.2...HEAD
-[1.0.2]: https://github.com/firefoxic/stylelint-codeguide/compare/v1.0.0...v1.0.2
-[1.0.1]: https://github.com/firefoxic/stylelint-codeguide/compare/v1.0.0...v1.0.1
-[1.0.0]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.3.2...v1.0.0
-[0.3.2]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.3.1...v0.3.2
-[0.3.1]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.2.2...v0.3.1
-[0.3.0]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.2.2...v0.3.0
-[0.2.2]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.2.1...v0.2.2
-[0.2.1]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.1.5...v0.2.0
-[0.1.5]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.1.4...v0.1.5
-[0.1.4]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.1.3...v0.1.4
-[0.1.3]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.1.2...v0.1.3
-[0.1.2]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.1.1...v0.1.2
-[0.1.1]: https://github.com/firefoxic/stylelint-codeguide/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/firefoxic/stylelint-codeguide/releases/tag/v0.1.0
+[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v1.0.0...v1.0.2
+[1.0.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v0.3.2...v1.0.0
+[0.3.2]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v0.2.2...v0.3.1
+[0.3.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v0.2.2...v0.3.0
+[0.2.2]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v0.2.1...v0.2.2
+[0.2.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v0.1.5...v0.2.0
+[0.1.5]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v0.1.4...v0.1.5
+[0.1.4]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v0.1.3...v0.1.4
+[0.1.3]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/releases/tag/v0.1.0

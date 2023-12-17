@@ -1,6 +1,6 @@
 {
-	"name": "stylelint-codeguide",
-	"description": "A collection of codeguide-specific rules for Stylelint",
+	"name": "@stylistic/stylelint-plugin",
+	"description": "A collection of stylistic/formatting Stylelint rules",
 	"version": "1.0.2",
 	"type": "module",
 	"exports": "./lib/index.js",
@@ -29,22 +29,24 @@
 		"name": "Sergey Artemov",
 		"email": "firefoxic.dev@gmail.com"
 	},
-	"homepage": "https://github.com/firefoxic/stylelint-codeguide",
+	"homepage": "https://github.com/stylelint-stylistic/stylelint-stylistic#readme",
 	"bugs": {
-		"url": "https://github.com/firefoxic/stylelint-codeguide/issues"
+		"url": "https://github.com/stylelint-stylistic/stylelint-stylistic/issues"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/firefoxic/stylelint-codeguide"
+		"url": "git://github.com/stylelint-stylistic/stylelint-stylistic"
 	},
 	"keywords": [
 		"codeguide",
 		"css",
 		"csslint",
+		"formatting",
 		"lint",
 		"linter",
 		"stylelint",
-		"stylelint-plugin"
+		"stylelint-plugin",
+		"stylistic"
 	],
 	"scripts": {
 		"prepare": "husky install",

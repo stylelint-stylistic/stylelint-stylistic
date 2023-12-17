@@ -1,4 +1,4 @@
-# stylelint-codeguide docs
+# stylelint-stylistic docs
 
 ## User guide
 
