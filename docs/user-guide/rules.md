@@ -1,6 +1,6 @@
 # Rules
 
-Here are stylelint-codeguide rules, grouped by the _thing_ they apply to (just like in [Stylelint](https://stylelint.io/user-guide/about-rules)).
+Here are `stylelint-stylistic` rules, grouped by the _thing_ they apply to (just like in [Stylelint](https://stylelint.io/user-guide/about-rules)).
 
 ## Color
 
