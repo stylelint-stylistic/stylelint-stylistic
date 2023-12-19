@@ -41,6 +41,10 @@ Create the `.stylelintrc` config file (or open the existing one), add `@styli
 
 Please refer to [Stylelint docs](https://stylelint.io/user-guide/get-started) for detailed info on using this linter.
 
+## Need more?
+
+ESLint deprecates stylistic rules, too. But you can continue to use them thanks to [ESLint Stylistic](https://eslint.style).
+
 ## Important documents
 
 - [Changelog](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/CHANGELOG.md)
