@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+## [2.0.0] — 2023–12–20
+
 ### Changed
 
 - The repository renamed to `stylelint-stylistic` and moved to the organization of the same name.
@@ -188,8 +190,9 @@ No meaningful changes.
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v1.0.2...HEAD
-[1.0.2]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v1.0.0...v1.0.2
+[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v1.0.2...v2.0.0
+[1.0.2]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v0.3.2...v1.0.0
 [0.3.2]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v0.3.1...v0.3.2
