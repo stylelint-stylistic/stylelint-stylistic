@@ -56,7 +56,7 @@
 		"test:coverage": "node --test --experimental-test-coverage",
 		"test:watch": "node --test --watch",
 		"preversion": "pnpm test",
-		"postversion": "pnpm publish",
+		"postversion": "pnpm publish --access=public",
 		"postpublish": "git push origin --all && git push origin --tags"
 	},
 	"devDependencies": {
