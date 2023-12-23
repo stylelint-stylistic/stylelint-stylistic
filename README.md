@@ -39,6 +39,10 @@ Create the `.stylelintrc` config file (or open the existing one), add `@styli
 }
 ```
 
+To avoid listing a lot of rules, you can use [`@stylistic/stylelint-config`](https://www.npmjs.com/package/@stylistic/stylelint-config), which returns the stylistic rules removed in [`stylelint-config-standard`](https://github.com/stylelint/stylelint-config-standard/releases/tag/30.0.0) and [`stylelint-config-recommended`](https://github.com/stylelint/stylelint-config-recommended/releases/tag/10.0.1).
+
+---
+
 Please refer to [Stylelint docs](https://stylelint.io/user-guide/get-started) for detailed info on using this linter.
 
 ## Need more?
