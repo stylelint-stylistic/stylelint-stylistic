@@ -114,6 +114,9 @@ Here are `stylelint-stylistic` rules, grouped by the _thing_ they apply to (just
 - [`at-rule-semicolon-newline-after`](../../lib/rules/at-rule-semicolon-newline-after/README.md): Require a newline after the semicolon of at-rules (Autofixable).
 - [`at-rule-semicolon-space-before`](../../lib/rules/at-rule-semicolon-space-before/README.md): Require a single space or disallow whitespace before the semicolons of at-rules.
 
+## Named grid areas
+- [`named-grid-areas-alignment`](../../lib/rules/named-grid-areas-alignment/README.md): Require cell tokens (and optionally ending quotes) within `grid-template-areas` to be aligned (Autofixable).
+
 ## General / Sheet
 
 - [`indentation`](../../lib/rules/indentation/README.md): Specify indentation (Autofixable).
