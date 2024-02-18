@@ -31,6 +31,9 @@ dependencies:
     version: 16.0.2
 
 devDependencies:
+  '@synap-ac/node-dot-extra-reporter':
+    specifier: ^1.1.0
+    version: 1.1.0
   common-tags:
     specifier: ^1.8.2
     version: 1.8.2
@@ -187,6 +190,12 @@ packages:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.15.0
 
+  /@synap-ac/node-dot-extra-reporter@1.1.0:
+    resolution: {integrity: sha512-eRMyoUKySUoN7IuD/bCGa9WoLfxIE8BJzxCY8K6maUc2UN2b7KfUpULm1P4VFWekVH4eci+HlqS89ZWsSE7JQw==}
+    dependencies:
+      chalk: 5.3.0
+    dev: true
+
   /@ungap/structured-clone@1.2.0:
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
     dev: true
@@ -289,6 +298,11 @@ packages:
     dependencies:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
+    dev: true
+
+  /chalk@5.3.0:
+    resolution: {integrity: sha512-dLitG79d+GV1Nb/VYcCDFivJeK1hiukt9QjRNVOsUtTy1rR1YJsmpGGTZ3qJos+uw7WmWF4wUwBd9jxjocFC2w==}
+    engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
     dev: true
 
   /color-convert@1.9.3:

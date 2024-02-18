@@ -52,7 +52,7 @@
 		"prepare": "husky install",
 		"lint": "eslint . --ignore-path .gitignore",
 		"pretest": "pnpm lint",
-		"test": "node --test",
+		"test": "node --test --test-reporter @synap-ac/node-dot-extra-reporter",
 		"test:coverage": "node --test --experimental-test-coverage",
 		"test:watch": "node --test --watch",
 		"preversion": "pnpm test",
@@ -60,6 +60,7 @@
 		"postpublish": "git push origin --all && git push origin --tags"
 	},
 	"devDependencies": {
+		"@synap-ac/node-dot-extra-reporter": "^1.1.0",
 		"common-tags": "^1.8.2",
 		"eslint": "^8.55.0",
 		"husky": "^8.0.3",
