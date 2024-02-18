@@ -1,7 +1,7 @@
 {
 	"name": "@stylistic/stylelint-plugin",
 	"description": "A collection of stylistic/formatting Stylelint rules",
-	"version": "2.0.0",
+	"version": "2.1.0",
 	"type": "module",
 	"exports": "./lib/index.js",
 	"files": [
