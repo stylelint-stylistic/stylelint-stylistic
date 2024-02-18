@@ -6,19 +6,19 @@ settings:
 
 dependencies:
   '@csstools/css-parser-algorithms':
-    specifier: ^2.3.2
+    specifier: ^2.5.0
     version: 2.5.0(@csstools/css-tokenizer@2.2.3)
   '@csstools/css-tokenizer':
-    specifier: ^2.2.1
+    specifier: ^2.2.3
     version: 2.2.3
   '@csstools/media-query-list-parser':
-    specifier: ^2.1.5
+    specifier: ^2.1.7
     version: 2.1.7(@csstools/css-parser-algorithms@2.5.0)(@csstools/css-tokenizer@2.2.3)
   is-plain-object:
     specifier: ^5.0.0
     version: 5.0.0
   postcss-selector-parser:
-    specifier: ^6.0.13
+    specifier: ^6.0.15
     version: 6.0.15
   postcss-value-parser:
     specifier: ^4.2.0
@@ -27,7 +27,7 @@ dependencies:
     specifier: ^0.1.0
     version: 0.1.0
   stylelint:
-    specifier: ^16.0.2
+    specifier: ^16.2.1
     version: 16.2.1
 
 devDependencies:

@@ -9,14 +9,14 @@
 		"!**/*.test.js"
 	],
 	"dependencies": {
-		"@csstools/css-parser-algorithms": "^2.3.2",
-		"@csstools/css-tokenizer": "^2.2.1",
-		"@csstools/media-query-list-parser": "^2.1.5",
+		"@csstools/css-parser-algorithms": "^2.5.0",
+		"@csstools/css-tokenizer": "^2.2.3",
+		"@csstools/media-query-list-parser": "^2.1.7",
 		"is-plain-object": "^5.0.0",
-		"postcss-selector-parser": "^6.0.13",
+		"postcss-selector-parser": "^6.0.15",
 		"postcss-value-parser": "^4.2.0",
 		"style-search": "^0.1.0",
-		"stylelint": "^16.0.2"
+		"stylelint": "^16.2.1"
 	},
 	"peerDependencies": {
 		"stylelint": "^16.0.2"
