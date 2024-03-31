@@ -51,6 +51,7 @@ ESLint deprecates stylistic rules, too. But you can continue to use them thanks 
 
 ## Important documents
 
+- [Rule list](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/docs/user-guide/rules.md)
 - [Changelog](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/CHANGELOG.md)
 - [Contributing](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/CONTRIBUTING.md)
 - [License](./LICENSE)
