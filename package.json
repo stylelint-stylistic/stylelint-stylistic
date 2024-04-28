@@ -50,8 +50,8 @@
 	],
 	"scripts": {
 		"prepare": "husky",
-		"lint": "eslint . --ignore-path .gitignore",
-		"pretest": "pnpm lint",
+		"lint": "eslint",
+		"pretest": "pnpm lint --cache",
 		"test": "node --test --test-reporter @synap-ac/node-dot-extra-reporter",
 		"test:coverage": "node --test --experimental-test-coverage",
 		"test:watch": "node --test --watch",
@@ -61,10 +61,13 @@
 		"postpublish": "git push --follow-tags"
 	},
 	"devDependencies": {
+		"@eslint/js": "^9.1.1",
 		"@firefoxic/utils": "^0.1.0",
+		"@stylistic/eslint-plugin-js": "^1.7.2",
 		"@synap-ac/node-dot-extra-reporter": "^1.1.0",
 		"common-tags": "^1.8.2",
-		"eslint": "^8.56.0",
+		"eslint": "^9.1.1",
+		"globals": "^15.1.0",
 		"husky": "^9.0.11",
 		"postcss": "^8.4.35",
 		"postcss-html": "^1.6.0",
