@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+## [2.1.2] — 2024–04–28
+
 ### Fixed
 
 - Autofixing of `@charset` name by `string-quotes` rule ([#26](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/26)) ([@Mouvedia](https://github.com/Mouvedia)).
@@ -207,7 +209,8 @@ No meaningful changes.
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v2.1.1...HEAD
+[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v2.1.2...HEAD
+[2.1.2]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v1.0.2...v2.0.0
