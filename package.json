@@ -56,10 +56,12 @@
 		"test:coverage": "node --test --experimental-test-coverage",
 		"test:watch": "node --test --watch",
 		"preversion": "pnpm test",
+		"version": "update-changelog && git add CHANGELOG.md",
 		"postversion": "pnpm publish --access=public",
-		"postpublish": "git push origin --all && git push origin --tags"
+		"postpublish": "git push --follow-tags"
 	},
 	"devDependencies": {
+		"@firefoxic/utils": "^0.1.0",
 		"@synap-ac/node-dot-extra-reporter": "^1.1.0",
 		"common-tags": "^1.8.2",
 		"eslint": "^8.56.0",
