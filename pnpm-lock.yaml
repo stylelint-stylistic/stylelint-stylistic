@@ -36,7 +36,7 @@ importers:
       '@eslint/js':
         specifier: ^9.1.1
         version: 9.1.1
-      '@firefoxic/utils':
+      '@firefoxic/update-changelog':
         specifier: ^0.1.0
         version: 0.1.0
       '@stylistic/eslint-plugin-js':
@@ -131,8 +131,8 @@ packages:
     resolution: {integrity: sha512-5WoDz3Y19Bg2BnErkZTp0en+c/i9PvgFS7MBe1+m60HjFr0hrphlAGp4yzI7pxpt4xShln4ZyYp4neJm8hmOkQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@firefoxic/utils@0.1.0':
-    resolution: {integrity: sha512-dqbz6cYOIeG9YMahtZhOi9FThRewC2LAzxoChnDV6DesM5JGd8w7t6dQN1KaU893WygyblpIuhhs4VJvgnuyog==}
+  '@firefoxic/update-changelog@0.1.0':
+    resolution: {integrity: sha512-VNmAKjmKHVTwktW6JICd3wYgdfQJOhmR/XsWubhmP9wg92dEyhDdxHu/9fssyKPLvQ8AWzLGkv6aKuUJdW2XkQ==}
     engines: {node: ^18.12 || >=20.9}
     hasBin: true
 
@@ -895,7 +895,7 @@ snapshots:
 
   '@eslint/js@9.1.1': {}
 
-  '@firefoxic/utils@0.1.0': {}
+  '@firefoxic/update-changelog@0.1.0': {}
 
   '@humanwhocodes/config-array@0.13.0':
     dependencies:
