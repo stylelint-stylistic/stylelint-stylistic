@@ -50,16 +50,16 @@
 		"postpublish": "git push --follow-tags"
 	},
 	"devDependencies": {
-		"@eslint/js": "^9.1.1",
+		"@eslint/js": "^9.2.0",
 		"@firefoxic/update-changelog": "^0.1.0",
-		"@stylistic/eslint-plugin-js": "^1.7.2",
+		"@stylistic/eslint-plugin-js": "^2.1.0",
 		"@synap-ac/node-dot-extra-reporter": "^1.1.0",
 		"common-tags": "^1.8.2",
-		"eslint": "^9.1.1",
-		"globals": "^15.1.0",
+		"eslint": "^9.2.0",
+		"globals": "^15.2.0",
 		"husky": "^9.0.11",
 		"postcss": "^8.4.38",
-		"postcss-html": "^1.6.0",
+		"postcss-html": "^1.7.0",
 		"postcss-less": "^6.0.0",
 		"postcss-scss": "^4.0.9",
 		"stylelint-test-rule-node": "^0.2.1"
