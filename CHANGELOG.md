@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+### Fixed
+
+- Dependencies are now updated, which fixes test fails ([#29](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/29)) ([@ybiquitous](https://github.com/ybiquitous)).
+
 ## [2.1.2] — 2024–04–28
 
 ### Fixed
@@ -32,9 +36,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 - The repository renamed to `stylelint-stylistic` and moved to the organization of the same name.
 - The plugin is published in `npm` under the new name `@stylistic/stylelint-plugin`. Therefore, you should:
-  - change the former plugin name `stylelint-codeguide` to the new one in the config,
-  - remove the old `stylelint-codeguide` package from dependencies
-  - install the new `@stylistic/stylelint-plugin` package.
+- change the former plugin name `stylelint-codeguide` to the new one in the config,
+- remove the old `stylelint-codeguide` package from dependencies
+- install the new `@stylistic/stylelint-plugin` package.
 - The namespace of plugin rules has been renamed. Therefore, you should change the rules prefix from `codeguide/` to `@stylistic/` in the config.
 
 ## [1.0.2] — 2023–12–12

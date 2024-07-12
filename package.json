@@ -28,14 +28,14 @@
 		"stylelint": "^16.0.2"
 	},
 	"dependencies": {
-		"@csstools/css-parser-algorithms": "^2.6.1",
-		"@csstools/css-tokenizer": "^2.2.4",
-		"@csstools/media-query-list-parser": "^2.1.9",
+		"@csstools/css-parser-algorithms": "^2.7.1",
+		"@csstools/css-tokenizer": "^2.4.1",
+		"@csstools/media-query-list-parser": "^2.1.13",
 		"is-plain-object": "^5.0.0",
-		"postcss-selector-parser": "^6.0.16",
+		"postcss-selector-parser": "^6.1.1",
 		"postcss-value-parser": "^4.2.0",
 		"style-search": "^0.1.0",
-		"stylelint": "^16.4.0"
+		"stylelint": "^16.8.0"
 	},
 	"scripts": {
 		"prepare": "husky",
@@ -49,21 +49,21 @@
 		"postversion": "pnpm publish --access=public",
 		"postpublish": "git push --follow-tags"
 	},
-	"packageManager": "pnpm@9.1.0",
+	"packageManager": "pnpm@9.6.0",
 	"devDependencies": {
-		"@eslint/js": "^9.2.0",
+		"@eslint/js": "^9.8.0",
 		"@firefoxic/update-changelog": "^0.1.0",
-		"@stylistic/eslint-plugin-js": "^2.1.0",
+		"@stylistic/eslint-plugin-js": "^2.4.0",
 		"@synap-ac/node-dot-extra-reporter": "^1.1.0",
 		"common-tags": "^1.8.2",
-		"eslint": "^9.2.0",
-		"globals": "^15.2.0",
-		"husky": "^9.0.11",
-		"postcss": "^8.4.38",
+		"eslint": "^9.8.0",
+		"globals": "^15.8.0",
+		"husky": "^9.1.4",
+		"postcss": "^8.4.40",
 		"postcss-html": "^1.7.0",
 		"postcss-less": "^6.0.0",
 		"postcss-scss": "^4.0.9",
-		"stylelint-test-rule-node": "^0.2.1"
+		"stylelint-test-rule-node": "^0.3.0"
 	},
 	"keywords": [
 		"codeguide",
