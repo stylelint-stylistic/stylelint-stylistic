@@ -13,36 +13,18 @@ env:
 
 jobs:
   test:
-    name: Test
-
     strategy:
       matrix:
         os:
           - ubuntu-latest
     runs-on: ${{ matrix.os }}
-
     steps:
-
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
           node-version-file: package.json
-
-      - name: Restore cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.local/share/pnpm/store/v3
-          key: cache-pnpm-${{ hashFiles('./pnpn-lock.yaml') }}
-          restore-keys: cache-pnpm-
-
-      - name: Install dependencies
-        run: corepack enable && pnpm i && pnpm add -D @reporters/github
-
-      - name: Run lint
-        run: pnpm lint
-
-      - name: Run tests
-        run: node --test --test-reporter=@reporters/github --test-reporter-destination=stdout --test-reporter=spec --test-reporter-destination=stdout
+          cache: pnpm
+      - run: pnpm install && pnpm add -D @reporters/github
+      - run: pnpm lint
+      - run: node --test --test-reporter=@reporters/github --test-reporter-destination=stdout --test-reporter=spec --test-reporter-destination=stdout
