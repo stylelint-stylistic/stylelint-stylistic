@@ -46,7 +46,7 @@
 		"test:watch": "node --test --watch",
 		"preversion": "pnpm test",
 		"version": "update-changelog && git add CHANGELOG.md",
-		"postversion": "pnpm publish --access=public",
+		"postversion": "if [ \"$CI\" != \"true\" ]; then pnpm publish --access public; fi",
 		"postpublish": "git push --follow-tags"
 	},
 	"packageManager": "pnpm@9.6.0",

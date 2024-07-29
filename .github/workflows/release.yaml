@@ -1,0 +1,31 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - release
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+          cache: pnpm
+      - run: pnpm install
+      - run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          git config --global user.email "firefoxic.dev@gmail.com"
+          git config --global user.name "firefoxic"
+          version_type=$(node scripts/determine-version.js)
+          if [ -n "$version_type" ]; then
+            pnpm version ${version_type}
+            pnpm publish --provenance --access public --no-git-checks
+          fi
