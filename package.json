@@ -25,7 +25,7 @@
 		"node": "^18.12 || >=20.9"
 	},
 	"peerDependencies": {
-		"stylelint": "^16.0.2"
+		"stylelint": "^16.8.0"
 	},
 	"dependencies": {
 		"@csstools/css-parser-algorithms": "^2.7.1",
