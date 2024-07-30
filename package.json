@@ -45,14 +45,14 @@
 		"test:coverage": "node --test --experimental-test-coverage",
 		"test:watch": "node --test --watch",
 		"preversion": "pnpm test",
-		"version": "update-changelog && git add CHANGELOG.md",
+		"version": "update-changelog",
 		"postversion": "if [ \"$CI\" != \"true\" ]; then pnpm publish --access public; fi",
 		"postpublish": "git push --follow-tags"
 	},
 	"packageManager": "pnpm@9.6.0",
 	"devDependencies": {
 		"@eslint/js": "^9.8.0",
-		"@firefoxic/update-changelog": "^0.1.0",
+		"@firefoxic/update-changelog": "^0.2.0",
 		"@stylistic/eslint-plugin-js": "^2.4.0",
 		"@synap-ac/node-dot-extra-reporter": "^1.1.0",
 		"common-tags": "^1.8.2",
