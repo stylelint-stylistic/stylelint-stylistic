@@ -22,8 +22,8 @@ jobs:
       - run: pnpm install
       - run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-          git config --global user.email "firefoxic.dev@gmail.com"
-          git config --global user.name "firefoxic"
+          git config --global user.email "actions@users.noreply.github.com"
+          git config --global user.name "GitHub Actions"
           version_type=$(node scripts/determine-version.js)
           if [ -n "$version_type" ]; then
             pnpm version ${version_type}
