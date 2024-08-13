@@ -21,11 +21,14 @@ jobs:
           cache: pnpm
       - run: pnpm install
       - run: |
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
           git config --global user.email "actions@users.noreply.github.com"
           git config --global user.name "GitHub Actions"
-          version_type=$(node scripts/determine-version.js)
-          if [ -n "$version_type" ]; then
-            pnpm version ${version_type}
-            pnpm publish --provenance --access public --no-git-checks
+          RELEASE_DESCRIPTION=$(awk '/## \[Unreleased\]/{flag=1; next} /## \[/{flag=0} flag' ./CHANGELOG.md | sed '/^[[:space:]]*$/d')
+          if echo "$RELEASE_DESCRIPTION" | grep -q '### Changed'; then
+              pnpm version major
+          elif echo "$RELEASE_DESCRIPTION" | grep -q '### Added'; then
+              pnpm version minor
+          elif echo "$RELEASE_DESCRIPTION" | grep -q '### Fixed'; then
+              pnpm version patch
           fi

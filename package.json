@@ -46,7 +46,7 @@
 		"test:watch": "node --test --watch",
 		"preversion": "pnpm test",
 		"version": "update-changelog",
-		"postversion": "if [ \"$CI\" != \"true\" ]; then pnpm publish --access public; fi",
+		"postversion": "pnpm publish --provenance --access public --no-git-checks",
 		"postpublish": "git push --follow-tags"
 	},
 	"packageManager": "pnpm@9.6.0",
