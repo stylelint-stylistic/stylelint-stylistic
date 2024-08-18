@@ -183,33 +183,35 @@ If the rule has autofix use:
 
 ### Add autofix
 
-Depending on the rule, it might be possible to automatically fix the rule's problems by mutating the PostCSS AST (Abstract Syntax Tree) using the [PostCSS API](http://api.postcss.org/).
+Depending on the rule, it might be possible to automatically fix the rule's problems by mutating the PostCSS AST (Abstract Syntax Tree) using the [PostCSS API](https://postcss.org/api/).
 
-Add `context` variable to rule parameters:
+Set `meta.fixable = true` to the rule:
 
-```js
-function rule(primary, secondary, context) {
-  return (root, result) => {
-    /* .. */
-  };
-}
+```diff js
+const meta = {
+	url: /* .. */,
++	fixable: true,
+};
 ```
 
-`context` is an object which could have two properties:
+Pass `fix` callback to the [`report` utility](./plugins.md#stylelintutilsreport):
 
-- `configurationComment`(string): String that prefixes configuration comments like `/* stylelint-disable */`.
-- `fix`(boolean): If `true`, your rule can apply autofixes.
-- `newline`(string): Line-ending used in current linted file.
+```diff js
+function rule(primary, secondary) {
+	return (root, result) => {
+		/* .. */
 
-If `context.fix` is `true`, then change `root` using PostCSS API and return early before `report()` is called.
++		const fix = () => { /* put your mutations here */ };
 
-```js
-if (context.fix) {
-  // Apply fixes using PostCSS API
-  return; // Return and don't report a problem
+		report({
+			result,
+			ruleName,
+			message,
+			node,
++			fix
+		});
+	};
 }
-
-report(/* .. */);
 ```
 
 ### Write the README
