@@ -1,7 +1,7 @@
 {
 	"name": "@stylistic/stylelint-plugin",
 	"description": "A collection of stylistic/formatting Stylelint rules",
-	"version": "3.0.0",
+	"version": "3.0.1",
 	"license": "MIT",
 	"author": {
 		"name": "Sergey Artemov",
