@@ -86,7 +86,7 @@ Use the [PostCSS API](https://api.postcss.org/) to navigate and analyze the CSS 
 When using array methods on nodes, e.g. `find`, `some`, `filter` etc, you should explicitly check the `type` property of the node before attempting to access other properties. For example:
 
 ```js
-const hasProperty = nodes.find(
+let hasProperty = nodes.find(
   ({ type, prop }) => type === "decl" && prop === propertyName
 );
 ```
@@ -188,7 +188,7 @@ Depending on the rule, it might be possible to automatically fix the rule's prob
 Set `meta.fixable = true` to the rule:
 
 ```diff js
-const meta = {
+let meta = {
 	url: /* .. */,
 +	fixable: true,
 };
@@ -201,7 +201,7 @@ function rule(primary, secondary) {
 	return (root, result) => {
 		/* .. */
 
-+		const fix = () => { /* put your mutations here */ };
++		let fix = () => { /* put your mutations here */ };
 
 		report({
 			result,
