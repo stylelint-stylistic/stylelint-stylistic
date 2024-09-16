@@ -12,6 +12,8 @@ Only lowercase at-rule names are valid in SCSS.
 
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix some of the problems reported by this rule.
 
+The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
+
 ## Options
 
 `string`: `"lower"|"upper"`

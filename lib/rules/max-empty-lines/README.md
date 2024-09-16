@@ -13,6 +13,8 @@ a {} /* ↑ */
 
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
+The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
+
 ## Options
 
 `int`: Maximum number of adjacent empty lines allowed.

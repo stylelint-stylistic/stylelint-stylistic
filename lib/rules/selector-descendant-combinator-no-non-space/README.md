@@ -12,6 +12,8 @@ This rule ensures that only a single space is used and ensures no tabs, newlines
 
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule.
 
+The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
+
 This rule currently ignores selectors containing comments.
 
 ## Options

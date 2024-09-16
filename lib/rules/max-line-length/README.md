@@ -12,6 +12,8 @@ Lines that exceed the maximum length but contain no whitespace (other than at th
 
 When evaluating the line length, the arguments of any `url(...)` functions are excluded from the calculation, because typically you have no control over the length of these arguments. This means that long `url()` functions should not contribute to problems.
 
+The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
+
 ## Options
 
 `int`: Maximum number of characters allowed.
