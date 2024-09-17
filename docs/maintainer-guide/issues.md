@@ -68,7 +68,7 @@ That fixes a bug in a rule:
 ```md
 I've labeled the issue as ready to implement. Please consider [contributing](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/CONTRIBUTING.md) if you have time.
 
-There are [steps on how to fix a bug in a rule](../developer-guide/rules#fix-a-bug-in-a-rule) in the Developer guide.
+There are [steps on how to fix a bug in a rule](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/docs/developer-guide/rules.md#fix-a-bug-in-a-rule) in the Developer guide.
 ```
 
 That adds a new option to a rule:
@@ -76,7 +76,7 @@ That adds a new option to a rule:
 ```md
 I've labeled the issue as ready to implement. Please consider [contributing](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/CONTRIBUTING.md) if you have time.
 
-There are [steps on how to add a new option](../developer-guide/rules#add-an-option-to-a-rule) in the Developer guide.
+There are [steps on how to add a new option](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/docs/developer-guide/rules.md#add-an-option-to-a-rule) in the Developer guide.
 ```
 
 That adds a new rule:
@@ -84,7 +84,7 @@ That adds a new rule:
 ```md
 I've labeled the issue as ready to implement. Please consider [contributing](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/CONTRIBUTING.md) if you have time.
 
-There are [steps on how to add a new rule](../developer-guide/rules#add-a-rule) in the Developer guide.
+There are [steps on how to add a new rule](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/docs/developer-guide/rules.md#add-a-rule) in the Developer guide.
 ```
 
 That is another type of improvement:
