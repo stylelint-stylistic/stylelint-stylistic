@@ -10,4 +10,9 @@ export default [
 		},
 	},
 	...firefoxicEslintConfig,
+	{
+		rules: {
+			'prefer-let/prefer-let': `off`,
+		},
+	},
 ]
