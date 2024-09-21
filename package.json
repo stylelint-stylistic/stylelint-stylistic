@@ -60,6 +60,7 @@
 		"postcss-html": "^1.7.0",
 		"postcss-less": "^6.0.0",
 		"postcss-scss": "^4.0.9",
+		"postcss-styled-syntax": "^0.6.4",
 		"stylelint-test-rule-node": "^0.3.0"
 	},
 	"keywords": [

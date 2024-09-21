@@ -31,7 +31,7 @@ importers:
         version: 0.1.0
       stylelint:
         specifier: ^16.8.2
-        version: 16.8.2
+        version: 16.8.2(typescript@5.6.2)
     devDependencies:
       '@firefoxic/eslint-config':
         specifier: ^3.0.1
@@ -60,9 +60,12 @@ importers:
       postcss-scss:
         specifier: ^4.0.9
         version: 4.0.9(postcss@8.4.41)
+      postcss-styled-syntax:
+        specifier: ^0.6.4
+        version: 0.6.4(postcss@8.4.41)
       stylelint-test-rule-node:
         specifier: ^0.3.0
-        version: 0.3.0(stylelint@16.8.2)
+        version: 0.3.0(stylelint@16.8.2(typescript@5.6.2))
 
 packages:
 
@@ -700,6 +703,12 @@ packages:
     resolution: {integrity: sha512-Q8qQfPiZ+THO/3ZrOrO0cJJKfpYCagtMUkXbnEfmgUjwXg6z/WBeOyS9APBBPCTSiDV+s4SwQGu8yFsiMRIudg==}
     engines: {node: '>=4'}
 
+  postcss-styled-syntax@0.6.4:
+    resolution: {integrity: sha512-uWiLn+9rKgIghUYmTHvXMR6MnyPULMe9Gv3bV537Fg4FH6CA6cn21WMjKss2Qb98LUhT847tKfnRGG3FhSOgUQ==}
+    engines: {node: '>=14.17'}
+    peerDependencies:
+      postcss: ^8.4.21
+
   postcss-value-parser@4.2.0:
     resolution: {integrity: sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ==}
 
@@ -824,6 +833,11 @@ packages:
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
     engines: {node: '>= 0.8.0'}
+
+  typescript@5.6.2:
+    resolution: {integrity: sha512-NW8ByodCSNCwZeghjN3o+JX5OFH0Ojg6sadjEKY4huZ52TqbJTJnDo5+Tw98lSy63NZvi4n+ez5m2u5d4PkZyw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
 
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
@@ -1049,12 +1063,14 @@ snapshots:
 
   concat-map@0.0.1: {}
 
-  cosmiconfig@9.0.0:
+  cosmiconfig@9.0.0(typescript@5.6.2):
     dependencies:
       env-paths: 2.2.1
       import-fresh: 3.3.0
       js-yaml: 4.1.0
       parse-json: 5.2.0
+    optionalDependencies:
+      typescript: 5.6.2
 
   cross-spawn@7.0.3:
     dependencies:
@@ -1443,6 +1459,11 @@ snapshots:
       cssesc: 3.0.0
       util-deprecate: 1.0.2
 
+  postcss-styled-syntax@0.6.4(postcss@8.4.41):
+    dependencies:
+      postcss: 8.4.41
+      typescript: 5.6.2
+
   postcss-value-parser@4.2.0: {}
 
   postcss@8.4.41:
@@ -1507,11 +1528,11 @@ snapshots:
 
   style-search@0.1.0: {}
 
-  stylelint-test-rule-node@0.3.0(stylelint@16.8.2):
+  stylelint-test-rule-node@0.3.0(stylelint@16.8.2(typescript@5.6.2)):
     dependencies:
-      stylelint: 16.8.2
+      stylelint: 16.8.2(typescript@5.6.2)
 
-  stylelint@16.8.2:
+  stylelint@16.8.2(typescript@5.6.2):
     dependencies:
       '@csstools/css-parser-algorithms': 3.0.1(@csstools/css-tokenizer@3.0.1)
       '@csstools/css-tokenizer': 3.0.1
@@ -1520,7 +1541,7 @@ snapshots:
       '@dual-bundle/import-meta-resolve': 4.1.0
       balanced-match: 2.0.0
       colord: 2.9.3
-      cosmiconfig: 9.0.0
+      cosmiconfig: 9.0.0(typescript@5.6.2)
       css-functions-list: 3.2.2
       css-tree: 2.3.1
       debug: 4.3.6
@@ -1588,6 +1609,8 @@ snapshots:
   type-check@0.4.0:
     dependencies:
       prelude-ls: 1.2.1
+
+  typescript@5.6.2: {}
 
   uri-js@4.4.1:
     dependencies:
