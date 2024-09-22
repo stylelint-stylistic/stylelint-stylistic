@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 - The `messageArgs` to 16 rules for custom message arguments. See [stylelint documentation](https://stylelint.io/user-guide/configure/#message) for details.
 
+### Fixed
+
+- Calculation of indentation using `postcss-styled-syntax` custom syntax ([#41](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/41)) ([@MorevM](https://github.com/MorevM)).
+
 ## [3.0.1] — 2024–08–18
 
 ### Fixed
