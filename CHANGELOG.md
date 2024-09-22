@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ### Fixed
 
-- Calculation of indentation using `postcss-styled-syntax` custom syntax
+- Calculation of indentation using `postcss-styled-syntax` custom syntax ([#41](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/41)) ([@MorevM](https://github.com/MorevM)).
 
 ## [3.0.1] — 2024–08–18
 
