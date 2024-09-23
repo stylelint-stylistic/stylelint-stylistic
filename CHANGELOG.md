@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+## [3.1.0] — 2024–09–23
+
 ### Added
 
 - The `messageArgs` to 16 rules for custom message arguments. See [stylelint documentation](https://stylelint.io/user-guide/configure/#message) for details.
@@ -235,7 +237,8 @@ No meaningful changes.
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v3.0.1...HEAD
+[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v3.0.1...v3.1.0
 [3.0.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v2.1.3...v3.0.0
 [2.1.3]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v2.1.2...v2.1.3
