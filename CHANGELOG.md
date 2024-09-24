@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
-## [3.1.0] — 2024–09–23
+## [3.1.0] — 2024–09–23
 
 ### Added
 
@@ -17,25 +17,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 - Calculation of indentation using `postcss-styled-syntax` custom syntax ([#41](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/41)) ([@MorevM](https://github.com/MorevM)).
 
-## [3.0.1] — 2024–08–18
+## [3.0.1] — 2024–08–18
 
 ### Fixed
 
 - The `context.fix`, which is deprecated in `stylelint@16.8.2`, is no longer used. Previously, attempts to update `stylelint` to `16.8.2` version resulted in multiple DeprecationWarning messages ([#37](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/37)).
 
-## [3.0.0] — 2024–07–30
+## [3.0.0] — 2024–07–30
 
 ### Changed
 
 - The plugin now requires `stylelint` version `16.8.0` or higher.
 
-## [2.1.3] — 2024–07–29
+## [2.1.3] — 2024–07–29
 
 ### Fixed
 
 - Dependencies are now updated, which fixes test fails ([#29](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/29)) ([@ybiquitous](https://github.com/ybiquitous)).
 
-## [2.1.2] — 2024–04–28
+## [2.1.2] — 2024–04–28
 
 ### Fixed
 
@@ -60,9 +60,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 - The repository renamed to `stylelint-stylistic` and moved to the organization of the same name.
 - The plugin is published in `npm` under the new name `@stylistic/stylelint-plugin`. Therefore, you should:
-- change the former plugin name `stylelint-codeguide` to the new one in the config,
-- remove the old `stylelint-codeguide` package from dependencies
-- install the new `@stylistic/stylelint-plugin` package.
+	- change the former plugin name `stylelint-codeguide` to the new one in the config,
+	- remove the old `stylelint-codeguide` package from dependencies
+	- install the new `@stylistic/stylelint-plugin` package.
 - The namespace of plugin rules has been renamed. Therefore, you should change the rules prefix from `codeguide/` to `@stylistic/` in the config.
 
 ## [1.0.2] — 2023–12–12
