@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+### Fixed
+
+- Disable indentation checking for property values that use dynamic expressions when `postcss-styled-syntax` is used.
+
 ## [3.1.0] — 2024–09–23
 
 ### Added
