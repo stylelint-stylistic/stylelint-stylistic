@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ### Fixed
 
-- Disable indentation checking for property values that use dynamic expressions when `postcss-styled-syntax` is used.
+- Disable indentation checking for property values that use dynamic expressions when `postcss-styled-syntax` is used ([#44](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/44)) ([@MorevM](https://github.com/MorevM)).
 
 ## [3.1.0] — 2024–09–23
 
