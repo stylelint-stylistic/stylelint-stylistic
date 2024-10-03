@@ -1,42 +1,27 @@
 # Performing releases
 
-1. Create a [new issue](https://github.com/stylelint/stylelint/issues/new?title=Release+%7Bversion%7D&labels=status%3A+needs+discussion) to announce the planned release:
-   - include the [template checklist](#new-release-issue-template)
-2. If necessary, test `main` locally in the:
-   1. [`stylelint/stylelint-config-recommended`](https://github.com/stylelint/stylelint-config-recommended)
-   2. [`stylelint/stylelint-config-standard`](https://github.com/stylelint/stylelint-config-standard)
-   3. [`stylelint/stylelint.io`](https://github.com/stylelint/stylelint.io)
-3. Release Stylelint:
-   1. If necessary, reorder the changelog entries in the "Prepare release" pull request so that the widest-reaching changes come first.
-   2. Merge the “Prepare release” pull request.
-   3. Open a terminal window in the `stylelint` repository.
-   4. Run `npm run release`.
-   5. Select the version from the [`np`](https://github.com/sindresorhus/np) prompt that matches the one in the changelog.
-   6. Confirm the publishing of the package to [www.npmjs.com/package/stylelint](https://www.npmjs.com/package/stylelint).
-   7. Confirm the creation of the release at [github.com/stylelint/stylelint/releases](https://github.com/stylelint/stylelint/releases).
-4. If necessary, release `stylelint-config-*`:
-   1. Change to the `stylelint-config-*` repository.
-   2. Repeat steps 5 to 8 above for that repository.
-5. Update the website:
-   1. Change to the `stylelint.io` repository.
-   2. Run `npm install https://github.com/stylelint/stylelint/tarball/${new_version} --save-dev` (replacing `${new_version}` with the version number, e.g. `14.13.2`).
-   3. Run `npm test`.
-   4. Commit these changes.
-   5. Push these changes.
-   6. Confirm the deployment of the update to [stylelint.io](https://stylelint.io).
-6. Check that [stylelint.io/demo](https://stylelint.io/demo) installs the latest Stylelint and config versions.
-7. Compose a tweet that:
-   - announces the release
-   - communicates what has changed
-   - links to the appropriate heading in the changelog on [stylelint.io](https://stylelint.io)
+> [!IMPORTANT]
+> Releasing a new version makes sense only when there are changes that are significant for users. Therefore, the **Unreleased** section of the [CHANGELOG.md](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/CHANGELOG.md) in the `main` branch should not be empty.
 
-## New release issue template
+To release a new version:
 
-```markdown
-- [ ] stylelint release
-- [ ] stylelint-config-recommended update/release
-- [ ] stylelint-config-standard update/release
-- [ ] stylelint.io update
-- [ ] stylelint-demo check
-- [ ] tweet
-```
+1. Create a pull request from the `main` branch to the `release` branch.
+2. After agreement with the other team members, [“Rebase and merge”](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges#rebase-and-merge-your-commits) this pull request. This will trigger the GitHub Action for the release.
+3. Wait for the successful completion of the action. Success means that:
+
+	- In the new commit (with the new version number in the title), the package version in `package.json` and `CHANGELOG.md` has been updated.
+	- This commit has a tag with the version number, and the `main` and `release` branches have been updated.
+	- Release notes for the new version have appeared in the [Releases](https://github.com/stylistic-stylelint/stylistic-stylelint/releases).
+	- The new version of the package has been published on [npmjs.org](https://www.npmjs.com/package/@stylistic/stylelint-plugin).
+4. If the automation fails, check the [GitHub Actions logs](https://github.com/stylelint-stylistic/stylelint-stylistic/actions/workflows/release.yaml) for troubleshooting.
+
+If necessary, release [`@stylistic/stylelint-config`](https://github.com/stylelint-stylistic/stylelint-config/).
+
+> [!NOTE]
+> The release level is determined automatically based on the presence of certain subsections in the **Unreleased** section of the changelog:
+>
+> - If there is **“Changed”** (with breaking changes) — it is always _major_, regardless of the presence of “Added” and “Fixed”.
+> - If there is **“Added”** (with new features) — it is _minor_, regardless of the presence of “Fixed”.
+> - If there is only **“Fixed”** (with bug fixes) — it is _patch_.
+>
+> This automation is not yet designed for alpha, beta, rc, and other pre-releases. In such rare cases, publication is done manually and locally.
