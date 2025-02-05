@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+## [3.1.2] — 2025–02–05
+
 ### Fixed
 
 - An explicit end position is now passed to all `report` calls. \
@@ -253,7 +255,8 @@ No meaningful changes.
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v3.1.1...HEAD
+[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v3.1.2...HEAD
+[3.1.2]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v3.1.1...v3.1.2
 [3.1.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v3.0.1...v3.1.0
 [3.0.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v3.0.0...v3.0.1
