@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ### Fixed
 
+- `stylelint` has been moved from `dependencies` to `devDependencies`. This may potentially fix some errors (see [Stylelint's documentation regarding `peerDependencies`](https://stylelint.io/developer-guide/plugins#peer-dependencies) and [PRs that explain the motivation behind this decision](https://github.com/stylelint/stylelint/issues/2812)).
 - `postcss` has been moved from `devDependencies` to `dependencies`. This fixes the “Cannot find package `postcss`” and “Named export `Input` not found” error in some environments.
 
 ## [3.1.2] — 2025–02–05
