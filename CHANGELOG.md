@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+### Fixed
+
+- `postcss` has been moved from `devDependencies` to `dependencies`. This fixes the “Cannot find package `postcss`” and “Named export `Input` not found” error in some environments.
+
 ## [3.1.2] — 2025–02–05
 
 ### Fixed
