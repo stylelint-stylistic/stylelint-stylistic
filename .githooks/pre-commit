@@ -1,4 +1,3 @@
 #!/bin/sh
-git stash -ku
-trap "git stash pop" EXIT
-pnpm test
+
+pnpm exec lint-staged

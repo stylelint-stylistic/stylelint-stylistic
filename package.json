@@ -40,7 +40,7 @@
 	"scripts": {
 		"prepare": "git config core.hooksPath .githooks",
 		"lint": "eslint",
-		"pretest": "pnpm lint --cache",
+		"pretest": "pnpm lint",
 		"test": "node --test --test-reporter dot",
 		"test:coverage": "node --test --experimental-test-coverage",
 		"test:watch": "node --test --watch",
@@ -54,6 +54,7 @@
 		"@firefoxic/update-changelog": "^1.0.0",
 		"common-tags": "^1.8.2",
 		"eslint": "^9.29.0",
+		"lint-staged": "^16.1.2",
 		"postcss-html": "^1.8.0",
 		"postcss-less": "^6.0.0",
 		"postcss-scss": "^4.0.9",
