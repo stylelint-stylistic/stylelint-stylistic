@@ -49,7 +49,6 @@
 		"postversion": "pnpm publish --provenance --access public --no-git-checks",
 		"postpublish": "git push --follow-tags"
 	},
-	"packageManager": "pnpm@9.7.1",
 	"devDependencies": {
 		"@firefoxic/eslint-config": "^3.0.1",
 		"@firefoxic/update-changelog": "^0.2.0",
