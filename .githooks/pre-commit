@@ -1,3 +1,37 @@
 #!/bin/sh
 
-pnpm exec lint-staged
+set -e
+
+if git rev-parse --verify HEAD >/dev/null 2>&1
+then
+	against=HEAD
+else
+	against=$(git hash-object -t tree /dev/null)
+fi
+
+git diff-index --check --cached "$against" --
+
+git stash -ku --quiet
+trap "git stash pop --quiet" EXIT
+
+changed_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|ts)$') || true
+
+if [ -z "$changed_files" ]; then
+	exit 0
+fi
+
+pnpm exec eslint $changed_files
+
+test_dirs=$(echo "$changed_files" | xargs -n1 dirname | sort -u)
+
+test_failed=0
+
+for dir in $test_dirs; do
+	if ls "$dir"/*.test.js >/dev/null 2>&1; then
+		if ! node --test --test-reporter dot "$dir"/*.test.js; then
+			test_failed=1
+		fi
+	fi
+done
+
+exit $test_failed
