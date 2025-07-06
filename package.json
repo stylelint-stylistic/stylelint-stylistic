@@ -25,15 +25,15 @@
 		"node": "^18.12 || >=20.9"
 	},
 	"peerDependencies": {
-		"stylelint": "^16.8.0"
+		"stylelint": "^16.22.0"
 	},
 	"dependencies": {
-		"@csstools/css-parser-algorithms": "^3.0.1",
-		"@csstools/css-tokenizer": "^3.0.1",
-		"@csstools/media-query-list-parser": "^3.0.1",
+		"@csstools/css-parser-algorithms": "^3.0.5",
+		"@csstools/css-tokenizer": "^3.0.4",
+		"@csstools/media-query-list-parser": "^4.0.3",
 		"is-plain-object": "^5.0.0",
-		"postcss": "^8.4.41",
-		"postcss-selector-parser": "^6.1.2",
+		"postcss": "^8.5.6",
+		"postcss-selector-parser": "^7.1.0",
 		"postcss-value-parser": "^4.2.0",
 		"style-search": "^0.1.0"
 	},
@@ -53,12 +53,12 @@
 		"@firefoxic/eslint-config": "^5.0.0",
 		"@firefoxic/update-changelog": "^1.0.0",
 		"common-tags": "^1.8.2",
-		"eslint": "^9.29.0",
+		"eslint": "^9.31.0",
 		"postcss-html": "^1.8.0",
 		"postcss-less": "^6.0.0",
 		"postcss-scss": "^4.0.9",
-		"postcss-styled-syntax": "^0.6.4",
-		"stylelint": "^16.8.0",
+		"postcss-styled-syntax": "^0.7.1",
+		"stylelint": "16.22.0",
 		"stylelint-test-rule-node": "^0.4.0"
 	},
 	"keywords": [
