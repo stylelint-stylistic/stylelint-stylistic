@@ -17,9 +17,6 @@ importers:
       '@csstools/media-query-list-parser':
         specifier: ^4.0.3
         version: 4.0.3(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)
-      is-plain-object:
-        specifier: ^5.0.0
-        version: 5.0.0
       postcss:
         specifier: ^8.5.6
         version: 8.5.6
