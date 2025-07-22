@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+## [4.0.0] — 2025–07–22
+
 ### Changed
 
 - The plugin now requires `stylelint` version `16.22.0` or higher.
@@ -266,7 +268,8 @@ No meaningful changes.
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v3.1.3...HEAD
+[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v4.0.0...HEAD
+[4.0.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v3.1.3...v4.0.0
 [3.1.3]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v3.1.2...v3.1.3
 [3.1.2]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v3.1.1...v3.1.2
 [3.1.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v3.1.0...v3.1.1
