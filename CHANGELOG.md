@@ -7,6 +7,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+### Fixed
+
+- Multiline pseudos are now aligned correctly with the `@stylistic/indentation` rule.
+
+	**Before**:
+	```css
+	.foo:where(
+	:not(
+	    .bar,
+	    .baz
+	)
+	) {}
+	```
+
+	**Now**:
+	```css
+	.foo:where(
+	  :not(
+	    .bar,
+	    .baz
+	  )
+	) {}
+	```
+
 ## [4.0.0] — 2025–07–22
 
 ### Changed
