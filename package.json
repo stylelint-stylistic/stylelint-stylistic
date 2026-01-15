@@ -42,15 +42,10 @@
 		"pretest": "pnpm lint",
 		"test": "node --test --test-reporter dot",
 		"test:coverage": "node --test --experimental-test-coverage",
-		"test:watch": "node --test --watch",
-		"preversion": "pnpm test",
-		"version": "update-changelog",
-		"postversion": "pnpm publish --provenance --access public --no-git-checks",
-		"postpublish": "git push --follow-tags"
+		"test:watch": "node --test --watch"
 	},
 	"devDependencies": {
 		"@firefoxic/eslint-config": "^5.0.0",
-		"@firefoxic/update-changelog": "^1.0.0",
 		"common-tags": "^1.8.2",
 		"eslint": "^9.31.0",
 		"postcss-html": "^1.8.0",
