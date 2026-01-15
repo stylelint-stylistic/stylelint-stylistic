@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 - Multiline pseudos are now aligned correctly with the `@stylistic/indentation` rule.
 
 	**Before**:
+
 	```css
 	.foo:where(
 	:not(
@@ -22,6 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 	```
 
 	**Now**:
+
 	```css
 	.foo:where(
 	  :not(
