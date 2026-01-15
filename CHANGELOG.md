@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+### Changed
+
+- The plugin now requires:
+	- `stylelint` version `17.0.0` or higher
+	- `node.js` version `20.19.0` or higher
+
 ## [4.0.1] — 2026–01–15
 
 ### Fixed
