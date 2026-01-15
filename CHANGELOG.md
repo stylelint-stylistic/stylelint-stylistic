@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+## [4.0.1] — 2026–01–15
+
 ### Fixed
 
 - Multiline pseudos are now aligned correctly with the `@stylistic/indentation` rule.
@@ -294,7 +296,8 @@ No meaningful changes.
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v4.0.0...HEAD
+[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v4.0.1...HEAD
+[4.0.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v4.0.0...v4.0.1
 [4.0.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v3.1.3...v4.0.0
 [3.1.3]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v3.1.2...v3.1.3
 [3.1.2]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v3.1.1...v3.1.2
