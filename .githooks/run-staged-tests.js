@@ -13,9 +13,6 @@ let dirs = files
 let uniqueDirs = [...new Set(dirs)]
 
 for (let dir of uniqueDirs) {
-	try {
-		execSync(`node --test --test-reporter dot "${dir}/*.test.js"`, { stdio: `inherit` })
-	} catch {
-		process.exitCode = 1
-	}
+	try { execSync(`node --test --test-reporter dot "${dir}/*.test.js"`, { stdio: `inherit` }) }
+	catch { process.exitCode = 1 }
 }
