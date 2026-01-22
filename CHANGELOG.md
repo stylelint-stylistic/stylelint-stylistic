@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+## [5.0.1] — 2026–01–22
+
 ### Fixed
 
 - The `selector-pseudo-class-parentheses-space-inside` rule no longer triggers false positives in multiline pseudo-classes.
@@ -308,7 +310,8 @@ No meaningful changes.
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.0.0...HEAD
+[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.0.1...HEAD
+[5.0.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.0.0...v5.0.1
 [5.0.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v4.0.1...v5.0.0
 [4.0.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v4.0.0...v4.0.1
 [4.0.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v3.1.3...v4.0.0
