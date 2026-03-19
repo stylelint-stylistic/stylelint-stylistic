@@ -15,7 +15,6 @@
 		"max-lines": "off",
 		"max-lines-per-function": "off",
 		"no-inline-comments": "off",
-		"no-param-reassign": "off",
 		"no-undefined": "off",
 		"no-warning-comments": "off",
 		"unicorn/no-array-reduce": "off",
