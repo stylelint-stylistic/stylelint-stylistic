@@ -38,16 +38,16 @@
 	},
 	"scripts": {
 		"prepare": "git config core.hooksPath .githooks",
-		"lint": "eslint",
+		"lint": "oxlint",
 		"pretest": "pnpm lint",
 		"test": "node --test --test-reporter dot",
 		"test:coverage": "node --test --experimental-test-coverage",
 		"test:watch": "node --test --watch"
 	},
 	"devDependencies": {
-		"@firefoxic/eslint-config": "^6.0.1",
+		"@firefoxic/oxlint-config": "^0.3.1",
 		"common-tags": "^1.8.2",
-		"eslint": "^9.39.2",
+		"oxlint": "^1.56.0",
 		"postcss-html": "^1.8.1",
 		"postcss-less": "^6.0.0",
 		"postcss-scss": "^4.0.9",

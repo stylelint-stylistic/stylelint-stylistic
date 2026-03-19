@@ -1,0 +1,29 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"extends": [
+		"./node_modules/@firefoxic/oxlint-config/lib/syntactic.jsonc",
+		"./node_modules/@firefoxic/oxlint-config/lib/stylistic.jsonc",
+	],
+	"env": {
+		"node": true,
+	},
+	"rules": {
+		// Permanently disabled rules
+		"enough-is-enough/prefer-let": "off",
+		// Temporarily disabled rules
+		"complexity": "off",
+		"max-lines": "off",
+		"max-lines-per-function": "off",
+		"no-inline-comments": "off",
+		"no-param-reassign": "off",
+		"no-undefined": "off",
+		"no-warning-comments": "off",
+		"jsdoc/check-tag-names": "off",
+		"jsdoc/require-param": "off",
+		"jsdoc/require-param-description": "off",
+		"jsdoc/require-property-description": "off",
+		"jsdoc/require-returns": "off",
+		"jsdoc/require-returns-description": "off",
+		"unicorn/no-array-reduce": "off",
+	},
+}
