@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+### Added
+
+- The `no-multiple-whitespaces` rule, which disallows multiple whitespaces between property values and function arguments.
+
 ### Fixed
 
 - The dependencies have now been updated to versions that include security fixes.
