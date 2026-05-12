@@ -1,0 +1,20 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"esModuleInterop": true,
+		"strict": true,
+		"strictNullChecks": true,
+		"noImplicitAny": true,
+		"forceConsistentCasingInFileNames": true,
+		"outDir": "./dist",
+		"checkJs": false,
+		"allowJs": true,
+		"skipLibCheck": true,
+		"types": ["vitest/globals"],
+	},
+	"include": [
+		"**/*.ts",
+	],
+}

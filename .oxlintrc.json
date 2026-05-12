@@ -7,6 +7,10 @@
 	"env": {
 		"node": true,
 	},
+	"globals": {
+		"createTestRule": "readonly",
+		"createTestRuleConfig": "readonly",
+	},
 	"rules": {
 		// Permanently disabled rules
 		"enough-is-enough/prefer-let": "off",
