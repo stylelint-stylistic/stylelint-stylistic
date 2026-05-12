@@ -23,6 +23,6 @@ jobs:
         with:
           node-version-file: package.json
           cache: pnpm
-      - run: pnpm install && pnpm add -D @reporters/github
+      - run: pnpm install
       - run: pnpm lint
-      - run: node --test --test-reporter=@reporters/github --test-reporter-destination=stdout --test-reporter=spec --test-reporter-destination=stdout
+      - run: pnpm test --reporter=github-actions --reporter=default
