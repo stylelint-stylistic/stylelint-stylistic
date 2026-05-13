@@ -9,6 +9,7 @@ const { createTestRule, createTestRuleConfig } = createTestUtils({
 	plugins,
 	testCaseWithoutDescriptionAppearance: `case-index`,
 	testGroupWithoutDescriptionAppearance: `line-in-file`,
+	contextNewlineFallback: `lf`,
 })
 
 globalThis.createTestRule = createTestRule
