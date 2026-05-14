@@ -40,20 +40,23 @@
 		"prepare": "git config core.hooksPath .githooks",
 		"lint": "oxlint",
 		"pretest": "pnpm lint",
-		"test": "node --test --test-reporter dot",
-		"test:coverage": "node --test --experimental-test-coverage",
-		"test:watch": "node --test --watch"
+		"typecheck": "tsc --noEmit",
+		"test": "vitest",
+		"test:coverage": "vitest --coverage",
+		"test:watch": "vitest --watch"
 	},
 	"devDependencies": {
 		"@firefoxic/oxlint-config": "^0.3.1",
-		"common-tags": "^1.8.2",
+		"@morev/stylelint-testing-library": "^1.1.0",
+		"@vitest/coverage-v8": "4.1.5",
 		"oxlint": "^1.57.0",
 		"postcss-html": "^1.8.1",
 		"postcss-less": "^6.0.0",
 		"postcss-scss": "^4.0.9",
 		"postcss-styled-syntax": "^0.7.1",
 		"stylelint": "^17.6.0",
-		"stylelint-test-rule-node": "^1.1.0"
+		"typescript": "^6.0.3",
+		"vitest": "^4.1.5"
 	},
 	"keywords": [
 		"codeguide",
