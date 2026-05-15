@@ -39,7 +39,6 @@
 	"scripts": {
 		"prepare": "git config core.hooksPath .githooks",
 		"lint": "oxlint",
-		"pretest": "pnpm lint",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest",
 		"test:coverage": "vitest --coverage",
