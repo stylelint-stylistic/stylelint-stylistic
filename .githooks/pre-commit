@@ -30,7 +30,7 @@ test_failed=0
 
 for dir in $test_dirs; do
 	if ls "$dir"/*.test.js >/dev/null 2>&1; then
-		if ! node --test --test-reporter dot "$dir"/*.test.js; then
+		if ! vitest "$dir"/*.test.js; then
 			test_failed=1
 		fi
 	fi
