@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+### Fixed
+
+- An exception for an empty custom property value has been added to the `declaration-block-semicolon-newline-before` rule: the `--custom-prop: ;` and `--custom-prop:;` variants are now considered valid (see [#50](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/50)).
+
 ## [5.1.0] — 2026–03–28
 
 ### Added
