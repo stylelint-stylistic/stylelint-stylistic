@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+## [5.2.0] — 2026–05–20
+
 ### Added
 
 - The `declaration-block-semicolon-newline-before` rule is now autofixable.
@@ -328,7 +330,8 @@ No meaningful changes.
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.1.0...HEAD
+[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.2.0...HEAD
+[5.2.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.1.0...v5.2.0
 [5.1.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.0.1...v5.1.0
 [5.0.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.0.0...v5.0.1
 [5.0.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v4.0.1...v5.0.0
