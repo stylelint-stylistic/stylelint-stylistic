@@ -21,9 +21,6 @@
 		"lib/**/*.js",
 		"!**/*.test.js"
 	],
-	"engines": {
-		"node": ">=20.19.0"
-	},
 	"peerDependencies": {
 		"stylelint": "^17.6.0"
 	},
@@ -47,7 +44,7 @@
 	"devDependencies": {
 		"@firefoxic/oxlint-config": "^0.3.1",
 		"@morev/stylelint-testing-library": "^1.1.0",
-		"@vitest/coverage-v8": "4.1.5",
+		"@vitest/coverage-v8": "4.1.6",
 		"oxlint": "^1.57.0",
 		"postcss-html": "^1.8.1",
 		"postcss-less": "^6.0.0",
@@ -55,7 +52,19 @@
 		"postcss-styled-syntax": "^0.7.1",
 		"stylelint": "^17.6.0",
 		"typescript": "^6.0.3",
-		"vitest": "^4.1.5"
+		"vitest": "^4.1.6"
+	},
+	"devEngines": {
+		"runtime": {
+			"name": "node",
+			"version": ">=26.2",
+			"onFail": "download"
+		},
+		"packageManager": {
+			"name": "pnpm",
+			"version": ">=11",
+			"onFail": "download"
+		}
 	},
 	"keywords": [
 		"codeguide",

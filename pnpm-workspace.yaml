@@ -1,7 +1,10 @@
-engineStrict: true
 gitBranchLockfile: true
+
+gitChecks: false
+
 mergeGitBranchLockfilesBranchPattern:
   - main
-  - release*
-shellEmulator: true
-verifyDepsBeforeRun: install
+  - release-*
+
+registries:
+  default: https://registry.npmjs.org/
