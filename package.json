@@ -34,12 +34,8 @@
 		"style-search": "^0.1.0"
 	},
 	"scripts": {
-		"prepare": "git config core.hooksPath .githooks",
-		"lint": "oxlint",
-		"typecheck": "tsc --noEmit",
-		"test": "vitest",
-		"test:coverage": "vitest --coverage",
-		"test:watch": "vitest --watch"
+		"help": "make help",
+		"prepare": "make setup"
 	},
 	"devDependencies": {
 		"@firefoxic/oxlint-config": "^0.3.1",
