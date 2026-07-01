@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+## [5.2.1] — 2026–07–01
+
 ### Fixed
 
 - The protocol in the repository's metadata URL now meets current requirements ([#79](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/79)) ([@BowenMilner](https://github.com/BowenMilner)).
@@ -334,7 +336,8 @@ No meaningful changes.
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.2.0...HEAD
+[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.2.1...HEAD
+[5.2.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.2.0...v5.2.1
 [5.2.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.1.0...v5.2.0
 [5.1.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.0.1...v5.1.0
 [5.0.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.0.0...v5.0.1
