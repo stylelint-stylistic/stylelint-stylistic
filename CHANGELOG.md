@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+### Fixed
+
+- The protocol in the repository's metadata URL now meets current requirements ([#79](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/79)) ([@BowenMilner](https://github.com/BowenMilner)).
+
 ## [5.2.0] — 2026–05–20
 
 ### Added
