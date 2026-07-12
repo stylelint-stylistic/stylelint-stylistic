@@ -2,7 +2,6 @@
 
 [![License: MIT][license-image]][license-url]
 [![Changelog][changelog-image]][changelog-url]
-[![NPM version][npm-image]][npm-url]
 [![Test Status][test-image]][test-url]
 
 An updatable collection of stylistic rules for [Stylelint](https://github.com/stylelint/stylelint) (in plugin form).
@@ -59,9 +58,6 @@ ESLint deprecates stylistic rules, too. But you can continue to use them thanks 
 
 [changelog-url]: https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/CHANGELOG.md
 [changelog-image]: https://img.shields.io/badge/Change-log-limegreen
-
-[npm-url]: https://npmjs.org/package/@stylistic/stylelint-plugin
-[npm-image]: https://badge.fury.io/js/@stylistic%2Fstylelint-plugin.svg
 
 [test-url]: https://github.com/stylelint-stylistic/stylelint-stylistic/actions
 [test-image]: https://github.com/stylelint-stylistic/stylelint-stylistic/actions/workflows/test.yaml/badge.svg?branch=main
