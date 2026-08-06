@@ -98,3 +98,43 @@ a {
     ,1)
 }
 ```
+
+## Optional secondary options
+
+### `ignoreFunctions: ["/regex/", /regex/, "non-regex"]`
+
+Ignore the commas of specified functions, including the commas of any function nested within them.
+
+Function names are matched as written, so use a case-insensitive regex (e.g. `"/^translate$/i"`) to also match other letter cases.
+
+For example, with `"always"`.
+
+Given:
+
+```json
+["translate", "/^rgba?$/"]
+```
+
+The following patterns are _not_ considered problems:
+
+```css
+a { transform: translate(1,1) }
+```
+
+```css
+a { color: rgba(0,0,0,0.5) }
+```
+
+```css
+a { transform: translate(min(1px,2px),1) }
+```
+
+The following patterns are still considered problems:
+
+```css
+a { transform: scale(1,1) }
+```
+
+```css
+a { background: linear-gradient(45deg,rgba(0,0,0,0.5)) }
+```
