@@ -105,7 +105,7 @@ a {
 
 Ignore the commas of specified functions, including the commas of any function nested within them.
 
-Function names are matched as written, so use a case-insensitive regex (e.g. `"/^translate$/i"`) to also match other letter cases.
+Function names are matched case-sensitively as written. Use a case-insensitive regex (e.g. `"/^translate$/i"`) to match other letter cases. This is important for custom functions like `--my-function()`, whose names are case-sensitive.
 
 For example, with `"always"`.
 
