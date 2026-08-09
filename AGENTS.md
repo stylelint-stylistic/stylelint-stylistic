@@ -74,4 +74,19 @@ The common indentation is stripped, so line numbers in `reject` cases count from
 - JSDoc on exported functions and rule bodies is load-bearing — `make check` type-checks JS via `tsconfig.json` (`allowJs`, `checkJs: false`, `strict`).
 - Rule names are `<thing>-<constraint>` (e.g. `color-hex-case`, `unit-case`); primary options should be explicit (`"lower"|"upper"`) rather than `always`/`never` where a noun works. Full rule-authoring conventions (options design, README format, message wording) live in `docs/developer-guide/rules.md`, adopted from Stylelint.
 - Adding a rule means touching four places: the rule dir, `lib/rules/index.js`, `docs/user-guide/rules.md`, and the `Unreleased` section of `CHANGELOG.md`.
-- `CHANGELOG.md` drives the release: `Unreleased → Changed` ⇒ major, `Added` ⇒ minor, only `Fixed` ⇒ patch (see `docs/maintainer-guide/releases.md`). Releases happen by merging `main` → `release`.
+
+## Changelog
+
+[CHANGELOG.md](CHANGELOG.md) is not a record of the work — it drives the release. `@firefoxic/release-it` reads the `## [Unreleased]` section and derives the bump from the first heading it finds there, in this order: `### Changed` ⇒ major, `### Added` ⇒ minor, `### Fixed` ⇒ patch. So a fix filed under `Changed` ships a major version. An empty `Unreleased` section aborts the release. Releases happen by merging `main` → `release`; a `release-<suffix>` branch publishes a prerelease under that suffix instead.
+
+Entries are written from the user's point of view, as “something **now** behaves like this”, not as a description of what was done. Never “added support for…” or “fixed a bug in…”. Name the subject first, then what is now true of it:
+
+```markdown
+- The plugin now requires `stylelint` version `17.0.0` or higher.
+- The `function-comma-newline-after` rule now has an additional `ignoreFunctions` option (see [#78](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/78)).
+- The `selector-pseudo-class-parentheses-space-inside` rule no longer triggers false positives in multiline pseudo-classes.
+```
+
+An optional sentence after that says what it means for the user — for a breaking change, what they will most likely have to fix; for a feature, what they can do with it now; for a fix, what they can now do without fear or which workaround they can drop. Where possible, end the entry with a link to the issue or PR in parentheses, plus the author's profile for outside contributions. Follow the surrounding entries: most of this file carries no links, and multi-part entries use a nested list rather than a long sentence.
+
+Purely internal changes — build tooling, test layout, CI — get no entry at all, since any entry forces a release.
