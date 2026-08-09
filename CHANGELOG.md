@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 - The `function-comma-newline-after` rule now has an additional `ignoreFunctions` option (see [#78](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/78)).
 - The `function-comma-newline-before` rule now has an additional `ignoreFunctions` option (see [#81](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/81)).
 - The `function-comma-space-after` rule now has an additional `ignoreFunctions` option (see [#82](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/82)).
+- The `function-comma-space-before` rule now has an additional `ignoreFunctions` option (see [#83](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/83)).
 
 ## [5.2.1] — 2026–07–01
 
