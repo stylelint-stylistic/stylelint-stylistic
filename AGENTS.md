@@ -4,28 +4,31 @@ This file provides guidance to coding agents when working with code in this 
 
 ## Commands
 
-All tasks go through the `Makefile` (there are no npm scripts besides `help` and `prepare`; `node_modules/.bin` is put on `PATH` by the Makefile):
+All tasks go through the `Makefile` (the only npm script is `help`, which itself calls `make help`; `node_modules/.bin` is put on `PATH` by the Makefile):
 
 ```shell
 make help                                     # list targets
-make setup                                    # install pnpm/deps, point core.hooksPath at .githooks
+make setup                                    # install deps, point core.hooksPath at .githooks
 make check                                    # tsc --noEmit (JSDoc-based type check)
-make lint                                     # oxlint (NOT eslint) — accepts FLAGS= and FILE=
-make test                                     # vitest, single run — accepts FLAGS= and FILE=
-make release                                  # lint + check + test, then @firefoxic/release-it
+make lint                                     # oxlint (NOT eslint) — accepts LINT_FLAGS= and FILE=
+make test                                     # vitest, single run — accepts TEST_FLAGS= and FILE=
+make prose                                    # bind function words in every Markdown file
+make prose-check                              # the same pass, writing nothing, failing on unbound prose
+make verify                                   # check + lint + test + prose-check
+make release                                  # verify, then @firefoxic/release-it
 ```
 
 Targeted runs:
 
 ```shell
-make test FILE=lib/rules/color-hex-case/index.test.js   # one rule's tests
-make test FLAGS="-t 'lower'"                            # filter by test name
-make test FLAGS=--watch                                 # watch (config sets watch: false)
-make test FLAGS=--coverage                              # coverage → ./.coverage
+make test FILE=lib/rules/color-hex-case/index.test.js        # one rule's tests
+make test TEST_FLAGS="-t 'lower'"                            # filter by test name
+make test TEST_FLAGS=--watch                                 # watch (config sets watch: false)
+make test TEST_FLAGS=--coverage                              # coverage → ./.coverage
 make lint FILE=lib/rules/color-hex-case
 ```
 
-CI (`.github/workflows/test.yaml`) runs `make setup`, `make check`, `make lint`, `make test` — match that order locally before pushing. The `pre-commit` hook lints staged `.js`/`.ts` files and runs the `*.test.js` files in their directories.
+CI (`.github/workflows/test.yaml`) runs `make setup` and then `make verify` — run `make verify` locally before pushing. The release workflow (`.github/workflows/release.yaml`) runs `make setup` and then `make release` on pushes to `release` and `release-*`. The `pre-commit` hook lints staged `.js`/`.ts` files and runs the `*.test.js` files in their directories.
 
 ## Architecture
 
