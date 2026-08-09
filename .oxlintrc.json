@@ -21,5 +21,6 @@
 		"no-inline-comments": "off",
 		"no-undefined": "off",
 		"no-warning-comments": "off",
+		"import/exports-last": "off",
 	},
 }

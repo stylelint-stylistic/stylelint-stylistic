@@ -28,37 +28,37 @@
 		"@csstools/css-parser-algorithms": "^4.0.0",
 		"@csstools/css-tokenizer": "^4.0.0",
 		"@csstools/media-query-list-parser": "^5.0.0",
-		"postcss": "^8.5.8",
-		"postcss-selector-parser": "^7.1.1",
+		"postcss": "^8.5.26",
+		"postcss-selector-parser": "^7.1.5",
 		"postcss-value-parser": "^4.2.0",
 		"style-search": "^0.1.0"
 	},
 	"scripts": {
-		"help": "make help",
-		"prepare": "make setup"
+		"help": "make help"
 	},
 	"devDependencies": {
-		"@firefoxic/oxlint-config": "^0.3.1",
+		"@firefoxic/oxlint-config": "^0.4.0",
 		"@morev/stylelint-testing-library": "^1.1.0",
-		"@vitest/coverage-v8": "4.1.6",
-		"oxlint": "^1.57.0",
-		"postcss-html": "^1.8.1",
+		"@types/node": "^26.2.0",
+		"@vitest/coverage-v8": "4.1.10",
+		"oxlint": "^1.77.0",
+		"postcss-html": "^2.0.0",
 		"postcss-less": "^6.0.0",
 		"postcss-scss": "^4.0.9",
-		"postcss-styled-syntax": "^0.7.1",
+		"postcss-styled-syntax": "^0.7.2",
 		"stylelint": "^17.6.0",
-		"typescript": "^6.0.3",
-		"vitest": "^4.1.6"
+		"typescript": "^7.0.2",
+		"vitest": "^4.1.10"
 	},
 	"devEngines": {
 		"runtime": {
 			"name": "node",
-			"version": ">=26.2",
+			"version": ">=26.7",
 			"onFail": "download"
 		},
 		"packageManager": {
 			"name": "pnpm",
-			"version": ">=11",
+			"version": ">=11.20",
 			"onFail": "download"
 		}
 	},
