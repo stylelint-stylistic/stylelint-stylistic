@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 ### Added
 
 - The `function-comma-newline-after` rule now has an additional `ignoreFunctions` option (see [#78](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/78)).
+- The `function-comma-newline-before` rule now has an additional `ignoreFunctions` option (see [#81](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/81)).
 
 ## [5.2.1] — 2026–07–01
 
