@@ -54,6 +54,20 @@ Vitest with `@morev/stylelint-testing-library`. `vitest.setup.ts` loads `lib/ind
 
 Rules must handle standard CSS only; non-standard syntax is filtered out through the `isStandardSyntax*` utils and tested there, not inside the rule.
 
+**Always enable `autoStripIndent`** in new and edited tests — `const testRule = createTestRule({ ruleName, autoStripIndent: true })` — and write multi-line `code` / `fixed` as indented template literals instead of `\n` escapes:
+
+```js
+{
+	code: `
+		a {
+			transform: scale(1,1);
+		}
+	`,
+},
+```
+
+The common indentation is stripped, so line numbers in `reject` cases count from the first non-empty line. Not every legacy test file has been migrated yet; migrate the file you touch, and re-run its tests, since enabling the flag changes the code of already-indented cases.
+
 ## Conventions
 
 - Code style is enforced by oxlint (`.oxlintrc.json` extending `@firefoxic/oxlint-config`) and `.editorconfig`: tabs, LF, final newline. Double quotes in `import` statements and object keys, **backticks for all other string literals**, `let` over `const` for bindings, function declarations over expressions, sorted import groups.
