@@ -1,6 +1,6 @@
 # unit-case
 
-Specify lowercase or uppercase for units.
+Specify lowercase or uppercase for units.
 
 ```css
     a { width: 10px; }
@@ -8,9 +8,9 @@ Specify lowercase or uppercase for units.
  *     These units */
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule.
 
-The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
+The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
 
 ## Options
 
@@ -18,7 +18,7 @@ The [`message` secondary option](https://stylelint.io/user-guide/configure/#mess
 
 ### `"lower"`
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a {
@@ -50,7 +50,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {
@@ -66,7 +66,7 @@ a {
 
 ### `"upper"`
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a {
@@ -98,7 +98,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {

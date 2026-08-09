@@ -1,6 +1,6 @@
 # function-comma-newline-after
 
-Require a newline or disallow whitespace after the commas of functions.
+Require a newline or disallow whitespace after the commas of functions.
 
 ```css
 a { transform: translate(1,
@@ -9,7 +9,7 @@ a { transform: translate(1,
  *             These commas */
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
 ## Options
 
@@ -17,9 +17,9 @@ The [`fix` option](https://stylelint.io/user-guide/options#fix) can automaticall
 
 ### `"always"`
 
-There _must always_ be a newline after the commas.
+There _must always_ be a newline after the commas.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { transform: translate(1,1) }
@@ -34,7 +34,7 @@ a { transform: translate(1
   ,1) }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {
@@ -45,16 +45,16 @@ a {
 
 ### `"always-multi-line"`
 
-There _must always_ be a newline after the commas in multi-line functions.
+There _must always_ be a newline after the commas in multi-line functions.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { transform: translate(1
   ,1) }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { transform: translate(1,1) }
@@ -73,16 +73,16 @@ a {
 
 ### `"never-multi-line"`
 
-There _must never_ be whitespace after the commas in multi-line functions.
+There _must never_ be whitespace after the commas in multi-line functions.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { transform: translate(1
   , 1) }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { transform: translate(1, 1) }
@@ -103,11 +103,11 @@ a {
 
 ### `ignoreFunctions: ["/regex/", /regex/, "non-regex"]`
 
-Ignore the commas of specified functions, including the commas of any function nested within them.
+Ignore the commas of specified functions, including the commas of any function nested within them.
 
-Function names are matched case-sensitively as written. Use a case-insensitive regex (e.g. `"/^translate$/i"`) to match other letter cases. This is important for custom functions like `--my-function()`, whose names are case-sensitive.
+Function names are matched case-sensitively as written. Use a case-insensitive regex (e.g. `"/^translate$/i"`) to match other letter cases. This is important for custom functions like `--my-function()`, whose names are case-sensitive.
 
-For example, with `"always"`.
+For example, with `"always"`.
 
 Given:
 
@@ -115,7 +115,7 @@ Given:
 ["translate", "/^rgba?$/"]
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { transform: translate(1,1) }
@@ -129,7 +129,7 @@ a { color: rgba(0,0,0,0.5) }
 a { transform: translate(min(1px,2px),1) }
 ```
 
-The following patterns are still considered problems:
+The following patterns are still considered problems:
 
 ```css
 a { transform: scale(1,1) }

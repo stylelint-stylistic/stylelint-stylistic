@@ -13,19 +13,19 @@ Specify indentation.
  * The indentation at these three points */
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
-The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
+The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
 
 ## Options
 
-`int|"tab"`, where `int` is the number of spaces
+`int|"tab"`, where `int` is the number of spaces
 
 ### `2`
 
-Always indent at-rules, rules, comments, declarations, inside parentheses and multi-line values by 2 spaces.
+Always indent at-rules, rules, comments, declarations, inside parentheses and multi-line values by 2 spaces.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @media print {
@@ -89,7 +89,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media print {
@@ -139,9 +139,9 @@ a {
 
 ### `baseIndentLevel: int|"auto"`
 
-By default, the indent level of the CSS code block in non-CSS-like files is determined by the shortest indent of non-empty line. The setting `baseIndentLevel` allows you to define a relative indent level based on CSS code block opening or closing line.
+By default, the indent level of the CSS code block in non-CSS-like files is determined by the shortest indent of non-empty line. The setting `baseIndentLevel` allows you to define a relative indent level based on CSS code block opening or closing line.
 
-For example, with `[ 2, { baseIndentLevel: 1 } ]`, CSS should be indented 1 levels higher than `<style>` tag:
+For example, with `[ 2, { baseIndentLevel: 1 } ]`, CSS should be indented 1 levels higher than `<style>` tag:
 
 ```html
 <!doctype html>
@@ -158,11 +158,11 @@ For example, with `[ 2, { baseIndentLevel: 1 } ]`, CSS should be indented 1 leve
 
 ### `indentInsideParens: "twice"|"once-at-root-twice-in-block"`
 
-By default, _one extra_ indentation (of your specified type) is expected after newlines inside parentheses, and the closing parenthesis is expected to have no extra indentation.
+By default, _one extra_ indentation (of your specified type) is expected after newlines inside parentheses, and the closing parenthesis is expected to have no extra indentation.
 
-If you would like to change the quantity of extra indentation inside parentheses, use this option.
+If you would like to change the quantity of extra indentation inside parentheses, use this option.
 
-`"twice"` means you expect two extra indentations (of your specified type) after newlines inside parentheses, and expect the closing parenthesis to have one extra indentation. For example:
+`"twice"` means you expect two extra indentations (of your specified type) after newlines inside parentheses, and expect the closing parenthesis to have one extra indentation. For example:
 
 ```css
 a {
@@ -175,7 +175,7 @@ a {
 }
 ```
 
-`"once-at-root-twice-in-block"` means two things: You want the behavior of `"once"`, as documented above, when the parenthetical expression is part of a node that is an immediate descendent of the root — i.e. not inside a block. And you want the behavior of `"twice"`, as documented above, when the parenthetical expression is part of a node that is inside a block. For example:
+`"once-at-root-twice-in-block"` means two things: You want the behavior of `"once"`, as documented above, when the parenthetical expression is part of a node that is an immediate descendent of the root — i.e. not inside a block. And you want the behavior of `"twice"`, as documented above, when the parenthetical expression is part of a node that is inside a block. For example:
 
 ```css
 @import (
@@ -194,11 +194,11 @@ a {
 
 ### `indentClosingBrace: true|false`
 
-If `true`, the closing brace of a block (rule or at-rule) will be expected at the same indentation level as the block's inner nodes.
+If `true`, the closing brace of a block (rule or at-rule) will be expected at the same indentation level as the block's inner nodes.
 
-For example, with `indentClosingBrace: true`.
+For example, with `indentClosingBrace: true`.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a {
@@ -214,7 +214,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {
@@ -232,11 +232,11 @@ a {
 
 ### `except: ["block", "param", "value"]`
 
-Do _not_ indent for these things.
+Do _not_ indent for these things.
 
-For example, with `2`.
+For example, with `2`.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @media print,
@@ -249,7 +249,7 @@ The following patterns are considered problems:
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media print,
@@ -266,11 +266,11 @@ top right;
 
 #### `"inside-parens"`
 
-Ignore the indentation inside parentheses.
+Ignore the indentation inside parentheses.
 
-For example, with `2`.
+For example, with `2`.
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {
@@ -285,11 +285,11 @@ a {
 
 #### `"param"`
 
-Ignore the indentation of at-rule params.
+Ignore the indentation of at-rule params.
 
-For example, with `2`.
+For example, with `2`.
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media print,
@@ -300,11 +300,11 @@ The following patterns are _not_ considered problems:
 
 #### `"value"`
 
-Ignore the indentation of values.
+Ignore the indentation of values.
 
-For example, with `2`.
+For example, with `2`.
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {

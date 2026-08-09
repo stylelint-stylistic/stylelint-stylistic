@@ -1,6 +1,6 @@
 # block-closing-brace-empty-line-before
 
-Require or disallow an empty line before the closing brace of blocks.
+Require or disallow an empty line before the closing brace of blocks.
 
 ```css
 a {
@@ -11,7 +11,7 @@ a {
  * This line */
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
 ## Options
 
@@ -19,7 +19,7 @@ The [`fix` option](https://stylelint.io/user-guide/options#fix) can automaticall
 
 ### `always-multi-line`
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a {
@@ -27,7 +27,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {
@@ -42,7 +42,7 @@ a { color: pink; }
 
 ### `never`
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a {
@@ -51,7 +51,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {
@@ -67,11 +67,11 @@ a { color: pink; }
 
 ### `except: ["after-closing-brace"]`
 
-When a rule is nested, `after-closing-brace` brace will reverse the primary option.
+When a rule is nested, `after-closing-brace` brace will reverse the primary option.
 
-For example, with `"never"` and `except: ["after-closing-brace"]`:
+For example, with `"never"` and `except: ["after-closing-brace"]`:
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @media print {
@@ -100,7 +100,7 @@ The following patterns are considered problems:
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media print {
@@ -139,9 +139,9 @@ The following patterns are _not_ considered problems:
 }
 ```
 
-For example, with `"always-multi-line"` and `except: ["after-closing-brace"]`:
+For example, with `"always-multi-line"` and `except: ["after-closing-brace"]`:
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @media print {
@@ -176,7 +176,7 @@ The following patterns are considered problems:
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media print {

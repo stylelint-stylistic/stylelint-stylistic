@@ -1,6 +1,6 @@
 # media-query-list-comma-newline-before
 
-Require a newline or disallow whitespace before the commas of media query lists.
+Require a newline or disallow whitespace before the commas of media query lists.
 
 ```css
     @media screen and (color)
@@ -15,9 +15,9 @@ Require a newline or disallow whitespace before the commas of media query lists.
 
 ### `"always"`
 
-There _must always_ be a newline before the commas.
+There _must always_ be a newline before the commas.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @media screen and (color), projection and (color) {}
@@ -28,7 +28,7 @@ The following patterns are considered problems:
 projection and (color) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media screen and (color)
@@ -43,16 +43,16 @@ projection and (color) {}
 
 ### `"always-multi-line"`
 
-There _must always_ be a newline before the commas in multi-line media query lists.
+There _must always_ be a newline before the commas in multi-line media query lists.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @media screen and (color),
 projection and (color) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media screen and (color), projection and (color) {}
@@ -71,9 +71,9 @@ projection and (color) {}
 
 ### `"never-multi-line"`
 
-There _must never_ be whitespace before the commas in multi-line media query lists.
+There _must never_ be whitespace before the commas in multi-line media query lists.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @media screen and (color)
@@ -86,7 +86,7 @@ The following patterns are considered problems:
 projection and (color) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media screen and (color), projection and (color) {}

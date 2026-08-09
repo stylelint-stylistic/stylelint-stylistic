@@ -1,6 +1,6 @@
 # block-opening-brace-space-after
 
-Require a single space or disallow whitespace after the opening brace of blocks.
+Require a single space or disallow whitespace after the opening brace of blocks.
 
 ```css
   a { color: pink; }
@@ -8,7 +8,7 @@ Require a single space or disallow whitespace after the opening brace of blocks.
  * The space after this brace */
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
 ## Options
 
@@ -16,9 +16,9 @@ The [`fix` option](https://stylelint.io/user-guide/options#fix) can automaticall
 
 ### `"always"`
 
-There _must always_ be a single space after the opening brace.
+There _must always_ be a single space after the opening brace.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a {color: pink; }
@@ -29,7 +29,7 @@ a {
 color: pink; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }
@@ -42,9 +42,9 @@ a { color: pink;
 
 ### `"never"`
 
-There _must never_ be whitespace after the opening brace.
+There _must never_ be whitespace after the opening brace.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { color: pink; }
@@ -55,7 +55,7 @@ a {
 color: pink; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {color: pink; }
@@ -68,15 +68,15 @@ a
 
 ### `"always-single-line"`
 
-There _must always_ be a single space after the opening brace in single-line blocks.
+There _must always_ be a single space after the opening brace in single-line blocks.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a {color: pink; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }
@@ -89,15 +89,15 @@ a {color: pink;
 
 ### `"never-single-line"`
 
-There _must never_ be whitespace after the opening brace in single-line blocks.
+There _must never_ be whitespace after the opening brace in single-line blocks.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { color: pink; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {color: pink; }
@@ -110,16 +110,16 @@ a { color: pink;
 
 ### `"always-multi-line"`
 
-There _must always_ be a single space after the opening brace in multi-line blocks.
+There _must always_ be a single space after the opening brace in multi-line blocks.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a {color: pink;
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {color: pink; }
@@ -132,16 +132,16 @@ a { color: pink;
 
 ### `"never-multi-line"`
 
-There _must never_ be whitespace after the opening brace in multi-line blocks.
+There _must never_ be whitespace after the opening brace in multi-line blocks.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { color: pink;
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }
@@ -156,11 +156,11 @@ a {color: pink;
 
 ### `ignore: ["at-rules"]`
 
-Ignore the opening brace of at-rules.
+Ignore the opening brace of at-rules.
 
-For example, with `"always"`:
+For example, with `"always"`:
 
-The following pattern is _not_ considered a problem:
+The following pattern is _not_ considered a problem:
 
 ```css
 @media print {

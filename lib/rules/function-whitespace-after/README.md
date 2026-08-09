@@ -1,6 +1,6 @@
 # function-whitespace-after
 
-Require or disallow whitespace after functions.
+Require or disallow whitespace after functions.
 
 ```css
 a { transform: translate(1, 1) scale(3); }
@@ -8,9 +8,9 @@ a { transform: translate(1, 1) scale(3); }
  *                   This space */
 ```
 
-This rule does not check for space immediately after `)` if the very next character is `,`, `)`, `/` or `}`, allowing some of the patterns exemplified below.
+This rule does not check for space immediately after `)` if the very next character is `,`, `)`, `/` or `}`, allowing some of the patterns exemplified below.
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
 ## Options
 
@@ -18,15 +18,15 @@ The [`fix` option](https://stylelint.io/user-guide/options#fix) can automaticall
 
 ### `"always"`
 
-There _must always_ be whitespace after the function.
+There _must always_ be whitespace after the function.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { transform: translate(1, 1)scale(3); }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { transform: translate(1, 1) scale(3); }
@@ -56,15 +56,15 @@ a { padding: calc(1 * 2px), calc(2 * 5px); }
 
 ### `"never"`
 
-There _must never_ be whitespace after the function.
+There _must never_ be whitespace after the function.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { transform: translate(1, 1) scale(3); }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { transform: translate(1, 1)scale(3); }

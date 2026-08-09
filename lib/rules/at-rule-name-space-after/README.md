@@ -1,6 +1,6 @@
 # at-rule-name-space-after
 
-Require a single space after at-rule names.
+Require a single space after at-rule names.
 
 ```css
 @media (max-width: 600px) {}
@@ -8,7 +8,7 @@ Require a single space after at-rule names.
  * The space after at-rule names */
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
 ## Options
 
@@ -16,9 +16,9 @@ The [`fix` option](https://stylelint.io/user-guide/options#fix) can automaticall
 
 ### `"always"`
 
-There _must always_ be a single space after at-rule names.
+There _must always_ be a single space after at-rule names.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @charset"UTF-8";
@@ -37,7 +37,7 @@ The following patterns are considered problems:
 (min-width: 700px) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @charset "UTF-8";
@@ -53,9 +53,9 @@ The following patterns are _not_ considered problems:
 
 ### `"always-single-line"`
 
-There _must always_ be a single space after at-rule names in single-line declaration blocks.
+There _must always_ be a single space after at-rule names in single-line declaration blocks.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @charset"UTF-8";
@@ -69,7 +69,7 @@ The following patterns are considered problems:
 @media  (min-width: 700px) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @charset "UTF-8";

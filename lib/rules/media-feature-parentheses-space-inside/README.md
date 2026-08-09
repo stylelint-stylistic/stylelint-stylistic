@@ -1,6 +1,6 @@
 # media-feature-parentheses-space-inside
 
-Require a single space or disallow whitespace on the inside of the parentheses within media features.
+Require a single space or disallow whitespace on the inside of the parentheses within media features.
 
 ```css
 @media ( max-width: 300px ) {}
@@ -8,7 +8,7 @@ Require a single space or disallow whitespace on the inside of the parentheses w
  * The space inside these two parentheses */
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
 ## Options
 
@@ -16,9 +16,9 @@ The [`fix` option](https://stylelint.io/user-guide/options#fix) can automaticall
 
 ### `"always"`
 
-There _must always_ be a single space inside the parentheses.
+There _must always_ be a single space inside the parentheses.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @media (max-width: 300px) {}
@@ -28,7 +28,7 @@ The following patterns are considered problems:
 @media (max-width: 300px ) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media ( max-width: 300px ) {}
@@ -36,9 +36,9 @@ The following patterns are _not_ considered problems:
 
 ### `"never"`
 
-There _must never_ be whitespace on the inside the parentheses.
+There _must never_ be whitespace on the inside the parentheses.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @media ( max-width: 300px ) {}
@@ -48,7 +48,7 @@ The following patterns are considered problems:
 @media ( max-width: 300px) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media (max-width: 300px) {}

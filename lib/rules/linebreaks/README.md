@@ -1,10 +1,10 @@
 # linebreaks
 
-Specify unix or windows linebreaks.
+Specify unix or windows linebreaks.
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
-The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
+The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
 
 ## Options
 
@@ -14,10 +14,10 @@ The [`message` secondary option](https://stylelint.io/user-guide/configure/#mess
 
 Linebreaks _must always_ be LF (`\n`).
 
-Lines with CRLF linebreaks are considered problems.
+Lines with CRLF linebreaks are considered problems.
 
 ### `"windows"`
 
 Linebreaks _must always_ be CRLF (`\r\n`).
 
-Lines with LF linebreaks are considered problems.
+Lines with LF linebreaks are considered problems.

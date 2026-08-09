@@ -8,15 +8,15 @@ a { color: pink;; }
  *  This semicolons */
 ```
 
-This rule ignores semicolons after Less mixins.
+This rule ignores semicolons after Less mixins.
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
 ## Options
 
 ### `true`
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @import "x.css";;
@@ -56,7 +56,7 @@ b {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @import "x.css";

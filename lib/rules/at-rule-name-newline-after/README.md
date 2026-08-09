@@ -1,6 +1,6 @@
 # at-rule-name-newline-after
 
-Require a newline after at-rule names.
+Require a newline after at-rule names.
 
 ```css
     @media
@@ -15,9 +15,9 @@ Require a newline after at-rule names.
 
 ### `"always"`
 
-There _must always_ be a newline after at-rule names.
+There _must always_ be a newline after at-rule names.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @charset "UTF-8";
@@ -28,7 +28,7 @@ The following patterns are considered problems:
   (orientation: landscape) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @charset
@@ -54,9 +54,9 @@ The following patterns are _not_ considered problems:
 
 ### `"always-multi-line"`
 
-There _must always_ be a newline after at-rule names in at-rules with multi-line parameters.
+There _must always_ be a newline after at-rule names in at-rules with multi-line parameters.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @import "x.css" screen and
@@ -68,7 +68,7 @@ The following patterns are considered problems:
  (orientation: landscape) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @charset "UTF-8";

@@ -1,6 +1,6 @@
 # media-feature-range-operator-space-before
 
-Require a single space or disallow whitespace before the range operator in media features.
+Require a single space or disallow whitespace before the range operator in media features.
 
 ```css
 @media (width >= 600px) {}
@@ -8,7 +8,7 @@ Require a single space or disallow whitespace before the range operator in media
  * The space before this operator */
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
 ## Options
 
@@ -16,9 +16,9 @@ The [`fix` option](https://stylelint.io/user-guide/options#fix) can automaticall
 
 ### `"always"`
 
-There _must always_ be a single space before the range operator.
+There _must always_ be a single space before the range operator.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @media (width>=600px) {}
@@ -28,7 +28,7 @@ The following patterns are considered problems:
 @media (width>= 600px) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media (width >=600px) {}
@@ -40,9 +40,9 @@ The following patterns are _not_ considered problems:
 
 ### `"never"`
 
-There _must never_ be whitespace before the range operator.
+There _must never_ be whitespace before the range operator.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @media (width >=600px) {}
@@ -52,7 +52,7 @@ The following patterns are considered problems:
 @media (width >= 600px) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media (width>=600px) {}

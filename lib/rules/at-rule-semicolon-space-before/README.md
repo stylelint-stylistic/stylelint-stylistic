@@ -1,6 +1,6 @@
 # at-rule-semicolon-space-before
 
-Require a single space or disallow whitespace before the semicolons of at-rules.
+Require a single space or disallow whitespace before the semicolons of at-rules.
 
 ```css
 @import "components/buttons";
@@ -14,15 +14,15 @@ Require a single space or disallow whitespace before the semicolons of at-rules.
 
 ### `"always"`
 
-There _must always_ be a single space before the semicolons.
+There _must always_ be a single space before the semicolons.
 
-The following pattern is considered a problem:
+The following pattern is considered a problem:
 
 ```css
 @import "components/buttons";
 ```
 
-The following pattern is _not_ considered a problem:
+The following pattern is _not_ considered a problem:
 
 ```css
 @import "components/buttons" ;
@@ -30,15 +30,15 @@ The following pattern is _not_ considered a problem:
 
 ### `"never"`
 
-There _must never_ be a single space before the semicolons.
+There _must never_ be a single space before the semicolons.
 
-The following pattern is considered a problem:
+The following pattern is considered a problem:
 
 ```css
 @import "components/buttons" ;
 ```
 
-The following pattern is _not_ considered a problem:
+The following pattern is _not_ considered a problem:
 
 ```css
 @import "components/buttons";

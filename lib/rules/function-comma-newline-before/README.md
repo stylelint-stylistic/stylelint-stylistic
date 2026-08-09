@@ -1,6 +1,6 @@
 # function-comma-newline-before
 
-Require a newline or disallow whitespace before the commas of functions.
+Require a newline or disallow whitespace before the commas of functions.
 
 ```css
   a { transform: translate(1
@@ -9,7 +9,7 @@ Require a newline or disallow whitespace before the commas of functions.
  * This comma */
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
 ## Options
 
@@ -17,9 +17,9 @@ The [`fix` option](https://stylelint.io/user-guide/options#fix) can automaticall
 
 ### `"always"`
 
-There _must always_ be a newline before the commas.
+There _must always_ be a newline before the commas.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { transform: translate(1,1) }
@@ -34,7 +34,7 @@ a { transform: translate(1,
   1) }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {
@@ -52,16 +52,16 @@ a {
 
 ### `"always-multi-line"`
 
-There _must always_ be a newline before the commas in multi-line functions.
+There _must always_ be a newline before the commas in multi-line functions.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { transform: translate(1,
   1) }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { transform: translate(1,1) }
@@ -87,16 +87,16 @@ a {
 
 ### `"never-multi-line"`
 
-There _must never_ be whitespace before the commas in multi-line functions.
+There _must never_ be whitespace before the commas in multi-line functions.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { transform: translate(1 ,
   1) }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { transform: translate(1 ,1) }

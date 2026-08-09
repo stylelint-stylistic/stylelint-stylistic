@@ -1,6 +1,6 @@
 # selector-attribute-brackets-space-inside
 
-Require a single space or disallow whitespace on the inside of the brackets within attribute selectors.
+Require a single space or disallow whitespace on the inside of the brackets within attribute selectors.
 
 ```css
     [ target=_blank ]
@@ -8,7 +8,7 @@ Require a single space or disallow whitespace on the inside of the brackets with
  * The space inside these two brackets */
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
 ## Options
 
@@ -16,9 +16,9 @@ The [`fix` option](https://stylelint.io/user-guide/options#fix) can automaticall
 
 ### `"always"`
 
-There _must always_ be a single space inside the brackets.
+There _must always_ be a single space inside the brackets.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 [target] {}
@@ -44,7 +44,7 @@ The following patterns are considered problems:
 [target=_blank ] {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 [ target ] {}
@@ -56,9 +56,9 @@ The following patterns are _not_ considered problems:
 
 ### `"never"`
 
-There _must never_ be whitespace on the inside the brackets.
+There _must never_ be whitespace on the inside the brackets.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 [ target] {}
@@ -84,7 +84,7 @@ The following patterns are considered problems:
 [ target=_blank ] {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 [target] {}

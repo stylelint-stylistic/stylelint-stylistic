@@ -1,6 +1,6 @@
 # at-rule-name-case
 
-Specify lowercase or uppercase for at-rules names.
+Specify lowercase or uppercase for at-rules names.
 
 ```css
    @media (min-width: 10px) {}
@@ -8,11 +8,11 @@ Specify lowercase or uppercase for at-rules names.
  * This at-rule name */
 ```
 
-Only lowercase at-rule names are valid in SCSS.
+Only lowercase at-rule names are valid in SCSS.
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix some of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix some of the problems reported by this rule.
 
-The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
+The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
 
 ## Options
 
@@ -20,7 +20,7 @@ The [`message` secondary option](https://stylelint.io/user-guide/configure/#mess
 
 ### `"lower"`
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @Charset 'UTF-8';
@@ -46,7 +46,7 @@ The following patterns are considered problems:
 @MEDIA (min-width: 50em) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @charset 'UTF-8';
@@ -58,7 +58,7 @@ The following patterns are _not_ considered problems:
 
 ### `"upper"`
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @Charset 'UTF-8';
@@ -84,7 +84,7 @@ The following patterns are considered problems:
 @media (min-width: 50em) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @CHARSET 'UTF-8';

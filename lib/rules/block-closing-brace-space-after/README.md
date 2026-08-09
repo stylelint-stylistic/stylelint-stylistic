@@ -1,6 +1,6 @@
 # block-closing-brace-space-after
 
-Require a single space or disallow whitespace after the closing brace of blocks.
+Require a single space or disallow whitespace after the closing brace of blocks.
 
 ```css
 a { color: pink; }
@@ -8,7 +8,7 @@ a { color: pink; }
  * The space after this brace */
 ```
 
-This rule allows a trailing semicolon after the closing brace of a block. For example,
+This rule allows a trailing semicolon after the closing brace of a block. For example,
 
 ```css
 :root {
@@ -26,9 +26,9 @@ This rule allows a trailing semicolon after the closing brace of a block. For ex
 
 ### `"always"`
 
-There _must always_ be a single space after the closing brace.
+There _must always_ be a single space after the closing brace.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { color: pink; }b { color: red; }
@@ -39,7 +39,7 @@ a { color: pink; }
 b { color: red; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; } b { color: red; }
@@ -47,9 +47,9 @@ a { color: pink; } b { color: red; }
 
 ### `"never"`
 
-There _must never_ be whitespace after the closing brace.
+There _must never_ be whitespace after the closing brace.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { color: pink; } b { color: red; }
@@ -60,7 +60,7 @@ a { color: pink; }
 b { color: red; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }b { color: red; }
@@ -73,15 +73,15 @@ a { color: pink;
 
 ### `"always-single-line"`
 
-There _must always_ be a single space after the closing brace in single-line blocks.
+There _must always_ be a single space after the closing brace in single-line blocks.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { color: pink; }b { color: red; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; } b { color: red; }
@@ -94,15 +94,15 @@ a { color: pink;
 
 ### `"never-single-line"`
 
-There _must never_ be whitespace after the closing brace in single-line blocks.
+There _must never_ be whitespace after the closing brace in single-line blocks.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { color: pink; } b { color: red; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }b { color: red; }
@@ -115,16 +115,16 @@ a { color: pink;
 
 ### `"always-multi-line"`
 
-There _must always_ be a single space after the closing brace in multi-line blocks.
+There _must always_ be a single space after the closing brace in multi-line blocks.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { color: pink;
 }b { color: red; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }b { color: red; }
@@ -137,16 +137,16 @@ a { color: pink;
 
 ### `"never-multi-line"`
 
-There _must never_ be whitespace after the closing brace in multi-line blocks.
+There _must never_ be whitespace after the closing brace in multi-line blocks.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { color: pink;
 } b { color: red; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; } b { color: red; }

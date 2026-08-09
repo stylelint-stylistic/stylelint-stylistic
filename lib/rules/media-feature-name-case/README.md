@@ -1,6 +1,6 @@
 # media-feature-name-case
 
-Specify lowercase or uppercase for media feature names.
+Specify lowercase or uppercase for media feature names.
 
 ```css
 @media (min-width: 700px) {}
@@ -8,9 +8,9 @@ Specify lowercase or uppercase for media feature names.
  * This media feature name */
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
-The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
+The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
 
 ## Options
 
@@ -18,7 +18,7 @@ The [`message` secondary option](https://stylelint.io/user-guide/configure/#mess
 
 ### `"lower"`
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @media (MIN-WIDTH: 700px) {}
@@ -36,7 +36,7 @@ The following patterns are considered problems:
 @media (WIDTH > 10em) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media (min-width: 700px) {}
@@ -56,7 +56,7 @@ The following patterns are _not_ considered problems:
 
 ### `"upper"`
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 @media (min-width: 700px) {}
@@ -74,7 +74,7 @@ The following patterns are considered problems:
 @media (10em < width <= 50em) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media (MIN-WIDTH: 700px) {}

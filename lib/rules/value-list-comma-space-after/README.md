@@ -1,6 +1,6 @@
 # value-list-comma-space-after
 
-Require a single space or disallow whitespace after the commas of value lists.
+Require a single space or disallow whitespace after the commas of value lists.
 
 ```css
 a { background-size: 0, 0; }
@@ -8,7 +8,7 @@ a { background-size: 0, 0; }
  * The space after this comma */
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule.
 
 ## Options
 
@@ -16,9 +16,9 @@ The [`fix` option](https://stylelint.io/user-guide/options#fix) can automaticall
 
 ### `"always"`
 
-There _must always_ be a single space after the commas.
+There _must always_ be a single space after the commas.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { background-size: 0,0; }
@@ -29,7 +29,7 @@ a { background-size: 0
       , 0; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { background-size: 0, 0; }
@@ -42,9 +42,9 @@ a { background-size: 0
 
 ### `"never"`
 
-There _must never_ be whitespace after the commas.
+There _must never_ be whitespace after the commas.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { background-size: 0, 0; }
@@ -55,7 +55,7 @@ a { background-size: 0 ,
       0; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { background-size: 0,0; }
@@ -68,15 +68,15 @@ a { background-size: 0
 
 ### `"always-single-line"`
 
-There _must always_ be a single space after the commas in single-line value lists.
+There _must always_ be a single space after the commas in single-line value lists.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { background-size: 0,0; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { background-size: 0, 0; }
@@ -94,15 +94,15 @@ a { background-size: 0
 
 ### `"never-single-line"`
 
-There _must never_ be whitespace after the commas in single-line value lists.
+There _must never_ be whitespace after the commas in single-line value lists.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { background-size: 0, 0; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { background-size: 0,0; }

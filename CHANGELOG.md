@@ -31,17 +31,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ### Added
 
-- The `no-multiple-whitespaces` rule, which disallows multiple whitespaces between property values and function arguments.
+- The `no-multiple-whitespaces` rule, which disallows multiple whitespaces between property values and function arguments.
 
 ### Fixed
 
-- The dependencies have now been updated to versions that include security fixes.
+- The dependencies have now been updated to versions that include security fixes.
 
 ## [5.0.1] — 2026–01–22
 
 ### Fixed
 
-- The `selector-pseudo-class-parentheses-space-inside` rule no longer triggers false positives in multiline pseudo-classes.
+- The `selector-pseudo-class-parentheses-space-inside` rule no longer triggers false positives in multiline pseudo-classes.
 
 ## [5.0.0] — 2026–01–15
 
@@ -49,13 +49,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 - The plugin now requires:
 	- `stylelint` version `17.0.0` or higher
-	- `node.js` version `20.19.0` or higher
+	- `node.js` version `20.19.0` or higher
 
 ## [4.0.1] — 2026–01–15
 
 ### Fixed
 
-- Multiline pseudos are now aligned correctly with the `@stylistic/indentation` rule.
+- Multiline pseudos are now aligned correctly with the `@stylistic/indentation` rule.
 
 	**Before**:
 
@@ -89,26 +89,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ### Fixed
 
-- `stylelint` has been moved from `dependencies` to `devDependencies`. This may potentially fix some errors (see [Stylelint's documentation regarding `peerDependencies`](https://stylelint.io/developer-guide/plugins#peer-dependencies) and [PRs that explain the motivation behind this decision](https://github.com/stylelint/stylelint/issues/2812)).
-- `postcss` has been moved from `devDependencies` to `dependencies`. This fixes the “Cannot find package `postcss`” and “Named export `Input` not found” error in some environments.
+- `stylelint` has been moved from `dependencies` to `devDependencies`. This may potentially fix some errors (see [Stylelint's documentation regarding `peerDependencies`](https://stylelint.io/developer-guide/plugins#peer-dependencies) and [PRs that explain the motivation behind this decision](https://github.com/stylelint/stylelint/issues/2812)).
+- `postcss` has been moved from `devDependencies` to `dependencies`. This fixes the “Cannot find package `postcss`” and “Named export `Input` not found” error in some environments.
 
-## [3.1.2] — 2025–02–05
+## [3.1.2] — 2025–02–05
 
 ### Fixed
 
-- An explicit end position is now passed to all `report` calls. \
-	The `report` calls no longer receive the `line` argument, which was [deprecated](https://github.com/stylelint/stylelint/pull/8244) in `stylelint@16.13.0`. \
+- An explicit end position is now passed to all `report` calls. \
+	The `report` calls no longer receive the `line` argument, which was [deprecated](https://github.com/stylelint/stylelint/pull/8244) in `stylelint@16.13.0`. \
 	Previously, attempts to update `stylelint` to `16.13.0` version resulted in multiple DeprecationWarning messages ([#53](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/53)) ([@MorevM](https://github.com/MorevM)).
-- Added an exception to the `declaration-block-semicolon-space-before` rule for an empty value of a custom property: now both `--custom-prop: ;` and `--custom-prop:;` are considered valid even with the `never` and `never-single-line` options. \
-  You can find a detailed explanation in [the original issue](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/50) ([#51](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/51)) ([@MorevM](https://github.com/MorevM)).
-- Fixed behavior of `baseIndentLevel` option of `indentation` rule when used in non-CSS files (e.g. when using `postcss-html` syntax) ([#47](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/47)) ([@net-solution](https://github.com/net-solution)).
-- Fixed removing the starting indentation along with the blank line in the `no-empty-first-rule` rule ([#47](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/47)) ([@net-solution](https://github.com/net-solution)).
+- Added an exception to the `declaration-block-semicolon-space-before` rule for an empty value of a custom property: now both `--custom-prop: ;` and `--custom-prop:;` are considered valid even with the `never` and `never-single-line` options. \
+  You can find a detailed explanation in [the original issue](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/50) ([#51](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/51)) ([@MorevM](https://github.com/MorevM)).
+- Fixed behavior of `baseIndentLevel` option of `indentation` rule when used in non-CSS files (e.g. when using `postcss-html` syntax) ([#47](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/47)) ([@net-solution](https://github.com/net-solution)).
+- Fixed removing the starting indentation along with the blank line in the `no-empty-first-rule` rule ([#47](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/47)) ([@net-solution](https://github.com/net-solution)).
 
-## [3.1.1] — 2024–10–04
+## [3.1.1] — 2024–10–04
 
 ### Fixed
 
-- Indentation checking for property values that use dynamic expressions when using `postcss-styled-syntax` is now disabled ([#44](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/44)) ([@MorevM](https://github.com/MorevM)).
+- Indentation checking for property values that use dynamic expressions when using `postcss-styled-syntax` is now disabled ([#44](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/44)) ([@MorevM](https://github.com/MorevM)).
 
 ## [3.1.0] — 2024–09–23
 
@@ -124,7 +124,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ### Fixed
 
-- The `context.fix`, which is deprecated in `stylelint@16.8.2`, is no longer used. Previously, attempts to update `stylelint` to `16.8.2` version resulted in multiple DeprecationWarning messages ([#37](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/37)).
+- The `context.fix`, which is deprecated in `stylelint@16.8.2`, is no longer used. Previously, attempts to update `stylelint` to `16.8.2` version resulted in multiple DeprecationWarning messages ([#37](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/37)).
 
 ## [3.0.0] — 2024–07–30
 
@@ -136,20 +136,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ### Fixed
 
-- Dependencies are now updated, which fixes test fails ([#29](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/29)) ([@ybiquitous](https://github.com/ybiquitous)).
+- Dependencies are now updated, which fixes test fails ([#29](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/29)) ([@ybiquitous](https://github.com/ybiquitous)).
 
 ## [2.1.2] — 2024–04–28
 
 ### Fixed
 
-- Autofixing of `@charset` name by `string-quotes` rule ([#26](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/26)) ([@Mouvedia](https://github.com/Mouvedia)).
+- Autofixing of `@charset` name by `string-quotes` rule ([#26](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/26)) ([@Mouvedia](https://github.com/Mouvedia)).
 
 ## [2.1.1] — 2024–03–31
 
 ### Fixed
 
-- `block-closing-brace-empty-line-before` with except: ["after-closing-brace"] false negatives for CSS Nesting ([#22](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/22)) ([@firefoxic](https://github.com/firefoxic)).
-- `named-grid-areas-alignment` for single-line input ([#21](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/21)) ([@MorevM](https://github.com/MorevM)).
+- `block-closing-brace-empty-line-before` with except: ["after-closing-brace"] false negatives for CSS Nesting ([#22](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/22)) ([@firefoxic](https://github.com/firefoxic)).
+- `named-grid-areas-alignment` for single-line input ([#21](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/21)) ([@MorevM](https://github.com/MorevM)).
 
 ## [2.1.0] — 2024–02–18
 
@@ -162,8 +162,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 ### Changed
 
 - The repository renamed to `stylelint-stylistic` and moved to the organization of the same name.
-- The plugin is published in `npm` under the new name `@stylistic/stylelint-plugin`. Therefore, you should:
-	- change the former plugin name `stylelint-codeguide` to the new one in the config,
+- The plugin is published in `npm` under the new name `@stylistic/stylelint-plugin`. Therefore, you should:
+	- change the former plugin name `stylelint-codeguide` to the new one in the config,
 	- remove the old `stylelint-codeguide` package from dependencies
 	- install the new `@stylistic/stylelint-plugin` package.
 - The namespace of plugin rules has been renamed. Therefore, you should change the rules prefix from `codeguide/` to `@stylistic/` in the config.
@@ -172,7 +172,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ### Updated
 
-- **Stylelint** to version `16.0.2`, which fixes the use of plugins in Windows.
+- **Stylelint** to version `16.0.2`, which fixes the use of plugins in Windows.
 
 ## [1.0.1] — 2023–12–10
 
@@ -186,7 +186,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 - The required version of **Stylelint** is now at least `v16.0.1`.
 - The required version of **Node.js** is now **LTS** at least `v18.12`, or at least `v20.9`.
-- The plugin is now converted to a pure ES module.
+- The plugin is now converted to a pure ES module.
 
 ## [0.3.2] — 2023–10–19
 
@@ -203,12 +203,12 @@ No meaningful changes.
 
 ### Changed
 
-- Along with updating the plugin to this release, Stylelint needs to be updated to `v15.10.3` as well.
+- Along with updating the plugin to this release, Stylelint needs to be updated to `v15.10.3` as well.
 
 ### Updated
 
 - All code according to `stylelint@15.10.3`.
-- Peer dependency — `stylelint@15.10.3`.
+- Peer dependency — `stylelint@15.10.3`.
 
 ## [0.2.2] — 2023–09–14
 
@@ -245,7 +245,7 @@ No meaningful changes.
 
 ### Removed
 
-- The `deprecated` flag from the `meta` of each rule.
+- The `deprecated` flag from the `meta` of each rule.
 
 ## [0.1.2] — 2023–03–28
 
@@ -257,7 +257,7 @@ No meaningful changes.
 
 ### Added
 
-- Babel until Stylelint is converted to ES Modules.
+- Babel until Stylelint is converted to ES Modules.
 
 ## [0.1.0] — 2023–03–28
 

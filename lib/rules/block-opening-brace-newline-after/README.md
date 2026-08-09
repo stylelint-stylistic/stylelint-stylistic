@@ -1,6 +1,6 @@
 # block-opening-brace-newline-after
 
-Require a newline after the opening brace of blocks.
+Require a newline after the opening brace of blocks.
 
 ```css
   a {
@@ -9,7 +9,7 @@ Require a newline after the opening brace of blocks.
  * The newline after this brace */
 ```
 
-This rule allows an end-of-line comment followed by a newline. For example,
+This rule allows an end-of-line comment followed by a newline. For example,
 
 ```css
 a { /* end-of-line comment */
@@ -17,7 +17,7 @@ a { /* end-of-line comment */
 }
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
 ## Options
 
@@ -25,9 +25,9 @@ The [`fix` option](https://stylelint.io/user-guide/options#fix) can automaticall
 
 ### `"always"`
 
-There _must always_ be a newline after the opening brace.
+There _must always_ be a newline after the opening brace.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a{ color: pink; }
@@ -45,7 +45,7 @@ a{ /* end-of-line comment
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {
@@ -66,16 +66,16 @@ a { /* end-of-line comment */
 
 ### `"always-multi-line"`
 
-There _must always_ be a newline after the opening brace in multi-line blocks.
+There _must always_ be a newline after the opening brace in multi-line blocks.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a{color: pink;
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }
@@ -88,16 +88,16 @@ color: pink; }
 
 ### `"never-multi-line"`
 
-There _must never_ be whitespace after the opening brace in multi-line blocks.
+There _must never_ be whitespace after the opening brace in multi-line blocks.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { color: pink;
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }
@@ -112,11 +112,11 @@ a {color: pink;
 
 ### `ignore: ["rules"]`
 
-Ignore the opening brace of rules.
+Ignore the opening brace of rules.
 
-For example, with `"always"`:
+For example, with `"always"`:
 
-The following pattern is _not_ considered a problem:
+The following pattern is _not_ considered a problem:
 
 ```css
 a { color: pink; }

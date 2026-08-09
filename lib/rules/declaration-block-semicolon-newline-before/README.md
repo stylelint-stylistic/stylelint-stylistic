@@ -1,6 +1,6 @@
 # declaration-block-semicolon-newline-before
 
-Require a newline or disallow whitespace before the semicolons of declaration blocks.
+Require a newline or disallow whitespace before the semicolons of declaration blocks.
 
 ```css
   a {
@@ -11,7 +11,7 @@ Require a newline or disallow whitespace before the semicolons of declaration bl
  * The newline before this semicolon */
 ```
 
-This rule ignores semicolons that are preceded by Less mixins.
+This rule ignores semicolons that are preceded by Less mixins.
 
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
@@ -21,9 +21,9 @@ The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatical
 
 ### `"always"`
 
-There _must always_ be a newline before the semicolons.
+There _must always_ be a newline before the semicolons.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { color: pink; }
@@ -35,7 +35,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink
@@ -51,9 +51,9 @@ a {
 
 ### `"always-multi-line"`
 
-There _must always_ be a newline before the semicolons in multi-line rules.
+There _must always_ be a newline before the semicolons in multi-line rules.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a {
@@ -61,7 +61,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }
@@ -80,9 +80,9 @@ a {
 
 ### `"never-multi-line"`
 
-There _must never_ be whitespace before the semicolons in multi-line rules.
+There _must never_ be whitespace before the semicolons in multi-line rules.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a {
@@ -91,7 +91,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }

@@ -1,6 +1,6 @@
 # selector-pseudo-class-case
 
-Specify lowercase or uppercase for pseudo-class selectors.
+Specify lowercase or uppercase for pseudo-class selectors.
 
 ```css
   a:hover {}
@@ -8,9 +8,9 @@ Specify lowercase or uppercase for pseudo-class selectors.
  * This pseudo-class selector */
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
-The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
+The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
 
 ## Options
 
@@ -18,7 +18,7 @@ The [`message` secondary option](https://stylelint.io/user-guide/configure/#mess
 
 ### `"lower"`
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a:Hover {}
@@ -40,7 +40,7 @@ a:HOVER {}
 :-MS-INPUT-PLACEHOLDER {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a:hover {}
@@ -56,7 +56,7 @@ a:hover {}
 
 ### `"upper"`
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a:Hover {}
@@ -78,7 +78,7 @@ a:hover {}
 :-ms-input-placeholder {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a:HOVER {}

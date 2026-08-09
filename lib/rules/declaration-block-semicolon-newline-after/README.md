@@ -1,6 +1,6 @@
 # declaration-block-semicolon-newline-after
 
-Require a newline or disallow whitespace after the semicolons of declaration blocks.
+Require a newline or disallow whitespace after the semicolons of declaration blocks.
 
 ```css
 a {
@@ -13,12 +13,12 @@ a {
 
 This rule ignores:
 
-- semicolons that are preceded by Less mixins
-- the last semicolon of declaration blocks
+- semicolons that are preceded by Less mixins
+- the last semicolon of declaration blocks
 
-Use the `block-closing-brace-*-before` rules to control the whitespace between the last semicolon and the closing brace instead.
+Use the `block-closing-brace-*-before` rules to control the whitespace between the last semicolon and the closing brace instead.
 
-This rule allows an end-of-line comment followed by a newline. For example,
+This rule allows an end-of-line comment followed by a newline. For example,
 
 ```css
 a {
@@ -27,7 +27,7 @@ a {
 }
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
 ## Options
 
@@ -35,9 +35,9 @@ The [`fix` option](https://stylelint.io/user-guide/options#fix) can automaticall
 
 ### `"always"`
 
-There _must always_ be a newline after the semicolon.
+There _must always_ be a newline after the semicolon.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { color: pink; top: 0; }
@@ -51,7 +51,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {
@@ -69,9 +69,9 @@ a {
 
 ### `"always-multi-line"`
 
-There _must always_ be a newline after the semicolon in multi-line rules.
+There _must always_ be a newline after the semicolon in multi-line rules.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a {
@@ -79,7 +79,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }
@@ -98,9 +98,9 @@ a {
 
 ### `"never-multi-line"`
 
-There _must never_ be whitespace after the semicolon in multi-line rules.
+There _must never_ be whitespace after the semicolon in multi-line rules.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a {
@@ -109,7 +109,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }

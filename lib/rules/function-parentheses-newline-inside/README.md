@@ -1,6 +1,6 @@
 # function-parentheses-newline-inside
 
-Require a newline or disallow whitespace on the inside of the parentheses of functions.
+Require a newline or disallow whitespace on the inside of the parentheses of functions.
 
 ```css
   a {
@@ -13,7 +13,7 @@ Require a newline or disallow whitespace on the inside of the parentheses of fun
  * The newline inside these two parentheses */
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
 ## Options
 
@@ -21,9 +21,9 @@ The [`fix` option](https://stylelint.io/user-guide/options#fix) can automaticall
 
 ### `"always"`
 
-There _must always_ be a newline inside the parentheses.
+There _must always_ be a newline inside the parentheses.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { transform: translate(1, 1); }
@@ -35,7 +35,7 @@ a { transform: translate(1,
   ); }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {
@@ -56,16 +56,16 @@ a {
 
 ### `"always-multi-line"`
 
-There _must always_ be a newline inside the parentheses of multi-line functions.
+There _must always_ be a newline inside the parentheses of multi-line functions.
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a { transform: translate(1,
   1) }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { transform: translate(1, 1) }
@@ -94,7 +94,7 @@ a {
 
 ### `"never-multi-line"`
 
-The following patterns are considered problems:
+The following patterns are considered problems:
 
 ```css
 a {
@@ -113,7 +113,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { transform: translate(1, 1) }
