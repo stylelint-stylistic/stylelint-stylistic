@@ -1,3 +1,4 @@
-node_modules
+.coverage/
+node_modules/
 *.log
-.coverage
+.claude/settings.local.json
