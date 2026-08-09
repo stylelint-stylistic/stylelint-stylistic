@@ -21,6 +21,4 @@ jobs:
           cache: true
           version: latest
       - run: make setup
-      - run: make check
-      - run: make lint
-      - run: make test
+      - run: make verify

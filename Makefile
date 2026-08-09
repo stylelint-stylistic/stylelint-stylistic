@@ -23,15 +23,26 @@ check: ## ✅ Check types with TypeScript
 	tsc --noEmit
 .PHONY: check
 
-lint: ## 🧬 Check code by oxlint [FLAGS=] [FILE=]
-	oxlint $(FLAGS) $(FILE)
+lint: ## 🧬 Check code by oxlint [LINT_FLAGS=] [FILE=]
+	oxlint $(LINT_FLAGS) $(FILE)
 .PHONY: lint
 
-test: ## 🧪 Run tests [FLAGS=] [FILE=]
-	vitest $(FLAGS) $(FILE)
+test: ## 🧪 Run tests [TEST_FLAGS=] [FILE=]
+	vitest $(TEST_FLAGS) $(FILE)
 .PHONY: test
 
-release: lint check test ## 🚀 Release a new version
+prose: ## ✍️  Bind function words in markdown with non-breaking spaces
+	./scripts/bind-prose.js
+.PHONY: prose
+
+prose-check: ## 🔤 Check that markdown prose is bound
+	./scripts/bind-prose.js --check
+.PHONY: prose-check
+
+verify: check lint test prose-check ## ✅ Run every check the CI runs
+.PHONY: verify
+
+release: verify ## 🚀 Release a new version
 	pnx @firefoxic/release-it
 .PHONY: release
 
