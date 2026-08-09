@@ -23,4 +23,4 @@ jobs:
       - run: make setup
       - run: make check
       - run: make lint
-      - run: make test FLAGS="--reporter=github-actions --reporter=default"
+      - run: make test
