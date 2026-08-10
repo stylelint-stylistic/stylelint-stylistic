@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+### Fixed
+
+- The `block-opening-brace-space-before` rule no longer removes a comment standing between the selector and the opening brace when fixing (see [#63](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/63)):
+	- a block comment is kept, and only the whitespace next to the brace changes, so such a stylesheet can now be autofixed without losing anything;
+	- an inline comment leaves the brace nowhere to go, since the comment ends only with a line break, so the problem is now reported rather than silently rewritten.
+
 ## [5.3.0] — 2026–08–09
 
 ### Added
