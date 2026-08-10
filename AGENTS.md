@@ -114,4 +114,8 @@ One case is still unsettled: `no`. It is left free everywhere for now, since i
 
 ## Commit messages
 
-The subject line is one imperative sentence, capitalized, with no trailing period and **no conventional-commits prefix** — write `Fix the build target`, never `fix:`, `chore(build):` or the like. Wrap code identifiers in backticks (`` Migrate from `node:test` to `vitest` ``). Explain the why in the body when the subject cannot carry it. There is no need to limit line length in the message body. Formatting rules should be the same as for MD files, including the rules from the “Prose typography” section.
+The subject line is one imperative sentence, capitalized, with no trailing period and **no conventional-commits prefix** — write `Fix the build target`, never `fix:`, `chore(build):` or the like. Wrap code identifiers in backticks (`` Migrate from `node:test` to `vitest` ``). Explain the why in the body when the subject cannot carry it.
+
+Nothing in the body is ever wrapped by hand. A paragraph is a single line, as long as the paragraph itself, and a blank line is all that separates one paragraph from the next — exactly as in a Markdown file. No column limit applies, neither 72 nor 80 nor 100: where the text breaks is for the reader's window to decide, not for the author. Everything else follows the rules for Markdown files, including the rules from the “Prose typography” section above.
+
+The message ends with its last paragraph. It carries no trailers whatsoever — no `Co-Authored-By`, no `Signed-off-by`, no note about the tool the commit was written with.
