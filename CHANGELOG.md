@@ -18,6 +18,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 	- an inline comment leaves the semicolon nowhere to go, since the comment ends only with a line break, so the problem is now reported rather than silently rewritten.
 - The `declaration-colon-space-before` rule no longer rewrites a declaration whose property is followed by an inline comment into code that does not parse (see [#88](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/88)). Such a comment ends only with a line break, so neither option can be satisfied without taking the colon into the comment, and the problem is now reported rather than fixed.
 - The `block-opening-brace-newline-before` rule no longer takes the opening brace into an inline comment standing in front of it (see [#89](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/89)). Such a comment ends only with a line break, so the `never-*` options cannot be satisfied without commenting the whole block out, and the problem is now reported rather than fixed.
+- The `declaration-colon-space-before` and `declaration-colon-space-after` rules now work on the declaration's own colon instead of the first colon they come across (see [#92](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/92)). A comment standing in front of the colon may hold a colon of its own, an URL for one, and used to be taken for the declaration's:
+	- the fix no longer edits the text of such a comment;
+	- the `never` options no longer miss the real violation hiding behind it;
+	- the `always` options no longer report a declaration that is already correct.
 
 ## [5.3.0] — 2026–08–09
 
