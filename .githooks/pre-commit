@@ -13,8 +13,16 @@ fi
 
 git diff-index --check --cached "$against" --
 
+stash_before=$(git rev-parse -q --verify refs/stash || true)
+
 git stash -ku --quiet
-trap "git stash pop --quiet" EXIT
+
+stash_after=$(git rev-parse -q --verify refs/stash || true)
+
+# There is nothing to stash when the commit takes the whole working tree, and popping all the same would take an unrelated entry off the stash.
+if [ "$stash_before" != "$stash_after" ]; then
+	trap "git stash pop --quiet" EXIT
+fi
 
 changed_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|ts)$') || true
 
