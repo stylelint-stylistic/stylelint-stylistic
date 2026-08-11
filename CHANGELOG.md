@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 - A fix that could only be written by commenting the code out is now reported instead — an inline comment ends only with a line break, so the character an option asks for has nowhere to go:
 	- The `declaration-colon-space-before` rule no longer rewrites a declaration whose property is followed by an inline comment into code that does not parse (see [#88](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/88)). Such a comment ends only with a line break, so neither option can be satisfied without taking the colon into the comment, and the problem is now reported rather than fixed.
+	- The `block-opening-brace-newline-before` rule no longer takes the opening brace into an inline comment standing in front of it (see [#89](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/89)). Such a comment ends only with a line break, so the `never-*` options cannot be satisfied without commenting the whole block out, and the problem is now reported rather than fixed.
 - A fix no longer carries off what stands next to the character it changes:
 	- The `block-opening-brace-space-before` rule no longer removes a comment standing between the selector and the opening brace when fixing (see [#63](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/63)):
 		- a block comment is kept, and only the whitespace next to the brace changes, so such a stylesheet can now be autofixed without losing anything;
