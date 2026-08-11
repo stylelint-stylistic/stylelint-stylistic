@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 	- a comment standing between the at-rule and the closing brace is kept;
 	- the closing brace stays on its own line instead of being pulled up to the at-rule;
 	- an inline comment leaves the semicolon nowhere to go, since the comment ends only with a line break, so the problem is now reported rather than silently rewritten.
+- The `declaration-colon-space-before` rule no longer rewrites a declaration whose property is followed by an inline comment into code that does not parse (see [#88](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/88)). Such a comment ends only with a line break, so neither option can be satisfied without taking the colon into the comment, and the problem is now reported rather than fixed.
 
 ## [5.3.0] — 2026–08–09
 
