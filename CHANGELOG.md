@@ -22,6 +22,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 	- the fix no longer edits the text of such a comment;
 	- the `never` options no longer miss the real violation hiding behind it;
 	- the `always` options no longer report a declaration that is already correct.
+- The `selector-combinator-space-before` rule no longer reports a combinator that opens a selector when a comment stands in front of it (see [#66](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/66)). A selector list broken over several lines and interleaved with comments is now left alone instead of being pulled onto one line. Two more things follow for this rule and for `selector-combinator-space-after` alike, whenever the selector holds an inline comment:
+	- the reported position no longer drifts two characters per comment, so it points at the combinator itself;
+	- the fix now reaches the output instead of being silently discarded, and the comment keeps its `//` spelling.
 
 ## [5.3.0] — 2026–08–09
 
