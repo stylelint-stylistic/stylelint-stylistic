@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+### Changed
+
+- False negatives are fixed — a violation the plugin used to pass over in silence, whether `--fix` was asked for or not, is now reported:
+	- The `declaration-colon-space-before` and `declaration-colon-space-after` rules now work on the declaration's own colon instead of the first colon they come across (see [#92](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/92)). A comment standing in front of the colon may hold a colon of its own, an URL for one, and used to be taken for the declaration's:
+		- the fix no longer edits the text of such a comment;
+		- the `never` options no longer miss the real violation hiding behind it;
+		- the `always` options no longer report a declaration that is already correct.
+
 ### Fixed
 
 - A fix that could only be written by commenting the code out is now reported instead — an inline comment ends only with a line break, so the character an option asks for has nowhere to go:
