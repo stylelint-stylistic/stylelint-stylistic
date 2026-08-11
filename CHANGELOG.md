@@ -28,6 +28,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 		- a comment standing between the at-rule and the closing brace is kept;
 		- the closing brace stays on its own line instead of being pulled up to the at-rule;
 		- an inline comment leaves the semicolon nowhere to go, since the comment ends only with a line break, so the problem is now reported rather than silently rewritten.
+- A warning is no longer raised over code that is already right, nor over the text of a comment taken for code:
+	- The `selector-combinator-space-before` rule no longer reports a combinator that opens a selector when a comment stands in front of it (see [#66](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/66)). A selector list broken over several lines and interleaved with comments is now left alone instead of being pulled onto one line. Two more things follow for this rule and for `selector-combinator-space-after` alike, whenever the selector holds an inline comment:
+		- the reported position no longer drifts two characters per comment, so it points at the combinator itself;
+		- the fix now reaches the output instead of being silently discarded, and the comment keeps its `//` spelling.
 
 ## [5.3.0] — 2026–08–09
 
