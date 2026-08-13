@@ -34,6 +34,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 		- the fix now reaches the output instead of being silently discarded, and the comment keeps its `//` spelling.
 - The warning was right and what came of it was not — a position off its mark, a fix discarded or refused where nothing was at risk:
 	- The `no-eol-whitespace` rule now trims every line of a comment when fixing, and not only the lines up to the first quotation mark in it (see [#67](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/67)). An apostrophe in the text of a comment, the one in `isn't` for instance, used to be taken for the opening quote of a string, and the lines after it were passed over — reported, but left as they were, however many times the fix was run.
+	- The `string-quotes` rule no longer loses its bearings in a declaration's value or an at-rule's parameters holding a comment (see [#61](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/61), [#33](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/33)):
+		- the reported position now points at the quote itself instead of drifting by the length of every comment standing in front of it;
+		- the fix now changes the quote characters and nothing else, so every comment in the value survives it;
+		- a string standing in front of an inline comment under `postcss-scss` is now reported rather than silently rewritten, since such a value cannot be edited at all without losing the spelling of its comments;
+		- a string standing behind such a comment is passed over instead of being reported two characters off per comment, until an inline comment can be told apart from the code around it.
 
 ## [5.3.0] — 2026–08–09
 
