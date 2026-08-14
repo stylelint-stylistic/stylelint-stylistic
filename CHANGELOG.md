@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ### Fixed
 
+- The `declaration-colon-space-after` rule now looks for the whitespace after the colon where a custom property whose value holds a comment actually keeps it (see [#109](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/109)) ([@VChet](https://github.com/VChet)):
+	- the `always` options no longer report `--a: /*comment*/ !important;`, whose single space is already in place, and no longer pass over `--a:/*comment*/ !important;`, which has none at all;
+	- their fix no longer adds a space of its own on every run, so two spaces or a tab after the colon now become the single space asked for;
+	- the `never` option now takes the whitespace away instead of reporting a fix and leaving the declaration as it was, and no longer reports one that has no whitespace to begin with;
+	- a space or a tab standing in front of the colon is no longer counted as one standing after it.
 - The `block-opening-brace-space-before` rule no longer removes a comment standing between the selector and the opening brace when fixing (see [#63](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/63)):
 	- a block comment is kept, and only the whitespace next to the brace changes, so such a stylesheet can now be autofixed without losing anything;
 	- an inline comment leaves the brace nowhere to go, since the comment ends only with a line break, so the problem is now reported rather than silently rewritten.
