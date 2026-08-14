@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 		- the `always` options no longer report a declaration that is already correct.
 - False negatives under `--fix` are fixed — a warning that used to vanish along with a fix that never reached the file now survives the run:
 	- A Less at-variable now keeps the fix written to it (see [#99](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/99)). `postcss-less` gives such a variable two copies of its text and prints the one no rule writes, so `--fix` used to leave the file exactly as it was and drop the warning along with it, reporting a clean pass on a file it never touched. This held for every rule that fixes an at-rule's parameters: `indentation`, `no-eol-whitespace`, `number-leading-zero`, `number-no-trailing-zeros` and `string-quotes`.
+	- The `indentation` rule now corrects every mis-indented line of an at-rule, and not only one of them (see [#103](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/103)). This holds for the parameters and for anything standing between the name and them, a multi-line comment for one. The remaining lines used to keep their indentation while all of the warnings disappeared, so a second run reported nothing left to fix.
 
 ### Fixed
 
