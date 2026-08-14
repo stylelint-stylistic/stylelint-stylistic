@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 ### Changed
 
 - False negatives are fixed — a violation the plugin used to pass over in silence, whether `--fix` was asked for or not, is now reported:
+	- The `declaration-colon-space-after` rule now looks for the whitespace after the colon where a custom property whose value holds a comment actually keeps it (see [#109](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/109)) ([@VChet](https://github.com/VChet)):
+		- the `always` options no longer report `--a: /*comment*/ !important;`, whose single space is already in place, and no longer pass over `--a:/*comment*/ !important;`, which has none at all;
+		- their fix no longer adds a space of its own on every run, so two spaces or a tab after the colon now become the single space asked for;
+		- the `never` option now takes the whitespace away instead of reporting a fix and leaving the declaration as it was, and no longer reports one that has no whitespace to begin with;
+		- a space or a tab standing in front of the colon is no longer counted as one standing after it.
 	- The `declaration-colon-space-before` and `declaration-colon-space-after` rules now work on the declaration's own colon instead of the first colon they come across (see [#92](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/92)). A comment standing in front of the colon may hold a colon of its own, an URL for one, and used to be taken for the declaration's:
 		- the fix no longer edits the text of such a comment;
 		- the `never` options no longer miss the real violation hiding behind it;
