@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 	- the fix now changes the quote characters and nothing else, so every comment in the value survives it;
 	- a string standing in front of an inline comment under `postcss-scss` is now reported rather than silently rewritten, since such a value cannot be edited at all without losing the spelling of its comments;
 	- a string standing behind such a comment is passed over instead of being reported two characters off per comment, until an inline comment can be told apart from the code around it.
+- A Less at-variable now keeps the fix written to it (see [#99](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/99)). `postcss-less` gives such a variable two copies of its text and prints the one no rule writes, so `--fix` used to leave the file exactly as it was and drop the warning along with it, reporting a clean pass on a file it never touched. This held for every rule that fixes an at-rule's parameters: `indentation`, `no-eol-whitespace`, `number-leading-zero`, `number-no-trailing-zeros` and `string-quotes`.
 
 ## [5.3.0] — 2026–08–09
 
