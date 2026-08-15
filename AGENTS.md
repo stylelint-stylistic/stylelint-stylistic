@@ -57,7 +57,7 @@ Vitest with `@morev/stylelint-testing-library`. `vitest.setup.ts` loads `lib/in
 
 Rules must handle standard CSS only; non-standard syntax is filtered out through the `isStandardSyntax*` utils and tested there, not inside the rule.
 
-**Always enable `autoStripIndent`** in new and edited tests — `const testRule = createTestRule({ ruleName, autoStripIndent: true })` — and write multi-line `code` / `fixed` as indented template literals instead of `\n` escapes:
+**Always enable `autoStripIndent`** in new and edited tests, and write multi-line `code` / `fixed` as indented template literals instead of `\n` escapes:
 
 ```js
 {
@@ -69,7 +69,34 @@ Rules must handle standard CSS only; non-standard syntax is filtered out through
 },
 ```
 
-The common indentation is stripped, so line numbers in `reject` cases count from the first non-empty line. Not every legacy test file has been migrated yet; migrate the file you touch, and re-run its tests, since enabling the flag changes the code of already-indented cases.
+The common indentation is stripped, so line numbers in `reject` cases count from the first non-empty line. The flag is read from the case first, then from the `testRule({ … })` block, then from the `createTestRule({ … })` factory, so a single block, or a single case, can use it inside a file written in the old style — a whole file is migrated only when that is worth doing for its own sake, and the tests are re-run afterwards, since the flag changes the code of already-indented cases.
+
+The common indentation is the shortest run of tabs and spaces in front of content, counted in characters, and that many characters are then taken off every line. Three things follow:
+
+- indentation a case is *about* is written on top of the common one — the common tabs, and then the space being tested; a space put in front of the tabs is taken off as one of the stripped characters instead;
+- the literal loses its final line break, and a blank first line with it, so a fixture cannot end in a newline;
+- `code` and `fixed` are stripped apart from each other, each by its own common indentation.
+
+Whitespace that has to survive to the character — the trailing spaces `no-eol-whitespace` is about, or a space inside indentation, which the linter would turn into a tab — is written as an interpolated constant declared once per file, since an editor trims a real trailing space away:
+
+```js
+// A space no editor trims from the end of a line and no linter turns into a tab.
+const S = ` `
+
+// …
+
+{
+	autoStripIndent: true,
+	code: `
+		@foo: (
+			a,${S}${S}${S}
+			b
+		);
+	`,
+},
+```
+
+A case testing `\r` or `\r\n` stays on one line with `\n` escapes: a carriage return is invisible in the source, and no linter leaves it where it is put.
 
 ## Conventions
 
