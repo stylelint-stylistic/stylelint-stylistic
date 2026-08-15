@@ -36,7 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 	- the fix now changes the quote characters and nothing else, so every comment in the value survives it;
 	- a string standing in front of an inline comment under `postcss-scss` is now reported rather than silently rewritten, since such a value cannot be edited at all without losing the spelling of its comments;
 	- a string standing behind such a comment is passed over instead of being reported two characters off per comment, until an inline comment can be told apart from the code around it.
-- The `string-quotes` rule no longer reports a quotation mark standing inside a `//` comment (see [#32](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/32)). A Less value or an at-rule's parameters spanning more than one line keep such a comment in themselves, and the quotes in its text used to be taken for a string of code:
+- The `string-quotes` rule no longer reports a quotation mark standing inside a `//` comment (see [#32](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/32)). A Less value or an at-rule's parameters keep such a comment in themselves whenever it does not open the statement, and the quotes in its text used to be taken for a string of code:
 	- the warning is gone, and the fix no longer rewrites the text of the comment;
 	- a double slash opens a comment only under a syntax that spells one that way and leaves it in the value, so a value of plain CSS or of `postcss-scss` is read exactly as before;
 	- a double slash belonging to an address opens no comment even there, whether the address is quoted or bare inside `url()`, and whatever parentheses its interpolation or its escapes bring along;
