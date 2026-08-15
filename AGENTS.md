@@ -4,27 +4,13 @@ This file provides guidance to coding agents when working with code in this 
 
 ## Commands
 
-All tasks go through the `Makefile` (the only npm script is `help`, which itself calls `make help`; `node_modules/.bin` is put on `PATH` by the Makefile):
+Every task goes through the [`Makefile`](Makefile), and that file is the list of tasks: read it, or run `make help`, which prints every target with its description and the flags it takes. Nothing is repeated here, so that no list can fall behind the one that is executed. The only npm script is `help`, which itself calls `make help`, and `node_modules/.bin` is put on `PATH` by the Makefile.
 
-```shell
-make help                                     # list targets
-make setup                                    # install deps, point core.hooksPath at .githooks
-make check                                    # tsc --noEmit (JSDoc-based type check)
-make lint                                     # oxlint (NOT eslint) — accepts LINT_FLAGS= and FILE=
-make test                                     # vitest, single run — accepts TEST_FLAGS= and FILE=
-make prose                                    # bind function words in every Markdown file
-make prose-check                              # the same pass, writing nothing, failing on unbound prose
-make verify                                   # check + lint + test + prose-check
-make release                                  # verify, then @firefoxic/release-it
-```
-
-Targeted runs:
+The one thing the file cannot say for itself is that a flag is passed as a variable rather than as an option:
 
 ```shell
 make test FILE=lib/rules/color-hex-case/index.test.js        # one rule's tests
 make test TEST_FLAGS="-t 'lower'"                            # filter by test name
-make test TEST_FLAGS=--watch                                 # watch (config sets watch: false)
-make test TEST_FLAGS=--coverage                              # coverage → ./.coverage
 make lint FILE=lib/rules/color-hex-case
 ```
 
