@@ -63,10 +63,10 @@ The common indentation is the shortest run of tabs and spaces in front of 
 - the literal loses its final line break, and a blank first line with it, so a fixture cannot end in a newline;
 - `code` and `fixed` are stripped apart from each other, each by its own common indentation.
 
-Whitespace that has to survive to the character — the trailing spaces `no-eol-whitespace` is about, or a space inside indentation, which the linter would turn into a tab — is written as an interpolated constant declared once per file, since an editor trims a real trailing space away:
+Whitespace at the end of a line — what `no-eol-whitespace` is about — is written as an interpolated constant declared once per file, since an editor trims a real trailing space away on the first save. Indentation asks for nothing of the kind: a space inside a template literal is left alone by the linter, and is written as itself.
 
 ```js
-// A space no editor trims from the end of a line and no linter turns into a tab.
+// A space no editor trims from the end of a line.
 const S = ` `
 
 // …
