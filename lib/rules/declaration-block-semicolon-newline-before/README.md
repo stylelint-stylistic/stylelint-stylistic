@@ -11,6 +11,8 @@ Require a newline or disallow whitespace before the semicolons of declarati
  * The newline before this semicolon */
 ```
 
+This rule also applies to the declarations of an inline `style` attribute in an HTML-like document.
+
 This rule ignores semicolons that are preceded by Less mixins.
 
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
