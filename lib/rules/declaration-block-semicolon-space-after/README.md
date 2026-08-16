@@ -8,6 +8,8 @@ a { color: pink; top: 0; }
  * The space after this semicolon */
 ```
 
+This rule also applies to the declarations of an inline `style` attribute in an HTML-like document.
+
 This rule ignores:
 
 - semicolons that are preceded by Less mixins

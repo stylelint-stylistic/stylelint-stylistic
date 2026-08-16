@@ -11,6 +11,8 @@ a {
  * The newline after this semicolon */
 ```
 
+This rule also applies to the declarations of an inline `style` attribute in an HTML-like document.
+
 This rule ignores:
 
 - semicolons that are preceded by Less mixins
