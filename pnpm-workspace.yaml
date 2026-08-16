@@ -6,5 +6,8 @@ mergeGitBranchLockfilesBranchPattern:
   - main
   - release-*
 
+patchedDependencies:
+  '@morev/stylelint-testing-library@1.1.0': patches/@morev__stylelint-testing-library@1.1.0.patch
+
 registries:
   default: https://registry.npmjs.org/

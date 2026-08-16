@@ -203,6 +203,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@morev/stylelint-testing-library@1.1.0': 1bac5e327cd55299d24fcfed4c2df5cbac1fcc2a64b44312153d47c53261e102
+
 importers:
 
   .:
@@ -234,7 +237,7 @@ importers:
         version: 0.4.0(eslint@10.8.1(supports-color@10.2.2))(oxlint@1.77.0)
       '@morev/stylelint-testing-library':
         specifier: ^1.1.0
-        version: 1.1.0(stylelint@17.14.1(supports-color@10.2.2)(typescript@7.0.2))
+        version: 1.1.0(patch_hash=1bac5e327cd55299d24fcfed4c2df5cbac1fcc2a64b44312153d47c53261e102)(stylelint@17.14.1(supports-color@10.2.2)(typescript@7.0.2))
       '@types/node':
         specifier: ^26.2.0
         version: 26.2.0
@@ -2061,7 +2064,7 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@morev/stylelint-testing-library@1.1.0(stylelint@17.14.1(supports-color@10.2.2)(typescript@7.0.2))':
+  '@morev/stylelint-testing-library@1.1.0(patch_hash=1bac5e327cd55299d24fcfed4c2df5cbac1fcc2a64b44312153d47c53261e102)(stylelint@17.14.1(supports-color@10.2.2)(typescript@7.0.2))':
     dependencies:
       '@morev/utils': 3.15.0
       stylelint: 17.14.1(supports-color@10.2.2)(typescript@7.0.2)

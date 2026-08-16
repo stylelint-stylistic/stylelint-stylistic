@@ -1,0 +1,26 @@
+diff --git a/dist/index.cjs b/dist/index.cjs
+index bfdac0ce609f68b6beeb5a3852663e1814c0a1ad..e2925d43a4c7ca4f38331c1a51a28d99baa7123c 100644
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -328,7 +328,7 @@ const testRule = (schema) => {
+ 				const { result: afterFixResult } = await lintWithOptions({
+ 					...stylelintOptions,
+ 					code: fixedCode ?? "",
+-					fix: true
++					fix: false
+ 				});
+ 				universal.assert.deepEqual(afterFixResult.warnings, fixedResult.warnings, "Warnings do not match");
+ 			}
+diff --git a/dist/index.js b/dist/index.js
+index cc0ca1688813b16cbc0286761384b3c507c96977..7b764915db626e068da99cb71dcfb6e6911cf820 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -304,7 +304,7 @@ const testRule = (schema) => {
+ 				const { result: afterFixResult } = await lintWithOptions({
+ 					...stylelintOptions,
+ 					code: fixedCode ?? "",
+-					fix: true
++					fix: false
+ 				});
+ 				universal.assert.deepEqual(afterFixResult.warnings, fixedResult.warnings, "Warnings do not match");
+ 			}
