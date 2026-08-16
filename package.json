@@ -38,7 +38,7 @@
 	},
 	"devDependencies": {
 		"@firefoxic/oxlint-config": "^0.4.0",
-		"@morev/stylelint-testing-library": "^1.1.0",
+		"@morev/stylelint-testing-library": "^1.1.1",
 		"@types/node": "^26.2.0",
 		"@vitest/coverage-v8": "4.1.10",
 		"oxlint": "^1.77.0",
