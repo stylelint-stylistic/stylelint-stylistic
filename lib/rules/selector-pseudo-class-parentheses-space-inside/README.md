@@ -8,7 +8,7 @@ input:not( [type="submit"] ) {}
  * The space inside these two parentheses */
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule. It won't fix pseudo elements containing comments.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix the problems reported by this rule, leaving any comment inside the parentheses where it is. Under `"always"` a pseudo-class whose last argument holds nothing but comments is fixed but goes on being reported.
 
 ## Options
 
