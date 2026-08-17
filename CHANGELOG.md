@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ### Fixed
 
+- The `function-comma-space-before`, `function-comma-space-after`, `function-comma-newline-before` and `function-comma-newline-after` rules no longer write into an inline comment standing in a function's arguments (see [#135](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/135)):
+	- a comma standing behind such a comment is no longer taken onto its line, since the line break in front of the comma is what closes the comment, so the problem is now reported rather than fixed;
+	- a comma standing inside the text of such a comment is no longer taken for a comma of the value at all, so nothing is reported for it and nothing written near it.
 - The `declaration-colon-space-after` rule now looks for the whitespace after the colon where a custom property whose value holds a comment actually keeps it (see [#109](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/109)) ([@VChet](https://github.com/VChet)):
 	- the `always` options no longer report `--a: /*comment*/ !important;`, whose single space is already in place, and no longer pass over `--a:/*comment*/ !important;`, which has none at all;
 	- their fix no longer adds a space of its own on every run, so two spaces or a tab after the colon now become the single space asked for;
