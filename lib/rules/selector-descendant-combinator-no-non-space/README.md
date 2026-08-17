@@ -31,6 +31,10 @@ The following patterns are considered problems:
 .bar {}
 ```
 
+```css
+.foo ( ) .bar {}
+```
+
 The following patterns are _not_ considered problems:
 
 ```css
