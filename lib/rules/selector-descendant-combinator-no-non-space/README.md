@@ -14,7 +14,9 @@ The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatical
 
 The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
 
-This rule currently ignores selectors containing comments.
+A comment standing inside a descendant combinator is kept where it is, and each stretch of whitespace beside it is measured on its own. A comment following a combinator of another kind takes the whitespace after it out of this rule's reach: `.foo > /*comment*/  .bar {}` holds a child combinator and no descendant one.
+
+This rule currently ignores a selector carrying an inline comment, and one whose comment stands in front of a parenthesised group.
 
 ## Options
 
@@ -35,8 +37,16 @@ The following patterns are considered problems:
 .foo ( ) .bar {}
 ```
 
+```css
+.foo  /*comment*/  .bar {}
+```
+
 The following patterns are _not_ considered problems:
 
 ```css
 .foo .bar {}
+```
+
+```css
+.foo /*comment*/ .bar {}
 ```
