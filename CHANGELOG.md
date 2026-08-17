@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ### Fixed
 
+- The `value-list-comma-space-before` rule no longer takes a comma standing behind an inline comment onto that comment's line (see [#136](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/136)). The line break in front of the comma is what closes such a comment, so neither option can be satisfied without commenting out the rest of the declaration, and the problem is now reported rather than fixed.
 - The `function-comma-space-before`, `function-comma-space-after`, `function-comma-newline-before` and `function-comma-newline-after` rules no longer write into an inline comment standing in a function's arguments (see [#135](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/135)):
 	- a comma standing behind such a comment is no longer taken onto its line, since the line break in front of the comma is what closes the comment, so the problem is now reported rather than fixed;
 	- a comma standing inside the text of such a comment is no longer taken for a comma of the value at all, so nothing is reported for it and nothing written near it.
