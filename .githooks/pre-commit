@@ -22,6 +22,12 @@ fi
 
 git diff-index --check --cached "$against" --
 
+# With an empty index there is nothing to check, and `git stash -ku` would take the whole working tree away instead of the part being committed — the very thing the stash is here to keep out of the way. A `git commit --amend` that only rewords a message arrives exactly like this.
+if git diff-index --cached --quiet "$against" --
+then
+	exit 0
+fi
+
 stash_before=$(git rev-parse -q --verify refs/stash || true)
 
 git stash -ku --quiet
