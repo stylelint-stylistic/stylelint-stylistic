@@ -16,7 +16,7 @@ The [`message` secondary option](https://stylelint.io/user-guide/configure/#mes
 
 A comment standing inside a descendant combinator is kept where it is, and each stretch of whitespace beside it is measured on its own. A comment following a combinator of another kind takes the whitespace after it out of this rule's reach: `.foo > /*comment*/  .bar {}` holds a child combinator and no descendant one.
 
-This rule currently ignores a selector carrying an inline comment, and one whose comment stands in front of a parenthesised group.
+An inline comment ends with the line break standing behind it, so the whitespace there can never be the single space this rule asks for, and it is passed over. This rule currently ignores a selector whose comment stands in front of a parenthesised group.
 
 ## Options
 
