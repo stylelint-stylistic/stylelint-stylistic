@@ -8,9 +8,9 @@ input:not( [type="submit"] ) {}
  * The space inside these two parentheses */
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix the problems reported by this rule, leaving any comment inside the parentheses where it is. Under `"always"` a pseudo-class whose last argument holds nothing but comments is fixed but goes on being reported.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix the problems reported by this rule, leaving any comment inside the parentheses where it is.
 
-An argument with no node in it — the whole of `input:not()`, or the empty half of `input:not(,[type="submit"])` — has no inside to space out, and that end of the parentheses is passed over. Where the parser does not give such a pseudo-class back the way the source spells it, whitespace standing at the missing argument or a comment inside the parentheses moving as it is parsed, the whole selector list is passed over instead, under either option.
+An argument with no node in it — the whole of `input:not()`, or the empty half of `input:not(,[type="submit"])` — has no inside to space out, and that end of the parentheses is passed over. Where whitespace stands at such an argument, or at a selector of the list that holds nothing, the parser keeps none of it and nothing in the parsed selector can hold it, so the whole list is passed over instead, under either option. So is a selector carrying an inline comment under `postcss-scss`, which that syntax spells one way and prints another.
 
 ## Options
 
