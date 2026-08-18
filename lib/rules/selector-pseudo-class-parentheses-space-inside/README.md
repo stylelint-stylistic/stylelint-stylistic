@@ -10,7 +10,7 @@ input:not( [type="submit"] ) {}
 
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix the problems reported by this rule, leaving any comment inside the parentheses where it is.
 
-An argument with no node in it — the whole of `input:not()`, or the empty half of `input:not(,[type="submit"])` — has no inside to space out, and that end of the parentheses is passed over. Where whitespace stands at such an argument, or at a selector of the list that holds nothing, the parser keeps none of it and nothing in the parsed selector can hold it, so the whole list is passed over instead, under either option. So is a selector carrying an inline comment under `postcss-scss`, which that syntax spells one way and prints another.
+An argument with no node in it — the whole of `input:not()`, or the empty half of `input:not(,[type="submit"])` — has no inside to space out, and that end of the parentheses is passed over. Where whitespace stands at such an argument, or at a selector of the list that holds nothing, the parser keeps none of it and nothing in the parsed selector can hold it, so the whole list is passed over instead, under either option. An inline comment ends with the line break standing behind it, so where that break is the whitespace in front of the closing parenthesis, neither option can be written there and that end of the parentheses is passed over.
 
 ## Options
 
