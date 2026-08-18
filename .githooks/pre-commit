@@ -4,6 +4,15 @@ set -e
 
 export PATH="./node_modules/.bin:$PATH"
 
+# A rebase, a merge, a cherry-pick or a revert owns the working tree while it runs, and a stash taken under one of them can leave the operation with no way to finish. What such a commit carries has been checked once already, on its way in, and the branch is checked again when the work lands.
+for marker in rebase-merge rebase-apply MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD
+do
+	if [ -e "$(git rev-parse --git-dir)/$marker" ]
+	then
+		exit 0
+	fi
+done
+
 if git rev-parse --verify HEAD >/dev/null 2>&1
 then
 	against=HEAD
