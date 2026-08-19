@@ -138,3 +138,31 @@ The following pattern is _not_ considered a problem:
 ```css
 /* ignore urls https://www.example.com */
 ```
+
+### `tabSize: int`
+
+Measure a tab as reaching the next tab stop of the given width, the way an editor with that tab size shows it, instead of as a single character.
+
+The option is named after the CSS `tab-size` property and counts the way it does: a tab takes as many columns as are left up to the next tab stop, so a tab standing in the middle of a line may take fewer than a whole tab size. Without the option a tab is one character like any other, and a file indented with tabs measures shorter than it looks in the editor, which is what the option is for alongside `indentation: "tab"`.
+
+For example, with a maximum length of `20` and `tabSize: 4`.
+
+The following pattern is considered a problem, the second line being indented with two tabs and measuring 8 + 13 = 21 columns:
+
+```css
+a {
+		color: black;
+}
+```
+
+The following patterns are _not_ considered problems, the first measuring 8 + 12 = 20 columns and the second 3 + 1 + 14 = 18, since its tab reaches the next tab stop after one column:
+
+```css
+a {
+		color: pink;
+}
+```
+
+```css
+a {	color: pink; }
+```
