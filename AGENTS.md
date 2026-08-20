@@ -43,6 +43,8 @@ Vitest with `@morev/stylelint-testing-library`. `vitest.setup.ts` loads `lib/in
 
 Rules must handle standard CSS only; non-standard syntax is filtered out through the `isStandardSyntax*` utils and tested there, not inside the rule.
 
+Every case carries a `description`, written as a noun phrase that continues the sentence the block already started: `accept` reads “accepts …”, `reject` reads “rejects …”. So it opens in lower case, ends without a period, and names what the fixture *is* rather than what the rule does with it — “a space in front of the comma of a single-line list”, not “rejects a space” or “CRLF”. Where a case exists for a reason the code cannot show, a clause says why: “a comma inside an attribute value, which is no comma of the list”. A case that repeats the one above it with a line break of another kind says so — “the same list written with a carriage-return line break” — rather than spelling the whole thing out again. The field is written with backticks, so a description can hold none; name identifiers in plain words instead. It stands after `code`, or after `fixed` where there is one.
+
 **Always enable `autoStripIndent`** in new and edited tests, and write multi-line `code` / `fixed` as indented template literals instead of `\n` escapes:
 
 ```js
