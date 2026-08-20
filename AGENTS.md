@@ -87,9 +87,23 @@ A case testing `\r` or `\r\n` stays on one line with `\n` escapes: a carria
 ## Conventions
 
 - Code style is enforced by oxlint (`.oxlintrc.json` extending `@firefoxic/oxlint-config`) and `.editorconfig`: tabs, LF, final newline. Double quotes in `import` statements and object keys, **backticks for all other string literals**, `let` over `const` for bindings, function declarations over expressions, sorted import groups.
-- JSDoc on exported functions and rule bodies is load-bearing — `make check` type-checks JS via `tsconfig.json` (`allowJs`, `checkJs: false`, `strict`).
+- Every exported function carries JSDoc, and the types in it are read by editors alone: `tsconfig.json` sets `checkJs: false`, so `make check` (`tsc --noEmit`) never looks inside a `.js` file. Nothing catches a wrong annotation — write one as carefully as code.
 - Rule names are `<thing>-<constraint>` (e.g. `color-hex-case`, `unit-case`); primary options should be explicit (`"lower"|"upper"`) rather than `always`/`never` where a noun works. Full rule-authoring conventions (options design, README format, message wording) live in `docs/developer-guide/rules.md`, adopted from Stylelint.
 - Adding a rule means touching four places: the rule dir, `lib/rules/index.js`, `docs/user-guide/rules.md`, and the `Unreleased` section of `CHANGELOG.md`.
+
+## Comments
+
+Nothing in a comment is ever wrapped by hand, exactly as in a commit message: a paragraph is one line, however long it turns out, and a blank comment line is all that separates one paragraph from the next. No column limit applies — where the text breaks is for the reader's window to decide, not for the author. Comments keep plain spaces, never the non-breaking ones of the section below.
+
+Three things inside a comment are not prose, and keep the lines they are written on: a list, a block of code, and a multi-line type literal such as the `@param {{ … }}` of [functionCommaSpaceFix](lib/utils/functionCommaSpaceFix/index.js).
+
+A JSDoc block that is prose alone — one paragraph, no tags — is written on a single line: `/** The code Stylelint exits with when its configuration is invalid. */`. One tag, and the block opens up, every tag on a line of its own.
+
+The dash before a tag's description separates that description from a name, so it is written only where there is a name to separate it from: `@param` and `@property` take it, `@returns` and `@throws` do not. `@description` is never written at all — a description is what a JSDoc block opens with, and it needs no tag.
+
+A description that spells out the name again says nothing. `@property {MessageFunction} [expectedBefore] - Message for expected before whitespace.` costs a line and a reading, and gives back neither what the message says nor when it is used.
+
+All of this holds in `*.test.js` as well, but a comment inside a fixture is not a comment: `/* … */` and `//` inside a `code` or `fixed` template literal are the CSS under test, and stay character for character as they are.
 
 ## Changelog
 
@@ -123,7 +137,7 @@ Verbs stay free, however short they are: `is`, `can`, `do` and `does` are bound
 
 One case is still unsettled: `no`. It is left free everywhere for now, since it can stand with nothing to attach to. The one exception is `no longer`: a single adverb spelled in two words, it never splits. More generally, a particle sometimes belongs to the preceding word rather than the following one — when that is clearly the case, follow the meaning.
 
-`make prose` applies all of this to every Markdown file in the repository, `LICENSE.md` aside, since a license is quoted verbatim. `make verify` runs the same pass as `make prose-check`, which writes nothing and fails on the first file left unbound. The script ([scripts/bind-prose.js](scripts/bind-prose.js)) is a helper, not an oracle: it cannot tell a conjunction from a pronoun, so both the pairs it must leave alone and the names it keeps whole are lists inside it. Read the diff it produces, and when meaning disagrees with the script, the meaning wins — teach it the exception, or the next run undoes yours.
+`make prose` applies all of this to every Markdown file in the repository, `LICENSE.md` aside, since a license is quoted verbatim, and `tmp/`, which holds work that is not part of the repository. `make verify` runs the same pass as `make prose-check`, which writes nothing and fails on the first file left unbound. The script ([scripts/bind-prose.js](scripts/bind-prose.js)) is a helper, not an oracle: it cannot tell a conjunction from a pronoun, so both the pairs it must leave alone and the names it keeps whole are lists inside it. Read the diff it produces, and when meaning disagrees with the script, the meaning wins — teach it the exception, or the next run undoes yours.
 
 ## Commit messages
 

@@ -5,7 +5,7 @@ import { argv, exit, stdout } from "node:process"
 
 let NBSP = `\u00A0`
 
-let SKIPPED_DIRS = [`node_modules`, `dist`, `coverage`, `.git`]
+let SKIPPED_DIRS = [`node_modules`, `dist`, `coverage`, `.git`, `tmp`]
 
 /** The license text is quoted verbatim, so it is left exactly as its source has it. */
 let SKIPPED_FILES = new Set([`LICENSE.md`])
