@@ -57,6 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 ### Added
 
 - The `max-line-length` rule now has an additional `tabSize` option (see [#10](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/10)). A tab used to count as one character, so a file indented with tabs measured shorter than the editor showed it; with the option a tab reaches the next tab stop of the given width, as the CSS `tab-size` property has it, and the limit is the one the editor's ruler shows.
+- The plugin now says so when it is listed in `extends` instead of `plugins` (see [#14](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/14)). It is a plugin rather than a shareable config, and Stylelint could not tell the one use from the other: it loaded the package as a config, found no rules in it, and reported every `@stylistic/` rule of the config as unknown — an error about the rules, whose cause is the field they were never reached from. A run now stops with a configuration error naming the field to move the package to.
 
 ### Fixed
 
