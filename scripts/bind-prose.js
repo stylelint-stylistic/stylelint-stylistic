@@ -10,10 +10,7 @@ let SKIPPED_DIRS = [`node_modules`, `dist`, `coverage`, `.git`, `tmp`]
 /** The license text is quoted verbatim, so it is left exactly as its source has it. */
 let SKIPPED_FILES = new Set([`LICENSE.md`])
 
-/**
- * Every word that binds to the one after it: articles, prepositions,
- * conjunctions, particles and the numerals spelled out.
- */
+/** Every word that binds to the one after it: articles, prepositions, conjunctions, particles and the numerals spelled out. */
 let FUNCTION_WORDS = `
 	a an the
 	in of to into for from at on by with without under over via through across inside
@@ -44,10 +41,7 @@ let TRAILING_NUMBER = /\b([A-Za-z]+) (\d+(?:[.,]\d+)?)(?=[,.;:)\]]|$)/gu
 /** An inline code span of any backtick width, left untouched. */
 let CODE_SPAN = /(`+)(?:(?!\1)[\s\S])*?\1/gu
 
-/**
- * Pairs the rules bind but the meaning does not: `that` as a pronoun in front
- * of its verb, `on` as an adverb rather than a preposition.
- */
+/** Pairs the rules bind but the meaning does not: `that` as a pronoun in front of its verb, `on` as an adverb rather than a preposition. */
 let EXCEPTIONS = [`that is`, `that says`, `on too`]
 
 let EXCEPTION_PATTERNS = EXCEPTIONS.map((pair) => new RegExp(`\\b${pair.replace(` `, `[ \\u00A0]`)}\\b`, `giu`))
@@ -55,7 +49,7 @@ let EXCEPTION_PATTERNS = EXCEPTIONS.map((pair) => new RegExp(`\\b${pair.replace(
 /**
  * Binds the function words of a single line of prose.
  *
- * @param {string} line The line to bind, with plain spaces only.
+ * @param {string} line - The line to bind, with plain spaces only.
  * @returns {string} The same line with non-breaking spaces in place.
  */
 function bind (line) {
@@ -83,7 +77,7 @@ function bind (line) {
 /**
  * Applies the convention to a whole document, leaving fenced code blocks alone.
  *
- * @param {string} source The Markdown source.
+ * @param {string} source - The Markdown source.
  * @returns {string} The bound Markdown source.
  */
 function bindDocument (source) {
