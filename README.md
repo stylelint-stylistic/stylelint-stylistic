@@ -18,7 +18,7 @@ Add `@stylistic/stylelint-plugin` and `stylelint` itself to your project:
 npm add -D stylelint @stylistic/stylelint-plugin
 ```
 
-Create the `.stylelintrc` config file (or open the existing one), add `@stylistic/stylelint-plugin` to the plugins array and the rules you need to the rules list. [All rules from `@stylistic/stylelint-plugin`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/docs/user-guide/rules.md) need to be namespaced with `@stylistic/`:
+Create the `.stylelintrc` config file (or open the existing one), add `@stylistic/stylelint-plugin` to the plugins array and the rules you need to the rules list. [All rules from `@stylistic/stylelint-plugin`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/docs/user-guide/rules.md) need to be namespaced with `@stylistic/`. That prefix is the whole difference — an unprefixed name in the rules list is a rule of Stylelint's own, a prefixed one is a rule of this plugin:
 
 ```json
 {
@@ -26,11 +26,9 @@ Create the `.stylelintrc` config file (or open the existing one), add `@styli
 		"@stylistic/stylelint-plugin"
 	],
 	"rules": {
-		// syntax rules from stylelint:
 		"color-function-notation": "modern",
 		"selector-max-compound-selectors": 2,
 
-		// stylistic rules from @stylistic/stylelint-plugin:
 		"@stylistic/color-hex-case": "lower",
 		"@stylistic/number-leading-zero": "always",
 		"@stylistic/unit-case": "lower"
