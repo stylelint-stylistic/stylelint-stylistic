@@ -5,27 +5,22 @@ set -e
 export PATH="./node_modules/.bin:$PATH"
 
 # A rebase, a merge, a cherry-pick or a revert owns the working tree while it runs, and a stash taken under one of them can leave the operation with no way to finish. What such a commit carries has been checked once already, on its way in, and the branch is checked again when the work lands.
-for marker in rebase-merge rebase-apply MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD
-do
+for marker in rebase-merge rebase-apply MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD; do
 	if [ -e "$(git rev-parse --git-dir)/$marker" ]
-	then
-		exit 0
+	then exit 0
 	fi
 done
 
 if git rev-parse --verify HEAD >/dev/null 2>&1
-then
-	against=HEAD
-else
-	against=$(git hash-object -t tree /dev/null)
+then against=HEAD
+else against=$(git hash-object -t tree /dev/null)
 fi
 
 git diff-index --check --cached "$against" --
 
 # With an empty index there is nothing to check, and `git stash -ku` would take the whole working tree away instead of the part being committed — the very thing the stash is here to keep out of the way. A `git commit --amend` that only rewords a message arrives exactly like this.
 if git diff-index --cached --quiet "$against" --
-then
-	exit 0
+then exit 0
 fi
 
 stash_before=$(git rev-parse -q --verify refs/stash || true)
@@ -35,28 +30,15 @@ git stash -ku --quiet
 stash_after=$(git rev-parse -q --verify refs/stash || true)
 
 # There is nothing to stash when the commit takes the whole working tree, and popping all the same would take an unrelated entry off the stash.
-if [ "$stash_before" != "$stash_after" ]; then
-	trap "git stash pop --quiet" EXIT
+if [ "$stash_before" != "$stash_after" ]
+then trap "git stash pop --quiet" EXIT
 fi
 
 changed_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|ts)$') || true
 
-if [ -z "$changed_files" ]; then
-	exit 0
+if [ -z "$changed_files" ]
+then exit 0
 fi
 
 oxlint $changed_files
-
-test_dirs=$(echo "$changed_files" | xargs -n1 dirname | sort -u)
-
-test_failed=0
-
-for dir in $test_dirs; do
-	if ls "$dir"/*.test.js >/dev/null 2>&1; then
-		if ! vitest "$dir"/*.test.js; then
-			test_failed=1
-		fi
-	fi
-done
-
-exit $test_failed
+vitest related $changed_files

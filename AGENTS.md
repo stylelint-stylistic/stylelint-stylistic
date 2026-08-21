@@ -14,7 +14,7 @@ make test TEST_FLAGS="-t 'lower'"                            # filter by test na
 make lint FILE=lib/rules/color-hex-case
 ```
 
-CI (`.github/workflows/test.yaml`) runs `make setup` and then `make verify` — run `make verify` locally before pushing. The release workflow (`.github/workflows/release.yaml`) runs `make setup` and then `make release` on pushes to `release` and `release-*`. The `pre-commit` hook lints staged `.js`/`.ts` files and runs the `*.test.js` files in their directories.
+CI (`.github/workflows/test.yaml`) runs `make setup` and then `make verify` — run `make verify` locally before pushing. The release workflow (`.github/workflows/release.yaml`) runs `make setup` and then `make release` on pushes to `release` and `release-*`. The `pre-commit` hook lints the staged `.js`/`.ts` files and runs, in one pass of `vitest related`, whatever test imports one of them — so a util is answered for by the rules that use it rather than by the directory it sits in.
 
 ## Architecture
 
