@@ -14,7 +14,6 @@ const RULE_OPTIONS = {
 	"block-closing-brace-newline-before": [`always`, `always-multi-line`, `never-multi-line`],
 	"block-closing-brace-space-after": [`always`, `never`, `always-single-line`, `never-single-line`, `always-multi-line`, `never-multi-line`],
 	"block-closing-brace-space-before": [`always`, `never`, `always-single-line`, `never-single-line`, `always-multi-line`, `never-multi-line`],
-	// `rules` is left out on purpose: the rule accepts it and then crashes on the first block (#241), so a run holding it lints nothing at all
 	"block-opening-brace-newline-after": [`always`, `always-multi-line`, `never-multi-line`],
 	"block-opening-brace-newline-before": [`always`, `always-single-line`, `never-single-line`, `always-multi-line`, `never-multi-line`],
 	"block-opening-brace-space-after": [`always`, `never`, `always-single-line`, `never-single-line`, `always-multi-line`, `never-multi-line`],
