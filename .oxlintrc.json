@@ -11,14 +11,102 @@
 		"createTestRule": "readonly",
 		"createTestRuleConfig": "readonly",
 	},
+	// Everything the shared config says holds. What stands below is what this plugin has a reason of its own for, and each entry carries that reason.
 	"rules": {
-		// Temporarily disabled rules
-		"complexity": "off",
-		"max-lines": "off",
-		"max-lines-per-function": "off",
-		"no-inline-comments": "off",
+		// A comment is not a line this rule is about: the plugin explains itself in prose, and counting that prose would punish the files that explain themselves best.
+		"max-lines": [
+			"error",
+			{
+				"skipComments": true,
+				"skipBlankLines": true
+			}
+		],
+		// The shape Stylelint asks a rule for counts twice over: `function rule (…)` holds the `(root, result) => { … }` it returns, so the same body is measured as two functions. The bar is set where it catches a walker that has genuinely grown rather than the shape itself.
+		"max-lines-per-function": [
+			"error",
+			{
+				"max": 100,
+				"skipComments": true,
+				"skipBlankLines": true
+			}
+		],
+		// A JSDoc cast has to stand where the expression it types does, so a block opening on `@type` or `@param` is no comment inline with code but part of the code.
+		"no-inline-comments": [
+			"error",
+			{
+				"ignorePattern": "^\\*\\s*@(type|param)\\b"
+			}
+		],
+		// Off for good: `eqeqeq` and `no-eq-null` are both on, so `value == null` is refused twice over, while this rule refuses `value === undefined`. Between the three there is no spelling left for the question the plugin asks 16 times, `typeof value === "undefined"` aside, and none of the 21 places handing `report` a `fix` of `undefined` reads better as a conditional spread.
 		"no-undefined": "off",
-		"no-warning-comments": "off",
-		"import/exports-last": "off",
 	},
+	"overrides": [
+		{
+			// Three walkers written before the rule was on: the callback of `root.walk` and the one of `styleSearch` in `indentation`, and the callback of `parsedValue.walk` in the two `function-parentheses-*-inside` rules, where eight all but identical branches of `primary` stand one after another. The ceiling is what the worst of them counts today, so none of the three may grow, and it comes down as each is taken apart.
+			"files": [
+				"lib/rules/function-parentheses-newline-inside/index.js",
+				"lib/rules/function-parentheses-space-inside/index.js",
+				"lib/rules/indentation/index.js",
+			],
+			"rules": {
+				"complexity": [
+					"error",
+					28
+				],
+			},
+		},
+		{
+			// The one rule that is long in code rather than in prose. The ceiling is what it counts today, so it may not grow, and it comes down if the file is ever taken apart the way its tests already are.
+			"files": [
+				"lib/rules/indentation/index.js",
+			],
+			"rules": {
+				"max-lines": [
+					"error",
+					{
+						"max": 427,
+						"skipComments": true,
+						"skipBlankLines": true
+					}
+				],
+				"max-lines-per-function": [
+					"error",
+					{
+						"max": 253,
+						"skipComments": true,
+						"skipBlankLines": true
+					}
+				],
+			},
+		},
+		{
+			// Five walkers that were long before the bar was set. The ceiling is what the longest of them counts today.
+			"files": [
+				"lib/rules/function-parentheses-space-inside/index.js",
+				"lib/rules/no-eol-whitespace/index.js",
+				"lib/rules/selector-attribute-brackets-space-inside/index.js",
+				"lib/rules/string-quotes/index.js",
+				"lib/utils/whitespaceChecker/index.js",
+			],
+			"rules": {
+				"max-lines-per-function": [
+					"error",
+					{
+						"max": 173,
+						"skipComments": true,
+						"skipBlankLines": true
+					}
+				],
+			},
+		},
+		{
+			// A rule opens on what it is — its name, the messages it reports and the `meta` a config and the docs read — and closes on the implementation. Sending the three to the foot of the file would put a rule's identity behind two hundred lines of walking, and would part with the shape [AGENTS.md](AGENTS.md) sets out and Stylelint's own rules keep.
+			"files": [
+				"lib/rules/*/index.js",
+			],
+			"rules": {
+				"import/exports-last": "off",
+			},
+		},
+	],
 }
