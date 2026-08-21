@@ -12,8 +12,6 @@
 		"createTestRuleConfig": "readonly",
 	},
 	"rules": {
-		// Permanently disabled rules
-		"enough-is-enough/prefer-let": "off",
 		// Temporarily disabled rules
 		"complexity": "off",
 		"max-lines": "off",

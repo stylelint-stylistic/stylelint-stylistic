@@ -4,7 +4,7 @@ import { assert, describe, expect, it } from "vitest"
 
 import plugins from "./lib/index"
 
-const { createTestRule, createTestRuleConfig } = createTestUtils({
+let { createTestRule, createTestRuleConfig } = createTestUtils({
 	testFunctions: { assert, describe, expect, it },
 	plugins,
 	autoStripIndent: true,

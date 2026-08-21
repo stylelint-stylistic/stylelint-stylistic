@@ -3,15 +3,15 @@
 import { readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { argv, exit, stdout } from "node:process"
 
-let NBSP = `\u00A0`
+const NBSP = `\u00A0`
 
-let SKIPPED_DIRS = [`node_modules`, `dist`, `coverage`, `.git`, `tmp`]
+const SKIPPED_DIRS = [`node_modules`, `dist`, `coverage`, `.git`, `tmp`]
 
 /** The license text is quoted verbatim, so it is left exactly as its source has it. */
-let SKIPPED_FILES = new Set([`LICENSE.md`])
+const SKIPPED_FILES = new Set([`LICENSE.md`])
 
 /** Every word that binds to the one after it: articles, prepositions, conjunctions, particles and the numerals spelled out. */
-let FUNCTION_WORDS = `
+const FUNCTION_WORDS = `
 	a an the
 	in of to into for from at on by with without under over via through across inside
 	after before between against about per than as like unlike onto upon within during
@@ -21,30 +21,30 @@ let FUNCTION_WORDS = `
 	two three four five six seven eight nine ten eleven twelve
 `.trim().split(/\s+/u)
 
-let ALTERNATIVES = FUNCTION_WORDS.toSorted((a, b) => b.length - a.length).join(`|`)
+const ALTERNATIVES = FUNCTION_WORDS.toSorted((a, b) => b.length - a.length).join(`|`)
 
 /** A function word, keeping any emphasis markers glued to it (`**not**`). */
-let FUNCTION_WORD = new RegExp(String.raw`\b(${ALTERNATIVES})([*_]{0,2}) (?=\S)`, `giu`)
+const FUNCTION_WORD = new RegExp(String.raw`\b(${ALTERNATIVES})([*_]{0,2}) (?=\S)`, `giu`)
 
 /** `no` binds to nothing on its own, but never parts with `longer`. */
-let NO_LONGER = /\bno longer\b/giu
+const NO_LONGER = /\bno longer\b/giu
 
 /** Names of works stay whole, and no rule can tell them from ordinary prose. */
-let PROPER_NAMES = [`Keep a Changelog`, `Semantic Versioning`]
+const PROPER_NAMES = [`Keep a Changelog`, `Semantic Versioning`]
 
 /** A number binds to what it counts or measures. */
-let NUMBER = /(?<![\w.-])(\d+(?:[.,]\d+)?) (?=\S)/gu
+const NUMBER = /(?<![\w.-])(\d+(?:[.,]\d+)?) (?=\S)/gu
 
 /** A number trailing its word — a date, a version — binds backwards instead. */
-let TRAILING_NUMBER = /\b([A-Za-z]+) (\d+(?:[.,]\d+)?)(?=[,.;:)\]]|$)/gu
+const TRAILING_NUMBER = /\b([A-Za-z]+) (\d+(?:[.,]\d+)?)(?=[,.;:)\]]|$)/gu
 
 /** An inline code span of any backtick width, left untouched. */
-let CODE_SPAN = /(`+)(?:(?!\1)[\s\S])*?\1/gu
+const CODE_SPAN = /(`+)(?:(?!\1)[\s\S])*?\1/gu
 
 /** Pairs the rules bind but the meaning does not: `that` as a pronoun in front of its verb, `on` as an adverb rather than a preposition. */
-let EXCEPTIONS = [`that is`, `that says`, `on too`]
+const EXCEPTIONS = [`that is`, `that says`, `on too`]
 
-let EXCEPTION_PATTERNS = EXCEPTIONS.map((pair) => new RegExp(`\\b${pair.replace(` `, `[ \\u00A0]`)}\\b`, `giu`))
+const EXCEPTION_PATTERNS = EXCEPTIONS.map((pair) => new RegExp(`\\b${pair.replace(` `, `[ \\u00A0]`)}\\b`, `giu`))
 
 /**
  * Binds the function words of a single line of prose.
