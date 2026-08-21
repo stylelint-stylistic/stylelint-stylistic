@@ -4,6 +4,8 @@ SHELL := bash
 
 export PATH := $(CURDIR)/node_modules/.bin:$(PATH)
 
+OUT ?= tmp/oracles
+
 ANSI_RESET := \033[0m
 ANSI_BOLD := \033[1m
 ANSI_BOLD_CYAN := \033[1;36m
@@ -38,6 +40,15 @@ prose: ## ✍️  Bind function words in markdown with non-breaking spaces
 prose-check: ## 🔤 Check that markdown prose is bound
 	./scripts/bind-prose.js --check
 .PHONY: prose-check
+
+oracles: ## 🔮 Run the three oracles over every rule and option [OUT=]
+	@mkdir -p $(OUT)
+	for oracle in converge control comments ; do
+		printf "\t🔮 $$oracle\n"
+		./scripts/oracles/$$oracle.mjs > $(OUT)/$$oracle.json
+	done
+	@printf "\t✅ Written to $(ANSI_BOLD)$(OUT)$(ANSI_RESET). Run once before a branch and once after, and read the diff.\n\n"
+.PHONY: oracles
 
 verify: check lint test prose-check ## ✅ Run every check the CI runs
 .PHONY: verify
