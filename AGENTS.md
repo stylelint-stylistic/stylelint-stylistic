@@ -45,7 +45,7 @@ Rules must handle standard CSS only; non-standard syntax is filtered out through
 
 Every case carries a `description`, written as a noun phrase that continues the sentence the block already started: `accept` reads “accepts …”, `reject` reads “rejects …”. So it opens in lower case, ends without a period, and names what the fixture *is* rather than what the rule does with it — “a space in front of the comma of a single-line list”, not “rejects a space” or “CRLF”. Where a case exists for a reason the code cannot show, a clause says why: “a comma inside an attribute value, which is no comma of the list”. A case that repeats the one above it with a line break of another kind says so — “the same list written with a carriage-return line break” — rather than spelling the whole thing out again. The field is written with backticks, so a description can hold none; name identifiers in plain words instead. It stands after `code`, or after `fixed` where there is one.
 
-**Always enable `autoStripIndent`** in new and edited tests, and write multi-line `code` / `fixed` as indented template literals instead of `\n` escapes:
+Indentation is stripped from every fixture: `autoStripIndent` is set once, in [vitest.setup.ts](vitest.setup.ts), and no test file turns it on. So multi-line `code` and `fixed` are written as indented template literals rather than with `\n` escapes:
 
 ```js
 {
@@ -57,13 +57,16 @@ Every case carries a `description`, written as a noun phrase that continues 
 },
 ```
 
-The common indentation is stripped, so line numbers in `reject` cases count from the first non-empty line. The flag is read from the case first, then from the `testRule({ … })` block, then from the `createTestRule({ … })` factory, so a single block, or a single case, can use it inside a file written in the old style — a whole file is migrated only when that is worth doing for its own sake, and the tests are re-run afterwards, since the flag changes the code of already-indented cases.
+What the stripping does, in the order it does it:
 
-The common indentation is the shortest run of tabs and spaces in front of content, counted in characters, and that many characters are then taken off every line. Three things follow:
-
-- indentation a case is *about* is written on top of the common one — the common tabs, and then the space being tested; a space put in front of the tabs is taken off as one of the stripped characters instead;
-- the literal loses its final line break, and a blank first line with it, so a fixture cannot end in a newline;
+- the line break that opens the literal goes, and every space and tab in front of the first line's content with it, so indentation a case is *about* can never stand on the first line;
+- the last line break goes too, along with the whitespace behind it, so a fixture cannot end in a newline;
+- of what is left, the shortest run of tabs and spaces in front of content is measured, and that many characters come off the front of every line — so a fixture's own indentation is written on top of the common tabs, and a space put in front of the tabs is taken off as one of the stripped characters instead;
 - `code` and `fixed` are stripped apart from each other, each by its own common indentation.
+
+Line numbers in `reject` cases therefore count from the first line of the fixture, not from the line its literal opens on.
+
+A case whose subject is the whitespace at the edges of the source — a blank first line, a newline at the end, the indentation of the whole fixture — cannot be written under stripping at all, and turns it off with `autoStripIndent: false`. That is the only reason to write the flag, and it goes at the narrowest scope covering the cases that need it: the case itself, the `testRule({ … })` block, or the `createTestRule({ … })` factory where a rule is about nothing else, as `linebreaks`, `max-empty-lines` and `no-missing-end-of-source-newline` are.
 
 Whitespace at the end of a line — what `no-eol-whitespace` is about — is written as an interpolated constant declared once per file, since an editor trims a real trailing space away on the first save. Indentation asks for nothing of the kind: a space inside a template literal is left alone by the linter, and is written as itself.
 

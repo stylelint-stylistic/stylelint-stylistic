@@ -7,6 +7,7 @@ import plugins from "./lib/index"
 const { createTestRule, createTestRuleConfig } = createTestUtils({
 	testFunctions: { assert, describe, expect, it },
 	plugins,
+	autoStripIndent: true,
 	testCaseWithoutDescriptionAppearance: `case-index`,
 	testGroupWithoutDescriptionAppearance: `line-in-file`,
 	contextNewlineFallback: `lf`,
