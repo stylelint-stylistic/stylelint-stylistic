@@ -75,7 +75,6 @@ const DEBT = {
 		`let violatedCRLFNewLinesRegex = new RegExp(\`(?:\\r\\n){\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
 		`let violatedLFNewLinesRegex = new RegExp(\`\\n{\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
 	],
-	"lib/rules/function-parentheses-newline-inside/index.js": [`return str.includes(\`\\n\`)`],
 	"lib/rules/function-whitespace-after/index.js": [
 		`if (nextChar === \`\\n\`) return`,
 		`if (source.slice(index, index + 2) === \`\\r\\n\`) return`,
