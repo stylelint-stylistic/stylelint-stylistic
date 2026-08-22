@@ -105,12 +105,7 @@ const DEBT = {
 		`if (rootString[nextNewlineIndex - 1] === \`\\r\`) nextNewlineIndex -= 1`,
 	],
 	"lib/rules/named-grid-areas-alignment/index.js": [`let isMultilineDeclaration = declarationValue.includes(\`\\n\`)`],
-	"lib/rules/no-eol-whitespace/index.js": [
-		`let beforeNewlineIndex = string.lastIndexOf(\`\\n\`, eolWhitespaceIndex)`,
-		`target: [\`\\n\`, \`\\r\`],`,
-		`root.raws.after.lastIndexOf(\`\\n\`),`,
-		`root.raws.after.lastIndexOf(\`\\r\`),`,
-	],
+	"lib/rules/no-eol-whitespace/index.js": [`const LINE_BREAK_CHARACTERS = [\`\\n\`, \`\\r\`, \`\\f\`]`],
 	"lib/rules/no-extra-semicolons/index.js": [`if (string[i] === \`\\n\`) {`],
 	"lib/rules/no-missing-end-of-source-newline/index.js": [`if (!rootString.trim() || rootString.endsWith(\`\\n\`)) return`],
 	"lib/rules/no-multiple-whitespaces/index.js": [`return char === \`\\n\` || char === \`\\r\``],
