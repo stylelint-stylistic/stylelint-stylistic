@@ -41,16 +41,20 @@ prose-check: ## 🔤 Check that markdown prose is bound
 	./scripts/bind-prose.js --check
 .PHONY: prose-check
 
-oracles: ## 🔮 Run the three oracles over every rule and option [OUT=]
+oracles: ## 🔮 Run the five oracles over every rule and option [OUT=]
 	@mkdir -p $(OUT)
-	for oracle in converge control comments ; do
+	for oracle in converge control comments twins nodes ; do
 		printf "\t🔮 $$oracle\n"
 		./scripts/oracles/$$oracle.mjs > $(OUT)/$$oracle.json
 	done
 	@printf "\t✅ Written to $(ANSI_BOLD)$(OUT)$(ANSI_RESET). Run once before a branch and once after, and read the diff.\n\n"
 .PHONY: oracles
 
-verify: check lint test prose-check ## ✅ Run every check the CI runs
+breaks-check: ## ↩️  Check that every line spelling a line break in lib/ is classified
+	./scripts/check-break-readings.js
+.PHONY: breaks-check
+
+verify: check lint test prose-check breaks-check ## ✅ Run every check the CI runs
 .PHONY: verify
 
 release: verify ## 🚀 Release a new version

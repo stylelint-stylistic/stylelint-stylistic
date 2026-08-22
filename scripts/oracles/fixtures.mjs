@@ -1,4 +1,4 @@
-/** The shapes the defects of this plugin have come out of: a comment beside code, two spellings of a line break, a bang, a run of them. Each is as small as it can be and still be wrong, since every fixture costs the run three lints per rule and option. */
+/** The shapes the defects of this plugin have come out of: a comment beside code, two spellings of a line break, a bang, a run of them. Each is as small as it can be and still be wrong, since every fixture costs the run about a dozen lints per rule and option — three for `converge.mjs`, one each for `comments.mjs` and `nodes.mjs`, and eight for `twins.mjs`, which lints an original and three twins twice over. */
 const FIXTURES = [
 	[`plain`, `a { color: pink; }\n`],
 	[`plain-multi`, `a,\nb {\n\tcolor: pink;\n\ttransform: translate(1px, 2px);\n}\n`],
@@ -25,7 +25,7 @@ const FIXTURES = [
 	[`nested-group`, `h1 { width: ((1) * (2))em; }\n`],
 ]
 
-/** The same shapes again with the comment the two custom syntaxes spell with a double slash. */
+/** The same shapes again with the comment the two custom syntaxes spell with a double slash. The last two stand where a fixer is about to take a break away — behind the opening brace, and behind a semicolon — since that is where taking one carries the code after it into the comment, which is #248 and which no fixture reached until this pair was written. */
 const INLINE_FIXTURES = [
 	[`inline-value`, `a { b: 1px // c\n\t2px; }\n`],
 	[`inline-trailing`, `a {\n\tcolor: pink // c\n}\n`],
@@ -35,6 +35,8 @@ const INLINE_FIXTURES = [
 	[`inline-unclosed`, `a { transform: translate(1px, 2px // a /*\n); }\n`],
 	[`inline-media`, `@media (min-width: 100px // c\n\t) { a { color: red; } }\n`],
 	[`inline-selector`, `a // c\n{ color: pink; }\n`],
+	[`inline-after-brace`, `a {// c\n\tcolor: pink;\n}\n`],
+	[`inline-after-semicolon`, `a {\n\tcolor: pink;// c\n\ttop: 0;\n}\n`],
 ]
 
 export { FIXTURES, INLINE_FIXTURES }
