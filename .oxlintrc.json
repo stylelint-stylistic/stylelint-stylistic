@@ -42,7 +42,7 @@
 	},
 	"overrides": [
 		{
-			// Three walkers written before the rule was on: the callback of `root.walk` and the one of `styleSearch` in `indentation`, and the callback of `parsedValue.walk` in the two `function-parentheses-*-inside` rules, where eight all but identical branches of `primary` stand one after another. The ceiling is what the worst of them counts today, so none of the three may grow, and it comes down as each is taken apart.
+			// Three walkers written before the rule was on: the callback of `root.walk` and the one of `styleSearch` in `indentation`, and the callback of `parsedValue.walk` in the two `function-parentheses-*-inside` rules, where eight all but identical branches of `primary` stand one after another. The ceiling is what the worst of them counts today, so none of the three may grow, and it comes down as each is taken apart. The worst is `root.walk` in `indentation` since #280 took the ternaries out of `function-parentheses-space-inside`, whose walker set the ceiling before that.
 			"files": [
 				"lib/rules/function-parentheses-newline-inside/index.js",
 				"lib/rules/function-parentheses-space-inside/index.js",
@@ -51,7 +51,7 @@
 			"rules": {
 				"complexity": [
 					"error",
-					28
+					27
 				],
 			},
 		},
