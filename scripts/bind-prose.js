@@ -5,7 +5,8 @@ import { argv, exit, stdout } from "node:process"
 
 const NBSP = `\u00A0`
 
-const SKIPPED_DIRS = [`node_modules`, `dist`, `coverage`, `.git`, `tmp`]
+/** Every directory holding Markdown the repository does not carry: what a package manager put there, what a build wrote, and the two the working tree keeps for a session rather than for the project. */
+const SKIPPED_DIRS = [`node_modules`, `dist`, `coverage`, `.git`, `.claude`, `tmp`]
 
 /** The license text is quoted verbatim, so it is left exactly as its source has it. */
 const SKIPPED_FILES = new Set([`LICENSE.md`])
