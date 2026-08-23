@@ -42,7 +42,7 @@ const ALLOWED = {
 	],
 	"lib/rules/function-parentheses-newline-inside/index.js": [
 		`return [...printedLines.slice(0, -1), printedLines.at(-1).slice(0, lines.at(-1).length)].join(\`\\n\`)`,
-		`formFeed: endsWithInlineComment(\`\${before.replaceAll(EVERY_FORM_FEED, \`\\n\`)})\`, spellsInlineComments),`,
+		`formFeed: endsWithInlineComment(text.replaceAll(EVERY_FORM_FEED, \`\\n\`), spellsInlineComments),`,
 	],
 	"lib/rules/function-parentheses-space-inside/index.js": [
 		`return [...printedLines.slice(0, -1), printedLines.at(-1).slice(0, lines.at(-1).length)].join(\`\\n\`)`,
