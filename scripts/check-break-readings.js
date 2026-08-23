@@ -42,11 +42,11 @@ const ALLOWED = {
 	],
 	"lib/rules/function-parentheses-newline-inside/index.js": [
 		`return [...printedLines.slice(0, -1), printedLines.at(-1).slice(0, lines.at(-1).length)].join(\`\\n\`)`,
-		`if (endsWithInlineComment(\`\${standing.replaceAll(EVERY_COMMENT_CLOSING_BREAK, \`\\n\`)})\`, spellsInlineComments)) return \`\``,
+		`formFeed: endsWithInlineComment(\`\${before.replaceAll(EVERY_FORM_FEED, \`\\n\`)})\`, spellsInlineComments),`,
 	],
 	"lib/rules/function-parentheses-space-inside/index.js": [
 		`return [...printedLines.slice(0, -1), printedLines.at(-1).slice(0, lines.at(-1).length)].join(\`\\n\`)`,
-		`if (endsWithInlineComment(\`\${standing.replaceAll(EVERY_COMMENT_CLOSING_BREAK, \`\\n\`)})\`, spellsInlineComments)) return \`\``,
+		`formFeed: endsWithInlineComment(\`\${before.replaceAll(EVERY_FORM_FEED, \`\\n\`)})\`, spellsInlineComments),`,
 	],
 	"lib/rules/indentation/index.js": [`return str.replaceAll(EVERY_LINE_BREAK_AND_INDENT, \`\\n\${whitespace}\`)`],
 	"lib/rules/max-empty-lines/index.js": [
