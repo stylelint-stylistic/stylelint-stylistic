@@ -49,6 +49,7 @@ const ALLOWED = {
 		`formFeed: endsWithInlineComment(text.replaceAll(EVERY_FORM_FEED, \`\\n\`), spellsInlineComments),`,
 	],
 	"lib/rules/indentation/index.js": [`return str.replaceAll(EVERY_LINE_BREAK_AND_INDENT, \`\\n\${whitespace}\`)`],
+	"lib/rules/linebreaks/index.js": [`if (data) return data.replaceAll(EVERY_CR_OR_LF_BREAK, shouldHaveCR ? \`\\r\\n\` : \`\\n\`)`],
 	"lib/rules/max-empty-lines/index.js": [
 		`let emptyLFLines = \`\\n\`.repeat(repeatTimes)`,
 		`let emptyCRLFLines = \`\\r\\n\`.repeat(repeatTimes)`,
@@ -94,8 +95,6 @@ const DEBT = {
 	"lib/rules/linebreaks/index.js": [
 		`let lines = root.source.input.css.split(\`\\n\`)`,
 		`if (i < lines.length - 1 && !line.includes(\`\\r\`)) line += \`\\n\``,
-		`let res = data.replaceAll(\`\\r\`, \`\`)`,
-		`if (shouldHaveCR) res = res.replaceAll(\`\\n\`, \`\\r\\n\`)`,
 	],
 	"lib/rules/max-empty-lines/index.js": [`target: CRLF.test(rootString) ? \`\\r\\n\` : \`\\n\`,`],
 	"lib/rules/max-line-length/index.js": [
