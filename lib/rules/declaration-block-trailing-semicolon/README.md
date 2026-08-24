@@ -10,13 +10,9 @@ a { background: orange; color: pink; }
 
 The trailing semicolon is the _last_ semicolon in a declaration block and it is optional.
 
-This rule ignores:
+This rule ignores declaration blocks containing nested (at-)rules. A Less mixin call is not one of them: Less asks for the semicolon behind a call no more than CSS asks for it behind a declaration, so a call closing its block is read like any other node closing a block.
 
-- Less mixins
-- trailing `//` comments
-- declaration blocks containing nested (at-)rules
-
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix the problems reported by this rule, except the ones a comment leaves the semicolon nowhere to stand in: `"always"` writes none behind a value or a set of parameters that a `//` comment runs to the end of, since the semicolon would land inside the comment, and `"never"` takes none away from behind a bodiless at-rule or a custom property that a comment closes the block behind, since that is a semicolon PostCSS writes back whatever the stylesheet asks for.
 
 ## Options
 
