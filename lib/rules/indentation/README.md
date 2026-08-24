@@ -89,6 +89,11 @@ a {
 }
 ```
 
+```css
+@media (min-width: 100px
+  ) {}
+```
+
 The following patterns are _not_ considered problems:
 
 ```css
@@ -134,6 +139,15 @@ a {
   top: 0;
 }
 ```
+
+```css
+@media (min-width: 100px
+) {}
+```
+
+A closing bracket standing at the beginning of a line is indented one level out from the lines inside the brackets — but only while a bracket opened at the end of a line is still open. A bracket opened in the middle of a line indents nothing, so the one closing it asks for the outermost level of the selector, the value or the set of parameters it belongs to: the first column for an at-rule at the root, the level of the at-rule itself for one nested in a rule, the level of the declaration for a value. This holds for the brace of a Sass interpolation as it does for a parenthesis, save under `indentClosingBrace` below: that option keeps a closing parenthesis at the level of the lines inside the parentheses, and has never been asked about a brace.
+
+That outermost level is the level of the node itself wherever the text is measured there rather than one level above it: `@nest` and Sass's `@at-root`, whose parameters are a selector, and anything the `except` option below takes a level away from. The brackets inside such a text still indent the lines they open, since `except` is about the level of the text and not about what stands inside it.
 
 ## Optional secondary options
 
