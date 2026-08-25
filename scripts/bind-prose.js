@@ -5,8 +5,8 @@ import { argv, exit, stdout } from "node:process"
 
 const NBSP = `\u00A0`
 
-/** Every directory holding Markdown the repository does not carry: what a package manager put there, what a build wrote, and the two the working tree keeps for a session rather than for the project. */
-const SKIPPED_DIRS = [`node_modules`, `dist`, `coverage`, `.git`, `.claude`, `tmp`]
+/** Every name of a directory holding Markdown the repository does not carry: what a package manager put there, what a build wrote, and the two the working tree keeps for a session rather than for the project. A name rather than a path, so that it is refused wherever in the tree it stands. */
+const SKIPPED_DIR_NAMES = new Set([`node_modules`, `dist`, `coverage`, `.git`, `.claude`, `tmp`])
 
 /** The license text is quoted verbatim, so it is left exactly as its source has it. */
 const SKIPPED_FILES = new Set([`LICENSE.md`])
@@ -96,16 +96,35 @@ function bindDocument (source) {
 }
 
 /**
+ * Collects the Markdown of one directory and of everything under it, declining to descend into a skipped name.
+ *
+ * `readdirSync` takes no list of subtrees to leave unread, so a walk asking it for the whole tree at once reads `node_modules` and `tmp` in full before any filter over its result can drop them — and a single entry under either that cannot be read ends the run over a directory the repository does not carry. Reading one directory at a time is what lets the name be refused before it costs anything.
+ *
+ * @param {string} directory - The directory to read, relative to the current one, and empty for that one itself.
+ * @param {string[]} paths - Where the Markdown found so far is collected.
+ */
+function collectMarkdownFrom (directory, paths) {
+	for (let entry of readdirSync(directory || `.`, { withFileTypes: true })) {
+		let path = directory ? `${directory}/${entry.name}` : entry.name
+
+		if (entry.isDirectory()) {
+			if (!SKIPPED_DIR_NAMES.has(entry.name)) collectMarkdownFrom(path, paths)
+		}
+		else if (path.endsWith(`.md`) && !SKIPPED_FILES.has(path)) paths.push(path)
+	}
+}
+
+/**
  * Collects every Markdown file the convention applies to.
  *
  * @returns {string[]} The paths, relative to the current directory.
  */
 function collectMarkdown () {
-	return readdirSync(`.`, { recursive: true })
-		.filter((path) => path.endsWith(`.md`))
-		.filter((path) => !SKIPPED_DIRS.some((dir) => path.startsWith(`${dir}/`)))
-		.filter((path) => !SKIPPED_FILES.has(path))
-		.toSorted()
+	let paths = []
+
+	collectMarkdownFrom(``, paths)
+
+	return paths.toSorted()
 }
 
 let isCheck = argv.includes(`--check`)
