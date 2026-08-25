@@ -13,7 +13,7 @@ Require a newline or disallow whitespace on the inside of the parentheses
  * The newline inside these two parentheses */
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix the problems reported by this rule, except two kinds of them under `"never-multi-line"`. Where an inline comment stands in front of the whitespace and the line break that whitespace holds is the one closing it, emptying the whitespace would leave the first argument, or the closing parenthesis, and everything the declaration has behind it, inside the comment's text. And behind the opening parenthesis the fixer may not reach every stretch of the whitespace the option was measured against: the walk that measures it steps over an inline comment and counts what hangs behind the comment's end, while the fix stops at the double slash that opens one, and emptying only the stretches it does reach would leave the option violated behind a problem reported as fixed. Both times the whitespace is left alone and the warning stands. `"always"` and `"always-multi-line"` put a line break in and take nothing away, so neither kind holds them back.
 
 ## Options
 
