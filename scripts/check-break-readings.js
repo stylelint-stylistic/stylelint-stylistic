@@ -40,14 +40,8 @@ const ALLOWED = {
 		`let allowedLFNewLinesString = \`\\n\`.repeat(maxAdjacentNewlines)`,
 		`let allowedCRLFNewLinesString = \`\\r\\n\`.repeat(maxAdjacentNewlines)`,
 	],
-	"lib/rules/function-parentheses-newline-inside/index.js": [
-		`return [...printedLines.slice(0, -1), printedLines.at(-1).slice(0, lines.at(-1).length)].join(\`\\n\`)`,
-		`formFeed: endsWithInlineComment(text.replaceAll(EVERY_FORM_FEED, \`\\n\`), spellsInlineComments),`,
-	],
-	"lib/rules/function-parentheses-space-inside/index.js": [
-		`return [...printedLines.slice(0, -1), printedLines.at(-1).slice(0, lines.at(-1).length)].join(\`\\n\`)`,
-		`formFeed: endsWithInlineComment(text.replaceAll(EVERY_FORM_FEED, \`\\n\`), spellsInlineComments),`,
-	],
+	"lib/rules/function-parentheses-newline-inside/index.js": [`formFeed: endsWithInlineComment(text.replaceAll(EVERY_FORM_FEED, \`\\n\`), spellsInlineComments),`],
+	"lib/rules/function-parentheses-space-inside/index.js": [`formFeed: endsWithInlineComment(text.replaceAll(EVERY_FORM_FEED, \`\\n\`), spellsInlineComments),`],
 	"lib/rules/indentation/index.js": [`return str.replaceAll(EVERY_LINE_BREAK_AND_INDENT, \`\\n\${whitespace}\`)`],
 	"lib/rules/linebreaks/index.js": [`if (data) return data.replaceAll(EVERY_CR_OR_LF_BREAK, shouldHaveCR ? \`\\r\\n\` : \`\\n\`)`],
 	"lib/rules/max-empty-lines/index.js": [
