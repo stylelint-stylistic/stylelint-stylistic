@@ -25,7 +25,7 @@ const FIXTURES = [
 	[`nested-group`, `h1 { width: ((1) * (2))em; }\n`],
 ]
 
-/** The same shapes again with the comment the two custom syntaxes spell with a double slash. The last two stand where a fixer is about to take a break away — behind the opening brace, and behind a semicolon — since that is where taking one carries the code after it into the comment, which is #248 and which no fixture reached until this pair was written. */
+/** The same shapes again with the comment the two custom syntaxes spell with a double slash. The last three are placed rather than translated. Two of them stand where a fixer is about to take a break away — behind the opening brace, and behind a semicolon — since that is where taking one carries the code after it into the comment, which is #248 and which no fixture reached until this pair was written. The third stands where a fixer is about to write one in: the comment there runs past a second call to the end of the line, so a break written into the first call closes the comment and hands the second one back to the value, which is #288 and which no fixture reached until this one was written. */
 const INLINE_FIXTURES = [
 	[`inline-value`, `a { b: 1px // c\n\t2px; }\n`],
 	[`inline-trailing`, `a {\n\tcolor: pink // c\n}\n`],
@@ -37,6 +37,7 @@ const INLINE_FIXTURES = [
 	[`inline-selector`, `a // c\n{ color: pink; }\n`],
 	[`inline-after-brace`, `a {// c\n\tcolor: pink;\n}\n`],
 	[`inline-after-semicolon`, `a {\n\tcolor: pink;// c\n\ttop: 0;\n}\n`],
+	[`inline-swallows-func`, `a { t: foo(1px // c) calc(1px\n); }\n`],
 ]
 
 export { FIXTURES, INLINE_FIXTURES }
