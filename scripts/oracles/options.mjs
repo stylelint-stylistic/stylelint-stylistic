@@ -4,6 +4,7 @@
  * The list is written out rather than read off the source, so that a run of an oracle over an older commit is comparable with a run over a newer one. A rule gaining an option gains a line here in the same commit.
  */
 const RULE_OPTIONS = {
+	"aspect-ratio-notation": [`ratio`, `number-where-possible`, `as-written`],
 	"at-rule-name-case": [`lower`, `upper`],
 	"at-rule-name-newline-after": [`always`, `always-multi-line`],
 	"at-rule-name-space-after": [`always`, `always-single-line`],
