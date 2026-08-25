@@ -19,6 +19,7 @@ const FIXTURES = [
 	[`selector-comment`, `a /* c */ > b { color: pink; }\n`],
 	[`atrule-bodiless`, `@import "a";\n@charset "utf-8";\n`],
 	[`grid`, `a { grid-template-areas: "a a"\n\t"b b"; }\n`],
+	[`aspect-ratio`, `a { aspect-ratio: 16 / 8 /*c*/ auto; }\n`],
 	[`quotes`, `a[href='x'] { b: 'y'; }\n`],
 	[`two-bangs`, `a { b: 1px!important 2px!important; }\n`],
 	[`group-with-unit`, `h1 { width: (1 + 2)px; }\n`],
