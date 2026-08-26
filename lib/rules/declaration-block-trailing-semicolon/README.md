@@ -66,6 +66,10 @@ a { color: pink; }
 a { background: orange; color: pink; }
 ```
 
+```css
+a { color: pink;; }
+```
+
 The following patterns are _not_ considered problems:
 
 ```css
