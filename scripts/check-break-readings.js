@@ -42,7 +42,7 @@ const ALLOWED = {
 	],
 	"lib/rules/function-parentheses-newline-inside/index.js": [`formFeed: endsWithInlineComment(text.replaceAll(EVERY_FORM_FEED, \`\\n\`), spellsInlineComments),`],
 	"lib/rules/function-parentheses-space-inside/index.js": [`formFeed: endsWithInlineComment(text.replaceAll(EVERY_FORM_FEED, \`\\n\`), spellsInlineComments),`],
-	"lib/rules/indentation/index.js": [`return str.replaceAll(EVERY_LINE_BREAK_AND_INDENT, \`\\n\${whitespace}\`)`],
+	"lib/rules/indentation/index.js": [`searchString = searchString.replaceAll(EVERY_BARE_CR_OR_FORM_FEED, \`\\n\`)`],
 	"lib/rules/linebreaks/index.js": [`if (data) return data.replaceAll(EVERY_CR_OR_LF_BREAK, shouldHaveCR ? \`\\r\\n\` : \`\\n\`)`],
 	"lib/rules/max-empty-lines/index.js": [
 		`let emptyLFLines = \`\\n\`.repeat(repeatTimes)`,
@@ -75,16 +75,8 @@ const DEBT = {
 		`if (source.slice(index, index + 2) === \`\\r\\n\`) return`,
 	],
 	"lib/rules/indentation/index.js": [
-		`let lastIndexOfNewline = before.lastIndexOf(\`\\n\`)`,
-		`if ((lastIndexOfNewline !== -1 || (isFirstChild && (!getDocument(parent) || (parent.raws.codeBefore && parent.raws.codeBefore.endsWith(\`\\n\`))))) && before.slice(lastIndexOfNewline + 1) !== expectedOpeningBraceIndentation) {`,
-		`if ((isRule(node) || isAtRule(node)) && hasBlock(node) && after && after.includes(\`\\n\`) && after.slice(after.lastIndexOf(\`\\n\`) + 1) !== expectedClosingBraceIndentation) {`,
 		`let expressionStartLine = node.parent.parent.source.input.css.split(\`\\n\`)[node.parent.source.start.line - 1]`,
-		`let isMultilineDeclaration = !!node.parent.source?.input.css.includes(\`\\n\`)`,
-		`if (!decl.value.includes(\`\\n\`)) return`,
-		`if (!source.includes(\`\\n\`)) return`,
 		`target: \`\\n\`,`,
-		`if (source[match.startIndex - 1] === \`\\r\`) newlineIndex -= 1`,
-		`if (after.endsWith(\`\\n\`)) {`,
 	],
 	"lib/rules/linebreaks/index.js": [
 		`let lines = root.source.input.css.split(\`\\n\`)`,
