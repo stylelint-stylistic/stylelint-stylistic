@@ -10,7 +10,7 @@ a { background: orange; color: pink; }
 
 The trailing semicolon is the _last_ semicolon in a declaration block and it is optional.
 
-This rule ignores declaration blocks containing nested (at-)rules. A Less mixin call is not one of them: Less asks for the semicolon behind a call no more than CSS asks for it behind a declaration, so a call closing its block is read like any other node closing a block.
+Nothing is asked of a declaration block that a nested rule closes, nor of one closed by an at-rule carrying a block. A block holding such a node anywhere but at its end is read like any other, its own closing node being what the rule asks about. A Less mixin call is no such node — `postcss-less` reads it as an at-rule with no block of its own — and Less asks for the semicolon behind a call no more than CSS asks for it behind a declaration, so a call closing its block is read like any other node closing a block.
 
 The top level of a stylesheet is no declaration block, so nothing is asked of a node standing there. The semicolon behind the last node of a file is as optional as a block's trailing one — dart-sass compiles a file ending in `$var: pink` — and this rule is named for the one a declaration block ends on. The root of an inline `style` attribute is the one exception, since the value of such an attribute is a declaration block and nothing else; an at-rule stands outside that exception all the same, an attribute having no place for one.
 
@@ -84,7 +84,11 @@ a { background: orange; color: pink }
 
 ### `ignore: ["single-declaration"]`
 
-Ignore declaration blocks that contain a single declaration.
+Ignore declaration blocks that hold a single node other than a comment.
+
+A comment is a node of the block and nothing the block is about, so it is not counted, however many comments stand in the block and on whichever side of that node they stand. Everything else the block holds is counted, whatever kind of node it is: a bodiless at-rule standing alone in a block is that block's single node, exactly as a declaration standing alone in one is, and a nested rule standing beside a declaration is a second node, so that block holds two.
+
+For example, with `"always"`.
 
 The following patterns are _not_ considered problems:
 
@@ -93,5 +97,27 @@ a { color: pink }
 ```
 
 ```css
-a { color: pink; }
+a { /* comment */ color: pink }
+```
+
+```css
+a { color: pink /* comment */ }
+```
+
+```css
+a { @include foo }
+```
+
+The following patterns are still considered problems:
+
+```css
+a { background: orange; color: pink }
+```
+
+```css
+a { /* comment */ background: orange; color: pink }
+```
+
+```css
+a { b { top: 0; } color: pink }
 ```
