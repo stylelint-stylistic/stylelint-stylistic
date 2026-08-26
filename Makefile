@@ -41,9 +41,9 @@ prose-check: ## 🔤 Check that markdown prose is bound
 	./scripts/bind-prose.js --check
 .PHONY: prose-check
 
-oracles: ## 🔮 Run the five oracles over every rule and option [OUT=]
+oracles: ## 🔮 Run every oracle over every rule and option [OUT=]
 	@mkdir -p $(OUT)
-	for oracle in converge control comments twins nodes ; do
+	for oracle in converge control comments twins nodes pairs ; do
 		printf "\t🔮 $$oracle\n"
 		./scripts/oracles/$$oracle.mjs > $(OUT)/$$oracle.json
 	done
