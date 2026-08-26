@@ -1,4 +1,4 @@
-/** The shapes the defects of this plugin have come out of: a comment beside code, two spellings of a line break, a bang, a run of them. Each is as small as it can be and still be wrong, since every fixture costs the run about a dozen lints per rule and option — three for `converge.mjs`, one each for `comments.mjs` and `nodes.mjs`, and eight for `twins.mjs`, which lints an original and three twins twice over. */
+/** The shapes the defects of this plugin have come out of: a comment beside code, two spellings of a line break, a bang, a run of them, an at-rule closing a block with neither a block nor a semicolon of its own. Each is as small as it can be and still be wrong, since every fixture costs the run about a dozen lints per rule and option — three for `converge.mjs`, one each for `comments.mjs` and `nodes.mjs`, and eight for `twins.mjs`, which lints an original and three twins twice over. */
 const FIXTURES = [
 	[`plain`, `a { color: pink; }\n`],
 	[`plain-multi`, `a,\nb {\n\tcolor: pink;\n\ttransform: translate(1px, 2px);\n}\n`],
@@ -18,6 +18,7 @@ const FIXTURES = [
 	[`nested-func`, `a { b: calc( 1px + f(2,3) ) ; }\n`],
 	[`selector-comment`, `a /* c */ > b { color: pink; }\n`],
 	[`atrule-bodiless`, `@import "a";\n@charset "utf-8";\n`],
+	[`atrule-closes-block`, `a {\n\t@extend .b\n}\n`],
 	[`grid`, `a { grid-template-areas: "a a"\n\t"b b"; }\n`],
 	[`aspect-ratio`, `a { aspect-ratio: 16 / 8 /*c*/ auto; }\n`],
 	[`quotes`, `a[href='x'] { b: 'y'; }\n`],
