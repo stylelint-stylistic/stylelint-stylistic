@@ -18,7 +18,7 @@ CI (`.github/workflows/test.yaml`) runs `make setup` and then `make verify` �
 
 ## Architecture
 
-A Stylelint plugin (`@stylistic/stylelint-plugin`) that restores the 76 stylistic rules Stylelint removed in v16. Pure ESM, no build step — `lib/` is published as-is (minus `*.test.js`).
+A Stylelint plugin (`@stylistic/stylelint-plugin`) that restores the stylistic rules Stylelint removed in v16 and adds rules of its own. How many there are is `lib/rules/index.js`, and no number is written here, since a written one falls behind. Pure ESM, no build step — `lib/` is published as-is (minus `*.test.js`).
 
 - `lib/index.js` — maps every entry of the rule registry through `stylelint.createPlugin(addNamespace(name), rule)` and exports the array. `addNamespace` prefixes `@stylistic/`, so users write `"@stylistic/color-hex-case"`.
 - `lib/rules/index.js` — the registry: static imports of every rule plus a default-exported object keyed by kebab-case rule name. **A new rule is not active until it is added here.**

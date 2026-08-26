@@ -8,7 +8,7 @@ An updatable collection of stylistic rules for [Stylelint](https://github.com
 
 ## About and purpose
 
-[Stylelint has removed 76 rules](https://stylelint.io/migration-guide/to-16#removed-deprecated-stylistic-rules) that enforce stylistic conventions. This project returns these rules to keep styles consistent with your codeguide. In addition, new rules may be added in the future.
+[Stylelint has removed 76 rules](https://stylelint.io/migration-guide/to-16#removed-deprecated-stylistic-rules) that enforce stylistic conventions. This project brought them back to keep styles consistent with your codeguide, and it has not stopped there: the list grows with rules of its own, so it is a collection rather than a fixed set.
 
 ## Installation and usage
 
