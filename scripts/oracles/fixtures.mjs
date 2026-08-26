@@ -23,6 +23,7 @@ const FIXTURES = [
 	[`aspect-ratio`, `a { aspect-ratio: 16 / 8 /*c*/ auto; }\n`],
 	[`quotes`, `a[href='x'] { b: 'y'; }\n`],
 	[`two-bangs`, `a { b: 1px!important 2px!important; }\n`],
+	[`bang-run-elsewhere`, `a { b: /*c*/\t!important; c: /*d*/\t!default; d: x! !important; }\n`],
 	[`group-with-unit`, `h1 { width: (1 + 2)px; }\n`],
 	[`nested-group`, `h1 { width: ((1) * (2))em; }\n`],
 ]
