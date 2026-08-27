@@ -1,4 +1,4 @@
-/** The shapes the defects of this plugin have come out of: a comment beside code, two spellings of a line break, a bang, a run of them, an at-rule closing a block with neither a block nor a semicolon of its own, a run of empty lines inside a call that holds another call. Each is as small as it can be and still be wrong, since every fixture costs the run about a dozen lints per rule and option — three for `converge.mjs`, one each for `comments.mjs` and `nodes.mjs`, and eight for `twins.mjs`, which lints an original and three twins twice over. */
+/** The shapes the defects of this plugin have come out of: a comment beside code, two spellings of a line break, a bang, a run of them, an at-rule closing a block with neither a block nor a semicolon of its own, a run of empty lines inside a call that holds another call, an interpolation holding whitespace. Each is as small as it can be and still be wrong, since every fixture costs the run about a dozen lints per rule and option — three for `converge.mjs`, one each for `comments.mjs` and `nodes.mjs`, and eight for `twins.mjs`, which lints an original and three twins twice over. */
 const FIXTURES = [
 	[`plain`, `a { color: pink; }\n`],
 	[`plain-multi`, `a,\nb {\n\tcolor: pink;\n\ttransform: translate(1px, 2px);\n}\n`],
@@ -30,6 +30,7 @@ const FIXTURES = [
 	[`group-with-unit`, `h1 { width: (1 + 2)px; }\n`],
 	[`nested-group`, `h1 { width: ((1) * (2))em; }\n`],
 	[`multiplied-units`, `h1 { width: 10PX*2REM*3EM; }\n`],
+	[`interpolation-with-space`, `a { --x: 10px#{$a != $b}; }\n`],
 ]
 
 /** The same shapes again with the comment the two custom syntaxes spell with a double slash. The last three are placed rather than translated. Two of them stand where a fixer is about to take a break away — behind the opening brace, and behind a semicolon — since that is where taking one carries the code after it into the comment, which is #248 and which no fixture reached until this pair was written. The third stands where a fixer is about to write one in: the comment there runs past a second call to the end of the line, so a break written into the first call closes the comment and hands the second one back to the value, which is #288 and which no fixture reached until this one was written. */
