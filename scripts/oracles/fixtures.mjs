@@ -18,6 +18,7 @@ const FIXTURES = [
 	[`trailing-comment-block`, `a { color: pink /* c */ }\n`],
 	[`nested-func`, `a { b: calc( 1px + f(2,3) ) ; }\n`],
 	[`nested-func-empty-lines`, `a { b: f(\n\n\ng(\n\n\n1)); }\n`],
+	[`slash-star-slash-empty-lines`, `a { b: f(1 /*/x*/\n\n\n2) zz; }\n`],
 	[`selector-comment`, `a /* c */ > b { color: pink; }\n`],
 	[`atrule-bodiless`, `@import "a";\n@charset "utf-8";\n`],
 	[`atrule-closes-block`, `a {\n\t@extend .b\n}\n`],
