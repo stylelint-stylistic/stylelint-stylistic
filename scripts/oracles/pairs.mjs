@@ -20,7 +20,7 @@ import stylelint from "stylelint"
 import { RULE_OPTIONS } from "./options.mjs"
 import { isUsable, PLUGIN } from "./runs.mjs"
 
-/** Shapes short enough to read and dirty enough that many rules have something to say about each. They are read as CSS alone: a pair races over the shape of the text rather than over the syntax it is written in, and reading each shape three times over would treble a run that is already the square of what the fixture wakes. */
+/** Shapes short enough to read and dirty enough that many rules have something to say about each. They are read as CSS alone: a pair races over the shape of the text rather than over the syntax it is written in, and reading each shape three times over would treble a run that is already the square of what the fixture wakes. The last two end on something other than a line break, which is what makes the fix of `no-missing-end-of-source-newline` reachable at all: every other shape here has closed its last line already, so that rule wrote nothing in any run this oracle made, and a class of [#356](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/356) went unseen. `free-semicolon` is what puts a row of that class on the board; `trailing-run` puts none on either checkout — under a maximum of one or two `max-empty-lines` rewrote nothing there before this fix, so the pair was never made at all, and under a maximum of zero, where it did rewrite, the two orders already agreed — and stands guard over a fix rather than reporting one. */
 const CORPUS = [
 	[`tight-block`, `a{color:red}\n`],
 	[`multi-decl`, `a {\n\tcolor: red; top: 0;\n}\n`],
@@ -30,6 +30,8 @@ const CORPUS = [
 	[`ratio`, `a { aspect-ratio: 2; }\n`],
 	[`bang`, `a { b: 1px!important }\n`],
 	[`nested-media`, `@media screen{\na{b:c;d:e}\n}\n`],
+	[`free-semicolon`, `@media all { a {} }\n;`],
+	[`trailing-run`, `a { color: pink; }\n\n   `],
 ]
 
 /** Every rule of the plugin under every primary option it accepts, each as a configuration of one rule. */
