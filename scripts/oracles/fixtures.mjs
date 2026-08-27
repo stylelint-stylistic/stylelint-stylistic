@@ -1,4 +1,4 @@
-/** The shapes the defects of this plugin have come out of: a comment beside code, two spellings of a line break, a bang, a run of them, an at-rule closing a block with neither a block nor a semicolon of its own. Each is as small as it can be and still be wrong, since every fixture costs the run about a dozen lints per rule and option — three for `converge.mjs`, one each for `comments.mjs` and `nodes.mjs`, and eight for `twins.mjs`, which lints an original and three twins twice over. */
+/** The shapes the defects of this plugin have come out of: a comment beside code, two spellings of a line break, a bang, a run of them, an at-rule closing a block with neither a block nor a semicolon of its own, a run of empty lines inside a call that holds another call. Each is as small as it can be and still be wrong, since every fixture costs the run about a dozen lints per rule and option — three for `converge.mjs`, one each for `comments.mjs` and `nodes.mjs`, and eight for `twins.mjs`, which lints an original and three twins twice over. */
 const FIXTURES = [
 	[`plain`, `a { color: pink; }\n`],
 	[`plain-multi`, `a,\nb {\n\tcolor: pink;\n\ttransform: translate(1px, 2px);\n}\n`],
@@ -16,6 +16,7 @@ const FIXTURES = [
 	[`crlf`, `a {\r\n\tcolor: pink;\r\n}\r\n`],
 	[`trailing-comment-block`, `a { color: pink /* c */ }\n`],
 	[`nested-func`, `a { b: calc( 1px + f(2,3) ) ; }\n`],
+	[`nested-func-empty-lines`, `a { b: f(\n\n\ng(\n\n\n1)); }\n`],
 	[`selector-comment`, `a /* c */ > b { color: pink; }\n`],
 	[`atrule-bodiless`, `@import "a";\n@charset "utf-8";\n`],
 	[`atrule-closes-block`, `a {\n\t@extend .b\n}\n`],
