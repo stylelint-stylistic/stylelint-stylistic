@@ -27,6 +27,7 @@ const FIXTURES = [
 	[`bang-run-elsewhere`, `a { b: /*c*/\t!important; c: /*d*/\t!default; d: x! !important; }\n`],
 	[`group-with-unit`, `h1 { width: (1 + 2)px; }\n`],
 	[`nested-group`, `h1 { width: ((1) * (2))em; }\n`],
+	[`multiplied-units`, `h1 { width: 10PX*2REM*3EM; }\n`],
 ]
 
 /** The same shapes again with the comment the two custom syntaxes spell with a double slash. The last three are placed rather than translated. Two of them stand where a fixer is about to take a break away — behind the opening brace, and behind a semicolon — since that is where taking one carries the code after it into the comment, which is #248 and which no fixture reached until this pair was written. The third stands where a fixer is about to write one in: the comment there runs past a second call to the end of the line, so a break written into the first call closes the comment and hands the second one back to the value, which is #288 and which no fixture reached until this one was written. */
