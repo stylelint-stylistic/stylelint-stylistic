@@ -5,6 +5,7 @@ const FIXTURES = [
 	[`block-comment`, `a { color: pink /* c */; }\n`],
 	[`comment-in-value`, `a { b: x/*c*/f(1,2)c; }\n`],
 	[`slash-star-slash`, `a { b: x/*/*a,b*/f(1,2)c; }\n`],
+	[`slash-star-slash-at-colon`, `a { b: /*/*a,b*/f(1,2)c; }\n`],
 	[`bang`, `a { b: 1px!important; }\n`],
 	[`bang-twice`, `a { b: 1px!important 2px /*c*/!important; }\n`],
 	[`bang-slashes`, `a { b: 1px!important//!important; }\n`],

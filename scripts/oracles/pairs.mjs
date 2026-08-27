@@ -32,6 +32,7 @@ const CORPUS = [
 	[`nested-media`, `@media screen{\na{b:c;d:e}\n}\n`],
 	[`free-semicolon`, `@media all { a {} }\n;`],
 	[`trailing-run`, `a { color: pink; }\n\n   `],
+	[`wordless-value`, `a { color:  /*c*/ ; }\n`],
 ]
 
 /** Every rule of the plugin under every primary option it accepts, each as a configuration of one rule. */
