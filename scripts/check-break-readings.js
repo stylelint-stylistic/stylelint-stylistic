@@ -40,8 +40,6 @@ const ALLOWED = {
 		`let allowedLFNewLinesString = \`\\n\`.repeat(maxAdjacentNewlines)`,
 		`let allowedCRLFNewLinesString = \`\\r\\n\`.repeat(maxAdjacentNewlines)`,
 	],
-	"lib/rules/function-parentheses-newline-inside/index.js": [`formFeed: endsWithInlineComment(text.replaceAll(EVERY_FORM_FEED, \`\\n\`), spellsInlineComments),`],
-	"lib/rules/function-parentheses-space-inside/index.js": [`formFeed: endsWithInlineComment(text.replaceAll(EVERY_FORM_FEED, \`\\n\`), spellsInlineComments),`],
 	"lib/rules/indentation/index.js": [`searchString = searchString.replaceAll(EVERY_BARE_CR_OR_FORM_FEED, \`\\n\`)`],
 	"lib/rules/linebreaks/index.js": [`if (data) return data.replaceAll(EVERY_CR_OR_LF_BREAK, shouldHaveCR ? \`\\r\\n\` : \`\\n\`)`],
 	"lib/rules/max-empty-lines/index.js": [
@@ -56,7 +54,10 @@ const ALLOWED = {
 		`let allowedLFNewLinesString = \`\\n\`.repeat(maxAdjacentNewlines)`,
 		`let allowedCRLFNewLinesString = \`\\r\\n\`.repeat(maxAdjacentNewlines)`,
 	],
-	"lib/utils/readsInlineComments/index.js": [`const INLINE_COMMENT_PROBE = \`a {}\\n// comment\\na { b: 'x', // comment\\n  'y'; }\\n\``],
+	"lib/utils/readsInlineComments/index.js": [
+		`const INLINE_COMMENT_PROBE = \`a {}\\n// comment\\na { b: 'x', // comment\\n  'y'; }\\n\``,
+		`const FORM_FEED_PROBE = \`a {}\\n// c\\fb {}\\n\``,
+	],
 }
 
 /** Every line that reads a break without asking `lib/regexps.js` what one is. */
@@ -104,7 +105,6 @@ const DEBT = {
 		`let violatedCRLFNewLinesRegex = new RegExp(\`(?:\\r\\n){\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
 		`let violatedLFNewLinesRegex = new RegExp(\`\\n{\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
 	],
-	"lib/utils/endsWithInlineComment/index.js": [`if (char === \`\\n\` || char === \`\\r\`) scan.state = \`code\``],
 	"lib/utils/findCommentSpans/index.js": [
 		`if (character === \`\\n\` || character === \`\\r\`) return index`,
 		`if (endsOnFormFeed && character === \`\\f\`) return index`,
