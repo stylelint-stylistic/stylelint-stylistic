@@ -3,16 +3,16 @@
 /**
  * Runs one sweep on both sides and writes the diff.
  *
- * A sweep is a module exporting its `name`, its `corpus` — a list of keyed texts, most often built with `scripts/harness/matrix.mjs` — its `configs`, each a rule under a primary option and, where there are any, secondary ones, and the `syntaxes` it is read under. Every text is linted under every configuration and syntax twice, checked and fixed, on the base and on the branch, and the finding is what moved between the two: `tmp/sweeps/<name>.md` holds it row by row, and the two sides stand beside it as JSON.
+ * A sweep is a module exporting its `name`, its `corpus` — a list of keyed texts, most often built with `scripts/harness/matrix.mjs` — its `configs`, each a rule under a primary option and, where there are any, secondary ones, and the `syntaxes` it is read under. Every text is linted under every configuration and syntax twice, checked and fixed, on the base and on the branch, and the finding is what moved between the two: `tmp/sweeps/<name>.md` holds it row by row; the two sides themselves stand in the store.
  *
- * Started through `make sweep FILE=… RUN=1` and nothing else: a run collects results, and the user approves one by that spelling.
+ * Each side is kept in the store with a digest beside it — one short hash per row — and a run compares the digests, reading the rows themselves only for the keys that moved. Started through `make sweep FILE=… RUN=1` and nothing else: a run collects results, and the user approves one by that spelling.
  */
 
 import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { argv, env, exit, stderr, stdout } from "node:process"
 
-import { hashAt, keyOf, read, write } from "../harness/cache.mjs"
+import { digestOf, hashAt, keyOf, read, readDigest, write } from "../harness/cache.mjs"
 import { defaultBase, libAt, ROOT } from "../harness/checkout.mjs"
 import { diff, render } from "../harness/diff.mjs"
 import { lintDirect, loadRules } from "../harness/lint.mjs"
@@ -78,31 +78,39 @@ if (!file) {
 
 let sweep = await import(path.resolve(file))
 let sides = { base, head: `worktree` }
+
+/** @type {Record<string, { digest: Record<string, string>, rows: () => Record<string, object> }>} Each side as its digest, and its rows behind a call, since the rows are read only for the keys the digests say have moved. */
 let results = {}
 
 for (let [side, revision] of Object.entries(sides)) {
 	// A side is measured once by what it depends on — the rules, the sweep and the runner — and read back on every later run; the two are taken in turn, base first
 	let inputs = { sweep: hashAt(`worktree`, path.relative(ROOT, path.resolve(file))), lib: hashAt(revision, `lib`), harness: hashAt(`worktree`, `scripts/harness`), lock: hashAt(`worktree`, `pnpm-lock.yaml`) }
 	let key = keyOf(inputs)
-	let rows = read(`sweeps`, sweep.name, key)
+	let digest = readDigest(`sweeps`, sweep.name, key)
 
-	if (!rows) {
-		stdout.write(`\t🧹 ${sweep.name} over ${side} (${revision})\n`)
-		// eslint-disable-next-line no-await-in-loop
-		rows = await measure(sweep, await loadRules(libAt(revision)))
-		write(`sweeps`, sweep.name, key, rows, { ...inputs, revision, root: ROOT })
+	if (digest) {
+		let rows
+
+		results[side] = { digest, rows: () => (rows ??= read(`sweeps`, sweep.name, key)) }
+		continue
 	}
 
-	results[side] = rows
+	stdout.write(`\t🧹 ${sweep.name} over ${side} (${revision})\n`)
+	// eslint-disable-next-line no-await-in-loop
+	let rows = await measure(sweep, await loadRules(libAt(revision)))
+
+	digest = digestOf(rows)
+	write(`sweeps`, sweep.name, key, rows, { ...inputs, revision, root: ROOT }, digest)
+	results[side] = { digest, rows: () => rows }
 }
 
 let out = path.join(ROOT, `tmp`, `sweeps`)
 
 mkdirSync(out, { recursive: true })
 
-let result = diff(results.base, results.head)
+let result = diff(results.base.digest, results.head.digest)
+let moved = result.changed.length + result.added.length + result.removed.length > 0
+let report = moved ? render(result, results.base.rows(), results.head.rows()) : render(result, {}, {})
 
-for (let side of Object.keys(sides)) writeFileSync(path.join(out, `${sweep.name}-${side}.json`), `${JSON.stringify(results[side], null, `\t`)}\n`)
-
-writeFileSync(path.join(out, `${sweep.name}.md`), `# ${sweep.name}: ${base} → worktree\n\n${render(result, results.base, results.head)}`)
-stdout.write(`${Object.keys(results.head).length} rows: ${result.same} same, ${result.changed.length} changed, ${result.added.length} added, ${result.removed.length} removed — tmp/sweeps/${sweep.name}.md\n`)
+writeFileSync(path.join(out, `${sweep.name}.md`), `# ${sweep.name}: ${base} → worktree\n\n${report}`)
+stdout.write(`${Object.keys(results.head.digest).length} rows: ${result.same} same, ${result.changed.length} changed, ${result.added.length} added, ${result.removed.length} removed — tmp/sweeps/${sweep.name}.md\n`)

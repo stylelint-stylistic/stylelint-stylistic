@@ -91,6 +91,32 @@ function fileOf (kind, name, key) {
 }
 
 /**
+ * Digests a result down to one short hash per row, so that two results can be compared without either being read whole.
+ *
+ * A result of the largest sweep is half a million rows and a hundred megabytes of JSON, and a comparison that reads both sides whole spends its seconds parsing text it will find unchanged. The digest is what a comparison reads instead; the rows themselves are read only for the keys the digest says have moved, which is most often none.
+ * @param {Record<string, unknown>} rows - The rows by key.
+ * @returns {Record<string, string>} A hash of each row by the same key.
+ */
+function digestOf (rows) {
+	let digest = {}
+
+	for (let [key, row] of Object.entries(rows)) digest[key] = createHash(`sha1`).update(JSON.stringify(row)).digest(`hex`).slice(0, 16)
+
+	return digest
+}
+
+/**
+ * Names the digest file of a result.
+ * @param {string} kind - `oracles` or `sweeps`.
+ * @param {string} name - The oracle's or the sweep's.
+ * @param {string} key - The key.
+ * @returns {string} The path.
+ */
+function digestFileOf (kind, name, key) {
+	return path.join(CACHE_DIR, kind, name, `${key}.digest.json`)
+}
+
+/**
  * Reads a kept result.
  * @param {string} kind - `oracles` or `sweeps`.
  * @param {string} name - The oracle's or the sweep's.
@@ -105,24 +131,48 @@ function read (kind, name, key) {
 	return JSON.parse(readFileSync(file, `utf8`))
 }
 
+/** The digests read in this process, by file. */
+let digests = new Map()
+
 /**
- * Keeps a result, once.
+ * Reads the digest of a kept result, which is all a comparison needs until a row has moved.
+ * @param {string} kind - `oracles` or `sweeps`.
+ * @param {string} name - The oracle's or the sweep's.
+ * @param {string} key - The key.
+ * @returns {Record<string, string> | undefined} The hash of each row by key, or nothing where no result was kept.
+ */
+function readDigest (kind, name, key) {
+	let file = digestFileOf(kind, name, key)
+
+	if (!existsSync(file)) return
+
+	// Two sides standing on one tree ask for one digest, and a file of half a million keys is parsed once for both
+	if (!digests.has(file)) digests.set(file, JSON.parse(readFileSync(file, `utf8`)))
+
+	return digests.get(file)
+}
+
+/**
+ * Keeps a result, once, with its digest beside it.
  * @param {string} kind - `oracles` or `sweeps`.
  * @param {string} name - The oracle's or the sweep's.
  * @param {string} key - The key.
  * @param {unknown} rows - The result.
  * @param {object} meta - What the key was made of, and where and when the run was made, kept beside the rows for a reader and for the collector.
+ * @param {Record<string, string>} [digest] - The digest of the rows, where the caller has it already.
  * @returns {void}
  */
-function write (kind, name, key, rows, meta) {
+function write (kind, name, key, rows, meta, digest) {
 	let file = fileOf(kind, name, key)
 
 	if (existsSync(file)) throw new Error(`${file} is already written; a result is written once, and a second answer to the same question is a finding rather than an update`)
 
 	mkdirSync(path.dirname(file), { recursive: true })
-	writeFileSync(file, `${JSON.stringify(rows, null, `\t`)}\n`)
+	writeFileSync(file, JSON.stringify(rows))
+	writeFileSync(digestFileOf(kind, name, key), JSON.stringify(digest ?? digestOf(/** @type {Record<string, unknown>} */ (rows))))
 	writeFileSync(`${file.slice(0, -5)}.meta.json`, `${JSON.stringify({ ...meta, writtenAt: new Date().toISOString() }, null, `\t`)}\n`)
 	chmodSync(file, READ_ONLY)
+	chmodSync(digestFileOf(kind, name, key), READ_ONLY)
 }
 
-export { CACHE_DIR, fileOf, hashAt, keyOf, read, treeOf, write }
+export { CACHE_DIR, digestOf, fileOf, hashAt, keyOf, read, readDigest, treeOf, write }
