@@ -112,9 +112,10 @@ if (plan.length > 0 && env.HARNESS_RUN !== `1`) {
 }
 
 for (let item of plan) {
-	stdout.write(`\t🔮 ${item.oracle} over ${item.side} (${item.revision})\n`)
-
+	let started = performance.now()
 	let rows = run(item.oracle, item.revision)
+
+	stdout.write(`\t🔮 ${item.oracle} over ${item.side} (${item.revision}) — ${((performance.now() - started) / 1000).toFixed(1)} s, ${rows.length} rows\n`)
 
 	write(`oracles`, item.oracle, item.key, rows, { ...item.inputs, revision: item.revision, root: ROOT })
 	results[item.side][item.oracle] = rows
