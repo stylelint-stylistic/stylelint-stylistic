@@ -13,7 +13,8 @@ import { stdout } from "node:process"
 import postcss from "postcss"
 import less from "postcss-less"
 import scss from "postcss-scss"
-import stylelint from "stylelint"
+
+import { lint } from "../harness/lint.mjs"
 
 import { buildRuns, isUsable } from "./runs.mjs"
 
@@ -55,7 +56,7 @@ async function probe (run) {
 	let result
 
 	try {
-		result = await stylelint.lint({ code: run.code, config: run.config, fix: true })
+		result = await lint({ code: run.code, config: run.config, fix: true })
 	}
 	catch {
 		return null

@@ -3,11 +3,11 @@
 Probes over a corpus of the shapes that have gone wrong before. All but one run every rule of the plugin against every primary option it accepts; `pairs.mjs` runs every pair of those instead. Each asks a question no test case in this repository can ask, and the table below is the list of them — a count of them written into this prose would fall behind the next one written.
 
 ```shell
-make oracles                        # writes tmp/oracles/{converge,control,comments,twins,nodes,pairs}.json
-make oracles OUT=tmp/oracles-before # anywhere else
+make oracles RUN=1                        # writes tmp/oracles/{converge,control,comments,twins,nodes,pairs}.json
+make oracles RUN=1 OUT=tmp/oracles-before # anywhere else
 ```
 
-They take a few minutes together, and each writes JSON: a list of rows, one per rule, option, syntax and fixture that answered wrongly — or, in `pairs.mjs`, one per pair of configurations and fixture. They can also be run one at a time — every script is executable and writes to standard output.
+Nothing runs without `RUN=1`: a run collects results rather than reading them, and it is the user who says when one is worth the machine — the bare target says what it would have run and stops, and the scripts refuse to start unless the Makefile has set `HARNESS_RUN`. They take about twenty seconds together, and each writes JSON: a list of rows, one per rule, option, syntax and fixture that answered wrongly — or, in `pairs.mjs`, one per pair of configurations and fixture. They can also be run one at a time — every script is executable and writes to standard output.
 
 | Oracle | Asks |
 | --- | --- |
@@ -45,6 +45,12 @@ Seven issues came out of the first run of them, [#231](https://github.com/st
 - it lints under one configuration, spelled one way round. A case naming a second rule through `extraRules` asserts the order it happened to write them in, and never the other, which is what `pairs.mjs` is for.
 
 An oracle is worth what it can be shown to catch, and a probe that has never been seen to fire says nothing about the code. `nodes.mjs` reported nothing when it was written, because no fixture stood where a fixer takes a break away from an inline comment; `inline-after-brace` and `inline-after-semicolon` were written with it, and it then reported [#248](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/248) four times over. `grid-empty-row` was written the same way for [#368](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/368), a row of the grid holding no cell at all, which no fixture carried: `converge.mjs` reports that shape three times over the code as it stood before that fix — once per syntax — and comes back clean from the fix itself.
+
+## The runner
+
+None of them calls `stylelint.lint`. A call of it over a snippet costs about 0.8 ms, and 0.7 of them are the linter around the rule — a linter created for the call, a configuration searched for and augmented, an ignore file looked up, reference roots loaded, disable comments walked — while the parse and the rule cost 0.05 ms together; over the 350 000 calls a run of the six makes, that is the difference between five minutes and twenty seconds. So [scripts/harness/lint.mjs](../harness/lint.mjs) does what `lintPostcssResult.mjs` does for one rule and nothing of the rest, and answers in the shape the oracles read. `make harness-check RUN=1` is the proof that the two agree: every run the oracles make, checked and fixed, and every fixture under pairs of rules in both orders, compared with Stylelint field by field. What the runner does not reproduce — disable comments, `ignoreDisables`, `quiet`, `computeEditInfo` — no fixture carries, and a rule reaching for one of them would show up there as a disagreement.
+
+The same runner drives the sweeps of [scripts/sweeps/](../sweeps/): a sweep is a module exporting a corpus, most often built by multiplying axes with [scripts/harness/matrix.mjs](../harness/matrix.mjs), and the configurations to read it under; `make sweep FILE=scripts/sweeps/<name>.mjs RUN=1 [BASE=<rev>]` lints it on the base and on the working tree in one process — the base's `lib/` is extracted under `tmp/checkouts/` by the hash of its tree, so the working tree is never moved for a run — and writes the rows that moved to `tmp/sweeps/<name>.md`, row by row and never by count. A sweep is kept once it has measured a branch, the way a fixture is kept once it has caught a defect.
 
 ## The files
 

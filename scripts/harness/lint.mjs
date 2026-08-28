@@ -7,6 +7,7 @@
  */
 
 import { EOL } from "node:os"
+import path from "node:path"
 
 import postcss from "postcss"
 
@@ -125,4 +126,37 @@ async function lintDirect ({ code, rules, registry, syntax, fix = false }) {
 	return { unparsable: false, usable, warnings, code: result.root.toString(parser.stringify) }
 }
 
-export { lintDirect, loadRules, loadSyntax }
+/** The registries already loaded, by the plugin path a configuration names. */
+let registries = new Map()
+
+/**
+ * Lints the way `stylelint.lint` is called by the oracles, and answers in the shape they read.
+ *
+ * The configuration is the one `runs.mjs` builds — a plugin named by its path, a syntax named by its package, and one rule or several under their namespaced names — and the answer carries `results[0].warnings`, `results[0].invalidOptionWarnings` and `code`, which is all an oracle reads of Stylelint's. A text the syntax cannot read answers with a warning whose rule is `CssSyntaxError`, as Stylelint's does.
+ * @param {object} options - The options `stylelint.lint` would have taken.
+ * @param {string} options.code - The text.
+ * @param {object} options.config - The configuration.
+ * @param {boolean} [options.fix] - Whether the rules are let write.
+ * @returns {Promise<{ results: [{ warnings: object[], invalidOptionWarnings: object[] }], code: string | undefined }>} The answer, shaped like Stylelint's.
+ */
+async function lint ({ code, config, fix = false }) {
+	let [plugin] = config.plugins
+
+	if (!registries.has(plugin)) registries.set(plugin, await loadRules(path.dirname(plugin)))
+
+	let rules = Object.entries(config.rules).map(([name, setting]) => {
+		let [primary, secondary] = Array.isArray(setting) ? setting : [setting]
+
+		return [name.replace(`@stylistic/`, ``), primary, secondary]
+	})
+	let answer = await lintDirect({ code, rules, registry: registries.get(plugin), syntax: config.customSyntax, fix })
+
+	if (answer.unparsable) return { results: [{ warnings: [{ rule: `CssSyntaxError`, text: `${answer.detail} (CssSyntaxError)`, severity: SEVERITY }], invalidOptionWarnings: [] }], code: undefined }
+
+	return {
+		results: [{ warnings: answer.warnings, invalidOptionWarnings: answer.usable ? [] : [{ text: `invalid option` }] }],
+		code: fix ? answer.code : undefined,
+	}
+}
+
+export { lint, lintDirect, loadRules, loadSyntax }
