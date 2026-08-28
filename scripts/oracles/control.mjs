@@ -10,7 +10,7 @@
 
 import { stdout } from "node:process"
 
-import stylelint from "stylelint"
+import { lint } from "../harness/lint.mjs"
 
 import { buildRuns } from "./runs.mjs"
 
@@ -43,7 +43,7 @@ const CORPUS = [
  * @returns {Promise<string[]>} The warnings, each with its position.
  */
 async function warningsOf (code, config) {
-	let result = await stylelint.lint({ code, config, fix: false })
+	let result = await lint({ code, config, fix: false })
 
 	return result.results[0].warnings.map((warning) => `${warning.line}:${warning.column} ${warning.text}`)
 }

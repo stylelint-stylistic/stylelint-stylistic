@@ -14,7 +14,7 @@
 
 import { stdout } from "node:process"
 
-import stylelint from "stylelint"
+import { lint } from "../harness/lint.mjs"
 
 import { buildRuns, isUsable } from "./runs.mjs"
 
@@ -42,7 +42,7 @@ async function probe (run) {
 		try {
 			// Each run reads what the one before it wrote, so the three cannot be made at once
 			// eslint-disable-next-line no-await-in-loop
-			result = await stylelint.lint({ code: current, config: run.config, fix: true })
+			result = await lint({ code: current, config: run.config, fix: true })
 		}
 		catch (error) {
 			return { kind: `broke`, ...label(run), detail: `threw: ${error.message}`, history }

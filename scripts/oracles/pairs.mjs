@@ -15,7 +15,7 @@
 
 import { stdout } from "node:process"
 
-import stylelint from "stylelint"
+import { lint as lintDirectly } from "../harness/lint.mjs"
 
 import { RULE_OPTIONS } from "./options.mjs"
 import { isUsable, PLUGIN } from "./runs.mjs"
@@ -52,7 +52,7 @@ async function lint (code, rules, fix) {
 	let result
 
 	try {
-		result = await stylelint.lint({ code, fix, config: { plugins: [PLUGIN], rules } })
+		result = await lintDirectly({ code, fix, config: { plugins: [PLUGIN], rules } })
 	}
 	catch {
 		return { code, warnings: 0, usable: false }

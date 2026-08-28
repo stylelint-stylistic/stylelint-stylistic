@@ -25,7 +25,7 @@
 
 import { stdout } from "node:process"
 
-import stylelint from "stylelint"
+import { lint } from "../harness/lint.mjs"
 
 import { buildRuns, isUsable } from "./runs.mjs"
 
@@ -76,8 +76,8 @@ async function ask (code, config) {
 	let fixed
 
 	try {
-		checked = await stylelint.lint({ code, config })
-		fixed = await stylelint.lint({ code, config, fix: true })
+		checked = await lint({ code, config })
+		fixed = await lint({ code, config, fix: true })
 	}
 	catch (error) {
 		return { read: false, unparsable: true, detail: `threw: ${error.message}` }

@@ -51,10 +51,10 @@ oracles: ## 🔮 Run every oracle over every rule and option [RUN=1] [OUT=]
 	@printf "\t✅ Written to $(ANSI_BOLD)$(OUT)$(ANSI_RESET). Run once before a branch and once after, and read the diff.\n\n"
 .PHONY: oracles
 
-sweep: ## 🧹 Run one sweep script, base and branch alike [RUN=1] FILE=
+sweep: ## 🧹 Run one sweep on the base and on the working tree, and write the diff [RUN=1] FILE= [BASE=]
 	@test -n "$(FILE)" || { printf "\t❌ $(ANSI_BOLD)FILE= names the sweep to run$(ANSI_RESET)\n\n"; exit 2; }
 	$(call require_run,the sweep $(FILE))
-	HARNESS_RUN=1 node $(FILE)
+	HARNESS_RUN=1 ./scripts/sweeps/run.mjs $(FILE) $(BASE)
 .PHONY: sweep
 
 harness-check: ## 🧫 Check that the direct runner agrees with Stylelint over every run of the oracles [RUN=1]
