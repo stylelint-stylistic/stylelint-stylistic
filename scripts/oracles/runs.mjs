@@ -11,8 +11,8 @@ if (env.HARNESS_RUN !== `1`) {
 	exit(EXIT_CODE_NOT_APPROVED)
 }
 
-/** The plugin is loaded by its place on disk, so that an oracle runs the same from any directory. */
-const PLUGIN = new URL(`../../lib/index.js`, import.meta.url).pathname
+/** The plugin is loaded by its place on disk, so that an oracle runs the same from any directory — and from another checkout's `lib/` where `HARNESS_LIB` names one, which is how a base is measured with the branch's oracles without moving the working tree. */
+const PLUGIN = env.HARNESS_LIB ? `${env.HARNESS_LIB}/index.js` : new URL(`../../lib/index.js`, import.meta.url).pathname
 
 /** @typedef {{ rule: string, primary: unknown, syntaxName: string, name: string, code: string, config: object }} Run */
 

@@ -3,11 +3,12 @@
 Probes over a corpus of the shapes that have gone wrong before. All but one run every rule of the plugin against every primary option it accepts; `pairs.mjs` runs every pair of those instead. Each asks a question no test case in this repository can ask, and the table below is the list of them — a count of them written into this prose would fall behind the next one written.
 
 ```shell
-make oracles RUN=1                        # writes tmp/oracles/{converge,control,comments,twins,nodes,pairs}.json
-make oracles RUN=1 OUT=tmp/oracles-before # anywhere else
+make oracles                        # reads what is kept, says what is not, and stops
+make oracles RUN=1                  # measures what is not kept, then writes tmp/oracles-diff.md
+make oracles BASE=<rev> HEAD=<rev>  # any two revisions; the defaults are where the branch left origin/main, and the working tree
 ```
 
-Nothing runs without `RUN=1`: a run collects results rather than reading them, and it is the user who says when one is worth the machine — the bare target says what it would have run and stops, and the scripts refuse to start unless the Makefile has set `HARNESS_RUN`. They take about twenty seconds together, and each writes JSON: a list of rows, one per rule, option, syntax and fixture that answered wrongly — or, in `pairs.mjs`, one per pair of configurations and fixture. They can also be run one at a time — every script is executable and writes to standard output.
+The two sides are compared rather than written: every result is kept under `~/.cache/stylelint-stylistic/` by what it depends on — the hash of the `lib/` tree it was measured over, of the scripts and the corpus that measured it, and of the lock file — so a base is measured once for every branch that stands on it, an amended or rebased commit whose `lib/` did not move keeps its result, and a run only ever measures the side no entry answers for. Nothing is measured without `RUN=1`: a run collects results rather than reading them, and it is the user who says when one is worth the machine — the bare target says what it would have run and stops, and the scripts refuse to start unless the Makefile has set `HARNESS_RUN`. `make cache-gc` takes out what no branch, remote or tag still reaches. A run of the six takes about twenty seconds, and each writes JSON: a list of rows, one per rule, option, syntax and fixture that answered wrongly — or, in `pairs.mjs`, one per pair of configurations and fixture. `compare.mjs` runs them one at a time with the working tree's scripts over either side's `lib/`, which `HARNESS_LIB` names, so that the two sides are always asked one question; every script writes to standard output.
 
 | Oracle | Asks |
 | --- | --- |
@@ -24,7 +25,7 @@ Nothing runs without `RUN=1`: a run collects results rather than reading them
 
 ## What to do with them
 
-**The diff is the finding, not the count.** Run them all before a branch and after it, and compare:
+**The diff is the finding, not the count.** `tmp/oracles-diff.md` holds it, row by row:
 
 - a row the branch **adds** is a defect the branch introduced. File it from the branch that made it, rather than leaving it for the next review;
 - a row the branch **removes** goes in the pull request body;
