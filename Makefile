@@ -57,6 +57,11 @@ sweep: ## 🧹 Run one sweep script, base and branch alike [RUN=1] FILE=
 	HARNESS_RUN=1 node $(FILE)
 .PHONY: sweep
 
+harness-check: ## 🧫 Check that the direct runner agrees with Stylelint over every run of the oracles [RUN=1]
+	$(call require_run,the runner check — about 60 000 lints)
+	HARNESS_RUN=1 ./scripts/harness/verify-lint.mjs
+.PHONY: harness-check
+
 breaks-check: ## ↩️  Check that every line spelling a line break in lib/ is classified
 	./scripts/check-break-readings.js
 .PHONY: breaks-check
