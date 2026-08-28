@@ -14,6 +14,8 @@ make test TEST_FLAGS="-t 'lower'"                            # filter by test na
 make lint FILE=lib/rules/color-hex-case
 ```
 
+Two targets collect results rather than check them, and are the slowest things the repository does: `make oracles` and `make sweep FILE=…`. Neither starts without `RUN=1`, and that spelling is what the user approves — a permission rule of theirs makes it prompt, in every mode. So a session runs the bare target first, which says what it would have run and stops, and then asks the user for the run rather than adding the flag on its own; a subagent never adds it at all, and hands the plan back to the session that spawned it. The scripts under `scripts/oracles/` refuse to start unless the Makefile has set `HARNESS_RUN`, so a direct `node` of one of them, or a script of the session's own importing them, stops at the same wall.
+
 CI (`.github/workflows/test.yaml`) runs `make setup` and then `make verify` — run `make verify` locally before pushing. The release workflow (`.github/workflows/release.yaml`) runs `make setup` and then `make release` on pushes to `release` and `release-*`. The `pre-commit` hook lints the staged `.js`/`.ts` files and runs, in one pass of `vitest related`, whatever test imports one of them — so a util is answered for by the rules that use it rather than by the directory it sits in.
 
 ## Architecture
