@@ -4,8 +4,6 @@ SHELL := bash
 
 export PATH := $(CURDIR)/node_modules/.bin:$(PATH)
 
-OUT ?= tmp/oracles
-
 ANSI_RESET := \033[0m
 ANSI_BOLD := \033[1m
 ANSI_BOLD_CYAN := \033[1;36m
@@ -41,14 +39,8 @@ prose-check: ## 🔤 Check that markdown prose is bound
 	./scripts/bind-prose.js --check
 .PHONY: prose-check
 
-oracles: ## 🔮 Run every oracle over every rule and option [RUN=1] [OUT=]
-	$(call require_run,every oracle — about 350 000 lints and four to five minutes on an idle machine)
-	@mkdir -p $(OUT)
-	for oracle in converge control comments twins nodes pairs ; do
-		printf "\t🔮 $$oracle\n"
-		HARNESS_RUN=1 ./scripts/oracles/$$oracle.mjs > $(OUT)/$$oracle.json
-	done
-	@printf "\t✅ Written to $(ANSI_BOLD)$(OUT)$(ANSI_RESET). Run once before a branch and once after, and read the diff.\n\n"
+oracles: ## 🔮 Compare every oracle's answer about the base with its answer about the working tree [RUN=1] [BASE=] [HEAD=]
+	HARNESS_RUN=$(RUN) ./scripts/oracles/compare.mjs $(BASE) $(HEAD)
 .PHONY: oracles
 
 sweep: ## 🧹 Run one sweep on the base and on the working tree, and write the diff [RUN=1] FILE= [BASE=]
@@ -62,6 +54,10 @@ harness-check: ## 🧫 Check that the direct runner agrees with Stylelint over e
 	HARNESS_RUN=1 ./scripts/harness/verify-lint.mjs
 .PHONY: harness-check
 
+cache-gc: ## 🗑️  Take out of the result store what no ref reaches any more
+	./scripts/harness/gc.mjs
+.PHONY: cache-gc
+
 breaks-check: ## ↩️  Check that every line spelling a line break in lib/ is classified
 	./scripts/check-break-readings.js
 .PHONY: breaks-check
@@ -73,7 +69,7 @@ release: verify ## 🚀 Release a new version
 	pnx @firefoxic/release-it
 .PHONY: release
 
-# A run of the oracles or of a sweep is the slowest thing this repository does, and it is asked for far more often than it is needed: what it compares is two states of the tree, and the state of a commit does not change with the commit's date or its message. So nothing here collects results without RUN=1, and a permission rule of the user's own makes that spelling prompt. Without it the target says what it would have run and stops — the recipe exits with the code below, and make reports it — which a session reads as "ask first" rather than as a failure of the build. A comma cannot stand in the argument, since `call` would read it as a second one.
+# A run of the oracles or of a sweep is the slowest thing this repository does, and it is asked for far more often than it is needed: what it compares is two states of the tree, and the state of a commit does not change with the commit's date or its message. So nothing here collects results without RUN=1, and a permission rule of the user's own makes that spelling prompt. Without it a target says what it would have run and stops — the recipe exits with the code below, and make reports it — which a session reads as "ask first" rather than as a failure of the build. A comma cannot stand in the argument, since `call` would read it as a second one.
 define require_run
 	@if [ "$(RUN)" != "1" ] ; then
 		printf "\n\t⏸  $(ANSI_BOLD)Not running$(ANSI_RESET) $(1).\n"

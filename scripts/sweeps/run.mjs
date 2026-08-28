@@ -12,6 +12,7 @@ import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { argv, env, exit, stderr, stdout } from "node:process"
 
+import { hashAt, keyOf, read, write } from "../harness/cache.mjs"
 import { defaultBase, libAt, ROOT } from "../harness/checkout.mjs"
 import { diff, render } from "../harness/diff.mjs"
 import { lintDirect, loadRules } from "../harness/lint.mjs"
@@ -76,13 +77,23 @@ if (!file) {
 }
 
 let sweep = await import(path.resolve(file))
-let sides = { base: await loadRules(libAt(base)), head: await loadRules(libAt(`worktree`)) }
+let sides = { base, head: `worktree` }
 let results = {}
 
-for (let [side, registry] of Object.entries(sides)) {
-	// The two sides are measured in turn, base first, so that the branch is never read before what it is compared with
-	// eslint-disable-next-line no-await-in-loop
-	results[side] = await measure(sweep, registry)
+for (let [side, revision] of Object.entries(sides)) {
+	// A side is measured once by what it depends on — the rules, the sweep and the runner — and read back on every later run; the two are taken in turn, base first
+	let inputs = { sweep: hashAt(`worktree`, path.relative(ROOT, path.resolve(file))), lib: hashAt(revision, `lib`), harness: hashAt(`worktree`, `scripts/harness`), lock: hashAt(`worktree`, `pnpm-lock.yaml`) }
+	let key = keyOf(inputs)
+	let rows = read(`sweeps`, sweep.name, key)
+
+	if (!rows) {
+		stdout.write(`\t🧹 ${sweep.name} over ${side} (${revision})\n`)
+		// eslint-disable-next-line no-await-in-loop
+		rows = await measure(sweep, await loadRules(libAt(revision)))
+		write(`sweeps`, sweep.name, key, rows, { ...inputs, revision, root: ROOT })
+	}
+
+	results[side] = rows
 }
 
 let out = path.join(ROOT, `tmp`, `sweeps`)
