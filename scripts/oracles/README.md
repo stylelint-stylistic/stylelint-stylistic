@@ -15,7 +15,7 @@ The two sides are compared rather than written: every result is kept under `
 | `converge.mjs` | Does `--fix` reach a fixed point, and does what it wrote still parse? |
 | `control.mjs` | Does a `//` comment move a warning, against a block comment of exactly the same width? |
 | `comments.mjs` | Does every comment the file held survive the fix? |
-| `twins.mjs` | Does a rule say the same thing about a file broken with a carriage return, a form feed or a Windows pair as about its line-feed twin, and does the syntax read the twin at all? |
+| `twins.mjs` | Does a rule say the same thing about a file broken with a Windows pair as about its line-feed twin, and does the syntax read the twin at all? |
 | `nodes.mjs` | Does every declaration, rule and at-rule the file held survive the fix? |
 | `pairs.mjs` | Does `--fix` leave a different file behind when the configuration lists two rules the other way round? |
 
