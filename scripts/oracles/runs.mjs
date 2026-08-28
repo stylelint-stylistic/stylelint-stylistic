@@ -1,5 +1,15 @@
+import { env, exit, stderr } from "node:process"
+
 import { FIXTURES, INLINE_FIXTURES } from "./fixtures.mjs"
 import { RULE_OPTIONS } from "./options.mjs"
+
+/** The code a run stops with where it was started without approval, and the one thing every oracle shares apart from its list of runs: a run collects results rather than reading them, it is the slowest thing the repository does, and it is asked for far more often than it is needed. So a script of this directory refuses to start unless the Makefile has set this variable, which `make oracles RUN=1` does and nothing else should — a session that wants a run asks for that spelling, and a permission rule of the user's own makes that spelling prompt. */
+const EXIT_CODE_NOT_APPROVED = 3
+
+if (env.HARNESS_RUN !== `1`) {
+	stderr.write(`Not running: an oracle collects new results, so it is started through \`make oracles RUN=1\` after the user has approved the run, never directly.\n`)
+	exit(EXIT_CODE_NOT_APPROVED)
+}
 
 /** The plugin is loaded by its place on disk, so that an oracle runs the same from any directory. */
 const PLUGIN = new URL(`../../lib/index.js`, import.meta.url).pathname
