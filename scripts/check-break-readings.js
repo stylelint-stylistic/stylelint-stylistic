@@ -40,8 +40,7 @@ const ALLOWED = {
 		`let allowedLFNewLinesString = \`\\n\`.repeat(maxAdjacentNewlines)`,
 		`let allowedCRLFNewLinesString = \`\\r\\n\`.repeat(maxAdjacentNewlines)`,
 	],
-	"lib/rules/indentation/index.js": [`searchString = searchString.replaceAll(EVERY_BARE_CR_OR_FORM_FEED, \`\\n\`)`],
-	"lib/rules/linebreaks/index.js": [`if (data) return data.replaceAll(EVERY_CR_OR_LF_BREAK, shouldHaveCR ? \`\\r\\n\` : \`\\n\`)`],
+	"lib/rules/linebreaks/index.js": [`if (data) return data.replaceAll(EVERY_LINE_BREAK, shouldHaveCR ? \`\\r\\n\` : \`\\n\`)`],
 	"lib/rules/max-empty-lines/index.js": [
 		`let emptyLFLines = \`\\n\`.repeat(repeatTimes)`,
 		`let emptyCRLFLines = \`\\r\\n\`.repeat(repeatTimes)`,
@@ -54,10 +53,11 @@ const ALLOWED = {
 		`let allowedLFNewLinesString = \`\\n\`.repeat(maxAdjacentNewlines)`,
 		`let allowedCRLFNewLinesString = \`\\r\\n\`.repeat(maxAdjacentNewlines)`,
 	],
-	"lib/utils/readsInlineComments/index.js": [
-		`const INLINE_COMMENT_PROBE = \`a {}\\n// comment\\na { b: 'x', // comment\\n  'y'; }\\n\``,
-		`const FORM_FEED_PROBE = \`a {}\\n// c\\fb {}\\n\``,
+	"lib/utils/getLineBreak/index.js": [
+		`const BREAK_OF_OPTION = { unix: \`\\n\`, windows: \`\\r\\n\` }`,
+		`return lineBreakOfFile(node) ?? \`\\n\``,
 	],
+	"lib/utils/readsInlineComments/index.js": [`const INLINE_COMMENT_PROBE = \`a {}\\n// comment\\na { b: 'x', // comment\\n  'y'; }\\n\``],
 }
 
 /** Every line that reads a break without asking `lib/regexps.js` what one is. */
@@ -79,10 +79,6 @@ const DEBT = {
 		`let expressionStartLine = node.parent.parent.source.input.css.split(\`\\n\`)[node.parent.source.start.line - 1]`,
 		`target: \`\\n\`,`,
 	],
-	"lib/rules/linebreaks/index.js": [
-		`let lines = root.source.input.css.split(\`\\n\`)`,
-		`if (i < lines.length - 1 && !line.includes(\`\\r\`)) line += \`\\n\``,
-	],
 	"lib/rules/max-empty-lines/index.js": [`target: CRLF.test(rootString) ? \`\\r\\n\` : \`\\n\`,`],
 	"lib/rules/max-line-length/index.js": [
 		`styleSearch({ source: rootString, target: [\`\\n\`], comments: \`check\` }, (match) => checkNewline(match))`,
@@ -90,7 +86,10 @@ const DEBT = {
 		`if (rootString[nextNewlineIndex - 1] === \`\\r\`) nextNewlineIndex -= 1`,
 	],
 	"lib/rules/named-grid-areas-alignment/index.js": [`let isMultilineDeclaration = declarationValue.includes(\`\\n\`)`],
-	"lib/rules/no-eol-whitespace/index.js": [`const LINE_BREAK_CHARACTERS = [\`\\n\`, \`\\r\`, \`\\f\`]`],
+	"lib/rules/no-eol-whitespace/index.js": [
+		`const LINE_BREAK_CHARACTERS = [\`\\n\`]`,
+		`if (string.charAt(eolWhitespaceIndex) === \`\\r\`) eolWhitespaceIndex -= 1`,
+	],
 	"lib/rules/no-extra-semicolons/index.js": [`if (string[i] === \`\\n\`) {`],
 	"lib/rules/no-multiple-whitespaces/index.js": [`return char === \`\\n\` || char === \`\\r\``],
 	"lib/rules/selector-max-empty-lines/index.js": [
@@ -106,12 +105,12 @@ const DEBT = {
 		`let violatedLFNewLinesRegex = new RegExp(\`\\n{\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
 	],
 	"lib/utils/findCommentSpans/index.js": [
-		`if (character === \`\\n\` || character === \`\\r\`) return index`,
-		`if (endsOnFormFeed && character === \`\\f\`) return index`,
+		`let index = text.indexOf(\`\\n\`, openIndex)`,
+		`return text[index - 1] === \`\\r\` ? index - 1 : index`,
 	],
 	"lib/utils/isWhitespace/index.js": [`return [\` \`, \`\\n\`, \`\\t\`, \`\\r\`, \`\\f\`].includes(char)`],
 	"lib/utils/whitespaceChecker/index.js": [
-		`return char === \`\\n\` || char === \`\\r\` || char === \`\\f\``,
+		`return char === \`\\n\``,
 		`if (oneCharAfter === \`\\r\` && twoCharsAfter === \`\\n\` && (activeArgs.onlyOneChar || isNullish(threeCharsAfter) || !isWhitespace(threeCharsAfter))) return`,
 	],
 }

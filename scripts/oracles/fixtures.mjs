@@ -1,4 +1,4 @@
-/** The shapes the defects of this plugin have come out of: a comment beside code, two spellings of a line break, a bang, a run of them, an at-rule closing a block with neither a block nor a semicolon of its own, a run of empty lines inside a call that holds another call, an interpolation holding whitespace. Each is as small as it can be and still be wrong, since every fixture costs the run about a dozen lints per rule and option — three for `converge.mjs`, one each for `comments.mjs` and `nodes.mjs`, and eight for `twins.mjs`, which lints an original and three twins twice over. */
+/** The shapes the defects of this plugin have come out of: a comment beside code, a Windows pair, a bare carriage return and a form feed — whitespace to PostCSS and to every rule, and a break to neither — a bang, a run of them, an at-rule closing a block with neither a block nor a semicolon of its own, a run of empty lines inside a call that holds another call, an interpolation holding whitespace. Each is as small as it can be and still be wrong, since every fixture costs the run about a dozen lints per rule and option — three for `converge.mjs`, one each for `comments.mjs` and `nodes.mjs`, and four for `twins.mjs`, which lints an original and its Windows twin twice over. */
 const FIXTURES = [
 	[`plain`, `a { color: pink; }\n`],
 	[`plain-multi`, `a,\nb {\n\tcolor: pink;\n\ttransform: translate(1px, 2px);\n}\n`],
@@ -12,8 +12,8 @@ const FIXTURES = [
 	[`url-slashes`, `a { b: url(http://a/b.png); }\n`],
 	[`media-ops`, `@media ,a<>=b screen<screen { a { b: c; } }\n`],
 	[`media-feature`, `@media (min-width:100px) and (max-width:200px) { a { b: c; } }\n`],
-	[`cr`, `a { color: pink;  \r}\n`],
-	[`ff`, `a { color: pink;  \f}\n`],
+	[`cr-as-whitespace`, `a { color: pink;  \r}\n`],
+	[`ff-as-whitespace`, `a { color: pink;  \f}\n`],
 	[`crlf`, `a {\r\n\tcolor: pink;\r\n}\r\n`],
 	[`trailing-comment-block`, `a { color: pink /* c */ }\n`],
 	[`nested-func`, `a { b: calc( 1px + f(2,3) ) ; }\n`],
