@@ -56,6 +56,7 @@ async function probe (run) {
 	return { rule: run.rule, primary: run.primary, syntaxName: run.syntaxName, name: run.name, before, after, code: run.code, output }
 }
 
+/** @type {object[]} */
 let findings = []
 
 for (let run of buildRuns()) {

@@ -42,7 +42,10 @@ function diff (base, head) {
 function render (result, base, head, limit = 200) {
 	let lines = [`| | rows |`, `| --- | --- |`, `| same | ${result.same} |`, `| changed | ${result.changed.length} |`, `| added | ${result.added.length} |`, `| removed | ${result.removed.length} |`, ``]
 
-	for (let [title, keys, sides] of [[`Changed`, result.changed, [base, head]], [`Added`, result.added, [head]], [`Removed`, result.removed, [base]]]) {
+	/** @type {[string, string[], Record<string, unknown>[]][]} */
+	let sections = [[`Changed`, result.changed, [base, head]], [`Added`, result.added, [head]], [`Removed`, result.removed, [base]]]
+
+	for (let [title, keys, sides] of sections) {
 		if (keys.length === 0) continue
 
 		lines.push(`## ${title}`, ``)

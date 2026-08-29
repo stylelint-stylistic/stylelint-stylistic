@@ -45,7 +45,7 @@ async function probe (run) {
 			result = await lint({ code: current, config: run.config, fix: true })
 		}
 		catch (error) {
-			return { kind: `broke`, ...label(run), detail: `threw: ${error.message}`, history }
+			return { kind: `broke`, ...label(run), detail: `threw: ${/** @type {{ message: string }} */ (error).message}`, history }
 		}
 
 		let [first] = result.results
@@ -64,6 +64,7 @@ async function probe (run) {
 	return null
 }
 
+/** @type {object[]} */
 let findings = []
 
 for (let run of buildRuns()) {

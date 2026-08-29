@@ -25,7 +25,7 @@ const IDENTITY = [`kind`, `rule`, `primary`, `syntaxName`, `name`, `spelling`, `
  * Names the inputs a result of one oracle over one side depends on.
  * @param {string} oracle - The oracle.
  * @param {string} revision - The side, as `hashAt` reads it.
- * @returns {object} The inputs, each as the hash Git keeps for it; the scripts and the corpus are always the working tree's.
+ * @returns {Record<string, string>} The inputs, each as the hash Git keeps for it; the scripts and the corpus are always the working tree's.
  */
 function inputsOf (oracle, revision) {
 	return { oracle, lib: hashAt(revision, `lib`), oracles: hashAt(`worktree`, `scripts/oracles`), harness: hashAt(`worktree`, `scripts/harness`), lock: hashAt(`worktree`, `pnpm-lock.yaml`) }
@@ -33,10 +33,11 @@ function inputsOf (oracle, revision) {
 
 /**
  * Keys the rows of one oracle by their identity.
- * @param {object[]} rows - The rows.
+ * @param {Record<string, unknown>[]} rows - The rows.
  * @returns {Record<string, object>} The rows by key; two rows of one identity are told apart by their place.
  */
 function keyed (rows) {
+	/** @type {Record<string, object>} */
 	let result = {}
 
 	for (let row of rows) {
@@ -55,7 +56,7 @@ function keyed (rows) {
  * Runs one oracle over one side, with the working tree's scripts.
  * @param {string} oracle - The oracle.
  * @param {string} revision - The side.
- * @returns {object[]} The rows.
+ * @returns {Record<string, unknown>[]} The rows.
  */
 function run (oracle, revision) {
 	let output = execFileSync(`node`, [path.join(ROOT, `scripts`, `oracles`, `${oracle}.mjs`)], { cwd: ROOT, encoding: `utf8`, maxBuffer: 1024 * 1024 * 256, env: { ...env, HARNESS_LIB: libAt(revision) } })
@@ -65,14 +66,19 @@ function run (oracle, revision) {
 
 let [base = defaultBase(), head = `worktree`] = argv.slice(2)
 let sides = { base, head }
+
+/** @type {{ side: string, revision: string, oracle: string, key: string, inputs: Record<string, string> }[]} */
 let plan = []
+
+/** @type {Record<string, Record<string, Record<string, unknown>[]>>} */
 let results = { base: {}, head: {} }
 
 for (let [side, revision] of Object.entries(sides)) {
 	for (let oracle of ORACLES) {
 		let inputs = inputsOf(oracle, revision)
 		let key = keyOf(inputs)
-		let rows = read(`oracles`, oracle, key)
+		// The store hands back what was written, and an oracle writes its rows as a list
+		let rows = /** @type {Record<string, unknown>[] | undefined} */ (read(`oracles`, oracle, key))
 
 		if (rows) results[side][oracle] = rows
 		else plan.push({ side, revision, oracle, key, inputs })
@@ -80,11 +86,14 @@ for (let [side, revision] of Object.entries(sides)) {
 }
 
 // Two sides standing on one `lib/` tree — a branch that has not touched a rule yet — ask one question, and one run answers it for both
+/** @type {Map<string, typeof plan>} */
 let answered = new Map()
 
 plan = plan.filter((item) => {
-	if (answered.has(item.key)) {
-		answered.get(item.key).push(item)
+	let twins = answered.get(item.key)
+
+	if (twins) {
+		twins.push(item)
 
 		return false
 	}
@@ -103,7 +112,7 @@ for (let item of plan) {
 	write(`oracles`, item.oracle, item.key, rows, { ...item.inputs, revision: item.revision, root: ROOT })
 	results[item.side][item.oracle] = rows
 
-	for (let twin of answered.get(item.key)) results[twin.side][twin.oracle] = rows
+	for (let twin of answered.get(item.key) ?? []) results[twin.side][twin.oracle] = rows
 }
 
 let report = [`# Oracles: ${base} → ${head}`, ``]

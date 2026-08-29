@@ -19,31 +19,41 @@ const CONFIGURATION_COMMENT = `stylelint`
 /** The severity every rule is given, since a run here has no configuration to set another. */
 const SEVERITY = `error`
 
-/** The syntaxes a run can name, each loaded once on first use. */
+/** @typedef {import('postcss').Syntax} Syntax A syntax as a configuration hands one over: what parses a text and what prints it back. */
+/** @typedef {{ rule?: string, text: string, line?: number, column?: number, endLine?: number, endColumn?: number, severity?: string }} Warning What a rule said, in the fields the oracles read; the warning standing in for a parse error carries no position. */
+/** @typedef {[string, unknown, object?]} RuleSetting A rule by its short name, with its primary option and, where there is one, its secondary options. */
+/** @typedef {Record<string, import('stylelint').Rule>} Registry The rules of one checkout by their short names, as `lib/rules/index.js` exports them. */
+/** @typedef {{ unparsable: true, detail: string } | { unparsable: false, usable: boolean, warnings: Warning[], code: string }} Answer What the rules said and wrote, or why the text could not be read. */
+/** @typedef {{ plugins: string[], customSyntax?: string, rules: Record<string, unknown> }} Config The configuration `runs.mjs` builds: a plugin named by its path, a syntax named by its package, and the rules under their namespaced names. */
+
+/** @type {Map<string, Syntax>} The syntaxes a run can name, each loaded once on first use. */
 let syntaxes = new Map()
 
 /**
  * Loads a syntax by the name a configuration spells it with, or hands back the one given.
- * @param {string | { parse: Function, stringify: Function } | undefined} syntax - A package name such as `postcss-scss`, a syntax object, or nothing for plain CSS.
- * @returns {Promise<{ parse: Function, stringify: Function }>} The syntax to parse and print with.
+ * @param {string | Syntax | undefined} syntax - A package name such as `postcss-scss`, a syntax object, or nothing for plain CSS.
+ * @returns {Promise<Syntax>} The syntax to parse and print with.
  */
 async function loadSyntax (syntax) {
 	if (!syntax) return postcss
 	if (typeof syntax !== `string`) return syntax
 
-	if (!syntaxes.has(syntax)) {
-		let module = await import(syntax)
+	let known = syntaxes.get(syntax)
 
-		syntaxes.set(syntax, module.default ?? module)
-	}
+	if (known) return known
 
-	return syntaxes.get(syntax)
+	let module = await import(syntax)
+	let loaded = module.default ?? module
+
+	syntaxes.set(syntax, loaded)
+
+	return loaded
 }
 
 /**
  * Loads the rule registry of a checkout, so that a base and a branch can be asked in one process.
  * @param {string} lib - The path of the checkout's `lib/` directory.
- * @returns {Promise<Record<string, Function>>} The registry, keyed by the rule's short name.
+ * @returns {Promise<Registry>} The registry, keyed by the rule's short name.
  */
 async function loadRules (lib) {
 	let module = await import(`${lib}/rules/index.js`)
@@ -61,33 +71,59 @@ function namespaced (name) {
 }
 
 /**
+ * Reads the rules of a configuration as the runner takes them: by their short names, in the order the configuration spells them.
+ * @param {Record<string, unknown>} rules - The rules of the configuration, under their namespaced names.
+ * @returns {RuleSetting[]} Each rule with its options.
+ */
+function settingsOf (rules) {
+	return Object.entries(rules).map(([name, setting]) => {
+		let [primary, secondary] = Array.isArray(setting) ? setting : [setting]
+
+		return /** @type {RuleSetting} */ ([name.replace(`@stylistic/`, ``), primary, secondary])
+	})
+}
+
+/**
  * Lints a text under the rules given, in the order given.
  * @param {object} options - What to lint and how.
  * @param {string} options.code - The text.
- * @param {Array<[string, unknown, object?]>} options.rules - Each rule by its short name, with its primary option and, where there is one, its secondary options; the order is the order the rules run in, which is the order a configuration would have listed them in.
- * @param {Record<string, Function>} options.registry - The rule registry to take the rules from, as `loadRules` returns it.
- * @param {string | object} [options.syntax] - The syntax to read the text with; plain CSS where none is given.
+ * @param {RuleSetting[]} options.rules - Each rule by its short name, with its primary option and, where there is one, its secondary options; the order is the order the rules run in, which is the order a configuration would have listed them in.
+ * @param {Registry} options.registry - The rule registry to take the rules from, as `loadRules` returns it.
+ * @param {string | Syntax} [options.syntax] - The syntax to read the text with; plain CSS where none is given.
  * @param {boolean} [options.fix] - Whether the rules are let write.
- * @returns {Promise<{ unparsable: true, detail: string } | { unparsable: false, usable: boolean, warnings: object[], code: string }>} What the rules said and wrote, or why the text could not be read at all. A run is `usable` where no rule objected to its options, as `isUsable` of the oracles has it.
+ * @returns {Promise<Answer>} What the rules said and wrote, or why the text could not be read at all. A run is `usable` where no rule objected to its options, as `isUsable` of the oracles has it.
  */
 async function lintDirect ({ code, rules, registry, syntax, fix = false }) {
 	let parser = await loadSyntax(syntax)
+
+	/** @type {import('stylelint').PostcssResult} */
 	let result
 
 	try {
-		result = postcss().process(code, { from: undefined, syntax: parser }).sync()
+		result = /** @type {import('stylelint').PostcssResult} */ (postcss().process(code, { from: undefined, syntax: parser }).sync())
 	}
 	catch (error) {
-		return { unparsable: true, detail: error.reason ?? error.message }
+		let { reason, message } = /** @type {{ reason?: string, message: string }} */ (error)
+
+		return { unparsable: true, detail: reason ?? message }
 	}
 
+	/** @type {{ fix: boolean, rules: Record<string, [unknown, object | undefined]> }} */
 	let config = { fix, rules: {} }
-	let stylelint = { ruleSeverities: {}, customMessages: {}, customUrls: {}, ruleMetadata: {}, fixersData: {}, rangesOfComputedEditInfos: [], disabledRanges: {}, config }
+
+	/** @type {Record<string, import('stylelint').RuleSeverity>} */
+	let ruleSeverities = {}
+
+	/** @type {Record<string, Partial<import('stylelint').RuleMeta>>} */
+	let ruleMetadata = {}
+	// The least of a result the rules read: `report` looks the rule's severity, its metadata and the configuration up here, and the fields it never touches are left out
+	let stylelint = /** @type {import('stylelint').StylelintPostcssResult} */ (/** @type {unknown} */ ({ ruleSeverities, customMessages: {}, customUrls: {}, ruleMetadata, fixersData: {}, rangesOfComputedEditInfos: [], disabledRanges: {}, config }))
 
 	result.stylelint = stylelint
 
 	let context = { configurationComment: CONFIGURATION_COMMENT, newline: code.match(BREAK_AS_STYLELINT_READS_IT)?.[0] ?? EOL }
-	let roots = result.root.type === `document` ? result.root.nodes : [result.root]
+	let parsed = /** @type {import('postcss').Root | import('postcss').Document} */ (result.root)
+	let roots = parsed.type === `document` ? parsed.nodes : [parsed]
 
 	for (let [name, primary, secondary] of rules) {
 		let rule = registry[name]
@@ -97,8 +133,8 @@ async function lintDirect ({ code, rules, registry, syntax, fix = false }) {
 		let fullName = namespaced(name)
 
 		config.rules[fullName] = [primary, secondary]
-		stylelint.ruleSeverities[fullName] = SEVERITY
-		stylelint.ruleMetadata[fullName] = rule.meta ?? {}
+		ruleSeverities[fullName] = SEVERITY
+		ruleMetadata[fullName] = rule.meta ?? {}
 
 		let check = rule(primary, secondary, context)
 
@@ -109,10 +145,12 @@ async function lintDirect ({ code, rules, registry, syntax, fix = false }) {
 		}
 	}
 
+	/** @type {Warning[]} */
 	let warnings = []
 	let usable = true
 
-	for (let warning of result.warnings()) {
+	// What `report` hangs on a warning beyond what PostCSS declares: the kind of warning where it is not a rule's, and the rule where it is
+	for (let warning of /** @type {(import('postcss').Warning & { stylelintType?: string, rule?: string })[]} */ (result.warnings())) {
 		if (warning.stylelintType === `invalidOption`) {
 			usable = false
 			continue
@@ -126,7 +164,7 @@ async function lintDirect ({ code, rules, registry, syntax, fix = false }) {
 	return { unparsable: false, usable, warnings, code: result.root.toString(parser.stringify) }
 }
 
-/** The registries already loaded, by the plugin path a configuration names. */
+/** @type {Map<string, Registry>} The registries already loaded, by the plugin path a configuration names. */
 let registries = new Map()
 
 /**
@@ -135,21 +173,20 @@ let registries = new Map()
  * The configuration is the one `runs.mjs` builds — a plugin named by its path, a syntax named by its package, and one rule or several under their namespaced names — and the answer carries `results[0].warnings`, `results[0].invalidOptionWarnings` and `code`, which is all an oracle reads of Stylelint's. A text the syntax cannot read answers with a warning whose rule is `CssSyntaxError`, as Stylelint's does.
  * @param {object} options - The options `stylelint.lint` would have taken.
  * @param {string} options.code - The text.
- * @param {object} options.config - The configuration.
+ * @param {Config} options.config - The configuration.
  * @param {boolean} [options.fix] - Whether the rules are let write.
- * @returns {Promise<{ results: [{ warnings: object[], invalidOptionWarnings: object[] }], code: string | undefined }>} The answer, shaped like Stylelint's.
+ * @returns {Promise<{ results: [{ warnings: Warning[], invalidOptionWarnings: { text: string }[] }], code: string | undefined }>} The answer, shaped like Stylelint's.
  */
 async function lint ({ code, config, fix = false }) {
 	let [plugin] = config.plugins
+	let registry = registries.get(plugin)
 
-	if (!registries.has(plugin)) registries.set(plugin, await loadRules(path.dirname(plugin)))
+	if (!registry) {
+		registry = await loadRules(path.dirname(plugin))
+		registries.set(plugin, registry)
+	}
 
-	let rules = Object.entries(config.rules).map(([name, setting]) => {
-		let [primary, secondary] = Array.isArray(setting) ? setting : [setting]
-
-		return [name.replace(`@stylistic/`, ``), primary, secondary]
-	})
-	let answer = await lintDirect({ code, rules, registry: registries.get(plugin), syntax: config.customSyntax, fix })
+	let answer = await lintDirect({ code, rules: settingsOf(config.rules), registry, syntax: config.customSyntax, fix })
 
 	if (answer.unparsable) return { results: [{ warnings: [{ rule: `CssSyntaxError`, text: `${answer.detail} (CssSyntaxError)`, severity: SEVERITY }], invalidOptionWarnings: [] }], code: undefined }
 
@@ -159,4 +196,4 @@ async function lint ({ code, config, fix = false }) {
 	}
 }
 
-export { lint, lintDirect, loadRules, loadSyntax }
+export { lint, lintDirect, loadRules, loadSyntax, settingsOf }

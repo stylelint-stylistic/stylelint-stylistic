@@ -34,7 +34,7 @@ function git (args, extraEnv = {}) {
 	return execFileSync(`git`, args, { cwd: ROOT, encoding: `utf8`, env: { ...env, ...extraEnv } }).trim()
 }
 
-/** The tree of the working tree as it stands, computed once per process. */
+/** @type {string | undefined} The tree of the working tree as it stands, computed once per process. */
 let worktreeTree
 
 /**
@@ -98,6 +98,7 @@ function fileOf (kind, name, key) {
  * @returns {Record<string, string>} A hash of each row by the same key.
  */
 function digestOf (rows) {
+	/** @type {Record<string, string>} */
 	let digest = {}
 
 	for (let [key, row] of Object.entries(rows)) digest[key] = createHash(`sha1`).update(JSON.stringify(row)).digest(`hex`).slice(0, 16)

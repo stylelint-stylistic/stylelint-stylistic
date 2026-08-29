@@ -44,7 +44,7 @@ const CONFIGS = Object.entries(RULE_OPTIONS).flatMap(([rule, primaries]) => prim
 /**
  * Lints one snippet under the rules in the order given.
  * @param {string} code - The snippet.
- * @param {object} rules - The rules to run, in the order the configuration is to spell them.
+ * @param {Record<string, unknown>} rules - The rules to run, in the order the configuration is to spell them.
  * @param {boolean} fix - Whether the rules are let write.
  * @returns {Promise<{ code: string, warnings: number, usable: boolean }>} What the run left and what it said, and whether it is a run an oracle can read at all.
  */
@@ -68,9 +68,10 @@ async function lint (code, rules, fix) {
  *
  * A rule that changes nothing here cannot race with another over it, and pairing the whole list with itself regardless would cost the square of every option the plugin has rather than the square of the handful this shape wakes.
  * @param {string} source - The fixture.
- * @returns {Promise<object[]>} The configurations that rewrote it.
+ * @returns {Promise<{ rule: string, primary: unknown }[]>} The configurations that rewrote it.
  */
 async function activeOn (source) {
+	/** @type {{ rule: string, primary: unknown }[]} */
 	let active = []
 
 	for (let config of CONFIGS) {
@@ -87,8 +88,8 @@ async function activeOn (source) {
  * Runs one pair of configurations over one fixture in both orders, and asks what each order left unsaid.
  * @param {string} name - The name of the fixture.
  * @param {string} source - The fixture.
- * @param {object} a - One configuration.
- * @param {object} b - The other.
+ * @param {{ rule: string, primary: unknown }} a - One configuration.
+ * @param {{ rule: string, primary: unknown }} b - The other.
  * @returns {Promise<object | null>} The row, or null where the order decides nothing.
  */
 async function probe (name, source, a, b) {
@@ -116,6 +117,7 @@ async function probe (name, source, a, b) {
 	}
 }
 
+/** @type {object[]} */
 let findings = []
 
 for (let [name, source] of CORPUS) {

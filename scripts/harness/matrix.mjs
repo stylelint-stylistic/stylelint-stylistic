@@ -12,13 +12,15 @@
  */
 function multiply (axes, template) {
 	let entries = Object.entries(axes)
+
+	/** @type {[string[], Record<string, string>][]} */
 	let rows = [[[], {}]]
 
 	for (let [axis, values] of entries) {
-		rows = rows.flatMap(([names, chosen]) => Object.entries(values).map(([name, value]) => [[...names, name], { ...chosen, [axis]: value }]))
+		rows = rows.flatMap(([names, chosen]) => Object.entries(values).map(([name, value]) => /** @type {[string[], Record<string, string>]} */ ([[...names, name], { ...chosen, [axis]: value }])))
 	}
 
-	return rows.map(([names, chosen]) => [names.join(`|`), template(chosen)])
+	return rows.map(([names, chosen]) => /** @type {[string, string]} */ ([names.join(`|`), template(chosen)]))
 }
 
 /**
@@ -28,7 +30,7 @@ function multiply (axes, template) {
  * @returns {[string, string][]} Every value in every environment, the environment's name in front of the value's key.
  */
 function place (values, environments) {
-	return Object.entries(environments).flatMap(([name, wrap]) => values.map(([key, value]) => [`${name}|${key}`, wrap(value)]))
+	return Object.entries(environments).flatMap(([name, wrap]) => values.map(([key, value]) => /** @type {[string, string]} */ ([`${name}|${key}`, wrap(value)])))
 }
 
 export { multiply, place }

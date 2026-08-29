@@ -11,7 +11,10 @@ import { place } from "../harness/matrix.mjs"
 /** The comment, in the two spellings of the same width, and the two shapes that carry no comment. A block comment is what the inline one is measured against, since neither the file nor the code around it differs by a character between the two. */
 const COMMENTS = { inline: `// c`, block: `/**/`, none: ``, twoInline: `// c\n\t// c` }
 
-/** Where the comment stands: behind the value of the last declaration, on a line of its own, behind the opening brace, and behind a semicolon. */
+/**
+ * Where the comment stands: behind the value of the last declaration, on a line of its own, behind the opening brace, and behind a semicolon.
+ * @type {Record<string, (comment: string) => string>}
+ */
 const PLACES = {
 	behindValue: (comment) => `a {\n\tcolor: pink ${comment}\n}\n`,
 	ownLine: (comment) => `a {\n\tcolor: pink;\n\t${comment}\n}\n`,
@@ -61,7 +64,7 @@ const corpus = [
 ]
 
 /** Every rule this branch rewrites a measurement in, under every primary option `scripts/oracles/options.mjs` lists for it. */
-const configs = [
+const configs = /** @type {[string, unknown[]][]} */ ([
 	[`at-rule-semicolon-newline-after`, [`always`]],
 	[`at-rule-semicolon-space-before`, [`always`, `never`]],
 	[`block-closing-brace-empty-line-before`, [`always-multi-line`, `never`]],
@@ -86,6 +89,6 @@ const configs = [
 	[`value-list-comma-newline-after`, [`always`, `always-multi-line`, `never-multi-line`]],
 	[`indentation`, [`tab`, 2]],
 	[`no-extra-semicolons`, [true]],
-].flatMap(([rule, primaries]) => primaries.map((primary) => ({ rule, primary })))
+]).flatMap(([rule, primaries]) => primaries.map((primary) => ({ rule, primary })))
 
 export { configs, corpus, name }

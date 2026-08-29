@@ -17,12 +17,17 @@ import { defaultBase, libAt, ROOT } from "../harness/checkout.mjs"
 import { diff, render } from "../harness/diff.mjs"
 import { lintDirect, loadRules } from "../harness/lint.mjs"
 
-/** The syntax each name is read under, plain CSS under none. */
+/**
+ * The syntax each name is read under, plain CSS under none.
+ * @type {Record<string, string | undefined>}
+ */
 const SYNTAXES = { css: undefined, scss: `postcss-scss`, less: `postcss-less` }
+
+/** @typedef {{ name: string, corpus: [string, string][], configs: { rule: string, primary: unknown, secondary?: object }[], syntaxes?: string[] }} Sweep What a sweep module exports. */
 
 /**
  * Lints one text under one configuration, checking and fixing, and reads the fix back.
- * @param {object} options - What `lintDirect` takes, without `fix`.
+ * @param {Omit<Parameters<typeof lintDirect>[0], 'fix'>} options - What `lintDirect` takes, without `fix`.
  * @returns {Promise<object>} The row: the warnings the check drew, the text the fix left and whether the syntax reads it — or why the run says nothing.
  */
 async function measureOne (options) {
@@ -32,6 +37,9 @@ async function measureOne (options) {
 	if (!checked.usable) return { usable: false }
 
 	let fixed = await lintDirect({ ...options, fix: true })
+
+	if (fixed.unparsable) throw new Error(`The text was read once and not again: ${fixed.detail}`)
+
 	let reparse = await lintDirect({ ...options, code: fixed.code, rules: [] })
 
 	return { warnings: checked.warnings.map((warning) => warning.text), fixed: fixed.code, reparses: !reparse.unparsable }
@@ -39,15 +47,17 @@ async function measureOne (options) {
 
 /**
  * Lints every text of the corpus under every configuration and syntax, with one registry.
- * @param {object} sweep - The sweep module.
- * @param {Record<string, Function>} registry - The rules of one side.
+ * @param {Sweep} sweep - The sweep module.
+ * @param {import('../harness/lint.mjs').Registry} registry - The rules of one side.
  * @returns {Promise<Record<string, object>>} Every row by its key.
  */
 async function measure (sweep, registry) {
+	/** @type {Record<string, object>} */
 	let rows = {}
 
 	for (let syntaxName of sweep.syntaxes ?? Object.keys(SYNTAXES)) {
 		for (let config of sweep.configs) {
+			/** @type {import('../harness/lint.mjs').RuleSetting[]} */
 			let rules = [[config.rule, config.primary, config.secondary]]
 
 			for (let [key, code] of sweep.corpus) {
@@ -68,6 +78,7 @@ if (!file) {
 	exit(2)
 }
 
+/** @type {Sweep} */
 let sweep = await import(path.resolve(file))
 let sides = { base, head: `worktree` }
 
@@ -81,9 +92,11 @@ for (let [side, revision] of Object.entries(sides)) {
 	let digest = readDigest(`sweeps`, sweep.name, key)
 
 	if (digest) {
+		/** @type {Record<string, object> | undefined} */
 		let rows
 
-		results[side] = { digest, rows: () => (rows ??= read(`sweeps`, sweep.name, key)) }
+		// The store hands back what was written, and a sweep writes its rows by key
+		results[side] = { digest, rows: () => (rows ??= /** @type {Record<string, object>} */ (read(`sweeps`, sweep.name, key))) }
 		continue
 	}
 

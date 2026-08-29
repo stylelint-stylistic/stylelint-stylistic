@@ -18,7 +18,10 @@ import { buildRuns } from "./runs.mjs"
 const INLINE_COMMENT = `//${` `}c`
 const BLOCK_COMMENT = `/${`*`.repeat(2)}/`
 
-/** The shapes a comment can stand in, each of them the same code whichever way the comment is spelled. The last two were written for #139: no earlier one puts the comment inside a set of parameters that carries on past it — in every other bodiless at-rule here the comment lands in `raws.between` and the syntax keeps no second copy — so no fixture reached `at-rule-semicolon-space-before` at all; and none put the break closing the comment where a rule counting past it lands on the next line rather than in the next column. */
+/**
+ * The shapes a comment can stand in, each of them the same code whichever way the comment is spelled. The last two were written for #139: no earlier one puts the comment inside a set of parameters that carries on past it — in every other bodiless at-rule here the comment lands in `raws.between` and the syntax keeps no second copy — so no fixture reached `at-rule-semicolon-space-before` at all; and none put the break closing the comment where a rule counting past it lands on the next line rather than in the next column.
+ * @type {[string, string][]}
+ */
 const CORPUS = [
 	[`value-continues`, `a { b: 1px ${INLINE_COMMENT}\n\t2px; }\n`],
 	[`value-ends-block`, `a {\n\tcolor: pink ${INLINE_COMMENT}\n}\n`],
@@ -41,7 +44,7 @@ const CORPUS = [
 /**
  * Lints one snippet and hands back what it said.
  * @param {string} code - The snippet.
- * @param {object} config - The Stylelint configuration.
+ * @param {import('../harness/lint.mjs').Config} config - The Stylelint configuration.
  * @returns {Promise<string[]>} The warnings, each with its position.
  */
 async function warningsOf (code, config) {
@@ -73,6 +76,7 @@ async function probe (run) {
 	return { rule: run.rule, primary: run.primary, syntaxName: run.syntaxName, name: run.name, inline, block }
 }
 
+/** @type {object[]} */
 let findings = []
 
 for (let run of buildRuns(CORPUS)) {

@@ -6,7 +6,7 @@ import { RULE_OPTIONS } from "./options.mjs"
 /** The plugin is loaded by its place on disk, so that an oracle runs the same from any directory — and from another checkout's `lib/` where `HARNESS_LIB` names one, which is how a base is measured with the branch's oracles without moving the working tree. */
 const PLUGIN = env.HARNESS_LIB ? `${env.HARNESS_LIB}/index.js` : new URL(`../../lib/index.js`, import.meta.url).pathname
 
-/** @typedef {{ rule: string, primary: unknown, syntaxName: string, name: string, code: string, config: object }} Run */
+/** @typedef {{ rule: string, primary: unknown, syntaxName: string, name: string, code: string, config: import('../harness/lint.mjs').Config }} Run */
 
 /**
  * Builds every run an oracle makes: every rule, under every primary option it accepts, over every fixture the syntax can hold.
@@ -16,6 +16,7 @@ const PLUGIN = env.HARNESS_LIB ? `${env.HARNESS_LIB}/index.js` : new URL(`../../
  * @returns {Run[]} Every run, in a stable order.
  */
 function buildRuns (corpus) {
+	/** @type {[string, string | null, [string, string][]][]} */
 	let syntaxes = corpus
 		? [[`scss`, `postcss-scss`, corpus], [`less`, `postcss-less`, corpus]]
 		: [[`css`, null, FIXTURES], [`scss`, `postcss-scss`, [...FIXTURES, ...INLINE_FIXTURES]], [`less`, `postcss-less`, [...FIXTURES, ...INLINE_FIXTURES]]]
@@ -36,7 +37,7 @@ function buildRuns (corpus) {
  * Asks whether a result is one an oracle can say anything about.
  *
  * A fixture no syntax reads is no fixture, and an option a rule does not take is `options.mjs` falling behind the plugin rather than the plugin being wrong. Neither is a finding.
- * @param {import('stylelint').LintResult} result - The result of one lint.
+ * @param {{ warnings: { rule?: string }[], invalidOptionWarnings?: unknown[] }} result - The result of one lint, of which the warnings and the objections to the options are read.
  * @returns {boolean} True where the run is worth reading.
  */
 function isUsable (result) {

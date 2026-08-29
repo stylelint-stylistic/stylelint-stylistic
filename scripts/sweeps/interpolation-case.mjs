@@ -6,7 +6,10 @@
 
 import { multiply, place } from "../harness/matrix.mjs"
 
+/** @type {Record<string, string>} */
 const OPENERS = { sass: `#{`, less: `@{`, postcssSimpleVars: `$(` }
+
+/** @type {Record<string, string>} */
 const CLOSERS = { sass: `}`, less: `}`, postcssSimpleVars: `)` }
 
 const TEXTS = { name: `$a`, comparison: `$a != $b`, product: `$m * 2px`, productEndingInDigit: `$n * 2`, twoDimensions: `2px 3rem`, upper: `$A`, upperUnit: `10PX`, unitAlone: `px`, upperUnitAlone: `PX`, sum: `$a + 1`, call: `f($a)`, quoted: `"PX"`, spacedName: ` $a `, hex: `#FFF`, empty: `` }
@@ -15,7 +18,10 @@ const HEADS = { none: ``, unit: `10px`, upperUnit: `10PX`, product: `1px*2rem`, 
 
 const TAILS = { none: ``, unit: `10px`, upperUnit: `10PX`, unitAlone: `px`, upperUnitAlone: `PX`, spacedUnit: ` 10px` }
 
-/** Values whose braces open no interpolation in plain CSS: a pair in a comment, in a string, and a bare one. */
+/**
+ * Values whose braces open no interpolation in plain CSS: a pair in a comment, in a string, and a bare one.
+ * @type {[string, string][]}
+ */
 const CONTROLS = [
 	[`control|comment-pair`, `1px /* { */ 10PX /* } */`],
 	[`control|string-pair`, `"{" 10PX "}"`],
@@ -36,9 +42,11 @@ const name = `interpolation-case`
 const corpus = place(
 	[
 		...multiply({ spelling: OPENERS, text: TEXTS, head: HEADS, tail: TAILS }, ({ spelling, text, head, tail }) => {
-			let closer = CLOSERS[Object.keys(OPENERS).find((key) => OPENERS[key] === spelling)]
+			let language = Object.keys(OPENERS).find((key) => OPENERS[key] === spelling)
 
-			return `${head}${spelling}${text}${closer}${tail}`
+			if (language === undefined) throw new Error(`No language opens an interpolation with "${spelling}"`)
+
+			return `${head}${spelling}${text}${CLOSERS[language]}${tail}`
 		}),
 		...CONTROLS,
 	],

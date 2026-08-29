@@ -13,7 +13,7 @@ import stylelint from "stylelint"
 import { RULE_OPTIONS } from "../oracles/options.mjs"
 import { buildRuns, isUsable } from "../oracles/runs.mjs"
 
-import { lintDirect, loadRules } from "./lint.mjs"
+import { lintDirect, loadRules, settingsOf } from "./lint.mjs"
 
 /** The registry of this checkout, which is the one every oracle reads too. */
 const REGISTRY = await loadRules(new URL(`../../lib`, import.meta.url).pathname)
@@ -24,9 +24,9 @@ const PAIRS_PER_FIXTURE = 24
 /**
  * Asks Stylelint, and shapes its answer like the runner's.
  * @param {string} code - The text.
- * @param {object} config - The configuration, as the oracles build one.
+ * @param {import('./lint.mjs').Config} config - The configuration, as the oracles build one.
  * @param {boolean} fix - Whether the rules are let write.
- * @returns {Promise<object>} The answer in the runner's shape.
+ * @returns {Promise<import('./lint.mjs').Answer>} The answer in the runner's shape.
  */
 async function askStylelint (code, config, fix) {
 	let result
@@ -35,7 +35,7 @@ async function askStylelint (code, config, fix) {
 		result = await stylelint.lint({ code, config, fix })
 	}
 	catch (error) {
-		return { unparsable: true, detail: error.message }
+		return { unparsable: true, detail: /** @type {{ message: string }} */ (error).message }
 	}
 
 	let [first] = result.results
@@ -54,29 +54,23 @@ async function askStylelint (code, config, fix) {
 /**
  * Asks the runner under the same configuration.
  * @param {string} code - The text.
- * @param {object} config - The configuration, as the oracles build one.
+ * @param {import('./lint.mjs').Config} config - The configuration, as the oracles build one.
  * @param {boolean} fix - Whether the rules are let write.
- * @returns {Promise<object>} The answer.
+ * @returns {Promise<import('./lint.mjs').Answer>} The answer.
  */
 function askRunner (code, config, fix) {
-	let rules = Object.entries(config.rules).map(([name, setting]) => {
-		let [primary, secondary] = Array.isArray(setting) ? setting : [setting]
-
-		return [name.replace(`@stylistic/`, ``), primary, secondary]
-	})
-
-	return lintDirect({ code, rules, registry: REGISTRY, syntax: config.customSyntax, fix })
+	return lintDirect({ code, rules: settingsOf(config.rules), registry: REGISTRY, syntax: config.customSyntax, fix })
 }
 
 /**
  * Compares the two answers, and names the first field they differ in.
- * @param {object} expected - What Stylelint said.
- * @param {object} actual - What the runner said.
+ * @param {import('./lint.mjs').Answer} expected - What Stylelint said.
+ * @param {import('./lint.mjs').Answer} actual - What the runner said.
  * @returns {string | null} The field, or null where the two agree.
  */
 function disagreement (expected, actual) {
 	if (expected.unparsable !== actual.unparsable) return `unparsable`
-	if (expected.unparsable) return null
+	if (expected.unparsable || actual.unparsable) return null
 	if (expected.usable !== actual.usable) return `usable`
 	if (!expected.usable) return null
 	if (expected.code !== actual.code) return `code`
@@ -86,13 +80,15 @@ function disagreement (expected, actual) {
 }
 
 let compared = 0
+
+/** @type {{ label: string, fix: boolean, field: string, expected: import('./lint.mjs').Answer, actual: import('./lint.mjs').Answer }[]} */
 let failures = []
 
 /**
  * Compares one configuration over one text, checking and fixing.
  * @param {string} label - What to print where the two disagree.
  * @param {string} code - The text.
- * @param {object} config - The configuration.
+ * @param {import('./lint.mjs').Config} config - The configuration.
  * @returns {Promise<void>} Nothing; a disagreement is recorded.
  */
 async function compare (label, code, config) {
@@ -115,7 +111,7 @@ for (let run of runs) {
 	await compare(`${run.rule} ${JSON.stringify(run.primary)} ${run.syntaxName} ${run.name}`, run.code, run.config)
 }
 
-let configs = Object.entries(RULE_OPTIONS).map(([rule, [primary]]) => [`@stylistic/${rule}`, primary])
+let configs = Object.entries(RULE_OPTIONS).map(([rule, [primary]]) => /** @type {[string, unknown]} */ ([`@stylistic/${rule}`, primary]))
 let fixtures = new Map(runs.filter((run) => run.syntaxName === `css`).map((run) => [run.name, run]))
 
 for (let [name, run] of fixtures) {

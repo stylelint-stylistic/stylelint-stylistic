@@ -64,8 +64,8 @@ function normalise (code) {
  *
  * A run that says nothing is told apart from one the syntax could not read at all, since the second is a finding here rather than a fixture to pass over: where the original parses and the twin does not, the syntax itself reads one break and not another, and that is the same bug this oracle is about, one layer down in a dependency.
  * @param {string} code - The text to lint.
- * @param {object} config - The configuration to lint it under.
- * @returns {Promise<object>} What the rule said and wrote, or why the run cannot be read.
+ * @param {import('../harness/lint.mjs').Config} config - The configuration to lint it under.
+ * @returns {Promise<{ read: false, unparsable: boolean, detail?: string } | { read: true, warnings: string[], positions: string[], output: string }>} What the rule said and wrote, or why the run cannot be read.
  */
 async function ask (code, config) {
 	let checked
@@ -76,7 +76,7 @@ async function ask (code, config) {
 		fixed = await lint({ code, config, fix: true })
 	}
 	catch (error) {
-		return { read: false, unparsable: true, detail: `threw: ${error.message}` }
+		return { read: false, unparsable: true, detail: `threw: ${/** @type {{ message: string }} */ (error).message}` }
 	}
 
 	let [first] = checked.results
@@ -125,6 +125,7 @@ async function probe (run) {
 
 	if (!original.read) return []
 
+	/** @type {object[]} */
 	let findings = []
 
 	for (let [spelling, character] of TWINS) {
@@ -164,6 +165,7 @@ async function probe (run) {
 	return findings
 }
 
+/** @type {object[]} */
 let findings = []
 
 for (let run of buildRuns()) {

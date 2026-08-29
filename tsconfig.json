@@ -9,7 +9,7 @@
 		"noImplicitAny": true,
 		"forceConsistentCasingInFileNames": true,
 		"outDir": "./dist",
-		"checkJs": false,
+		"checkJs": true,
 		"allowJs": true,
 		"skipLibCheck": true,
 		"types": [

@@ -18,7 +18,10 @@ import { lint } from "../harness/lint.mjs"
 
 import { buildRuns, isUsable } from "./runs.mjs"
 
-/** The parser each syntax of a run is read back with, so that what came out of the fix is counted the way what went in was written. */
+/**
+ * The parser each syntax of a run is read back with, so that what came out of the fix is counted the way what went in was written.
+ * @type {Record<string, { parse: import('postcss').Parser }>}
+ */
 const PARSERS = { css: postcss, less, scss }
 
 /**
@@ -31,8 +34,8 @@ function tally (code, syntaxName) {
 	let counts = { decl: 0, rule: 0, atrule: 0 }
 
 	try {
-		PARSERS[syntaxName].parse(code).walk((node) => {
-			if (node.type in counts) counts[node.type] += 1
+		PARSERS[syntaxName].parse(code).walk(({ type }) => {
+			if (type === `decl` || type === `rule` || type === `atrule`) counts[type] += 1
 		})
 	}
 	catch {
@@ -75,6 +78,7 @@ async function probe (run) {
 	return { rule: run.rule, primary: run.primary, syntaxName: run.syntaxName, name: run.name, before, after, code: run.code, output }
 }
 
+/** @type {object[]} */
 let findings = []
 
 for (let run of buildRuns()) {

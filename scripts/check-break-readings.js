@@ -34,7 +34,10 @@ const COMMENT_ONLY = /^(?:\/\/|\*(?!\/\s*\S))|^\/\*(?:(?!\*\/)[\s\S])*(?:\*\/\s*
 /** The file the answers are meant to come from, and the tests, whose fixtures are stylesheets rather than readings of one. */
 const SKIPPED = /(?:^|\/)regexps\.js$|\.test\.js$/u
 
-/** Every line that puts a break into a text, or spells one inside a stylesheet written as data. None of them asks whether anything is a break, so none is debt. */
+/**
+ * Every line that puts a break into a text, or spells one inside a stylesheet written as data. None of them asks whether anything is a break, so none is debt.
+ * @type {Record<string, string[]>}
+ */
 const ALLOWED = {
 	"lib/rules/function-max-empty-lines/index.js": [
 		`let allowedLFNewLinesString = \`\\n\`.repeat(maxAdjacentNewlines)`,
@@ -60,7 +63,10 @@ const ALLOWED = {
 	"lib/utils/readsInlineComments/index.js": [`const INLINE_COMMENT_PROBE = \`a {}\\n// comment\\na { b: 'x', // comment\\n  'y'; }\\n\``],
 }
 
-/** Every line that reads a break without asking `lib/regexps.js` what one is. */
+/**
+ * Every line that reads a break without asking `lib/regexps.js` what one is.
+ * @type {Record<string, string[]>}
+ */
 const DEBT = {
 	"lib/rules/block-closing-brace-empty-line-before/index.js": [`if (statementString[index - 1] === \`\\r\`) index -= 1`],
 	"lib/rules/block-closing-brace-newline-before/index.js": [`if (statementString[index - 1] === \`\\r\`) index -= 1`],
@@ -76,7 +82,7 @@ const DEBT = {
 		`if (source.slice(index, index + 2) === \`\\r\\n\`) return`,
 	],
 	"lib/rules/indentation/index.js": [
-		`let expressionStartLine = node.parent.parent.source.input.css.split(\`\\n\`)[node.parent.source.start.line - 1]`,
+		`let expressionStartLine = parent.parent.source.input.css.split(\`\\n\`)[parent.source.start.line - 1]`,
 		`target: \`\\n\`,`,
 	],
 	"lib/rules/max-empty-lines/index.js": [`target: CRLF.test(rootString) ? \`\\r\\n\` : \`\\n\`,`],
@@ -120,7 +126,7 @@ const DEBT = {
  * @returns {string[]} The paths, relative to the repository root.
  */
 function collectSources () {
-	return readdirSync(LIB, { recursive: true })
+	return readdirSync(LIB, { recursive: true, encoding: `utf8` })
 		.filter((path) => path.endsWith(`.js`))
 		.map((path) => `lib/${path}`)
 		.filter((path) => !SKIPPED.test(path))
