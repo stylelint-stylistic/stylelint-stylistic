@@ -9,7 +9,7 @@ Every task goes through the [`Makefile`](Makefile), and that file is the li
 The one thing the file cannot say for itself is that a flag is passed as a variable rather than as an option:
 
 ```shell
-make test FILE=lib/rules/color-hex-case/index.test.js        # one rule's tests
+make test FILE=lib/rules/color-hex-case/index.test.ts        # one rule's tests
 make test TEST_FLAGS="-t 'lower'"                            # filter by test name
 make lint FILE=lib/rules/color-hex-case
 ```
@@ -24,7 +24,7 @@ A Stylelint plugin (`@stylistic/stylelint-plugin`) that restores the stylisti
 
 - `lib/index.ts` — maps every entry of the rule registry through `stylelint.createPlugin(addNamespace(name), rule)` and exports the array. `addNamespace` prefixes `@stylistic/`, so users write `"@stylistic/color-hex-case"`.
 - `lib/rules/index.ts` — the registry: static imports of every rule plus a default-exported object keyed by kebab-case rule name. **A new rule is not active until it is added here.**
-- `lib/rules/<rule-name>/` — `index.ts` (rule), `index.test.js`, `README.md` (user docs).
+- `lib/rules/<rule-name>/` — `index.ts` (rule), `index.test.ts`, `README.md` (user docs).
 - `lib/utils/<utilName>/index.ts` — one util per directory. Many rules are thin wrappers over shared checkers: `whitespaceChecker` (the `always`/`never`/`always-single-line`/… engine behind most `*-space-*` and `*-newline-*` rules), plus the `*CommaSpaceChecker`, `*ColonSpaceChecker`, `isStandardSyntax*`, and `has*Interpolation` families. Look for an existing util before writing new traversal logic. A util puts its helpers above what it exports, and a type is exported where it is declared.
 - `lib/regexps.ts` — every regular expression the plugin reads a stylesheet with, each one a named constant under a line saying what it matches. Nothing else in `lib/` spells a pattern inline, so a pattern wanted in a second place is already there under a name, and whatever had to be worked out about it is written once.
 - `lib/reference/selectors.ts` — shared CSS reference data.
@@ -118,7 +118,7 @@ The dash before a tag's description separates that description from a name
 
 A description that spells out the name again says nothing. `@property {MessageFunction} [expectedBefore] - Message for expected before whitespace.` costs a line and a reading, and gives back neither what the message says nor when it is used.
 
-All of this holds in `*.test.js` as well, but a comment inside a fixture is not a comment: `/* … */` and `//` inside a `code` or `fixed` template literal are the CSS under test, and stay character for character as they are.
+All of this holds in `*.test.ts` as well, but a comment inside a fixture is not a comment: `/* … */` and `//` inside a `code` or `fixed` template literal are the CSS under test, and stay character for character as they are.
 
 ## Changelog
 
