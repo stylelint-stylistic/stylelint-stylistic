@@ -2,7 +2,11 @@ import { LINE_BREAK, OPENS_WITH_QUOTE, URL_CALL_AT_END } from "../../regexps.ts"
 import type { InlineCommentReading } from "../readsInlineComments/index.ts"
 
 /** Where a scan stands: what it is reading, how far it has read, the quote that would close the string it is inside, and the pattern that closes the comment it may be inside. */
-export type Scan = { state: `blockComment` | `code` | `inlineComment` | `string` | `url`, index: number, openingQuote: string }
+export type Scan = {
+	state: `blockComment` | `code` | `inlineComment` | `string` | `url`,
+	index: number,
+	openingQuote: string,
+}
 
 /**
  * Reads one character of an inline comment.

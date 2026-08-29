@@ -48,7 +48,11 @@ const CONFIGS = Object.entries(RULE_OPTIONS).flatMap(([rule, primaries]) => prim
  * @param fix - Whether the rules are let write.
  * @returns What the run left and what it said, and whether it is a run an oracle can read at all.
  */
-async function lint (code: string, rules: Record<string, unknown>, fix: boolean): Promise<{ code: string, warnings: number, usable: boolean }> {
+async function lint (code: string, rules: Record<string, unknown>, fix: boolean): Promise<{
+	code: string,
+	warnings: number,
+	usable: boolean,
+}> {
 	let result
 
 	try {
@@ -70,8 +74,14 @@ async function lint (code: string, rules: Record<string, unknown>, fix: boolean)
  * @param source - The fixture.
  * @returns The configurations that rewrote it.
  */
-async function activeOn (source: string): Promise<{ rule: string, primary: unknown }[]> {
-	let active: { rule: string, primary: unknown }[] = []
+async function activeOn (source: string): Promise<{
+	rule: string,
+	primary: unknown,
+}[]> {
+	let active: {
+		rule: string,
+		primary: unknown,
+	}[] = []
 
 	for (let config of CONFIGS) {
 		// eslint-disable-next-line no-await-in-loop
@@ -91,7 +101,13 @@ async function activeOn (source: string): Promise<{ rule: string, primary: unkno
  * @param b - The other.
  * @returns The row, or null where the order decides nothing.
  */
-async function probe (name: string, source: string, a: { rule: string, primary: unknown }, b: { rule: string, primary: unknown }): Promise<object | null> {
+async function probe (name: string, source: string, a: {
+	rule: string,
+	primary: unknown,
+}, b: {
+	rule: string,
+	primary: unknown,
+}): Promise<object | null> {
 	let aFirst = await lint(source, { [a.rule]: a.primary, [b.rule]: b.primary }, true)
 	let bFirst = await lint(source, { [b.rule]: b.primary, [a.rule]: a.primary }, true)
 

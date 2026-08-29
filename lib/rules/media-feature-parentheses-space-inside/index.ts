@@ -84,7 +84,11 @@ function rule (primary: `always` | `never`): RuleCheck {
 			// A double slash opens a comment that runs to the end of its line, and `postcss-value-parser` knows nothing of the kind: a parenthesis standing in the text of one opens a media feature as far as that parser is concerned, and the fix then writes inside the comment
 			let inlineComments = findInlineCommentSpans(params, reading.spells)
 
-			let problems: Array<{ message: string, index: number, fix?: () => void }> = []
+			let problems: Array<{
+				message: string,
+				index: number,
+				fix?: () => void,
+			}> = []
 
 			// What a fix changed, and nothing else: the parameters are edited at the positions the fixes name rather than printed anew from the parsed tree, since `postcss-value-parser` does not always give back the text it was handed — a comment opening `/*/` comes back as `/**/` — and a fix made anywhere in such a query would rewrite a comment standing elsewhere in it
 			//

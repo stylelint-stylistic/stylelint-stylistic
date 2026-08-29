@@ -9,7 +9,12 @@ import { findInterpolationSpans, findInterpolationSpanTouching } from "./index.t
  * @param type - What the parser calls the node.
  * @returns The node.
  */
-function node (text: string, run: string, type: string = `word`): { type: string, value: string, sourceIndex: number, sourceEndIndex: number } {
+function node (text: string, run: string, type: string = `word`): {
+	type: string,
+	value: string,
+	sourceIndex: number,
+	sourceEndIndex: number,
+} {
 	let sourceIndex = text.indexOf(run)
 
 	return { type, value: run, sourceIndex, sourceEndIndex: sourceIndex + run.length }

@@ -1,5 +1,9 @@
 /** A replacement for one span of a text, addressed in that text as it stood before any edit was applied. */
-export type Edit = { start: number, end: number, text: string }
+export type Edit = {
+	start: number,
+	end: number,
+	text: string,
+}
 
 /**
  * Applies a list of edits to a text.

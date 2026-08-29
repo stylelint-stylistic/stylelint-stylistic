@@ -2,10 +2,18 @@ import type { AtRule, Comment, Declaration, Document, Node, Parser, Root, Rule, 
 import type { FunctionNode, Node as ValueParserNode } from "postcss-value-parser"
 
 /** The raw of a selector, a value or a set of params. PostCSS keeps the text with its comments in `raw` beside the copy it hands back in `value`, and `postcss-scss` keeps a third copy under `scss`, spelled as the file spells it with every `//` comment in place, which is the one it prints. */
-export type SyntaxRaw = { raw: string, value: string, scss?: string }
+export type SyntaxRaw = {
+	raw: string,
+	value: string,
+	scss?: string,
+}
 
 /** The source of a root `postcss-html` read out of a page, beside what PostCSS gives every node: whether the block came out of a `style` attribute, the language the block names, and the syntax it was parsed with. */
-export type EmbeddedSource = NodeSource & { inline?: boolean, lang?: string, syntax?: Syntax }
+export type EmbeddedSource = NodeSource & {
+	inline?: boolean,
+	lang?: string,
+	syntax?: Syntax,
+}
 
 /**
  * Checks if a node is a PostCSS Root node.

@@ -154,7 +154,10 @@ function rule (primary: `always` | `never`): RuleCheck {
 		let spacesAttribute = attributeNode.raws.spaces && attributeNode.raws.spaces.attribute
 		let rawAttrBefore = spacesAttribute && spacesAttribute.before
 
-		let { attrBefore, setAttrBefore }: { attrBefore: string, setAttrBefore: (fixed: string) => void } = spacesAttribute && rawAttrBefore
+		let { attrBefore, setAttrBefore }: {
+			attrBefore: string,
+			setAttrBefore: (fixed: string) => void,
+		} = spacesAttribute && rawAttrBefore
 			? {
 				attrBefore: rawAttrBefore,
 				setAttrBefore (fixed) {
@@ -186,7 +189,10 @@ function rule (primary: `always` | `never`): RuleCheck {
 
 		let spaces = attributeNode.spaces[key]
 
-		let { after, setAfter }: { after: string, setAfter: (fixed: string) => void } = rawSpaces && rawAfter
+		let { after, setAfter }: {
+			after: string,
+			setAfter: (fixed: string) => void,
+		} = rawSpaces && rawAfter
 			? {
 				after: rawAfter,
 				setAfter (fixed) {

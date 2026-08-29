@@ -3,7 +3,11 @@ import type { Node } from "postcss-value-parser"
 import { findCommentSpans } from "../findCommentSpans/index.ts"
 
 /** The span an inline comment occupies in a value, in the coordinates of the file, and how far the copy a syntax rewrote its comments in has run away from that value by the end of the comment. */
-export type InlineCommentSpan = { start: number, end: number, delta?: number }
+export type InlineCommentSpan = {
+	start: number,
+	end: number,
+	delta?: number,
+}
 
 /**
  * Finds the spans the inline comments of a string occupy in it. A double slash belonging to an address opens no comment, whether the address is quoted or bare inside `url()`, and neither does one inside a block comment; a comment ends with its line rather than with the string.

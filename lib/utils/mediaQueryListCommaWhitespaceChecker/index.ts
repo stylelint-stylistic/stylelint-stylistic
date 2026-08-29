@@ -19,7 +19,11 @@ let { utils: { report } } = stylelint
 export function mediaQueryListCommaWhitespaceChecker (opts: {
 	root: Root,
 	result: PostcssResult,
-	locationChecker: (args: { source: string, index: number, err: (message: string) => void }) => void,
+	locationChecker: (args: {
+		source: string,
+		index: number,
+		err: (message: string) => void,
+	}) => void,
 	checkedRuleName: string,
 	fix?: ((atRule: AtRule, index: number) => void),
 	isFixable?: ((params: string, index: number, atRule: AtRule) => boolean),

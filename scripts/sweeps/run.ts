@@ -21,7 +21,12 @@ import { lintDirect, loadRules, type Registry, type RuleSetting } from "../harne
 const SYNTAXES: Record<string, string | undefined> = { css: undefined, scss: `postcss-scss`, less: `postcss-less` }
 
 /** What a sweep module exports. */
-type Sweep = { name: string, corpus: [string, string][], configs: { rule: string, primary: unknown, secondary?: object }[], syntaxes?: string[] }
+type Sweep = {
+	name: string,
+	corpus: [string, string][],
+	configs: { rule: string, primary: unknown, secondary?: object }[],
+	syntaxes?: string[],
+}
 
 /**
  * Lints one text under one configuration, checking and fixing, and reads the fix back.
@@ -78,7 +83,10 @@ let sweep: Sweep = await import(path.resolve(file))
 let sides = { base, head: `worktree` }
 
 /** Each side as its digest, and its rows behind a call, since the rows are read only for the keys the digests say have moved. */
-let results: Record<string, { digest: Record<string, string>, rows: () => Record<string, object> }> = {}
+let results: Record<string, {
+	digest: Record<string, string>,
+	rows: () => Record<string, object>,
+}> = {}
 
 for (let [side, revision] of Object.entries(sides)) {
 	// A side is measured once by what it depends on — the rules, the sweep and the runner — and read back on every later run; the two are taken in turn, base first

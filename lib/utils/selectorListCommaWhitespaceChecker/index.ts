@@ -18,7 +18,11 @@ export interface SelectorListCommaWhitespaceCheckerOptions {
 	result: PostcssResult,
 
 	/** The location checker function. */
-	locationChecker: (opts: { source: string, index: number, err: (msg: string) => void }) => void,
+	locationChecker: (opts: {
+		source: string,
+		index: number,
+		err: (msg: string) => void,
+	}) => void,
 
 	/** The name of the rule being checked. */
 	checkedRuleName: string,

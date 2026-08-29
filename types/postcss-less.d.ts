@@ -29,7 +29,10 @@ declare module "postcss-less" {
 
 	let parse: Parser
 	let stringify: Stringifier
-	let less: { parse: Parser, stringify: Stringifier }
+	let less: {
+		parse: Parser,
+		stringify: Stringifier,
+	}
 
 	export default less
 	export { parse, stringify }

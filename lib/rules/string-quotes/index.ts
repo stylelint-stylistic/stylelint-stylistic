@@ -285,7 +285,7 @@ function rule (primary: `single` | `double`, secondaryOptions: { avoidEscape?: b
 		 * @param value - The value, as the file spells it.
 		 * @returns The spans, in the coordinates of the value.
 		 */
-		function scanCommentSpans (raws: { raw: string, scss?: string } | undefined, value: string): InlineCommentSpan[] {
+		function scanCommentSpans (raws: SyntaxRaw | undefined, value: string): InlineCommentSpan[] {
 			if (!value.includes(`//`)) return []
 
 			// A double slash of a syntax that marks its comments in a copy of its own is code — part of an address, most often. Unless that copy has gone out of step with the value and left the scan to answer after all, and then the comments are the ones the text spells.

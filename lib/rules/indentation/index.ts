@@ -37,13 +37,22 @@ export let meta = {
 	fixable: true,
 }
 
+/** The secondary options: the level the file opens at, the constructs excepted or ignored, how far a parenthesised value indents, and whether a closing brace does. */
+type SecondaryOptions = {
+	baseIndentLevel?: number | `auto`,
+	except?: (`block` | `value` | `param`)[],
+	ignore?: (`value` | `param` | `inside-parens`)[],
+	indentInsideParens?: `twice` | `once-at-root-twice-in-block`,
+	indentClosingBrace?: boolean,
+}
+
 /**
  * Specifies indentation.
  * @param primary - The primary option: a number of spaces, or `tab`.
  * @param secondaryOptions - The secondary options: `baseIndentLevel`, `except`, `ignore`, `indentInsideParens` and `indentClosingBrace`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: number | `tab`, secondaryOptions: { baseIndentLevel?: number | `auto`, except?: (`block` | `value` | `param`)[], ignore?: (`value` | `param` | `inside-parens`)[], indentInsideParens?: `twice` | `once-at-root-twice-in-block`, indentClosingBrace?: boolean } = {}): RuleCheck {
+function rule (primary: number | `tab`, secondaryOptions: SecondaryOptions = {}): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,
@@ -269,7 +278,11 @@ function rule (primary: number | `tab`, secondaryOptions: { baseIndentLevel?: nu
 			let { searchString } = searchCopy(source, node, result)
 
 			// Data for current node fixing
-			let fixPositions: Array<{ expectedIndentation: string, currentIndentation: string, startIndex: number }> = []
+			let fixPositions: Array<{
+				expectedIndentation: string,
+				currentIndentation: string,
+				startIndex: number,
+			}> = []
 
 			// Every break the search finds is handed over, and the ones standing inside parentheses are turned away in the callback below, so that the arguments of a function, and the non-standard things written in parentheses beside them — a Sass map among them — may be indented however their author likes.
 			// Only a bracket opened at the end of a line raises the lines standing behind it, so a bracket opening a line unwinds one only while such a one is open. One opened in the middle of a line raised nothing, and unwinding it took the count a step past the outermost level of the text being measured — at the root, to an indentation of minus one tab, which is no level and nothing a file can be written with. These are counts rather than a stack: a closing bracket is not matched to the one it closes, so where a bracket opened in the middle of a line closes while another opened at a line's end is still open, the count spends the wrong one. The two kinds are counted apart, since a brace closes on the line it lowers and a parenthesis on the line after it.

@@ -122,7 +122,10 @@ function rule (primary: `ratio` | `number-where-possible` | `as-written`, second
 }
 
 /** The two numbers a `<ratio>` is written with, as the value parser read them. */
-type Ratio = { width: ValueParserNode, height?: ValueParserNode }
+type Ratio = {
+	width: ValueParserNode,
+	height?: ValueParserNode,
+}
 
 /**
  * Finds the numbers of the `<ratio>` a value holds, where the value spells `auto || <ratio>` and nothing else.
@@ -282,7 +285,13 @@ function greatestCommonDivisor (one: bigint, other: bigint): bigint {
  * @param comments - The spans the comments of that text occupy in it.
  * @returns True where a comment stands in what the edit writes over.
  */
-function holdsComment (edit: { start: number, end: number }, comments: { start: number, end: number }[]): boolean {
+function holdsComment (edit: {
+	start: number,
+	end: number,
+}, comments: {
+	start: number,
+	end: number,
+}[]): boolean {
 	return comments.some(({ start, end }) => start < edit.end && end > edit.start)
 }
 

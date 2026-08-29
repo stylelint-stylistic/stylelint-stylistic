@@ -855,7 +855,10 @@ describe(`${ruleName} on a run of comments longer than the stack is deep`, () =>
  * @param option - The primary option to run under.
  * @returns What the fix wrote and how many warnings a run without it raised.
  */
-async function fixQuietly (code: string, option: string): Promise<{ code: string | undefined, warnings: number }> {
+async function fixQuietly (code: string, option: string): Promise<{
+	code: string | undefined,
+	warnings: number,
+}> {
 	let fixed = await stylelint.lint({
 		code,
 		config: { plugins, rules: { [ruleName]: option } },

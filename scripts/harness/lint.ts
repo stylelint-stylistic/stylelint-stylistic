@@ -22,7 +22,15 @@ const CONFIGURATION_COMMENT = `stylelint`
 const SEVERITY = `error`
 
 /** What a rule said, in the fields the oracles read; the warning standing in for a parse error carries no position. */
-export type Warning = { rule?: string, text: string, line?: number, column?: number, endLine?: number, endColumn?: number, severity?: string }
+export type Warning = {
+	rule?: string,
+	text: string,
+	line?: number,
+	column?: number,
+	endLine?: number,
+	endColumn?: number,
+	severity?: string,
+}
 
 /** A rule by its short name, with its primary option and, where there is one, its secondary options. */
 export type RuleSetting = [string, unknown, object?]
@@ -31,10 +39,22 @@ export type RuleSetting = [string, unknown, object?]
 export type Registry = Record<string, Rule>
 
 /** What the rules said and wrote, or why the text could not be read. */
-export type Answer = { unparsable: true, detail: string } | { unparsable: false, usable: boolean, warnings: Warning[], code: string }
+export type Answer = {
+	unparsable: true,
+	detail: string,
+} | {
+	unparsable: false,
+	usable: boolean,
+	warnings: Warning[],
+	code: string,
+}
 
 /** The configuration `runs.ts` builds: a plugin named by its path, a syntax named by its package, and the rules under their namespaced names. */
-export type Config = { plugins: string[], customSyntax?: string, rules: Record<string, unknown> }
+export type Config = {
+	plugins: string[],
+	customSyntax?: string,
+	rules: Record<string, unknown>,
+}
 
 /** The syntaxes a run can name, each loaded once on first use. */
 let syntaxes: Map<string, Syntax> = new Map()
@@ -103,7 +123,13 @@ function settingsOf (rules: Record<string, unknown>): RuleSetting[] {
  * @param [options.fix] - Whether the rules are let write.
  * @returns What the rules said and wrote, or why the text could not be read at all. A run is `usable` where no rule objected to its options, as `isUsable` of the oracles has it.
  */
-async function lintDirect ({ code, rules, registry, syntax, fix = false }: { code: string, rules: RuleSetting[], registry: Registry, syntax?: string | Syntax, fix?: boolean }): Promise<Answer> {
+async function lintDirect ({ code, rules, registry, syntax, fix = false }: {
+	code: string,
+	rules: RuleSetting[],
+	registry: Registry,
+	syntax?: string | Syntax,
+	fix?: boolean,
+}): Promise<Answer> {
 	let parser = await loadSyntax(syntax)
 
 	let result: PostcssResult
@@ -112,12 +138,18 @@ async function lintDirect ({ code, rules, registry, syntax, fix = false }: { cod
 		result = postcss().process(code, { from: undefined, syntax: parser }).sync() as PostcssResult
 	}
 	catch (error) {
-		let { reason, message } = error as { reason?: string, message: string }
+		let { reason, message } = error as {
+			reason?: string,
+			message: string,
+		}
 
 		return { unparsable: true, detail: reason ?? message }
 	}
 
-	let config: { fix: boolean, rules: Record<string, [unknown, object | undefined]> } = { fix, rules: {} }
+	let config: {
+		fix: boolean,
+		rules: Record<string, [unknown, object | undefined]>,
+	} = { fix, rules: {} }
 
 	let ruleSeverities: Record<string, RuleSeverity> = {}
 
@@ -155,7 +187,10 @@ async function lintDirect ({ code, rules, registry, syntax, fix = false }: { cod
 	let usable = true
 
 	// What `report` hangs on a warning beyond what PostCSS declares: the kind of warning where it is not a rule's, and the rule where it is
-	for (let warning of (result.warnings() as (PostcssWarning & { stylelintType?: string, rule?: string })[])) {
+	for (let warning of (result.warnings() as (PostcssWarning & {
+		stylelintType?: string,
+		rule?: string,
+	})[])) {
 		if (warning.stylelintType === `invalidOption`) {
 			usable = false
 			continue
@@ -182,7 +217,14 @@ let registries: Map<string, Registry> = new Map()
  * @param [options.fix] - Whether the rules are let write.
  * @returns The answer, shaped like Stylelint's.
  */
-async function lint ({ code, config, fix = false }: { code: string, config: Config, fix?: boolean }): Promise<{ results: [{ warnings: Warning[], invalidOptionWarnings: { text: string }[] }], code: string | undefined }> {
+async function lint ({ code, config, fix = false }: {
+	code: string,
+	config: Config,
+	fix?: boolean,
+}): Promise<{
+	results: [{ warnings: Warning[], invalidOptionWarnings: { text: string }[] }],
+	code: string | undefined,
+}> {
 	let [plugin] = config.plugins
 	let registry = registries.get(plugin)
 

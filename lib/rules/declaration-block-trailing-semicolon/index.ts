@@ -68,12 +68,23 @@ function semicolonOutlivesTheFlag (node: Node): boolean {
 	return (isAtRule(node) && !hasBlock(node)) || (isDeclaration(node) && isCustomProperty(node.prop))
 }
 
+/** A raw standing behind the node closing a block: the node holding it, the key it is held under, where it opens in the file and what it holds. */
+type HeldRaw = {
+	owner: Node,
+	key: string,
+	start: number,
+	text: string,
+}
+
 /**
  * Reads where a node opens and closes in the file, which every node the parser built says of itself.
  * @param node - The node.
  * @returns The two offsets.
  */
-function offsetsOf (node: Node): { start: number, end: number } {
+function offsetsOf (node: Node): {
+	start: number,
+	end: number,
+} {
 	let { source } = node
 
 	if (!source?.start || !source.end) throw new Error(`The node must carry a source with both of its ends`)
@@ -109,12 +120,12 @@ function blockEnd (container: Container): number {
  * @param node - The node closing the block.
  * @returns The raws, each named by the node holding it and the key it is held under.
  */
-function rawsBehind (node: ChildNode): { owner: Node, key: string, start: number, text: string }[] {
+function rawsBehind (node: ChildNode): HeldRaw[] {
 	let container = node.parent
 
 	if (!container?.nodes) throw new Error(`The node must stand in a block`)
 
-	let raws: { owner: Node, key: string, start: number, text: string }[] = []
+	let raws: HeldRaw[] = []
 
 	for (let sibling of container.nodes.slice(container.index(node) + 1)) {
 		let text = sibling.raws.before

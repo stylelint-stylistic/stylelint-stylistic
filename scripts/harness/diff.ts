@@ -10,7 +10,12 @@
  * @param head - The rows of the branch, by key.
  * @returns The keys the branch added, the keys it removed, the keys it changed, and how many it left as they were.
  */
-function diff (base: Record<string, unknown>, head: Record<string, unknown>): { added: string[], removed: string[], changed: string[], same: number } {
+function diff (base: Record<string, unknown>, head: Record<string, unknown>): {
+	added: string[],
+	removed: string[],
+	changed: string[],
+	same: number,
+} {
 	let added = []
 	let removed = []
 	let changed = []

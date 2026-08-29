@@ -4,7 +4,11 @@
  * @param comparison - The comparison value(s).
  * @returns False where nothing matched, or the match, the pattern it was made against and the substring it covers.
  */
-function testAgainstStringOrRegExpOrArray (value: string, comparison: string | RegExp | Array<string | RegExp>): false | { match: string, pattern: (string | RegExp), substring: string } {
+function testAgainstStringOrRegExpOrArray (value: string, comparison: string | RegExp | Array<string | RegExp>): false | {
+	match: string,
+	pattern: (string | RegExp),
+	substring: string,
+} {
 	if (!Array.isArray(comparison)) return testAgainstStringOrRegExp(value, comparison)
 
 	for (let comparisonItem of comparison) {
@@ -22,7 +26,11 @@ function testAgainstStringOrRegExpOrArray (value: string, comparison: string | R
  * @param comparison - The comparison value.
  * @returns False where nothing matched, or the match, the pattern it was made against and the substring it covers.
  */
-function testAgainstStringOrRegExp (value: string, comparison: string | RegExp): false | { match: string, pattern: (string | RegExp), substring: string } {
+function testAgainstStringOrRegExp (value: string, comparison: string | RegExp): false | {
+	match: string,
+	pattern: (string | RegExp),
+	substring: string,
+} {
 	// If it's a RegExp, test directly
 	if (comparison instanceof RegExp) {
 		let match = value.match(comparison)
@@ -56,7 +64,11 @@ function testAgainstStringOrRegExp (value: string, comparison: string | RegExp):
  * @param comparison - The comparison value(s).
  * @returns False where nothing matched, or the match, the pattern it was made against and the substring it covers.
  */
-export function matchesStringOrRegExp (input: string | Array<string>, comparison: string | RegExp | Array<string | RegExp>): false | { match: string, pattern: (string | RegExp), substring: string } {
+export function matchesStringOrRegExp (input: string | Array<string>, comparison: string | RegExp | Array<string | RegExp>): false | {
+	match: string,
+	pattern: (string | RegExp),
+	substring: string,
+} {
 	if (!Array.isArray(input)) return testAgainstStringOrRegExpOrArray(input, comparison)
 
 	for (let inputItem of input) {

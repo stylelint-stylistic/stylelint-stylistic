@@ -81,7 +81,13 @@ function disagreement (expected: Answer, actual: Answer): string | null {
 
 let compared = 0
 
-let failures: { label: string, fix: boolean, field: string, expected: Answer, actual: Answer }[] = []
+let failures: {
+	label: string,
+	fix: boolean,
+	field: string,
+	expected: Answer,
+	actual: Answer,
+}[] = []
 
 /**
  * Compares one configuration over one text, checking and fixing.

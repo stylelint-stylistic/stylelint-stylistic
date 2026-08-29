@@ -9,7 +9,12 @@ import { isStandardSyntaxDeclaration } from "../isStandardSyntaxDeclaration/inde
 let { utils: { report } } = stylelint
 
 /** A function that checks whitespace at a specific location. */
-export type LocationChecker = (args: { source: string, index: number, lineCheckStr: string, err: (message: string) => void }) => void
+export type LocationChecker = (args: {
+	source: string,
+	index: number,
+	lineCheckStr: string,
+	err: (message: string) => void,
+}) => void
 
 /**
  * Checks whitespace around colons in declarations.

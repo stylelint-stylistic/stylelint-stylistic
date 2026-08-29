@@ -57,7 +57,10 @@ function rule (primary: true): RuleCheck {
 		 * @param value - The value to check.
 		 */
 		function check (node: AtRule | Declaration, value: string): void {
-			let fixPositions: Array<{ startIndex: number, endIndex: number }> = []
+			let fixPositions: Array<{
+				startIndex: number,
+				endIndex: number,
+			}> = []
 
 			// Get out quickly if there are no periods
 			if (!value.includes(`.`)) return

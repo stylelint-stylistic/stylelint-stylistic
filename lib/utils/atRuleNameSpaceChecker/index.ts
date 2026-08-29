@@ -11,7 +11,12 @@ let { utils: { report } } = stylelint
  */
 export function atRuleNameSpaceChecker (options: {
 	root: Root,
-	locationChecker: (opts: { source: string, index: number, err: (msg: string) => void, errTarget: string }) => void,
+	locationChecker: (opts: {
+		source: string,
+		index: number,
+		err: (msg: string) => void,
+		errTarget: string,
+	}) => void,
 	result: PostcssResult,
 	checkedRuleName: string,
 	fix?: ((atRule: AtRule) => void) | null,

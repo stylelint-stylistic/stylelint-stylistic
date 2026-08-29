@@ -15,7 +15,12 @@ import type { SyntaxRaw } from "../../utils/typeGuards/index.ts"
 let { utils: { report, ruleMessages, validateOptions } } = stylelint
 
 /** A node of the selector with the raws the parser hangs on one it found a comment beside: the run of whitespace and comment it prints in place of `spaces`, and the value it prints in place of the node's own. */
-type NodeWithRaws = Node & { raws?: { spaces?: Partial<Spaces>, value?: string } }
+type NodeWithRaws = Node & {
+	raws?: {
+		spaces?: Partial<Spaces>,
+		value?: string,
+	},
+}
 
 let shortName = `selector-pseudo-class-parentheses-space-inside`
 

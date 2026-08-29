@@ -113,7 +113,12 @@ function rule (primary: true): RuleCheck {
 				 * Reports a run of whitespace that is not the single space the rule asks for.
 				 * @param segment - The run, as {@link splitAtComments} cut it.
 				 */
-				function reportRun (segment: { value: string, index: number, isComment: boolean, closesInlineComment: boolean }): void {
+				function reportRun (segment: {
+					value: string,
+					index: number,
+					isComment: boolean,
+					closesInlineComment: boolean,
+				}): void {
 					// A run already a single space is what the rule asks for, and an empty one — a comment abutting the selector beside it — has no whitespace to complain of.
 					if (segment.isComment || segment.value === ` ` || segment.value === ``) return
 
@@ -217,7 +222,12 @@ function isLeftOverOfCombinator (node: Combinator): boolean {
  * @param inlineComments - The inline comments of the selector.
  * @returns The segments, in the order they stand in.
  */
-function splitAtComments (text: string, offset: number, inlineComments: InlineComment[]): Array<{ value: string, index: number, isComment: boolean, closesInlineComment: boolean }> {
+function splitAtComments (text: string, offset: number, inlineComments: InlineComment[]): Array<{
+	value: string,
+	index: number,
+	isComment: boolean,
+	closesInlineComment: boolean,
+}> {
 	let comments = inlineComments
 		.filter((inlineComment) => inlineComment.startIndex < offset + text.length && offset < inlineComment.endIndex)
 		.map((inlineComment) => ({ start: Math.max(inlineComment.startIndex - offset, 0), end: Math.min(inlineComment.endIndex - offset, text.length), isInline: true }))

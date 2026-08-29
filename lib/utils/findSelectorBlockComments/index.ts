@@ -7,7 +7,10 @@ import { EVERY_ESCAPE_STRING_OR_BLOCK_COMMENT } from "../../regexps.ts"
  * @param selector - The selector to read.
  * @returns The comments, in the order they stand in.
  */
-export function findSelectorBlockComments (selector: string): Array<{ start: number, end: number }> {
+export function findSelectorBlockComments (selector: string): Array<{
+	start: number,
+	end: number,
+}> {
 	let comments = []
 
 	for (let match of selector.matchAll(EVERY_ESCAPE_STRING_OR_BLOCK_COMMENT)) {

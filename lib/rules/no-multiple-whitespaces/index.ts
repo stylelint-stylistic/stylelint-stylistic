@@ -66,7 +66,11 @@ function isEscapedQuote (value: string, pos: number): boolean {
  * @param pos - The position of the character.
  * @returns Updated string state.
  */
-function handleStringChar (char: string, inString: boolean, stringChar: string, value: string, pos: number): { inString: boolean, stringChar: string, skip: boolean } {
+function handleStringChar (char: string, inString: boolean, stringChar: string, value: string, pos: number): {
+	inString: boolean,
+	stringChar: string,
+	skip: boolean,
+} {
 	if (!inString && (char === `"` || char === `'`)) {
 		return { inString: true, stringChar: char, skip: true }
 	}
@@ -90,7 +94,10 @@ function handleStringChar (char: string, inString: boolean, stringChar: string, 
  * @param errors - Array of error positions.
  * @returns The fixed value.
  */
-function fixWhitespaceErrors (value: string, errors: { start: number, count: number }[]): string {
+function fixWhitespaceErrors (value: string, errors: {
+	start: number,
+	count: number,
+}[]): string {
 	let newValue = value
 
 	for (let j = errors.length - 1; j >= 0; j -= 1) {
@@ -121,7 +128,10 @@ function rule (primary: true): RuleCheck {
 			let stringChar = ``
 			let afterNewline = true
 
-			let errors: { start: number, count: number }[] = []
+			let errors: {
+				start: number,
+				count: number,
+			}[] = []
 
 			// Main character iteration to find multiple whitespace errors
 			for (let i = 0; i < value.length; i += 1) {

@@ -11,7 +11,10 @@ import plugins from "../../index.ts"
  * @param rules - The two rules, in the order the configuration is to spell them.
  * @returns What the run left behind and how much of it the pair still has to say about.
  */
-async function fix (code: string, rules: object): Promise<{ code: string, warnings: number }> {
+async function fix (code: string, rules: object): Promise<{
+	code: string,
+	warnings: number,
+}> {
 	let fixed = await stylelint.lint({ code, config: { plugins, rules }, fix: true })
 	let read = await stylelint.lint({ code: fixed.code ?? code, config: { plugins, rules } })
 

@@ -19,7 +19,11 @@ let { utils: { report } } = stylelint
 export function selectorAttributeOperatorSpaceChecker (options: {
 	root: Root,
 	result: PostcssResult,
-	locationChecker: (opts: { source: string, index: number, err: (msg: string) => void }) => void,
+	locationChecker: (opts: {
+		source: string,
+		index: number,
+		err: (msg: string) => void,
+	}) => void,
 	checkedRuleName: string,
 	checkBeforeOperator: boolean,
 	fix?: ((attributeNode: Attribute) => void),

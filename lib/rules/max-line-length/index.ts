@@ -34,7 +34,11 @@ const EXCLUDED_PATTERNS = [
  * @param secondaryOptions - The secondary options: `ignore`, `ignorePattern` and `tabSize`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: number, secondaryOptions: { ignore?: (`non-comments` | `comments`) | (`non-comments` | `comments`)[], ignorePattern?: string | RegExp | (string | RegExp)[], tabSize?: number }): RuleCheck {
+function rule (primary: number, secondaryOptions: {
+	ignore?: (`non-comments` | `comments`) | (`non-comments` | `comments`)[],
+	ignorePattern?: string | RegExp | (string | RegExp)[],
+	tabSize?: number,
+}): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,

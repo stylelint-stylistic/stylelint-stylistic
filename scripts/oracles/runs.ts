@@ -9,7 +9,14 @@ import { RULE_OPTIONS } from "./options.ts"
 /** The plugin is loaded by its place on disk, so that an oracle runs the same from any directory — and from another checkout's `lib/` where `HARNESS_LIB` names one, which is how a base is measured with the branch's oracles without moving the working tree. */
 const PLUGIN = entryAt(env.HARNESS_LIB || new URL(`../../lib`, import.meta.url).pathname, `index`)
 
-export type Run = { rule: string, primary: unknown, syntaxName: string, name: string, code: string, config: Config }
+export type Run = {
+	rule: string,
+	primary: unknown,
+	syntaxName: string,
+	name: string,
+	code: string,
+	config: Config,
+}
 
 /**
  * Builds every run an oracle makes: every rule, under every primary option it accepts, over every fixture the syntax can hold.
@@ -42,7 +49,10 @@ function buildRuns (corpus?: [string, string][]): Run[] {
  * @param result - The result of one lint, of which the warnings and the objections to the options are read.
  * @returns True where the run is worth reading.
  */
-function isUsable (result: { warnings: { rule?: string }[], invalidOptionWarnings?: unknown[] }): boolean {
+function isUsable (result: {
+	warnings: { rule?: string }[],
+	invalidOptionWarnings?: unknown[],
+}): boolean {
 	if (result.warnings.some((warning) => warning.rule === `CssSyntaxError`)) return false
 
 	return (result.invalidOptionWarnings ?? []).length === 0

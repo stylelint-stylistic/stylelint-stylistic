@@ -45,7 +45,10 @@ function rule (primary: `always` | `never`): RuleCheck {
 			checkedRuleName: ruleName,
 			checkBeforeOperator: false,
 			fix: (attributeNode) => {
-				let { operatorAfter, setOperatorAfter }: { operatorAfter: string, setOperatorAfter: (fixed: string) => void } = (() => {
+				let { operatorAfter, setOperatorAfter }: {
+					operatorAfter: string,
+					setOperatorAfter: (fixed: string) => void,
+				} = (() => {
 					let rawOperator = attributeNode.raws.operator
 
 					if (rawOperator) {

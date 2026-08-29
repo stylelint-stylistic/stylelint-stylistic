@@ -66,7 +66,13 @@ function run (oracle: string, revision: string): Record<string, unknown>[] {
 let [base = defaultBase(), head = `worktree`] = argv.slice(2)
 let sides = { base, head }
 
-let plan: { side: string, revision: string, oracle: string, key: string, inputs: Record<string, string> }[] = []
+let plan: {
+	side: string,
+	revision: string,
+	oracle: string,
+	key: string,
+	inputs: Record<string, string>,
+}[] = []
 
 let results: Record<string, Record<string, Record<string, unknown>[]>> = { base: {}, head: {} }
 

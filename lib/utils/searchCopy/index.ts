@@ -17,7 +17,10 @@ import { readsInlineComments } from "../readsInlineComments/index.ts"
  * @param result - The Stylelint result, which the syntax of the file is read from.
  * @returns The copy to hand the search, and the spans the comments occupy in the text it was made of.
  */
-export function searchCopy (text: string, node: Node, result: PostcssResult): { searchString: string, commentSpans: CommentSpan[] } {
+export function searchCopy (text: string, node: Node, result: PostcssResult): {
+	searchString: string,
+	commentSpans: CommentSpan[],
+} {
 	let commentSpans = findCommentSpans(text, readsInlineComments(node, result))
 
 	// The masking is handed no spans because the blanking left it none to guard: every comment is gone from the copy, so every double slash still standing in it opens none

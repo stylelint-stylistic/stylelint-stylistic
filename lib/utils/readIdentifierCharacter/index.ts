@@ -10,7 +10,10 @@ import { LEADING_HEX_ESCAPE, LEADING_LINE_BREAK } from "../../regexps.ts"
  * @param index - The index the character is spelled from.
  * @returns The character, or nothing where the backslash spells none, and the index behind the characters spelling it.
  */
-export function readIdentifierCharacter (text: string, index: number): { character: string | undefined, end: number } {
+export function readIdentifierCharacter (text: string, index: number): {
+	character: string | undefined,
+	end: number,
+} {
 	if (text[index] !== `\\`) return { character: text[index], end: index + 1 }
 
 	let next = text[index + 1]

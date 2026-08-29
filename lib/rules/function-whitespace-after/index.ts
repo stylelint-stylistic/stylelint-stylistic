@@ -141,7 +141,11 @@ function rule (primary: `always` | `never`): RuleCheck {
 		 * @param value - The value to fix.
 		 * @returns The fixer object.
 		 */
-		function createFixer (value: string): { applyFix: (index: number) => void, hasFixed: boolean, fixed: string } {
+		function createFixer (value: string): {
+			applyFix: (index: number) => void,
+			hasFixed: boolean,
+			fixed: string,
+		} {
 			let fixed = ``
 			let lastIndex = 0
 

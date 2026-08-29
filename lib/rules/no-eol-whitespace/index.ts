@@ -64,7 +64,10 @@ function lastLineBreakIndex (string: string, from: number = string.length - 1): 
  * @param options - The options object.
  * @returns The error start index, or -1 if no error.
  */
-function findErrorStartIndex (lastEOLIndex: number, string: string, options: { ignoreEmptyLines: boolean, isRootFirst: boolean }): number {
+function findErrorStartIndex (lastEOLIndex: number, string: string, options: {
+	ignoreEmptyLines: boolean,
+	isRootFirst: boolean,
+}): number {
 	let { ignoreEmptyLines, isRootFirst } = options
 
 	let eolWhitespaceIndex = lastEOLIndex - 1
@@ -149,7 +152,10 @@ function rule (primary: true, secondaryOptions: { ignore?: `empty-lines` | `empt
 		 * @param callback - callback the whitespace index at the end of each line.
 		 * @param options - `isRootFirst` marks the given string as the first token of the root, `isPlainText` marks it as text that is not CSS.
 		 */
-		function eachEolWhitespace (string: string, callback: (index: number) => void, options: { isRootFirst?: boolean, isPlainText?: boolean } = {}): void {
+		function eachEolWhitespace (string: string, callback: (index: number) => void, options: {
+			isRootFirst?: boolean,
+			isPlainText?: boolean,
+		} = {}): void {
 			let { isRootFirst = false, isPlainText = false } = options
 
 			/**
@@ -287,7 +293,10 @@ function rule (primary: true, secondaryOptions: { ignore?: `empty-lines` | `empt
 		 * @param fixFn - The function to apply the fix.
 		 * @param options - The scanning options, forwarded to `eachEolWhitespace`.
 		 */
-		function fixText (value: string | undefined, fixFn: (text: string) => void, options?: { isRootFirst?: boolean, isPlainText?: boolean }): void {
+		function fixText (value: string | undefined, fixFn: (text: string) => void, options?: {
+			isRootFirst?: boolean,
+			isPlainText?: boolean,
+		}): void {
 			if (!value) return
 
 			let fixed = ``

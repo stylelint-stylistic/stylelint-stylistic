@@ -49,7 +49,10 @@ function rule (primary: `always` | `never`): RuleCheck {
 				let rawAttr = attributeNode.raws.spaces && attributeNode.raws.spaces.attribute
 				let rawAttrAfter = rawAttr && rawAttr.after
 
-				let { attrAfter, setAttrAfter }: { attrAfter: string, setAttrAfter: (fixed: string) => void } = rawAttr && rawAttrAfter
+				let { attrAfter, setAttrAfter }: {
+					attrAfter: string,
+					setAttrAfter: (fixed: string) => void,
+				} = rawAttr && rawAttrAfter
 					? {
 						attrAfter: rawAttrAfter,
 						setAttrAfter (fixed) {

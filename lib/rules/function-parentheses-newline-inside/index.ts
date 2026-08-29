@@ -153,7 +153,10 @@ function findFirstCharacterIndex (declValue: string, firstIndex: number): number
  * @param valueNode - The function being fixed.
  * @returns The span, counted in the value the file spells.
  */
-function getAfterSpan (valueNode: FunctionNode): { start: number, end: number } {
+function getAfterSpan (valueNode: FunctionNode): {
+	start: number,
+	end: number,
+} {
 	let end = valueNode.sourceEndIndex - 1
 
 	return { start: end - valueNode.after.length, end }
@@ -215,7 +218,19 @@ function getFixEmptiedAfter (valueNode: FunctionNode): number[][] {
  * @param read - What the walk has read of the function, and the value it was read from.
  * @returns Whether each of the two fixes may be written.
  */
-function getNeverFixability (read: { declValue: string, valueNode: FunctionNode, openingIndex: number, checkBefore: string, checkAfter: string, firstIndex: number, measured: number[][], reading: InlineCommentReading }): { isOpeningFixable: boolean, isClosingFixable: boolean } {
+function getNeverFixability (read: {
+	declValue: string,
+	valueNode: FunctionNode,
+	openingIndex: number,
+	checkBefore: string,
+	checkAfter: string,
+	firstIndex: number,
+	measured: number[][],
+	reading: InlineCommentReading,
+}): {
+	isOpeningFixable: boolean,
+	isClosingFixable: boolean,
+} {
 	let { declValue, valueNode, openingIndex, checkBefore, checkAfter, firstIndex, measured, reading } = read
 
 	let firstCharacterIndex = findFirstCharacterIndex(declValue, firstIndex)
@@ -381,7 +396,11 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, _se
  * @param inlineComments - The spans the inline comments of the value occupy in it.
  * @returns The whitespace, the index the first significant thing behind it begins at — the node the parser hands back where one stands, the code a node of a comment's text reaches past that comment's end with where the parser filed one under such a node, and the function's own closing parenthesis where it holds neither — and the stretches the whitespace was gathered from.
  */
-function getCheckBefore (valueNode: FunctionNode, openingIndex: number, declValue: string, inlineComments: InlineCommentSpan[]): { before: string, firstIndex: number, measured: number[][] } {
+function getCheckBefore (valueNode: FunctionNode, openingIndex: number, declValue: string, inlineComments: InlineCommentSpan[]): {
+	before: string,
+	firstIndex: number,
+	measured: number[][],
+} {
 	let before = valueNode.before
 	let measured = [[openingIndex, openingIndex + valueNode.before.length]]
 	let firstIndex = valueNode.sourceEndIndex - 1

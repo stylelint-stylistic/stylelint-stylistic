@@ -8,7 +8,11 @@ import { isStandardSyntaxValue } from "../isStandardSyntaxValue/index.ts"
  * @param node - The value parser node, or nothing at all.
  * @returns The dimension object, or null values where the node carries no dimension.
  */
-export function getDimension (node?: Partial<Node>): { unit: null, number: null, positions: null } | (valueParser.Dimension & { positions: number[] }) {
+export function getDimension (node?: Partial<Node>): {
+	unit: null,
+	number: null,
+	positions: null,
+} | (valueParser.Dimension & { positions: number[] }) {
 	if (!node || !node.value) {
 		return {
 			unit: null,

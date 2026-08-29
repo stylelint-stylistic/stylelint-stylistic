@@ -12,13 +12,25 @@ import { setDeclarationValue } from "../setDeclarationValue/index.ts"
 let { utils: { report } } = stylelint
 
 /** The declaration as the file prints it, and where in that print one bang of it stands. */
-export type BangTarget = { text: string, index: number }
+export type BangTarget = {
+	text: string,
+	index: number,
+}
 
 /** One of the texts a declaration is printed from that a fix can write into: where it opens in that print, what it holds, how it is written back, and what is to be written into it. */
-export type DeclarationPart = { start: number, text: string, write: (text: string) => void, edits: Edit[] }
+export type DeclarationPart = {
+	start: number,
+	text: string,
+	write: (text: string) => void,
+	edits: Edit[],
+}
 
 /** A function that checks whitespace at a specific location. */
-export type LocationChecker = (args: { source: string, index: number, err: (message: string) => void }) => void
+export type LocationChecker = (args: {
+	source: string,
+	index: number,
+	err: (message: string) => void,
+}) => void
 
 /**
  * Files one edit of a printed declaration under the texts it is printed from.

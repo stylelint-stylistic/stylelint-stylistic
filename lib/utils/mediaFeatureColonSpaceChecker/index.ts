@@ -17,7 +17,11 @@ let { utils: { report } } = stylelint
  */
 export function mediaFeatureColonSpaceChecker (opts: {
 	root: Root,
-	locationChecker: (args: { source: string, index: number, err: (message: string) => void }) => void,
+	locationChecker: (args: {
+		source: string,
+		index: number,
+		err: (message: string) => void,
+	}) => void,
 	fix?: ((node: AtRule, index: number) => void),
 	result: PostcssResult,
 	checkedRuleName: string,

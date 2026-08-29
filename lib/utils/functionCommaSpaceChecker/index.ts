@@ -19,7 +19,11 @@ import { commentsRemovedBefore, withoutComments } from "../withoutComments/index
 let { utils: { report } } = stylelint
 
 /** A function that checks whitespace at a specific location. */
-export type LocationChecker = (args: { source: string, index: number, err: (message: string) => void }) => void
+export type LocationChecker = (args: {
+	source: string,
+	index: number,
+	err: (message: string) => void,
+}) => void
 
 /**
  * Checks whitespace around commas in function arguments.
@@ -94,7 +98,11 @@ export function functionCommaSpaceChecker (opts: {
 				return commaIndex - commentsRemovedBefore(hiddenArguments, commaIndex, commentSpans)
 			}
 
-			let commaDataList: { commaNode: ValueParserDivNode, checkIndex: number, nodeIndex: number }[] = []
+			let commaDataList: {
+				commaNode: ValueParserDivNode,
+				checkIndex: number,
+				nodeIndex: number,
+			}[] = []
 
 			for (let [nodeIndex, node] of valueNode.nodes.entries()) {
 				if (node.type !== `div` || node.value !== `,`) continue

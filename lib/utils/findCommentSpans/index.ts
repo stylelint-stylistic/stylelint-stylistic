@@ -96,7 +96,11 @@ function skipString (text: string, openIndex: number): number {
 }
 
 /** The span a comment occupies in a text, in the coordinates of that text, and which of the two kinds it is. */
-export type CommentSpan = { start: number, end: number, isInline: boolean }
+export type CommentSpan = {
+	start: number,
+	end: number,
+	isInline: boolean,
+}
 
 /**
  * Finds the spans the comments of a text occupy in it, block comments and inline ones alike. A double slash belonging to an address opens no comment, whether the address is quoted or bare inside `url()`, and neither does a slash an escape spells wherever it stands; a block comment runs to its `*\/` and an inline one to the end of its line.

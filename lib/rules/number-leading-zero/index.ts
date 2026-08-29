@@ -63,7 +63,10 @@ function rule (primary: `always` | `never`): RuleCheck {
 		 * @param value - The value to check.
 		 */
 		function check (node: AtRule | Declaration, value: string): void {
-			let neverFixPositions: Array<{ startIndex: number, endIndex: number }> = []
+			let neverFixPositions: Array<{
+				startIndex: number,
+				endIndex: number,
+			}> = []
 
 			let alwaysFixPositions: Array<{ index: number }> = []
 

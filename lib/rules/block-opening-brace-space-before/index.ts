@@ -41,7 +41,10 @@ export let meta = {
  * @param secondaryOptions - The secondary options: `ignoreAtRules` and `ignoreSelectors`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: `always` | `never` | `always-single-line` | `never-single-line` | `always-multi-line` | `never-multi-line`, secondaryOptions: { ignoreAtRules?: string | RegExp | (string | RegExp)[], ignoreSelectors?: string | RegExp | (string | RegExp)[] }): RuleCheck {
+function rule (primary: `always` | `never` | `always-single-line` | `never-single-line` | `always-multi-line` | `never-multi-line`, secondaryOptions: {
+	ignoreAtRules?: string | RegExp | (string | RegExp)[],
+	ignoreSelectors?: string | RegExp | (string | RegExp)[],
+}): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
 
 	return (root, result) => {

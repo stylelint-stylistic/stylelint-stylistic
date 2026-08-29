@@ -45,7 +45,10 @@ function isGridRow (node: Node, inlineComments: InlineCommentSpan[]): node is St
  * @param secondaryOptions - The secondary options: `gap` and `alignQuotes`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: true, secondaryOptions: { gap?: number, alignQuotes?: boolean } = {}): RuleCheck {
+function rule (primary: true, secondaryOptions: {
+	gap?: number,
+	alignQuotes?: boolean,
+} = {}): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,

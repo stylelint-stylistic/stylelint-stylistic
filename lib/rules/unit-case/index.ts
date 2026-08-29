@@ -37,6 +37,14 @@ export let meta = {
 	fixable: true,
 }
 
+/** What one miscased unit is reported as: where the warning stands, counted in the node, and what it says. */
+type Problem = {
+	index: number,
+	endIndex: number,
+	message: RuleMessage,
+	messageArgs: string[],
+}
+
 /**
  * Specifies lowercase or uppercase for units.
  * @param primary - The primary option, one of `lower` and `upper`.
@@ -58,7 +66,7 @@ function rule (primary: `lower` | `upper`): RuleCheck {
 		 * @param getIndex - Function to get the index of the node.
 		 */
 		function check<T extends AtRule | Declaration> (node: T, checkedValue: string, getIndex: (node: T) => number): void {
-			let problems: Array<{ index: number, endIndex: number, message: RuleMessage, messageArgs: string[] }> = []
+			let problems: Problem[] = []
 
 			// What the walk changed, and nothing else: the text is edited at the positions the changed words stand at rather than printed anew from the parsed tree, since `postcss-value-parser` does not always give back the text it was handed — a comment opening `/*/` comes back as `/**/` — and a fix made anywhere in such a text would rewrite a comment standing elsewhere in it
 			let edits: Edit[] = []
@@ -76,7 +84,7 @@ function rule (primary: `lower` | `upper`): RuleCheck {
 			 * @param valueNode - The value parser node to read.
 			 * @returns What to report about the unit, or `null` where the node carries no miscased one.
 			 */
-			function readMiscasedUnit (valueNode: Node): { index: number, endIndex: number, message: RuleMessage, messageArgs: string[] } | null {
+			function readMiscasedUnit (valueNode: Node): Problem | null {
 				let dimension = getDimension(valueNode)
 
 				if (!dimension.number || !dimension.unit) return null

@@ -67,7 +67,16 @@ function normalise (code: string): string {
  * @param config - The configuration to lint it under.
  * @returns What the rule said and wrote, or why the run cannot be read.
  */
-async function ask (code: string, config: Config): Promise<{ read: false, unparsable: boolean, detail?: string } | { read: true, warnings: string[], positions: string[], output: string }> {
+async function ask (code: string, config: Config): Promise<{
+	read: false,
+	unparsable: boolean,
+	detail?: string,
+} | {
+	read: true,
+	warnings: string[],
+	positions: string[],
+	output: string,
+}> {
 	let checked
 	let fixed
 
