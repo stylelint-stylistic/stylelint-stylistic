@@ -28,7 +28,7 @@ The following patterns are considered problems:
 @media (max-width: 300px ) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media ( max-width: 300px ) {}
@@ -48,7 +48,7 @@ The following patterns are considered problems:
 @media ( max-width: 300px) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media (max-width: 300px) {}

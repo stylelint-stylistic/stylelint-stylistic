@@ -24,7 +24,7 @@ The following patterns are considered problems:
 a { color: #FFF; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: #000; }
@@ -42,7 +42,7 @@ The following patterns are considered problems:
 a { color: #fff; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: #000; }

@@ -28,7 +28,7 @@ a { color: pink !important; }
 a { color: pink      !important; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink ! important; }
@@ -52,7 +52,7 @@ a { color: pink ! important; }
 a { color: pink! important; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink !important; }

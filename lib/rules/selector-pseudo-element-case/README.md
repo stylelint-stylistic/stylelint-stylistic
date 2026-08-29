@@ -48,7 +48,7 @@ a::BEFORE {}
 input::-MOZ-PLACEHOLDER {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a:before {}
@@ -94,7 +94,7 @@ a::before {}
 input::-moz-placeholder {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a:BEFORE {}

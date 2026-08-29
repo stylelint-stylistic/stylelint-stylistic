@@ -44,7 +44,7 @@ a { content: "x"; }
 a[id="foo"] {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { content: 'x'; }
@@ -72,7 +72,7 @@ a { content: 'x'; }
 a[id='foo'] {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { content: "x"; }
@@ -104,7 +104,7 @@ a { content: "x'y'z"; }
 a[id="foo'bar'baz"] {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { content: 'x'; }

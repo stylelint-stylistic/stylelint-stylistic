@@ -31,7 +31,7 @@ Comment strings are also checked -- so the following is a problem:
  * something else */
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }
@@ -50,7 +50,7 @@ a { color: pink; }
 
 Allow end-of-line whitespace for lines that are only whitespace, "empty" lines.
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {

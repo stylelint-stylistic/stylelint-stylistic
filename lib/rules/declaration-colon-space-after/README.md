@@ -28,7 +28,7 @@ a { color :pink }
 a { color:pink }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color : pink }
@@ -52,7 +52,7 @@ a { color : pink }
 a { color: pink }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color :pink }
@@ -64,7 +64,7 @@ a { color:pink }
 
 ### `"always-single-line"`
 
-There _must always_ be a single space after the colon _if the declaration's value is single-line_.
+There _must always_ be a single space after the colon _if the declaration's value is single-line_.
 
 The following patterns are considered problems:
 
@@ -74,7 +74,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {

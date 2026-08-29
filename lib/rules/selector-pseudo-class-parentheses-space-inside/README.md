@@ -30,7 +30,7 @@ input:not([type="submit"]) {}
 input:not([type="submit"] ) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 input:not( [type="submit"] ) {}
@@ -50,7 +50,7 @@ input:not( [type="submit"] ) {}
 input:not( [type="submit"]) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 input:not([type="submit"]) {}

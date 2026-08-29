@@ -32,11 +32,11 @@ test: ## 🧪 Run tests [TEST_FLAGS=] [FILE=]
 .PHONY: test
 
 prose: ## ✍️  Bind function words in markdown with non-breaking spaces
-	./scripts/bind-prose.js
+	beautypography
 .PHONY: prose
 
 prose-check: ## 🔤 Check that markdown prose is bound
-	./scripts/bind-prose.js --check
+	beautypography --check
 .PHONY: prose-check
 
 oracles: ## 🔮 Compare every oracle's answer about the base with its answer about the working tree [BASE=] [HEAD=]

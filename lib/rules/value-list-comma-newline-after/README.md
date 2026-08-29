@@ -30,7 +30,7 @@ a { background-size: 0
       , 0; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { background-size: 0,
@@ -48,7 +48,7 @@ a { background-size: 0
     , 0; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { background-size: 0, 0; }
@@ -74,7 +74,7 @@ a { background-size: 0
       , 0; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { background-size: 0,0; }

@@ -45,7 +45,7 @@ a{ /* end-of-line comment
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {
@@ -75,7 +75,7 @@ a{color: pink;
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }
@@ -97,7 +97,7 @@ a { color: pink;
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }
@@ -116,7 +116,7 @@ Ignore the opening brace of rules.
 
 For example, with `"always"`:
 
-The following pattern is _not_ considered a problem:
+The following pattern is _not_ considered a problem:
 
 ```css
 a { color: pink; }

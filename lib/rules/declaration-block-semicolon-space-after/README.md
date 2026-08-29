@@ -40,7 +40,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink;}
@@ -71,7 +71,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink;}
@@ -95,7 +95,7 @@ The following patterns are considered problems:
 a { color: pink;top: 0; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; top: 0; }
@@ -118,7 +118,7 @@ The following patterns are considered problems:
 a { color: pink; top: 0; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink;top: 0; }

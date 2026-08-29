@@ -36,7 +36,7 @@ The following patterns are considered problems:
 @media (WIDTH > 10em) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media (min-width: 700px) {}
@@ -74,7 +74,7 @@ The following patterns are considered problems:
 @media (10em < width <= 50em) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media (MIN-WIDTH: 700px) {}

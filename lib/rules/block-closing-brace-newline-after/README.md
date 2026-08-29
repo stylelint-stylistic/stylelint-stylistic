@@ -50,7 +50,7 @@ a { color: pink;
 } b { color: red; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }
@@ -67,7 +67,7 @@ The following patterns are considered problems:
 a { color: pink; } b { color: red; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink;
@@ -89,7 +89,7 @@ The following patterns are considered problems:
 a { color: pink; } b { color: red; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }b { color: red; }
@@ -111,7 +111,7 @@ a { color: pink;
 }b { color: red; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }b { color: red; }
@@ -134,7 +134,7 @@ a { color: pink;
 } b { color: red; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; } b { color: red; }
@@ -159,7 +159,7 @@ Given:
 ["if", "else"]
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @if ($var) {

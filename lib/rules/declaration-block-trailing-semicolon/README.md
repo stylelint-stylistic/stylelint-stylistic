@@ -38,7 +38,7 @@ a { background: orange; color: pink }
 a { @include foo }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }
@@ -70,7 +70,7 @@ a { background: orange; color: pink; }
 a { color: pink;; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink }
@@ -90,7 +90,7 @@ A comment is a node of the block and nothing the block is about, so it is
 
 For example, with `"always"`.
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink }

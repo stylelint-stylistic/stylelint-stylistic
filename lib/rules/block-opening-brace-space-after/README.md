@@ -29,7 +29,7 @@ a {
 color: pink; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }
@@ -55,7 +55,7 @@ a {
 color: pink; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {color: pink; }
@@ -76,7 +76,7 @@ The following patterns are considered problems:
 a {color: pink; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }
@@ -97,7 +97,7 @@ The following patterns are considered problems:
 a { color: pink; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {color: pink; }
@@ -119,7 +119,7 @@ a {color: pink;
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {color: pink; }
@@ -141,7 +141,7 @@ a { color: pink;
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { color: pink; }
@@ -160,7 +160,7 @@ Ignore the opening brace of at-rules.
 
 For example, with `"always"`:
 
-The following pattern is _not_ considered a problem:
+The following pattern is _not_ considered a problem:
 
 ```css
 @media print {

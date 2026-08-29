@@ -40,7 +40,7 @@ div {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 /* ✅ Aligned cell tokens */
@@ -80,7 +80,7 @@ div {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 /* ✅ Two spaces between cell tokens */
@@ -111,7 +111,7 @@ div {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 /* ✅ Ending quotes are properly aligned */

@@ -22,7 +22,7 @@ The following pattern is considered a problem:
 @import "components/buttons";
 ```
 
-The following pattern is _not_ considered a problem:
+The following pattern is _not_ considered a problem:
 
 ```css
 @import "components/buttons" ;
@@ -38,7 +38,7 @@ The following pattern is considered a problem:
 @import "components/buttons" ;
 ```
 
-The following pattern is _not_ considered a problem:
+The following pattern is _not_ considered a problem:
 
 ```css
 @import "components/buttons";

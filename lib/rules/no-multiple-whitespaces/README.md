@@ -37,7 +37,7 @@ a { border: 1px  solid   black }
 a { color: rgb(0  0   0    /    0) }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { gap: 1em 2em }

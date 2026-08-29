@@ -94,7 +94,7 @@ a {
   ) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media print {
@@ -155,7 +155,7 @@ That outermost level is the level of the node itself wherever the text is m
 
 By default, the indent level of the CSS code block in non-CSS-like files is determined by the shortest indent of non-empty line. The setting `baseIndentLevel` allows you to define a relative indent level based on CSS code block opening or closing line.
 
-For example, with `[ 2, { baseIndentLevel: 1 } ]`, CSS should be indented 1 levels higher than `<style>` tag:
+For example, with `[ 2, { baseIndentLevel: 1 } ]`, CSS should be indented 1 levels higher than `<style>` tag:
 
 ```html
 <!doctype html>
@@ -228,7 +228,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {
@@ -246,7 +246,7 @@ a {
 
 ### `except: ["block", "param", "value"]`
 
-Do _not_ indent for these things.
+Do _not_ indent for these things.
 
 For example, with `2`.
 
@@ -263,7 +263,7 @@ The following patterns are considered problems:
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media print,
@@ -284,7 +284,7 @@ Ignore the indentation inside parentheses.
 
 For example, with `2`.
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {
@@ -303,7 +303,7 @@ Ignore the indentation of at-rule params.
 
 For example, with `2`.
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media print,
@@ -318,7 +318,7 @@ Ignore the indentation of values.
 
 For example, with `2`.
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {

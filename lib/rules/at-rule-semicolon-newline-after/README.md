@@ -37,7 +37,7 @@ The following patterns are considered problems:
 @import url("x.css"); a {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @import url("x.css");

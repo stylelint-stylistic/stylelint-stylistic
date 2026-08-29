@@ -38,7 +38,7 @@ a { aspect-ratio: 2; }
 a { aspect-ratio: auto 1.5; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { aspect-ratio: 2 / 1; }
@@ -66,7 +66,7 @@ a { aspect-ratio: 2 / 1; }
 a { aspect-ratio: 2 / 1.0; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { aspect-ratio: 2; }
@@ -86,7 +86,7 @@ The rule _must not_ choose between the two notations.
 
 Give this option together with a secondary option below. On its own the rule has an opinion about neither axis and reports nothing at all.
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { aspect-ratio: 2; }
@@ -122,7 +122,7 @@ a { aspect-ratio: 1.5; }
 a { aspect-ratio: 0.5 / 0.25; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { aspect-ratio: 16 / 9; }

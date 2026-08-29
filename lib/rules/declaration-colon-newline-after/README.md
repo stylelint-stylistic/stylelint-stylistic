@@ -32,7 +32,7 @@ a { color:pink; }
 a { color: pink; }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {
@@ -43,7 +43,7 @@ a {
 
 ### `"always-multi-line"`
 
-There _must always_ be a newline after the colon _if the declaration's value is multi-line_.
+There _must always_ be a newline after the colon _if the declaration's value is multi-line_.
 
 The following patterns are considered problems:
 
@@ -54,7 +54,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {

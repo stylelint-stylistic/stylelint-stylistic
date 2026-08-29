@@ -14,7 +14,7 @@ The following pattern is considered a problem:
 a {}
 ```
 
-The following pattern is _not_ considered a problem:
+The following pattern is _not_ considered a problem:
 
 ```css
 U+FEFF
@@ -30,7 +30,7 @@ U+FEFF
 a {}
 ```
 
-The following pattern is _not_ considered a problem:
+The following pattern is _not_ considered a problem:
 
 ```css
 a {}

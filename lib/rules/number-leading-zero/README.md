@@ -30,7 +30,7 @@ a { line-height: .5; }
 a { transform: translate(2px, .4px); }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { line-height: 0.5; }
@@ -54,7 +54,7 @@ a { line-height: 0.5; }
 a { transform: translate(2px, 0.4px); }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { line-height: .5; }

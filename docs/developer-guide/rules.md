@@ -30,7 +30,7 @@ Unless it applies to the whole source, then there is no first part.
 You should add test cases for all patterns that are:
 
 - considered problems
-- _not_ considered problems
+- _not_ considered problems
 
 You should use:
 
@@ -47,7 +47,7 @@ You should use:
 You should:
 
 - vary column and line positions across your tests
-- include at least one test that has 2 warnings
+- include at least one test that has 2 warnings
 - test non-standard syntax in the `isStandardSyntax*` utilities, not in the rule itself
 
 #### Commonly overlooked edge-cases
@@ -224,7 +224,7 @@ Each rule is accompanied by a README in the following format:
 4. Expanded description (if necessary).
 5. Options.
 6. Example patterns that are considered problems (for each option value).
-7. Example patterns that are _not_ considered problems (for each option value).
+7. Example patterns that are _not_ considered problems (for each option value).
 8. Optional options (if applicable).
 
 The single-line description is in the form of:

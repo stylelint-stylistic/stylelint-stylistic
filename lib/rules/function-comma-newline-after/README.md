@@ -34,7 +34,7 @@ a { transform: translate(1
   ,1) }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {
@@ -54,7 +54,7 @@ a { transform: translate(1
   ,1) }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { transform: translate(1,1) }
@@ -82,7 +82,7 @@ a { transform: translate(1
   , 1) }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { transform: translate(1, 1) }
@@ -115,7 +115,7 @@ Given:
 ["translate", "/^rgba?$/"]
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { transform: translate(1,1) }

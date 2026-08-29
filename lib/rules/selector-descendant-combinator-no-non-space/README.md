@@ -41,7 +41,7 @@ The following patterns are considered problems:
 .foo  /*comment*/  .bar {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 .foo .bar {}

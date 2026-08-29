@@ -37,7 +37,7 @@ The following patterns are considered problems:
 (min-width: 700px) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @charset "UTF-8";
@@ -69,7 +69,7 @@ The following patterns are considered problems:
 @media  (min-width: 700px) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @charset "UTF-8";

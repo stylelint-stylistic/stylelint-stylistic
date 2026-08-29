@@ -32,7 +32,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {
@@ -95,7 +95,7 @@ a { color: pink; } /* comment that is too long */
 a { /* this comment is too long for the max length */ }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 /* comment that is too long for my rule*/
@@ -121,7 +121,7 @@ Given:
 "/^@import\\s+/"
 ```
 
-The following pattern is _not_ considered a problem:
+The following pattern is _not_ considered a problem:
 
 ```css
 @import "../../../../another/css/or/scss/file/or/something.css";
@@ -133,7 +133,7 @@ Given the following, with a maximum length of `20`.
 ["/https?://[0-9,a-z]*.*/"];
 ```
 
-The following pattern is _not_ considered a problem:
+The following pattern is _not_ considered a problem:
 
 ```css
 /* ignore urls https://www.example.com */
@@ -147,7 +147,7 @@ The option is named after the CSS `tab-size` property and counts the way it
 
 For example, with a maximum length of `20` and `tabSize: 4`.
 
-The following pattern is considered a problem, the second line being indented with two tabs and measuring 8 + 13 = 21 columns:
+The following pattern is considered a problem, the second line being indented with two tabs and measuring 8 + 13 = 21 columns:
 
 ```css
 a {
@@ -155,7 +155,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems, the first measuring 8 + 12 = 20 columns and the second 3 + 1 + 14 = 18, since its tab reaches the next tab stop after one column:
+The following patterns are _not_ considered problems, the first measuring 8 + 12 = 20 columns and the second 3 + 1 + 14 = 18, since its tab reaches the next tab stop after one column:
 
 ```css
 a {

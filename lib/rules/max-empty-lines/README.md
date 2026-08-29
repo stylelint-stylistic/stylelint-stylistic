@@ -45,7 +45,7 @@ Comment strings are also checked -- so the following is a problem:
  */
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a {}
@@ -84,7 +84,7 @@ a {}
 b {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 /*

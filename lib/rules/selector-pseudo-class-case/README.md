@@ -40,7 +40,7 @@ a:HOVER {}
 :-MS-INPUT-PLACEHOLDER {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a:hover {}
@@ -78,7 +78,7 @@ a:hover {}
 :-ms-input-placeholder {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a:HOVER {}

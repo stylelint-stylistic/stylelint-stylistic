@@ -30,7 +30,7 @@ The following patterns are considered problems:
 a { transform: translate(1, 1)scale(3); }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { transform: translate(1, 1) scale(3); }
@@ -68,7 +68,7 @@ The following patterns are considered problems:
 a { transform: translate(1, 1) scale(3); }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { transform: translate(1, 1)scale(3); }

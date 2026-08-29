@@ -24,7 +24,7 @@ a { top: 1.0px }
 a { top: 1.01000px }
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 a { top: 1px }

@@ -30,7 +30,7 @@ The following patterns are considered problems:
 , projection and (color) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media screen and (color),
@@ -54,7 +54,7 @@ The following patterns are considered problems:
 , projection and (color) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media screen and (color), projection and (color) {}
@@ -88,7 +88,7 @@ projection and (color) {}
 projection and (color) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @media screen and (color), projection and (color) {}

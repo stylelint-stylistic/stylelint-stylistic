@@ -44,7 +44,7 @@ The following patterns are considered problems:
 [target= "_blank"] {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 [target] {}
@@ -104,7 +104,7 @@ The following patterns are considered problems:
 [target = "_blank"] {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 [target] {}

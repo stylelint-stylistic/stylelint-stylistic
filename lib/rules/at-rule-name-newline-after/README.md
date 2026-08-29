@@ -28,7 +28,7 @@ The following patterns are considered problems:
   (orientation: landscape) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @charset
@@ -68,7 +68,7 @@ The following patterns are considered problems:
  (orientation: landscape) {}
 ```
 
-The following patterns are _not_ considered problems:
+The following patterns are _not_ considered problems:
 
 ```css
 @charset "UTF-8";
