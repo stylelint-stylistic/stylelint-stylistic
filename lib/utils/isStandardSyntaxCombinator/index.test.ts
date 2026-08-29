@@ -7,7 +7,7 @@ import { isStandardSyntaxCombinator } from "./index.ts"
 describe(`isStandardSyntaxCombinator`, () => {
 	it(`tag`, () => {
 		// A node of the stylesheet rather than of a selector, which the util turns away by its type
-		expect(isStandardSyntaxCombinator(((parse(`a {}`).first as unknown) as import("postcss-selector-parser").Combinator))).toBe(false)
+		expect(isStandardSyntaxCombinator(parse(`a {}`).first as unknown as import("postcss-selector-parser").Combinator)).toBe(false)
 	})
 	it(`descendant`, () => {
 		expect(isStandardSyntaxCombinator(combinator(`a b {}`))).toBe(true)

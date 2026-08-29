@@ -11,7 +11,7 @@ import { isStandardSyntaxRule } from "./index.ts"
  * @returns That rule.
  */
 function node (code: string, parser: { parse: import("postcss").Parser } = postcss): import("postcss").Rule {
-	return (parser.parse(code).first as import("postcss").Rule)
+	return parser.parse(code).first as import("postcss").Rule
 }
 
 /**

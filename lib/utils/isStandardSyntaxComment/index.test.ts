@@ -29,7 +29,7 @@ describe(`isStandardSyntaxComment`, () => {
  * @returns That comment.
  */
 function css (code: string): import("postcss").Comment {
-	return (parseCss(code).first as import("postcss").Comment)
+	return parseCss(code).first as import("postcss").Comment
 }
 
 /**
@@ -38,7 +38,7 @@ function css (code: string): import("postcss").Comment {
  * @returns That comment.
  */
 function less (code: string): import("postcss").Comment {
-	return (parseLess(code).first as import("postcss").Comment)
+	return parseLess(code).first as import("postcss").Comment
 }
 
 /**
@@ -47,5 +47,5 @@ function less (code: string): import("postcss").Comment {
  * @returns That comment.
  */
 function scss (code: string): import("postcss").Comment {
-	return (parseScss(code).first as import("postcss").Comment)
+	return parseScss(code).first as import("postcss").Comment
 }

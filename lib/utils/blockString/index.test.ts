@@ -46,5 +46,5 @@ describe(`blockString`, () => {
 function postcssCheck (cssString: string, syntax: { parse: import("postcss").Parser } = postcss): string {
 	let root = syntax.parse(cssString, { from: undefined })
 
-	return blockString((root.first as import("postcss").Container), (({ opts: { syntax } } as unknown) as import("stylelint").PostcssResult))
+	return blockString(root.first as import("postcss").Container, { opts: { syntax } } as unknown as import("stylelint").PostcssResult)
 }

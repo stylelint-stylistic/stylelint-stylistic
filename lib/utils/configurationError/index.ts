@@ -9,7 +9,7 @@ export type ConfigurationError = Error & { code: number }
  * @returns The configuration error object with exit code.
  */
 export function configurationError (text: string): ConfigurationError {
-	let err = (new Error(text) as ConfigurationError)
+	let err = new Error(text) as ConfigurationError
 
 	err.code = EXIT_CODE_INVALID_CONFIG
 

@@ -28,7 +28,7 @@ describe(`setBlockAfter`, () => {
 	})
 
 	it(`hands back the statement it was given`, () => {
-		let statement = (parse(`a {\n\t@extend .b\n}`).first as import("postcss").Rule)
+		let statement = parse(`a {\n\t@extend .b\n}`).first as import("postcss").Rule
 
 		expect(setBlockAfter(statement, ` `)).toBe(statement)
 	})
@@ -44,7 +44,7 @@ describe(`setBlockAfter`, () => {
 function run (css: string, after: string, syntax?: { parse: import("postcss").Parser }): string {
 	let root = syntax ? syntax.parse(css) : parse(css)
 
-	setBlockAfter((root.first as import("postcss").Container), after)
+	setBlockAfter(root.first as import("postcss").Container, after)
 
 	return syntax ? root.toString(syntax) : root.toString()
 }

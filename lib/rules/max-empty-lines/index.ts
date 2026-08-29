@@ -71,7 +71,7 @@ function rule (primary: number, secondaryOptions: { ignore?: `comments` | `comme
 			})
 
 			let { first } = root
-			let { document } = (root as { document?: import("postcss").Document })
+			let { document } = root as { document?: import("postcss").Document }
 			let firstNodeRawsBefore = first && first.raws.before
 			let rootRawsAfter = root.raws.after
 

@@ -4,8 +4,8 @@ import { describe, expect, it } from "vitest"
 
 import { searchCopy } from "./index.ts"
 
-const CSS_RESULT = (({ opts: {} } as unknown) as import("stylelint").PostcssResult)
-const SCSS_RESULT = (({ opts: { syntax: { parse: parseScss } } } as unknown) as import("stylelint").PostcssResult)
+const CSS_RESULT = { opts: {} } as unknown as import("stylelint").PostcssResult
+const SCSS_RESULT = { opts: { syntax: { parse: parseScss } } } as unknown as import("stylelint").PostcssResult
 
 describe(`searchCopy`, () => {
 	it(`a double slash of plain CSS is code, and its second slash is spelled out of the search's way`, () => {

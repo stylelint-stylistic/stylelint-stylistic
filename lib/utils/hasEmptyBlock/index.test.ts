@@ -37,5 +37,5 @@ it(`hasEmptyBlock`, () => {
 function postcssCheck (cssString: string): boolean {
 	let root = parse(cssString)
 
-	return hasEmptyBlock((root.first as import("postcss").Rule))
+	return hasEmptyBlock(root.first as import("postcss").Rule)
 }

@@ -15,8 +15,8 @@ import { moveDeclarationValueHeadIntoBetween } from "./index.ts"
  * @returns What the file prints, what the value now reads as, and what stands between the property and it.
  */
 function move (parser: { parse: import("postcss").Parser }, css: string, length: number): { printed: string, value: string, between: string | undefined } {
-	let rule = (parser.parse(css).first as import("postcss").Rule)
-	let decl = (rule.first as import("postcss").Declaration)
+	let rule = parser.parse(css).first as import("postcss").Rule
+	let decl = rule.first as import("postcss").Declaration
 
 	moveDeclarationValueHeadIntoBetween(decl, length)
 

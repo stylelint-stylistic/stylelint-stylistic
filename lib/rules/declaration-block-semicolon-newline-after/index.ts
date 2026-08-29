@@ -68,7 +68,7 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, _se
 			if (!nodeToCheck) return
 
 			let problemIndex = nodeString(decl, result).length + 1
-			let previousNode = (nodeToCheck.prev() as import("postcss").ChildNode)
+			let previousNode = nodeToCheck.prev() as import("postcss").ChildNode
 			// Under `never-multi-line` the fix takes away the whitespace standing in front of the node it checks, and where an inline comment stands in front of that whitespace, the line break the whitespace opens with is what closes the comment: taking it away would put the node inside the comment's text, and the declaration it holds out of the stylesheet altogether. Nothing can be written there, so the block is left alone and the warning stands. The `always` options are in no such danger, since the break they keep or write is what closes such a comment anyway
 			//
 			// The semicolon stands between the declaration and that whitespace, so it is handed in with the declaration: a value ending in the break that closes its own comment is asked about with the semicolon behind it, which is where the write lands. Where a comment node stands between the two instead, the semicolon is in front of that comment rather than behind it, and there is nothing to hand in

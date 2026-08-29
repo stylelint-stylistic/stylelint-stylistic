@@ -48,7 +48,7 @@ describe(`getLineBreak`, () => {
 function ask (css: string, rules: Record<string, unknown> = {}): string {
 	let root = parse(css)
 
-	return getLineBreak((root.first as import("postcss").Rule), result(rules))
+	return getLineBreak(root.first as import("postcss").Rule, result(rules))
 }
 
 /**
@@ -57,5 +57,5 @@ function ask (css: string, rules: Record<string, unknown> = {}): string {
  * @returns The result.
  */
 function result (rules: Record<string, unknown> = {}): import("stylelint").PostcssResult {
-	return (({ stylelint: { config: { rules } } } as unknown) as import("stylelint").PostcssResult)
+	return { stylelint: { config: { rules } } } as unknown as import("stylelint").PostcssResult
 }

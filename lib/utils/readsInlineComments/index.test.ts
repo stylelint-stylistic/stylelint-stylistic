@@ -57,9 +57,9 @@ describe(`syntaxKeepsInlineComments`, () => {
  * @returns What that syntax makes of such a comment.
  */
 function read (syntax?: unknown): import("./index.ts").InlineCommentReading {
-	let rule = (parse(`a { color: red; }`, { from: undefined }).first as import("postcss").Rule)
+	let rule = parse(`a { color: red; }`, { from: undefined }).first as import("postcss").Rule
 
-	return inlineCommentReading((rule.first as import("postcss").Declaration), (({ opts: { syntax } } as unknown) as import("stylelint").PostcssResult))
+	return inlineCommentReading(rule.first as import("postcss").Declaration, { opts: { syntax } } as unknown as import("stylelint").PostcssResult)
 }
 
 describe(`inlineCommentReading`, () => {

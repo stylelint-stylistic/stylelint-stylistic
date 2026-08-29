@@ -6,7 +6,7 @@ import { transformSelector } from "./index.ts"
 describe(`transformSelector`, () => {
 	it(`success`, () => {
 		let warn = vi.fn()
-		let result = (({ warn } as unknown) as import("stylelint").PostcssResult)
+		let result = { warn } as unknown as import("stylelint").PostcssResult
 		let ruleNode = rule({ selector: `a, b > c` })
 		let callback = vi.fn()
 
@@ -17,7 +17,7 @@ describe(`transformSelector`, () => {
 
 	it(`failure`, () => {
 		let warn = vi.fn()
-		let result = (({ warn } as unknown) as import("stylelint").PostcssResult)
+		let result = { warn } as unknown as import("stylelint").PostcssResult
 		let ruleNode = rule({ selector: `a[}` })
 		let callback = vi.fn()
 

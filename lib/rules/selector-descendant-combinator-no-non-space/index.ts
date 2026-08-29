@@ -175,7 +175,7 @@ function standsForSource (selectorTree: import("postcss-selector-parser").Root, 
 		if (moved === undefined) return
 
 		// The two groups may be empty, so the pattern matches every text
-		let [, whitespace, group] = (LEADING_WHITESPACE_AND_REST.exec(combinatorNode.raws?.value ?? combinatorNode.value) as RegExpExecArray)
+		let [, whitespace, group] = LEADING_WHITESPACE_AND_REST.exec(combinatorNode.raws?.value ?? combinatorNode.value) as RegExpExecArray
 		let text = whitespace + moved + group
 
 		if (!selector.startsWith(text, combinatorNode.sourceIndex)) return

@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest"
 import { isInlineStyleAttribute } from "./index.ts"
 
 /** The syntax as its own declaration should spell it: the parser is always there, whatever the optional field says. */
-let html = (postcssHtml as { parse: import("postcss").Parser })
+let html = postcssHtml as { parse: import("postcss").Parser }
 
 describe(`isInlineStyleAttribute`, () => {
 	it(`the root of a style attribute`, () => {
@@ -42,7 +42,7 @@ function parentsOf (syntax: { parse: import("postcss").Parser }, code: string): 
 	let verdicts: boolean[] = []
 
 	syntax.parse(code).walkDecls((decl) => {
-		verdicts.push(isInlineStyleAttribute((decl.parent as import("postcss").Container)))
+		verdicts.push(isInlineStyleAttribute(decl.parent as import("postcss").Container))
 	})
 
 	return verdicts

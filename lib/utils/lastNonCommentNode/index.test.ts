@@ -9,7 +9,7 @@ import { lastNonCommentNode } from "./index.ts"
  * @returns That rule.
  */
 function firstBlock (css: string): import("postcss").Rule {
-	return (parse(css).first as import("postcss").Rule)
+	return parse(css).first as import("postcss").Rule
 }
 
 describe(`lastNonCommentNode`, () => {
@@ -52,6 +52,6 @@ describe(`lastNonCommentNode`, () => {
 	})
 
 	it(`no container at all, which is what a node standing on no parent hands over`, () => {
-		expect(lastNonCommentNode((parse(`a {}`).parent as import("postcss").Container | undefined))).toBe(null)
+		expect(lastNonCommentNode(parse(`a {}`).parent as import("postcss").Container | undefined)).toBe(null)
 	})
 })

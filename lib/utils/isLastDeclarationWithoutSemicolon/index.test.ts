@@ -11,7 +11,7 @@ import { isLastDeclarationWithoutSemicolon } from "./index.ts"
 function firstDeclaration (css: string): import("postcss").Declaration {
 	let decl = (parse(css).first as import("postcss").Rule).nodes.find((node) => node.type === `decl`)
 
-	return (decl as import("postcss").Declaration)
+	return decl as import("postcss").Declaration
 }
 
 describe(`isLastDeclarationWithoutSemicolon`, () => {
@@ -48,7 +48,7 @@ describe(`isLastDeclarationWithoutSemicolon`, () => {
 	})
 
 	it(`a declaration on the root, which has no block to close`, () => {
-		let decl = (parse(`color: pink`).first as import("postcss").Declaration)
+		let decl = parse(`color: pink`).first as import("postcss").Declaration
 
 		expect(isLastDeclarationWithoutSemicolon(decl)).toBe(true)
 	})

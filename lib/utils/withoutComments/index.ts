@@ -23,7 +23,7 @@ function commentRemovalRuns (text: string, spans: CommentSpan[] = findCommentSpa
 		if (LEADING_NON_WHITESPACE.test(text.slice(end))) continue
 
 		// The run may be empty, so the pattern matches every text
-		let leading = (text.slice(0, start).match(TRAILING_SPACES) as RegExpMatchArray)
+		let leading = text.slice(0, start).match(TRAILING_SPACES) as RegExpMatchArray
 
 		runs.push({ start: start - leading[0].length, end })
 	}

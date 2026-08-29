@@ -12,9 +12,9 @@ import { declarationColonSource } from "./index.ts"
  * @returns The text.
  */
 function source (parser: { parse: import("postcss").Parser }, css: string): string {
-	let rule = (parser.parse(css).first as import("postcss").Rule)
+	let rule = parser.parse(css).first as import("postcss").Rule
 
-	return declarationColonSource((rule.first as import("postcss").Declaration))
+	return declarationColonSource(rule.first as import("postcss").Declaration)
 }
 
 describe(`declarationColonSource`, () => {

@@ -8,10 +8,10 @@ describe(`the plugin in the wrong field of a config`, () => {
 		let { results } = await stylelint.lint({
 			code: `a { color: #FFF; }`,
 			// The list the package exports is what a configuration naming the package is handed, so it is listed as a user's configuration lists it, which the types of a configuration do not spell
-			config: (({
+			config: {
 				plugins: [plugins],
 				rules: { "@stylistic/color-hex-case": `lower` },
-			} as unknown) as import("stylelint").Config),
+			} as unknown as import("stylelint").Config,
 		})
 
 		expect(results[0].warnings).toHaveLength(1)
@@ -22,10 +22,10 @@ describe(`the plugin in the wrong field of a config`, () => {
 		let lint = stylelint.lint({
 			code: `a { color: #FFF; }`,
 			// The wrong field, which is the point of the case and which the types of a configuration refuse
-			config: (({
+			config: {
 				"extends": [plugins],
 				"rules": { "@stylistic/color-hex-case": `lower` },
-			} as unknown) as import("stylelint").Config),
+			} as unknown as import("stylelint").Config,
 		})
 
 		await expect(lint).rejects.toThrow(/is a plugin, not a shareable config/u)

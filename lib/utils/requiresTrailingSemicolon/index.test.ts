@@ -14,12 +14,12 @@ import { requiresTrailingSemicolon } from "./index.ts"
  */
 function lastNodeOfTheBlock (syntax: { parse: import("postcss").Parser }, code: string, asked?: unknown): boolean {
 	let root = syntax.parse(code, { from: undefined })
-	let block = (root.last as import("postcss").Container)
+	let block = root.last as import("postcss").Container
 	let node = block.nodes ? block.last : block
 
 	if (!node) throw new Error(`The block holds no node`)
 
-	return requiresTrailingSemicolon(node, (({ opts: { syntax: asked === undefined ? syntax : asked } } as unknown) as import("stylelint").PostcssResult))
+	return requiresTrailingSemicolon(node, { opts: { syntax: asked === undefined ? syntax : asked } } as unknown as import("stylelint").PostcssResult)
 }
 
 /**
@@ -34,9 +34,9 @@ function closingALessBlock (node: string): boolean {
 describe(`requiresTrailingSemicolon`, () => {
 	describe(`the syntax`, () => {
 		it(`no syntax at all, which is plain CSS`, () => {
-			let rule = (parse(`a { @layer l; }`).first as import("postcss").Rule)
+			let rule = parse(`a { @layer l; }`).first as import("postcss").Rule
 
-			expect(requiresTrailingSemicolon((rule.first as import("postcss").AtRule), (({ opts: {} } as unknown) as import("stylelint").PostcssResult))).toBe(false)
+			expect(requiresTrailingSemicolon(rule.first as import("postcss").AtRule, { opts: {} } as unknown as import("stylelint").PostcssResult)).toBe(false)
 		})
 
 		it(`a syntax that reads the probe and spells no Less variable in it`, () => {
@@ -61,12 +61,12 @@ describe(`requiresTrailingSemicolon`, () => {
 
 		it(`the syntax of the node's own stylesheet, which is asked ahead of the one the file was opened with`, () => {
 			let root = less.parse(`a { @extend .b; }`, { from: undefined })
-			let source = (root.source as import("../typeGuards/index.ts").EmbeddedSource)
-			let rule = (root.first as import("postcss").Rule)
+			let source = root.source as import("../typeGuards/index.ts").EmbeddedSource
+			let rule = root.first as import("postcss").Rule
 
 			source.syntax = scss
 
-			expect(requiresTrailingSemicolon((rule.last as import("postcss").AtRule), (({ opts: { syntax: less } } as unknown) as import("stylelint").PostcssResult))).toBe(false)
+			expect(requiresTrailingSemicolon(rule.last as import("postcss").AtRule, { opts: { syntax: less } } as unknown as import("stylelint").PostcssResult)).toBe(false)
 		})
 
 		it(`one parse of the probe per syntax, however many nodes are asked about`, () => {

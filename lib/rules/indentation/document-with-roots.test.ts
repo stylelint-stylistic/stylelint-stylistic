@@ -14,7 +14,7 @@ function parse (source: string, opts?: import("postcss").ProcessOptions): import
 	let doc = (new Document())
 	let root = postcssParse(source, opts)
 
-	let held = (root as import("postcss").Root & { document?: import("postcss").Document })
+	let held = root as import("postcss").Root & { document?: import("postcss").Document }
 
 	held.parent = doc
 	held.document = doc
@@ -32,10 +32,10 @@ testRule({
 	config: [2],
 
 	// The library's declaration names a string alone, while it hands whatever it is given on to Stylelint, which takes a syntax object as readily as a package name
-	customSyntax: (({
+	customSyntax: {
 		parse,
 		stringify,
-	} as unknown) as string),
+	} as unknown as string,
 
 	accept: [
 		{

@@ -33,7 +33,7 @@ function rule (primary: `always` | `never`): RuleCheck {
 
 		// A `document` root is an HTML file holding stylesheets, and a byte order mark stands at the head of the file rather than of any block in it
 		let source: import("../../utils/typeGuards/index.ts").EmbeddedSource | undefined = root.source
-		let { document } = (root as { document?: import("postcss").Document })
+		let { document } = root as { document?: import("postcss").Document }
 
 		if (!validOptions || !source || source.inline || source.lang === `object-literal` || document !== undefined) return
 

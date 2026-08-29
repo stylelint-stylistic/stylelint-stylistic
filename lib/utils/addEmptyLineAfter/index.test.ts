@@ -96,7 +96,7 @@ describe(`addEmptyLineAfter`, () => {
 function run (css: string, index: number = 0, rules: Record<string, unknown> = {}): string {
 	let root = parse(css)
 
-	addEmptyLineAfter((root.nodes[index] as import("postcss").Rule), (({ stylelint: { config: { rules } } } as unknown) as import("stylelint").PostcssResult))
+	addEmptyLineAfter(root.nodes[index] as import("postcss").Rule, { stylelint: { config: { rules } } } as unknown as import("stylelint").PostcssResult)
 
 	return root.toString()
 }

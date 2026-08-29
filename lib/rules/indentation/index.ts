@@ -491,7 +491,7 @@ function getDocument (node: import("postcss").Node): import("postcss").Document 
 
 	if (!(`document` in holder)) return
 
-	return (holder.document as import("postcss").Document | undefined)
+	return holder.document as import("postcss").Document | undefined
 }
 
 /**
@@ -634,7 +634,7 @@ function inferRootIndentLevel (root: import("postcss").Root, baseIndentLevel: nu
 		let afterEnd
 
 		if (TRAILING_LINE_BREAK.test(after)) {
-			let document = ((`document` in root ? root.document : undefined) as import("postcss").Document | undefined)
+			let document = (`document` in root ? root.document : undefined) as import("postcss").Document | undefined
 
 			if (document) {
 				let nextRoot = document.nodes[document.nodes.indexOf(root) + 1]

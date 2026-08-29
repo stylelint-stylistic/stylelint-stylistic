@@ -56,7 +56,7 @@ describe(`lastNodeHoldsTheBlockAfter`, () => {
 	})
 
 	it(`turns away a block whose own raw a fix has already filled, which no parse of this shape leaves anything in`, () => {
-		let statement = (parse(`a {\n\t@extend .b;\n}`).first as import("postcss").Rule)
+		let statement = parse(`a {\n\t@extend .b;\n}`).first as import("postcss").Rule
 
 		// What `declaration-block-trailing-semicolon` under `never` leaves behind: the flag cleared and the whitespace standing where it stood
 		statement.raws.semicolon = false
@@ -74,5 +74,5 @@ describe(`lastNodeHoldsTheBlockAfter`, () => {
 function run (css: string, syntax?: { parse: import("postcss").Parser }): ReturnType<typeof lastNodeHoldsTheBlockAfter> {
 	let root = syntax ? syntax.parse(css) : parse(css)
 
-	return lastNodeHoldsTheBlockAfter((root.first as import("postcss").Container))
+	return lastNodeHoldsTheBlockAfter(root.first as import("postcss").Container)
 }

@@ -135,12 +135,12 @@ function rule (primary: `unix` | `windows`): RuleCheck {
 		 */
 		function reportNewlineError (line: number, column: number): void {
 			// A node made by hand is what lets a warning point at an empty line.
-			let node = _rule(({
+			let node = _rule({
 				source: {
 					start: { line, column, offset: 0 },
 					input: new Input(``),
 				},
-			} as import("postcss").RuleProps))
+			} as import("postcss").RuleProps)
 
 			report({
 				message: messages.expected,

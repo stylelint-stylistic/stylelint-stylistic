@@ -87,5 +87,5 @@ function postcssCheck (options?: string | { noRawBefore?: boolean }, cssString?:
 	let css = typeof opts === `string` ? opts : cssString ?? ``
 	let root = syntax.parse(css, { from: undefined })
 
-	return beforeBlockString((root.first as import("postcss").Container), (({ opts: { syntax } } as unknown) as import("stylelint").PostcssResult), typeof opts === `string` ? {} : opts)
+	return beforeBlockString(root.first as import("postcss").Container, { opts: { syntax } } as unknown as import("stylelint").PostcssResult, typeof opts === `string` ? {} : opts)
 }

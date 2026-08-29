@@ -22,7 +22,7 @@ function ask (syntax: { parse: import("postcss").Parser }, code: string, pick: (
 
 	if (!node) throw new Error(`The case picks no node`)
 
-	return writesIntoInlineComment(node, (({ opts: { syntax } } as unknown) as import("stylelint").PostcssResult), spelledBetween)
+	return writesIntoInlineComment(node, { opts: { syntax } } as unknown as import("stylelint").PostcssResult, spelledBetween)
 }
 
 /**
@@ -31,7 +31,7 @@ function ask (syntax: { parse: import("postcss").Parser }, code: string, pick: (
  * @returns That statement.
  */
 function block (root: import("postcss").Root | import("postcss").Document): import("postcss").Container {
-	return (root.first as import("postcss").Container)
+	return root.first as import("postcss").Container
 }
 
 describe(`writesIntoInlineComment`, () => {

@@ -56,5 +56,5 @@ describe(`getBlockAfter`, () => {
 function run (css: string, syntax?: { parse: import("postcss").Parser }): ReturnType<typeof getBlockAfter> {
 	let root = syntax ? syntax.parse(css) : parse(css)
 
-	return getBlockAfter((root.first as import("postcss").Container))
+	return getBlockAfter(root.first as import("postcss").Container)
 }

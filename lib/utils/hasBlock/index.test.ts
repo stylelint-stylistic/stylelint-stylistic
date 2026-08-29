@@ -38,5 +38,5 @@ it(`hasBlock`, () => {
 function postcssCheck (cssString: string): boolean {
 	let root = parse(cssString)
 
-	return hasBlock((root.first as import("postcss").Container))
+	return hasBlock(root.first as import("postcss").Container)
 }

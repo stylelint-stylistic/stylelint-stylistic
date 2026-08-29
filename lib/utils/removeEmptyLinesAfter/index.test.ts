@@ -78,7 +78,7 @@ describe(`removeEmptyLineBefore`, () => {
 function run (css: string): string {
 	let root = parse(css)
 
-	removeEmptyLinesAfter((root.nodes[0] as import("postcss").Rule))
+	removeEmptyLinesAfter(root.nodes[0] as import("postcss").Rule)
 
 	return root.toString()
 }
