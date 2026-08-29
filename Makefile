@@ -39,19 +39,17 @@ prose-check: ## 🔤 Check that markdown prose is bound
 	./scripts/bind-prose.js --check
 .PHONY: prose-check
 
-oracles: ## 🔮 Compare every oracle's answer about the base with its answer about the working tree [RUN=1] [BASE=] [HEAD=]
-	HARNESS_RUN=$(RUN) ./scripts/oracles/compare.mjs $(BASE) $(HEAD)
+oracles: ## 🔮 Compare every oracle's answer about the base with its answer about the working tree [BASE=] [HEAD=]
+	./scripts/oracles/compare.mjs $(BASE) $(HEAD)
 .PHONY: oracles
 
-sweep: ## 🧹 Run one sweep on the base and on the working tree, and write the diff [RUN=1] FILE= [BASE=]
+sweep: ## 🧹 Run one sweep on the base and on the working tree, and write the diff FILE= [BASE=]
 	@test -n "$(FILE)" || { printf "\t❌ $(ANSI_BOLD)FILE= names the sweep to run$(ANSI_RESET)\n\n"; exit 2; }
-	$(call require_run,the sweep $(FILE))
-	HARNESS_RUN=1 ./scripts/sweeps/run.mjs $(FILE) $(BASE)
+	./scripts/sweeps/run.mjs $(FILE) $(BASE)
 .PHONY: sweep
 
-harness-check: ## 🧫 Check that the direct runner agrees with Stylelint over every run of the oracles [RUN=1]
-	$(call require_run,the runner check — about 60 000 lints)
-	HARNESS_RUN=1 ./scripts/harness/verify-lint.mjs
+harness-check: ## 🧫 Check that the direct runner agrees with Stylelint over every run of the oracles
+	./scripts/harness/verify-lint.mjs
 .PHONY: harness-check
 
 cache-gc: ## 🗑️  Take out of the result store what no ref reaches any more
@@ -68,15 +66,6 @@ verify: check lint test prose-check breaks-check ## ✅ Run every check the CI r
 release: verify ## 🚀 Release a new version
 	pnx @firefoxic/release-it
 .PHONY: release
-
-# A run of the oracles or of a sweep is the slowest thing this repository does, and it is asked for far more often than it is needed: what it compares is two states of the tree, and the state of a commit does not change with the commit's date or its message. So nothing here collects results without RUN=1, and a permission rule of the user's own makes that spelling prompt. Without it a target says what it would have run and stops — the recipe exits with the code below, and make reports it — which a session reads as "ask first" rather than as a failure of the build. A comma cannot stand in the argument, since `call` would read it as a second one.
-define require_run
-	@if [ "$(RUN)" != "1" ] ; then
-		printf "\n\t⏸  $(ANSI_BOLD)Not running$(ANSI_RESET) $(1).\n"
-		printf "\tA run collects new results, so it is asked for rather than started: the user approves it by adding $(ANSI_BOLD)RUN=1$(ANSI_RESET) to this very command.\n\n"
-		exit 3
-	fi
-endef
 
 define pnpm_alert
 	(

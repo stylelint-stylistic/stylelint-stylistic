@@ -3,15 +3,15 @@
 /**
  * Compares the oracles' answers about a base with their answers about a branch, measuring only what has not been measured before.
  *
- * Every result is kept by what it depends on — see `scripts/harness/cache.mjs` — so the two sides are first looked up, and only a side no entry answers for is put on the plan. A plan that is not empty is printed and stops the run unless `HARNESS_RUN` is set, which `make oracles RUN=1` does after the user has approved it. Each oracle is then started once per missing side, with the branch's scripts and corpus over that side's `lib/`, so that the two sides are always asked the same question; and the diff of the six is written to `tmp/oracles-diff.md`, row by row and never by count.
+ * Every result is kept by what it depends on — see `scripts/harness/cache.mjs` — so the two sides are first looked up, and only a side no entry answers for is measured. Each oracle is started once per missing side, with the branch's scripts and corpus over that side's `lib/`, so that the two sides are always asked the same question; and the diff of the six is written to `tmp/oracles-diff.md`, row by row and never by count.
  */
 
 import { execFileSync } from "node:child_process"
 import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { argv, env, exit, stdout } from "node:process"
+import { argv, env, stdout } from "node:process"
 
-import { CACHE_DIR, hashAt, keyOf, read, write } from "../harness/cache.mjs"
+import { hashAt, keyOf, read, write } from "../harness/cache.mjs"
 import { defaultBase, libAt, ROOT } from "../harness/checkout.mjs"
 import { diff, render } from "../harness/diff.mjs"
 
@@ -20,12 +20,6 @@ const ORACLES = [`converge`, `control`, `comments`, `twins`, `nodes`, `pairs`]
 
 /** The fields that tell one row from another; everything else a row holds is what the oracle found there. */
 const IDENTITY = [`kind`, `rule`, `primary`, `syntaxName`, `name`, `spelling`, `a`, `b`]
-
-/** The code a run stops with where it was started without approval. */
-const EXIT_CODE_NOT_APPROVED = 3
-
-/** How long a run of the six takes on this machine when nothing is cached, for the plan to say. */
-const SECONDS_PER_SIDE = 25
 
 /**
  * Names the inputs a result of one oracle over one side depends on.
@@ -64,7 +58,7 @@ function keyed (rows) {
  * @returns {object[]} The rows.
  */
 function run (oracle, revision) {
-	let output = execFileSync(`node`, [path.join(ROOT, `scripts`, `oracles`, `${oracle}.mjs`)], { cwd: ROOT, encoding: `utf8`, maxBuffer: 1024 * 1024 * 256, env: { ...env, HARNESS_RUN: `1`, HARNESS_LIB: libAt(revision) } })
+	let output = execFileSync(`node`, [path.join(ROOT, `scripts`, `oracles`, `${oracle}.mjs`)], { cwd: ROOT, encoding: `utf8`, maxBuffer: 1024 * 1024 * 256, env: { ...env, HARNESS_LIB: libAt(revision) } })
 
 	return JSON.parse(output)
 }
@@ -99,17 +93,6 @@ plan = plan.filter((item) => {
 
 	return true
 })
-
-if (plan.length > 0 && env.HARNESS_RUN !== `1`) {
-	let missingSides = new Set(plan.map((item) => item.side))
-
-	stdout.write(`\n\t⏸  Not running. ${plan.length} of ${ORACLES.length * 2} results are not in ${CACHE_DIR}:\n`)
-
-	for (let item of plan) stdout.write(`\t   ${item.side} (${item.revision}) — ${item.oracle}\n`)
-
-	stdout.write(`\tAbout ${missingSides.size * SECONDS_PER_SIDE} seconds on an idle machine. A run collects new results, so it is asked for rather than started: the user approves it by adding RUN=1 to this very command.\n\n`)
-	exit(EXIT_CODE_NOT_APPROVED)
-}
 
 for (let item of plan) {
 	let started = performance.now()

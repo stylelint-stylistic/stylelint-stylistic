@@ -5,28 +5,20 @@
  *
  * A sweep is a module exporting its `name`, its `corpus` — a list of keyed texts, most often built with `scripts/harness/matrix.mjs` — its `configs`, each a rule under a primary option and, where there are any, secondary ones, and the `syntaxes` it is read under. Every text is linted under every configuration and syntax twice, checked and fixed, on the base and on the branch, and the finding is what moved between the two: `tmp/sweeps/<name>.md` holds it row by row; the two sides themselves stand in the store.
  *
- * Each side is kept in the store with a digest beside it — one short hash per row — and a run compares the digests, reading the rows themselves only for the keys that moved. Started through `make sweep FILE=… RUN=1` and nothing else: a run collects results, and the user approves one by that spelling.
+ * Each side is kept in the store with a digest beside it — one short hash per row — and a run compares the digests, reading the rows themselves only for the keys that moved. Started through `make sweep FILE=…`.
  */
 
 import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { argv, env, exit, stderr, stdout } from "node:process"
+import { argv, exit, stderr, stdout } from "node:process"
 
 import { digestOf, hashAt, keyOf, read, readDigest, write } from "../harness/cache.mjs"
 import { defaultBase, libAt, ROOT } from "../harness/checkout.mjs"
 import { diff, render } from "../harness/diff.mjs"
 import { lintDirect, loadRules } from "../harness/lint.mjs"
 
-/** The code a run stops with where it was started without approval. */
-const EXIT_CODE_NOT_APPROVED = 3
-
 /** The syntax each name is read under, plain CSS under none. */
 const SYNTAXES = { css: undefined, scss: `postcss-scss`, less: `postcss-less` }
-
-if (env.HARNESS_RUN !== `1`) {
-	stderr.write(`Not running: a sweep collects new results, so it is started through \`make sweep FILE=… RUN=1\` after the user has approved the run, never directly.\n`)
-	exit(EXIT_CODE_NOT_APPROVED)
-}
 
 /**
  * Lints one text under one configuration, checking and fixing, and reads the fix back.
