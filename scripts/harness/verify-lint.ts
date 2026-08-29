@@ -10,10 +10,10 @@ import { exit, stdout } from "node:process"
 
 import stylelint from "stylelint"
 
-import { RULE_OPTIONS } from "../oracles/options.mjs"
-import { buildRuns, isUsable } from "../oracles/runs.mjs"
+import { RULE_OPTIONS } from "../oracles/options.ts"
+import { buildRuns, isUsable } from "../oracles/runs.ts"
 
-import { lintDirect, loadRules, settingsOf } from "./lint.mjs"
+import { lintDirect, loadRules, settingsOf } from "./lint.ts"
 
 /** The registry of this checkout, which is the one every oracle reads too. */
 const REGISTRY = await loadRules(new URL(`../../lib`, import.meta.url).pathname)
@@ -23,19 +23,19 @@ const PAIRS_PER_FIXTURE = 24
 
 /**
  * Asks Stylelint, and shapes its answer like the runner's.
- * @param {string} code - The text.
- * @param {import('./lint.mjs').Config} config - The configuration, as the oracles build one.
- * @param {boolean} fix - Whether the rules are let write.
- * @returns {Promise<import('./lint.mjs').Answer>} The answer in the runner's shape.
+ * @param code - The text.
+ * @param config - The configuration, as the oracles build one.
+ * @param fix - Whether the rules are let write.
+ * @returns The answer in the runner's shape.
  */
-async function askStylelint (code, config, fix) {
+async function askStylelint (code: string, config: import("./lint.ts").Config, fix: boolean): Promise<import("./lint.ts").Answer> {
 	let result
 
 	try {
 		result = await stylelint.lint({ code, config, fix })
 	}
 	catch (error) {
-		return { unparsable: true, detail: /** @type {{ message: string }} */ (error).message }
+		return { unparsable: true, detail: (error as { message: string }).message }
 	}
 
 	let [first] = result.results
@@ -53,22 +53,22 @@ async function askStylelint (code, config, fix) {
 
 /**
  * Asks the runner under the same configuration.
- * @param {string} code - The text.
- * @param {import('./lint.mjs').Config} config - The configuration, as the oracles build one.
- * @param {boolean} fix - Whether the rules are let write.
- * @returns {Promise<import('./lint.mjs').Answer>} The answer.
+ * @param code - The text.
+ * @param config - The configuration, as the oracles build one.
+ * @param fix - Whether the rules are let write.
+ * @returns The answer.
  */
-function askRunner (code, config, fix) {
+function askRunner (code: string, config: import("./lint.ts").Config, fix: boolean): Promise<import("./lint.ts").Answer> {
 	return lintDirect({ code, rules: settingsOf(config.rules), registry: REGISTRY, syntax: config.customSyntax, fix })
 }
 
 /**
  * Compares the two answers, and names the first field they differ in.
- * @param {import('./lint.mjs').Answer} expected - What Stylelint said.
- * @param {import('./lint.mjs').Answer} actual - What the runner said.
- * @returns {string | null} The field, or null where the two agree.
+ * @param expected - What Stylelint said.
+ * @param actual - What the runner said.
+ * @returns The field, or null where the two agree.
  */
-function disagreement (expected, actual) {
+function disagreement (expected: import("./lint.ts").Answer, actual: import("./lint.ts").Answer): string | null {
 	if (expected.unparsable !== actual.unparsable) return `unparsable`
 	if (expected.unparsable || actual.unparsable) return null
 	if (expected.usable !== actual.usable) return `usable`
@@ -81,17 +81,16 @@ function disagreement (expected, actual) {
 
 let compared = 0
 
-/** @type {{ label: string, fix: boolean, field: string, expected: import('./lint.mjs').Answer, actual: import('./lint.mjs').Answer }[]} */
-let failures = []
+let failures: { label: string, fix: boolean, field: string, expected: import("./lint.ts").Answer, actual: import("./lint.ts").Answer }[] = []
 
 /**
  * Compares one configuration over one text, checking and fixing.
- * @param {string} label - What to print where the two disagree.
- * @param {string} code - The text.
- * @param {import('./lint.mjs').Config} config - The configuration.
- * @returns {Promise<void>} Nothing; a disagreement is recorded.
+ * @param label - What to print where the two disagree.
+ * @param code - The text.
+ * @param config - The configuration.
+ * @returns Nothing; a disagreement is recorded.
  */
-async function compare (label, code, config) {
+async function compare (label: string, code: string, config: import("./lint.ts").Config): Promise<void> {
 	for (let fix of [false, true]) {
 		// The two are asked in turn so that a run of this script stays as light on the machine as the oracle it stands in for
 		// eslint-disable-next-line no-await-in-loop
@@ -111,7 +110,7 @@ for (let run of runs) {
 	await compare(`${run.rule} ${JSON.stringify(run.primary)} ${run.syntaxName} ${run.name}`, run.code, run.config)
 }
 
-let configs = Object.entries(RULE_OPTIONS).map(([rule, [primary]]) => /** @type {[string, unknown]} */ ([`@stylistic/${rule}`, primary]))
+let configs = Object.entries(RULE_OPTIONS).map(([rule, [primary]]) => [`@stylistic/${rule}`, primary] as [string, unknown])
 let fixtures = new Map(runs.filter((run) => run.syntaxName === `css`).map((run) => [run.name, run]))
 
 for (let [name, run] of fixtures) {

@@ -14,25 +14,25 @@
 
 import { stdout } from "node:process"
 
-import { lint } from "../harness/lint.mjs"
+import { lint } from "../harness/lint.ts"
 
-import { buildRuns, isUsable } from "./runs.mjs"
+import { buildRuns, isUsable } from "./runs.ts"
 
 /**
  * Names a run, without carrying its configuration into the report.
- * @param {import('./runs.mjs').Run} run - The run to name.
- * @returns {object} The four fields that identify it.
+ * @param run - The run to name.
+ * @returns The four fields that identify it.
  */
-function label (run) {
+function label (run: import("./runs.ts").Run): object {
 	return { rule: run.rule, primary: run.primary, syntaxName: run.syntaxName, name: run.name }
 }
 
 /**
  * Runs the fixer three times over one fixture.
- * @param {import('./runs.mjs').Run} run - The rule, the option, the syntax and the fixture.
- * @returns {Promise<object | null>} The finding, or null where there is none.
+ * @param run - The rule, the option, the syntax and the fixture.
+ * @returns The finding, or null where there is none.
  */
-async function probe (run) {
+async function probe (run: import("./runs.ts").Run): Promise<object | null> {
 	let history = [run.code]
 	let current = run.code
 
@@ -45,7 +45,7 @@ async function probe (run) {
 			result = await lint({ code: current, config: run.config, fix: true })
 		}
 		catch (error) {
-			return { kind: `broke`, ...label(run), detail: `threw: ${/** @type {{ message: string }} */ (error).message}`, history }
+			return { kind: `broke`, ...label(run), detail: `threw: ${(error as { message: string }).message}`, history }
 		}
 
 		let [first] = result.results
@@ -64,8 +64,7 @@ async function probe (run) {
 	return null
 }
 
-/** @type {object[]} */
-let findings = []
+let findings: object[] = []
 
 for (let run of buildRuns()) {
 	// eslint-disable-next-line no-await-in-loop

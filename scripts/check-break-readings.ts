@@ -34,11 +34,8 @@ const COMMENT_ONLY = /^(?:\/\/|\*(?!\/\s*\S))|^\/\*(?:(?!\*\/)[\s\S])*(?:\*\/\s*
 /** The file the answers are meant to come from, and the tests, whose fixtures are stylesheets rather than readings of one. */
 const SKIPPED = /(?:^|\/)regexps\.[jt]s$|\.test\.[jt]s$/u
 
-/**
- * Every line that puts a break into a text, or spells one inside a stylesheet written as data. None of them asks whether anything is a break, so none is debt.
- * @type {Record<string, string[]>}
- */
-const ALLOWED = {
+/** Every line that puts a break into a text, or spells one inside a stylesheet written as data. None of them asks whether anything is a break, so none is debt. */
+const ALLOWED: Record<string, string[]> = {
 	"lib/rules/function-max-empty-lines/index.ts": [
 		`let allowedLFNewLinesString = \`\\n\`.repeat(maxAdjacentNewlines)`,
 		`let allowedCRLFNewLinesString = \`\\r\\n\`.repeat(maxAdjacentNewlines)`,
@@ -63,11 +60,8 @@ const ALLOWED = {
 	"lib/utils/readsInlineComments/index.ts": [`const INLINE_COMMENT_PROBE = \`a {}\\n// comment\\na { b: 'x', // comment\\n  'y'; }\\n\``],
 }
 
-/**
- * Every line that reads a break without asking `lib/regexps.ts` what one is.
- * @type {Record<string, string[]>}
- */
-const DEBT = {
+/** Every line that reads a break without asking `lib/regexps.ts` what one is. */
+const DEBT: Record<string, string[]> = {
 	"lib/rules/block-closing-brace-empty-line-before/index.ts": [`if (statementString[index - 1] === \`\\r\`) index -= 1`],
 	"lib/rules/block-closing-brace-newline-before/index.ts": [`if (statementString[index - 1] === \`\\r\`) index -= 1`],
 	"lib/rules/block-closing-brace-space-before/index.ts": [`if (statementString[index - 1] === \`\\r\`) index -= 1`],
@@ -123,9 +117,9 @@ const DEBT = {
 
 /**
  * Every JavaScript file of `lib/` a break could be spelled in.
- * @returns {string[]} The paths, relative to the repository root.
+ * @returns The paths, relative to the repository root.
  */
-function collectSources () {
+function collectSources (): string[] {
 	return readdirSync(LIB, { recursive: true, encoding: `utf8` })
 		.filter((path) => path.endsWith(`.js`) || path.endsWith(`.ts`))
 		.map((path) => `lib/${path}`)
@@ -135,10 +129,10 @@ function collectSources () {
 
 /**
  * Counts how many times each line of a list stands in it.
- * @param {string[]} lines - The classified lines of one file.
- * @returns {Map<string, number>} Each line against the number of times it is expected.
+ * @param lines - The classified lines of one file.
+ * @returns Each line against the number of times it is expected.
  */
-function tally (lines) {
+function tally (lines: string[]): Map<string, number> {
 	let counts = new Map()
 
 	for (let line of lines) counts.set(line, (counts.get(line) ?? 0) + 1)
@@ -176,8 +170,8 @@ for (let path of [...Object.keys(ALLOWED), ...Object.keys(DEBT)]) {
 	if (!seen.has(path)) stale.push(`${path}\t(the file itself is gone)`)
 }
 
-if (unclassified.length > 0) stdout.write(`\tA line spells a line break and neither list accounts for it:\n\t\t${unclassified.join(`\n\t\t`)}\n\tIf it reads a break, ask the question through a name in lib/regexps.ts or add the line to DEBT in scripts/check-break-readings.js. If it only writes one, add it to ALLOWED.\n`)
+if (unclassified.length > 0) stdout.write(`\tA line spells a line break and neither list accounts for it:\n\t\t${unclassified.join(`\n\t\t`)}\n\tIf it reads a break, ask the question through a name in lib/regexps.ts or add the line to DEBT in scripts/check-break-readings.ts. If it only writes one, add it to ALLOWED.\n`)
 
-if (stale.length > 0) stdout.write(`\tA list names a line the file no longer holds:\n\t\t${stale.join(`\n\t\t`)}\n\tTake it out of scripts/check-break-readings.js — a list that lags behind the code says nothing about either.\n`)
+if (stale.length > 0) stdout.write(`\tA list names a line the file no longer holds:\n\t\t${stale.join(`\n\t\t`)}\n\tTake it out of scripts/check-break-readings.ts — a list that lags behind the code says nothing about either.\n`)
 
 if (unclassified.length > 0 || stale.length > 0) exit(1)

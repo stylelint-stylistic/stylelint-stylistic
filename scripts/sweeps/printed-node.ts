@@ -1,21 +1,18 @@
 /**
  * A comment of every spelling, standing wherever a rule that measures a printed node can meet one, in every kind of block and under every syntax.
  *
- * Written for #139, where every position counted in `node.toString()` stands as far past its mark as PostCSS's stringifier differs from the one the file was opened with. The positions themselves are `control.mjs`'s question — a sweep keeps the text of a warning and not the place of it — so what this corpus is for is the other half: whether a rule that now reads the text the file spells says something it did not say before, and whether `--fix` writes something else. The block-measuring options turn on whether a block is single-line or multi-line, and two characters of a rewritten comment are enough to change that answer rather than the column, so a widening here shows as a warning arriving or leaving and as a fix output moving.
+ * Written for #139, where every position counted in `node.toString()` stands as far past its mark as PostCSS's stringifier differs from the one the file was opened with. The positions themselves are `control.ts`'s question — a sweep keeps the text of a warning and not the place of it — so what this corpus is for is the other half: whether a rule that now reads the text the file spells says something it did not say before, and whether `--fix` writes something else. The block-measuring options turn on whether a block is single-line or multi-line, and two characters of a rewritten comment are enough to change that answer rather than the column, so a widening here shows as a warning arriving or leaving and as a fix output moving.
  *
  * The controls carry no comment at all: a corpus in which every block holds one is blind to what the branch does to a block that holds none, and the three utilities it rewrites are called for every statement of every file.
  */
 
-import { place } from "../harness/matrix.mjs"
+import { place } from "../harness/matrix.ts"
 
 /** The comment, in the two spellings of the same width, and the two shapes that carry no comment. A block comment is what the inline one is measured against, since neither the file nor the code around it differs by a character between the two. */
 const COMMENTS = { inline: `// c`, block: `/**/`, none: ``, twoInline: `// c\n\t// c` }
 
-/**
- * Where the comment stands: behind the value of the last declaration, on a line of its own, behind the opening brace, and behind a semicolon.
- * @type {Record<string, (comment: string) => string>}
- */
-const PLACES = {
+/** Where the comment stands: behind the value of the last declaration, on a line of its own, behind the opening brace, and behind a semicolon. */
+const PLACES: Record<string, (comment: string) => string> = {
 	behindValue: (comment) => `a {\n\tcolor: pink ${comment}\n}\n`,
 	ownLine: (comment) => `a {\n\tcolor: pink;\n\t${comment}\n}\n`,
 	behindOpeningBrace: (comment) => `a {${comment}\n\tcolor: pink;\n}\n`,
@@ -63,8 +60,8 @@ const corpus = [
 	...RAW_SHAPES,
 ]
 
-/** Every rule this branch rewrites a measurement in, under every primary option `scripts/oracles/options.mjs` lists for it. */
-const configs = /** @type {[string, unknown[]][]} */ ([
+/** Every rule this branch rewrites a measurement in, under every primary option `scripts/oracles/options.ts` lists for it. */
+const configs = ([
 	[`at-rule-semicolon-newline-after`, [`always`]],
 	[`at-rule-semicolon-space-before`, [`always`, `never`]],
 	[`block-closing-brace-empty-line-before`, [`always-multi-line`, `never`]],
@@ -89,6 +86,6 @@ const configs = /** @type {[string, unknown[]][]} */ ([
 	[`value-list-comma-newline-after`, [`always`, `always-multi-line`, `never-multi-line`]],
 	[`indentation`, [`tab`, 2]],
 	[`no-extra-semicolons`, [true]],
-]).flatMap(([rule, primaries]) => primaries.map((primary) => ({ rule, primary })))
+] as [string, unknown[]][]).flatMap(([rule, primaries]) => primaries.map((primary) => ({ rule, primary })))
 
 export { configs, corpus, name }

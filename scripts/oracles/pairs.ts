@@ -15,10 +15,10 @@
 
 import { stdout } from "node:process"
 
-import { lint as lintDirectly } from "../harness/lint.mjs"
+import { lint as lintDirectly } from "../harness/lint.ts"
 
-import { RULE_OPTIONS } from "./options.mjs"
-import { isUsable, PLUGIN } from "./runs.mjs"
+import { RULE_OPTIONS } from "./options.ts"
+import { isUsable, PLUGIN } from "./runs.ts"
 
 /** Shapes short enough to read and dirty enough that many rules have something to say about each. They are read as CSS alone: a pair races over the shape of the text rather than over the syntax it is written in, and reading each shape three times over would treble a run that is already the square of what the fixture wakes. The last two end on something other than a line break, which is what makes the fix of `no-missing-end-of-source-newline` reachable at all: every other shape here has closed its last line already, so that rule wrote nothing in any run this oracle made, and a class of [#356](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/356) went unseen. `free-semicolon` is what puts a row of that class on the board; `trailing-run` puts none on either checkout — under a maximum of one or two `max-empty-lines` rewrote nothing there before this fix, so the pair was never made at all, and under a maximum of zero, where it did rewrite, the two orders already agreed — and stands guard over a fix rather than reporting one. */
 const CORPUS = [
@@ -43,12 +43,12 @@ const CONFIGS = Object.entries(RULE_OPTIONS).flatMap(([rule, primaries]) => prim
 
 /**
  * Lints one snippet under the rules in the order given.
- * @param {string} code - The snippet.
- * @param {Record<string, unknown>} rules - The rules to run, in the order the configuration is to spell them.
- * @param {boolean} fix - Whether the rules are let write.
- * @returns {Promise<{ code: string, warnings: number, usable: boolean }>} What the run left and what it said, and whether it is a run an oracle can read at all.
+ * @param code - The snippet.
+ * @param rules - The rules to run, in the order the configuration is to spell them.
+ * @param fix - Whether the rules are let write.
+ * @returns What the run left and what it said, and whether it is a run an oracle can read at all.
  */
-async function lint (code, rules, fix) {
+async function lint (code: string, rules: Record<string, unknown>, fix: boolean): Promise<{ code: string, warnings: number, usable: boolean }> {
 	let result
 
 	try {
@@ -67,12 +67,11 @@ async function lint (code, rules, fix) {
  * Picks the configurations that have something to write about one fixture.
  *
  * A rule that changes nothing here cannot race with another over it, and pairing the whole list with itself regardless would cost the square of every option the plugin has rather than the square of the handful this shape wakes.
- * @param {string} source - The fixture.
- * @returns {Promise<{ rule: string, primary: unknown }[]>} The configurations that rewrote it.
+ * @param source - The fixture.
+ * @returns The configurations that rewrote it.
  */
-async function activeOn (source) {
-	/** @type {{ rule: string, primary: unknown }[]} */
-	let active = []
+async function activeOn (source: string): Promise<{ rule: string, primary: unknown }[]> {
+	let active: { rule: string, primary: unknown }[] = []
 
 	for (let config of CONFIGS) {
 		// eslint-disable-next-line no-await-in-loop
@@ -86,13 +85,13 @@ async function activeOn (source) {
 
 /**
  * Runs one pair of configurations over one fixture in both orders, and asks what each order left unsaid.
- * @param {string} name - The name of the fixture.
- * @param {string} source - The fixture.
- * @param {{ rule: string, primary: unknown }} a - One configuration.
- * @param {{ rule: string, primary: unknown }} b - The other.
- * @returns {Promise<object | null>} The row, or null where the order decides nothing.
+ * @param name - The name of the fixture.
+ * @param source - The fixture.
+ * @param a - One configuration.
+ * @param b - The other.
+ * @returns The row, or null where the order decides nothing.
  */
-async function probe (name, source, a, b) {
+async function probe (name: string, source: string, a: { rule: string, primary: unknown }, b: { rule: string, primary: unknown }): Promise<object | null> {
 	let aFirst = await lint(source, { [a.rule]: a.primary, [b.rule]: b.primary }, true)
 	let bFirst = await lint(source, { [b.rule]: b.primary, [a.rule]: a.primary }, true)
 
@@ -117,8 +116,7 @@ async function probe (name, source, a, b) {
 	}
 }
 
-/** @type {object[]} */
-let findings = []
+let findings: object[] = []
 
 for (let [name, source] of CORPUS) {
 	// eslint-disable-next-line no-await-in-loop

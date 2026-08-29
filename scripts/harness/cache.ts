@@ -13,7 +13,7 @@ import { homedir } from "node:os"
 import path from "node:path"
 import { env } from "node:process"
 
-import { ROOT } from "./checkout.mjs"
+import { ROOT } from "./checkout.ts"
 
 /** Where the store is. */
 const CACHE_DIR = env.STYLISTIC_CACHE ?? path.join(homedir(), `.cache`, `stylelint-stylistic`)
@@ -26,23 +26,23 @@ const SCRATCH_INDEX = path.join(ROOT, `tmp`, `harness-index`)
 
 /**
  * Runs Git in the repository and hands back what it printed.
- * @param {string[]} args - The arguments.
- * @param {object} [extraEnv] - Variables to add to the environment.
- * @returns {string} Standard output, trimmed.
+ * @param args - The arguments.
+ * @param extraEnv - Variables to add to the environment.
+ * @returns Standard output, trimmed.
  */
-function git (args, extraEnv = {}) {
+function git (args: string[], extraEnv: object = {}): string {
 	return execFileSync(`git`, args, { cwd: ROOT, encoding: `utf8`, env: { ...env, ...extraEnv } }).trim()
 }
 
-/** @type {string | undefined} The tree of the working tree as it stands, computed once per process. */
-let worktreeTree
+/** The tree of the working tree as it stands, computed once per process. */
+let worktreeTree: string | undefined
 
 /**
  * Resolves a revision to a tree, `worktree` standing for the working tree as it stands — tracked files with their changes, untracked ones included, ignored ones not.
- * @param {string} revision - Anything `git rev-parse` reads, or `worktree`.
- * @returns {string} The hash of the tree.
+ * @param revision - Anything `git rev-parse` reads, or `worktree`.
+ * @returns The hash of the tree.
  */
-function treeOf (revision) {
+function treeOf (revision: string): string {
 	if (revision !== `worktree`) return git([`rev-parse`, `${revision}^{tree}`])
 
 	if (!worktreeTree) {
@@ -62,31 +62,31 @@ function treeOf (revision) {
 
 /**
  * Hashes one path inside a revision — a tree or a blob, whichever the path names.
- * @param {string} revision - Anything `treeOf` reads.
- * @param {string} inside - The path inside it.
- * @returns {string} The hash Git keeps for it.
+ * @param revision - Anything `treeOf` reads.
+ * @param inside - The path inside it.
+ * @returns The hash Git keeps for it.
  */
-function hashAt (revision, inside) {
+function hashAt (revision: string, inside: string): string {
 	return git([`rev-parse`, `${treeOf(revision)}:${inside}`])
 }
 
 /**
  * Builds the key of a result from what it depends on.
- * @param {object} parts - Every input, as a name and the hash or text it stands at; the order of the names is part of the key.
- * @returns {string} The key.
+ * @param parts - Every input, as a name and the hash or text it stands at; the order of the names is part of the key.
+ * @returns The key.
  */
-function keyOf (parts) {
+function keyOf (parts: object): string {
 	return createHash(`sha256`).update(JSON.stringify(parts)).digest(`hex`).slice(0, 24)
 }
 
 /**
  * Names the file of a result.
- * @param {string} kind - `oracles` or `sweeps`.
- * @param {string} name - The oracle's or the sweep's.
- * @param {string} key - The key.
- * @returns {string} The path.
+ * @param kind - `oracles` or `sweeps`.
+ * @param name - The oracle's or the sweep's.
+ * @param key - The key.
+ * @returns The path.
  */
-function fileOf (kind, name, key) {
+function fileOf (kind: string, name: string, key: string): string {
 	return path.join(CACHE_DIR, kind, name, `${key}.json`)
 }
 
@@ -94,12 +94,11 @@ function fileOf (kind, name, key) {
  * Digests a result down to one short hash per row, so that two results can be compared without either being read whole.
  *
  * A result of the largest sweep is half a million rows and a hundred megabytes of JSON, and a comparison that reads both sides whole spends its seconds parsing text it will find unchanged. The digest is what a comparison reads instead; the rows themselves are read only for the keys the digest says have moved, which is most often none.
- * @param {Record<string, unknown>} rows - The rows by key.
- * @returns {Record<string, string>} A hash of each row by the same key.
+ * @param rows - The rows by key.
+ * @returns A hash of each row by the same key.
  */
-function digestOf (rows) {
-	/** @type {Record<string, string>} */
-	let digest = {}
+function digestOf (rows: Record<string, unknown>): Record<string, string> {
+	let digest: Record<string, string> = {}
 
 	for (let [key, row] of Object.entries(rows)) digest[key] = createHash(`sha1`).update(JSON.stringify(row)).digest(`hex`).slice(0, 16)
 
@@ -108,23 +107,23 @@ function digestOf (rows) {
 
 /**
  * Names the digest file of a result.
- * @param {string} kind - `oracles` or `sweeps`.
- * @param {string} name - The oracle's or the sweep's.
- * @param {string} key - The key.
- * @returns {string} The path.
+ * @param kind - `oracles` or `sweeps`.
+ * @param name - The oracle's or the sweep's.
+ * @param key - The key.
+ * @returns The path.
  */
-function digestFileOf (kind, name, key) {
+function digestFileOf (kind: string, name: string, key: string): string {
 	return path.join(CACHE_DIR, kind, name, `${key}.digest.json`)
 }
 
 /**
  * Reads a kept result.
- * @param {string} kind - `oracles` or `sweeps`.
- * @param {string} name - The oracle's or the sweep's.
- * @param {string} key - The key.
- * @returns {unknown | undefined} The rows, or nothing where none were kept.
+ * @param kind - `oracles` or `sweeps`.
+ * @param name - The oracle's or the sweep's.
+ * @param key - The key.
+ * @returns The rows, or nothing where none were kept.
  */
-function read (kind, name, key) {
+function read (kind: string, name: string, key: string): unknown | undefined {
 	let file = fileOf(kind, name, key)
 
 	if (!existsSync(file)) return
@@ -137,12 +136,12 @@ let digests = new Map()
 
 /**
  * Reads the digest of a kept result, which is all a comparison needs until a row has moved.
- * @param {string} kind - `oracles` or `sweeps`.
- * @param {string} name - The oracle's or the sweep's.
- * @param {string} key - The key.
- * @returns {Record<string, string> | undefined} The hash of each row by key, or nothing where no result was kept.
+ * @param kind - `oracles` or `sweeps`.
+ * @param name - The oracle's or the sweep's.
+ * @param key - The key.
+ * @returns The hash of each row by key, or nothing where no result was kept.
  */
-function readDigest (kind, name, key) {
+function readDigest (kind: string, name: string, key: string): Record<string, string> | undefined {
 	let file = digestFileOf(kind, name, key)
 
 	if (!existsSync(file)) return
@@ -155,22 +154,21 @@ function readDigest (kind, name, key) {
 
 /**
  * Keeps a result, once, with its digest beside it.
- * @param {string} kind - `oracles` or `sweeps`.
- * @param {string} name - The oracle's or the sweep's.
- * @param {string} key - The key.
- * @param {unknown} rows - The result.
- * @param {object} meta - What the key was made of, and where and when the run was made, kept beside the rows for a reader and for the collector.
- * @param {Record<string, string>} [digest] - The digest of the rows, where the caller has it already.
- * @returns {void}
+ * @param kind - `oracles` or `sweeps`.
+ * @param name - The oracle's or the sweep's.
+ * @param key - The key.
+ * @param rows - The result.
+ * @param meta - What the key was made of, and where and when the run was made, kept beside the rows for a reader and for the collector.
+ * @param digest - The digest of the rows, where the caller has it already.
  */
-function write (kind, name, key, rows, meta, digest) {
+function write (kind: string, name: string, key: string, rows: unknown, meta: object, digest?: Record<string, string>): void {
 	let file = fileOf(kind, name, key)
 
 	if (existsSync(file)) throw new Error(`${file} is already written; a result is written once, and a second answer to the same question is a finding rather than an update`)
 
 	mkdirSync(path.dirname(file), { recursive: true })
 	writeFileSync(file, JSON.stringify(rows))
-	writeFileSync(digestFileOf(kind, name, key), JSON.stringify(digest ?? digestOf(/** @type {Record<string, unknown>} */ (rows))))
+	writeFileSync(digestFileOf(kind, name, key), JSON.stringify(digest ?? digestOf(rows as Record<string, unknown>)))
 	writeFileSync(`${file.slice(0, -5)}.meta.json`, `${JSON.stringify({ ...meta, writtenAt: new Date().toISOString() }, null, `\t`)}\n`)
 	chmodSync(file, READ_ONLY)
 	chmodSync(digestFileOf(kind, name, key), READ_ONLY)

@@ -4,8 +4,8 @@
  * Written for the change that made the plugin read a line break the way PostCSS does — a line feed or a Windows pair, and nothing else — so that every rule's answer about a bare carriage return and a form feed could be read before and after it, row by row. The whole-file respellings ask what a rule says about a file broken one way throughout; the single positions ask what it says about one such character standing where whitespace stands, since that is what a bare `\r` or `\f` now is.
  */
 
-import { FIXTURES, INLINE_FIXTURES } from "../oracles/fixtures.mjs"
-import { RULE_OPTIONS } from "../oracles/options.mjs"
+import { FIXTURES, INLINE_FIXTURES } from "../oracles/fixtures.ts"
+import { RULE_OPTIONS } from "../oracles/options.ts"
 
 /** The four spellings a whole file is broken with. */
 const SPELLINGS = { lf: `\n`, crlf: `\r\n`, cr: `\r`, ff: `\f` }

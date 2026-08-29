@@ -6,11 +6,11 @@
 
 /**
  * Diffs two results keyed alike.
- * @param {Record<string, unknown>} base - The rows of the base, by key.
- * @param {Record<string, unknown>} head - The rows of the branch, by key.
- * @returns {{ added: string[], removed: string[], changed: string[], same: number }} The keys the branch added, the keys it removed, the keys it changed, and how many it left as they were.
+ * @param base - The rows of the base, by key.
+ * @param head - The rows of the branch, by key.
+ * @returns The keys the branch added, the keys it removed, the keys it changed, and how many it left as they were.
  */
-function diff (base, head) {
+function diff (base: Record<string, unknown>, head: Record<string, unknown>): { added: string[], removed: string[], changed: string[], same: number } {
 	let added = []
 	let removed = []
 	let changed = []
@@ -33,17 +33,16 @@ function diff (base, head) {
 
 /**
  * Writes a diff as Markdown a reader can go through row by row.
- * @param {ReturnType<typeof diff>} result - The diff.
- * @param {Record<string, unknown>} base - The rows of the base, by key.
- * @param {Record<string, unknown>} head - The rows of the branch, by key.
- * @param {number} [limit] - How many rows of each list to spell out.
- * @returns {string} The Markdown.
+ * @param result - The diff.
+ * @param base - The rows of the base, by key.
+ * @param head - The rows of the branch, by key.
+ * @param limit - How many rows of each list to spell out.
+ * @returns The Markdown.
  */
-function render (result, base, head, limit = 200) {
+function render (result: ReturnType<typeof diff>, base: Record<string, unknown>, head: Record<string, unknown>, limit: number = 200): string {
 	let lines = [`| | rows |`, `| --- | --- |`, `| same | ${result.same} |`, `| changed | ${result.changed.length} |`, `| added | ${result.added.length} |`, `| removed | ${result.removed.length} |`, ``]
 
-	/** @type {[string, string[], Record<string, unknown>[]][]} */
-	let sections = [[`Changed`, result.changed, [base, head]], [`Added`, result.added, [head]], [`Removed`, result.removed, [base]]]
+	let sections: [string, string[], Record<string, unknown>[]][] = [[`Changed`, result.changed, [base, head]], [`Added`, result.added, [head]], [`Removed`, result.removed, [base]]]
 
 	for (let [title, keys, sides] of sections) {
 		if (keys.length === 0) continue

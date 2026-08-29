@@ -4,7 +4,7 @@
  * Written for #282 and #321 and carried since, so that no later fix can move a break or a comment there without a row saying so. Ten comments, since a `//` comment closed by the parser, one left open, one holding a block comment's opener and one standing in a string or an address are all different things to a fixer; ten breaks, since a line feed, a carriage return, a Windows pair, a form feed, the two Unicode separators and a plain space are all different things to the syntaxes; and six tails, since what stands behind the break decides whether the parser has closed the call at all. A second prefix puts the same call on two lines, so that the `-multi-line` options are reached.
  */
 
-import { multiply, place } from "../harness/matrix.mjs"
+import { multiply, place } from "../harness/matrix.ts"
 
 const LINE_SEPARATOR = String.fromCodePoint(0x2028)
 const PARAGRAPH_SEPARATOR = String.fromCodePoint(0x2029)

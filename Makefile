@@ -40,24 +40,24 @@ prose-check: ## 🔤 Check that markdown prose is bound
 .PHONY: prose-check
 
 oracles: ## 🔮 Compare every oracle's answer about the base with its answer about the working tree [BASE=] [HEAD=]
-	./scripts/oracles/compare.mjs $(BASE) $(HEAD)
+	./scripts/oracles/compare.ts $(BASE) $(HEAD)
 .PHONY: oracles
 
 sweep: ## 🧹 Run one sweep on the base and on the working tree, and write the diff FILE= [BASE=]
 	@test -n "$(FILE)" || { printf "\t❌ $(ANSI_BOLD)FILE= names the sweep to run$(ANSI_RESET)\n\n"; exit 2; }
-	./scripts/sweeps/run.mjs $(FILE) $(BASE)
+	./scripts/sweeps/run.ts $(FILE) $(BASE)
 .PHONY: sweep
 
 harness-check: ## 🧫 Check that the direct runner agrees with Stylelint over every run of the oracles
-	./scripts/harness/verify-lint.mjs
+	./scripts/harness/verify-lint.ts
 .PHONY: harness-check
 
 cache-gc: ## 🗑️  Take out of the result store what no ref reaches any more
-	./scripts/harness/gc.mjs
+	./scripts/harness/gc.ts
 .PHONY: cache-gc
 
 breaks-check: ## ↩️  Check that every line spelling a line break in lib/ is classified
-	./scripts/check-break-readings.js
+	./scripts/check-break-readings.ts
 .PHONY: breaks-check
 
 verify: check lint test prose-check breaks-check build ## ✅ Run every check the CI runs

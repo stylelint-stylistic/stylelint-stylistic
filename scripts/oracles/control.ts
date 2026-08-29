@@ -10,19 +10,16 @@
 
 import { stdout } from "node:process"
 
-import { lint } from "../harness/lint.mjs"
+import { lint } from "../harness/lint.ts"
 
-import { buildRuns } from "./runs.mjs"
+import { buildRuns } from "./runs.ts"
 
 /** The inline comment every fixture is written with, and the block comment of exactly its width that stands in its place. Both are spelled out of the source of this file, so that nothing here is read as a comment of its own. */
 const INLINE_COMMENT = `//${` `}c`
 const BLOCK_COMMENT = `/${`*`.repeat(2)}/`
 
-/**
- * The shapes a comment can stand in, each of them the same code whichever way the comment is spelled. The last two were written for #139: no earlier one puts the comment inside a set of parameters that carries on past it — in every other bodiless at-rule here the comment lands in `raws.between` and the syntax keeps no second copy — so no fixture reached `at-rule-semicolon-space-before` at all; and none put the break closing the comment where a rule counting past it lands on the next line rather than in the next column.
- * @type {[string, string][]}
- */
-const CORPUS = [
+/** The shapes a comment can stand in, each of them the same code whichever way the comment is spelled. The last two were written for #139: no earlier one puts the comment inside a set of parameters that carries on past it — in every other bodiless at-rule here the comment lands in `raws.between` and the syntax keeps no second copy — so no fixture reached `at-rule-semicolon-space-before` at all; and none put the break closing the comment where a rule counting past it lands on the next line rather than in the next column. */
+const CORPUS: [string, string][] = [
 	[`value-continues`, `a { b: 1px ${INLINE_COMMENT}\n\t2px; }\n`],
 	[`value-ends-block`, `a {\n\tcolor: pink ${INLINE_COMMENT}\n}\n`],
 	[`decl-then-decl`, `a {\n\tcolor: pink ${INLINE_COMMENT}\n\tcolor: red;\n}\n`],
@@ -43,11 +40,11 @@ const CORPUS = [
 
 /**
  * Lints one snippet and hands back what it said.
- * @param {string} code - The snippet.
- * @param {import('../harness/lint.mjs').Config} config - The Stylelint configuration.
- * @returns {Promise<string[]>} The warnings, each with its position.
+ * @param code - The snippet.
+ * @param config - The Stylelint configuration.
+ * @returns The warnings, each with its position.
  */
-async function warningsOf (code, config) {
+async function warningsOf (code: string, config: import("../harness/lint.ts").Config): Promise<string[]> {
 	let result = await lint({ code, config, fix: false })
 
 	return result.results[0].warnings.map((warning) => `${warning.line}:${warning.column} ${warning.text}`)
@@ -55,10 +52,10 @@ async function warningsOf (code, config) {
 
 /**
  * Lints one fixture in both of its spellings and compares what each one drew.
- * @param {import('./runs.mjs').Run} run - The rule, the option, the syntax and the fixture.
- * @returns {Promise<object | null>} The finding, or null where the two agree.
+ * @param run - The rule, the option, the syntax and the fixture.
+ * @returns The finding, or null where the two agree.
  */
-async function probe (run) {
+async function probe (run: import("./runs.ts").Run): Promise<object | null> {
 	let inline
 	let block
 
@@ -76,8 +73,7 @@ async function probe (run) {
 	return { rule: run.rule, primary: run.primary, syntaxName: run.syntaxName, name: run.name, inline, block }
 }
 
-/** @type {object[]} */
-let findings = []
+let findings: object[] = []
 
 for (let run of buildRuns(CORPUS)) {
 	// eslint-disable-next-line no-await-in-loop

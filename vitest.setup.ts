@@ -5,7 +5,7 @@ import stylelint from "stylelint"
 import { assert, describe, expect, it } from "vitest"
 
 import rules from "./lib/rules/index.ts"
-import { lintDirect } from "./scripts/harness/lint.mjs"
+import { lintDirect } from "./scripts/harness/lint.ts"
 
 // The plugin is named by its path rather than handed over as objects, so that the testing library has no plugin objects to deep-clone for every case that carries no line break — it clones them to force `context.newline`, which no rule of this plugin reads any more
 const PLUGIN = new URL(`./lib/index.ts`, import.meta.url).pathname

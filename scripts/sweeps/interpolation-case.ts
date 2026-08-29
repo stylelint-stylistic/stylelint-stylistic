@@ -4,13 +4,11 @@
  * Written for #298, where `unit-case` recased the name inside `10px#{$a != $b}` because the parser had cut the interpolation into words and no word held the whole of it; the corpus of that branch is rebuilt here from the axes `.claude/docs/method-sweep.md` records, and the numbers of that branch are not to be read off it. The twelve controls open no interpolation in plain CSS, since a corpus that puts an interpolation into every form is blind to what a branch does where there is none — the second draft of that fix stopped checking a value whose braces stand in two comments, and no row could say so.
  */
 
-import { multiply, place } from "../harness/matrix.mjs"
+import { multiply, place } from "../harness/matrix.ts"
 
-/** @type {Record<string, string>} */
-const OPENERS = { sass: `#{`, less: `@{`, postcssSimpleVars: `$(` }
+const OPENERS: Record<string, string> = { sass: `#{`, less: `@{`, postcssSimpleVars: `$(` }
 
-/** @type {Record<string, string>} */
-const CLOSERS = { sass: `}`, less: `}`, postcssSimpleVars: `)` }
+const CLOSERS: Record<string, string> = { sass: `}`, less: `}`, postcssSimpleVars: `)` }
 
 const TEXTS = { name: `$a`, comparison: `$a != $b`, product: `$m * 2px`, productEndingInDigit: `$n * 2`, twoDimensions: `2px 3rem`, upper: `$A`, upperUnit: `10PX`, unitAlone: `px`, upperUnitAlone: `PX`, sum: `$a + 1`, call: `f($a)`, quoted: `"PX"`, spacedName: ` $a `, hex: `#FFF`, empty: `` }
 
@@ -18,11 +16,8 @@ const HEADS = { none: ``, unit: `10px`, upperUnit: `10PX`, product: `1px*2rem`, 
 
 const TAILS = { none: ``, unit: `10px`, upperUnit: `10PX`, unitAlone: `px`, upperUnitAlone: `PX`, spacedUnit: ` 10px` }
 
-/**
- * Values whose braces open no interpolation in plain CSS: a pair in a comment, in a string, and a bare one.
- * @type {[string, string][]}
- */
-const CONTROLS = [
+/** Values whose braces open no interpolation in plain CSS: a pair in a comment, in a string, and a bare one. */
+const CONTROLS: [string, string][] = [
 	[`control|comment-pair`, `1px /* { */ 10PX /* } */`],
 	[`control|string-pair`, `"{" 10PX "}"`],
 	[`control|bare-pair`, `{ 10PX }`],

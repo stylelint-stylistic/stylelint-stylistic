@@ -13,10 +13,10 @@ const ROOT = execFileSync(`git`, [`rev-parse`, `--show-toplevel`], { encoding: `
 
 /**
  * Hands back the path of a revision's `lib/`, extracting it where it is not on disk yet.
- * @param {string} revision - Anything `git rev-parse` reads, or `worktree` for the working tree as it stands.
- * @returns {string} The absolute path of that `lib/`.
+ * @param revision - Anything `git rev-parse` reads, or `worktree` for the working tree as it stands.
+ * @returns The absolute path of that `lib/`.
  */
-function libAt (revision) {
+function libAt (revision: string): string {
 	if (revision === `worktree`) return path.join(ROOT, `lib`)
 
 	let tree = execFileSync(`git`, [`rev-parse`, `${revision}:lib`], { cwd: ROOT, encoding: `utf8` }).trim()
@@ -34,11 +34,11 @@ function libAt (revision) {
  * Names the entry file of a checkout's `lib/` under one name, in whichever of the two spellings the checkout keeps it.
  *
  * The migration to TypeScript renames every module of `lib/` from `.js` to `.ts`, and a base a branch is measured against keeps the spelling it was written with; a run asks both sides in one process, so the file has to be found rather than named. The probe goes once the base of every branch is on the far side of the migration.
- * @param {string} lib - The path of the checkout's `lib/` directory.
- * @param {string} name - The module, relative to `lib/` and without its extension.
- * @returns {string} The absolute path of that module.
+ * @param lib - The path of the checkout's `lib/` directory.
+ * @param name - The module, relative to `lib/` and without its extension.
+ * @returns The absolute path of that module.
  */
-function entryAt (lib, name) {
+function entryAt (lib: string, name: string): string {
 	let typescript = path.join(lib, `${name}.ts`)
 
 	return existsSync(typescript) ? typescript : path.join(lib, `${name}.js`)
@@ -46,9 +46,9 @@ function entryAt (lib, name) {
 
 /**
  * Names the revision a branch is measured against: where it left `origin/main`.
- * @returns {string} The commit.
+ * @returns The commit.
  */
-function defaultBase () {
+function defaultBase (): string {
 	return execFileSync(`git`, [`merge-base`, `HEAD`, `origin/main`], { cwd: ROOT, encoding: `utf8` }).trim()
 }
 

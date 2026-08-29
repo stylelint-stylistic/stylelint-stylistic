@@ -11,8 +11,8 @@ import { readdirSync, readFileSync, rmSync } from "node:fs"
 import path from "node:path"
 import { stdout } from "node:process"
 
-import { CACHE_DIR } from "./cache.mjs"
-import { ROOT } from "./checkout.mjs"
+import { CACHE_DIR } from "./cache.ts"
+import { ROOT } from "./checkout.ts"
 
 let commits = execFileSync(`git`, [`rev-list`, `--branches`, `--remotes`, `--tags`], { cwd: ROOT, encoding: `utf8` }).trim().split(`\n`)
 let trees = new Set(execFileSync(`git`, [`cat-file`, `--batch-check=%(objectname)`], { cwd: ROOT, encoding: `utf8`, input: commits.map((commit) => `${commit}:lib\n`).join(``) }).trim().split(`\n`))

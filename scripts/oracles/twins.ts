@@ -21,9 +21,9 @@
 
 import { stdout } from "node:process"
 
-import { lint } from "../harness/lint.mjs"
+import { lint } from "../harness/lint.ts"
 
-import { buildRuns, isUsable } from "./runs.mjs"
+import { buildRuns, isUsable } from "./runs.ts"
 
 /** Every break of a text, a Windows pair counting as one so that normalising never leaves an empty line behind it. */
 const EVERY_BREAK = /\r?\n/gu
@@ -42,20 +42,20 @@ const SPELLING_IS_THE_SUBJECT = new Set([`linebreaks`])
 
 /**
  * Spells every break of a text with one character in place of the line feed.
- * @param {string} code - The line-feed original.
- * @param {string} spelling - The break to write in its place.
- * @returns {string} The twin.
+ * @param code - The line-feed original.
+ * @param spelling - The break to write in its place.
+ * @returns The twin.
  */
-function respell (code, spelling) {
+function respell (code: string, spelling: string): string {
 	return code.replaceAll(`\n`, spelling)
 }
 
 /**
  * Writes every break of a text back as a line feed, so that two outputs can be compared on what the fix did rather than on which character it wrote.
- * @param {string} code - The text to normalise.
- * @returns {string} The same text with one spelling of a break throughout.
+ * @param code - The text to normalise.
+ * @returns The same text with one spelling of a break throughout.
  */
-function normalise (code) {
+function normalise (code: string): string {
 	return code.replaceAll(EVERY_BREAK, `\n`)
 }
 
@@ -63,11 +63,11 @@ function normalise (code) {
  * Lints a text once for its warnings and once for its fix.
  *
  * A run that says nothing is told apart from one the syntax could not read at all, since the second is a finding here rather than a fixture to pass over: where the original parses and the twin does not, the syntax itself reads one break and not another, and that is the same bug this oracle is about, one layer down in a dependency.
- * @param {string} code - The text to lint.
- * @param {import('../harness/lint.mjs').Config} config - The configuration to lint it under.
- * @returns {Promise<{ read: false, unparsable: boolean, detail?: string } | { read: true, warnings: string[], positions: string[], output: string }>} What the rule said and wrote, or why the run cannot be read.
+ * @param code - The text to lint.
+ * @param config - The configuration to lint it under.
+ * @returns What the rule said and wrote, or why the run cannot be read.
  */
-async function ask (code, config) {
+async function ask (code: string, config: import("../harness/lint.ts").Config): Promise<{ read: false, unparsable: boolean, detail?: string } | { read: true, warnings: string[], positions: string[], output: string }> {
 	let checked
 	let fixed
 
@@ -76,7 +76,7 @@ async function ask (code, config) {
 		fixed = await lint({ code, config, fix: true })
 	}
 	catch (error) {
-		return { read: false, unparsable: true, detail: `threw: ${/** @type {{ message: string }} */ (error).message}` }
+		return { read: false, unparsable: true, detail: `threw: ${(error as { message: string }).message}` }
 	}
 
 	let [first] = checked.results
@@ -95,19 +95,19 @@ async function ask (code, config) {
 
 /**
  * Names a run, without carrying its configuration into the report.
- * @param {import('./runs.mjs').Run} run - The run to name.
- * @returns {object} The four fields that identify it.
+ * @param run - The run to name.
+ * @returns The four fields that identify it.
  */
-function label (run) {
+function label (run: import("./runs.ts").Run): object {
 	return { rule: run.rule, primary: run.primary, syntaxName: run.syntaxName, name: run.name }
 }
 
 /**
  * Asks one fixture and its three twins, and reports where they disagree.
- * @param {import('./runs.mjs').Run} run - The rule, the option, the syntax and the fixture.
- * @returns {Promise<object[]>} Every finding of this run, and the empty array where there is none.
+ * @param run - The rule, the option, the syntax and the fixture.
+ * @returns Every finding of this run, and the empty array where there is none.
  */
-async function probe (run) {
+async function probe (run: import("./runs.ts").Run): Promise<object[]> {
 	if (SPELLING_IS_THE_SUBJECT.has(run.rule)) return []
 
 	// The fixture is normalised rather than passed over where it spells a break with a pair already: respelling a line feed in a text that holds `\r\n` would make two breaks of one, while normalising first makes every fixture a line-feed original with a twin, and the `crlf` shape of the shared corpus — one of the few carrying whitespace in front of a break, which is what #247 turns on — joins the run instead of being skipped
@@ -125,8 +125,7 @@ async function probe (run) {
 
 	if (!original.read) return []
 
-	/** @type {object[]} */
-	let findings = []
+	let findings: object[] = []
 
 	for (let [spelling, character] of TWINS) {
 		let code = respell(source, character)
@@ -165,8 +164,7 @@ async function probe (run) {
 	return findings
 }
 
-/** @type {object[]} */
-let findings = []
+let findings: object[] = []
 
 for (let run of buildRuns()) {
 	// eslint-disable-next-line no-await-in-loop

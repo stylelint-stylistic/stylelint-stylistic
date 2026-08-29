@@ -3,7 +3,7 @@
 /**
  * Runs one sweep on both sides and writes the diff.
  *
- * A sweep is a module exporting its `name`, its `corpus` — a list of keyed texts, most often built with `scripts/harness/matrix.mjs` — its `configs`, each a rule under a primary option and, where there are any, secondary ones, and the `syntaxes` it is read under. Every text is linted under every configuration and syntax twice, checked and fixed, on the base and on the branch, and the finding is what moved between the two: `tmp/sweeps/<name>.md` holds it row by row; the two sides themselves stand in the store.
+ * A sweep is a module exporting its `name`, its `corpus` — a list of keyed texts, most often built with `scripts/harness/matrix.ts` — its `configs`, each a rule under a primary option and, where there are any, secondary ones, and the `syntaxes` it is read under. Every text is linted under every configuration and syntax twice, checked and fixed, on the base and on the branch, and the finding is what moved between the two: `tmp/sweeps/<name>.md` holds it row by row; the two sides themselves stand in the store.
  *
  * Each side is kept in the store with a digest beside it — one short hash per row — and a run compares the digests, reading the rows themselves only for the keys that moved. Started through `make sweep FILE=…`.
  */
@@ -12,25 +12,23 @@ import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { argv, exit, stderr, stdout } from "node:process"
 
-import { digestOf, hashAt, keyOf, read, readDigest, write } from "../harness/cache.mjs"
-import { defaultBase, libAt, ROOT } from "../harness/checkout.mjs"
-import { diff, render } from "../harness/diff.mjs"
-import { lintDirect, loadRules } from "../harness/lint.mjs"
+import { digestOf, hashAt, keyOf, read, readDigest, write } from "../harness/cache.ts"
+import { defaultBase, libAt, ROOT } from "../harness/checkout.ts"
+import { diff, render } from "../harness/diff.ts"
+import { lintDirect, loadRules } from "../harness/lint.ts"
 
-/**
- * The syntax each name is read under, plain CSS under none.
- * @type {Record<string, string | undefined>}
- */
-const SYNTAXES = { css: undefined, scss: `postcss-scss`, less: `postcss-less` }
+/** The syntax each name is read under, plain CSS under none. */
+const SYNTAXES: Record<string, string | undefined> = { css: undefined, scss: `postcss-scss`, less: `postcss-less` }
 
-/** @typedef {{ name: string, corpus: [string, string][], configs: { rule: string, primary: unknown, secondary?: object }[], syntaxes?: string[] }} Sweep What a sweep module exports. */
+/** What a sweep module exports. */
+type Sweep = { name: string, corpus: [string, string][], configs: { rule: string, primary: unknown, secondary?: object }[], syntaxes?: string[] }
 
 /**
  * Lints one text under one configuration, checking and fixing, and reads the fix back.
- * @param {Omit<Parameters<typeof lintDirect>[0], 'fix'>} options - What `lintDirect` takes, without `fix`.
- * @returns {Promise<object>} The row: the warnings the check drew, the text the fix left and whether the syntax reads it — or why the run says nothing.
+ * @param options - What `lintDirect` takes, without `fix`.
+ * @returns The row: the warnings the check drew, the text the fix left and whether the syntax reads it — or why the run says nothing.
  */
-async function measureOne (options) {
+async function measureOne (options: Omit<Parameters<typeof lintDirect>[0], `fix`>): Promise<object> {
 	let checked = await lintDirect(options)
 
 	if (checked.unparsable) return { unparsable: true }
@@ -47,18 +45,16 @@ async function measureOne (options) {
 
 /**
  * Lints every text of the corpus under every configuration and syntax, with one registry.
- * @param {Sweep} sweep - The sweep module.
- * @param {import('../harness/lint.mjs').Registry} registry - The rules of one side.
- * @returns {Promise<Record<string, object>>} Every row by its key.
+ * @param sweep - The sweep module.
+ * @param registry - The rules of one side.
+ * @returns Every row by its key.
  */
-async function measure (sweep, registry) {
-	/** @type {Record<string, object>} */
-	let rows = {}
+async function measure (sweep: Sweep, registry: import("../harness/lint.ts").Registry): Promise<Record<string, object>> {
+	let rows: Record<string, object> = {}
 
 	for (let syntaxName of sweep.syntaxes ?? Object.keys(SYNTAXES)) {
 		for (let config of sweep.configs) {
-			/** @type {import('../harness/lint.mjs').RuleSetting[]} */
-			let rules = [[config.rule, config.primary, config.secondary]]
+			let rules: import("../harness/lint.ts").RuleSetting[] = [[config.rule, config.primary, config.secondary]]
 
 			for (let [key, code] of sweep.corpus) {
 				// The rows are measured in turn so that a run stays as light on the machine as the one it replaces
@@ -74,16 +70,15 @@ async function measure (sweep, registry) {
 let [file, base = defaultBase()] = argv.slice(2)
 
 if (!file) {
-	stderr.write(`Usage: run.mjs <sweep module> [base revision]\n`)
+	stderr.write(`Usage: run.ts <sweep module> [base revision]\n`)
 	exit(2)
 }
 
-/** @type {Sweep} */
-let sweep = await import(path.resolve(file))
+let sweep: Sweep = await import(path.resolve(file))
 let sides = { base, head: `worktree` }
 
-/** @type {Record<string, { digest: Record<string, string>, rows: () => Record<string, object> }>} Each side as its digest, and its rows behind a call, since the rows are read only for the keys the digests say have moved. */
-let results = {}
+/** Each side as its digest, and its rows behind a call, since the rows are read only for the keys the digests say have moved. */
+let results: Record<string, { digest: Record<string, string>, rows: () => Record<string, object> }> = {}
 
 for (let [side, revision] of Object.entries(sides)) {
 	// A side is measured once by what it depends on — the rules, the sweep and the runner — and read back on every later run; the two are taken in turn, base first
@@ -92,11 +87,10 @@ for (let [side, revision] of Object.entries(sides)) {
 	let digest = readDigest(`sweeps`, sweep.name, key)
 
 	if (digest) {
-		/** @type {Record<string, object> | undefined} */
-		let rows
+		let rows: Record<string, object> | undefined
 
 		// The store hands back what was written, and a sweep writes its rows by key
-		results[side] = { digest, rows: () => (rows ??= /** @type {Record<string, object>} */ (read(`sweeps`, sweep.name, key))) }
+		results[side] = { digest, rows: (): Record<string, object> => (rows ??= (read(`sweeps`, sweep.name, key) as Record<string, object>)) }
 		continue
 	}
 
@@ -106,7 +100,7 @@ for (let [side, revision] of Object.entries(sides)) {
 
 	digest = digestOf(rows)
 	write(`sweeps`, sweep.name, key, rows, { ...inputs, revision, root: ROOT }, digest)
-	results[side] = { digest, rows: () => rows }
+	results[side] = { digest, rows: (): Record<string, object> => rows }
 }
 
 let out = path.join(ROOT, `tmp`, `sweeps`)

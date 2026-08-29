@@ -8,9 +8,9 @@
 
 import { stdout } from "node:process"
 
-import { lint } from "../harness/lint.mjs"
+import { lint } from "../harness/lint.ts"
 
-import { buildRuns, isUsable } from "./runs.mjs"
+import { buildRuns, isUsable } from "./runs.ts"
 
 /** Every opening a comment can be spelled with, counted apart so that one kind turning into the other is a finding too. */
 const EVERY_BLOCK_OPENING = /\/\*/gu
@@ -18,19 +18,19 @@ const EVERY_INLINE_OPENING = /\/\//gu
 
 /**
  * Counts the comment openings a text holds.
- * @param {string} text - The text to count in.
- * @returns {string} The tally, as a key two texts can be compared by.
+ * @param text - The text to count in.
+ * @returns The tally, as a key two texts can be compared by.
  */
-function tally (text) {
+function tally (text: string): string {
 	return `block:${(text.match(EVERY_BLOCK_OPENING) ?? []).length} inline:${(text.match(EVERY_INLINE_OPENING) ?? []).length}`
 }
 
 /**
  * Fixes one fixture and counts what came out against what went in.
- * @param {import('./runs.mjs').Run} run - The rule, the option, the syntax and the fixture.
- * @returns {Promise<object | null>} The finding, or null where there is none.
+ * @param run - The rule, the option, the syntax and the fixture.
+ * @returns The finding, or null where there is none.
  */
-async function probe (run) {
+async function probe (run: import("./runs.ts").Run): Promise<object | null> {
 	let before = tally(run.code)
 
 	if (before === `block:0 inline:0`) return null
@@ -56,8 +56,7 @@ async function probe (run) {
 	return { rule: run.rule, primary: run.primary, syntaxName: run.syntaxName, name: run.name, before, after, code: run.code, output }
 }
 
-/** @type {object[]} */
-let findings = []
+let findings: object[] = []
 
 for (let run of buildRuns()) {
 	// eslint-disable-next-line no-await-in-loop
