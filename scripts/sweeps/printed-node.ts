@@ -8,6 +8,8 @@
 
 import { place } from "../harness/matrix.ts"
 
+import type { Sweep } from "./run.ts"
+
 /** The comment, in the two spellings of the same width, and the two shapes that carry no comment. A block comment is what the inline one is measured against, since neither the file nor the code around it differs by a character between the two. */
 const COMMENTS = { inline: `// c`, block: `/**/`, none: ``, twoInline: `// c\n\t// c` }
 
@@ -32,7 +34,7 @@ const PLACES: Record<string, (comment: string) => string> = {
 }
 
 /** The shapes whose printed copy parts from the file for a reason other than a comment: a Less mixin call, whose leading dot and flag live in raws PostCSS prints neither of, and a Sass nested property, a declaration carrying a block that `postcss-scss` prints and PostCSS's own stringifier drops. The detached ruleset and the free semicolon behind a brace are controls: the two stringifiers agree on both, and a corpus in which every shape diverges says nothing about what the change does where none does. Five of them put a bang and a comma on either side of that block and three put a sibling behind it, since a rule reading a declaration's own text has to be measured on one that holds something to read and on one the rule does not pass over: the first draft of this branch handed such a declaration to the bang and comma checkers with the block laid onto the end of it, and every bang and comma the block held came past the checker a second time; the second draft handed it to the `declaration-block-semicolon-*-before` rules the same way, and every fixture that had it standing last in its block was passed over by all four of them before they could say so. */
-const RAW_SHAPES = [
+const RAW_SHAPES: [string, string][] = [
 	[`raw|lessMixinCall`, `a {\n\t.m()\n}\n`],
 	[`raw|lessMixinCallWithBang`, `a {\n\t.m() !important\n}\n`],
 	[`raw|lessMixinCallThenDecl`, `a {\n\t.m();\n\tcolor: pink;\n}\n`],
@@ -53,15 +55,15 @@ const RAW_SHAPES = [
 	[`raw|freeSemicolonBehindBrace`, `a { &:hover { color: pink;; }; }\n`],
 ]
 
-const name = `printed-node`
+const name: Sweep[`name`] = `printed-node`
 
-const corpus = [
+const corpus: Sweep[`corpus`] = [
 	...place(Object.entries(COMMENTS), PLACES),
 	...RAW_SHAPES,
 ]
 
 /** Every rule this branch rewrites a measurement in, under every primary option `scripts/oracles/options.ts` lists for it. */
-const configs = ([
+const configs: Sweep[`configs`] = ([
 	[`at-rule-semicolon-newline-after`, [`always`]],
 	[`at-rule-semicolon-space-before`, [`always`, `never`]],
 	[`block-closing-brace-empty-line-before`, [`always-multi-line`, `never`]],

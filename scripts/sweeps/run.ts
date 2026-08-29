@@ -21,7 +21,7 @@ import { lintDirect, loadRules, type Registry, type RuleSetting } from "../harne
 const SYNTAXES: Record<string, string | undefined> = { css: undefined, scss: `postcss-scss`, less: `postcss-less` }
 
 /** What a sweep module exports. */
-type Sweep = {
+export type Sweep = {
 	name: string,
 	corpus: [string, string][],
 	configs: { rule: string, primary: unknown, secondary?: object }[],
@@ -97,8 +97,16 @@ for (let [side, revision] of Object.entries(sides)) {
 	if (digest) {
 		let rows: Record<string, object> | undefined
 
-		// The store hands back what was written, and a sweep writes its rows by key
-		results[side] = { digest, rows: (): Record<string, object> => (rows ??= (read(`sweeps`, sweep.name, key) as Record<string, object>)) }
+		results[side] = {
+			digest,
+			rows: (): Record<string, object> => {
+				rows ??= read<Record<string, object>>(`sweeps`, sweep.name, key)
+
+				if (!rows) throw new Error(`The store holds the digest of ${sweep.name} and not its rows`)
+
+				return rows
+			},
+		}
 		continue
 	}
 

@@ -80,8 +80,7 @@ for (let [side, revision] of Object.entries(sides)) {
 	for (let oracle of ORACLES) {
 		let inputs = inputsOf(oracle, revision)
 		let key = keyOf(inputs)
-		// The store hands back what was written, and an oracle writes its rows as a list
-		let rows = read(`oracles`, oracle, key) as Record<string, unknown>[] | undefined
+		let rows = read<Record<string, unknown>[]>(`oracles`, oracle, key)
 
 		if (rows) results[side][oracle] = rows
 		else plan.push({ side, revision, oracle, key, inputs })

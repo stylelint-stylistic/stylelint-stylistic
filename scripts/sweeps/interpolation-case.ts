@@ -6,6 +6,8 @@
 
 import { multiply, place } from "../harness/matrix.ts"
 
+import type { Sweep } from "./run.ts"
+
 const OPENERS: Record<string, string> = { sass: `#{`, less: `@{`, postcssSimpleVars: `$(` }
 
 const CLOSERS: Record<string, string> = { sass: `}`, less: `}`, postcssSimpleVars: `)` }
@@ -32,9 +34,9 @@ const CONTROLS: [string, string][] = [
 	[`control|parens`, `(10PX)`],
 ]
 
-const name = `interpolation-case`
+const name: Sweep[`name`] = `interpolation-case`
 
-const corpus = place(
+const corpus: Sweep[`corpus`] = place(
 	[
 		...multiply({ spelling: OPENERS, text: TEXTS, head: HEADS, tail: TAILS }, ({ spelling, text, head, tail }) => {
 			let language = Object.keys(OPENERS).find((key) => OPENERS[key] === spelling)
@@ -54,7 +56,7 @@ const corpus = place(
 	},
 )
 
-const configs = [
+const configs: Sweep[`configs`] = [
 	{ rule: `unit-case`, primary: `lower` },
 	{ rule: `unit-case`, primary: `upper` },
 	{ rule: `color-hex-case`, primary: `lower` },

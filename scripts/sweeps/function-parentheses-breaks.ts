@@ -6,6 +6,8 @@
 
 import { multiply, place } from "../harness/matrix.ts"
 
+import type { Sweep } from "./run.ts"
+
 const LINE_SEPARATOR = String.fromCodePoint(0x2028)
 const PARAGRAPH_SEPARATOR = String.fromCodePoint(0x2029)
 const NO_BREAK_SPACE = String.fromCodePoint(0x00a0)
@@ -16,14 +18,14 @@ const COMMENTS = { inline: `//c`, inlineThenBlockOpener: `//c/*x`, block: `/*b*/
 
 const TAILS = { none: ``, block: `/*t*/`, blockOverLs: `/*t${LINE_SEPARATOR}u*/`, blockOverLf: `/*t\nu*/`, blockOpen: `/*t*`, word: `d` }
 
-const name = `function-parentheses-breaks`
+const name: Sweep[`name`] = `function-parentheses-breaks`
 
-const corpus = place(
+const corpus: Sweep[`corpus`] = place(
 	multiply({ comment: COMMENTS, first: BREAKS, second: BREAKS, tail: TAILS }, ({ comment, first, second, tail }) => `translate(1px, 2px ${comment}${first}${tail}${second})`),
 	{ singleLine: (value) => `a { transform: ${value}; }`, multiLine: (value) => `a { transform: 1px,\n${value}; }` },
 )
 
-const configs = [
+const configs: Sweep[`configs`] = [
 	{ rule: `function-parentheses-space-inside`, primary: `always` },
 	{ rule: `function-parentheses-space-inside`, primary: `never` },
 	{ rule: `function-parentheses-space-inside`, primary: `always-single-line` },

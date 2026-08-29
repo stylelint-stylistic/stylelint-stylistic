@@ -97,7 +97,7 @@ function fileOf (kind: string, name: string, key: string): string {
  * @param rows - The rows by key.
  * @returns A hash of each row by the same key.
  */
-function digestOf (rows: Record<string, unknown>): Record<string, string> {
+function digestOf (rows: Record<string, unknown> | unknown[]): Record<string, string> {
 	let digest: Record<string, string> = {}
 
 	for (let [key, row] of Object.entries(rows)) digest[key] = createHash(`sha1`).update(JSON.stringify(row)).digest(`hex`).slice(0, 16)
@@ -123,12 +123,12 @@ function digestFileOf (kind: string, name: string, key: string): string {
  * @param key - The key.
  * @returns The rows, or nothing where none were kept.
  */
-function read (kind: string, name: string, key: string): unknown | undefined {
+function read<T> (kind: string, name: string, key: string): T | undefined {
 	let file = fileOf(kind, name, key)
 
 	if (!existsSync(file)) return
 
-	return JSON.parse(readFileSync(file, `utf8`))
+	return JSON.parse(readFileSync(file, `utf8`)) as T
 }
 
 /** The digests read in this process, by file. */
@@ -161,14 +161,14 @@ function readDigest (kind: string, name: string, key: string): Record<string, st
  * @param meta - What the key was made of, and where and when the run was made, kept beside the rows for a reader and for the collector.
  * @param digest - The digest of the rows, where the caller has it already.
  */
-function write (kind: string, name: string, key: string, rows: unknown, meta: object, digest?: Record<string, string>): void {
+function write (kind: string, name: string, key: string, rows: Record<string, unknown> | unknown[], meta: object, digest?: Record<string, string>): void {
 	let file = fileOf(kind, name, key)
 
 	if (existsSync(file)) throw new Error(`${file} is already written; a result is written once, and a second answer to the same question is a finding rather than an update`)
 
 	mkdirSync(path.dirname(file), { recursive: true })
 	writeFileSync(file, JSON.stringify(rows))
-	writeFileSync(digestFileOf(kind, name, key), JSON.stringify(digest ?? digestOf(rows as Record<string, unknown>)))
+	writeFileSync(digestFileOf(kind, name, key), JSON.stringify(digest ?? digestOf(rows)))
 	writeFileSync(`${file.slice(0, -5)}.meta.json`, `${JSON.stringify({ ...meta, writtenAt: new Date().toISOString() }, null, `\t`)}\n`)
 	chmodSync(file, READ_ONLY)
 	chmodSync(digestFileOf(kind, name, key), READ_ONLY)
