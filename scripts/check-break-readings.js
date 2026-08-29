@@ -3,13 +3,13 @@
 /**
  * Accounts for every line of `lib/` that spells a line break, and refuses one nobody has classified.
  *
- * [AGENTS.md](../AGENTS.md) asks that every regular expression the plugin reads a stylesheet with live in [lib/regexps.js](../lib/regexps.js) under a name, so that a question is asked once and in the same words wherever it is asked. A comparison is not a regular expression, though, and a `===` against a break character, an `includes` of one, a `style-search` target and a pattern built out of a template literal all slip past that convention — which is where #246 stood, and where half the readings of a break in this plugin still stand. `oxlint` has no `no-restricted-syntax`, so the check is written here.
+ * [AGENTS.md](../AGENTS.md) asks that every regular expression the plugin reads a stylesheet with live in [lib/regexps.ts](../lib/regexps.ts) under a name, so that a question is asked once and in the same words wherever it is asked. A comparison is not a regular expression, though, and a `===` against a break character, an `includes` of one, a `style-search` target and a pattern built out of a template literal all slip past that convention — which is where #246 stood, and where half the readings of a break in this plugin still stand. `oxlint` has no `no-restricted-syntax`, so the check is written here.
  *
  * The first draft of it looked for the shapes a reading is written in, and missed thirteen of them, one being the very line #247 is about. Looking for shapes cannot work: a reading can be spelled in as many ways as JavaScript has syntax, and every list of those is a list of the ones somebody thought of. So the question is turned around. **Every line spelling a break is a finding until it is classified**, and the two lists below are the classification — which cannot leak, since a line matching neither is what the check fails on.
  *
  * `ALLOWED` is a line that puts a break into a text, or spells a stylesheet as data. It asks nothing, so it may stand anywhere and stay for ever: a fixer has to be free to write the character the file is spelled with.
  *
- * `DEBT` is a line that reads one. Each is a place the next bug of the class can be, and the list is meant to shrink: taking a line off it means either asking the question through a name in `lib/regexps.js`, or — where the narrow reading is the right one — moving it behind a name of its own that says so. Nothing here says a listed reading is wrong. Several are right and say why in a comment beside them, `whitespaceChecker`'s own three-character test among them. What the list says is that they stand outside the one place this question is meant to be answered from.
+ * `DEBT` is a line that reads one. Each is a place the next bug of the class can be, and the list is meant to shrink: taking a line off it means either asking the question through a name in `lib/regexps.ts`, or — where the narrow reading is the right one — moving it behind a name of its own that says so. Nothing here says a listed reading is wrong. Several are right and say why in a comment beside them, `whitespaceChecker`'s own three-character test among them. What the list says is that they stand outside the one place this question is meant to be answered from.
  *
  * A line is matched by its text rather than by its number, so moving one leaves it classified while changing one asks for the classification again, and the two lists are counted rather than looked up, or a second copy of a listed line would grow the debt without the list saying so.
  *
@@ -56,15 +56,15 @@ const ALLOWED = {
 		`let allowedLFNewLinesString = \`\\n\`.repeat(maxAdjacentNewlines)`,
 		`let allowedCRLFNewLinesString = \`\\r\\n\`.repeat(maxAdjacentNewlines)`,
 	],
-	"lib/utils/getLineBreak/index.js": [
+	"lib/utils/getLineBreak/index.ts": [
 		`const BREAK_OF_OPTION = { unix: \`\\n\`, windows: \`\\r\\n\` }`,
 		`return lineBreakOfFile(node) ?? \`\\n\``,
 	],
-	"lib/utils/readsInlineComments/index.js": [`const INLINE_COMMENT_PROBE = \`a {}\\n// comment\\na { b: 'x', // comment\\n  'y'; }\\n\``],
+	"lib/utils/readsInlineComments/index.ts": [`const INLINE_COMMENT_PROBE = \`a {}\\n// comment\\na { b: 'x', // comment\\n  'y'; }\\n\``],
 }
 
 /**
- * Every line that reads a break without asking `lib/regexps.js` what one is.
+ * Every line that reads a break without asking `lib/regexps.ts` what one is.
  * @type {Record<string, string[]>}
  */
 const DEBT = {
@@ -110,12 +110,12 @@ const DEBT = {
 		`let violatedCRLFNewLinesRegex = new RegExp(\`(?:\\r\\n){\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
 		`let violatedLFNewLinesRegex = new RegExp(\`\\n{\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
 	],
-	"lib/utils/findCommentSpans/index.js": [
+	"lib/utils/findCommentSpans/index.ts": [
 		`let index = text.indexOf(\`\\n\`, openIndex)`,
 		`return text[index - 1] === \`\\r\` ? index - 1 : index`,
 	],
-	"lib/utils/isWhitespace/index.js": [`return [\` \`, \`\\n\`, \`\\t\`, \`\\r\`, \`\\f\`].includes(char)`],
-	"lib/utils/whitespaceChecker/index.js": [
+	"lib/utils/isWhitespace/index.ts": [`return [\` \`, \`\\n\`, \`\\t\`, \`\\r\`, \`\\f\`].includes(char)`],
+	"lib/utils/whitespaceChecker/index.ts": [
 		`return char === \`\\n\``,
 		`if (oneCharAfter === \`\\r\` && twoCharsAfter === \`\\n\` && (activeArgs.onlyOneChar || isNullish(threeCharsAfter) || !isWhitespace(threeCharsAfter))) return`,
 	],
@@ -176,7 +176,7 @@ for (let path of [...Object.keys(ALLOWED), ...Object.keys(DEBT)]) {
 	if (!seen.has(path)) stale.push(`${path}\t(the file itself is gone)`)
 }
 
-if (unclassified.length > 0) stdout.write(`\tA line spells a line break and neither list accounts for it:\n\t\t${unclassified.join(`\n\t\t`)}\n\tIf it reads a break, ask the question through a name in lib/regexps.js or add the line to DEBT in scripts/check-break-readings.js. If it only writes one, add it to ALLOWED.\n`)
+if (unclassified.length > 0) stdout.write(`\tA line spells a line break and neither list accounts for it:\n\t\t${unclassified.join(`\n\t\t`)}\n\tIf it reads a break, ask the question through a name in lib/regexps.ts or add the line to DEBT in scripts/check-break-readings.js. If it only writes one, add it to ALLOWED.\n`)
 
 if (stale.length > 0) stdout.write(`\tA list names a line the file no longer holds:\n\t\t${stale.join(`\n\t\t`)}\n\tTake it out of scripts/check-break-readings.js — a list that lags behind the code says nothing about either.\n`)
 

@@ -96,7 +96,7 @@
 				"lib/rules/no-eol-whitespace/index.js",
 				"lib/rules/selector-attribute-brackets-space-inside/index.js",
 				"lib/rules/string-quotes/index.js",
-				"lib/utils/whitespaceChecker/index.js",
+				"lib/utils/whitespaceChecker/index.ts",
 			],
 			"rules": {
 				"max-lines-per-function": [
