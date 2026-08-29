@@ -3,7 +3,7 @@ import { findCommentSpans } from "../findCommentSpans/index.ts"
 import { hideFalseInlineComments } from "../hideFalseInlineComments/index.ts"
 import { readsInlineComments } from "../readsInlineComments/index.ts"
 
-type CommentSpan = import("../findCommentSpans/index.ts").CommentSpan
+export type CommentSpan = import("../findCommentSpans/index.ts").CommentSpan
 
 /**
  * Builds the copy of a node's text that a scan is handed in place of the text itself, and hands back the comments it was built from.
@@ -25,5 +25,3 @@ export function searchCopy (text: string, node: import("postcss").Node, result: 
 		commentSpans,
 	}
 }
-
-export type { CommentSpan }

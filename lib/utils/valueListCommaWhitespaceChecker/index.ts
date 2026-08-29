@@ -8,7 +8,7 @@ import { searchCopy } from "../searchCopy/index.ts"
 
 let { utils: { report } } = stylelint
 
-interface ValueListCommaWhitespaceCheckerOptions {
+export interface ValueListCommaWhitespaceCheckerOptions {
 
 	/** The PostCSS root node. */
 	root: import("postcss").Root,
@@ -88,5 +88,3 @@ export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceC
 		})
 	}
 }
-
-export type { ValueListCommaWhitespaceCheckerOptions }

@@ -1,7 +1,7 @@
 import { TRAILING_WHITESPACE } from "../../regexps.ts"
 import { lastNodeHoldsTheBlockAfter } from "../lastNodeHoldsTheBlockAfter/index.ts"
 
-type Container = import("postcss").Container
+export type Container = import("postcss").Container
 
 /**
  * Sets the block's final raw, in the raw the parser filed it in — which is the one {@link lastNodeHoldsTheBlockAfter} names and `getBlockAfter` reads back.
@@ -24,5 +24,3 @@ export function setBlockAfter (statement: Container, after: string): Container {
 
 	return statement
 }
-
-export type { Container }

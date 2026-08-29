@@ -1,6 +1,6 @@
 import { findCommentSpans } from "../findCommentSpans/index.ts"
 
-type CommentSpan = import("../findCommentSpans/index.ts").CommentSpan
+export type CommentSpan = import("../findCommentSpans/index.ts").CommentSpan
 
 /**
  * Blanks every comment of a text out of it, delimiters and all, so that a reader knowing less about the text than {@link findCommentSpans} does finds no comment there to read for itself.
@@ -33,5 +33,3 @@ export function blankComments (text: string, spans: (CommentSpan | import("../fi
 
 	return pieces.join(``)
 }
-
-export type { CommentSpan }

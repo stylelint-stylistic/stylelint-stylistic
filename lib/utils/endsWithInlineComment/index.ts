@@ -1,7 +1,7 @@
 import { LINE_BREAK, OPENS_WITH_QUOTE, URL_CALL_AT_END } from "../../regexps.ts"
 
 /** Where a scan stands: what it is reading, how far it has read, the quote that would close the string it is inside, and the pattern that closes the comment it may be inside. */
-type Scan = { state: `blockComment` | `code` | `inlineComment` | `string` | `url`, index: number, openingQuote: string }
+export type Scan = { state: `blockComment` | `code` | `inlineComment` | `string` | `url`, index: number, openingQuote: string }
 
 /**
  * Reads one character of an inline comment.
@@ -131,5 +131,3 @@ export function endsWithInlineComment (source: string, reading: import("../reads
 
 	return scanEndsInsideInlineComment(text)
 }
-
-export type { Scan }

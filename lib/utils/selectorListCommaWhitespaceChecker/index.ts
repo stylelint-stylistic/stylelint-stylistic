@@ -7,7 +7,7 @@ import { toSelectorSourceIndex } from "../toSelectorSourceIndex/index.ts"
 
 let { utils: { report } } = stylelint
 
-interface SelectorListCommaWhitespaceCheckerOptions {
+export interface SelectorListCommaWhitespaceCheckerOptions {
 
 	/** The PostCSS root node. */
 	root: import("postcss").Root,
@@ -85,5 +85,3 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 		})
 	}
 }
-
-export type { SelectorListCommaWhitespaceCheckerOptions }

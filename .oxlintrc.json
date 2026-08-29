@@ -39,6 +39,8 @@
 		],
 		// Off for good: `eqeqeq` and `no-eq-null` are both on, so `value == null` is refused twice over, while this rule refuses `value === undefined`. Between the three there is no spelling left for the question the plugin asks 16 times, `typeof value === "undefined"` aside, and none of the 21 places handing `report` a `fix` of `undefined` reads better as a conditional spread.
 		"no-undefined": "off",
+		// Off for the whole project: a type is declared where it is named and exported there, and a rule opens on what it is — its name, its messages and its `meta` — and closes on the implementation. The shared config carries the rule still; it goes there with the next release.
+		"import/exports-last": "off",
 	},
 	"overrides": [
 		{
@@ -107,15 +109,6 @@
 						"skipBlankLines": true
 					}
 				],
-			},
-		},
-		{
-			// A rule opens on what it is — its name, the messages it reports and the `meta` a config and the docs read — and closes on the implementation. Sending the three to the foot of the file would put a rule's identity behind two hundred lines of walking, and would part with the shape [AGENTS.md](AGENTS.md) sets out and Stylelint's own rules keep.
-			"files": [
-				"lib/rules/*/index.js",
-			],
-			"rules": {
-				"import/exports-last": "off",
 			},
 		},
 	],

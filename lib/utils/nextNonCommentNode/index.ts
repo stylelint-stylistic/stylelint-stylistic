@@ -1,6 +1,6 @@
 import { isComment } from "../typeGuards/index.ts"
 
-type PostcssNode = import("postcss").Node
+export type PostcssNode = import("postcss").Node
 
 /**
  * Gets the next non-comment node in a PostCSS AST at or after a given node.
@@ -27,5 +27,3 @@ export function nextNonCommentNode (startNode: PostcssNode | undefined, onCommen
 
 	return null
 }
-
-export type { PostcssNode }

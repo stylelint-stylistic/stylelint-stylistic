@@ -1,6 +1,6 @@
 import { findCommentSpans } from "../findCommentSpans/index.ts"
 
-type CommentSpan = import("../findCommentSpans/index.ts").CommentSpan
+export type CommentSpan = import("../findCommentSpans/index.ts").CommentSpan
 
 /**
  * Spells every double slash that opens no comment out of harm's way, so that a reader which knows less about the text than {@link findCommentSpans} does cannot take one for a comment.
@@ -28,5 +28,3 @@ export function hideFalseInlineComments (text: string, spans: (CommentSpan | imp
 
 	return hidden ? hidden.join(``) : text
 }
-
-export type { CommentSpan }

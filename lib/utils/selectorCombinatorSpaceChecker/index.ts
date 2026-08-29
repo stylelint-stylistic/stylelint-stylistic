@@ -11,7 +11,7 @@ import { toSelectorSourceIndex } from "../toSelectorSourceIndex/index.ts"
 let { utils: { report } } = stylelint
 
 /** A function that checks whitespace at a specific location. */
-type LocationChecker = (args: { source: string, index: number, errTarget: string, err: (message: string) => void }) => void
+export type LocationChecker = (args: { source: string, index: number, errTarget: string, err: (message: string) => void }) => void
 
 /**
  * Gets the closest preceding sibling that is not a comment.
@@ -124,5 +124,3 @@ export function selectorCombinatorSpaceChecker (opts: {
 		})
 	}
 }
-
-export type { LocationChecker }

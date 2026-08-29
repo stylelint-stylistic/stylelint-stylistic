@@ -1,4 +1,4 @@
-type AtRule = import("postcss").AtRule | import("postcss-less").AtRule
+export type AtRule = import("postcss").AtRule | import("postcss-less").AtRule
 
 /**
  * Mirrors the params just written to an at-rule into the value that `postcss-less` prints.
@@ -13,5 +13,3 @@ export function syncLessVariableValue (atRule: AtRule, params: string): AtRule {
 
 	return atRule
 }
-
-export type { AtRule }

@@ -82,7 +82,7 @@ function readName (text: string, runStart: number | null, runEnd: number, index:
 }
 
 /** The span the arguments of one function call occupy in a text, from the character behind its opening parenthesis to its closing one, under the name the call was made by. */
-type FunctionArgumentSpan = { start: number, end: number, name: string }
+export type FunctionArgumentSpan = { start: number, end: number, name: string }
 
 /**
  * Finds the spans the arguments of the function calls of a text occupy in it.
@@ -159,5 +159,3 @@ export function findFunctionArgumentSpans (text: string): FunctionArgumentSpan[]
 
 	return spans
 }
-
-export type { FunctionArgumentSpan }

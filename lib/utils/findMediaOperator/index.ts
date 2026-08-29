@@ -8,7 +8,7 @@ import { searchCopy } from "../searchCopy/index.ts"
 // `styleSearch` tries the targets in the order they are given and reports the first that matches, so the two-character operators stand in front of the one-character ones and `>=` is read whole rather than as a `>` with an `=` behind it
 const RANGE_OPERATORS = [`>=`, `<=`, `>`, `<`, `=`]
 
-type StyleSearchMatch = import("style-search").StyleSearchMatch
+export type StyleSearchMatch = import("style-search").StyleSearchMatch
 
 /**
  * Finds media operator matches in an at-rule and invokes a callback for each.
@@ -38,5 +38,3 @@ export function findMediaOperator<T extends import("postcss").AtRule> (atRule: T
 		cb(match, params, atRule)
 	})
 }
-
-export type { StyleSearchMatch }

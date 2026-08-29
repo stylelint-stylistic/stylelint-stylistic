@@ -2,7 +2,7 @@ import { nodeSyntax } from "../nodeSyntax/index.ts"
 import { isSyntax } from "../typeGuards/index.ts"
 
 /** What the probe of a syntax says about a comment opened by a double slash: whether the syntax spells one at all, and whether it leaves one standing in the value a rule reads. Which break closes one is no question of the syntax's: a line break is what PostCSS reads as one, a line feed with or without a carriage return in front of it, and every scan of a text closes such a comment there. */
-type InlineCommentReading = { spells: boolean, keeps: boolean }
+export type InlineCommentReading = { spells: boolean, keeps: boolean }
 
 /** The reading of {@link probeSyntax}, per syntax. */
 let inlineCommentSyntaxes: WeakMap<object, InlineCommentReading> = new WeakMap()
@@ -105,5 +105,3 @@ export function syntaxKeepsInlineComments (syntax?: unknown): boolean {
 
 	return reading.spells && reading.keeps
 }
-
-export type { InlineCommentReading }

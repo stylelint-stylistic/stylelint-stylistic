@@ -17,12 +17,12 @@ import { commentsRemovedBefore, withoutComments } from "../withoutComments/index
 
 let { utils: { report } } = stylelint
 
-type Edit = import("../applyEditsFromEnd/index.ts").Edit
-type ValueParserFunctionNode = import("postcss-value-parser").FunctionNode
-type ValueParserDivNode = import("postcss-value-parser").DivNode
+export type Edit = import("../applyEditsFromEnd/index.ts").Edit
+export type ValueParserFunctionNode = import("postcss-value-parser").FunctionNode
+export type ValueParserDivNode = import("postcss-value-parser").DivNode
 
 /** A function that checks whitespace at a specific location. */
-type LocationChecker = (args: { source: string, index: number, err: (message: string) => void }) => void
+export type LocationChecker = (args: { source: string, index: number, err: (message: string) => void }) => void
 
 /**
  * Checks whitespace around commas in function arguments.
@@ -177,5 +177,3 @@ export function functionCommaSpaceChecker (opts: {
 		if (edits.length > 0) setDeclarationValue(decl, applyEditsFromEnd(declValue, edits))
 	})
 }
-
-export type { Edit, LocationChecker, ValueParserDivNode, ValueParserFunctionNode }

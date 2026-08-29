@@ -14,7 +14,7 @@ function endOfLine (text: string, index: number): number {
 }
 
 /** An inline comment of a selector, as both spellings have it. */
-type InlineComment = {
+export type InlineComment = {
 	value: string,
 	firstOrdinal: number,
 	lastOrdinal: number,
@@ -75,5 +75,3 @@ export function findSelectorInlineComments (rawSelector: string, scssSelector?: 
 
 	return inlineComments
 }
-
-export type { InlineComment }

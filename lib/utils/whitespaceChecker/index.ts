@@ -13,10 +13,10 @@ function isLineBreak (char: string | undefined): boolean {
 }
 
 /** A function that returns a message string. */
-type MessageFunction = (message: string) => string
+export type MessageFunction = (message: string) => string
 
 /** The messages a checker reports with. Each expectation reaches for the one named after it, so a rule has to carry the messages of the expectations it accepts and no others. */
-interface Messages {
+export interface Messages {
 
 	/** Reported by `always` where the whitespace in front of the index is missing. */
 	expectedBefore?: MessageFunction,
@@ -54,7 +54,7 @@ interface Messages {
 	/** What `never-multi-line` reports in place of `rejectedAfter`. */
 	rejectedAfterMultiLine?: MessageFunction,
 }
-interface WhitespaceCheckerArgs {
+export interface WhitespaceCheckerArgs {
 
 	/** The source string. */
 	source: string,
@@ -79,10 +79,10 @@ interface WhitespaceCheckerArgs {
 }
 
 /** A function that checks whitespace at a specific location. */
-type WhitespaceChecker = (args: WhitespaceCheckerArgs) => void
+export type WhitespaceChecker = (args: WhitespaceCheckerArgs) => void
 
 /** An object containing whitespace checking functions. */
-type WhitespaceCheckers = {
+export type WhitespaceCheckers = {
 	before: WhitespaceChecker,
 	beforeAllowingIndentation: WhitespaceChecker,
 	after: WhitespaceChecker,
@@ -318,5 +318,3 @@ export function whitespaceChecker (targetWhitespace: `space` | `newline`, expect
 		afterOneOnly,
 	}
 }
-
-export type { MessageFunction, Messages, WhitespaceChecker, WhitespaceCheckerArgs, WhitespaceCheckers }

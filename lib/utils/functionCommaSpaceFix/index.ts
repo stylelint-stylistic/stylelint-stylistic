@@ -1,6 +1,6 @@
-type Edit = import("../applyEditsFromEnd/index.ts").Edit
-type ValueParserDivNode = import("postcss-value-parser").DivNode
-type ValueParserFunctionNode = import("postcss-value-parser").FunctionNode
+export type Edit = import("../applyEditsFromEnd/index.ts").Edit
+export type ValueParserDivNode = import("postcss-value-parser").DivNode
+export type ValueParserFunctionNode = import("postcss-value-parser").FunctionNode
 
 /**
  * Measures the whitespace run standing on one side of a comma that the comma itself does not hold.
@@ -91,5 +91,3 @@ export function functionCommaSpaceFix (params: {
 
 	return []
 }
-
-export type { Edit, ValueParserDivNode, ValueParserFunctionNode }

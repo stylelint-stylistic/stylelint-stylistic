@@ -4,11 +4,11 @@ import { isGeneralEnclosed, isMediaFeature, isMediaQueryInvalid, parseFromTokens
 
 import { RANGE_FEATURE_OPERATOR } from "../../regexps.ts"
 
-type MediaQueryList = Array<import("@csstools/media-query-list-parser").MediaQuery>
+export type MediaQueryList = Array<import("@csstools/media-query-list-parser").MediaQuery>
 
-type TokenIdent = import("@csstools/css-tokenizer").TokenIdent
+export type TokenIdent = import("@csstools/css-tokenizer").TokenIdent
 
-type MediaQuerySerializer = { stringify: () => string }
+export type MediaQuerySerializer = { stringify: () => string }
 
 /**
  * Extracts top-level token nodes from a GeneralEnclosed node.
@@ -118,5 +118,3 @@ export function findMediaFeatureNames (mediaQueryParams: string, callback: (medi
 		},
 	}
 }
-
-export type { MediaQueryList, MediaQuerySerializer, TokenIdent }

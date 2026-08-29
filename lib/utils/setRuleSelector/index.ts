@@ -1,7 +1,7 @@
 import { findInlineCommentSpans } from "../findInlineCommentSpans/index.ts"
 import { rewriteInlineComments } from "../rewriteInlineComments/index.ts"
 
-type Rule = import("postcss").Rule
+export type Rule = import("postcss").Rule
 
 /**
  * Sets the selector of a rule, in the copy of it the syntax prints.
@@ -29,5 +29,3 @@ export function setRuleSelector (rule: Rule, selector: string): Rule {
 
 	return rule
 }
-
-export type { Rule }

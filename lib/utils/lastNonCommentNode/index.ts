@@ -1,5 +1,5 @@
-type PostcssChildNode = import("postcss").ChildNode
-type PostcssContainer = import("postcss").Container
+export type PostcssChildNode = import("postcss").ChildNode
+export type PostcssContainer = import("postcss").Container
 
 /**
  * Gets the last node of a container that is not a comment.
@@ -17,5 +17,3 @@ export function lastNonCommentNode (container: PostcssContainer | undefined): Po
 
 	return node ?? null
 }
-
-export type { PostcssChildNode, PostcssContainer }

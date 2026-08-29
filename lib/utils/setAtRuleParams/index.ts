@@ -2,7 +2,7 @@ import { findInlineCommentSpans } from "../findInlineCommentSpans/index.ts"
 import { rewriteInlineComments } from "../rewriteInlineComments/index.ts"
 import { syncLessVariableValue } from "../syncLessVariableValue/index.ts"
 
-type AtRule = import("postcss").AtRule
+export type AtRule = import("postcss").AtRule
 
 /**
  * Sets the params of an at-rule, in the copy of them the syntax prints.
@@ -32,5 +32,3 @@ export function setAtRuleParams (atRule: AtRule, params: string): AtRule {
 
 	return atRule
 }
-
-export type { AtRule }

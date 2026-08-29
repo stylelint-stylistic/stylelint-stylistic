@@ -1,7 +1,7 @@
 /** The code `sysexits.h` reserves for a configuration error, which is the one Stylelint exits with. */
 const EXIT_CODE_INVALID_CONFIG = 78
 
-type ConfigurationError = Error & { code: number }
+export type ConfigurationError = Error & { code: number }
 
 /**
  * Creates a configuration error from text and sets the CLI exit code.
@@ -15,5 +15,3 @@ export function configurationError (text: string): ConfigurationError {
 
 	return err
 }
-
-export type { ConfigurationError }

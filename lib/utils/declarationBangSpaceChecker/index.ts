@@ -10,17 +10,17 @@ import { setDeclarationValue } from "../setDeclarationValue/index.ts"
 
 let { utils: { report } } = stylelint
 
-type Edit = import("../applyEditsFromEnd/index.ts").Edit
-type Declaration = import("postcss").Declaration
+export type Edit = import("../applyEditsFromEnd/index.ts").Edit
+export type Declaration = import("postcss").Declaration
 
 /** The declaration as the file prints it, and where in that print one bang of it stands. */
-type BangTarget = { text: string, index: number }
+export type BangTarget = { text: string, index: number }
 
 /** One of the texts a declaration is printed from that a fix can write into: where it opens in that print, what it holds, how it is written back, and what is to be written into it. */
-type DeclarationPart = { start: number, text: string, write: (text: string) => void, edits: Edit[] }
+export type DeclarationPart = { start: number, text: string, write: (text: string) => void, edits: Edit[] }
 
 /** A function that checks whitespace at a specific location. */
-type LocationChecker = (args: { source: string, index: number, err: (message: string) => void }) => void
+export type LocationChecker = (args: { source: string, index: number, err: (message: string) => void }) => void
 
 /**
  * Files one edit of a printed declaration under the texts it is printed from.
@@ -111,5 +111,3 @@ export function declarationBangSpaceChecker (opts: {
 		for (let part of parts) if (part.edits.length > 0) part.write(applyEditsFromEnd(part.text, part.edits))
 	})
 }
-
-export type { BangTarget, Declaration, DeclarationPart, Edit, LocationChecker }

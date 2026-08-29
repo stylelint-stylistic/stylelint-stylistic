@@ -1,7 +1,7 @@
 import { findInlineCommentSpans } from "../findInlineCommentSpans/index.ts"
 import { rewriteInlineComments } from "../rewriteInlineComments/index.ts"
 
-type Declaration = import("postcss").Declaration
+export type Declaration = import("postcss").Declaration
 
 /**
  * Sets the value of a CSS declaration, in the copy of it the syntax prints.
@@ -29,5 +29,3 @@ export function setDeclarationValue (decl: Declaration, value: string): Declarat
 
 	return decl
 }
-
-export type { Declaration }

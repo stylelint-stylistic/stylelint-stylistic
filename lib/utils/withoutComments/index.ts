@@ -1,10 +1,10 @@
 import { LEADING_NON_WHITESPACE, TRAILING_SPACES } from "../../regexps.ts"
 import { findCommentSpans } from "../findCommentSpans/index.ts"
 
-type CommentSpan = import("../findCommentSpans/index.ts").CommentSpan
+export type CommentSpan = import("../findCommentSpans/index.ts").CommentSpan
 
 /** The run a comment takes out of a text when it is removed from it, from the first character taken to the one behind the last. */
-type RemovedRun = { start: number, end: number }
+export type RemovedRun = { start: number, end: number }
 
 /**
  * Says which runs of a text its comments take with them when they are removed.
@@ -69,5 +69,3 @@ export function commentsRemovedBefore (text: string, index: number, spans: Comme
 
 	return removed
 }
-
-export type { CommentSpan, RemovedRun }
