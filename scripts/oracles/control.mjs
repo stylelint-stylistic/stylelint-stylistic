@@ -18,7 +18,7 @@ import { buildRuns } from "./runs.mjs"
 const INLINE_COMMENT = `//${` `}c`
 const BLOCK_COMMENT = `/${`*`.repeat(2)}/`
 
-/** The shapes a comment can stand in, each of them the same code whichever way the comment is spelled. */
+/** The shapes a comment can stand in, each of them the same code whichever way the comment is spelled. The last two were written for #139: no earlier one puts the comment inside a set of parameters that carries on past it — in every other bodiless at-rule here the comment lands in `raws.between` and the syntax keeps no second copy — so no fixture reached `at-rule-semicolon-space-before` at all; and none put the break closing the comment where a rule counting past it lands on the next line rather than in the next column. */
 const CORPUS = [
 	[`value-continues`, `a { b: 1px ${INLINE_COMMENT}\n\t2px; }\n`],
 	[`value-ends-block`, `a {\n\tcolor: pink ${INLINE_COMMENT}\n}\n`],
@@ -34,6 +34,8 @@ const CORPUS = [
 	[`two-comments`, `a { b: 1px ${INLINE_COMMENT}\n\t2px ${INLINE_COMMENT}\n\t3px; }\n`],
 	[`bodiless-at-rule`, `@import "a" ${INLINE_COMMENT}\n\t;\n`],
 	[`at-rule-in-block`, `a {\n\t@include x ${INLINE_COMMENT}\n\t;\n}\n`],
+	[`at-rule-params-continue`, `@import "a" ${INLINE_COMMENT}\n\t"b" ;\n`],
+	[`semicolon-then-decl`, `a { color: red ${INLINE_COMMENT}\n;\ntop: 0;\n}\n`],
 ]
 
 /**
