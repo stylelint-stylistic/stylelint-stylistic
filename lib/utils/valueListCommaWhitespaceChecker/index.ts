@@ -1,5 +1,6 @@
-import styleSearch from "style-search"
-import stylelint from "stylelint"
+import type { Declaration, Root } from "postcss"
+import styleSearch, { type StyleSearchMatch } from "style-search"
+import stylelint, { type PostcssResult } from "stylelint"
 
 import { declarationString } from "../declarationString/index.ts"
 import { isStandardSyntaxDeclaration } from "../isStandardSyntaxDeclaration/index.ts"
@@ -11,10 +12,10 @@ let { utils: { report } } = stylelint
 export interface ValueListCommaWhitespaceCheckerOptions {
 
 	/** The PostCSS root node. */
-	root: import("postcss").Root,
+	root: Root,
 
 	/** The Stylelint result. */
-	result: import("stylelint").PostcssResult,
+	result: PostcssResult,
 
 	/** The location checker function. */
 	locationChecker: (opts: { source: string, index: number, err: (msg: string) => void }) => void,
@@ -23,13 +24,13 @@ export interface ValueListCommaWhitespaceCheckerOptions {
 	checkedRuleName: string,
 
 	/** The fix function. */
-	fix?: ((node: import("postcss").Declaration, index: number) => void),
+	fix?: ((node: Declaration, index: number) => void),
 
 	/** Tells whether this particular problem can be fixed. The declaration comes with it as the checker has already printed it, so that a rule reading the text in front of the comma need not print it again. */
-	isFixable?: ((node: import("postcss").Declaration, index: number, declString: string) => boolean),
+	isFixable?: ((node: Declaration, index: number, declString: string) => boolean),
 
 	/** The index determination function. */
-	determineIndex?: ((declString: string, match: import("style-search").StyleSearchMatch) => number | false),
+	determineIndex?: ((declString: string, match: StyleSearchMatch) => number | false),
 }
 
 /**
@@ -67,7 +68,7 @@ export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceC
 	 * @param index - The index of the comma.
 	 * @param node - The declaration node.
 	 */
-	function checkComma (source: string, index: number, node: import("postcss").Declaration): void {
+	function checkComma (source: string, index: number, node: Declaration): void {
 		opts.locationChecker({
 			source,
 			index,

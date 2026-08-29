@@ -1,4 +1,4 @@
-import postcss from "postcss"
+import postcss, { type AtRule, type Node, type Parser } from "postcss"
 import postcssLess from "postcss-less"
 import { describe, expect, it } from "vitest"
 
@@ -55,8 +55,8 @@ describe(`syncLessVariableValue`, () => {
  * @param parser - The syntax to read it with.
  * @returns That at-rule.
  */
-function atRule (code: string, parser: { parse: import("postcss").Parser } = postcss): import("postcss").AtRule {
-	let list: import("postcss").AtRule[] = []
+function atRule (code: string, parser: { parse: Parser } = postcss): AtRule {
+	let list: AtRule[] = []
 
 	parser.parse(code).walkAtRules((rule) => {
 		list.push(rule)
@@ -70,7 +70,7 @@ function atRule (code: string, parser: { parse: import("postcss").Parser } = pos
  * @param code - The stylesheet.
  * @returns That at-rule.
  */
-function lessAtRule (code: string): import("postcss").AtRule {
+function lessAtRule (code: string): AtRule {
 	return atRule(code, postcssLess)
 }
 
@@ -79,6 +79,6 @@ function lessAtRule (code: string): import("postcss").AtRule {
  * @param node - A node of that stylesheet.
  * @returns The stylesheet.
  */
-function less (node: import("postcss").Node): string {
+function less (node: Node): string {
 	return node.root().toString(postcssLess)
 }

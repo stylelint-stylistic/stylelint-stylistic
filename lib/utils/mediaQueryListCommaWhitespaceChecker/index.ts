@@ -1,5 +1,6 @@
+import type { AtRule, Root } from "postcss"
 import styleSearch from "style-search"
-import stylelint from "stylelint"
+import stylelint, { type PostcssResult } from "stylelint"
 
 import { MEDIA_QUERY_COMBINATORS } from "../../reference/mediaQueries.ts"
 import { LEADING_BLOCK_COMMENT, MEDIA_AT_RULE, OPENS_WITH_INLINE_COMMENT } from "../../regexps.ts"
@@ -16,12 +17,12 @@ let { utils: { report } } = stylelint
  * @param opts - The options object.
  */
 export function mediaQueryListCommaWhitespaceChecker (opts: {
-	root: import("postcss").Root,
-	result: import("stylelint").PostcssResult,
+	root: Root,
+	result: PostcssResult,
 	locationChecker: (args: { source: string, index: number, err: (message: string) => void }) => void,
 	checkedRuleName: string,
-	fix?: ((atRule: import("postcss").AtRule, index: number) => void),
-	isFixable?: ((params: string, index: number, atRule: import("postcss").AtRule) => boolean),
+	fix?: ((atRule: AtRule, index: number) => void),
+	isFixable?: ((params: string, index: number, atRule: AtRule) => boolean),
 	allowTrailingComments?: boolean,
 }): void {
 	let { fix } = opts
@@ -69,7 +70,7 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 	 * @param index - The index to check.
 	 * @param node - The at-rule node.
 	 */
-	function checkComma (source: string, index: number, node: import("postcss").AtRule): void {
+	function checkComma (source: string, index: number, node: AtRule): void {
 		opts.locationChecker({
 			source,
 			index,

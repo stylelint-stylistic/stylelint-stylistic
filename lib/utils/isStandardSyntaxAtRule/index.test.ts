@@ -1,4 +1,4 @@
-import postcss from "postcss"
+import postcss, { type AtRule, type Parser } from "postcss"
 import postcssLess from "postcss-less"
 import postcssScss from "postcss-scss"
 import { describe, expect, it } from "vitest"
@@ -110,8 +110,8 @@ describe(`isStandardSyntaxAtRule`, () => {
  * @param parser - The syntax to read it with.
  * @returns The at-rules, in the order the walk meets them.
  */
-function atRules (code: string, parser: { parse: import("postcss").Parser } = postcss): import("postcss").AtRule[] {
-	let rules: import("postcss").AtRule[] = []
+function atRules (code: string, parser: { parse: Parser } = postcss): AtRule[] {
+	let rules: AtRule[] = []
 
 	parser.parse(code).walkAtRules((rule) => {
 		rules.push(rule)
@@ -125,7 +125,7 @@ function atRules (code: string, parser: { parse: import("postcss").Parser } = po
  * @param code - The stylesheet.
  * @returns That at-rule.
  */
-function atRule (code: string): import("postcss").AtRule {
+function atRule (code: string): AtRule {
 	return atRules(code)[0]
 }
 
@@ -134,7 +134,7 @@ function atRule (code: string): import("postcss").AtRule {
  * @param code - The stylesheet.
  * @returns The at-rules.
  */
-function scssAtRules (code: string): import("postcss").AtRule[] {
+function scssAtRules (code: string): AtRule[] {
 	return atRules(code, postcssScss)
 }
 
@@ -143,6 +143,6 @@ function scssAtRules (code: string): import("postcss").AtRule[] {
  * @param code - The stylesheet.
  * @returns The at-rules.
  */
-function lessAtRules (code: string): import("postcss").AtRule[] {
+function lessAtRules (code: string): AtRule[] {
 	return atRules(code, postcssLess)
 }

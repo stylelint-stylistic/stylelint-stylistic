@@ -1,11 +1,14 @@
+import type { Node, Root } from "postcss"
+import type { Attribute } from "postcss-selector-parser"
 import styleSearch from "style-search"
-import stylelint from "stylelint"
+import stylelint, { type PostcssResult } from "stylelint"
 
 import { findSelectorInlineComments } from "../findSelectorInlineComments/index.ts"
 import { isStandardSyntaxRule } from "../isStandardSyntaxRule/index.ts"
 import { parseSelector } from "../parseSelector/index.ts"
 import { restoreSelectorInlineComments } from "../restoreSelectorInlineComments/index.ts"
 import { toSelectorSourceIndex } from "../toSelectorSourceIndex/index.ts"
+import type { SyntaxRaw } from "../typeGuards/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -14,19 +17,19 @@ let { utils: { report } } = stylelint
  * @param options - The options object.
  */
 export function selectorAttributeOperatorSpaceChecker (options: {
-	root: import("postcss").Root,
-	result: import("stylelint").PostcssResult,
+	root: Root,
+	result: PostcssResult,
 	locationChecker: (opts: { source: string, index: number, err: (msg: string) => void }) => void,
 	checkedRuleName: string,
 	checkBeforeOperator: boolean,
-	fix?: ((attributeNode: import("postcss-selector-parser").Attribute) => void),
+	fix?: ((attributeNode: Attribute) => void),
 }): void {
 	let { fix } = options
 
 	options.root.walkRules((rule) => {
 		if (!isStandardSyntaxRule(rule)) return
 
-		let selectorRaws: import("../typeGuards/index.ts").SyntaxRaw | undefined = rule.raws.selector
+		let selectorRaws: SyntaxRaw | undefined = rule.raws.selector
 		let selector = selectorRaws ? selectorRaws.raw : rule.selector
 
 		if (!selector.includes(`[`) || !selector.includes(`=`)) return
@@ -74,7 +77,7 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 		 * @param attributeNode - The attribute node.
 		 * @param operator - The operator being checked.
 		 */
-		function checkOperator (source: string, index: number, node: import("postcss").Node, attributeNode: import("postcss-selector-parser").Attribute, operator: string): void {
+		function checkOperator (source: string, index: number, node: Node, attributeNode: Attribute, operator: string): void {
 			options.locationChecker({
 				source,
 				index,

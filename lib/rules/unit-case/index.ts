@@ -1,9 +1,10 @@
-import valueParser from "postcss-value-parser"
-import stylelint from "stylelint"
+import type { AtRule, Declaration } from "postcss"
+import valueParser, { type Node } from "postcss-value-parser"
+import stylelint, { type RuleMessage } from "stylelint"
 
 import { MEDIA_AT_RULE } from "../../regexps.ts"
 import { addNamespace } from "../../utils/addNamespace/index.ts"
-import { applyEditsFromEnd } from "../../utils/applyEditsFromEnd/index.ts"
+import { applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
@@ -36,8 +37,6 @@ export let meta = {
 	fixable: true,
 }
 
-type Edit = import("../../utils/applyEditsFromEnd/index.ts").Edit
-
 /**
  * Specifies lowercase or uppercase for units.
  * @param primary - The primary option, one of `lower` and `upper`.
@@ -58,8 +57,8 @@ function rule (primary: `lower` | `upper`): RuleCheck {
 		 * @param checkedValue - The value to check.
 		 * @param getIndex - Function to get the index of the node.
 		 */
-		function check<T extends import("postcss").AtRule | import("postcss").Declaration> (node: T, checkedValue: string, getIndex: (node: T) => number): void {
-			let problems: Array<{ index: number, endIndex: number, message: import("stylelint").RuleMessage, messageArgs: string[] }> = []
+		function check<T extends AtRule | Declaration> (node: T, checkedValue: string, getIndex: (node: T) => number): void {
+			let problems: Array<{ index: number, endIndex: number, message: RuleMessage, messageArgs: string[] }> = []
 
 			// What the walk changed, and nothing else: the text is edited at the positions the changed words stand at rather than printed anew from the parsed tree, since `postcss-value-parser` does not always give back the text it was handed — a comment opening `/*/` comes back as `/**/` — and a fix made anywhere in such a text would rewrite a comment standing elsewhere in it
 			let edits: Edit[] = []
@@ -77,7 +76,7 @@ function rule (primary: `lower` | `upper`): RuleCheck {
 			 * @param valueNode - The value parser node to read.
 			 * @returns What to report about the unit, or `null` where the node carries no miscased one.
 			 */
-			function readMiscasedUnit (valueNode: import("postcss-value-parser").Node): { index: number, endIndex: number, message: import("stylelint").RuleMessage, messageArgs: string[] } | null {
+			function readMiscasedUnit (valueNode: Node): { index: number, endIndex: number, message: RuleMessage, messageArgs: string[] } | null {
 				let dimension = getDimension(valueNode)
 
 				if (!dimension.number || !dimension.unit) return null

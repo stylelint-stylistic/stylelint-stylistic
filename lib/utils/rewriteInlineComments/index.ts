@@ -1,7 +1,5 @@
 import { EVERY_COMMENT_DELIMITER } from "../../regexps.ts"
-import { findInlineCommentSpans } from "../findInlineCommentSpans/index.ts"
-
-export type InlineCommentSpan = import("../findInlineCommentSpans/index.ts").InlineCommentSpan
+import { findInlineCommentSpans, type InlineCommentSpan } from "../findInlineCommentSpans/index.ts"
 
 /**
  * Rewrites the inline comments of a value into block comments, as `postcss-scss` does when it fills the raw of that value: the two slashes opening a comment become the two characters opening a block comment, its line break becomes the two closing them, and a `*` followed by `/` in the text — or the other way round — is cut in two so that it closes nothing.

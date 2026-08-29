@@ -1,3 +1,5 @@
+import type { Node } from "postcss-value-parser"
+
 import { EVERY_INTERPOLATION } from "../../regexps.ts"
 
 /** The span an interpolation occupies in a text, counted in that text. */
@@ -26,6 +28,6 @@ export function findInterpolationSpans (text: string): InterpolationSpan[] {
  * @param spans - The spans {@link findInterpolationSpans} found in the text the node was parsed from, which the node's positions count in.
  * @returns The span the node touches, or nothing where the node carries no interpolation's text.
  */
-export function findInterpolationSpanTouching (valueNode: Pick<import("postcss-value-parser").Node, `sourceIndex` | `sourceEndIndex`> & { type?: string, value?: string }, spans: InterpolationSpan[]): InterpolationSpan | undefined {
+export function findInterpolationSpanTouching (valueNode: Pick<Node, `sourceIndex` | `sourceEndIndex`> & { type?: string, value?: string }, spans: InterpolationSpan[]): InterpolationSpan | undefined {
 	return spans.find(({ start, end }) => valueNode.sourceIndex < end && valueNode.sourceEndIndex > start)
 }

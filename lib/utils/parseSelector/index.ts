@@ -1,4 +1,6 @@
-import selectorParser from "postcss-selector-parser"
+import type { Node } from "postcss"
+import selectorParser, { type Root } from "postcss-selector-parser"
+import type { PostcssResult } from "stylelint"
 
 /**
  * Parses a CSS selector string using postcss-selector-parser.
@@ -7,7 +9,7 @@ import selectorParser from "postcss-selector-parser"
  * @param node - The PostCSS node for error reporting.
  * @returns The parsed selector, or undefined where there is no selector to parse or the parser refuses it.
  */
-export function parseSelector (selector: string, result: import("stylelint").PostcssResult, node: import("postcss").Node): import("postcss-selector-parser").Root | undefined {
+export function parseSelector (selector: string, result: PostcssResult, node: Node): Root | undefined {
 	if (!selector) return
 
 	try {

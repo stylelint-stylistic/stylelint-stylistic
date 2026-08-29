@@ -10,16 +10,16 @@
 
 import { stdout } from "node:process"
 
-import postcss from "postcss"
+import postcss, { type Parser } from "postcss"
 import less from "postcss-less"
 import scss from "postcss-scss"
 
 import { lint } from "../harness/lint.ts"
 
-import { buildRuns, isUsable } from "./runs.ts"
+import { buildRuns, isUsable, type Run } from "./runs.ts"
 
 /** The parser each syntax of a run is read back with, so that what came out of the fix is counted the way what went in was written. */
-const PARSERS: Record<string, { parse: import("postcss").Parser }> = { css: postcss, less, scss }
+const PARSERS: Record<string, { parse: Parser }> = { css: postcss, less, scss }
 
 /**
  * Counts the declarations, rules and at-rules a stylesheet holds.
@@ -47,7 +47,7 @@ function tally (code: string, syntaxName: string): string | null {
  * @param run - The rule, the option, the syntax and the fixture.
  * @returns The finding, or null where there is none.
  */
-async function probe (run: import("./runs.ts").Run): Promise<object | null> {
+async function probe (run: Run): Promise<object | null> {
 	let before = tally(run.code, run.syntaxName)
 
 	// A fixture the syntax cannot read is no fixture, and one holding nothing to lose is nothing to ask about

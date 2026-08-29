@@ -10,9 +10,9 @@
 
 import { stdout } from "node:process"
 
-import { lint } from "../harness/lint.ts"
+import { type Config, lint } from "../harness/lint.ts"
 
-import { buildRuns } from "./runs.ts"
+import { buildRuns, type Run } from "./runs.ts"
 
 /** The inline comment every fixture is written with, and the block comment of exactly its width that stands in its place. Both are spelled out of the source of this file, so that nothing here is read as a comment of its own. */
 const INLINE_COMMENT = `//${` `}c`
@@ -44,7 +44,7 @@ const CORPUS: [string, string][] = [
  * @param config - The Stylelint configuration.
  * @returns The warnings, each with its position.
  */
-async function warningsOf (code: string, config: import("../harness/lint.ts").Config): Promise<string[]> {
+async function warningsOf (code: string, config: Config): Promise<string[]> {
 	let result = await lint({ code, config, fix: false })
 
 	return result.results[0].warnings.map((warning) => `${warning.line}:${warning.column} ${warning.text}`)
@@ -55,7 +55,7 @@ async function warningsOf (code: string, config: import("../harness/lint.ts").Co
  * @param run - The rule, the option, the syntax and the fixture.
  * @returns The finding, or null where the two agree.
  */
-async function probe (run: import("./runs.ts").Run): Promise<object | null> {
+async function probe (run: Run): Promise<object | null> {
 	let inline
 	let block
 

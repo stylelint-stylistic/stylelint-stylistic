@@ -1,3 +1,6 @@
+import type { Input, Node } from "postcss"
+import type { PostcssResult } from "stylelint"
+
 import { CAPTURED_LINE_BREAK } from "../../regexps.ts"
 
 /** The setting of the one rule about the spelling of a break, under the name a configuration lists it by. */
@@ -7,7 +10,7 @@ const LINEBREAKS_RULE = `@stylistic/linebreaks`
 const BREAK_OF_OPTION = { unix: `\n`, windows: `\r\n` }
 
 /** What each file was found to end its lines with, kept against the input it was read out of, so that a file is scanned once however many fixes ask about it. */
-let lineBreaks: WeakMap<import("postcss").Input, string | undefined> = new WeakMap()
+let lineBreaks: WeakMap<Input, string | undefined> = new WeakMap()
 
 /**
  * Reads what a file ends its lines with, off the text the syntax was handed rather than off anything PostCSS prints back.
@@ -16,7 +19,7 @@ let lineBreaks: WeakMap<import("postcss").Input, string | undefined> = new WeakM
  * @param node - A node of the file being asked about.
  * @returns The break the file ends its lines with, or `undefined` where nothing can be read: a file written on one line, and a node standing in no file at all, which is one made by hand.
  */
-function lineBreakOfFile (node: import("postcss").Node): string | undefined {
+function lineBreakOfFile (node: Node): string | undefined {
 	let input = node.root().source?.input
 
 	if (!input) return
@@ -41,7 +44,7 @@ function lineBreakOfFile (node: import("postcss").Node): string | undefined {
  * @param result - The Stylelint result, which holds the configuration.
  * @returns The break to write.
  */
-export function getLineBreak (node: import("postcss").Node, result: import("stylelint").PostcssResult): string {
+export function getLineBreak (node: Node, result: PostcssResult): string {
 	let setting = result.stylelint?.config?.rules?.[LINEBREAKS_RULE]
 	let option = Array.isArray(setting) ? setting[0] : setting
 

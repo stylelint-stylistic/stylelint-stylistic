@@ -1,3 +1,6 @@
+import type { AtRule, Rule } from "postcss"
+import type { PostcssResult } from "stylelint"
+
 import { CAPTURED_LINE_BREAK, LINE_BREAK } from "../../regexps.ts"
 import { getBlockAfter } from "../getBlockAfter/index.ts"
 import { getLineBreak } from "../getLineBreak/index.ts"
@@ -11,7 +14,7 @@ import { setBlockAfter } from "../setBlockAfter/index.ts"
  * @param result - The Stylelint result, which holds the configuration the break to write is read from.
  * @returns The modified node.
  */
-export function addEmptyLineAfter<T extends import("postcss").Rule | import("postcss").AtRule> (node: T, result: import("stylelint").PostcssResult): T {
+export function addEmptyLineAfter<T extends Rule | AtRule> (node: T, result: PostcssResult): T {
 	let blockAfter = getBlockAfter(node)
 
 	if (typeof blockAfter !== `string`) return node

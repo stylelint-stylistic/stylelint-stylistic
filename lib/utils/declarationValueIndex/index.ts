@@ -1,3 +1,5 @@
+import type { Declaration } from "postcss"
+
 import { isObject, isString } from "../validateTypes/index.ts"
 
 /**
@@ -5,7 +7,7 @@ import { isObject, isString } from "../validateTypes/index.ts"
  * @param decl - The CSS declaration node.
  * @returns The starting index of the declaration's value.
  */
-export function declarationValueIndex (decl: import("postcss").Declaration): number {
+export function declarationValueIndex (decl: Declaration): number {
 	let raws = decl.raws
 	let prop = raws.prop
 	let count = 0

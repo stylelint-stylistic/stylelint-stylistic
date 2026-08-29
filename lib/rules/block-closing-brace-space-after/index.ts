@@ -1,3 +1,4 @@
+import type { AtRule, Rule } from "postcss"
 import stylelint from "stylelint"
 
 import { addNamespace } from "../../utils/addNamespace/index.ts"
@@ -59,7 +60,7 @@ function rule (primary: `always` | `never` | `always-single-line` | `never-singl
 		 * Checks a statement for closing brace space after violations.
 		 * @param statement - The rule or at-rule to check.
 		 */
-		function check (statement: import("postcss").Rule | import("postcss").AtRule): void {
+		function check (statement: Rule | AtRule): void {
 			let nextNode = statement.next()
 
 			if (!nextNode) return

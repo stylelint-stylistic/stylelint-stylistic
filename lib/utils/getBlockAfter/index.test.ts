@@ -1,4 +1,4 @@
-import { atRule, decl, parse, rule } from "postcss"
+import { atRule, type Container, decl, parse, type Parser, rule } from "postcss"
 import less from "postcss-less"
 import scss from "postcss-scss"
 import { describe, expect, it } from "vitest"
@@ -53,8 +53,8 @@ describe(`getBlockAfter`, () => {
  * @param syntax - The syntax to read it with, where plain CSS is not the one.
  * @returns What the util answers.
  */
-function run (css: string, syntax?: { parse: import("postcss").Parser }): ReturnType<typeof getBlockAfter> {
+function run (css: string, syntax?: { parse: Parser }): ReturnType<typeof getBlockAfter> {
 	let root = syntax ? syntax.parse(css) : parse(css)
 
-	return getBlockAfter(root.first as import("postcss").Container)
+	return getBlockAfter(root.first as Container)
 }

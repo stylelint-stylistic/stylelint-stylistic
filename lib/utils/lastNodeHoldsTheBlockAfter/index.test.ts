@@ -1,4 +1,4 @@
-import { atRule, parse, rule } from "postcss"
+import { atRule, type Container, parse, type Parser, type Rule, rule } from "postcss"
 import less from "postcss-less"
 import scss from "postcss-scss"
 import { describe, expect, it } from "vitest"
@@ -56,7 +56,7 @@ describe(`lastNodeHoldsTheBlockAfter`, () => {
 	})
 
 	it(`turns away a block whose own raw a fix has already filled, which no parse of this shape leaves anything in`, () => {
-		let statement = parse(`a {\n\t@extend .b;\n}`).first as import("postcss").Rule
+		let statement = parse(`a {\n\t@extend .b;\n}`).first as Rule
 
 		// What `declaration-block-trailing-semicolon` under `never` leaves behind: the flag cleared and the whitespace standing where it stood
 		statement.raws.semicolon = false
@@ -71,8 +71,8 @@ describe(`lastNodeHoldsTheBlockAfter`, () => {
  * @param syntax - The syntax to read it with, where plain CSS is not the one.
  * @returns What the util answers.
  */
-function run (css: string, syntax?: { parse: import("postcss").Parser }): ReturnType<typeof lastNodeHoldsTheBlockAfter> {
+function run (css: string, syntax?: { parse: Parser }): ReturnType<typeof lastNodeHoldsTheBlockAfter> {
 	let root = syntax ? syntax.parse(css) : parse(css)
 
-	return lastNodeHoldsTheBlockAfter(root.first as import("postcss").Container)
+	return lastNodeHoldsTheBlockAfter(root.first as Container)
 }

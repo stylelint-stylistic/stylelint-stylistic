@@ -15,7 +15,7 @@ import { argv, exit, stderr, stdout } from "node:process"
 import { digestOf, hashAt, keyOf, read, readDigest, write } from "../harness/cache.ts"
 import { defaultBase, libAt, ROOT } from "../harness/checkout.ts"
 import { diff, render } from "../harness/diff.ts"
-import { lintDirect, loadRules } from "../harness/lint.ts"
+import { lintDirect, loadRules, type Registry, type RuleSetting } from "../harness/lint.ts"
 
 /** The syntax each name is read under, plain CSS under none. */
 const SYNTAXES: Record<string, string | undefined> = { css: undefined, scss: `postcss-scss`, less: `postcss-less` }
@@ -49,12 +49,12 @@ async function measureOne (options: Omit<Parameters<typeof lintDirect>[0], `fix`
  * @param registry - The rules of one side.
  * @returns Every row by its key.
  */
-async function measure (sweep: Sweep, registry: import("../harness/lint.ts").Registry): Promise<Record<string, object>> {
+async function measure (sweep: Sweep, registry: Registry): Promise<Record<string, object>> {
 	let rows: Record<string, object> = {}
 
 	for (let syntaxName of sweep.syntaxes ?? Object.keys(SYNTAXES)) {
 		for (let config of sweep.configs) {
-			let rules: import("../harness/lint.ts").RuleSetting[] = [[config.rule, config.primary, config.secondary]]
+			let rules: RuleSetting[] = [[config.rule, config.primary, config.secondary]]
 
 			for (let [key, code] of sweep.corpus) {
 				// The rows are measured in turn so that a run stays as light on the machine as the one it replaces

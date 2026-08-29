@@ -4,6 +4,7 @@ import { OPENS_WITH_LINE_BREAK } from "../../regexps.ts"
 import { addNamespace } from "../../utils/addNamespace/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import type { EmbeddedSource } from "../../utils/typeGuards/index.ts"
 
 let { utils: { report, ruleMessages, validateOptions } } = stylelint
 
@@ -29,7 +30,7 @@ function rule (primary: true): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, { actual: primary })
 
-		let source: import("../../utils/typeGuards/index.ts").EmbeddedSource | undefined = root.source
+		let source: EmbeddedSource | undefined = root.source
 
 		if (!validOptions || source?.inline || source?.lang === `object-literal`) return
 

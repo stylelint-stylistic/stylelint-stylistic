@@ -1,3 +1,6 @@
+import type { Node, Syntax } from "postcss"
+import type { PostcssResult } from "stylelint"
+
 /**
  * The syntax a node was parsed with, which is the one that prints it back.
  *
@@ -6,8 +9,8 @@
  * @param result - The Stylelint result, which holds the syntax the file was opened with.
  * @returns That syntax, undefined where the file was read as plain CSS.
  */
-export function nodeSyntax (node: import("postcss").Node, result?: import("stylelint").PostcssResult): import("postcss").Syntax | undefined {
+export function nodeSyntax (node: Node, result?: PostcssResult): Syntax | undefined {
 	let root = node.root()
 
-	return (root.source && (root.source as { syntax?: import("postcss").Syntax }).syntax) || (result && result.opts && result.opts.syntax)
+	return (root.source && (root.source as { syntax?: Syntax }).syntax) || (result && result.opts && result.opts.syntax)
 }

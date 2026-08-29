@@ -1,4 +1,4 @@
-import { Document, Input, parse as postcssParse, stringify } from "postcss"
+import { Document, Input, parse as postcssParse, type ProcessOptions, type Root, stringify } from "postcss"
 
 import { ruleName } from "./index.ts"
 
@@ -10,11 +10,11 @@ let testRule = createTestRule({ ruleName })
  * @param opts - The options of the parse.
  * @returns The document holding that one root.
  */
-function parse (source: string, opts?: import("postcss").ProcessOptions): import("postcss").Document {
+function parse (source: string, opts?: ProcessOptions): Document {
 	let doc = (new Document())
 	let root = postcssParse(source, opts)
 
-	let held = root as import("postcss").Root & { document?: import("postcss").Document }
+	let held = root as Root & { document?: Document }
 
 	held.parent = doc
 	held.document = doc

@@ -1,7 +1,8 @@
+import type { Rule } from "postcss"
+
 import { findInlineCommentSpans } from "../findInlineCommentSpans/index.ts"
 import { rewriteInlineComments } from "../rewriteInlineComments/index.ts"
-
-export type Rule = import("postcss").Rule
+import type { SyntaxRaw } from "../typeGuards/index.ts"
 
 /**
  * Sets the selector of a rule, in the copy of it the syntax prints.
@@ -12,7 +13,7 @@ export type Rule = import("postcss").Rule
  * @returns The rule that was passed in.
  */
 export function setRuleSelector (rule: Rule, selector: string): Rule {
-	let syntaxRaw: import("../typeGuards/index.ts").SyntaxRaw | undefined = rule.raws.selector
+	let syntaxRaw: SyntaxRaw | undefined = rule.raws.selector
 
 	if (syntaxRaw) {
 		if (typeof syntaxRaw.scss === `string`) {

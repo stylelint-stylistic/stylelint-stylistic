@@ -1,4 +1,4 @@
-import { parse } from "postcss"
+import { parse, type Rule } from "postcss"
 import { describe, expect, it } from "vitest"
 
 import { removeEmptyLinesAfter } from "./index.ts"
@@ -78,7 +78,7 @@ describe(`removeEmptyLineBefore`, () => {
 function run (css: string): string {
 	let root = parse(css)
 
-	removeEmptyLinesAfter(root.nodes[0] as import("postcss").Rule)
+	removeEmptyLinesAfter(root.nodes[0] as Rule)
 
 	return root.toString()
 }

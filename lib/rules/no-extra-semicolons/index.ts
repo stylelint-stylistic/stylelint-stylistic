@@ -1,5 +1,6 @@
+import type { Node } from "postcss"
 import styleSearch from "style-search"
-import stylelint from "stylelint"
+import stylelint, { type FixCallback } from "stylelint"
 
 import { addNamespace } from "../../utils/addNamespace/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -29,7 +30,7 @@ export let meta = {
  * @param node - The PostCSS node.
  * @returns The offset index.
  */
-function getOffsetByNode (node: import("postcss").Node): number {
+function getOffsetByNode (node: Node): number {
 	if (node.parent && `document` in node.parent && node.parent.document) return 0
 
 	let root = node.root()
@@ -74,7 +75,7 @@ function rule (primary: true): RuleCheck {
 
 		if (!validOptions) return
 
-		let fix: import("stylelint").FixCallback | undefined
+		let fix: FixCallback | undefined
 
 		if (root.raws.after && root.raws.after.trim().length > 0) {
 			let rawAfterRoot = root.raws.after

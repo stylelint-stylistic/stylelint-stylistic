@@ -1,4 +1,4 @@
-import { parse } from "postcss"
+import { type AtRule, parse } from "postcss"
 import { parse as parseScss } from "postcss-scss"
 import { describe, expect, it } from "vitest"
 
@@ -31,8 +31,8 @@ describe(`getAtRuleParams`, () => {
  * @param css - The stylesheet.
  * @returns That at-rule.
  */
-function atRule (css: string): import("postcss").AtRule {
-	let list: import("postcss").AtRule[] = []
+function atRule (css: string): AtRule {
+	let list: AtRule[] = []
 
 	parse(css).walkAtRules((rule) => {
 		list.push(rule)
@@ -46,8 +46,8 @@ function atRule (css: string): import("postcss").AtRule {
  * @param css - The stylesheet.
  * @returns That at-rule.
  */
-function scssAtRule (css: string): import("postcss").AtRule {
-	let list: import("postcss").AtRule[] = []
+function scssAtRule (css: string): AtRule {
+	let list: AtRule[] = []
 
 	parseScss(css).walkAtRules((rule) => {
 		list.push(rule)

@@ -1,18 +1,18 @@
-export type Node = import("postcss").Node
-export type NodeSource = import("postcss").Source
+import type { AtRule, Comment, Declaration, Document, Node, Parser, Root, Rule, Source as NodeSource, Syntax } from "postcss"
+import type { FunctionNode, Node as ValueParserNode } from "postcss-value-parser"
 
 /** The raw of a selector, a value or a set of params. PostCSS keeps the text with its comments in `raw` beside the copy it hands back in `value`, and `postcss-scss` keeps a third copy under `scss`, spelled as the file spells it with every `//` comment in place, which is the one it prints. */
 export type SyntaxRaw = { raw: string, value: string, scss?: string }
 
 /** The source of a root `postcss-html` read out of a page, beside what PostCSS gives every node: whether the block came out of a `style` attribute, the language the block names, and the syntax it was parsed with. */
-export type EmbeddedSource = import("postcss").Source & { inline?: boolean, lang?: string, syntax?: import("postcss").Syntax }
+export type EmbeddedSource = NodeSource & { inline?: boolean, lang?: string, syntax?: Syntax }
 
 /**
  * Checks if a node is a PostCSS Root node.
  * @param node - The node to check.
  * @returns True if the node is a Root, false otherwise.
  */
-export function isRoot (node: Node): node is import("postcss").Root {
+export function isRoot (node: Node): node is Root {
 	return node.type === `root`
 }
 
@@ -21,7 +21,7 @@ export function isRoot (node: Node): node is import("postcss").Root {
  * @param node - The node to check.
  * @returns True if the node is a Rule, false otherwise.
  */
-export function isRule (node: Node): node is import("postcss").Rule {
+export function isRule (node: Node): node is Rule {
 	return node.type === `rule`
 }
 
@@ -30,7 +30,7 @@ export function isRule (node: Node): node is import("postcss").Rule {
  * @param node - The node to check.
  * @returns True if the node is an AtRule, false otherwise.
  */
-export function isAtRule (node: Node): node is import("postcss").AtRule {
+export function isAtRule (node: Node): node is AtRule {
 	return node.type === `atrule`
 }
 
@@ -39,7 +39,7 @@ export function isAtRule (node: Node): node is import("postcss").AtRule {
  * @param node - The node to check.
  * @returns True if the node is a Comment, false otherwise.
  */
-export function isComment (node: Node): node is import("postcss").Comment {
+export function isComment (node: Node): node is Comment {
 	return node.type === `comment`
 }
 
@@ -48,7 +48,7 @@ export function isComment (node: Node): node is import("postcss").Comment {
  * @param node - The node to check.
  * @returns True if the node is a Declaration, false otherwise.
  */
-export function isDeclaration (node: Node): node is import("postcss").Declaration {
+export function isDeclaration (node: Node): node is Declaration {
 	return node.type === `decl`
 }
 
@@ -57,7 +57,7 @@ export function isDeclaration (node: Node): node is import("postcss").Declaratio
  * @param node - The node to check.
  * @returns True if the node is a Document, false otherwise.
  */
-export function isDocument (node: Node): node is import("postcss").Document {
+export function isDocument (node: Node): node is Document {
 	return node.type === `document`
 }
 
@@ -66,7 +66,7 @@ export function isDocument (node: Node): node is import("postcss").Document {
  * @param node - The node to check.
  * @returns True if the node is a Function, false otherwise.
  */
-export function isValueFunction (node: import("postcss-value-parser").Node): node is import("postcss-value-parser").FunctionNode {
+export function isValueFunction (node: ValueParserNode): node is FunctionNode {
 	return node.type === `function`
 }
 
@@ -84,7 +84,7 @@ export function hasSource (node: Node): node is (Node & { source: NodeSource }) 
  * @param value - The value a configuration named as a syntax, or nothing at all.
  * @returns True where it can parse.
  */
-export function isSyntax (value: unknown): value is { parse: import("postcss").Parser } {
+export function isSyntax (value: unknown): value is { parse: Parser } {
 	// PostCSS itself is a function carrying `parse`, and a syntax package is an object carrying one
 	return (typeof value === `object` || typeof value === `function`) && value !== null && `parse` in value && typeof value.parse === `function`
 }

@@ -1,4 +1,4 @@
-import valueParser from "postcss-value-parser"
+import valueParser, { type FunctionNode } from "postcss-value-parser"
 import { describe, expect, it } from "vitest"
 
 import { isStandardSyntaxFunction } from "./index.ts"
@@ -40,8 +40,8 @@ describe(`isStandardSyntaxFunction`, () => {
  * @param declValue - The value.
  * @returns That call.
  */
-function getFunction (declValue: string): import("postcss-value-parser").FunctionNode {
-	let functions: import("postcss-value-parser").FunctionNode[] = []
+function getFunction (declValue: string): FunctionNode {
+	let functions: FunctionNode[] = []
 
 	valueParser(declValue).walk((valueNode) => {
 		if (valueNode.type === `function`) functions.push(valueNode)

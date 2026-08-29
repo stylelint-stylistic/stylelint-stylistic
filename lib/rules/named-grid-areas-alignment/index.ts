@@ -1,10 +1,10 @@
-import valueParser from "postcss-value-parser"
+import valueParser, { type Node, type StringNode } from "postcss-value-parser"
 import stylelint from "stylelint"
 
 import { EVERY_LINE_BREAK_RUN, EVERY_WHITESPACE_RUN, LAST_LINE } from "../../regexps.ts"
 import { addNamespace } from "../../utils/addNamespace/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
-import { findInlineCommentSpans, findInlineCommentSpanTouching } from "../../utils/findInlineCommentSpans/index.ts"
+import { findInlineCommentSpans, findInlineCommentSpanTouching, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
 import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { readsInlineComments } from "../../utils/readsInlineComments/index.ts"
@@ -35,7 +35,7 @@ export let meta = {
  * @param inlineComments - The spans the inline comments of the value occupy in it.
  * @returns True where the node is a row of the grid.
  */
-function isGridRow (node: import("postcss-value-parser").Node, inlineComments: import("../../utils/findInlineCommentSpans/index.ts").InlineCommentSpan[]): node is import("postcss-value-parser").StringNode {
+function isGridRow (node: Node, inlineComments: InlineCommentSpan[]): node is StringNode {
 	return node.type === `string` && !findInlineCommentSpanTouching(node, inlineComments)
 }
 

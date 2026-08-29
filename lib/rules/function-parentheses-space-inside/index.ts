@@ -1,16 +1,16 @@
-import valueParser from "postcss-value-parser"
-import stylelint from "stylelint"
+import valueParser, { type FunctionNode } from "postcss-value-parser"
+import stylelint, { type FixCallback } from "stylelint"
 
 import { addNamespace } from "../../utils/addNamespace/index.ts"
-import { applyEditsFromEnd } from "../../utils/applyEditsFromEnd/index.ts"
+import { applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
-import { findInlineCommentSpanAt, findInlineCommentSpanHolding, findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
+import { findInlineCommentSpanAt, findInlineCommentSpanHolding, findInlineCommentSpans, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
 import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { isStandardSyntaxFunction } from "../../utils/isStandardSyntaxFunction/index.ts"
 import { movesEndIntoInlineComment } from "../../utils/movesEndIntoInlineComment/index.ts"
-import { inlineCommentReading } from "../../utils/readsInlineComments/index.ts"
+import { type InlineCommentReading, inlineCommentReading } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 
@@ -36,9 +36,6 @@ export let meta = {
 	fixable: true,
 }
 
-type Edit = import("../../utils/applyEditsFromEnd/index.ts").Edit
-type FunctionNode = import("postcss-value-parser").FunctionNode
-
 /** A character put where the first argument of a function begins, so that the guard reading the text in front of it is answered about that position and not about the whitespace the fix would write over. Any character that opens nothing and that `String.prototype.trimEnd` leaves standing answers the same, and the argument's own first character is not one of those: the value parser counts as space only what stands below the blank, so a separator of Unicode standing there is a character of the argument, and the scan behind the guard would trim it away together with the line break in front of it and read the comment as still open. */
 const ARGUMENT_STAND_IN = `x`
 
@@ -58,7 +55,7 @@ const ARGUMENT_STAND_IN = `x`
  * @param inlineComments - The spans the inline comments of the value occupy in it.
  * @returns True where the rule may read the function's parentheses and write between them.
  */
-function isFunctionParsedAsWritten (valueNode: FunctionNode, inlineComments: import("../../utils/findInlineCommentSpans/index.ts").InlineCommentSpan[]): boolean {
+function isFunctionParsedAsWritten (valueNode: FunctionNode, inlineComments: InlineCommentSpan[]): boolean {
 	if (!isStandardSyntaxFunction(valueNode)) return false
 
 	if (valueNode.unclosed) return false
@@ -78,7 +75,7 @@ function isFunctionParsedAsWritten (valueNode: FunctionNode, inlineComments: imp
  * @param reading - What the syntax the value was spelled in makes of a comment opened by a double slash.
  * @returns True where a reading has the argument move into a comment.
  */
-function movesOpeningIntoComment (declValue: string, valueNode: FunctionNode, reading: import("../../utils/readsInlineComments/index.ts").InlineCommentReading): boolean {
+function movesOpeningIntoComment (declValue: string, valueNode: FunctionNode, reading: InlineCommentReading): boolean {
 	let openingIndex = valueNode.sourceIndex + valueNode.value.length + 1
 	let firstIndex = openingIndex + valueNode.before.length
 	let standingText = declValue.slice(0, firstIndex)
@@ -97,7 +94,7 @@ function movesOpeningIntoComment (declValue: string, valueNode: FunctionNode, re
  * @param reading - What the syntax the value was spelled in makes of a comment opened by a double slash.
  * @returns True where a reading has the parenthesis move into a comment.
  */
-function movesClosingIntoComment (declValue: string, valueNode: FunctionNode, reading: import("../../utils/readsInlineComments/index.ts").InlineCommentReading): boolean {
+function movesClosingIntoComment (declValue: string, valueNode: FunctionNode, reading: InlineCommentReading): boolean {
 	let closingIndex = valueNode.sourceEndIndex - 1
 	let standingText = declValue.slice(0, closingIndex)
 	// The fix writes the whitespace the function keeps in front of the parenthesis and nothing else, so everything behind that whitespace stays on the line it is written on, and only the parenthesis moves. A single space is all the `always` options put there, and a space closes no comment, so both options leave the parenthesis standing behind the same text.
@@ -152,7 +149,7 @@ function rule (primary: `always` | `never` | `always-single-line` | `never-singl
 		root.walkDecls((decl) => {
 			if (!decl.value.includes(`(`)) return
 
-			let fix: import("stylelint").FixCallback | undefined
+			let fix: FixCallback | undefined
 			// What a fix changed, and nothing else: the value is edited at the positions the fixes name rather than printed anew from the parsed tree, since `postcss-value-parser` does not always give back the text it was handed — a comment opening `/*/` comes back as `/**/` — and a fix made anywhere in such a value would rewrite a comment standing elsewhere in it
 			let edits: Edit[] = []
 			let declValue = getDeclarationValue(decl)

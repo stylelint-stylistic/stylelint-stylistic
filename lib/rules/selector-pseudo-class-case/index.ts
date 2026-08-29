@@ -10,6 +10,7 @@ import { parseSelector } from "../../utils/parseSelector/index.ts"
 import { restoreSelectorInlineComments } from "../../utils/restoreSelectorInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { toSelectorSourceIndex } from "../../utils/toSelectorSourceIndex/index.ts"
+import type { SyntaxRaw } from "../../utils/typeGuards/index.ts"
 
 let { utils: { report, ruleMessages, validateOptions } } = stylelint
 
@@ -43,7 +44,7 @@ function rule (primary: `lower` | `upper`): RuleCheck {
 		root.walkRules((ruleNode) => {
 			if (!isStandardSyntaxRule(ruleNode)) return
 
-			let selectorRaws: import("../../utils/typeGuards/index.ts").SyntaxRaw | undefined = ruleNode.raws.selector
+			let selectorRaws: SyntaxRaw | undefined = ruleNode.raws.selector
 			let selector = selectorRaws ? selectorRaws.raw : ruleNode.selector
 
 			if (!selector.includes(`:`)) return

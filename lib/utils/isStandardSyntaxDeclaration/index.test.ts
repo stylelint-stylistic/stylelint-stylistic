@@ -1,4 +1,4 @@
-import postcss from "postcss"
+import postcss, { type Declaration, type Parser } from "postcss"
 import postcssLess from "postcss-less"
 import postcssScss from "postcss-scss"
 import { describe, expect, it } from "vitest"
@@ -137,8 +137,8 @@ describe(`isStandardSyntaxDeclaration`, () => {
  * @param parser - The syntax to read it with.
  * @returns That declaration.
  */
-function decl (css: string, parser: { parse: import("postcss").Parser } = postcss): import("postcss").Declaration {
-	let list: import("postcss").Declaration[] = []
+function decl (css: string, parser: { parse: Parser } = postcss): Declaration {
+	let list: Declaration[] = []
 
 	parser.parse(css).walkDecls((d) => {
 		list.push(d)
@@ -154,7 +154,7 @@ function decl (css: string, parser: { parse: import("postcss").Parser } = postcs
  * @param css - The stylesheet.
  * @returns That declaration.
  */
-function scssDecl (css: string): import("postcss").Declaration {
+function scssDecl (css: string): Declaration {
 	return decl(css, postcssScss)
 }
 
@@ -163,6 +163,6 @@ function scssDecl (css: string): import("postcss").Declaration {
  * @param css - The stylesheet.
  * @returns That declaration.
  */
-function lessDecl (css: string): import("postcss").Declaration {
+function lessDecl (css: string): Declaration {
 	return decl(css, postcssLess)
 }

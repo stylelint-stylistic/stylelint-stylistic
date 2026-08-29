@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { addEdit, applyEditsFromEnd, toIndexBeforeEdits } from "./index.ts"
+import { addEdit, applyEditsFromEnd, type Edit, toIndexBeforeEdits } from "./index.ts"
 
 describe(`applyEditsFromEnd`, () => {
 	it(`no edit at all`, () => {
@@ -123,7 +123,7 @@ describe(`addEdit`, () => {
 	})
 
 	it(`an edit added to an empty list`, () => {
-		let edits: import("./index.ts").Edit[] = []
+		let edits: Edit[] = []
 
 		addEdit(edits, { start: 0, end: 1, text: `x` })
 

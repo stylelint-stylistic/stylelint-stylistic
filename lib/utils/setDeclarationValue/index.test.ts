@@ -1,6 +1,8 @@
-import { parse } from "postcss"
+import { type Declaration, parse } from "postcss"
 import { parse as parseScss, stringify as stringifyScss } from "postcss-scss"
 import { describe, expect, it } from "vitest"
+
+import type { SyntaxRaw } from "../typeGuards/index.ts"
 
 import { setDeclarationValue } from "./index.ts"
 
@@ -41,7 +43,7 @@ describe(`setDeclarationValue`, () => {
 
 		setDeclarationValue(node, `0 // c\n  2px`)
 
-		expect((node.raws.value as import("../typeGuards/index.ts").SyntaxRaw).scss).toBe(`0 // c\n  2px`)
+		expect((node.raws.value as SyntaxRaw).scss).toBe(`0 // c\n  2px`)
 	})
 
 	it(`keeps the raw beside it in step`, () => {
@@ -49,7 +51,7 @@ describe(`setDeclarationValue`, () => {
 
 		setDeclarationValue(node, `0 // c\n  2px`)
 
-		expect((node.raws.value as import("../typeGuards/index.ts").SyntaxRaw).raw).toBe(`0 /* c*/\n  2px`)
+		expect((node.raws.value as SyntaxRaw).raw).toBe(`0 /* c*/\n  2px`)
 	})
 
 	it(`the syntax prints what was written`, () => {
@@ -68,8 +70,8 @@ describe(`setDeclarationValue`, () => {
  * @param css - The stylesheet.
  * @returns That declaration.
  */
-function decl (css: string): import("postcss").Declaration {
-	let list: import("postcss").Declaration[] = []
+function decl (css: string): Declaration {
+	let list: Declaration[] = []
 
 	parse(css).walkDecls((d) => {
 		list.push(d)
@@ -83,8 +85,8 @@ function decl (css: string): import("postcss").Declaration {
  * @param css - The stylesheet.
  * @returns That declaration.
  */
-function scssDecl (css: string): import("postcss").Declaration {
-	let list: import("postcss").Declaration[] = []
+function scssDecl (css: string): Declaration {
+	let list: Declaration[] = []
 
 	parseScss(css).walkDecls((d) => {
 		list.push(d)

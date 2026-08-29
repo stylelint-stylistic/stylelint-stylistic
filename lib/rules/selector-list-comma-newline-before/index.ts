@@ -1,3 +1,4 @@
+import type { Rule } from "postcss"
 import stylelint from "stylelint"
 
 import { TRAILING_SPACES_AND_TABS, TRAILING_WHITESPACE } from "../../regexps.ts"
@@ -8,6 +9,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { restoreSelectorInlineComments } from "../../utils/restoreSelectorInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { selectorListCommaWhitespaceChecker } from "../../utils/selectorListCommaWhitespaceChecker/index.ts"
+import type { SyntaxRaw } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
 let { utils: { ruleMessages, validateOptions } } = stylelint
@@ -44,7 +46,7 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, _se
 
 		if (!validOptions) return
 
-		let fixData: Map<import("postcss").Rule, number[]> | undefined
+		let fixData: Map<Rule, number[]> | undefined
 
 		selectorListCommaWhitespaceChecker({
 			root,
@@ -73,7 +75,7 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, _se
 
 		if (fixData) {
 			for (let [ruleNode, commaIndices] of fixData.entries()) {
-				let selectorRaws: import("../../utils/typeGuards/index.ts").SyntaxRaw | undefined = ruleNode.raws.selector
+				let selectorRaws: SyntaxRaw | undefined = ruleNode.raws.selector
 				let selector = selectorRaws ? selectorRaws.raw : ruleNode.selector
 
 				// The comments are read off the two spellings before anything is written, since the alignment the pair is read by holds only while the copies tell one story.

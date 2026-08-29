@@ -1,4 +1,4 @@
-import { parse } from "postcss"
+import { type Container, parse, type Parser, type Rule } from "postcss"
 import less from "postcss-less"
 import scss from "postcss-scss"
 import { describe, expect, it } from "vitest"
@@ -28,7 +28,7 @@ describe(`setBlockAfter`, () => {
 	})
 
 	it(`hands back the statement it was given`, () => {
-		let statement = parse(`a {\n\t@extend .b\n}`).first as import("postcss").Rule
+		let statement = parse(`a {\n\t@extend .b\n}`).first as Rule
 
 		expect(setBlockAfter(statement, ` `)).toBe(statement)
 	})
@@ -41,10 +41,10 @@ describe(`setBlockAfter`, () => {
  * @param syntax - The syntax to read it with, where plain CSS is not the one.
  * @returns The stylesheet as it prints after the write.
  */
-function run (css: string, after: string, syntax?: { parse: import("postcss").Parser }): string {
+function run (css: string, after: string, syntax?: { parse: Parser }): string {
 	let root = syntax ? syntax.parse(css) : parse(css)
 
-	setBlockAfter(root.first as import("postcss").Container, after)
+	setBlockAfter(root.first as Container, after)
 
 	return syntax ? root.toString(syntax) : root.toString()
 }

@@ -1,6 +1,7 @@
-import postcss from "postcss"
+import postcss, { type Container, type Parser } from "postcss"
 import less from "postcss-less"
 import scss from "postcss-scss"
+import type { PostcssResult } from "stylelint"
 import { beforeEach, describe, expect, it } from "vitest"
 
 import { beforeBlockString } from "./index.ts"
@@ -82,10 +83,10 @@ describe(`beforeBlockString`, () => {
  * @param syntax - The syntax to read it with.
  * @returns What the util answers.
  */
-function postcssCheck (options?: string | { noRawBefore?: boolean }, cssString?: string, syntax: { parse: import("postcss").Parser } = postcss): string {
+function postcssCheck (options?: string | { noRawBefore?: boolean }, cssString?: string, syntax: { parse: Parser } = postcss): string {
 	let opts = typeof options === `undefined` ? {} : options
 	let css = typeof opts === `string` ? opts : cssString ?? ``
 	let root = syntax.parse(css, { from: undefined })
 
-	return beforeBlockString(root.first as import("postcss").Container, { opts: { syntax } } as unknown as import("stylelint").PostcssResult, typeof opts === `string` ? {} : opts)
+	return beforeBlockString(root.first as Container, { opts: { syntax } } as unknown as PostcssResult, typeof opts === `string` ? {} : opts)
 }

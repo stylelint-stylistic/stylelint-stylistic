@@ -1,7 +1,5 @@
 import { LEADING_NON_WHITESPACE, TRAILING_SPACES } from "../../regexps.ts"
-import { findCommentSpans } from "../findCommentSpans/index.ts"
-
-export type CommentSpan = import("../findCommentSpans/index.ts").CommentSpan
+import { type CommentSpan, findCommentSpans } from "../findCommentSpans/index.ts"
 
 /** The run a comment takes out of a text when it is removed from it, from the first character taken to the one behind the last. */
 export type RemovedRun = { start: number, end: number }

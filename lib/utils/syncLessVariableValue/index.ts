@@ -1,4 +1,7 @@
-export type AtRule = import("postcss").AtRule | import("postcss-less").AtRule
+import type { AtRule as PostcssAtRule } from "postcss"
+import type { AtRule as LessAtRule } from "postcss-less"
+
+export type AtRule = PostcssAtRule | LessAtRule
 
 /**
  * Mirrors the params just written to an at-rule into the value that `postcss-less` prints.

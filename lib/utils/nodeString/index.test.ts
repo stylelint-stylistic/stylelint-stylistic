@@ -1,6 +1,7 @@
-import postcss, { parse } from "postcss"
+import postcss, { type Node, parse, type Parser, type Rule } from "postcss"
 import less from "postcss-less"
 import scss from "postcss-scss"
+import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
 import { nodeString } from "./index.ts"
@@ -53,7 +54,7 @@ describe(`nodeString`, () => {
 	it(`falls back to PostCSS's own stringifier where no syntax is to be had`, () => {
 		let root = parse(`a { color: pink }`)
 
-		expect(nodeString(root.first as import("postcss").Rule)).toBe(`a { color: pink }`)
+		expect(nodeString(root.first as Rule)).toBe(`a { color: pink }`)
 	})
 })
 
@@ -64,10 +65,10 @@ describe(`nodeString`, () => {
  * @param type - The type of the node to print.
  * @returns That node, as `nodeString` prints it.
  */
-function first (syntax: { parse: import("postcss").Parser }, css: string, type: string): string {
+function first (syntax: { parse: Parser }, css: string, type: string): string {
 	let root = syntax.parse(css, { from: undefined })
 
-	let found: import("postcss").Node | undefined
+	let found: Node | undefined
 
 	root.walk((node) => {
 		if (found === undefined && node.type === type) found = node
@@ -75,5 +76,5 @@ function first (syntax: { parse: import("postcss").Parser }, css: string, type: 
 
 	if (!found) throw new Error(`The stylesheet holds no node of the type "${type}"`)
 
-	return nodeString(found, { opts: { syntax } } as unknown as import("stylelint").PostcssResult)
+	return nodeString(found, { opts: { syntax } } as unknown as PostcssResult)
 }

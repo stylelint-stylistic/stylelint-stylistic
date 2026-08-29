@@ -1,4 +1,5 @@
-import stylelint from "stylelint"
+import type { AtRule, Node, Rule } from "postcss"
+import stylelint, { type PostcssResult } from "stylelint"
 
 import { EVERY_LINE_BREAK, LINE_BREAK } from "../../regexps.ts"
 import { addNamespace } from "../../utils/addNamespace/index.ts"
@@ -43,7 +44,7 @@ export let meta = {
  * @param result - The Stylelint result, which holds the syntax the file was opened with.
  * @returns True where any node of that run leaves an inline comment open behind it.
  */
-function fixWouldCommentOutTheBlock (statement: import("postcss").Rule | import("postcss").AtRule, nodeToCheck: import("postcss").Node, result: import("stylelint").PostcssResult): boolean {
+function fixWouldCommentOutTheBlock (statement: Rule | AtRule, nodeToCheck: Node, result: PostcssResult): boolean {
 	for (let node = statement.first; node && node !== nodeToCheck; node = node.next()) {
 		if (writesIntoInlineComment(node, result)) return true
 	}
@@ -88,7 +89,7 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, sec
 		 * Checks a statement for opening brace newline violations.
 		 * @param statement - The rule or at-rule to check.
 		 */
-		function check (statement: import("postcss").Rule | import("postcss").AtRule): void {
+		function check (statement: Rule | AtRule): void {
 			// Return early if blockless or has an empty block
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 
@@ -103,7 +104,7 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, sec
 			 * @param comment - The comment the walk stepped over.
 			 * @param nextNode - The node standing behind that comment.
 			 */
-			function carryBreakPastComment (comment: import("postcss").Node, nextNode: import("postcss").Node | undefined): void {
+			function carryBreakPastComment (comment: Node, nextNode: Node | undefined): void {
 				if (!nextNode) return
 
 				// A line break is what PostCSS reads as one: a line feed, with or without the carriage return of a Windows pair in front of it

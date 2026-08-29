@@ -1,7 +1,8 @@
+import type { Declaration } from "postcss"
+
 import { findInlineCommentSpans } from "../findInlineCommentSpans/index.ts"
 import { rewriteInlineComments } from "../rewriteInlineComments/index.ts"
-
-export type Declaration = import("postcss").Declaration
+import type { SyntaxRaw } from "../typeGuards/index.ts"
 
 /**
  * Sets the value of a CSS declaration, in the copy of it the syntax prints.
@@ -12,7 +13,7 @@ export type Declaration = import("postcss").Declaration
  * @returns The declaration that was passed in.
  */
 export function setDeclarationValue (decl: Declaration, value: string): Declaration {
-	let syntaxRaw: import("../typeGuards/index.ts").SyntaxRaw | undefined = decl.raws.value
+	let syntaxRaw: SyntaxRaw | undefined = decl.raws.value
 
 	if (syntaxRaw) {
 		if (typeof syntaxRaw.scss === `string`) {

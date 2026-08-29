@@ -1,3 +1,5 @@
+import type { Declaration } from "postcss"
+
 import { getDeclarationValue } from "../getDeclarationValue/index.ts"
 import { setDeclarationValue } from "../setDeclarationValue/index.ts"
 
@@ -15,7 +17,7 @@ import { setDeclarationValue } from "../setDeclarationValue/index.ts"
  * @param length - How many characters of the printed value to move, never more than that value holds. Both rules hand over nothing at all where no run stands at its head — a value opening on the word it holds, and a value that is empty.
  * @returns The declaration that was passed in.
  */
-export function moveDeclarationValueHeadIntoBetween (decl: import("postcss").Declaration, length: number): import("postcss").Declaration {
+export function moveDeclarationValueHeadIntoBetween (decl: Declaration, length: number): Declaration {
 	let value = getDeclarationValue(decl)
 	let tail = value.slice(length)
 

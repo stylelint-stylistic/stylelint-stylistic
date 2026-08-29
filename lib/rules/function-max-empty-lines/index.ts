@@ -1,3 +1,4 @@
+import type { Declaration } from "postcss"
 import valueParser from "postcss-value-parser"
 import stylelint from "stylelint"
 
@@ -30,7 +31,7 @@ export let meta = {
  * @param decl - The CSS declaration node.
  * @returns The index of the start of the declaration's value.
  */
-function placeIndexOnValueStart (decl: import("postcss").Declaration): number {
+function placeIndexOnValueStart (decl: Declaration): number {
 	assertString(decl.raws.between)
 
 	return decl.prop.length + decl.raws.between.length - 1

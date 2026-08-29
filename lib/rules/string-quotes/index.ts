@@ -1,3 +1,4 @@
+import type { AtRule, Declaration, Rule } from "postcss"
 import valueParser from "postcss-value-parser"
 import stylelint from "stylelint"
 
@@ -5,7 +6,7 @@ import { addNamespace } from "../../utils/addNamespace/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
-import { findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
+import { findInlineCommentSpans, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
 import { findSelectorInlineComments } from "../../utils/findSelectorInlineComments/index.ts"
 import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
 import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
@@ -20,7 +21,7 @@ import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setAtRuleParams } from "../../utils/setAtRuleParams/index.ts"
 import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 import { toSelectorSourceIndex } from "../../utils/toSelectorSourceIndex/index.ts"
-import { isAtRule } from "../../utils/typeGuards/index.ts"
+import { isAtRule, type SyntaxRaw } from "../../utils/typeGuards/index.ts"
 import { assertString, isBoolean } from "../../utils/validateTypes/index.ts"
 
 let { utils: { report, ruleMessages, validateOptions } } = stylelint
@@ -40,8 +41,6 @@ export let meta = {
 
 const SINGLE_QUOTE = `'`
 const DOUBLE_QUOTE = `"`
-
-type InlineCommentSpan = import("../../utils/findInlineCommentSpans/index.ts").InlineCommentSpan
 
 /**
  * Specifies single or double quotes around strings.
@@ -99,10 +98,10 @@ function rule (primary: `single` | `double`, secondaryOptions: { avoidEscape?: b
 		 * Checks a rule node for quote violations.
 		 * @param ruleNode - The rule node to check.
 		 */
-		function checkRule (ruleNode: import("postcss").Rule): void {
+		function checkRule (ruleNode: Rule): void {
 			if (!isStandardSyntaxRule(ruleNode)) return
 
-			let selectorRaws: import("../../utils/typeGuards/index.ts").SyntaxRaw | undefined = ruleNode.raws.selector
+			let selectorRaws: SyntaxRaw | undefined = ruleNode.raws.selector
 
 			// `ruleNode.selector` is a copy with every comment taken out, so a position counted in it stands short of the file wherever a comment goes before, and a fix written to it prints without the comments. The raw is the text the file holds — except under `postcss-scss`, which spells every inline comment of the raw as a block one and keeps the file's spelling beside it, two characters shorter per comment. The raw is what is parsed here, every position is translated back into the file's coordinates, and a fix is written to both copies.
 			let selector = selectorRaws ? selectorRaws.raw : ruleNode.selector
@@ -209,10 +208,10 @@ function rule (primary: `single` | `double`, secondaryOptions: { avoidEscape?: b
 		 * @param rawValue - The value to check, as the raws of the node record it.
 		 * @param getIndex - Function to get the index of the node.
 		 */
-		function checkDeclOrAtRule<T extends import("postcss").AtRule | import("postcss").Declaration> (node: T, rawValue: string, getIndex: (node: T) => number): void {
+		function checkDeclOrAtRule<T extends AtRule | Declaration> (node: T, rawValue: string, getIndex: (node: T) => number): void {
 			let fixPositions: number[] = []
 
-			let raws: import("../../utils/typeGuards/index.ts").SyntaxRaw | undefined = isAtRule(node) ? node.raws.params : node.raws.value
+			let raws: SyntaxRaw | undefined = isAtRule(node) ? node.raws.params : node.raws.value
 
 			// `postcss-scss` rewrites every `//` comment inside the raw into a block comment, keeps the spelling of the file in a copy of its own and prints that copy. The rule works in that copy, since it is the file it reports positions in and the text a fix has to reach.
 			let value = (raws && raws.scss) || rawValue

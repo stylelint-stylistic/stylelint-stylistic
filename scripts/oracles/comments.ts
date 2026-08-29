@@ -10,7 +10,7 @@ import { stdout } from "node:process"
 
 import { lint } from "../harness/lint.ts"
 
-import { buildRuns, isUsable } from "./runs.ts"
+import { buildRuns, isUsable, type Run } from "./runs.ts"
 
 /** Every opening a comment can be spelled with, counted apart so that one kind turning into the other is a finding too. */
 const EVERY_BLOCK_OPENING = /\/\*/gu
@@ -30,7 +30,7 @@ function tally (text: string): string {
  * @param run - The rule, the option, the syntax and the fixture.
  * @returns The finding, or null where there is none.
  */
-async function probe (run: import("./runs.ts").Run): Promise<object | null> {
+async function probe (run: Run): Promise<object | null> {
 	let before = tally(run.code)
 
 	if (before === `block:0 inline:0`) return null

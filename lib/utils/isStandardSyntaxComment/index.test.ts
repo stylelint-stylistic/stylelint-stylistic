@@ -1,4 +1,4 @@
-import { parse as parseCss } from "postcss"
+import { type Comment, parse as parseCss } from "postcss"
 import { parse as parseLess } from "postcss-less"
 import { parse as parseScss } from "postcss-scss"
 import { describe, expect, it } from "vitest"
@@ -28,8 +28,8 @@ describe(`isStandardSyntaxComment`, () => {
  * @param code - The stylesheet.
  * @returns That comment.
  */
-function css (code: string): import("postcss").Comment {
-	return parseCss(code).first as import("postcss").Comment
+function css (code: string): Comment {
+	return parseCss(code).first as Comment
 }
 
 /**
@@ -37,8 +37,8 @@ function css (code: string): import("postcss").Comment {
  * @param code - The stylesheet.
  * @returns That comment.
  */
-function less (code: string): import("postcss").Comment {
-	return parseLess(code).first as import("postcss").Comment
+function less (code: string): Comment {
+	return parseLess(code).first as Comment
 }
 
 /**
@@ -46,6 +46,6 @@ function less (code: string): import("postcss").Comment {
  * @param code - The stylesheet.
  * @returns That comment.
  */
-function scss (code: string): import("postcss").Comment {
-	return parseScss(code).first as import("postcss").Comment
+function scss (code: string): Comment {
+	return parseScss(code).first as Comment
 }

@@ -1,3 +1,6 @@
+import type { Node } from "postcss"
+import type { PostcssResult } from "stylelint"
+
 import { nodeSyntax } from "../nodeSyntax/index.ts"
 
 /**
@@ -14,7 +17,7 @@ import { nodeSyntax } from "../nodeSyntax/index.ts"
  * @param result - The Stylelint result, which holds the syntax the file was opened with.
  * @returns The node, spelled as the file spells it.
  */
-export function nodeString (node: import("postcss").Node, result?: import("stylelint").PostcssResult): string {
+export function nodeString (node: Node, result?: PostcssResult): string {
 	// A file read as plain CSS has no syntax of its own, and `toString` reaches for PostCSS's stringifier where it is handed none
 	return node.toString(nodeSyntax(node, result))
 }

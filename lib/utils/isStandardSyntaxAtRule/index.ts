@@ -1,3 +1,6 @@
+import type { AtRule } from "postcss"
+import type { AtRule as LessAtRule } from "postcss-less"
+
 import { isLessDetachedRulesetCall } from "../isLessDetachedRulesetCall/index.ts"
 
 /**
@@ -5,7 +8,7 @@ import { isLessDetachedRulesetCall } from "../isLessDetachedRulesetCall/index.ts
  * @param atRule - The at-rule node to check.
  * @returns True if the at-rule is standard, false otherwise.
  */
-export function isStandardSyntaxAtRule (atRule: import("postcss").AtRule | import("postcss-less").AtRule): boolean {
+export function isStandardSyntaxAtRule (atRule: AtRule | LessAtRule): boolean {
 	// Ignore scss `@content` inside mixins
 	if (!atRule.nodes && atRule.params === ``) return false
 

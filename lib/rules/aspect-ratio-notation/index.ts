@@ -1,4 +1,5 @@
-import valueParser from "postcss-value-parser"
+import type { Node } from "postcss"
+import valueParser, { type Node as ValueParserNode } from "postcss-value-parser"
 import stylelint from "stylelint"
 
 import { ASPECT_RATIO_PROPERTY, NUMBER_WITHOUT_SIGN_OR_EXPONENT } from "../../regexps.ts"
@@ -75,7 +76,7 @@ function rule (primary: `ratio` | `number-where-possible` | `as-written`, second
 		 * @param textIndex - The offset from the start of the node to the first character of that text.
 		 * @param write - Writes the fixed text back to the node.
 		 */
-		function check (node: import("postcss").Node, text: string, textIndex: number, write: (fixed: string) => void): void {
+		function check (node: Node, text: string, textIndex: number, write: (fixed: string) => void): void {
 			let comments = findCommentSpans(text, readsInlineComments(node, result))
 			// The value parser has a node for a block comment and none for a comment opened by a double slash, whose text comes back as ordinary words and divs. Blanking every comment out answers both at once: the copy spells the text character for character everywhere else, so every position below counts in the text itself, and what the parse holds is code the file spells and nothing else.
 			let ratio = findRatio(valueParser(blankComments(text, comments)).nodes)
@@ -121,7 +122,7 @@ function rule (primary: `ratio` | `number-where-possible` | `as-written`, second
 }
 
 /** The two numbers a `<ratio>` is written with, as the value parser read them. */
-type Ratio = { width: import("postcss-value-parser").Node, height?: import("postcss-value-parser").Node }
+type Ratio = { width: ValueParserNode, height?: ValueParserNode }
 
 /**
  * Finds the numbers of the `<ratio>` a value holds, where the value spells `auto || <ratio>` and nothing else.
@@ -130,7 +131,7 @@ type Ratio = { width: import("postcss-value-parser").Node, height?: import("post
  * @param nodes - The nodes of the parsed value, comments already blanked out of it.
  * @returns The numbers, or nothing where the value is no bare ratio.
  */
-function findRatio (nodes: import("postcss-value-parser").Node[]): Ratio | undefined {
+function findRatio (nodes: ValueParserNode[]): Ratio | undefined {
 	let numbers = []
 	let hasAuto = false
 	let hasAutoBehindNumber = false

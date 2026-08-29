@@ -1,11 +1,12 @@
-import { parse } from "postcss"
+import { type Declaration, parse } from "postcss"
 import { parse as parseScss } from "postcss-scss"
+import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
 import { searchCopy } from "./index.ts"
 
-const CSS_RESULT = { opts: {} } as unknown as import("stylelint").PostcssResult
-const SCSS_RESULT = { opts: { syntax: { parse: parseScss } } } as unknown as import("stylelint").PostcssResult
+const CSS_RESULT = { opts: {} } as unknown as PostcssResult
+const SCSS_RESULT = { opts: { syntax: { parse: parseScss } } } as unknown as PostcssResult
 
 describe(`searchCopy`, () => {
 	it(`a double slash of plain CSS is code, and its second slash is spelled out of the search's way`, () => {
@@ -48,8 +49,8 @@ describe(`searchCopy`, () => {
  * @param css - The stylesheet.
  * @returns That declaration.
  */
-function cssDecl (css: string): import("postcss").Declaration {
-	let list: import("postcss").Declaration[] = []
+function cssDecl (css: string): Declaration {
+	let list: Declaration[] = []
 
 	parse(css).walkDecls((d) => {
 		list.push(d)
@@ -63,8 +64,8 @@ function cssDecl (css: string): import("postcss").Declaration {
  * @param css - The stylesheet.
  * @returns That declaration.
  */
-function scssDecl (css: string): import("postcss").Declaration {
-	let list: import("postcss").Declaration[] = []
+function scssDecl (css: string): Declaration {
+	let list: Declaration[] = []
 
 	parseScss(css).walkDecls((d) => {
 		list.push(d)

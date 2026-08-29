@@ -1,5 +1,6 @@
+import type { AtRule, Root } from "postcss"
 import styleSearch from "style-search"
-import stylelint from "stylelint"
+import stylelint, { type PostcssResult } from "stylelint"
 
 import { MEDIA_QUERY_COMBINATORS } from "../../reference/mediaQueries.ts"
 import { MEDIA_AT_RULE } from "../../regexps.ts"
@@ -15,10 +16,10 @@ let { utils: { report } } = stylelint
  * @param opts - The options object.
  */
 export function mediaFeatureColonSpaceChecker (opts: {
-	root: import("postcss").Root,
+	root: Root,
 	locationChecker: (args: { source: string, index: number, err: (message: string) => void }) => void,
-	fix?: ((node: import("postcss").AtRule, index: number) => void),
-	result: import("stylelint").PostcssResult,
+	fix?: ((node: AtRule, index: number) => void),
+	result: PostcssResult,
 	checkedRuleName: string,
 }): void {
 	let { fix } = opts
@@ -45,7 +46,7 @@ export function mediaFeatureColonSpaceChecker (opts: {
 	 * @param index - The index of the colon.
 	 * @param node - The at-rule node.
 	 */
-	function checkColon (source: string, index: number, node: import("postcss").AtRule): void {
+	function checkColon (source: string, index: number, node: AtRule): void {
 		opts.locationChecker({
 			source,
 			index,

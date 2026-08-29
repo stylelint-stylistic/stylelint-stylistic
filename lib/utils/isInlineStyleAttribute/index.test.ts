@@ -1,4 +1,4 @@
-import { parse } from "postcss"
+import { type Container, parse, type Parser } from "postcss"
 import postcssHtml from "postcss-html"
 import scss from "postcss-scss"
 import { describe, expect, it } from "vitest"
@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest"
 import { isInlineStyleAttribute } from "./index.ts"
 
 /** The syntax as its own declaration should spell it: the parser is always there, whatever the optional field says. */
-let html = postcssHtml as { parse: import("postcss").Parser }
+let html = postcssHtml as { parse: Parser }
 
 describe(`isInlineStyleAttribute`, () => {
 	it(`the root of a style attribute`, () => {
@@ -38,11 +38,11 @@ describe(`isInlineStyleAttribute`, () => {
  * @param code - The code to parse.
  * @returns One verdict per declaration, in document order.
  */
-function parentsOf (syntax: { parse: import("postcss").Parser }, code: string): boolean[] {
+function parentsOf (syntax: { parse: Parser }, code: string): boolean[] {
 	let verdicts: boolean[] = []
 
 	syntax.parse(code).walkDecls((decl) => {
-		verdicts.push(isInlineStyleAttribute(decl.parent as import("postcss").Container))
+		verdicts.push(isInlineStyleAttribute(decl.parent as Container))
 	})
 
 	return verdicts

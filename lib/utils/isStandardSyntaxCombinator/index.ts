@@ -1,9 +1,11 @@
+import type { Combinator } from "postcss-selector-parser"
+
 /**
  * Checks whether a combinator is standard (i.e. not a reference combinator).
  * @param node - The combinator node to check.
  * @returns True if the combinator is standard, false otherwise.
  */
-export function isStandardSyntaxCombinator (node: import("postcss-selector-parser").Combinator): boolean {
+export function isStandardSyntaxCombinator (node: Combinator): boolean {
 	// if it's not a combinator, then it's not a standard combinator
 	if (node.type !== `combinator`) return false
 

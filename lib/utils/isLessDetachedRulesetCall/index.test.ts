@@ -1,3 +1,4 @@
+import type { AtRule } from "postcss"
 import postcssLess from "postcss-less"
 import { describe, expect, it } from "vitest"
 
@@ -47,8 +48,8 @@ describe(`isLessDetachedRulesetCall`, () => {
  * @param index - Which at-rule, counted in the order the walk meets them.
  * @returns That at-rule.
  */
-function lessAtRule (code: string, index: number = 0): import("postcss").AtRule {
-	let atRules: import("postcss").AtRule[] = []
+function lessAtRule (code: string, index: number = 0): AtRule {
+	let atRules: AtRule[] = []
 
 	postcssLess.parse(code).walkAtRules((atRule) => {
 		atRules.push(atRule)

@@ -1,4 +1,5 @@
-import stylelint from "stylelint"
+import type { AtRule, Root } from "postcss"
+import stylelint, { type PostcssResult } from "stylelint"
 
 import { isStandardSyntaxAtRule } from "../isStandardSyntaxAtRule/index.ts"
 
@@ -9,11 +10,11 @@ let { utils: { report } } = stylelint
  * @param options - The options object.
  */
 export function atRuleNameSpaceChecker (options: {
-	root: import("postcss").Root,
+	root: Root,
 	locationChecker: (opts: { source: string, index: number, err: (msg: string) => void, errTarget: string }) => void,
-	result: import("stylelint").PostcssResult,
+	result: PostcssResult,
 	checkedRuleName: string,
-	fix?: ((atRule: import("postcss").AtRule) => void) | null,
+	fix?: ((atRule: AtRule) => void) | null,
 }): void {
 	options.root.walkAtRules((atRule) => {
 		if (!isStandardSyntaxAtRule(atRule)) return
@@ -31,7 +32,7 @@ export function atRuleNameSpaceChecker (options: {
 	 * @param index - The index to check.
 	 * @param node - The at-rule node.
 	 */
-	function checkColon (source: string, index: number, node: import("postcss").AtRule): void {
+	function checkColon (source: string, index: number, node: AtRule): void {
 		let { fix } = options
 
 		options.locationChecker({

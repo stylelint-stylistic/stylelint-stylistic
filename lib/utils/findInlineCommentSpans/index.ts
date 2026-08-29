@@ -1,3 +1,5 @@
+import type { Node } from "postcss-value-parser"
+
 import { findCommentSpans } from "../findCommentSpans/index.ts"
 
 /** The span an inline comment occupies in a value, in the coordinates of the file, and how far the copy a syntax rewrote its comments in has run away from that value by the end of the comment. */
@@ -39,7 +41,7 @@ export function findInlineCommentSpanAt (index: number, spans: InlineCommentSpan
  * @param spans - The spans {@link findInlineCommentSpans} found in the text the node was parsed from, which the node's positions count in.
  * @returns The span holding the node, or nothing where the node is one of the value.
  */
-export function findInlineCommentSpanHolding (valueNode: import("postcss-value-parser").Node, spans: InlineCommentSpan[]): InlineCommentSpan | undefined {
+export function findInlineCommentSpanHolding (valueNode: Node, spans: InlineCommentSpan[]): InlineCommentSpan | undefined {
 	return findInlineCommentSpanAt(valueNode.sourceIndex, spans)
 }
 
@@ -53,6 +55,6 @@ export function findInlineCommentSpanHolding (valueNode: import("postcss-value-p
  * @param spans - The spans {@link findInlineCommentSpans} found in the text the node was parsed from, which the node's positions count in.
  * @returns The span the node overlaps, or nothing where the node carries no comment's text.
  */
-export function findInlineCommentSpanTouching (valueNode: Pick<import("postcss-value-parser").Node, `sourceIndex` | `sourceEndIndex`>, spans: InlineCommentSpan[]): InlineCommentSpan | undefined {
+export function findInlineCommentSpanTouching (valueNode: Pick<Node, `sourceIndex` | `sourceEndIndex`>, spans: InlineCommentSpan[]): InlineCommentSpan | undefined {
 	return spans.find(({ start, end }) => valueNode.sourceIndex < end && valueNode.sourceEndIndex > start)
 }

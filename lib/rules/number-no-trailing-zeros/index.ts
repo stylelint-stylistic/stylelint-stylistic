@@ -1,3 +1,4 @@
+import type { AtRule, Declaration } from "postcss"
 import valueParser from "postcss-value-parser"
 import stylelint from "stylelint"
 
@@ -55,7 +56,7 @@ function rule (primary: true): RuleCheck {
 		 * @param node - The node to check.
 		 * @param value - The value to check.
 		 */
-		function check (node: import("postcss").AtRule | import("postcss").Declaration, value: string): void {
+		function check (node: AtRule | Declaration, value: string): void {
 			let fixPositions: Array<{ startIndex: number, endIndex: number }> = []
 
 			// Get out quickly if there are no periods

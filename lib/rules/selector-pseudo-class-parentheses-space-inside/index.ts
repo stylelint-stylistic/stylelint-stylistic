@@ -1,4 +1,5 @@
-import stylelint from "stylelint"
+import type { Container, Node, Root, Spaces } from "postcss-selector-parser"
+import stylelint, { type FixCallback } from "stylelint"
 
 import { LEADING_WHITESPACE_OR_BLOCK_COMMENT, LEADING_WHITESPACE_RUN, LINE_BREAK, TRAILING_WHITESPACE_RUN, WHITESPACE } from "../../regexps.ts"
 import { addNamespace } from "../../utils/addNamespace/index.ts"
@@ -9,11 +10,12 @@ import { parseSelector } from "../../utils/parseSelector/index.ts"
 import { restoreSelectorInlineComments } from "../../utils/restoreSelectorInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { toSelectorSourceIndex } from "../../utils/toSelectorSourceIndex/index.ts"
+import type { SyntaxRaw } from "../../utils/typeGuards/index.ts"
 
 let { utils: { report, ruleMessages, validateOptions } } = stylelint
 
 /** A node of the selector with the raws the parser hangs on one it found a comment beside: the run of whitespace and comment it prints in place of `spaces`, and the value it prints in place of the node's own. */
-type NodeWithRaws = import("postcss-selector-parser").Node & { raws?: { spaces?: Partial<import("postcss-selector-parser").Spaces>, value?: string } }
+type NodeWithRaws = Node & { raws?: { spaces?: Partial<Spaces>, value?: string } }
 
 let shortName = `selector-pseudo-class-parentheses-space-inside`
 
@@ -50,10 +52,10 @@ function rule (primary: `always` | `never`): RuleCheck {
 
 			if (!ruleNode.selector.includes(`(`)) return
 
-			let fix: import("stylelint").FixCallback | undefined
+			let fix: FixCallback | undefined
 			let hasFixed = false
 
-			let selectorRaws: import("../../utils/typeGuards/index.ts").SyntaxRaw | undefined = ruleNode.raws.selector
+			let selectorRaws: SyntaxRaw | undefined = ruleNode.raws.selector
 
 			let selector = selectorRaws ? selectorRaws.raw : ruleNode.selector
 
@@ -167,7 +169,7 @@ function rule (primary: `always` | `never`): RuleCheck {
  * @param selector - The selector the tree was parsed from.
  * @returns True if the tree gives the selector back the way the source spells it.
  */
-function standsForSource (selectorTree: import("postcss-selector-parser").Root, selector: string): boolean {
+function standsForSource (selectorTree: Root, selector: string): boolean {
 	if (String(selectorTree) === selector) return true
 
 	selectorTree.walk((node) => {
@@ -197,8 +199,8 @@ function standsForSource (selectorTree: import("postcss-selector-parser").Root, 
  * @param node - The node to look ahead from.
  * @returns The node, or nothing where it closes the selector.
  */
-function nodeAfter (node: import("postcss-selector-parser").Node | import("postcss-selector-parser").Container | undefined): import("postcss-selector-parser").Node | undefined {
-	let current: import("postcss-selector-parser").Node | import("postcss-selector-parser").Container | undefined = node
+function nodeAfter (node: Node | Container | undefined): Node | undefined {
+	let current: Node | Container | undefined = node
 
 	while (current && current.parent) {
 		let next = current.next()
@@ -221,7 +223,7 @@ function nodeAfter (node: import("postcss-selector-parser").Node | import("postc
  * @param node - The node to give the whitespace to.
  * @param selector - The selector the tree was parsed from.
  */
-function restoreSpaceBefore (node: import("postcss-selector-parser").Node, selector: string): void {
+function restoreSpaceBefore (node: Node, selector: string): void {
 	if (node.type === `combinator` && WHITESPACE.test(node.value)) {
 		node.spaces.before = ``
 		node.spaces.after = ``
@@ -282,7 +284,7 @@ function trailingWhitespace (text: string, index: number): string {
  * @param node - The container node.
  * @returns The node, or nothing where the container holds none.
  */
-function firstNodeInside (node: import("postcss-selector-parser").Container): import("postcss-selector-parser").Node | undefined {
+function firstNodeInside (node: Container): Node | undefined {
 	let target = node.first
 
 	while (target && target.type === `selector`) target = target.first
@@ -295,7 +297,7 @@ function firstNodeInside (node: import("postcss-selector-parser").Container): im
  * @param node - The container node.
  * @returns The node, or nothing where the container holds none.
  */
-function lastNodeInside (node: import("postcss-selector-parser").Container): import("postcss-selector-parser").Node | undefined {
+function lastNodeInside (node: Container): Node | undefined {
 	let target = node.last
 
 	while (target && target.type === `selector`) target = target.last
@@ -310,7 +312,7 @@ function lastNodeInside (node: import("postcss-selector-parser").Container): imp
  * @param target - The node to set the space of.
  * @param value - The space value to set.
  */
-function setSpaceBefore (target: import("postcss-selector-parser").Node, value: string): void {
+function setSpaceBefore (target: Node, value: string): void {
 	target.spaces.before = value
 
 	let spaces = (target as NodeWithRaws).raws?.spaces
@@ -325,7 +327,7 @@ function setSpaceBefore (target: import("postcss-selector-parser").Node, value: 
  * @param target - The node to set the space of.
  * @param value - The space value to set.
  */
-function setSpaceAfter (target: import("postcss-selector-parser").Node, value: string): void {
+function setSpaceAfter (target: Node, value: string): void {
 	target.spaces.after = value
 
 	let spaces = (target as NodeWithRaws).raws?.spaces

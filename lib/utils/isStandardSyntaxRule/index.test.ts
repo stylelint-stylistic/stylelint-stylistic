@@ -1,4 +1,4 @@
-import postcss from "postcss"
+import postcss, { type Parser, type Rule } from "postcss"
 import postcssLess from "postcss-less"
 import { describe, expect, it } from "vitest"
 
@@ -10,8 +10,8 @@ import { isStandardSyntaxRule } from "./index.ts"
  * @param parser - The syntax to read it with.
  * @returns That rule.
  */
-function node (code: string, parser: { parse: import("postcss").Parser } = postcss): import("postcss").Rule {
-	return parser.parse(code).first as import("postcss").Rule
+function node (code: string, parser: { parse: Parser } = postcss): Rule {
+	return parser.parse(code).first as Rule
 }
 
 /**
@@ -19,7 +19,7 @@ function node (code: string, parser: { parse: import("postcss").Parser } = postc
  * @param code - The stylesheet.
  * @returns That rule.
  */
-function lessNode (code: string): import("postcss").Rule {
+function lessNode (code: string): Rule {
 	return node(code, postcssLess)
 }
 

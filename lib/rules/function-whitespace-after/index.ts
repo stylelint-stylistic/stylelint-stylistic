@@ -1,3 +1,4 @@
+import type { Node } from "postcss"
 import stylelint from "stylelint"
 
 import { IMPORT_AT_RULE, LEADING_SPACED_SIGN, LEADING_SPACED_SUM_OPERATOR } from "../../regexps.ts"
@@ -58,7 +59,7 @@ function rule (primary: `always` | `never`): RuleCheck {
 		 * @param node - The node whose text is being read.
 		 * @returns True where the syntax that spelled that node spells arithmetic of its own.
 		 */
-		function readsOwnArithmetic (node: import("postcss").Node): boolean {
+		function readsOwnArithmetic (node: Node): boolean {
 			return readsInlineComments(node, result)
 		}
 
@@ -70,7 +71,7 @@ function rule (primary: `always` | `never`): RuleCheck {
 		 * @param nodeIndex - The index of the node.
 		 * @param fix - The fix function.
 		 */
-		function check (node: import("postcss").Node, value: string, searchString: string, nodeIndex: number, fix: (index: number) => void): void {
+		function check (node: Node, value: string, searchString: string, nodeIndex: number, fix: (index: number) => void): void {
 			// The parenthesis a call closes is the one this rule is about, and it is looked for rather than come across: the parentheses of `(@a * 2)px` group an arithmetic expression, and the unit standing behind them belongs to it, so neither option may touch that spelling. A call the text never closes ends at the end of it, where no parenthesis stands and nothing follows to space from. The spans come in the order the text closes them, so the fixer is handed its positions front to back, as it reads them
 			for (let { end } of findFunctionArgumentSpans(searchString)) {
 				if (searchString.charAt(end) !== `)`) continue
@@ -88,7 +89,7 @@ function rule (primary: `always` | `never`): RuleCheck {
 		 * @param nodeIndex - The index of the node.
 		 * @param fix - The fix function.
 		 */
-		function checkClosingParen (source: string, searchString: string, index: number, node: import("postcss").Node, nodeIndex: number, fix: (index: number) => void): void {
+		function checkClosingParen (source: string, searchString: string, index: number, node: Node, nodeIndex: number, fix: (index: number) => void): void {
 			let nextChar = source.charAt(index)
 
 			if (!nextChar) return

@@ -1,7 +1,10 @@
-import { parse } from "postcss"
+import { type AtRule, type Container, type Document, parse, type Parser, type ProcessOptions, type Root, type Rule } from "postcss"
 import less from "postcss-less"
 import scss from "postcss-scss"
+import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
+
+import type { EmbeddedSource } from "../typeGuards/index.ts"
 
 import { requiresTrailingSemicolon } from "./index.ts"
 
@@ -12,14 +15,14 @@ import { requiresTrailingSemicolon } from "./index.ts"
  * @param asked - The syntax to ask the question under, where it is not the one that parsed.
  * @returns What the util makes of that node.
  */
-function lastNodeOfTheBlock (syntax: { parse: import("postcss").Parser }, code: string, asked?: unknown): boolean {
+function lastNodeOfTheBlock (syntax: { parse: Parser }, code: string, asked?: unknown): boolean {
 	let root = syntax.parse(code, { from: undefined })
-	let block = root.last as import("postcss").Container
+	let block = root.last as Container
 	let node = block.nodes ? block.last : block
 
 	if (!node) throw new Error(`The block holds no node`)
 
-	return requiresTrailingSemicolon(node, { opts: { syntax: asked === undefined ? syntax : asked } } as unknown as import("stylelint").PostcssResult)
+	return requiresTrailingSemicolon(node, { opts: { syntax: asked === undefined ? syntax : asked } } as unknown as PostcssResult)
 }
 
 /**
@@ -34,9 +37,9 @@ function closingALessBlock (node: string): boolean {
 describe(`requiresTrailingSemicolon`, () => {
 	describe(`the syntax`, () => {
 		it(`no syntax at all, which is plain CSS`, () => {
-			let rule = parse(`a { @layer l; }`).first as import("postcss").Rule
+			let rule = parse(`a { @layer l; }`).first as Rule
 
-			expect(requiresTrailingSemicolon(rule.first as import("postcss").AtRule, { opts: {} } as unknown as import("stylelint").PostcssResult)).toBe(false)
+			expect(requiresTrailingSemicolon(rule.first as AtRule, { opts: {} } as unknown as PostcssResult)).toBe(false)
 		})
 
 		it(`a syntax that reads the probe and spells no Less variable in it`, () => {
@@ -61,12 +64,12 @@ describe(`requiresTrailingSemicolon`, () => {
 
 		it(`the syntax of the node's own stylesheet, which is asked ahead of the one the file was opened with`, () => {
 			let root = less.parse(`a { @extend .b; }`, { from: undefined })
-			let source = root.source as import("../typeGuards/index.ts").EmbeddedSource
-			let rule = root.first as import("postcss").Rule
+			let source = root.source as EmbeddedSource
+			let rule = root.first as Rule
 
 			source.syntax = scss
 
-			expect(requiresTrailingSemicolon(rule.last as import("postcss").AtRule, { opts: { syntax: less } } as unknown as import("stylelint").PostcssResult)).toBe(false)
+			expect(requiresTrailingSemicolon(rule.last as AtRule, { opts: { syntax: less } } as unknown as PostcssResult)).toBe(false)
 		})
 
 		it(`one parse of the probe per syntax, however many nodes are asked about`, () => {
@@ -79,7 +82,7 @@ describe(`requiresTrailingSemicolon`, () => {
 				 * @param options - The options of the parse.
 				 * @returns What Less makes of it.
 				 */
-				parse (code: string, options?: import("postcss").ProcessOptions): import("postcss").Root | import("postcss").Document {
+				parse (code: string, options?: ProcessOptions): Root | Document {
 					parses += 1
 
 					return less.parse(code, options)

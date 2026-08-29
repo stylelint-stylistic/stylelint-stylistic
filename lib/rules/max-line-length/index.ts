@@ -1,4 +1,4 @@
-import styleSearch from "style-search"
+import styleSearch, { type StyleSearchMatch } from "style-search"
 import stylelint from "stylelint"
 
 import { EVERY_IMPORT_ADDRESS, EVERY_URL_CONTENT, LEADING_WHITESPACE_RUN } from "../../regexps.ts"
@@ -144,7 +144,7 @@ function rule (primary: number, secondaryOptions: { ignore?: (`non-comments` | `
 		 * @param match - The style search match.
 		 * @returns Nothing; a line over the limit is reported, and one within it is left alone.
 		 */
-		function checkNewline (match: import("style-search").StyleSearchMatch | { endIndex: number }): void {
+		function checkNewline (match: StyleSearchMatch | { endIndex: number }): void {
 			let nextNewlineIndex = rootString.indexOf(`\n`, match.endIndex)
 
 			if (rootString[nextNewlineIndex - 1] === `\r`) nextNewlineIndex -= 1

@@ -16,14 +16,14 @@ import { stdout } from "node:process"
 
 import { lint } from "../harness/lint.ts"
 
-import { buildRuns, isUsable } from "./runs.ts"
+import { buildRuns, isUsable, type Run } from "./runs.ts"
 
 /**
  * Names a run, without carrying its configuration into the report.
  * @param run - The run to name.
  * @returns The four fields that identify it.
  */
-function label (run: import("./runs.ts").Run): object {
+function label (run: Run): object {
 	return { rule: run.rule, primary: run.primary, syntaxName: run.syntaxName, name: run.name }
 }
 
@@ -32,7 +32,7 @@ function label (run: import("./runs.ts").Run): object {
  * @param run - The rule, the option, the syntax and the fixture.
  * @returns The finding, or null where there is none.
  */
-async function probe (run: import("./runs.ts").Run): Promise<object | null> {
+async function probe (run: Run): Promise<object | null> {
 	let history = [run.code]
 	let current = run.code
 

@@ -1,3 +1,5 @@
+import type { Declaration } from "postcss"
+
 /**
  * Gets the value of a CSS declaration, spelled as the file spells it.
  *
@@ -5,8 +7,10 @@
  * @param decl - The CSS declaration node.
  * @returns The declaration value, including raw whitespace.
  */
-export function getDeclarationValue (decl: import("postcss").Declaration): string {
-	let syntaxRaw: import("../typeGuards/index.ts").SyntaxRaw | undefined = decl.raws.value
+import type { SyntaxRaw } from "../typeGuards/index.ts"
+
+export function getDeclarationValue (decl: Declaration): string {
+	let syntaxRaw: SyntaxRaw | undefined = decl.raws.value
 
 	if (!syntaxRaw) return decl.value
 

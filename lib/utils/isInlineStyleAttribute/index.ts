@@ -1,3 +1,5 @@
+import type { Container } from "postcss"
+
 import { isRoot } from "../typeGuards/index.ts"
 
 /**
@@ -5,7 +7,7 @@ import { isRoot } from "../typeGuards/index.ts"
  * @param container - The container node to check.
  * @returns True if the container is the root of a `style` attribute, false otherwise.
  */
-export function isInlineStyleAttribute (container: import("postcss").Container): boolean {
+export function isInlineStyleAttribute (container: Container): boolean {
 	if (!isRoot(container)) return false
 
 	let { source } = container

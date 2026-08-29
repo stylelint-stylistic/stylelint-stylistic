@@ -1,6 +1,5 @@
-import { findCommentSpans } from "../findCommentSpans/index.ts"
-
-export type CommentSpan = import("../findCommentSpans/index.ts").CommentSpan
+import { type CommentSpan, findCommentSpans } from "../findCommentSpans/index.ts"
+import type { InlineCommentSpan } from "../findInlineCommentSpans/index.ts"
 
 /**
  * Blanks every comment of a text out of it, delimiters and all, so that a reader knowing less about the text than {@link findCommentSpans} does finds no comment there to read for itself.
@@ -14,7 +13,7 @@ export type CommentSpan = import("../findCommentSpans/index.ts").CommentSpan
  * @param spans - The spans its comments occupy in it, where they are already known, from either scan.
  * @returns The text, with every comment replaced by spaces.
  */
-export function blankComments (text: string, spans: (CommentSpan | import("../findInlineCommentSpans/index.ts").InlineCommentSpan)[] = findCommentSpans(text)): string {
+export function blankComments (text: string, spans: (CommentSpan | InlineCommentSpan)[] = findCommentSpans(text)): string {
 	if (spans.length === 0) return text
 
 	let pieces = []

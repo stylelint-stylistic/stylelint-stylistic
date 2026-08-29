@@ -1,9 +1,10 @@
+import type { Node } from "postcss"
+import type { PostcssResult } from "stylelint"
+
 import { blankComments } from "../blankComments/index.ts"
-import { findCommentSpans } from "../findCommentSpans/index.ts"
+import { type CommentSpan, findCommentSpans } from "../findCommentSpans/index.ts"
 import { hideFalseInlineComments } from "../hideFalseInlineComments/index.ts"
 import { readsInlineComments } from "../readsInlineComments/index.ts"
-
-export type CommentSpan = import("../findCommentSpans/index.ts").CommentSpan
 
 /**
  * Builds the copy of a node's text that a scan is handed in place of the text itself, and hands back the comments it was built from.
@@ -16,7 +17,7 @@ export type CommentSpan = import("../findCommentSpans/index.ts").CommentSpan
  * @param result - The Stylelint result, which the syntax of the file is read from.
  * @returns The copy to hand the search, and the spans the comments occupy in the text it was made of.
  */
-export function searchCopy (text: string, node: import("postcss").Node, result: import("stylelint").PostcssResult): { searchString: string, commentSpans: CommentSpan[] } {
+export function searchCopy (text: string, node: Node, result: PostcssResult): { searchString: string, commentSpans: CommentSpan[] } {
 	let commentSpans = findCommentSpans(text, readsInlineComments(node, result))
 
 	// The masking is handed no spans because the blanking left it none to guard: every comment is gone from the copy, so every double slash still standing in it opens none

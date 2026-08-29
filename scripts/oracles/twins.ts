@@ -21,9 +21,9 @@
 
 import { stdout } from "node:process"
 
-import { lint } from "../harness/lint.ts"
+import { type Config, lint } from "../harness/lint.ts"
 
-import { buildRuns, isUsable } from "./runs.ts"
+import { buildRuns, isUsable, type Run } from "./runs.ts"
 
 /** Every break of a text, a Windows pair counting as one so that normalising never leaves an empty line behind it. */
 const EVERY_BREAK = /\r?\n/gu
@@ -67,7 +67,7 @@ function normalise (code: string): string {
  * @param config - The configuration to lint it under.
  * @returns What the rule said and wrote, or why the run cannot be read.
  */
-async function ask (code: string, config: import("../harness/lint.ts").Config): Promise<{ read: false, unparsable: boolean, detail?: string } | { read: true, warnings: string[], positions: string[], output: string }> {
+async function ask (code: string, config: Config): Promise<{ read: false, unparsable: boolean, detail?: string } | { read: true, warnings: string[], positions: string[], output: string }> {
 	let checked
 	let fixed
 
@@ -98,7 +98,7 @@ async function ask (code: string, config: import("../harness/lint.ts").Config): 
  * @param run - The run to name.
  * @returns The four fields that identify it.
  */
-function label (run: import("./runs.ts").Run): object {
+function label (run: Run): object {
 	return { rule: run.rule, primary: run.primary, syntaxName: run.syntaxName, name: run.name }
 }
 
@@ -107,7 +107,7 @@ function label (run: import("./runs.ts").Run): object {
  * @param run - The rule, the option, the syntax and the fixture.
  * @returns Every finding of this run, and the empty array where there is none.
  */
-async function probe (run: import("./runs.ts").Run): Promise<object[]> {
+async function probe (run: Run): Promise<object[]> {
 	if (SPELLING_IS_THE_SUBJECT.has(run.rule)) return []
 
 	// The fixture is normalised rather than passed over where it spells a break with a pair already: respelling a line feed in a text that holds `\r\n` would make two breaks of one, while normalising first makes every fixture a line-feed original with a twin, and the `crlf` shape of the shared corpus — one of the few carrying whitespace in front of a break, which is what #247 turns on — joins the run instead of being skipped

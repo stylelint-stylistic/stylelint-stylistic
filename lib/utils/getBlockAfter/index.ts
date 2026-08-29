@@ -1,3 +1,5 @@
+import type { Container } from "postcss"
+
 import { TRAILING_WHITESPACE } from "../../regexps.ts"
 import { lastNodeHoldsTheBlockAfter } from "../lastNodeHoldsTheBlockAfter/index.ts"
 
@@ -8,7 +10,7 @@ import { lastNodeHoldsTheBlockAfter } from "../lastNodeHoldsTheBlockAfter/index.
  * @param statement - The statement carrying the block.
  * @returns The run, undefined where the block carries no raw for it.
  */
-export function getBlockAfter (statement: import("postcss").Container): string | undefined {
+export function getBlockAfter (statement: Container): string | undefined {
 	if (!lastNodeHoldsTheBlockAfter(statement)) return statement.raws.after
 
 	let between = statement.last.raws.between ?? ``

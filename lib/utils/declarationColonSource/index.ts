@@ -1,3 +1,5 @@
+import type { Declaration } from "postcss"
+
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
 import { getDeclarationValue } from "../getDeclarationValue/index.ts"
 
@@ -12,6 +14,6 @@ import { getDeclarationValue } from "../getDeclarationValue/index.ts"
  * @param decl - The CSS declaration node.
  * @returns The declaration as the file prints it, up to the end of the value, with a sentinel behind it.
  */
-export function declarationColonSource (decl: import("postcss").Declaration): string {
+export function declarationColonSource (decl: Declaration): string {
 	return `${decl.toString().slice(0, declarationValueIndex(decl))}${getDeclarationValue(decl)}xxx`
 }

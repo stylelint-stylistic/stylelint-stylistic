@@ -1,3 +1,4 @@
+import type { AtRule, Declaration, Document, Node, Root, Rule, Source } from "postcss"
 import styleSearch from "style-search"
 import stylelint from "stylelint"
 
@@ -162,7 +163,7 @@ function rule (primary: number | `tab`, secondaryOptions: { baseIndentLevel?: nu
 		 * @param node - The node to calculate level for.
 		 * @returns The calculated indentation level.
 		 */
-		function getStyledDeclarationLevel (node: import("postcss").Node): number {
+		function getStyledDeclarationLevel (node: Node): number {
 			let { parent } = node
 
 			if (!parent?.parent?.source || !parent.source?.start) throw new Error(`A styled expression must stand inside a node with a source`)
@@ -181,7 +182,7 @@ function rule (primary: number | `tab`, secondaryOptions: { baseIndentLevel?: nu
 		 * @param level - The current level.
 		 * @returns The calculated indentation level.
 		 */
-		function indentationLevel (node: import("postcss").Node, level: number = 0): number {
+		function indentationLevel (node: Node, level: number = 0): number {
 			if (!node.parent) throw new Error(`A parent node must be present`)
 
 			let calculatedLevel = level
@@ -210,7 +211,7 @@ function rule (primary: number | `tab`, secondaryOptions: { baseIndentLevel?: nu
 		 * @param decl - The declaration to check.
 		 * @param declLevel - The indentation level of the declaration.
 		 */
-		function checkValue (decl: import("postcss").Declaration, declLevel: number): void {
+		function checkValue (decl: Declaration, declLevel: number): void {
 			if (!LINE_BREAK.test(decl.value)) return
 
 			if (isStyledSyntaxDeclaration(decl) && decl.value.includes(`\${`)) return
@@ -228,7 +229,7 @@ function rule (primary: number | `tab`, secondaryOptions: { baseIndentLevel?: nu
 		 * @param ruleNode - The rule node to check.
 		 * @param ruleLevel - The indentation level of the rule.
 		 */
-		function checkSelector (ruleNode: import("postcss").Rule, ruleLevel: number): void {
+		function checkSelector (ruleNode: Rule, ruleLevel: number): void {
 			let level = ruleLevel
 
 			// Less mixins have params, and they should be indented extra
@@ -243,7 +244,7 @@ function rule (primary: number | `tab`, secondaryOptions: { baseIndentLevel?: nu
 		 * @param atRule - The at-rule to check.
 		 * @param ruleLevel - The indentation level of the rule.
 		 */
-		function checkAtRuleParams (atRule: import("postcss").AtRule, ruleLevel: number): void {
+		function checkAtRuleParams (atRule: AtRule, ruleLevel: number): void {
 			if (optionsMatches(secondaryOptions, `ignore`, `param`)) return
 
 			// @nest and SCSS's @at-root rules should be treated like regular rules, not expected to have their params (selectors) indented
@@ -259,7 +260,7 @@ function rule (primary: number | `tab`, secondaryOptions: { baseIndentLevel?: nu
 		 * @param node - The node being checked.
 		 * @param nodeLevel - The indentation level of that node, which the level above is measured against.
 		 */
-		function checkMultilineBit (source: string, newlineIndentLevel: number, node: import("postcss").Node, nodeLevel: number): void {
+		function checkMultilineBit (source: string, newlineIndentLevel: number, node: Node, nodeLevel: number): void {
 			if (!LINE_BREAK.test(source)) return
 
 			// The search is handed a copy with every comment blanked out of it rather than the text itself, since `style-search` reads the line break that closes an inline comment as part of that comment and never hands the position over — so every line standing behind such a comment went unmeasured, which is #236. The copy is as long as the text and spells it character for character everywhere else, so the positions of the search are the positions of the file, which is the text a warning is counted in and the text a fix is written to.
@@ -461,14 +462,14 @@ function rule (primary: number | `tab`, secondaryOptions: { baseIndentLevel?: nu
  * @param space - The primary option: the number of spaces of one level, or `tab`.
  * @returns The calculated base indentation level.
  */
-function getRootBaseIndentLevel (root: import("postcss").Root, baseIndentLevel: number | `auto` | undefined, space: number | `tab`): number {
+function getRootBaseIndentLevel (root: Root, baseIndentLevel: number | `auto` | undefined, space: number | `tab`): number {
 	let document = getDocument(root)
 
 	if (!document) return 0
 
 	if (!root.source) throw new Error(`The root node must have a source`)
 
-	let source: import("postcss").Source & { baseIndentLevel?: number } = root.source
+	let source: Source & { baseIndentLevel?: number } = root.source
 
 	let indentLevel = source.baseIndentLevel
 
@@ -486,12 +487,12 @@ function getRootBaseIndentLevel (root: import("postcss").Root, baseIndentLevel: 
  * @param node - The node to get document from.
  * @returns The document node or undefined.
  */
-function getDocument (node: import("postcss").Node): import("postcss").Document | undefined {
+function getDocument (node: Node): Document | undefined {
 	let holder = `document` in node ? node : node.root()
 
 	if (!(`document` in holder)) return
 
-	return holder.document as import("postcss").Document | undefined
+	return holder.document as Document | undefined
 }
 
 /**
@@ -500,10 +501,10 @@ function getDocument (node: import("postcss").Node): import("postcss").Document 
  * @param space - The primary option: the number of spaces of one level, or `tab`.
  * @returns The inferred indent size.
  */
-function inferDocIndentSize (document: import("postcss").Document, space: number | `tab`): number {
+function inferDocIndentSize (document: Document, space: number | `tab`): number {
 	if (!document.source) throw new Error(`The document node must have a source`)
 
-	let docSource: import("postcss").Source & { indentSize?: number } = document.source
+	let docSource: Source & { indentSize?: number } = document.source
 
 	let indentSize = docSource.indentSize
 
@@ -566,7 +567,7 @@ function inferDocIndentSize (document: import("postcss").Document, space: number
  * @param indentSize - Function to get the indent size.
  * @returns The inferred root indentation level.
  */
-function inferRootIndentLevel (root: import("postcss").Root, baseIndentLevel: number | `auto` | undefined, indentSize: () => number): number {
+function inferRootIndentLevel (root: Root, baseIndentLevel: number | `auto` | undefined, indentSize: () => number): number {
 	/**
 	 * Gets the indentation level from a string.
 	 *
@@ -634,7 +635,7 @@ function inferRootIndentLevel (root: import("postcss").Root, baseIndentLevel: nu
 		let afterEnd
 
 		if (TRAILING_LINE_BREAK.test(after)) {
-			let document = (`document` in root ? root.document : undefined) as import("postcss").Document | undefined
+			let document = (`document` in root ? root.document : undefined) as Document | undefined
 
 			if (document) {
 				let nextRoot = document.nodes[document.nodes.indexOf(root) + 1]

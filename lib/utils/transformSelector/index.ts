@@ -1,4 +1,6 @@
-import selectorParser from "postcss-selector-parser"
+import type { Rule } from "postcss"
+import selectorParser, { type Root } from "postcss-selector-parser"
+import type { PostcssResult } from "stylelint"
 
 /**
  * Runs a callback over a rule's parsed selector and writes the result back into the rule.
@@ -7,7 +9,7 @@ import selectorParser from "postcss-selector-parser"
  * @param callback - The callback to transform the selector.
  * @returns The selector as the callback left it, or undefined where the parser refused it.
  */
-export function transformSelector (result: import("stylelint").PostcssResult, node: import("postcss").Rule, callback: (root: import("postcss-selector-parser").Root) => void): string | undefined {
+export function transformSelector (result: PostcssResult, node: Rule, callback: (root: Root) => void): string | undefined {
 	try {
 		return selectorParser(callback).processSync(node, { updateSelector: true })
 	}

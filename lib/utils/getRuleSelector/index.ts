@@ -1,3 +1,5 @@
+import type { Rule } from "postcss"
+
 /**
  * Gets the selector of a rule, spelled as the file spells it.
  *
@@ -5,8 +7,10 @@
  * @param rule - The rule node.
  * @returns The selector, spelled as the file spells it.
  */
-export function getRuleSelector (rule: import("postcss").Rule): string {
-	let syntaxRaw: import("../typeGuards/index.ts").SyntaxRaw | undefined = rule.raws.selector
+import type { SyntaxRaw } from "../typeGuards/index.ts"
+
+export function getRuleSelector (rule: Rule): string {
+	let syntaxRaw: SyntaxRaw | undefined = rule.raws.selector
 
 	if (!syntaxRaw) return rule.selector
 

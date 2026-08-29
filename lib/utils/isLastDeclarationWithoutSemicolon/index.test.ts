@@ -1,4 +1,4 @@
-import { parse } from "postcss"
+import { type Declaration, parse, type Rule } from "postcss"
 import { describe, expect, it } from "vitest"
 
 import { isLastDeclarationWithoutSemicolon } from "./index.ts"
@@ -8,10 +8,10 @@ import { isLastDeclarationWithoutSemicolon } from "./index.ts"
  * @param css - The stylesheet.
  * @returns The first declaration of the first block.
  */
-function firstDeclaration (css: string): import("postcss").Declaration {
-	let decl = (parse(css).first as import("postcss").Rule).nodes.find((node) => node.type === `decl`)
+function firstDeclaration (css: string): Declaration {
+	let decl = (parse(css).first as Rule).nodes.find((node) => node.type === `decl`)
 
-	return decl as import("postcss").Declaration
+	return decl as Declaration
 }
 
 describe(`isLastDeclarationWithoutSemicolon`, () => {
@@ -48,7 +48,7 @@ describe(`isLastDeclarationWithoutSemicolon`, () => {
 	})
 
 	it(`a declaration on the root, which has no block to close`, () => {
-		let decl = parse(`color: pink`).first as import("postcss").Declaration
+		let decl = parse(`color: pink`).first as Declaration
 
 		expect(isLastDeclarationWithoutSemicolon(decl)).toBe(true)
 	})

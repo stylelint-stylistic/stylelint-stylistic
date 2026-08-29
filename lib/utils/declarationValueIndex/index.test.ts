@@ -1,4 +1,4 @@
-import { parse } from "postcss"
+import { type Declaration, parse } from "postcss"
 import { describe, expect, it } from "vitest"
 
 import { declarationValueIndex } from "./index.ts"
@@ -30,8 +30,8 @@ describe(`declarationValueIndex`, () => {
  * @param css - The stylesheet.
  * @returns That declaration.
  */
-function decl (css: string): import("postcss").Declaration {
-	let list: import("postcss").Declaration[] = []
+function decl (css: string): Declaration {
+	let list: Declaration[] = []
 
 	parse(css).walkDecls((d) => {
 		list.push(d)

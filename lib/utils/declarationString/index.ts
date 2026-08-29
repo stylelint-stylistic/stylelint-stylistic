@@ -1,3 +1,5 @@
+import type { Declaration } from "postcss"
+
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
 import { getDeclarationValue } from "../getDeclarationValue/index.ts"
 
@@ -10,7 +12,7 @@ import { getDeclarationValue } from "../getDeclarationValue/index.ts"
  * @param decl - The declaration to print.
  * @returns The declaration, from its property to the end of its bang, if it has one.
  */
-export function declarationString (decl: import("postcss").Declaration): string {
+export function declarationString (decl: Declaration): string {
 	let important = decl.important ? (decl.raws.important || ` !important`) : ``
 
 	// Only the value is spelled in two copies: the property and everything between it and the value are printed as they stand, so the string PostCSS prints holds them exactly as the file does

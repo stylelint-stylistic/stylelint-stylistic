@@ -1,3 +1,6 @@
+import type { Declaration } from "postcss"
+import type { Declaration as LessDeclaration } from "postcss-less"
+
 import { isScssVariable } from "../isScssVariable/index.ts"
 import { isRule } from "../typeGuards/index.ts"
 
@@ -6,7 +9,7 @@ import { isRule } from "../typeGuards/index.ts"
  * @param decl - The declaration node to check.
  * @returns True if the declaration is standard syntax, false otherwise.
  */
-export function isStandardSyntaxDeclaration (decl: import("postcss").Declaration | import("postcss-less").Declaration): boolean {
+export function isStandardSyntaxDeclaration (decl: Declaration | LessDeclaration): boolean {
 	let prop = decl.prop
 	let parent = decl.parent
 

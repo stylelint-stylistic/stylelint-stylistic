@@ -1,4 +1,4 @@
-import { parse } from "postcss"
+import { type Document, parse, type Root, type Rule } from "postcss"
 import { parse as parseLess } from "postcss-less"
 import { parse as parseScss } from "postcss-scss"
 import { describe, expect, it } from "vitest"
@@ -28,7 +28,7 @@ describe(`getRuleSelector`, () => {
  * @param css - The stylesheet.
  * @returns That rule.
  */
-function rule (css: string): import("postcss").Rule {
+function rule (css: string): Rule {
 	return collect(parse(css))
 }
 
@@ -37,7 +37,7 @@ function rule (css: string): import("postcss").Rule {
  * @param css - The stylesheet.
  * @returns That rule.
  */
-function scssRule (css: string): import("postcss").Rule {
+function scssRule (css: string): Rule {
 	return collect(parseScss(css))
 }
 
@@ -46,7 +46,7 @@ function scssRule (css: string): import("postcss").Rule {
  * @param css - The stylesheet.
  * @returns That rule.
  */
-function lessRule (css: string): import("postcss").Rule {
+function lessRule (css: string): Rule {
 	return collect(parseLess(css))
 }
 
@@ -55,8 +55,8 @@ function lessRule (css: string): import("postcss").Rule {
  * @param root - The parsed stylesheet.
  * @returns That rule.
  */
-function collect (root: import("postcss").Root | import("postcss").Document): import("postcss").Rule {
-	let list: import("postcss").Rule[] = []
+function collect (root: Root | Document): Rule {
+	let list: Rule[] = []
 
 	root.walkRules((node) => {
 		list.push(node)

@@ -1,3 +1,4 @@
+import type { AtRule } from "postcss"
 import stylelint from "stylelint"
 
 import { LEADING_WHITESPACE, LEADING_WHITESPACE_WITHOUT_BREAK, OPENS_WITH_LINE_BREAK } from "../../regexps.ts"
@@ -46,7 +47,7 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, _se
 		if (!validOptions) return
 
 		// Only check for the newline after the comma, while allowing arbitrary indentation after the newline
-		let fixData: Map<import("postcss").AtRule, number[]> | undefined
+		let fixData: Map<AtRule, number[]> | undefined
 
 		mediaQueryListCommaWhitespaceChecker({
 			root,

@@ -1,4 +1,5 @@
-import { stringify } from "postcss"
+import { type Container, stringify } from "postcss"
+import type { PostcssResult } from "stylelint"
 
 import { hasBlock } from "../hasBlock/index.ts"
 import { nodeSyntax } from "../nodeSyntax/index.ts"
@@ -15,7 +16,7 @@ import { isAtRule, isRule } from "../typeGuards/index.ts"
  * @param options - Whether to leave the statement's `raws.before` out of the result.
  * @returns The string before the block.
  */
-export function beforeBlockString (statement: import("postcss").Container, result?: import("stylelint").PostcssResult, options: { noRawBefore?: boolean } = {}): string {
+export function beforeBlockString (statement: Container, result?: PostcssResult, options: { noRawBefore?: boolean } = {}): string {
 	let { noRawBefore = false } = options
 
 	if (!hasBlock(statement)) return ``

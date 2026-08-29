@@ -1,3 +1,7 @@
+import type { Document, Node, Root } from "postcss"
+import type { AtRule } from "postcss-less"
+import type { PostcssResult } from "stylelint"
+
 import { hasBlock } from "../hasBlock/index.ts"
 import { isLessDetachedRulesetCall } from "../isLessDetachedRulesetCall/index.ts"
 import { nodeSyntax } from "../nodeSyntax/index.ts"
@@ -28,7 +32,7 @@ function readsAsLess (syntax: unknown): boolean {
 	let verdict = false
 
 	try {
-		let probe: import("postcss").Root | import("postcss").Document = syntax.parse(LESS_PROBE, { from: undefined })
+		let probe: Root | Document = syntax.parse(LESS_PROBE, { from: undefined })
 
 		probe.walkAtRules((atRule) => {
 			verdict = Boolean(`variable` in atRule && atRule.variable)
@@ -58,7 +62,7 @@ function readsAsLess (syntax: unknown): boolean {
  * @param atRule - The node to read.
  * @returns True where Less reads it as an at-rule.
  */
-function isLessAtRule (atRule: import("postcss-less").AtRule): boolean {
+function isLessAtRule (atRule: AtRule): boolean {
 	if (atRule.mixin) return false
 
 	return !isLessDetachedRulesetCall(atRule)
@@ -78,7 +82,7 @@ function isLessAtRule (atRule: import("postcss-less").AtRule): boolean {
  * @param result - The Stylelint result, which holds the syntax the file was opened with.
  * @returns True where the semicolon behind that node is not the fix's to take away.
  */
-export function requiresTrailingSemicolon (node: import("postcss").Node, result: import("stylelint").PostcssResult): boolean {
+export function requiresTrailingSemicolon (node: Node, result: PostcssResult): boolean {
 	if (!isAtRule(node) || hasBlock(node) || !isLessAtRule(node)) return false
 
 	return readsAsLess(nodeSyntax(node, result))

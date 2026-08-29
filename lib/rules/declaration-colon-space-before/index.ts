@@ -1,3 +1,4 @@
+import type { Declaration } from "postcss"
 import stylelint from "stylelint"
 
 import { TRAILING_WHITESPACE } from "../../regexps.ts"
@@ -33,7 +34,7 @@ export let meta = {
  * @param index - The index of the colon within the checked string.
  * @returns The part of `between` in front of the colon.
  */
-function beforeColonString (decl: import("postcss").Declaration, index: number): string {
+function beforeColonString (decl: Declaration, index: number): string {
 	let between = decl.raws.between
 
 	assertString(between)

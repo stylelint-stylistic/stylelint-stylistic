@@ -1,8 +1,9 @@
+import type { AtRule } from "postcss"
+
 import { findInlineCommentSpans } from "../findInlineCommentSpans/index.ts"
 import { rewriteInlineComments } from "../rewriteInlineComments/index.ts"
 import { syncLessVariableValue } from "../syncLessVariableValue/index.ts"
-
-export type AtRule = import("postcss").AtRule
+import type { SyntaxRaw } from "../typeGuards/index.ts"
 
 /**
  * Sets the params of an at-rule, in the copy of them the syntax prints.
@@ -13,7 +14,7 @@ export type AtRule = import("postcss").AtRule
  * @returns The at-rule that was passed in.
  */
 export function setAtRuleParams (atRule: AtRule, params: string): AtRule {
-	let syntaxRaw: import("../typeGuards/index.ts").SyntaxRaw | undefined = atRule.raws.params
+	let syntaxRaw: SyntaxRaw | undefined = atRule.raws.params
 
 	if (syntaxRaw) {
 		if (typeof syntaxRaw.scss === `string`) {

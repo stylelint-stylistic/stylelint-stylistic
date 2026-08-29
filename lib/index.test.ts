@@ -1,4 +1,4 @@
-import stylelint from "stylelint"
+import stylelint, { type Config } from "stylelint"
 import { describe, expect, it } from "vitest"
 
 import plugins from "./index.ts"
@@ -11,7 +11,7 @@ describe(`the plugin in the wrong field of a config`, () => {
 			config: {
 				plugins: [plugins],
 				rules: { "@stylistic/color-hex-case": `lower` },
-			} as unknown as import("stylelint").Config,
+			} as unknown as Config,
 		})
 
 		expect(results[0].warnings).toHaveLength(1)
@@ -25,7 +25,7 @@ describe(`the plugin in the wrong field of a config`, () => {
 			config: {
 				"extends": [plugins],
 				"rules": { "@stylistic/color-hex-case": `lower` },
-			} as unknown as import("stylelint").Config,
+			} as unknown as Config,
 		})
 
 		await expect(lint).rejects.toThrow(/is a plugin, not a shareable config/u)

@@ -1,4 +1,5 @@
 import { endsWithInlineComment } from "../endsWithInlineComment/index.ts"
+import type { InlineCommentReading } from "../readsInlineComments/index.ts"
 
 /**
  * Asks whether a fix would take the character a text ends with from outside an inline comment into one.
@@ -15,6 +16,6 @@ import { endsWithInlineComment } from "../endsWithInlineComment/index.ts"
  * @param reading - What the syntax the text was spelled in makes of such a comment.
  * @returns True where the character moves into a comment.
  */
-export function movesEndIntoInlineComment (standingText: string, fixedText: string, reading: import("../readsInlineComments/index.ts").InlineCommentReading): boolean {
+export function movesEndIntoInlineComment (standingText: string, fixedText: string, reading: InlineCommentReading): boolean {
 	return !endsWithInlineComment(standingText, reading) && endsWithInlineComment(fixedText, reading)
 }

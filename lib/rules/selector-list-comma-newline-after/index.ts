@@ -10,6 +10,7 @@ import { isStandardSyntaxRule } from "../../utils/isStandardSyntaxRule/index.ts"
 import { restoreSelectorInlineComments } from "../../utils/restoreSelectorInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { toSelectorSourceIndex } from "../../utils/toSelectorSourceIndex/index.ts"
+import type { SyntaxRaw } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
 let { utils: { report, ruleMessages, validateOptions } } = stylelint
@@ -52,7 +53,7 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, _se
 			// The raw selector is what is read, so that an end-of-line comment is allowed, e.g.
 			//   a, /* comment */
 			//   b {}
-			let selectorRaws: import("../../utils/typeGuards/index.ts").SyntaxRaw | undefined = ruleNode.raws.selector
+			let selectorRaws: SyntaxRaw | undefined = ruleNode.raws.selector
 			let selector = selectorRaws ? selectorRaws.raw : ruleNode.selector
 
 			// `postcss-scss` rewrites every inline comment of a selector into a block comment in the raw read here, keeps the source spelling beside it and prints that one, so the two strings drift apart by two characters per comment. Every position is counted in the raw and reported in the file's own coordinates, and a fix is written to both copies.

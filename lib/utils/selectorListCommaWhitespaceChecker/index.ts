@@ -1,19 +1,21 @@
+import type { Root, Rule } from "postcss"
 import styleSearch from "style-search"
-import stylelint from "stylelint"
+import stylelint, { type PostcssResult } from "stylelint"
 
-import { findSelectorInlineComments } from "../findSelectorInlineComments/index.ts"
+import { findSelectorInlineComments, type InlineComment } from "../findSelectorInlineComments/index.ts"
 import { isStandardSyntaxRule } from "../isStandardSyntaxRule/index.ts"
 import { toSelectorSourceIndex } from "../toSelectorSourceIndex/index.ts"
+import type { SyntaxRaw } from "../typeGuards/index.ts"
 
 let { utils: { report } } = stylelint
 
 export interface SelectorListCommaWhitespaceCheckerOptions {
 
 	/** The PostCSS root node. */
-	root: import("postcss").Root,
+	root: Root,
 
 	/** The Stylelint result. */
-	result: import("stylelint").PostcssResult,
+	result: PostcssResult,
 
 	/** The location checker function. */
 	locationChecker: (opts: { source: string, index: number, err: (msg: string) => void }) => void,
@@ -22,10 +24,10 @@ export interface SelectorListCommaWhitespaceCheckerOptions {
 	checkedRuleName: string,
 
 	/** The fix function. */
-	fix?: ((rule: import("postcss").Rule, index: number) => void),
+	fix?: ((rule: Rule, index: number) => void),
 
 	/** Tells whether this particular problem can be fixed. Stylelint counts a fixer as applied whatever it does, so a rule that cannot repair a problem has to say so here rather than from inside the fixer. */
-	isFixable?: ((selector: string, index: number, inlineComments: import("../findSelectorInlineComments/index.ts").InlineComment[]) => boolean),
+	isFixable?: ((selector: string, index: number, inlineComments: InlineComment[]) => boolean),
 }
 
 /**
@@ -38,7 +40,7 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 	opts.root.walkRules((rule) => {
 		if (!isStandardSyntaxRule(rule)) return
 
-		let selectorRaws: import("../typeGuards/index.ts").SyntaxRaw | undefined = rule.raws.selector
+		let selectorRaws: SyntaxRaw | undefined = rule.raws.selector
 		let selector = selectorRaws ? selectorRaws.raw : rule.selector
 
 		// `postcss-scss` rewrites every inline comment of a selector into a block comment in the raw read here, keeps the source spelling beside it and prints that one, so the two strings drift apart by two characters per comment. Every position is counted in the raw, reported in the file's own coordinates, and handed to the rule's fixer as the raw spells it, since the raw is the copy the rule slices.
@@ -63,7 +65,7 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 	 * @param node - The rule node.
 	 * @param inlineComments - The inline comments of the selector.
 	 */
-	function checkDelimiter (source: string, index: number, node: import("postcss").Rule, inlineComments: import("../findSelectorInlineComments/index.ts").InlineComment[]): void {
+	function checkDelimiter (source: string, index: number, node: Rule, inlineComments: InlineComment[]): void {
 		opts.locationChecker({
 			source,
 			index,

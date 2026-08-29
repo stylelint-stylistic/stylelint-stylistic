@@ -1,4 +1,4 @@
-import { parse } from "postcss"
+import { type Declaration, parse } from "postcss"
 import { parse as parseScss } from "postcss-scss"
 import { describe, expect, it } from "vitest"
 
@@ -35,8 +35,8 @@ describe(`getDeclarationValue`, () => {
  * @param css - The stylesheet.
  * @returns That declaration.
  */
-function decl (css: string): import("postcss").Declaration {
-	let list: import("postcss").Declaration[] = []
+function decl (css: string): Declaration {
+	let list: Declaration[] = []
 
 	parse(css).walkDecls((d) => {
 		list.push(d)
@@ -50,8 +50,8 @@ function decl (css: string): import("postcss").Declaration {
  * @param css - The stylesheet.
  * @returns That declaration.
  */
-function scssDecl (css: string): import("postcss").Declaration {
-	let list: import("postcss").Declaration[] = []
+function scssDecl (css: string): Declaration {
+	let list: Declaration[] = []
 
 	parseScss(css).walkDecls((d) => {
 		list.push(d)

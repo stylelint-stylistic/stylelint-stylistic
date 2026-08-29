@@ -1,7 +1,8 @@
-import valueParser from "postcss-value-parser"
-import stylelint from "stylelint"
+import type { Root } from "postcss"
+import valueParser, { type DivNode as ValueParserDivNode, type FunctionNode as ValueParserFunctionNode } from "postcss-value-parser"
+import stylelint, { type PostcssResult } from "stylelint"
 
-import { applyEditsFromEnd } from "../applyEditsFromEnd/index.ts"
+import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
 import { endsWithInlineComment } from "../endsWithInlineComment/index.ts"
 import { findCommentSpans } from "../findCommentSpans/index.ts"
@@ -17,10 +18,6 @@ import { commentsRemovedBefore, withoutComments } from "../withoutComments/index
 
 let { utils: { report } } = stylelint
 
-export type Edit = import("../applyEditsFromEnd/index.ts").Edit
-export type ValueParserFunctionNode = import("postcss-value-parser").FunctionNode
-export type ValueParserDivNode = import("postcss-value-parser").DivNode
-
 /** A function that checks whitespace at a specific location. */
 export type LocationChecker = (args: { source: string, index: number, err: (message: string) => void }) => void
 
@@ -29,10 +26,10 @@ export type LocationChecker = (args: { source: string, index: number, err: (mess
  * @param opts - The options object.
  */
 export function functionCommaSpaceChecker (opts: {
-	root: import("postcss").Root,
+	root: Root,
 	locationChecker: LocationChecker,
 	fix?: ((node: ValueParserDivNode, index: number, functionNode: ValueParserFunctionNode) => Edit[]),
-	result: import("stylelint").PostcssResult,
+	result: PostcssResult,
 	checkedRuleName: string,
 	fixPosition?: `before` | `after`,
 	ignoreFunctions?: string | RegExp | Array<string | RegExp>,

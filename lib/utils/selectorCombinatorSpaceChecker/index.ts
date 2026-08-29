@@ -1,4 +1,6 @@
-import stylelint from "stylelint"
+import type { Node, Root } from "postcss"
+import type { Combinator, Node as SelectorParserNode } from "postcss-selector-parser"
+import stylelint, { type PostcssResult } from "stylelint"
 
 import { WHITESPACE } from "../../regexps.ts"
 import { findSelectorInlineComments } from "../findSelectorInlineComments/index.ts"
@@ -7,6 +9,7 @@ import { isStandardSyntaxRule } from "../isStandardSyntaxRule/index.ts"
 import { parseSelector } from "../parseSelector/index.ts"
 import { restoreSelectorInlineComments } from "../restoreSelectorInlineComments/index.ts"
 import { toSelectorSourceIndex } from "../toSelectorSourceIndex/index.ts"
+import type { SyntaxRaw } from "../typeGuards/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -18,7 +21,7 @@ export type LocationChecker = (args: { source: string, index: number, errTarget:
  * @param node - The node to start from.
  * @returns The node, or nothing if the node is preceded by comments only.
  */
-function prevNonComment (node: import("postcss-selector-parser").Node): import("postcss-selector-parser").Node | undefined {
+function prevNonComment (node: SelectorParserNode): SelectorParserNode | undefined {
 	let prev = node.prev()
 
 	while (prev && prev.type === `comment`) prev = prev.prev()
@@ -31,12 +34,12 @@ function prevNonComment (node: import("postcss-selector-parser").Node): import("
  * @param opts - The options object.
  */
 export function selectorCombinatorSpaceChecker (opts: {
-	root: import("postcss").Root,
-	result: import("stylelint").PostcssResult,
+	root: Root,
+	result: PostcssResult,
 	locationChecker: LocationChecker,
 	locationType: `before` | `after`,
 	checkedRuleName: string,
-	fix?: ((combinator: import("postcss-selector-parser").Combinator) => void),
+	fix?: ((combinator: Combinator) => void),
 }): void {
 	let { fix } = opts
 	let hasFixed
@@ -46,7 +49,7 @@ export function selectorCombinatorSpaceChecker (opts: {
 
 		hasFixed = false
 
-		let selectorRaws: import("../typeGuards/index.ts").SyntaxRaw | undefined = rule.raws.selector
+		let selectorRaws: SyntaxRaw | undefined = rule.raws.selector
 		let selector = selectorRaws ? selectorRaws.raw : rule.selector
 		let inlineComments = findSelectorInlineComments(selector, selectorRaws && selectorRaws.scss)
 
@@ -96,7 +99,7 @@ export function selectorCombinatorSpaceChecker (opts: {
 	 * @param node - The parent node.
 	 * @param reportIndex - The index of the combinator in the source of the parent node.
 	 */
-	function check (source: string, combinator: import("postcss-selector-parser").Combinator, index: number, node: import("postcss").Node, reportIndex: number): void {
+	function check (source: string, combinator: Combinator, index: number, node: Node, reportIndex: number): void {
 		// A comment standing beside a combinator is folded into the raws of that side, and a raw is what the parser prints in place of the spaces the fix writes. Stylelint counts a fixer as applied whatever it does, so a write nothing would print has to be declined here rather than from inside the fixer, or the warning goes down with it and `--fix` reports a clean pass on a file it has not touched.
 		let isFixable = fix && combinator.raws?.spaces?.[opts.locationType] === undefined
 

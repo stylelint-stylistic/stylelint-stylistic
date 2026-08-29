@@ -1,3 +1,6 @@
+import type { Node } from "postcss"
+import type { PostcssResult } from "stylelint"
+
 import { endsWithInlineComment } from "../endsWithInlineComment/index.ts"
 import { getAtRuleParams } from "../getAtRuleParams/index.ts"
 import { getDeclarationValue } from "../getDeclarationValue/index.ts"
@@ -13,7 +16,7 @@ const A_WRITTEN_CHARACTER = `;`
  * @param node - The node to ask about.
  * @returns True where it is such a comment.
  */
-function isInlineComment (node: import("postcss").Node): boolean {
+function isInlineComment (node: Node): boolean {
 	return isComment(node) && Boolean((`inline` in node && node.inline) || node.raws.inline)
 }
 
@@ -30,7 +33,7 @@ function isInlineComment (node: import("postcss").Node): boolean {
  * @param node - The node the write would stand behind.
  * @returns That text, empty where the node ends with something no comment can hold.
  */
-function textAWriteFollows (node: import("postcss").Node): string {
+function textAWriteFollows (node: Node): string {
 	if (isComment(node)) return isInlineComment(node) ? `//` : ``
 
 	if (isDeclaration(node)) return getDeclarationValue(node) + (node.raws.important || ``)
@@ -53,7 +56,7 @@ function textAWriteFollows (node: import("postcss").Node): string {
  * @param spelledBetween - The run that will stand between the node and the write once the fix has run, where the write does not land on the whitespace the node ends with.
  * @returns True where such a write would land inside an inline comment.
  */
-export function writesIntoInlineComment (node: import("postcss").Node, result: import("stylelint").PostcssResult, spelledBetween?: string): boolean {
+export function writesIntoInlineComment (node: Node, result: PostcssResult, spelledBetween?: string): boolean {
 	let text = textAWriteFollows(node)
 	let reading = inlineCommentReading(node, result)
 

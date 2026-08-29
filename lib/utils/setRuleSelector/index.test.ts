@@ -1,7 +1,9 @@
-import { parse } from "postcss"
+import { type Document, parse, type Root, type Rule } from "postcss"
 import { parse as parseLess } from "postcss-less"
 import { parse as parseScss, stringify as stringifyScss } from "postcss-scss"
 import { describe, expect, it } from "vitest"
+
+import type { SyntaxRaw } from "../typeGuards/index.ts"
 
 import { setRuleSelector } from "./index.ts"
 
@@ -42,7 +44,7 @@ describe(`setRuleSelector`, () => {
 
 		setRuleSelector(node, `a // c\r\n, b`)
 
-		expect((node.raws.selector as import("../typeGuards/index.ts").SyntaxRaw).scss).toBe(`a // c\r\n, b`)
+		expect((node.raws.selector as SyntaxRaw).scss).toBe(`a // c\r\n, b`)
 	})
 
 	it(`keeps the raw beside it in step`, () => {
@@ -50,7 +52,7 @@ describe(`setRuleSelector`, () => {
 
 		setRuleSelector(node, `a // c\r\n, b`)
 
-		expect((node.raws.selector as import("../typeGuards/index.ts").SyntaxRaw).raw).toBe(`a /* c*/\r\n, b`)
+		expect((node.raws.selector as SyntaxRaw).raw).toBe(`a /* c*/\r\n, b`)
 	})
 
 	it(`the syntax prints what was written`, () => {
@@ -78,7 +80,7 @@ describe(`setRuleSelector`, () => {
  * @param css - The stylesheet.
  * @returns That rule.
  */
-function rule (css: string): import("postcss").Rule {
+function rule (css: string): Rule {
 	return collect(parse(css))
 }
 
@@ -87,7 +89,7 @@ function rule (css: string): import("postcss").Rule {
  * @param css - The stylesheet.
  * @returns That rule.
  */
-function scssRule (css: string): import("postcss").Rule {
+function scssRule (css: string): Rule {
 	return collect(parseScss(css))
 }
 
@@ -96,7 +98,7 @@ function scssRule (css: string): import("postcss").Rule {
  * @param css - The stylesheet.
  * @returns That rule.
  */
-function lessRule (css: string): import("postcss").Rule {
+function lessRule (css: string): Rule {
 	return collect(parseLess(css))
 }
 
@@ -105,8 +107,8 @@ function lessRule (css: string): import("postcss").Rule {
  * @param root - The parsed stylesheet.
  * @returns That rule.
  */
-function collect (root: import("postcss").Root | import("postcss").Document): import("postcss").Rule {
-	let list: import("postcss").Rule[] = []
+function collect (root: Root | Document): Rule {
+	let list: Rule[] = []
 
 	root.walkRules((node) => {
 		list.push(node)

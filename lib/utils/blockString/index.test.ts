@@ -1,6 +1,7 @@
-import postcss from "postcss"
+import postcss, { type Container, type Parser } from "postcss"
 import less from "postcss-less"
 import scss from "postcss-scss"
+import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
 import { blockString } from "./index.ts"
@@ -43,8 +44,8 @@ describe(`blockString`, () => {
  * @param syntax - The syntax to read it with.
  * @returns What the util answers.
  */
-function postcssCheck (cssString: string, syntax: { parse: import("postcss").Parser } = postcss): string {
+function postcssCheck (cssString: string, syntax: { parse: Parser } = postcss): string {
 	let root = syntax.parse(cssString, { from: undefined })
 
-	return blockString(root.first as import("postcss").Container, { opts: { syntax } } as unknown as import("stylelint").PostcssResult)
+	return blockString(root.first as Container, { opts: { syntax } } as unknown as PostcssResult)
 }

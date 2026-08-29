@@ -1,9 +1,9 @@
-import valueParser from "postcss-value-parser"
+import valueParser, { type Node } from "postcss-value-parser"
 import stylelint from "stylelint"
 
 import { CONTAINS_HEX_COLOR, HEX_COLOR } from "../../regexps.ts"
 import { addNamespace } from "../../utils/addNamespace/index.ts"
-import { applyEditsFromEnd } from "../../utils/applyEditsFromEnd/index.ts"
+import { applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { findInlineCommentSpanHolding, findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
 import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
@@ -27,8 +27,6 @@ export let meta = {
 	url: getRuleDocUrl(shortName),
 	fixable: true,
 }
-
-type Edit = import("../../utils/applyEditsFromEnd/index.ts").Edit
 
 /**
  * Enforces lowercase or uppercase case for hex color values.
@@ -96,7 +94,7 @@ function rule (primary: `lower` | `upper`): RuleCheck {
  * @param node - The value parser node to check.
  * @returns True if the node is a hex color, false otherwise.
  */
-function isHexColor (node: import("postcss-value-parser").Node): boolean {
+function isHexColor (node: Node): boolean {
 	let { type, value } = node
 
 	return type === `word` && HEX_COLOR.test(value)

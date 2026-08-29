@@ -9,7 +9,8 @@
 import { EOL } from "node:os"
 import path from "node:path"
 
-import postcss from "postcss"
+import postcss, { type Document, type Root, type Syntax, type Warning as PostcssWarning } from "postcss"
+import type { PostcssResult, Rule, RuleMeta, RuleSeverity, StylelintPostcssResult } from "stylelint"
 
 import { entryAt } from "./checkout.ts"
 import { BREAK_AS_STYLELINT_READS_IT } from "./regexps.ts"
@@ -20,9 +21,6 @@ const CONFIGURATION_COMMENT = `stylelint`
 /** The severity every rule is given, since a run here has no configuration to set another. */
 const SEVERITY = `error`
 
-/** A syntax as a configuration hands one over: what parses a text and what prints it back. */
-export type Syntax = import("postcss").Syntax
-
 /** What a rule said, in the fields the oracles read; the warning standing in for a parse error carries no position. */
 export type Warning = { rule?: string, text: string, line?: number, column?: number, endLine?: number, endColumn?: number, severity?: string }
 
@@ -30,7 +28,7 @@ export type Warning = { rule?: string, text: string, line?: number, column?: num
 export type RuleSetting = [string, unknown, object?]
 
 /** The rules of one checkout by their short names, as `lib/rules/index.js` exports them. */
-export type Registry = Record<string, import("stylelint").Rule>
+export type Registry = Record<string, Rule>
 
 /** What the rules said and wrote, or why the text could not be read. */
 export type Answer = { unparsable: true, detail: string } | { unparsable: false, usable: boolean, warnings: Warning[], code: string }
@@ -108,10 +106,10 @@ function settingsOf (rules: Record<string, unknown>): RuleSetting[] {
 async function lintDirect ({ code, rules, registry, syntax, fix = false }: { code: string, rules: RuleSetting[], registry: Registry, syntax?: string | Syntax, fix?: boolean }): Promise<Answer> {
 	let parser = await loadSyntax(syntax)
 
-	let result: import("stylelint").PostcssResult
+	let result: PostcssResult
 
 	try {
-		result = postcss().process(code, { from: undefined, syntax: parser }).sync() as import("stylelint").PostcssResult
+		result = postcss().process(code, { from: undefined, syntax: parser }).sync() as PostcssResult
 	}
 	catch (error) {
 		let { reason, message } = error as { reason?: string, message: string }
@@ -121,16 +119,16 @@ async function lintDirect ({ code, rules, registry, syntax, fix = false }: { cod
 
 	let config: { fix: boolean, rules: Record<string, [unknown, object | undefined]> } = { fix, rules: {} }
 
-	let ruleSeverities: Record<string, import("stylelint").RuleSeverity> = {}
+	let ruleSeverities: Record<string, RuleSeverity> = {}
 
-	let ruleMetadata: Record<string, Partial<import("stylelint").RuleMeta>> = {}
+	let ruleMetadata: Record<string, Partial<RuleMeta>> = {}
 	// The least of a result the rules read: `report` looks the rule's severity, its metadata and the configuration up here, and the fields it never touches are left out
-	let stylelint = { ruleSeverities, customMessages: {}, customUrls: {}, ruleMetadata, fixersData: {}, rangesOfComputedEditInfos: [], disabledRanges: {}, config } as unknown as import("stylelint").StylelintPostcssResult
+	let stylelint = { ruleSeverities, customMessages: {}, customUrls: {}, ruleMetadata, fixersData: {}, rangesOfComputedEditInfos: [], disabledRanges: {}, config } as unknown as StylelintPostcssResult
 
 	result.stylelint = stylelint
 
 	let context = { configurationComment: CONFIGURATION_COMMENT, newline: code.match(BREAK_AS_STYLELINT_READS_IT)?.[0] ?? EOL }
-	let parsed = result.root as import("postcss").Root | import("postcss").Document
+	let parsed = result.root as Root | Document
 	let roots = parsed.type === `document` ? parsed.nodes : [parsed]
 
 	for (let [name, primary, secondary] of rules) {
@@ -157,7 +155,7 @@ async function lintDirect ({ code, rules, registry, syntax, fix = false }: { cod
 	let usable = true
 
 	// What `report` hangs on a warning beyond what PostCSS declares: the kind of warning where it is not a rule's, and the rule where it is
-	for (let warning of (result.warnings() as (import("postcss").Warning & { stylelintType?: string, rule?: string })[])) {
+	for (let warning of (result.warnings() as (PostcssWarning & { stylelintType?: string, rule?: string })[])) {
 		if (warning.stylelintType === `invalidOption`) {
 			usable = false
 			continue

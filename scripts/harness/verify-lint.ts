@@ -13,7 +13,7 @@ import stylelint from "stylelint"
 import { RULE_OPTIONS } from "../oracles/options.ts"
 import { buildRuns, isUsable } from "../oracles/runs.ts"
 
-import { lintDirect, loadRules, settingsOf } from "./lint.ts"
+import { type Answer, type Config, lintDirect, loadRules, settingsOf } from "./lint.ts"
 
 /** The registry of this checkout, which is the one every oracle reads too. */
 const REGISTRY = await loadRules(new URL(`../../lib`, import.meta.url).pathname)
@@ -28,7 +28,7 @@ const PAIRS_PER_FIXTURE = 24
  * @param fix - Whether the rules are let write.
  * @returns The answer in the runner's shape.
  */
-async function askStylelint (code: string, config: import("./lint.ts").Config, fix: boolean): Promise<import("./lint.ts").Answer> {
+async function askStylelint (code: string, config: Config, fix: boolean): Promise<Answer> {
 	let result
 
 	try {
@@ -58,7 +58,7 @@ async function askStylelint (code: string, config: import("./lint.ts").Config, f
  * @param fix - Whether the rules are let write.
  * @returns The answer.
  */
-function askRunner (code: string, config: import("./lint.ts").Config, fix: boolean): Promise<import("./lint.ts").Answer> {
+function askRunner (code: string, config: Config, fix: boolean): Promise<Answer> {
 	return lintDirect({ code, rules: settingsOf(config.rules), registry: REGISTRY, syntax: config.customSyntax, fix })
 }
 
@@ -68,7 +68,7 @@ function askRunner (code: string, config: import("./lint.ts").Config, fix: boole
  * @param actual - What the runner said.
  * @returns The field, or null where the two agree.
  */
-function disagreement (expected: import("./lint.ts").Answer, actual: import("./lint.ts").Answer): string | null {
+function disagreement (expected: Answer, actual: Answer): string | null {
 	if (expected.unparsable !== actual.unparsable) return `unparsable`
 	if (expected.unparsable || actual.unparsable) return null
 	if (expected.usable !== actual.usable) return `usable`
@@ -81,7 +81,7 @@ function disagreement (expected: import("./lint.ts").Answer, actual: import("./l
 
 let compared = 0
 
-let failures: { label: string, fix: boolean, field: string, expected: import("./lint.ts").Answer, actual: import("./lint.ts").Answer }[] = []
+let failures: { label: string, fix: boolean, field: string, expected: Answer, actual: Answer }[] = []
 
 /**
  * Compares one configuration over one text, checking and fixing.
@@ -90,7 +90,7 @@ let failures: { label: string, fix: boolean, field: string, expected: import("./
  * @param config - The configuration.
  * @returns Nothing; a disagreement is recorded.
  */
-async function compare (label: string, code: string, config: import("./lint.ts").Config): Promise<void> {
+async function compare (label: string, code: string, config: Config): Promise<void> {
 	for (let fix of [false, true]) {
 		// The two are asked in turn so that a run of this script stays as light on the machine as the oracle it stands in for
 		// eslint-disable-next-line no-await-in-loop

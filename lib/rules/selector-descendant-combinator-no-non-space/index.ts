@@ -1,15 +1,17 @@
+import type { Combinator, Root } from "postcss-selector-parser"
 import stylelint from "stylelint"
 
 import { LEADING_WHITESPACE_AND_REST, WHITESPACE } from "../../regexps.ts"
 import { addNamespace } from "../../utils/addNamespace/index.ts"
 import { findSelectorBlockComments } from "../../utils/findSelectorBlockComments/index.ts"
-import { findSelectorInlineComments } from "../../utils/findSelectorInlineComments/index.ts"
+import { findSelectorInlineComments, type InlineComment } from "../../utils/findSelectorInlineComments/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isStandardSyntaxRule } from "../../utils/isStandardSyntaxRule/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
 import { restoreSelectorInlineComments } from "../../utils/restoreSelectorInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { toSelectorSourceIndex } from "../../utils/toSelectorSourceIndex/index.ts"
+import type { SyntaxRaw } from "../../utils/typeGuards/index.ts"
 
 let { utils: { report, ruleMessages, validateOptions } } = stylelint
 
@@ -44,7 +46,7 @@ function rule (primary: true): RuleCheck {
 
 			let hasFixed = false
 
-			let selectorRaws: import("../../utils/typeGuards/index.ts").SyntaxRaw | undefined = ruleNode.raws.selector
+			let selectorRaws: SyntaxRaw | undefined = ruleNode.raws.selector
 
 			let selector = selectorRaws ? selectorRaws.raw : ruleNode.selector
 
@@ -164,7 +166,7 @@ function rule (primary: true): RuleCheck {
  * @param selector - The selector the tree was parsed from.
  * @returns True if the tree gives the selector back the way the source spells it.
  */
-function standsForSource (selectorTree: import("postcss-selector-parser").Root, selector: string): boolean {
+function standsForSource (selectorTree: Root, selector: string): boolean {
 	if (String(selectorTree) === selector) return true
 
 	selectorTree.walkCombinators((combinatorNode) => {
@@ -194,7 +196,7 @@ function standsForSource (selectorTree: import("postcss-selector-parser").Root, 
  * @param node - The combinator to look back from.
  * @returns True if a comment separates this node from a combinator in front of it.
  */
-function isLeftOverOfCombinator (node: import("postcss-selector-parser").Combinator): boolean {
+function isLeftOverOfCombinator (node: Combinator): boolean {
 	let previous = node.prev()
 
 	if (!previous || previous.type !== `comment`) return false
@@ -215,7 +217,7 @@ function isLeftOverOfCombinator (node: import("postcss-selector-parser").Combina
  * @param inlineComments - The inline comments of the selector.
  * @returns The segments, in the order they stand in.
  */
-function splitAtComments (text: string, offset: number, inlineComments: import("../../utils/findSelectorInlineComments/index.ts").InlineComment[]): Array<{ value: string, index: number, isComment: boolean, closesInlineComment: boolean }> {
+function splitAtComments (text: string, offset: number, inlineComments: InlineComment[]): Array<{ value: string, index: number, isComment: boolean, closesInlineComment: boolean }> {
 	let comments = inlineComments
 		.filter((inlineComment) => inlineComment.startIndex < offset + text.length && offset < inlineComment.endIndex)
 		.map((inlineComment) => ({ start: Math.max(inlineComment.startIndex - offset, 0), end: Math.min(inlineComment.endIndex - offset, text.length), isInline: true }))

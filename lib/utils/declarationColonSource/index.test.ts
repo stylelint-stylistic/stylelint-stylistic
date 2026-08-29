@@ -1,4 +1,4 @@
-import postcss from "postcss"
+import postcss, { type Declaration, type Parser, type Rule } from "postcss"
 import less from "postcss-less"
 import scss from "postcss-scss"
 import { describe, expect, it } from "vitest"
@@ -11,10 +11,10 @@ import { declarationColonSource } from "./index.ts"
  * @param css - The stylesheet, whose first rule holds the declaration.
  * @returns The text.
  */
-function source (parser: { parse: import("postcss").Parser }, css: string): string {
-	let rule = parser.parse(css).first as import("postcss").Rule
+function source (parser: { parse: Parser }, css: string): string {
+	let rule = parser.parse(css).first as Rule
 
-	return declarationColonSource(rule.first as import("postcss").Declaration)
+	return declarationColonSource(rule.first as Declaration)
 }
 
 describe(`declarationColonSource`, () => {

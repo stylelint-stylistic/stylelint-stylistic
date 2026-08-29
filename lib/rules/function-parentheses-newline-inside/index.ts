@@ -1,18 +1,18 @@
-import valueParser from "postcss-value-parser"
-import stylelint from "stylelint"
+import valueParser, { type FunctionNode } from "postcss-value-parser"
+import stylelint, { type FixCallback } from "stylelint"
 
 import { LEADING_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
 import { addNamespace } from "../../utils/addNamespace/index.ts"
-import { addEdit, applyEditsFromEnd, toIndexBeforeEdits } from "../../utils/applyEditsFromEnd/index.ts"
+import { addEdit, applyEditsFromEnd, type Edit, toIndexBeforeEdits } from "../../utils/applyEditsFromEnd/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
-import { findInlineCommentSpanAt, findInlineCommentSpanHolding, findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
+import { findInlineCommentSpanAt, findInlineCommentSpanHolding, findInlineCommentSpans, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
 import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { isStandardSyntaxFunction } from "../../utils/isStandardSyntaxFunction/index.ts"
 import { movesEndIntoInlineComment } from "../../utils/movesEndIntoInlineComment/index.ts"
-import { inlineCommentReading } from "../../utils/readsInlineComments/index.ts"
+import { type InlineCommentReading, inlineCommentReading } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 
@@ -36,8 +36,6 @@ export let meta = {
 	fixable: true,
 }
 
-type Edit = import("../../utils/applyEditsFromEnd/index.ts").Edit
-
 /**
  * Finds the spans the inline comments of a value occupy once the fixes collected so far are written into it, counted in the value as the file spells it.
  *
@@ -49,7 +47,7 @@ type Edit = import("../../utils/applyEditsFromEnd/index.ts").Edit
  * @param spellsInlineComments - False where the syntax the value was spelled in writes no comment with a double slash.
  * @returns The spans, in the coordinates of the value the file spells.
  */
-function findInlineCommentSpansAfterEdits (declValue: string, edits: Edit[], spellsInlineComments: boolean): import("../../utils/findInlineCommentSpans/index.ts").InlineCommentSpan[] {
+function findInlineCommentSpansAfterEdits (declValue: string, edits: Edit[], spellsInlineComments: boolean): InlineCommentSpan[] {
 	return findInlineCommentSpans(applyEditsFromEnd(declValue, edits), spellsInlineComments)
 		.map(({ start, end }) => ({ start: toIndexBeforeEdits(start, edits), end: toIndexBeforeEdits(end, edits) }))
 }
@@ -70,7 +68,7 @@ function findInlineCommentSpansAfterEdits (declValue: string, edits: Edit[], spe
  * @param inlineComments - The spans the inline comments of the value occupy in it.
  * @returns True where the rule may read the function's parentheses and write between them.
  */
-function isFunctionParsedAsWritten (valueNode: FunctionNode, inlineComments: import("../../utils/findInlineCommentSpans/index.ts").InlineCommentSpan[]): boolean {
+function isFunctionParsedAsWritten (valueNode: FunctionNode, inlineComments: InlineCommentSpan[]): boolean {
 	if (!isStandardSyntaxFunction(valueNode)) return false
 
 	if (valueNode.unclosed) return false
@@ -129,7 +127,7 @@ function mergeRanges (lists: number[][][]): number[][] {
  * @param reading - What the syntax the value was spelled in makes of a comment opened by a double slash.
  * @returns True where a reading has the character move into a comment.
  */
-function movesIntoComment (declValue: string, characterIndex: number, emptied: number[][], reading: import("../../utils/readsInlineComments/index.ts").InlineCommentReading): boolean {
+function movesIntoComment (declValue: string, characterIndex: number, emptied: number[][], reading: InlineCommentReading): boolean {
 	let standingText = declValue.slice(0, characterIndex + 1)
 
 	return movesEndIntoInlineComment(standingText, withoutRanges(standingText, emptied), reading)
@@ -217,7 +215,7 @@ function getFixEmptiedAfter (valueNode: FunctionNode): number[][] {
  * @param read - What the walk has read of the function, and the value it was read from.
  * @returns Whether each of the two fixes may be written.
  */
-function getNeverFixability (read: { declValue: string, valueNode: FunctionNode, openingIndex: number, checkBefore: string, checkAfter: string, firstIndex: number, measured: number[][], reading: import("../../utils/readsInlineComments/index.ts").InlineCommentReading }): { isOpeningFixable: boolean, isClosingFixable: boolean } {
+function getNeverFixability (read: { declValue: string, valueNode: FunctionNode, openingIndex: number, checkBefore: string, checkAfter: string, firstIndex: number, measured: number[][], reading: InlineCommentReading }): { isOpeningFixable: boolean, isClosingFixable: boolean } {
 	let { declValue, valueNode, openingIndex, checkBefore, checkAfter, firstIndex, measured, reading } = read
 
 	let firstCharacterIndex = findFirstCharacterIndex(declValue, firstIndex)
@@ -260,7 +258,7 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, _se
 		root.walkDecls((decl) => {
 			if (!decl.value.includes(`(`)) return
 
-			let fix: import("stylelint").FixCallback | undefined
+			let fix: FixCallback | undefined
 			// What a fix changed, and nothing else: the value is edited at the positions the fixes name rather than printed anew from the parsed tree, since `postcss-value-parser` does not always give back the text it was handed — a comment opening `/*/` comes back as `/**/` — and a fix made anywhere in such a value would rewrite a comment standing elsewhere in it
 			let edits: Edit[] = []
 			let declValue = getDeclarationValue(decl)
@@ -369,8 +367,6 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, _se
 	}
 }
 
-type FunctionNode = import("postcss-value-parser").FunctionNode
-
 /**
  * Gets the whitespace before the first non-comment, non-space node in a function, and says where that node begins.
  *
@@ -385,7 +381,7 @@ type FunctionNode = import("postcss-value-parser").FunctionNode
  * @param inlineComments - The spans the inline comments of the value occupy in it.
  * @returns The whitespace, the index the first significant thing behind it begins at — the node the parser hands back where one stands, the code a node of a comment's text reaches past that comment's end with where the parser filed one under such a node, and the function's own closing parenthesis where it holds neither — and the stretches the whitespace was gathered from.
  */
-function getCheckBefore (valueNode: FunctionNode, openingIndex: number, declValue: string, inlineComments: import("../../utils/findInlineCommentSpans/index.ts").InlineCommentSpan[]): { before: string, firstIndex: number, measured: number[][] } {
+function getCheckBefore (valueNode: FunctionNode, openingIndex: number, declValue: string, inlineComments: InlineCommentSpan[]): { before: string, firstIndex: number, measured: number[][] } {
 	let before = valueNode.before
 	let measured = [[openingIndex, openingIndex + valueNode.before.length]]
 	let firstIndex = valueNode.sourceEndIndex - 1

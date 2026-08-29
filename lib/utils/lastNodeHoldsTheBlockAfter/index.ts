@@ -1,3 +1,5 @@
+import type { AtRule, Container } from "postcss"
+
 import { hasBlock } from "../hasBlock/index.ts"
 import { isAtRule } from "../typeGuards/index.ts"
 
@@ -14,7 +16,7 @@ import { isAtRule } from "../typeGuards/index.ts"
  * @param statement - The statement carrying the block.
  * @returns True where the last node of the block holds that run.
  */
-export function lastNodeHoldsTheBlockAfter<T extends import("postcss").Container> (statement: T): statement is T & { last: import("postcss").AtRule } {
+export function lastNodeHoldsTheBlockAfter<T extends Container> (statement: T): statement is T & { last: AtRule } {
 	let last = statement.last
 
 	if (!last || !isAtRule(last) || hasBlock(last)) return false

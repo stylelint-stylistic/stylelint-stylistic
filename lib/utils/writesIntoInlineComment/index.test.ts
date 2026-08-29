@@ -1,6 +1,7 @@
-import { parse } from "postcss"
+import { type Container, type Document, type Node, parse, type Parser, type Root } from "postcss"
 import less from "postcss-less"
 import scss from "postcss-scss"
+import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
 import { writesIntoInlineComment } from "./index.ts"
@@ -16,13 +17,13 @@ const PLAIN_CSS = { parse }
  * @param spelledBetween - The run the fix would leave standing between that node and the write.
  * @returns What the utility answers.
  */
-function ask (syntax: { parse: import("postcss").Parser }, code: string, pick: (root: import("postcss").Root | import("postcss").Document) => import("postcss").Node | undefined, spelledBetween?: string): boolean {
+function ask (syntax: { parse: Parser }, code: string, pick: (root: Root | Document) => Node | undefined, spelledBetween?: string): boolean {
 	let root = syntax.parse(code, { from: undefined })
 	let node = pick(root)
 
 	if (!node) throw new Error(`The case picks no node`)
 
-	return writesIntoInlineComment(node, { opts: { syntax } } as unknown as import("stylelint").PostcssResult, spelledBetween)
+	return writesIntoInlineComment(node, { opts: { syntax } } as unknown as PostcssResult, spelledBetween)
 }
 
 /**
@@ -30,8 +31,8 @@ function ask (syntax: { parse: import("postcss").Parser }, code: string, pick: (
  * @param root - The parsed stylesheet.
  * @returns That statement.
  */
-function block (root: import("postcss").Root | import("postcss").Document): import("postcss").Container {
-	return root.first as import("postcss").Container
+function block (root: Root | Document): Container {
+	return root.first as Container
 }
 
 describe(`writesIntoInlineComment`, () => {

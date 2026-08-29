@@ -1,3 +1,4 @@
+import type { AtRule, Rule } from "postcss"
 import stylelint from "stylelint"
 
 import { LINE_BREAK, NON_SPACE } from "../../regexps.ts"
@@ -74,7 +75,7 @@ function rule (primary: `always` | `always-single-line` | `never-single-line` | 
 		 * Checks a statement for closing brace newline after violations.
 		 * @param statement - The rule or at-rule to check.
 		 */
-		function check (statement: import("postcss").Rule | import("postcss").AtRule): void {
+		function check (statement: Rule | AtRule): void {
 			if (!hasBlock(statement)) return
 
 			if (statement.type === `atrule` && optionsMatches(secondaryOptions, `ignoreAtRules`, statement.name)) return

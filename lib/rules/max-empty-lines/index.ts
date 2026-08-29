@@ -1,5 +1,6 @@
+import type { Document, Root } from "postcss"
 import styleSearch from "style-search"
-import stylelint from "stylelint"
+import stylelint, { type PostcssResult } from "stylelint"
 
 import { CRLF, CRLF_RUN, EVERY_CRLF_RUN, EVERY_LF_RUN, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { addNamespace } from "../../utils/addNamespace/index.ts"
@@ -71,7 +72,7 @@ function rule (primary: number, secondaryOptions: { ignore?: `comments` | `comme
 			})
 
 			let { first } = root
-			let { document } = root as { document?: import("postcss").Document }
+			let { document } = root as { document?: Document }
 			let firstNodeRawsBefore = first && first.raws.before
 			let rootRawsAfter = root.raws.after
 
@@ -115,7 +116,7 @@ function rule (primary: number, secondaryOptions: { ignore?: `comments` | `comme
 		 * @param matchEndIndex - The end index of the match.
 		 * @param node - The root node.
 		 */
-		function checkMatch (matchStartIndex: number, matchEndIndex: number, node: import("postcss").Root): void {
+		function checkMatch (matchStartIndex: number, matchEndIndex: number, node: Root): void {
 			let eof = matchEndIndex >= endOfFile
 			let problem = false
 
@@ -197,7 +198,7 @@ function replaceEmptyLines (maxLines: number, str: unknown, isSpecialCase: boole
  * @param root - The root node of CSS.
  * @returns True if the node is the last node of file, false otherwise.
  */
-function isEofNode (document: import("stylelint").PostcssResult[`root`], root: import("postcss").Root): boolean {
+function isEofNode (document: PostcssResult[`root`], root: Root): boolean {
 	if (!document || document.constructor.name !== `Document` || !(`type` in document)) return true
 
 	// In the `postcss-html` and `postcss-jsx` syntax, checks that there is text after the given node.

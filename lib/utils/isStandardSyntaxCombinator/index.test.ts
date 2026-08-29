@@ -1,5 +1,5 @@
 import { parse } from "postcss"
-import selectorParser from "postcss-selector-parser"
+import selectorParser, { type Combinator } from "postcss-selector-parser"
 import { describe, expect, it } from "vitest"
 
 import { isStandardSyntaxCombinator } from "./index.ts"
@@ -7,7 +7,7 @@ import { isStandardSyntaxCombinator } from "./index.ts"
 describe(`isStandardSyntaxCombinator`, () => {
 	it(`tag`, () => {
 		// A node of the stylesheet rather than of a selector, which the util turns away by its type
-		expect(isStandardSyntaxCombinator(parse(`a {}`).first as unknown as import("postcss-selector-parser").Combinator)).toBe(false)
+		expect(isStandardSyntaxCombinator(parse(`a {}`).first as unknown as Combinator)).toBe(false)
 	})
 	it(`descendant`, () => {
 		expect(isStandardSyntaxCombinator(combinator(`a b {}`))).toBe(true)
@@ -58,8 +58,8 @@ describe(`isStandardSyntaxCombinator`, () => {
  * @param css - The stylesheet.
  * @returns That combinator.
  */
-function combinator (css: string): import("postcss-selector-parser").Combinator {
-	let list: import("postcss-selector-parser").Combinator[] = []
+function combinator (css: string): Combinator {
+	let list: Combinator[] = []
 
 	parse(css).walkRules((rule) => {
 		selectorParser((selectorAST) => {

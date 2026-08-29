@@ -1,3 +1,4 @@
+import type { Declaration } from "postcss"
 import stylelint from "stylelint"
 
 import { LEADING_WHITESPACE, SPACES_THEN_BLOCK_COMMENT, SPACES_THEN_INLINE_COMMENT } from "../../regexps.ts"
@@ -45,7 +46,7 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, _se
 
 		if (!validOptions) return
 
-		let fixData: Map<import("postcss").Declaration, number[]> | undefined
+		let fixData: Map<Declaration, number[]> | undefined
 
 		valueListCommaWhitespaceChecker({
 			root,

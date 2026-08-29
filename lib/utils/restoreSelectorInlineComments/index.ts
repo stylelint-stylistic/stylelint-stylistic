@@ -1,4 +1,5 @@
 import { findSelectorBlockComments } from "../findSelectorBlockComments/index.ts"
+import type { InlineComment } from "../findSelectorInlineComments/index.ts"
 
 /**
  * Gives a selector's inline comments their source spelling back, so that a fix written to the raw suits the copy `postcss-scss` prints.
@@ -8,7 +9,7 @@ import { findSelectorBlockComments } from "../findSelectorBlockComments/index.ts
  * @param inlineComments - The inline comments of the selector.
  * @returns The selector spelled the way the source spells it.
  */
-export function restoreSelectorInlineComments (rawSelector: string, inlineComments: import("../findSelectorInlineComments/index.ts").InlineComment[]): string {
+export function restoreSelectorInlineComments (rawSelector: string, inlineComments: InlineComment[]): string {
 	if (inlineComments.length === 0) return rawSelector
 
 	let comments = findSelectorBlockComments(rawSelector)

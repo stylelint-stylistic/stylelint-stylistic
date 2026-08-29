@@ -1,4 +1,4 @@
-import { parse } from "postcss"
+import { type Declaration, type Node, parse, type Rule } from "postcss"
 import { beforeEach, describe, expect, it } from "vitest"
 
 import { nextNonCommentNode } from "./index.ts"
@@ -10,11 +10,11 @@ describe(`nextNonCommentNode`, () => {
 	let caseA = ``
 	let caseB = ``
 
-	let aNode: import("postcss").Rule | undefined
+	let aNode: Rule | undefined
 
-	let bNode: import("postcss").Rule | undefined
+	let bNode: Rule | undefined
 
-	let colorNode: import("postcss").Declaration | undefined
+	let colorNode: Declaration | undefined
 
 	beforeEach(() => {
 		aNode = undefined
@@ -76,7 +76,7 @@ describe(`nextNonCommentNode`, () => {
 	it(`the callback is called for each comment stepped over, with the node standing behind it`, () => {
 		let root = parse(`a { /* x */ /* y */ color: pink; }`)
 
-		let steps: [string, import("postcss").Node | undefined][] = []
+		let steps: [string, Node | undefined][] = []
 
 		root.walkRules((rule) => {
 			aNode = rule
@@ -108,7 +108,7 @@ describe(`nextNonCommentNode`, () => {
 	it(`the callback is called with nothing behind a comment the block ends with`, () => {
 		let root = parse(`a { /* x */ }`)
 
-		let steps: [string, import("postcss").Node | undefined][] = []
+		let steps: [string, Node | undefined][] = []
 
 		root.walkRules((rule) => {
 			aNode = rule

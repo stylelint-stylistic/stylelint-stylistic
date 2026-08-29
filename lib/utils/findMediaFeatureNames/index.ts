@@ -1,12 +1,10 @@
 import { isSimpleBlockNode, isTokenNode, parseCommaSeparatedListOfComponentValues } from "@csstools/css-parser-algorithms"
-import { isToken, stringify, tokenize, TokenType } from "@csstools/css-tokenizer"
-import { isGeneralEnclosed, isMediaFeature, isMediaQueryInvalid, parseFromTokens } from "@csstools/media-query-list-parser"
+import { type CSSToken, isToken, stringify, type TokenIdent, tokenize, TokenType } from "@csstools/css-tokenizer"
+import { type GeneralEnclosed, isGeneralEnclosed, isMediaFeature, isMediaQueryInvalid, type MediaQuery, parseFromTokens } from "@csstools/media-query-list-parser"
 
 import { RANGE_FEATURE_OPERATOR } from "../../regexps.ts"
 
-export type MediaQueryList = Array<import("@csstools/media-query-list-parser").MediaQuery>
-
-export type TokenIdent = import("@csstools/css-tokenizer").TokenIdent
+export type MediaQueryList = Array<MediaQuery>
 
 export type MediaQuerySerializer = { stringify: () => string }
 
@@ -15,12 +13,12 @@ export type MediaQuerySerializer = { stringify: () => string }
  * @param node - The node to extract tokens from.
  * @returns Array of relevant CSS tokens.
  */
-function topLevelTokenNodes (node: import("@csstools/media-query-list-parser").GeneralEnclosed): Array<import("@csstools/css-tokenizer").CSSToken> {
+function topLevelTokenNodes (node: GeneralEnclosed): Array<CSSToken> {
 	let components = node.value.value
 
 	if (isToken(components) || components.length === 0 || isToken(components[0])) return []
 
-	let relevantTokens: Array<import("@csstools/css-tokenizer").CSSToken> = []
+	let relevantTokens: Array<CSSToken> = []
 
 	// To consume the next token if it is a scss variable
 	let lastWasDollarSign = false

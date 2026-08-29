@@ -1,5 +1,6 @@
+import type { Attribute } from "postcss-selector-parser"
 import styleSearch from "style-search"
-import stylelint from "stylelint"
+import stylelint, { type FixCallback } from "stylelint"
 
 import { LEADING_WHITESPACE, TRAILING_WHITESPACE } from "../../regexps.ts"
 import { addNamespace } from "../../utils/addNamespace/index.ts"
@@ -10,6 +11,7 @@ import { parseSelector } from "../../utils/parseSelector/index.ts"
 import { restoreSelectorInlineComments } from "../../utils/restoreSelectorInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { toSelectorSourceIndex } from "../../utils/toSelectorSourceIndex/index.ts"
+import type { SyntaxRaw } from "../../utils/typeGuards/index.ts"
 
 let { utils: { report, ruleMessages, validateOptions } } = stylelint
 
@@ -46,7 +48,7 @@ function rule (primary: `always` | `never`): RuleCheck {
 		root.walkRules((ruleNode) => {
 			if (!isStandardSyntaxRule(ruleNode)) return
 
-			let selectorRaws: import("../../utils/typeGuards/index.ts").SyntaxRaw | undefined = ruleNode.raws.selector
+			let selectorRaws: SyntaxRaw | undefined = ruleNode.raws.selector
 
 			let selector = selectorRaws ? selectorRaws.raw : ruleNode.selector
 
@@ -55,7 +57,7 @@ function rule (primary: `always` | `never`): RuleCheck {
 			// `postcss-scss` rewrites every inline comment of a selector into a block comment in the raw parsed here, keeps the source spelling beside it and prints that one, so the two strings drift apart by two characters per comment. Every position is counted in the raw and reported in the file's own coordinates, and a fix is written to both copies.
 			let inlineComments = findSelectorInlineComments(selector, selectorRaws && selectorRaws.scss)
 
-			let fix: import("stylelint").FixCallback | undefined
+			let fix: FixCallback | undefined
 			let hasFixed
 			let selectorTree = parseSelector(selector, result, ruleNode)
 
@@ -148,7 +150,7 @@ function rule (primary: `always` | `never`): RuleCheck {
 	 * Fixes the space before an attribute selector.
 	 * @param attributeNode - The attribute node to fix.
 	 */
-	function fixBefore (attributeNode: import("postcss-selector-parser").Attribute): void {
+	function fixBefore (attributeNode: Attribute): void {
 		let spacesAttribute = attributeNode.raws.spaces && attributeNode.raws.spaces.attribute
 		let rawAttrBefore = spacesAttribute && spacesAttribute.before
 
@@ -176,7 +178,7 @@ function rule (primary: `always` | `never`): RuleCheck {
 	 * Fixes the space after an attribute selector.
 	 * @param attributeNode - The attribute node to fix.
 	 */
-	function fixAfter (attributeNode: import("postcss-selector-parser").Attribute): void {
+	function fixAfter (attributeNode: Attribute): void {
 		let key: `insensitive` | `value` | `attribute` = attributeNode.operator ? (attributeNode.insensitive ? `insensitive` : `value`) : `attribute`
 
 		let rawSpaces = attributeNode.raws.spaces && attributeNode.raws.spaces[key]

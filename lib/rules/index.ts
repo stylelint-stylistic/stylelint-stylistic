@@ -1,3 +1,5 @@
+import type { Rule } from "stylelint"
+
 import aspectRatioNotation from "./aspect-ratio-notation/index.ts"
 import atRuleNameCase from "./at-rule-name-case/index.ts"
 import atRuleNameNewlineAfter from "./at-rule-name-newline-after/index.ts"
@@ -77,8 +79,6 @@ import valueListCommaNewlineBefore from "./value-list-comma-newline-before/index
 import valueListCommaSpaceAfter from "./value-list-comma-space-after/index.ts"
 import valueListCommaSpaceBefore from "./value-list-comma-space-before/index.ts"
 import valueListMaxEmptyLines from "./value-list-max-empty-lines/index.ts"
-
-type Rule = import("stylelint").Rule
 
 let rules: { readonly [name: string]: Rule } = {
 	"aspect-ratio-notation": aspectRatioNotation,

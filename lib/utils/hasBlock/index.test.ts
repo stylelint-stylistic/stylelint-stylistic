@@ -1,4 +1,4 @@
-import { parse } from "postcss"
+import { type Container, parse } from "postcss"
 import { expect, it } from "vitest"
 
 import { hasBlock } from "./index.ts"
@@ -38,5 +38,5 @@ it(`hasBlock`, () => {
 function postcssCheck (cssString: string): boolean {
 	let root = parse(cssString)
 
-	return hasBlock(root.first as import("postcss").Container)
+	return hasBlock(root.first as Container)
 }

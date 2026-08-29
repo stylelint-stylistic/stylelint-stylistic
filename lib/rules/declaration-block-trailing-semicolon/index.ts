@@ -1,4 +1,5 @@
-import stylelint from "stylelint"
+import type { ChildNode, Container, Node } from "postcss"
+import stylelint, { type PostcssResult } from "stylelint"
 
 import { TRAILING_WHITESPACE } from "../../regexps.ts"
 import { addNamespace } from "../../utils/addNamespace/index.ts"
@@ -42,7 +43,7 @@ export let meta = {
  * @param node - The node the semicolon would stand behind.
  * @returns True where the node stands in a declaration block.
  */
-function standsInADeclarationBlock (node: import("postcss").Node): boolean {
+function standsInADeclarationBlock (node: Node): boolean {
 	let container = node.parent
 
 	// The two walks throw on a node with no parent before they ask, so this stands for whoever asks next rather than for them
@@ -61,7 +62,7 @@ function standsInADeclarationBlock (node: import("postcss").Node): boolean {
  * @param node - The node the semicolon stands behind.
  * @returns True where clearing the block's flag would leave the semicolon where it is.
  */
-function semicolonOutlivesTheFlag (node: import("postcss").Node): boolean {
+function semicolonOutlivesTheFlag (node: Node): boolean {
 	if (!node.next()) return false
 
 	return (isAtRule(node) && !hasBlock(node)) || (isDeclaration(node) && isCustomProperty(node.prop))
@@ -72,7 +73,7 @@ function semicolonOutlivesTheFlag (node: import("postcss").Node): boolean {
  * @param node - The node.
  * @returns The two offsets.
  */
-function offsetsOf (node: import("postcss").Node): { start: number, end: number } {
+function offsetsOf (node: Node): { start: number, end: number } {
 	let { source } = node
 
 	if (!source?.start || !source.end) throw new Error(`The node must carry a source with both of its ends`)
@@ -89,7 +90,7 @@ function offsetsOf (node: import("postcss").Node): { start: number, end: number 
  * @param container - The container the block belongs to.
  * @returns The offset in the file the block ends at.
  */
-function blockEnd (container: import("postcss").Container): number {
+function blockEnd (container: Container): number {
 	let { end } = offsetsOf(container)
 
 	if (isRoot(container)) return end
@@ -108,12 +109,12 @@ function blockEnd (container: import("postcss").Container): number {
  * @param node - The node closing the block.
  * @returns The raws, each named by the node holding it and the key it is held under.
  */
-function rawsBehind (node: import("postcss").ChildNode): { owner: import("postcss").Node, key: string, start: number, text: string }[] {
+function rawsBehind (node: ChildNode): { owner: Node, key: string, start: number, text: string }[] {
 	let container = node.parent
 
 	if (!container?.nodes) throw new Error(`The node must stand in a block`)
 
-	let raws: { owner: import("postcss").Node, key: string, start: number, text: string }[] = []
+	let raws: { owner: Node, key: string, start: number, text: string }[] = []
 
 	for (let sibling of container.nodes.slice(container.index(node) + 1)) {
 		let text = sibling.raws.before
@@ -139,7 +140,7 @@ function rawsBehind (node: import("postcss").ChildNode): { owner: import("postcs
  * @param node - The node closing the block.
  * @returns The index, counted from the node's own start, or undefined where the block ends on no semicolon.
  */
-function trailingSemicolonIndex (node: import("postcss").ChildNode): number | undefined {
+function trailingSemicolonIndex (node: ChildNode): number | undefined {
 	let { start, end } = offsetsOf(node)
 	let holder = rawsBehind(node).findLast((raw) => raw.text.includes(`;`))
 
@@ -155,7 +156,7 @@ function trailingSemicolonIndex (node: import("postcss").ChildNode): number | un
  * Taking one of them alone away would leave the block ending on a semicolon still, and that is what used to happen: the flag's own semicolon went, the raws kept theirs, and the next parse read the first of those as the flag's in its turn. So one run of `--fix` ended clean over a file the rule still had something to say about, and the work needed a second.
  * @param node - The node closing the block.
  */
-function takeTheTrailingSemicolonsAway (node: import("postcss").ChildNode): void {
+function takeTheTrailingSemicolonsAway (node: ChildNode): void {
 	let { parent } = node
 
 	if (!parent) throw new Error(`The node must stand in a block`)
@@ -181,7 +182,7 @@ function takeTheTrailingSemicolonsAway (node: import("postcss").ChildNode): void
  * @param result - The Stylelint result, which holds the syntax the file was opened with.
  * @returns True where the fix may be written.
  */
-function isFixable (node: import("postcss").ChildNode, primary: `always` | `never`, spelledBetween: string | undefined, result: import("stylelint").PostcssResult): boolean {
+function isFixable (node: ChildNode, primary: `always` | `never`, spelledBetween: string | undefined, result: PostcssResult): boolean {
 	if (primary === `never`) return !semicolonOutlivesTheFlag(node) && !requiresTrailingSemicolon(node, result)
 
 	return !hasBlock(node) && !writesIntoInlineComment(node, result, spelledBetween)
@@ -229,7 +230,7 @@ function rule (primary: `always` | `never`, secondaryOptions: { ignore?: `single
 		 * Checks the last node for trailing semicolon violations.
 		 * @param node - The node to check.
 		 */
-		function checkLastNode (node: import("postcss").ChildNode): void {
+		function checkLastNode (node: ChildNode): void {
 			let { parent } = node
 
 			if (!parent) throw new Error(`A parent node must be present`)

@@ -1,5 +1,4 @@
-export type PostcssChildNode = import("postcss").ChildNode
-export type PostcssContainer = import("postcss").Container
+import type { ChildNode, Container } from "postcss"
 
 /**
  * Gets the last node of a container that is not a comment.
@@ -10,7 +9,7 @@ export type PostcssContainer = import("postcss").Container
  * @param container - The container to look inside.
  * @returns The last non-comment node, or null where the container holds none.
  */
-export function lastNonCommentNode (container: PostcssContainer | undefined): PostcssChildNode | null {
+export function lastNonCommentNode (container: Container | undefined): ChildNode | null {
 	let node = container ? container.last : undefined
 
 	while (node && node.type === `comment`) node = node.prev()

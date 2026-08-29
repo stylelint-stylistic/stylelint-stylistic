@@ -1,3 +1,6 @@
+import type { Document, Node, Root } from "postcss"
+import type { PostcssResult } from "stylelint"
+
 import { nodeSyntax } from "../nodeSyntax/index.ts"
 import { isSyntax } from "../typeGuards/index.ts"
 
@@ -30,7 +33,7 @@ function probeSyntax (syntax?: unknown): InlineCommentReading {
 	let reading: InlineCommentReading = { spells: true, keeps: false }
 
 	try {
-		let probe: import("postcss").Root | import("postcss").Document = syntax.parse(INLINE_COMMENT_PROBE, { from: undefined })
+		let probe: Root | Document = syntax.parse(INLINE_COMMENT_PROBE, { from: undefined })
 		let readsTheProbe = false
 
 		probe.walk((node) => {
@@ -70,7 +73,7 @@ function probeSyntax (syntax?: unknown): InlineCommentReading {
  * @param result - The Stylelint result, which holds the syntax the file was opened with.
  * @returns True where a double slash in that node's text opens a comment.
  */
-export function readsInlineComments (node: import("postcss").Node, result: import("stylelint").PostcssResult): boolean {
+export function readsInlineComments (node: Node, result: PostcssResult): boolean {
 	return syntaxSpellsInlineComments(nodeSyntax(node, result))
 }
 
@@ -80,7 +83,7 @@ export function readsInlineComments (node: import("postcss").Node, result: impor
  * @param result - The Stylelint result, which holds the syntax the file was opened with.
  * @returns What that syntax makes of such a comment.
  */
-export function inlineCommentReading (node: import("postcss").Node, result: import("stylelint").PostcssResult): InlineCommentReading {
+export function inlineCommentReading (node: Node, result: PostcssResult): InlineCommentReading {
 	return probeSyntax(nodeSyntax(node, result))
 }
 

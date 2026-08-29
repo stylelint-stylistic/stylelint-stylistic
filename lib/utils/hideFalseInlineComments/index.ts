@@ -1,6 +1,5 @@
-import { findCommentSpans } from "../findCommentSpans/index.ts"
-
-export type CommentSpan = import("../findCommentSpans/index.ts").CommentSpan
+import { type CommentSpan, findCommentSpans } from "../findCommentSpans/index.ts"
+import type { InlineCommentSpan } from "../findInlineCommentSpans/index.ts"
 
 /**
  * Spells every double slash that opens no comment out of harm's way, so that a reader which knows less about the text than {@link findCommentSpans} does cannot take one for a comment.
@@ -12,7 +11,7 @@ export type CommentSpan = import("../findCommentSpans/index.ts").CommentSpan
  * @param spans - The spans the comments of the text occupy in it, both kinds of them, where they are already known. A caller that leaves one out leaves the slash it opens on unguarded.
  * @returns The text, with the second slash of every false comment opening written as a question mark.
  */
-export function hideFalseInlineComments (text: string, spans: (CommentSpan | import("../findInlineCommentSpans/index.ts").InlineCommentSpan)[] = findCommentSpans(text)): string {
+export function hideFalseInlineComments (text: string, spans: (CommentSpan | InlineCommentSpan)[] = findCommentSpans(text)): string {
 	let openings = new Set(spans.map(({ start }) => start))
 	// The characters are taken apart only where there is something to write over, and a text carrying no false opening — every text holding no double slash among them — is handed back as it came
 	let hidden = null

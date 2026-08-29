@@ -1,3 +1,5 @@
+import type { Declaration } from "postcss"
+
 import { lastNonCommentNode } from "../lastNonCommentNode/index.ts"
 
 /**
@@ -7,7 +9,7 @@ import { lastNonCommentNode } from "../lastNonCommentNode/index.ts"
  * @param decl - The declaration to ask about.
  * @returns True where the declaration closes its block with no semicolon behind it.
  */
-export function isLastDeclarationWithoutSemicolon (decl: import("postcss").Declaration): boolean {
+export function isLastDeclarationWithoutSemicolon (decl: Declaration): boolean {
 	let parent = decl.parent
 
 	if (!parent || parent.raws.semicolon) return false

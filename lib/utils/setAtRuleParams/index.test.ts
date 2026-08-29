@@ -1,6 +1,8 @@
-import { parse } from "postcss"
+import { type AtRule, parse } from "postcss"
 import { parse as parseScss, stringify as stringifyScss } from "postcss-scss"
 import { describe, expect, it } from "vitest"
+
+import type { SyntaxRaw } from "../typeGuards/index.ts"
 
 import { setAtRuleParams } from "./index.ts"
 
@@ -41,7 +43,7 @@ describe(`setAtRuleParams`, () => {
 
 		setAtRuleParams(node, `screen // c\n  and (min-width: 2px)`)
 
-		expect((node.raws.params as import("../typeGuards/index.ts").SyntaxRaw).scss).toBe(`screen // c\n  and (min-width: 2px)`)
+		expect((node.raws.params as SyntaxRaw).scss).toBe(`screen // c\n  and (min-width: 2px)`)
 	})
 
 	it(`keeps the raw beside it in step`, () => {
@@ -49,7 +51,7 @@ describe(`setAtRuleParams`, () => {
 
 		setAtRuleParams(node, `screen // c\n  and (min-width: 2px)`)
 
-		expect((node.raws.params as import("../typeGuards/index.ts").SyntaxRaw).raw).toBe(`screen /* c*/\n  and (min-width: 2px)`)
+		expect((node.raws.params as SyntaxRaw).raw).toBe(`screen /* c*/\n  and (min-width: 2px)`)
 	})
 
 	it(`the syntax prints what was written`, () => {
@@ -68,8 +70,8 @@ describe(`setAtRuleParams`, () => {
  * @param css - The stylesheet.
  * @returns That at-rule.
  */
-function atRule (css: string): import("postcss").AtRule {
-	let list: import("postcss").AtRule[] = []
+function atRule (css: string): AtRule {
+	let list: AtRule[] = []
 
 	parse(css).walkAtRules((rule) => {
 		list.push(rule)
@@ -83,8 +85,8 @@ function atRule (css: string): import("postcss").AtRule {
  * @param css - The stylesheet.
  * @returns That at-rule.
  */
-function scssAtRule (css: string): import("postcss").AtRule {
-	let list: import("postcss").AtRule[] = []
+function scssAtRule (css: string): AtRule {
+	let list: AtRule[] = []
 
 	parseScss(css).walkAtRules((rule) => {
 		list.push(rule)

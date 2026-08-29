@@ -1,9 +1,10 @@
-import { parse } from "postcss"
+import { type Declaration, parse, type Rule } from "postcss"
 import less from "postcss-less"
 import scss from "postcss-scss"
+import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
-import { inlineCommentReading, syntaxKeepsInlineComments, syntaxSpellsInlineComments } from "./index.ts"
+import { type InlineCommentReading, inlineCommentReading, syntaxKeepsInlineComments, syntaxSpellsInlineComments } from "./index.ts"
 
 describe(`syntaxSpellsInlineComments`, () => {
 	it(`no syntax at all, which is plain CSS`, () => {
@@ -56,10 +57,10 @@ describe(`syntaxKeepsInlineComments`, () => {
  * @param syntax - The syntax the file was opened with, none of it standing for plain CSS.
  * @returns What that syntax makes of such a comment.
  */
-function read (syntax?: unknown): import("./index.ts").InlineCommentReading {
-	let rule = parse(`a { color: red; }`, { from: undefined }).first as import("postcss").Rule
+function read (syntax?: unknown): InlineCommentReading {
+	let rule = parse(`a { color: red; }`, { from: undefined }).first as Rule
 
-	return inlineCommentReading(rule.first as import("postcss").Declaration, { opts: { syntax } } as unknown as import("stylelint").PostcssResult)
+	return inlineCommentReading(rule.first as Declaration, { opts: { syntax } } as unknown as PostcssResult)
 }
 
 describe(`inlineCommentReading`, () => {

@@ -6,6 +6,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { restoreSelectorInlineComments } from "../../utils/restoreSelectorInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { toSelectorSourceIndex } from "../../utils/toSelectorSourceIndex/index.ts"
+import type { SyntaxRaw } from "../../utils/typeGuards/index.ts"
 import { isNumber } from "../../utils/validateTypes/index.ts"
 
 let { utils: { report, ruleMessages, validateOptions } } = stylelint
@@ -45,7 +46,7 @@ function rule (primary: number): RuleCheck {
 		let allowedCRLFNewLinesString = `\r\n`.repeat(maxAdjacentNewlines)
 
 		root.walkRules((ruleNode) => {
-			let selectorRaws: import("../../utils/typeGuards/index.ts").SyntaxRaw | undefined = ruleNode.raws.selector
+			let selectorRaws: SyntaxRaw | undefined = ruleNode.raws.selector
 			let selector = selectorRaws ? selectorRaws.raw : ruleNode.selector
 
 			// `postcss-scss` rewrites every inline comment of a selector into a block comment in the raw read here, keeps the source spelling beside it and prints that one, so the two strings drift apart by two characters per comment. The positions are reported in the file's own coordinates, and a fix is written to both copies. The line break that closes each comment stands outside it and survives the fix, since collapsing the empty lines always leaves the first break standing.

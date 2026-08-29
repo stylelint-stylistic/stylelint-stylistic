@@ -1,3 +1,5 @@
+import type { Node } from "postcss-value-parser"
+
 import { HEX_ESCAPE_TERMINATOR, TRAILING_HEX_ESCAPE } from "../../regexps.ts"
 import { namesAnAddress } from "../namesAnAddress/index.ts"
 
@@ -10,7 +12,7 @@ import { namesAnAddress } from "../namesAnAddress/index.ts"
  * @param siblings - The nodes the call stands among.
  * @returns The name, escapes unresolved and in the case the file writes it.
  */
-function readName (valueNode: import("postcss-value-parser").Node, index: number, siblings: import("postcss-value-parser").Node[]): string {
+function readName (valueNode: Node, index: number, siblings: Node[]): string {
 	let name = valueNode.value
 
 	for (let at = index - 1; at > 0; at -= 2) {
@@ -37,6 +39,6 @@ function readName (valueNode: import("postcss-value-parser").Node, index: number
  * @param siblings - The nodes the node stands among.
  * @returns True where the node is a call opening an address.
  */
-export function opensAnAddress (valueNode: import("postcss-value-parser").Node, index: number, siblings: import("postcss-value-parser").Node[]): boolean {
+export function opensAnAddress (valueNode: Node, index: number, siblings: Node[]): boolean {
 	return valueNode.type === `function` && namesAnAddress(readName(valueNode, index, siblings))
 }

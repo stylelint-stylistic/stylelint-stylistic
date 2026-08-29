@@ -1,4 +1,4 @@
-import postcss from "postcss"
+import postcss, { type Declaration, type Parser, type Rule } from "postcss"
 import less from "postcss-less"
 import scss from "postcss-scss"
 import { describe, expect, it } from "vitest"
@@ -14,9 +14,9 @@ import { moveDeclarationValueHeadIntoBetween } from "./index.ts"
  * @param length - How many characters of the printed value to move.
  * @returns What the file prints, what the value now reads as, and what stands between the property and it.
  */
-function move (parser: { parse: import("postcss").Parser }, css: string, length: number): { printed: string, value: string, between: string | undefined } {
-	let rule = parser.parse(css).first as import("postcss").Rule
-	let decl = rule.first as import("postcss").Declaration
+function move (parser: { parse: Parser }, css: string, length: number): { printed: string, value: string, between: string | undefined } {
+	let rule = parser.parse(css).first as Rule
+	let decl = rule.first as Declaration
 
 	moveDeclarationValueHeadIntoBetween(decl, length)
 

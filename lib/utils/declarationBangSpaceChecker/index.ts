@@ -1,7 +1,8 @@
+import type { Declaration, Root } from "postcss"
 import styleSearch from "style-search"
-import stylelint from "stylelint"
+import stylelint, { type PostcssResult } from "stylelint"
 
-import { applyEditsFromEnd } from "../applyEditsFromEnd/index.ts"
+import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import { declarationString } from "../declarationString/index.ts"
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
 import { getDeclarationValue } from "../getDeclarationValue/index.ts"
@@ -9,9 +10,6 @@ import { searchCopy } from "../searchCopy/index.ts"
 import { setDeclarationValue } from "../setDeclarationValue/index.ts"
 
 let { utils: { report } } = stylelint
-
-export type Edit = import("../applyEditsFromEnd/index.ts").Edit
-export type Declaration = import("postcss").Declaration
 
 /** The declaration as the file prints it, and where in that print one bang of it stands. */
 export type BangTarget = { text: string, index: number }
@@ -51,9 +49,9 @@ function fileEdit (parts: DeclarationPart[], edit: Edit): void {
  * @param opts - The options object.
  */
 export function declarationBangSpaceChecker (opts: {
-	root: import("postcss").Root,
+	root: Root,
 	locationChecker: LocationChecker,
-	result: import("stylelint").PostcssResult,
+	result: PostcssResult,
 	checkedRuleName: string,
 	fix?: ((target: BangTarget) => Edit[]),
 	isFixable?: ((decl: Declaration, index: number) => boolean),

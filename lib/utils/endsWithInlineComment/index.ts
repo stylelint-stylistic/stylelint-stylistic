@@ -1,4 +1,5 @@
 import { LINE_BREAK, OPENS_WITH_QUOTE, URL_CALL_AT_END } from "../../regexps.ts"
+import type { InlineCommentReading } from "../readsInlineComments/index.ts"
 
 /** Where a scan stands: what it is reading, how far it has read, the quote that would close the string it is inside, and the pattern that closes the comment it may be inside. */
 export type Scan = { state: `blockComment` | `code` | `inlineComment` | `string` | `url`, index: number, openingQuote: string }
@@ -122,7 +123,7 @@ function scanEndsInsideInlineComment (text: string): boolean {
  * @param reading - What the syntax that spelled the string makes of such a comment, defaulted to a syntax that has said nothing.
  * @returns True if the string ends with an inline comment.
  */
-export function endsWithInlineComment (source: string, reading: import("../readsInlineComments/index.ts").InlineCommentReading = NOTHING_SAID): boolean {
+export function endsWithInlineComment (source: string, reading: InlineCommentReading = NOTHING_SAID): boolean {
 	// Where no double slash opens a comment, no text ends with one, and the scan below has nothing else it could answer with
 	if (!reading.spells) return false
 

@@ -1,5 +1,6 @@
+import type { AtRule, Declaration, Node } from "postcss"
 import valueParser from "postcss-value-parser"
-import stylelint from "stylelint"
+import stylelint, { type FixCallback } from "stylelint"
 
 import { FRACTION_WITH_LEADING_ZEROS, FRACTION_WITHOUT_LEADING_ZERO } from "../../regexps.ts"
 import { addNamespace } from "../../utils/addNamespace/index.ts"
@@ -46,7 +47,7 @@ function rule (primary: `always` | `never`): RuleCheck {
 
 		if (!validOptions) return
 
-		let fix: import("stylelint").FixCallback | undefined
+		let fix: FixCallback | undefined
 
 		root.walkAtRules((atRule) => {
 			if (atRule.name.toLowerCase() === `import`) return
@@ -61,7 +62,7 @@ function rule (primary: `always` | `never`): RuleCheck {
 		 * @param node - The node to check.
 		 * @param value - The value to check.
 		 */
-		function check (node: import("postcss").AtRule | import("postcss").Declaration, value: string): void {
+		function check (node: AtRule | Declaration, value: string): void {
 			let neverFixPositions: Array<{ startIndex: number, endIndex: number }> = []
 
 			let alwaysFixPositions: Array<{ index: number }> = []
@@ -154,7 +155,7 @@ function rule (primary: `always` | `never`): RuleCheck {
 		 * @param node - The node with the violation.
 		 * @param index - The index of the violation.
 		 */
-		function complain (message: string, node: import("postcss").Node, index: number): void {
+		function complain (message: string, node: Node, index: number): void {
 			report({
 				result,
 				ruleName,

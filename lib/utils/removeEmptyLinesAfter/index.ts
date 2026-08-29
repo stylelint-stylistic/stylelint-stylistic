@@ -1,3 +1,5 @@
+import type { AtRule, Rule } from "postcss"
+
 import { EVERY_EMPTY_LINE_RUN, EVERY_SEMICOLON } from "../../regexps.ts"
 import { getBlockAfter } from "../getBlockAfter/index.ts"
 import { setBlockAfter } from "../setBlockAfter/index.ts"
@@ -13,7 +15,7 @@ import { setBlockAfter } from "../setBlockAfter/index.ts"
  * @param node - The PostCSS node to modify.
  * @returns The modified node.
  */
-export function removeEmptyLinesAfter<T extends import("postcss").Rule | import("postcss").AtRule> (node: T): T {
+export function removeEmptyLinesAfter<T extends Rule | AtRule> (node: T): T {
 	let blockAfter = getBlockAfter(node)
 
 	setBlockAfter(node, blockAfter ? blockAfter.replaceAll(EVERY_EMPTY_LINE_RUN, (run, first) => first + (run.match(EVERY_SEMICOLON) || []).join(``)) : ``)

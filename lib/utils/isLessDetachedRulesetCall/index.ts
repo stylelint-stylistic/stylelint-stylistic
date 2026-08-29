@@ -1,3 +1,6 @@
+import type { AtRule } from "postcss"
+import type { AtRule as LessAtRule } from "postcss-less"
+
 /**
  * Asks whether a node the parser handed over as an at-rule is a call to a Less detached ruleset — `@dr()`, where `@dr: { … }` stands somewhere above.
  *
@@ -13,7 +16,7 @@
  * @param atRule - The at-rule node to read.
  * @returns True where the node is a call to a detached ruleset.
  */
-export function isLessDetachedRulesetCall (atRule: import("postcss").AtRule | import("postcss-less").AtRule): boolean {
+export function isLessDetachedRulesetCall (atRule: AtRule | LessAtRule): boolean {
 	if (`mixin` in atRule && atRule.mixin) return false
 
 	return !atRule.nodes && atRule.raws.afterName === `` && atRule.params.startsWith(`()`)

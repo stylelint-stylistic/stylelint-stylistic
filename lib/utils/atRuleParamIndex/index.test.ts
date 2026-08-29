@@ -1,4 +1,4 @@
-import { parse } from "postcss"
+import { type AtRule, parse } from "postcss"
 import { describe, expect, it } from "vitest"
 
 import { atRuleParamIndex } from "./index.ts"
@@ -26,8 +26,8 @@ describe(`atRuleParamIndex`, () => {
  * @param css - The stylesheet.
  * @returns That at-rule.
  */
-function atRule (css: string): import("postcss").AtRule {
-	let list: import("postcss").AtRule[] = []
+function atRule (css: string): AtRule {
+	let list: AtRule[] = []
 
 	parse(css).walkAtRules((rule) => {
 		list.push(rule)

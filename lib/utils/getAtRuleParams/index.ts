@@ -1,3 +1,5 @@
+import type { AtRule } from "postcss"
+
 /**
  * Gets the params of an at-rule, spelled as the file spells them.
  *
@@ -5,8 +7,10 @@
  * @param atRule - The at-rule node.
  * @returns The params, spelled as the file spells them.
  */
-export function getAtRuleParams (atRule: import("postcss").AtRule): string {
-	let syntaxRaw: import("../typeGuards/index.ts").SyntaxRaw | undefined = atRule.raws.params
+import type { SyntaxRaw } from "../typeGuards/index.ts"
+
+export function getAtRuleParams (atRule: AtRule): string {
+	let syntaxRaw: SyntaxRaw | undefined = atRule.raws.params
 
 	if (!syntaxRaw) return atRule.params
 

@@ -1,4 +1,4 @@
-import { parse } from "postcss"
+import { parse, type Rule } from "postcss"
 import { expect, it } from "vitest"
 
 import { hasEmptyBlock } from "./index.ts"
@@ -37,5 +37,5 @@ it(`hasEmptyBlock`, () => {
 function postcssCheck (cssString: string): boolean {
 	let root = parse(cssString)
 
-	return hasEmptyBlock(root.first as import("postcss").Rule)
+	return hasEmptyBlock(root.first as Rule)
 }

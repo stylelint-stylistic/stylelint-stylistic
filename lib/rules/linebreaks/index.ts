@@ -1,4 +1,4 @@
-import { Input, rule as _rule } from "postcss"
+import { Input, rule as _rule, type RuleProps } from "postcss"
 import stylelint from "stylelint"
 
 import { CRLF, EVERY_LINE_BREAK, EVERY_LINE_WITH_BREAK, LINE_BREAK } from "../../regexps.ts"
@@ -140,7 +140,7 @@ function rule (primary: `unix` | `windows`): RuleCheck {
 					start: { line, column, offset: 0 },
 					input: new Input(``),
 				},
-			} as import("postcss").RuleProps)
+			} as RuleProps)
 
 			report({
 				message: messages.expected,

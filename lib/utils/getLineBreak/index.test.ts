@@ -1,4 +1,5 @@
-import { parse, rule } from "postcss"
+import { parse, type Rule, rule } from "postcss"
+import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
 import { getLineBreak } from "./index.ts"
@@ -48,7 +49,7 @@ describe(`getLineBreak`, () => {
 function ask (css: string, rules: Record<string, unknown> = {}): string {
 	let root = parse(css)
 
-	return getLineBreak(root.first as import("postcss").Rule, result(rules))
+	return getLineBreak(root.first as Rule, result(rules))
 }
 
 /**
@@ -56,6 +57,6 @@ function ask (css: string, rules: Record<string, unknown> = {}): string {
  * @param rules - The rules the configuration lists.
  * @returns The result.
  */
-function result (rules: Record<string, unknown> = {}): import("stylelint").PostcssResult {
-	return { stylelint: { config: { rules } } } as unknown as import("stylelint").PostcssResult
+function result (rules: Record<string, unknown> = {}): PostcssResult {
+	return { stylelint: { config: { rules } } } as unknown as PostcssResult
 }

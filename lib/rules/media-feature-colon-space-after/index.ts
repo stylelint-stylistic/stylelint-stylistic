@@ -1,3 +1,4 @@
+import type { AtRule } from "postcss"
 import stylelint from "stylelint"
 
 import { LEADING_WHITESPACE } from "../../regexps.ts"
@@ -42,7 +43,7 @@ function rule (primary: `always` | `never`): RuleCheck {
 
 		if (!validOptions) return
 
-		let fixData: Map<import("postcss").AtRule, number[]> | undefined
+		let fixData: Map<AtRule, number[]> | undefined
 
 		mediaFeatureColonSpaceChecker({
 			root,

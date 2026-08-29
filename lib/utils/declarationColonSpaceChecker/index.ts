@@ -1,5 +1,6 @@
+import type { Declaration, Root } from "postcss"
 import styleSearch from "style-search"
-import stylelint from "stylelint"
+import stylelint, { type PostcssResult } from "stylelint"
 
 import { declarationColonSource } from "../declarationColonSource/index.ts"
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
@@ -15,11 +16,11 @@ export type LocationChecker = (args: { source: string, index: number, lineCheckS
  * @param opts - The options object.
  */
 export function declarationColonSpaceChecker (opts: {
-	root: import("postcss").Root,
+	root: Root,
 	locationChecker: LocationChecker,
-	fix?: ((decl: import("postcss").Declaration, index: number) => void),
-	isFixable?: ((decl: import("postcss").Declaration, index: number) => boolean),
-	result: import("stylelint").PostcssResult,
+	fix?: ((decl: Declaration, index: number) => void),
+	isFixable?: ((decl: Declaration, index: number) => boolean),
+	result: PostcssResult,
 	checkedRuleName: string,
 }): void {
 	let { fix } = opts

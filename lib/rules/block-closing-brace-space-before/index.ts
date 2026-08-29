@@ -1,3 +1,4 @@
+import type { AtRule, Rule } from "postcss"
 import stylelint from "stylelint"
 
 import { TRAILING_WHITESPACE } from "../../regexps.ts"
@@ -65,7 +66,7 @@ function rule (primary: `always` | `never` | `always-single-line` | `never-singl
 		 * Checks a statement for closing brace space before violations.
 		 * @param statement - The rule or at-rule to check.
 		 */
-		function check (statement: import("postcss").Rule | import("postcss").AtRule): void {
+		function check (statement: Rule | AtRule): void {
 			// Return early if blockless or has empty block
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 

@@ -1,9 +1,9 @@
-import valueParser from "postcss-value-parser"
+import valueParser, { type FunctionNode } from "postcss-value-parser"
 import stylelint from "stylelint"
 
 import { MEDIA_AT_RULE, SPACE_OR_TAB } from "../../regexps.ts"
 import { addNamespace } from "../../utils/addNamespace/index.ts"
-import { addEdit, applyEditsFromEnd } from "../../utils/applyEditsFromEnd/index.ts"
+import { addEdit, applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { endsWithInlineComment } from "../../utils/endsWithInlineComment/index.ts"
 import { findInlineCommentSpanHolding, findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
@@ -30,9 +30,6 @@ export let meta = {
 	url: getRuleDocUrl(shortName),
 	fixable: true,
 }
-
-type Edit = import("../../utils/applyEditsFromEnd/index.ts").Edit
-type FunctionNode = import("postcss-value-parser").FunctionNode
 
 /**
  * Names the span the whitespace behind a media feature's opening parenthesis stands in, and what goes there.
