@@ -36,8 +36,8 @@ const PROPER_NAMES = [`Keep a Changelog`, `Semantic Versioning`]
 /** A number binds to what it counts or measures. */
 const NUMBER = /(?<![\w.-])(\d+(?:[.,]\d+)?) (?=\S)/gu
 
-/** A number trailing its word — a date, a version — binds backwards instead. */
-const TRAILING_NUMBER = /\b([A-Za-z]+) (\d+(?:[.,]\d+)?)(?=[,.;:)\]]|$)/gu
+/** A number trailing its word — a date, a version, a line of a file — binds backwards instead. What tells such a number from one that counts is what follows it: a number counting something is followed by the thing it counts, so anything closing the clause behind the number says it counts nothing. An em dash closes one as surely as a comma does, and stands behind the number by the time this runs, with the space in front of it already bound to it. */
+const TRAILING_NUMBER = /\b([A-Za-z]+) (\d+(?:[.,]\d+)?)(?=[,.;:)\]]|[ \u00A0]—|$)/gu
 
 /** An inline code span of any backtick width, left untouched. */
 const CODE_SPAN = /(`+)(?:(?!\1)[\s\S])*?\1/gu
