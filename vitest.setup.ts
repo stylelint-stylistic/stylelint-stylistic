@@ -17,8 +17,8 @@ let lintWithTheLinter = stylelint.lint
 
 /**
  * Asks whether a case reaches for what the runner does not model: a disable comment, a secondary option about the report, a file name, a plugin other than this one, or a configuration under test.
- * @param {LinterOptions} options - What `stylelint.lint` was called with.
- * @returns {boolean} True where the linter itself has to answer.
+ * @param options - What `stylelint.lint` was called with.
+ * @returns True where the linter itself has to answer.
  */
 function needsTheLinter (options: LinterOptions): boolean {
 	if (typeof options.code !== `string` || options.code === `` || options.codeFilename || options.code.includes(`stylelint-`)) return true
@@ -31,8 +31,8 @@ function needsTheLinter (options: LinterOptions): boolean {
  * Lints a case the way the oracles do, and answers in the shape the testing library reads.
  *
  * A run of the suite is some 9 000 cases of up to three lints each, and `stylelint.lint` spends nine tenths of a lint on the linter around the rule: a linter created for the call, a configuration searched for and augmented, an ignore file looked up, disable comments walked. The runner of the oracles does what the linter does for one rule and nothing of the rest, and `make harness-check RUN=1` is the proof that the two agree. The linter itself is called only where a case asks for what the runner does not model.
- * @param {LinterOptions} options - What `stylelint.lint` was called with.
- * @returns {Promise<LinterResult>} What the library reads of a linter result: the warnings, the parse errors, the option warnings and the text the fix left.
+ * @param options - What `stylelint.lint` was called with.
+ * @returns What the library reads of a linter result: the warnings, the parse errors, the option warnings and the text the fix left.
  */
 async function lint (options: LinterOptions): Promise<LinterResult> {
 	if (needsTheLinter(options)) return lintWithTheLinter(options)

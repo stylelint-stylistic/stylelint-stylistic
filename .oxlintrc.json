@@ -42,6 +42,16 @@
 	},
 	"overrides": [
 		{
+			// A TypeScript file carries its types in its signatures, and a JSDoc type beside them would be a second copy to fall out of step. The shared config will carry this once it is released with it; until then it stands here.
+			"files": [
+				"**/*.ts",
+			],
+			"rules": {
+				"jsdoc/require-param-type": "off",
+				"jsdoc/require-returns-type": "off",
+			},
+		},
+		{
 			// Three walkers written before the rule was on: the callback of `root.walk` and the one of `styleSearch` in `indentation`, and the callback of `parsedValue.walk` in the two `function-parentheses-*-inside` rules, where eight all but identical branches of `primary` stand one after another. The ceiling is what the worst of them counts today, so none of the three may grow, and it comes down as each is taken apart. The worst is `root.walk` in `indentation` since #280 took the ternaries out of `function-parentheses-space-inside`, whose walker set the ceiling before that.
 			"files": [
 				"lib/rules/function-parentheses-newline-inside/index.js",

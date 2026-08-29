@@ -11,6 +11,7 @@ import path from "node:path"
 
 import postcss from "postcss"
 
+import { entryAt } from "./checkout.mjs"
 import { BREAK_AS_STYLELINT_READS_IT } from "./regexps.mjs"
 
 /** The comment word Stylelint reads its configuration comments by, which no fixture carries and which a rule may still ask about. */
@@ -56,7 +57,7 @@ async function loadSyntax (syntax) {
  * @returns {Promise<Registry>} The registry, keyed by the rule's short name.
  */
 async function loadRules (lib) {
-	let module = await import(`${lib}/rules/index.js`)
+	let module = await import(entryAt(lib, `rules/index`))
 
 	return module.default
 }

@@ -8,10 +8,13 @@
 		"strictNullChecks": true,
 		"noImplicitAny": true,
 		"forceConsistentCasingInFileNames": true,
-		"outDir": "./dist",
+		"noEmit": true,
 		"checkJs": true,
 		"allowJs": true,
 		"skipLibCheck": true,
+		"erasableSyntaxOnly": true,
+		"verbatimModuleSyntax": true,
+		"rewriteRelativeImportExtensions": true,
 		"types": [
 			"vitest/globals"
 		],
@@ -20,6 +23,7 @@
 		"**/*",
 	],
 	"exclude": [
+		"dist",
 		"tmp",
 	],
 }

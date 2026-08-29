@@ -4,7 +4,7 @@ This file provides guidance to coding agents when working with code in this 
 
 ## Commands
 
-Every task goes through the [`Makefile`](Makefile), and that file is the list of tasks: read it, or run `make help`, which prints every target with its description and the flags it takes. Nothing is repeated here, so that no list can fall behind the one that is executed. The only npm script is `help`, which itself calls `make help`, and `node_modules/.bin` is put on `PATH` by the Makefile.
+Every task goes through the [`Makefile`](Makefile), and that file is the list of tasks: read it, or run `make help`, which prints every target with its description and the flags it takes. Nothing is repeated here, so that no list can fall behind the one that is executed. The npm scripts are `help`, which itself calls `make help`, and `prepare`, which the package manager runs after an install: it points Git at the hooks of [.githooks](.githooks) where there is a repository to point, and builds `dist/` — for the checkout on this machine and for a package installed straight from Git alike, since the built entry is what `exports` names. The Makefile lists everything else, and `node_modules/.bin` is put on `PATH` by the Makefile.
 
 The one thing the file cannot say for itself is that a flag is passed as a variable rather than as an option:
 
@@ -16,11 +16,11 @@ make lint FILE=lib/rules/color-hex-case
 
 Two targets collect results rather than check them: `make oracles` and `make sweep FILE=…`. Both keep every result by what it depends on, under `~/.cache/stylelint-stylistic/`, and measure only the side no entry answers for, so a run is seconds and a rerun over an unchanged tree is nothing; run them freely, before a branch and after it, and read the diff they write.
 
-CI (`.github/workflows/test.yaml`) runs `make setup` and then `make verify` — run `make verify` locally before pushing. The release workflow (`.github/workflows/release.yaml`) runs `make setup` and then `make release` on pushes to `release` and `release-*`. The `pre-commit` hook lints the staged `.js`/`.ts` files and runs, in one pass of `vitest related`, whatever test imports one of them — so a util is answered for by the rules that use it rather than by the directory it sits in.
+CI (`.github/workflows/test.yaml`) runs `pnpm ci` and then `make verify` — run `make verify` locally before pushing. The release workflow (`.github/workflows/release.yaml`) runs `pnpm ci` and then `make release` on pushes to `release` and `release-*`. The `pre-commit` hook lints the staged `.js`/`.ts` files and runs, in one pass of `vitest related`, whatever test imports one of them — so a util is answered for by the rules that use it rather than by the directory it sits in.
 
 ## Architecture
 
-A Stylelint plugin (`@stylistic/stylelint-plugin`) that restores the stylistic rules Stylelint removed in v16 and adds rules of its own. How many there are is `lib/rules/index.js`, and no number is written here, since a written one falls behind. Pure ESM, no build step — `lib/` is published as-is (minus `*.test.js`).
+A Stylelint plugin (`@stylistic/stylelint-plugin`) that restores the stylistic rules Stylelint removed in v16 and adds rules of its own. How many there are is `lib/rules/index.js`, and no number is written here, since a written one falls behind. Pure ESM. `make build` (`tsc -p tsconfig.build.json`) writes `lib/` to `dist/` — every module beside its `.d.ts`, the tests left out — and `dist/` is what the package publishes and what `exports` points at; it is never committed, and `make release` builds it before publishing.
 
 - `lib/index.js` — maps every entry of the rule registry through `stylelint.createPlugin(addNamespace(name), rule)` and exports the array. `addNamespace` prefixes `@stylistic/`, so users write `"@stylistic/color-hex-case"`.
 - `lib/rules/index.js` — the registry: static imports of every rule plus a default-exported object keyed by kebab-case rule name. **A new rule is not active until it is added here.**

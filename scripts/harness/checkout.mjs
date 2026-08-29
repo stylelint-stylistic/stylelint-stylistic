@@ -31,6 +31,20 @@ function libAt (revision) {
 }
 
 /**
+ * Names the entry file of a checkout's `lib/` under one name, in whichever of the two spellings the checkout keeps it.
+ *
+ * The migration to TypeScript renames every module of `lib/` from `.js` to `.ts`, and a base a branch is measured against keeps the spelling it was written with; a run asks both sides in one process, so the file has to be found rather than named. The probe goes once the base of every branch is on the far side of the migration.
+ * @param {string} lib - The path of the checkout's `lib/` directory.
+ * @param {string} name - The module, relative to `lib/` and without its extension.
+ * @returns {string} The absolute path of that module.
+ */
+function entryAt (lib, name) {
+	let typescript = path.join(lib, `${name}.ts`)
+
+	return existsSync(typescript) ? typescript : path.join(lib, `${name}.js`)
+}
+
+/**
  * Names the revision a branch is measured against: where it left `origin/main`.
  * @returns {string} The commit.
  */
@@ -38,4 +52,4 @@ function defaultBase () {
 	return execFileSync(`git`, [`merge-base`, `HEAD`, `origin/main`], { cwd: ROOT, encoding: `utf8` }).trim()
 }
 
-export { defaultBase, libAt, ROOT }
+export { defaultBase, entryAt, libAt, ROOT }

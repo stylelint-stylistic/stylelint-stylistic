@@ -13,15 +13,15 @@ help: ## 🧾 Print this message
 	$(call print_help)
 .PHONY: help
 
-setup: ## 🛠️  Setup the project environment
-	@command -v pnpm >/dev/null 2>&1 || $(call pnpm_alert) ; set -x
-	pnpm ci
-	git config --local core.hooksPath .githooks
-.PHONY: setup
-
 check: ## ✅ Check types with TypeScript
 	tsc --noEmit
 .PHONY: check
+
+build: ## 📦 Build the package into dist/ and load what came out
+	rm -rf dist
+	tsc -p tsconfig.build.json
+	node --input-type=module -e 'import("./dist/index.js").then(({ default: plugins }) => { if (plugins.length === 0) throw new Error("dist/index.js exports no plugin") })'
+.PHONY: build
 
 lint: ## 🧬 Check code by oxlint [LINT_FLAGS=] [FILE=]
 	oxlint $(LINT_FLAGS) $(FILE)
@@ -60,21 +60,12 @@ breaks-check: ## ↩️  Check that every line spelling a line break in lib/ is 
 	./scripts/check-break-readings.js
 .PHONY: breaks-check
 
-verify: check lint test prose-check breaks-check ## ✅ Run every check the CI runs
+verify: check lint test prose-check breaks-check build ## ✅ Run every check the CI runs
 .PHONY: verify
 
-release: verify ## 🚀 Release a new version
+release: verify build ## 🚀 Release a new version
 	pnx @firefoxic/release-it
 .PHONY: release
-
-define pnpm_alert
-	(
-		printf "\t❌ $(ANSI_BOLD)pnpm not found in PATH$(ANSI_RESET)\n"
-		printf "\tPlease install pnpm first:\n"
-		printf "\thttps://pnpm.io/installation\n\n"
-		exit 1
-	)
-endef
 
 define print_help
 	grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \

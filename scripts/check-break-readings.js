@@ -32,7 +32,7 @@ const MENTIONS = /\\(?:[nrf]|u000[acd]|x0[acd]|u\{0*[acd]\}|c[jlm])/iu
 const COMMENT_ONLY = /^(?:\/\/|\*(?!\/\s*\S))|^\/\*(?:(?!\*\/)[\s\S])*(?:\*\/\s*)?$/u
 
 /** The file the answers are meant to come from, and the tests, whose fixtures are stylesheets rather than readings of one. */
-const SKIPPED = /(?:^|\/)regexps\.js$|\.test\.js$/u
+const SKIPPED = /(?:^|\/)regexps\.[jt]s$|\.test\.[jt]s$/u
 
 /**
  * Every line that puts a break into a text, or spells one inside a stylesheet written as data. None of them asks whether anything is a break, so none is debt.
@@ -127,7 +127,7 @@ const DEBT = {
  */
 function collectSources () {
 	return readdirSync(LIB, { recursive: true, encoding: `utf8` })
-		.filter((path) => path.endsWith(`.js`))
+		.filter((path) => path.endsWith(`.js`) || path.endsWith(`.ts`))
 		.map((path) => `lib/${path}`)
 		.filter((path) => !SKIPPED.test(path))
 		.toSorted()

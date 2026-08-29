@@ -16,10 +16,15 @@
 		"url": "git+https://github.com/stylelint-stylistic/stylelint-stylistic.git"
 	},
 	"type": "module",
-	"exports": "./lib/index.js",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./package.json": "./package.json"
+	},
 	"files": [
-		"lib/**/*.js",
-		"!**/*.test.js"
+		"dist"
 	],
 	"peerDependencies": {
 		"stylelint": "^17.6.0"
@@ -34,7 +39,8 @@
 		"style-search": "^0.1.0"
 	},
 	"scripts": {
-		"help": "make help"
+		"help": "make help",
+		"prepare": "git config --local core.hooksPath .githooks || true; make build"
 	},
 	"devDependencies": {
 		"@firefoxic/beautypography": "^0.1.0",
