@@ -4,11 +4,11 @@ import type { LinterOptions, LinterResult } from "stylelint"
 import stylelint from "stylelint"
 import { assert, describe, expect, it } from "vitest"
 
-import rules from "./lib/rules/index.js"
+import rules from "./lib/rules/index.ts"
 import { lintDirect } from "./scripts/harness/lint.mjs"
 
 // The plugin is named by its path rather than handed over as objects, so that the testing library has no plugin objects to deep-clone for every case that carries no line break — it clones them to force `context.newline`, which no rule of this plugin reads any more
-const PLUGIN = new URL(`./lib/index.js`, import.meta.url).pathname
+const PLUGIN = new URL(`./lib/index.ts`, import.meta.url).pathname
 
 // The secondary options a rule's report is shaped by, which the runner below does not model
 const REPORT_OPTIONS = new Set([`severity`, `message`, `url`, `disableFix`, `reportDisables`])

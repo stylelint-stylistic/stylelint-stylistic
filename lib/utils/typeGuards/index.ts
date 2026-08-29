@@ -1,11 +1,11 @@
-type Node = import("postcss").Node
-type NodeSource = import("postcss").Source
+export type Node = import("postcss").Node
+export type NodeSource = import("postcss").Source
 
 /** The raw of a selector, a value or a set of params. PostCSS keeps the text with its comments in `raw` beside the copy it hands back in `value`, and `postcss-scss` keeps a third copy under `scss`, spelled as the file spells it with every `//` comment in place, which is the one it prints. */
-type SyntaxRaw = { raw: string, value: string, scss?: string }
+export type SyntaxRaw = { raw: string, value: string, scss?: string }
 
 /** The source of a root `postcss-html` read out of a page, beside what PostCSS gives every node: whether the block came out of a `style` attribute, the language the block names, and the syntax it was parsed with. */
-type EmbeddedSource = import("postcss").Source & { inline?: boolean, lang?: string, syntax?: import("postcss").Syntax }
+export type EmbeddedSource = import("postcss").Source & { inline?: boolean, lang?: string, syntax?: import("postcss").Syntax }
 
 /**
  * Checks if a node is a PostCSS Root node.
@@ -78,8 +78,6 @@ export function isValueFunction (node: import("postcss-value-parser").Node): nod
 export function hasSource (node: Node): node is (Node & { source: NodeSource }) {
 	return Boolean(node.source)
 }
-
-export type { EmbeddedSource, Node, NodeSource, SyntaxRaw }
 
 /**
  * Asks whether a value is something a stylesheet can be parsed with: an object carrying a `parse` function, which is all a syntax has to have to be asked a question.

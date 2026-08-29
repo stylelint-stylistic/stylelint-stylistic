@@ -39,20 +39,20 @@ const SKIPPED = /(?:^|\/)regexps\.[jt]s$|\.test\.[jt]s$/u
  * @type {Record<string, string[]>}
  */
 const ALLOWED = {
-	"lib/rules/function-max-empty-lines/index.js": [
+	"lib/rules/function-max-empty-lines/index.ts": [
 		`let allowedLFNewLinesString = \`\\n\`.repeat(maxAdjacentNewlines)`,
 		`let allowedCRLFNewLinesString = \`\\r\\n\`.repeat(maxAdjacentNewlines)`,
 	],
-	"lib/rules/linebreaks/index.js": [`if (data) return data.replaceAll(EVERY_LINE_BREAK, shouldHaveCR ? \`\\r\\n\` : \`\\n\`)`],
-	"lib/rules/max-empty-lines/index.js": [
+	"lib/rules/linebreaks/index.ts": [`if (data) return data.replaceAll(EVERY_LINE_BREAK, shouldHaveCR ? \`\\r\\n\` : \`\\n\`)`],
+	"lib/rules/max-empty-lines/index.ts": [
 		`let emptyLFLines = \`\\n\`.repeat(repeatTimes)`,
 		`let emptyCRLFLines = \`\\r\\n\`.repeat(repeatTimes)`,
 	],
-	"lib/rules/selector-max-empty-lines/index.js": [
+	"lib/rules/selector-max-empty-lines/index.ts": [
 		`let allowedLFNewLinesString = \`\\n\`.repeat(maxAdjacentNewlines)`,
 		`let allowedCRLFNewLinesString = \`\\r\\n\`.repeat(maxAdjacentNewlines)`,
 	],
-	"lib/rules/value-list-max-empty-lines/index.js": [
+	"lib/rules/value-list-max-empty-lines/index.ts": [
 		`let allowedLFNewLinesString = \`\\n\`.repeat(maxAdjacentNewlines)`,
 		`let allowedCRLFNewLinesString = \`\\r\\n\`.repeat(maxAdjacentNewlines)`,
 	],
@@ -68,45 +68,45 @@ const ALLOWED = {
  * @type {Record<string, string[]>}
  */
 const DEBT = {
-	"lib/rules/block-closing-brace-empty-line-before/index.js": [`if (statementString[index - 1] === \`\\r\`) index -= 1`],
-	"lib/rules/block-closing-brace-newline-before/index.js": [`if (statementString[index - 1] === \`\\r\`) index -= 1`],
-	"lib/rules/block-closing-brace-space-before/index.js": [`if (statementString[index - 1] === \`\\r\`) index -= 1`],
-	"lib/rules/block-opening-brace-newline-before/index.js": [`if (beforeBraceNoRaw[index - 1] === \`\\r\`) index -= 1`],
-	"lib/rules/block-opening-brace-space-before/index.js": [`if (beforeBraceNoRaw[index - 1] === \`\\r\`) index -= 1`],
-	"lib/rules/function-max-empty-lines/index.js": [
+	"lib/rules/block-closing-brace-empty-line-before/index.ts": [`if (statementString[index - 1] === \`\\r\`) index -= 1`],
+	"lib/rules/block-closing-brace-newline-before/index.ts": [`if (statementString[index - 1] === \`\\r\`) index -= 1`],
+	"lib/rules/block-closing-brace-space-before/index.ts": [`if (statementString[index - 1] === \`\\r\`) index -= 1`],
+	"lib/rules/block-opening-brace-newline-before/index.ts": [`if (beforeBraceNoRaw[index - 1] === \`\\r\`) index -= 1`],
+	"lib/rules/block-opening-brace-space-before/index.ts": [`if (beforeBraceNoRaw[index - 1] === \`\\r\`) index -= 1`],
+	"lib/rules/function-max-empty-lines/index.ts": [
 		`let violatedCRLFNewLinesRegex = new RegExp(\`(?:\\r\\n){\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
 		`let violatedLFNewLinesRegex = new RegExp(\`\\n{\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
 	],
-	"lib/rules/function-whitespace-after/index.js": [
+	"lib/rules/function-whitespace-after/index.ts": [
 		`if (nextChar === \`\\n\`) return`,
 		`if (source.slice(index, index + 2) === \`\\r\\n\`) return`,
 	],
-	"lib/rules/indentation/index.js": [
+	"lib/rules/indentation/index.ts": [
 		`let expressionStartLine = parent.parent.source.input.css.split(\`\\n\`)[parent.source.start.line - 1]`,
 		`target: \`\\n\`,`,
 	],
-	"lib/rules/max-empty-lines/index.js": [`target: CRLF.test(rootString) ? \`\\r\\n\` : \`\\n\`,`],
-	"lib/rules/max-line-length/index.js": [
+	"lib/rules/max-empty-lines/index.ts": [`target: CRLF.test(rootString) ? \`\\r\\n\` : \`\\n\`,`],
+	"lib/rules/max-line-length/index.ts": [
 		`styleSearch({ source: rootString, target: [\`\\n\`], comments: \`check\` }, (match) => checkNewline(match))`,
 		`let nextNewlineIndex = rootString.indexOf(\`\\n\`, match.endIndex)`,
 		`if (rootString[nextNewlineIndex - 1] === \`\\r\`) nextNewlineIndex -= 1`,
 	],
-	"lib/rules/named-grid-areas-alignment/index.js": [`let isMultilineDeclaration = declarationValue.includes(\`\\n\`)`],
-	"lib/rules/no-eol-whitespace/index.js": [
+	"lib/rules/named-grid-areas-alignment/index.ts": [`let isMultilineDeclaration = declarationValue.includes(\`\\n\`)`],
+	"lib/rules/no-eol-whitespace/index.ts": [
 		`const LINE_BREAK_CHARACTERS = [\`\\n\`]`,
 		`if (string.charAt(eolWhitespaceIndex) === \`\\r\`) eolWhitespaceIndex -= 1`,
 	],
-	"lib/rules/no-extra-semicolons/index.js": [`if (string[i] === \`\\n\`) {`],
-	"lib/rules/no-multiple-whitespaces/index.js": [`return char === \`\\n\` || char === \`\\r\``],
-	"lib/rules/selector-max-empty-lines/index.js": [
+	"lib/rules/no-extra-semicolons/index.ts": [`if (string[i] === \`\\n\`) {`],
+	"lib/rules/no-multiple-whitespaces/index.ts": [`return char === \`\\n\` || char === \`\\r\``],
+	"lib/rules/selector-max-empty-lines/index.ts": [
 		`let violatedCRLFNewLinesRegex = new RegExp(\`(?:\\r\\n){\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
 		`let violatedLFNewLinesRegex = new RegExp(\`\\n{\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
 	],
-	"lib/rules/string-quotes/index.js": [
+	"lib/rules/string-quotes/index.ts": [
 		`let lineBreakIndex = spelled.indexOf(\`\\n\`, spelledIndex)`,
 		`let rewrittenLineBreakIndex = rewritten.indexOf(\`\\n\`, rewrittenIndex)`,
 	],
-	"lib/rules/value-list-max-empty-lines/index.js": [
+	"lib/rules/value-list-max-empty-lines/index.ts": [
 		`let violatedCRLFNewLinesRegex = new RegExp(\`(?:\\r\\n){\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
 		`let violatedLFNewLinesRegex = new RegExp(\`\\n{\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
 	],

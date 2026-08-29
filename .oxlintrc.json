@@ -56,9 +56,9 @@
 		{
 			// Three walkers written before the rule was on: the callback of `root.walk` and the one of `styleSearch` in `indentation`, and the callback of `parsedValue.walk` in the two `function-parentheses-*-inside` rules, where eight all but identical branches of `primary` stand one after another. The ceiling is what the worst of them counts today, so none of the three may grow, and it comes down as each is taken apart. The worst is `root.walk` in `indentation` since #280 took the ternaries out of `function-parentheses-space-inside`, whose walker set the ceiling before that.
 			"files": [
-				"lib/rules/function-parentheses-newline-inside/index.js",
-				"lib/rules/function-parentheses-space-inside/index.js",
-				"lib/rules/indentation/index.js",
+				"lib/rules/function-parentheses-newline-inside/index.ts",
+				"lib/rules/function-parentheses-space-inside/index.ts",
+				"lib/rules/indentation/index.ts",
 			],
 			"rules": {
 				"complexity": [
@@ -70,7 +70,7 @@
 		{
 			// The one rule that is long in code rather than in prose. The ceiling is what it counts today, so it may not grow, and it comes down if the file is ever taken apart the way its tests already are.
 			"files": [
-				"lib/rules/indentation/index.js",
+				"lib/rules/indentation/index.ts",
 			],
 			"rules": {
 				"max-lines": [
@@ -94,10 +94,10 @@
 		{
 			// Five walkers that were long before the bar was set. The ceiling is what the longest of them counts today.
 			"files": [
-				"lib/rules/function-parentheses-space-inside/index.js",
-				"lib/rules/no-eol-whitespace/index.js",
-				"lib/rules/selector-attribute-brackets-space-inside/index.js",
-				"lib/rules/string-quotes/index.js",
+				"lib/rules/function-parentheses-space-inside/index.ts",
+				"lib/rules/no-eol-whitespace/index.ts",
+				"lib/rules/selector-attribute-brackets-space-inside/index.ts",
+				"lib/rules/string-quotes/index.ts",
 				"lib/utils/whitespaceChecker/index.ts",
 			],
 			"rules": {
