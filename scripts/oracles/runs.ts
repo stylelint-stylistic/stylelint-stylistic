@@ -1,13 +1,13 @@
+import path from "node:path"
 import { env } from "node:process"
 
-import { entryAt } from "../harness/checkout.ts"
 import type { Config } from "../harness/lint.ts"
 
 import { FIXTURES, INLINE_FIXTURES } from "./fixtures.ts"
 import { RULE_OPTIONS } from "./options.ts"
 
 /** The plugin is loaded by its place on disk, so that an oracle runs the same from any directory — and from another checkout's `lib/` where `HARNESS_LIB` names one, which is how a base is measured with the branch's oracles without moving the working tree. */
-const PLUGIN = entryAt(env.HARNESS_LIB || new URL(`../../lib`, import.meta.url).pathname, `index`)
+const PLUGIN = path.join(env.HARNESS_LIB || new URL(`../../lib`, import.meta.url).pathname, `index.ts`)
 
 export type Run = {
 	rule: string,

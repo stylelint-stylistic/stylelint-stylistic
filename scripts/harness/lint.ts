@@ -12,7 +12,6 @@ import path from "node:path"
 import postcss, { type Document, type Root, type Syntax, type Warning as PostcssWarning } from "postcss"
 import type { PostcssResult, Rule, RuleMeta, RuleSeverity, StylelintPostcssResult } from "stylelint"
 
-import { entryAt } from "./checkout.ts"
 import { BREAK_AS_STYLELINT_READS_IT } from "./regexps.ts"
 
 /** The comment word Stylelint reads its configuration comments by, which no fixture carries and which a rule may still ask about. */
@@ -35,7 +34,7 @@ export type Warning = {
 /** A rule by its short name, with its primary option and, where there is one, its secondary options. */
 export type RuleSetting = [string, unknown, (object | undefined)?]
 
-/** The rules of one checkout by their short names, as `lib/rules/index.js` exports them. */
+/** The rules of one checkout by their short names, as `lib/rules/index.ts` exports them. */
 export type Registry = Record<string, Rule>
 
 /** What the rules said and wrote, or why the text could not be read. */
@@ -86,7 +85,7 @@ async function loadSyntax (syntax: string | Syntax | undefined): Promise<Syntax>
  * @returns The registry, keyed by the rule's short name.
  */
 async function loadRules (lib: string): Promise<Registry> {
-	let module = await import(entryAt(lib, `rules/index`))
+	let module = await import(path.join(lib, `rules`, `index.ts`))
 
 	return module.default
 }
