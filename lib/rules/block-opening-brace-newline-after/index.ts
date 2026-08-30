@@ -135,8 +135,8 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, sec
 						endIndex: problemIndex,
 						result,
 						ruleName,
-						fix: isFixable
-							? (): void => {
+						...(isFixable && {
+							fix: (): void => {
 								let nodeToCheckRaws = nodeToCheck.raws
 
 								if (typeof nodeToCheckRaws.before !== `string`) return
@@ -175,8 +175,8 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, sec
 
 									nodeToCheckRaws.before = ``
 								}
-							}
-							: undefined,
+							},
+						}),
 					})
 				},
 			})

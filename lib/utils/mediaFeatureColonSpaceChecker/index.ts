@@ -64,7 +64,7 @@ export function mediaFeatureColonSpaceChecker (opts: {
 					endIndex: colonIndex,
 					result: opts.result,
 					ruleName: opts.checkedRuleName,
-					fix: fix ? (): void => fix(node, colonIndex) : undefined,
+					...(fix && { fix: (): void => fix(node, colonIndex) }),
 				})
 			},
 		})

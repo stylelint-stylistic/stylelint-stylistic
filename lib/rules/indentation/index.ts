@@ -130,7 +130,7 @@ function rule (primary: number | `tab`, secondaryOptions: SecondaryOptions = {})
 					fix () {
 						if (isFirstChild && isString(node.raws.before)) node.raws.before = node.raws.before.replace(SPACES_AND_TABS_BEFORE_CONTENT, expectedOpeningBraceIndentation)
 
-						node.raws.before = fixIndentation(node.raws.before, expectedOpeningBraceIndentation)
+						if (isString(node.raws.before)) node.raws.before = fixIndentation(node.raws.before, expectedOpeningBraceIndentation)
 					},
 				})
 			}
@@ -152,7 +152,7 @@ function rule (primary: number | `tab`, secondaryOptions: SecondaryOptions = {})
 					result,
 					ruleName,
 					fix () {
-						node.raws.after = fixIndentation(node.raws.after, expectedClosingBraceIndentation)
+						if (isString(node.raws.after)) node.raws.after = fixIndentation(node.raws.after, expectedClosingBraceIndentation)
 					},
 				})
 			}
@@ -682,9 +682,7 @@ function inferRootIndentLevel (root: Root, baseIndentLevel: number | `auto` | un
  * @param whitespace - The whitespace to use for indentation.
  * @returns The fixed string.
  */
-function fixIndentation (str: string | undefined, whitespace: string): string | undefined {
-	if (!isString(str)) return str
-
+function fixIndentation (str: string, whitespace: string): string {
 	return str.replaceAll(EVERY_LINE_BREAK_AND_INDENT, `$1${whitespace}`)
 }
 

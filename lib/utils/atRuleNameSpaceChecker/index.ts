@@ -51,7 +51,7 @@ export function atRuleNameSpaceChecker (options: {
 					endIndex: index,
 					result: options.result,
 					ruleName: options.checkedRuleName,
-					fix: fix ? (): void => fix(node) : undefined,
+					...(fix && { fix: (): void => fix(node) }),
 				})
 			},
 			errTarget: `@${node.name}`,

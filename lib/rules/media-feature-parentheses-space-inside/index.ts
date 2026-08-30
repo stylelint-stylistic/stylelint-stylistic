@@ -118,7 +118,7 @@ function rule (primary: `always` | `never`): RuleCheck {
 							problems.push({
 								message: messages.rejectedClosing,
 								index: node.sourceIndex - 2 + len + indexBoost,
-								fix: isFixable ? (): void => { addEdit(edits, closingEdit(node, ``, params)) } : undefined,
+								...(isFixable && { fix: (): void => { addEdit(edits, closingEdit(node, ``, params)) } }),
 							})
 						}
 					}
@@ -151,7 +151,7 @@ function rule (primary: `always` | `never`): RuleCheck {
 						endIndex: err.index,
 						result,
 						ruleName,
-						fix: err.fix,
+						...(err.fix && { fix: err.fix }),
 					})
 				}
 

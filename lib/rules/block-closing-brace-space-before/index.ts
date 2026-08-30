@@ -98,16 +98,16 @@ function rule (primary: `always` | `never` | `always-single-line` | `never-singl
 						endIndex: index,
 						result,
 						ruleName,
-						fix: isFixable
-							? (): void => {
+						...(isFixable && {
+							fix: (): void => {
 								let raw = getBlockAfter(statement)
 
 								if (typeof raw !== `string`) return
 
 								if (primary.startsWith(`always`)) setBlockAfter(statement, raw.replace(TRAILING_WHITESPACE, ` `))
 								else if (primary.startsWith(`never`)) setBlockAfter(statement, raw.replace(TRAILING_WHITESPACE, ``))
-							}
-							: undefined,
+							},
+						}),
 					})
 				},
 			})

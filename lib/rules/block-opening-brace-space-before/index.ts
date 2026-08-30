@@ -119,8 +119,8 @@ function rule (primary: `always` | `never` | `always-single-line` | `never-singl
 						endIndex: index,
 						result,
 						ruleName,
-						fix: isFixable
-							? (): void => {
+						...(isFixable && {
+							fix: (): void => {
 								if (primary.startsWith(`always`)) {
 									statement.raws.between = `${beforeWhitespace} `
 
@@ -128,8 +128,8 @@ function rule (primary: `always` | `never` | `always-single-line` | `never-singl
 								}
 
 								if (primary.startsWith(`never`)) statement.raws.between = beforeWhitespace
-							}
-							: undefined,
+							},
+						}),
 					})
 				},
 			})

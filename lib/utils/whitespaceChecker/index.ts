@@ -109,16 +109,9 @@ export function whitespaceChecker (targetWhitespace: `space` | `newline`, expect
 	 * @param args - Where to look, and what to do about what is found.
 	 */
 	function before (args: WhitespaceCheckerArgs): void {
-		let { source, index, err, errTarget, lineCheckStr, onlyOneChar = false, allowIndentation = false } = args
+		let { source, lineCheckStr, onlyOneChar = false, allowIndentation = false } = args
 
-		activeArgs = {
-			source,
-			index,
-			err,
-			errTarget,
-			onlyOneChar,
-			allowIndentation,
-		}
+		activeArgs = { ...args, onlyOneChar, allowIndentation }
 
 		switch (expectation) {
 			case `always`:
@@ -149,9 +142,9 @@ export function whitespaceChecker (targetWhitespace: `space` | `newline`, expect
 	 * @param args - Where to look, and what to do about what is found.
 	 */
 	function after (args: WhitespaceCheckerArgs): void {
-		let { source, index, err, errTarget, lineCheckStr, onlyOneChar = false } = args
+		let { source, lineCheckStr, onlyOneChar = false } = args
 
-		activeArgs = { source, index, err, errTarget, onlyOneChar }
+		activeArgs = { ...args, onlyOneChar, allowIndentation: false }
 
 		switch (expectation) {
 			case `always`:

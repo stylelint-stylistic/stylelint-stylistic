@@ -282,7 +282,7 @@ function rule (primary: `always` | `never` | `always-single-line` | `never-singl
 					node: decl,
 					index: problemIndex,
 					endIndex: problemIndex,
-					fix,
+					...(fix && { fix }),
 				})
 			}
 		})

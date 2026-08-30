@@ -167,7 +167,7 @@ function rule (primary: `always` | `never`): RuleCheck {
 				node,
 				index,
 				endIndex: index,
-				fix,
+				...(fix && { fix }),
 			})
 		}
 	}

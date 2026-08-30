@@ -87,7 +87,7 @@ export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceC
 					endIndex: index,
 					result: opts.result,
 					ruleName: opts.checkedRuleName,
-					fix: fix && isFixable ? (): void => fix(node, index) : undefined,
+					...(fix && isFixable && { fix: (): void => fix(node, index) }),
 				})
 			},
 		})

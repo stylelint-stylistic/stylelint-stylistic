@@ -50,7 +50,7 @@ function buildRuns (corpus?: [string, string][]): Run[] {
  * @returns True where the run is worth reading.
  */
 function isUsable (result: {
-	warnings: { rule?: string }[],
+	warnings: { rule?: string | undefined }[],
 	invalidOptionWarnings?: unknown[],
 }): boolean {
 	if (result.warnings.some((warning) => warning.rule === `CssSyntaxError`)) return false

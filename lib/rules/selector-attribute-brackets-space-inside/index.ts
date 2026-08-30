@@ -140,7 +140,7 @@ function rule (primary: `always` | `never`): RuleCheck {
 					result,
 					ruleName,
 					node: ruleNode,
-					fix,
+					...(fix && { fix }),
 				})
 			}
 		})

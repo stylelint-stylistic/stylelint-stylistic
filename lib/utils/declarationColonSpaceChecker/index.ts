@@ -66,7 +66,7 @@ export function declarationColonSpaceChecker (opts: {
 						endIndex: problemIndex,
 						result: opts.result,
 						ruleName: opts.checkedRuleName,
-						fix: fix && isFixable ? (): void => fix(decl, startIndex) : undefined,
+						...(fix && isFixable && { fix: (): void => fix(decl, startIndex) }),
 					})
 				},
 			})

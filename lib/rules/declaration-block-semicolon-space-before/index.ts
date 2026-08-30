@@ -86,8 +86,8 @@ function rule (primary: `always` | `never` | `always-single-line` | `never-singl
 						endIndex: problemIndex,
 						result,
 						ruleName,
-						fix: isFixable
-							? (): void => {
+						...(isFixable && {
+							fix: (): void => {
 								if (primary.startsWith(`always`)) {
 									// The raw is kept rather than written anew, so that a comment, and any other layout standing in front of the flag, survives the fix
 									if (decl.important) decl.raws.important = (decl.raws.important || ` !important`).replace(TRAILING_WHITESPACE, ` `)
@@ -106,8 +106,8 @@ function rule (primary: `always` | `never` | `always-single-line` | `never-singl
 										setDeclarationValue(decl, newValue)
 									}
 								}
-							}
-							: undefined,
+							},
+						}),
 					})
 				},
 			})

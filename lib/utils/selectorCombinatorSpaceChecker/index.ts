@@ -120,13 +120,13 @@ export function selectorCombinatorSpaceChecker (opts: {
 					endIndex: reportIndex,
 					result: opts.result,
 					ruleName: opts.checkedRuleName,
-					fix: fix && isFixable
-						? (): void => {
+					...(fix && isFixable && {
+						fix: (): void => {
 							hasFixed = true
 
 							fix(combinator)
-						}
-						: undefined,
+						},
+					}),
 				})
 			},
 		})

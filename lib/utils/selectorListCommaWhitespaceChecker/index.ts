@@ -85,7 +85,7 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 					endIndex: sourceIndex,
 					result: opts.result,
 					ruleName: opts.checkedRuleName,
-					fix: fix && isFixable ? (): void => fix(node, index) : undefined,
+					...(fix && isFixable && { fix: (): void => fix(node, index) }),
 				})
 			},
 		})

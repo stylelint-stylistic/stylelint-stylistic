@@ -82,8 +82,8 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, _se
 						endIndex: problemIndex,
 						result,
 						ruleName,
-						fix: isFixable
-							? (): void => {
+						...(isFixable && {
+							fix: (): void => {
 								if (primary.startsWith(`always`)) {
 									// The semicolon stands behind `!important`, so wherever the declaration carries the flag, the raw holding it is the text the break goes into, and PostCSS keeps that raw only where the flag is spelled some other way than ` !important`. The raw is kept rather than written anew, so that a comment, and any other layout standing in front of the flag, survives the fix
 									if (decl.important) decl.raws.important = (decl.raws.important || ` !important`).replace(TRAILING_WHITESPACE, getLineBreak(root, result))
@@ -104,8 +104,8 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, _se
 										setDeclarationValue(decl, newValue)
 									}
 								}
-							}
-							: undefined,
+							},
+						}),
 					})
 				},
 			})

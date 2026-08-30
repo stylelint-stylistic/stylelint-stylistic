@@ -93,11 +93,11 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, _se
 								endIndex: sourceIndex,
 								result,
 								ruleName,
-								fix: closesInlineComment
-									? undefined
-									: (): void => {
+								...(!closesInlineComment && {
+									fix: (): void => {
 										fixIndices.push(fixIndex)
 									},
+								}),
 							})
 						},
 					})

@@ -93,8 +93,8 @@ function rule (primary: `always` | `always-single-line` | `never-single-line` | 
 						endIndex: index,
 						result,
 						ruleName,
-						fix: isFixable
-							? (): void => {
+						...(isFixable && {
+							fix: (): void => {
 								if (typeof statement.raws.between !== `string`) return
 
 								if (primary.startsWith(`always`)) {
@@ -104,8 +104,8 @@ function rule (primary: `always` | `always-single-line` | `never-single-line` | 
 									else statement.raws.between += getLineBreak(root, result)
 								}
 								else if (primary.startsWith(`never`)) statement.raws.between = statement.raws.between.replace(TRAILING_WHITESPACE, ``)
-							}
-							: undefined,
+							},
+						}),
 					})
 				},
 			})

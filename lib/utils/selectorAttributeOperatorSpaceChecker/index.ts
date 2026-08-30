@@ -98,13 +98,13 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 						endIndex: problemIndex,
 						result: options.result,
 						ruleName: options.checkedRuleName,
-						fix: fix
-							? (): void => {
+						...(fix && {
+							fix: (): void => {
 								hasFixed = true
 
 								fix(attributeNode)
-							}
-							: undefined,
+							},
+						}),
 					})
 				},
 			})

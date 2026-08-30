@@ -107,11 +107,11 @@ export function declarationBangSpaceChecker (opts: {
 						endIndex: index,
 						result: opts.result,
 						ruleName: opts.checkedRuleName,
-						fix: fix && isFixable
-							? (): void => {
+						...(fix && isFixable && {
+							fix: (): void => {
 								for (let edit of fix({ text: declString, index })) fileEdit(parts, edit)
-							}
-							: undefined,
+							},
+						}),
 					})
 				},
 			})

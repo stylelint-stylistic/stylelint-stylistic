@@ -176,7 +176,7 @@ function rule (primary: true): RuleCheck {
 				endIndex: index,
 				result,
 				ruleName,
-				fix,
+				...(fix && { fix }),
 			})
 		}
 	}

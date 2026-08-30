@@ -113,9 +113,7 @@ function rule (primary: `ratio` | `number-where-possible` | `as-written`, second
 				result,
 				ruleName,
 				// A comment standing between the two numbers is code, and the run that takes the second number away holds it: taking a comment out of a stylesheet is nothing this rule was asked to do, so the problem is reported and the value left for a reader to settle
-				fix: edits.some((edit) => holdsComment(edit, comments))
-					? undefined
-					: (): void => write(applyEditsFromEnd(text, edits)),
+				...(!edits.some((edit) => holdsComment(edit, comments)) && { fix: (): void => write(applyEditsFromEnd(text, edits)) }),
 			})
 		}
 	}
@@ -124,7 +122,7 @@ function rule (primary: `ratio` | `number-where-possible` | `as-written`, second
 /** The two numbers a `<ratio>` is written with, as the value parser read them. */
 type Ratio = {
 	width: ValueParserNode,
-	height?: ValueParserNode,
+	height: ValueParserNode | undefined,
 }
 
 /**

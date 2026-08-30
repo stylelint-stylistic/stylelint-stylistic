@@ -375,7 +375,7 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, _se
 					node: decl,
 					index: problemIndex,
 					endIndex: problemIndex,
-					fix,
+					...(fix && { fix }),
 				})
 			}
 		})

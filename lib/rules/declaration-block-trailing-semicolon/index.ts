@@ -283,8 +283,8 @@ function rule (primary: `always` | `never`, secondaryOptions: { ignore?: `single
 					endIndex: problemIndex,
 					result,
 					ruleName,
-					fix: isFixable(node, primary, spelledBetween, result)
-						? (): void => {
+					...(isFixable(node, primary, spelledBetween, result) && {
+						fix: (): void => {
 							if (primary === `always` && !hasSemicolon) {
 								parent.raws.semicolon = true
 
@@ -295,8 +295,8 @@ function rule (primary: `always` | `never`, secondaryOptions: { ignore?: `single
 								}
 							}
 							else if (primary === `never`) takeTheTrailingSemicolonsAway(node)
-						}
-						: undefined,
+						},
+					}),
 				})
 			}
 		}

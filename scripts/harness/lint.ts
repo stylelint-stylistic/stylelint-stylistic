@@ -23,17 +23,17 @@ const SEVERITY = `error`
 
 /** What a rule said, in the fields the oracles read; the warning standing in for a parse error carries no position. */
 export type Warning = {
-	rule?: string,
+	rule?: string | undefined,
 	text: string,
-	line?: number,
-	column?: number,
-	endLine?: number,
-	endColumn?: number,
-	severity?: string,
+	line?: number | undefined,
+	column?: number | undefined,
+	endLine?: number | undefined,
+	endColumn?: number | undefined,
+	severity?: string | undefined,
 }
 
 /** A rule by its short name, with its primary option and, where there is one, its secondary options. */
-export type RuleSetting = [string, unknown, object?]
+export type RuleSetting = [string, unknown, (object | undefined)?]
 
 /** The rules of one checkout by their short names, as `lib/rules/index.js` exports them. */
 export type Registry = Record<string, Rule>
@@ -127,7 +127,7 @@ async function lintDirect ({ code, rules, registry, syntax, fix = false }: {
 	code: string,
 	rules: RuleSetting[],
 	registry: Registry,
-	syntax?: string | Syntax,
+	syntax?: string | Syntax | undefined,
 	fix?: boolean,
 }): Promise<Answer> {
 	let parser = await loadSyntax(syntax)

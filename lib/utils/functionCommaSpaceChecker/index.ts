@@ -36,7 +36,7 @@ export function functionCommaSpaceChecker (opts: {
 	result: PostcssResult,
 	checkedRuleName: string,
 	fixPosition?: `before` | `after`,
-	ignoreFunctions?: string | RegExp | Array<string | RegExp>,
+	ignoreFunctions?: string | RegExp | Array<string | RegExp> | undefined,
 }): void {
 	let { fix } = opts
 
@@ -161,11 +161,11 @@ export function functionCommaSpaceChecker (opts: {
 						node: decl,
 						result: opts.result,
 						ruleName: opts.checkedRuleName,
-						fix: fix && isFixable(commaNode)
-							? (): void => {
+						...(fix && isFixable(commaNode) && {
+							fix: (): void => {
 								edits.push(...fix(commaNode, nodeIndex, functionNode))
-							}
-							: undefined,
+							},
+						}),
 					})
 				}
 			}

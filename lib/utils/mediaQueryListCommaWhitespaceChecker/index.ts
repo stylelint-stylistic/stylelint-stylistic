@@ -90,7 +90,7 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 					endIndex: commaIndex,
 					result: opts.result,
 					ruleName: opts.checkedRuleName,
-					fix: fix && isFixable ? (): void => fix(node, commaIndex) : undefined,
+					...(fix && isFixable && { fix: (): void => fix(node, commaIndex) }),
 				})
 			},
 		})

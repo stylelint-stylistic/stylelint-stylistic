@@ -87,8 +87,8 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, _se
 						endIndex: problemIndex,
 						result,
 						ruleName,
-						fix: isFixable
-							? (): void => {
+						...(isFixable && {
+							fix: (): void => {
 								if (primary.startsWith(`always`)) {
 									// Trim up to the break that already stands there, whichever character it is, and add one only where none does
 									let index = nodeToCheck.raws.before.search(LINE_BREAK)
@@ -99,8 +99,8 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, _se
 								}
 
 								if (primary === `never-multi-line`) nodeToCheck.raws.before = ``
-							}
-							: undefined,
+							},
+						}),
 					})
 				},
 			})

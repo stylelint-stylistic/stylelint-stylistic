@@ -24,7 +24,7 @@ const SYNTAXES: Record<string, string | undefined> = { css: undefined, scss: `po
 export type Sweep = {
 	name: string,
 	corpus: [string, string][],
-	configs: { rule: string, primary: unknown, secondary?: object }[],
+	configs: { rule: string, primary: unknown, secondary?: object | undefined }[],
 	syntaxes?: string[],
 }
 

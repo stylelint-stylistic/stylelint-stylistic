@@ -6,6 +6,7 @@
 		"esModuleInterop": true,
 		"strict": true,
 		"noUncheckedIndexedAccess": true,
+		"exactOptionalPropertyTypes": true,
 		"strictNullChecks": true,
 		"noImplicitAny": true,
 		"forceConsistentCasingInFileNames": true,
