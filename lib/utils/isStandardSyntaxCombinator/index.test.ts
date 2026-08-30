@@ -2,6 +2,8 @@ import { parse } from "postcss"
 import selectorParser, { type Combinator } from "postcss-selector-parser"
 import { describe, expect, it } from "vitest"
 
+import { pick } from "../../../vitest.helpers.ts"
+
 import { isStandardSyntaxCombinator } from "./index.ts"
 
 describe(`isStandardSyntaxCombinator`, () => {
@@ -69,9 +71,5 @@ function combinator (css: string): Combinator {
 		}).processSync(rule.selector)
 	})
 
-	let [first] = list
-
-	if (!first) throw new Error(`The stylesheet holds no node of the kind asked for`)
-
-	return first
+	return pick(list)
 }

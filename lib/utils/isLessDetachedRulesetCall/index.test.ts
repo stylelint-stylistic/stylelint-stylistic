@@ -2,6 +2,8 @@ import type { AtRule } from "postcss"
 import postcssLess from "postcss-less"
 import { describe, expect, it } from "vitest"
 
+import { pick } from "../../../vitest.helpers.ts"
+
 import { isLessDetachedRulesetCall } from "./index.ts"
 
 describe(`isLessDetachedRulesetCall`, () => {
@@ -55,9 +57,5 @@ function lessAtRule (code: string, index: number = 0): AtRule {
 		atRules.push(atRule)
 	})
 
-	let atRule = atRules[index]
-
-	if (!atRule) throw new Error(`The stylesheet holds no at-rule at that index`)
-
-	return atRule
+	return pick(atRules, index)
 }

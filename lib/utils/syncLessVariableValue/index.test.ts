@@ -2,6 +2,8 @@ import postcss, { type AtRule, type Node, type Parser } from "postcss"
 import postcssLess from "postcss-less"
 import { describe, expect, it } from "vitest"
 
+import { pick } from "../../../vitest.helpers.ts"
+
 import { syncLessVariableValue } from "./index.ts"
 
 describe(`syncLessVariableValue`, () => {
@@ -62,11 +64,7 @@ function atRule (code: string, parser: { parse: Parser } = postcss): AtRule {
 		list.push(rule)
 	})
 
-	let [first] = list
-
-	if (!first) throw new Error(`The stylesheet holds no node of the kind asked for`)
-
-	return first
+	return pick(list)
 }
 
 /**

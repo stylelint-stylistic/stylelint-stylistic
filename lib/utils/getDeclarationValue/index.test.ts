@@ -2,6 +2,8 @@ import { type Declaration, parse } from "postcss"
 import { parse as parseScss } from "postcss-scss"
 import { describe, expect, it } from "vitest"
 
+import { pick } from "../../../vitest.helpers.ts"
+
 import { getDeclarationValue } from "./index.ts"
 
 describe(`getDeclarationValue`, () => {
@@ -42,11 +44,7 @@ function decl (css: string): Declaration {
 		list.push(d)
 	})
 
-	let [first] = list
-
-	if (!first) throw new Error(`The stylesheet holds no node of the kind asked for`)
-
-	return first
+	return pick(list)
 }
 
 /**
@@ -61,9 +59,5 @@ function scssDecl (css: string): Declaration {
 		list.push(d)
 	})
 
-	let [first] = list
-
-	if (!first) throw new Error(`The stylesheet holds no node of the kind asked for`)
-
-	return first
+	return pick(list)
 }

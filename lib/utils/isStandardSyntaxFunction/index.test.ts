@@ -1,6 +1,8 @@
 import valueParser, { type FunctionNode } from "postcss-value-parser"
 import { describe, expect, it } from "vitest"
 
+import { pick } from "../../../vitest.helpers.ts"
+
 import { isStandardSyntaxFunction } from "./index.ts"
 
 describe(`isStandardSyntaxFunction`, () => {
@@ -47,9 +49,5 @@ function getFunction (declValue: string): FunctionNode {
 		if (valueNode.type === `function`) functions.push(valueNode)
 	})
 
-	let [first] = functions
-
-	if (!first) throw new Error(`The stylesheet holds no node of the kind asked for`)
-
-	return first
+	return pick(functions)
 }

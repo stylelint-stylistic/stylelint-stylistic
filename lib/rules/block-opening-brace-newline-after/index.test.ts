@@ -1,6 +1,7 @@
 import stylelint from "stylelint"
 import { describe, expect, it } from "vitest"
 
+import { pick } from "../../../vitest.helpers.ts"
 import plugins from "../../index.ts"
 
 import { messages, ruleName } from "./index.ts"
@@ -869,7 +870,7 @@ async function fixQuietly (code: string, option: string): Promise<{
 		config: { plugins, rules: { [ruleName]: option } },
 	})
 
-	return { code: fixed.code, warnings: reported.results[0]?.warnings.length ?? 0 }
+	return { code: fixed.code, warnings: pick(reported.results).warnings.length }
 }
 
 describe(`${ruleName} on the whitespace it carries past a comment`, () => {

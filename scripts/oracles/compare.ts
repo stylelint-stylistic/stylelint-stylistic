@@ -12,7 +12,7 @@ import path from "node:path"
 import { argv, env, stdout } from "node:process"
 
 import { hashAt, keyOf, read, write } from "../harness/cache.ts"
-import { defaultBase, libAt, ROOT } from "../harness/checkout.ts"
+import { defaultBase, libAt, ROOT, type Side } from "../harness/checkout.ts"
 import { diff, render } from "../harness/diff.ts"
 
 /** The oracles, in the order `make oracles` has always run them. */
@@ -64,9 +64,6 @@ function run (oracle: string, revision: string): Record<string, unknown>[] {
 }
 
 let [base = defaultBase(), head = `worktree`] = argv.slice(2)
-
-/** The two sides of a comparison. */
-type Side = `base` | `head`
 
 let sides: Record<Side, string> = { base, head }
 

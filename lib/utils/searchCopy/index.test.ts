@@ -3,6 +3,8 @@ import { parse as parseScss } from "postcss-scss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
+import { pick } from "../../../vitest.helpers.ts"
+
 import { searchCopy } from "./index.ts"
 
 const CSS_RESULT = { opts: {} } as unknown as PostcssResult
@@ -56,11 +58,7 @@ function cssDecl (css: string): Declaration {
 		list.push(d)
 	})
 
-	let [first] = list
-
-	if (!first) throw new Error(`The stylesheet holds no node of the kind asked for`)
-
-	return first
+	return pick(list)
 }
 
 /**
@@ -75,9 +73,5 @@ function scssDecl (css: string): Declaration {
 		list.push(d)
 	})
 
-	let [first] = list
-
-	if (!first) throw new Error(`The stylesheet holds no node of the kind asked for`)
-
-	return first
+	return pick(list)
 }

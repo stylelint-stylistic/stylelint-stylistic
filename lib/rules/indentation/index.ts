@@ -128,9 +128,9 @@ function rule (primary: number | `tab`, secondaryOptions: SecondaryOptions = {})
 					result,
 					ruleName,
 					fix () {
-						if (isFirstChild && isString(node.raws.before)) node.raws.before = node.raws.before.replace(SPACES_AND_TABS_BEFORE_CONTENT, expectedOpeningBraceIndentation)
+						if (!isString(node.raws.before)) return
 
-						if (isString(node.raws.before)) node.raws.before = fixIndentation(node.raws.before, expectedOpeningBraceIndentation)
+						node.raws.before = fixIndentation(isFirstChild ? node.raws.before.replace(SPACES_AND_TABS_BEFORE_CONTENT, expectedOpeningBraceIndentation) : node.raws.before, expectedOpeningBraceIndentation)
 					},
 				})
 			}
@@ -178,7 +178,7 @@ function rule (primary: number | `tab`, secondaryOptions: SecondaryOptions = {})
 			if (!parent?.parent?.source || !parent.source?.start) throw new Error(`A styled expression must stand inside a node with a source`)
 
 			// Content of the line where styled expressions starts
-			let expressionStartLine = parent.parent.source.input.css.split(`\n`)[parent.source.start.line - 1] ?? ``
+			let expressionStartLine = lineAt(parent.parent.source.input.css, parent.source.start.line)
 			// Indent characters (spaces/tabs) before the content of the line where the styled expressions starts
 			let indentCharacters = expressionStartLine.match(LEADING_SPACES_AND_TABS)?.[0] ?? ``
 
@@ -674,6 +674,20 @@ function inferRootIndentLevel (root: Root, baseIndentLevel: number | `auto` | un
 	if (indents.length > 0) return Math.max(...indents.map((indent) => getIndentLevel(indent))) + newBaseIndentLevel
 
 	return newBaseIndentLevel
+}
+
+/**
+ * Reads one line of a text, counted from one as a source position counts them.
+ * @param text - The text.
+ * @param line - The number of the line.
+ * @returns The line, without its break.
+ */
+function lineAt (text: string, line: number): string {
+	let found = text.split(`\n`)[line - 1]
+
+	if (found === undefined) throw new Error(`A styled expression starts on a line its file does not hold`)
+
+	return found
 }
 
 /**

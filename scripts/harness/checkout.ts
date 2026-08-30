@@ -52,4 +52,7 @@ function defaultBase (): string {
 	return execFileSync(`git`, [`merge-base`, `HEAD`, `origin/main`], { cwd: ROOT, encoding: `utf8` }).trim()
 }
 
+/** The two sides of a comparison: the revision a branch is measured against, and the branch. */
+export type Side = `base` | `head`
+
 export { defaultBase, entryAt, libAt, ROOT }

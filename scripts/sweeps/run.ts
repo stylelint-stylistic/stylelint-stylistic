@@ -13,7 +13,7 @@ import path from "node:path"
 import { argv, exit, stderr, stdout } from "node:process"
 
 import { digestOf, hashAt, keyOf, read, readDigest, write } from "../harness/cache.ts"
-import { defaultBase, libAt, ROOT } from "../harness/checkout.ts"
+import { defaultBase, libAt, ROOT, type Side } from "../harness/checkout.ts"
 import { diff, render } from "../harness/diff.ts"
 import { lintDirect, loadRules, type Registry, type RuleSetting } from "../harness/lint.ts"
 
@@ -79,10 +79,8 @@ if (!file) {
 	exit(2)
 }
 
-let sweep: Sweep = await import(path.resolve(file))
-
-/** The two sides of a comparison. */
-type Side = `base` | `head`
+let sweepFile = path.resolve(file)
+let sweep: Sweep = await import(sweepFile)
 
 /** One side as its digest, and its rows behind a call, since the rows are read only for the keys the digests say have moved. */
 type Result = {
@@ -91,20 +89,24 @@ type Result = {
 }
 
 let sides: Record<Side, string> = { base, head: `worktree` }
-let results: Partial<Record<Side, Result>> = {}
 
-for (let side of [`base`, `head`] as const) {
+/**
+ * Measures one side, or reads it back where the store holds it.
+ * @param side - The side.
+ * @returns Its digest, and its rows on demand.
+ */
+async function measureSide (side: Side): Promise<Result> {
 	let revision = sides[side]
 
 	// A side is measured once by what it depends on — the rules, the sweep and the runner — and read back on every later run; the two are taken in turn, base first
-	let inputs = { sweep: hashAt(`worktree`, path.relative(ROOT, path.resolve(file))), lib: hashAt(revision, `lib`), harness: hashAt(`worktree`, `scripts/harness`), lock: hashAt(`worktree`, `pnpm-lock.yaml`) }
+	let inputs = { sweep: hashAt(`worktree`, path.relative(ROOT, sweepFile)), lib: hashAt(revision, `lib`), harness: hashAt(`worktree`, `scripts/harness`), lock: hashAt(`worktree`, `pnpm-lock.yaml`) }
 	let key = keyOf(inputs)
 	let digest = readDigest(`sweeps`, sweep.name, key)
 
 	if (digest) {
 		let rows: Record<string, object> | undefined
 
-		results[side] = {
+		return {
 			digest,
 			rows: (): Record<string, object> => {
 				rows ??= read<Record<string, object>>(`sweeps`, sweep.name, key)
@@ -114,25 +116,22 @@ for (let side of [`base`, `head`] as const) {
 				return rows
 			},
 		}
-		continue
 	}
 
 	stdout.write(`\t🧹 ${sweep.name} over ${side} (${revision})\n`)
-	// eslint-disable-next-line no-await-in-loop
 	let rows = await measure(sweep, await loadRules(libAt(revision)))
 
 	digest = digestOf(rows)
 	write(`sweeps`, sweep.name, key, rows, { ...inputs, revision, root: ROOT }, digest)
-	results[side] = { digest, rows: (): Record<string, object> => rows }
+	return { digest, rows: (): Record<string, object> => rows }
 }
+
+let baseResult = await measureSide(`base`)
+let headResult = await measureSide(`head`)
 
 let out = path.join(ROOT, `tmp`, `sweeps`)
 
 mkdirSync(out, { recursive: true })
-
-let { base: baseResult, head: headResult } = results
-
-if (!baseResult || !headResult) throw new Error(`A side was neither read nor measured`)
 
 let result = diff(baseResult.digest, headResult.digest)
 let moved = result.changed.length + result.added.length + result.removed.length > 0

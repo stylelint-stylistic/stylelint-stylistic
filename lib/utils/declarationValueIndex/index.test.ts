@@ -1,6 +1,8 @@
 import { type Declaration, parse } from "postcss"
 import { describe, expect, it } from "vitest"
 
+import { pick } from "../../../vitest.helpers.ts"
+
 import { declarationValueIndex } from "./index.ts"
 
 describe(`declarationValueIndex`, () => {
@@ -37,9 +39,5 @@ function decl (css: string): Declaration {
 		list.push(d)
 	})
 
-	let [first] = list
-
-	if (!first) throw new Error(`The stylesheet holds no node of the kind asked for`)
-
-	return first
+	return pick(list)
 }

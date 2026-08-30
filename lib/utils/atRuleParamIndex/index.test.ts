@@ -1,6 +1,8 @@
 import { type AtRule, parse } from "postcss"
 import { describe, expect, it } from "vitest"
 
+import { pick } from "../../../vitest.helpers.ts"
+
 import { atRuleParamIndex } from "./index.ts"
 
 describe(`atRuleParamIndex`, () => {
@@ -33,9 +35,5 @@ function atRule (css: string): AtRule {
 		list.push(rule)
 	})
 
-	let [first] = list
-
-	if (!first) throw new Error(`The stylesheet holds no node of the kind asked for`)
-
-	return first
+	return pick(list)
 }

@@ -216,7 +216,9 @@ function rule (primary: `lower` | `upper`): RuleCheck {
  * @returns What stands in front of the first bang, or the whole text where it holds none.
  */
 function withoutBangFlag (text: string): string {
-	return text.split(`!`)[0] ?? ``
+	let bang = text.indexOf(`!`)
+
+	return bang === -1 ? text : text.slice(0, bang)
 }
 
 rule.ruleName = ruleName

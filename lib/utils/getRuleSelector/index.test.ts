@@ -3,6 +3,8 @@ import { parse as parseLess } from "postcss-less"
 import { parse as parseScss } from "postcss-scss"
 import { describe, expect, it } from "vitest"
 
+import { pick } from "../../../vitest.helpers.ts"
+
 import { getRuleSelector } from "./index.ts"
 
 describe(`getRuleSelector`, () => {
@@ -62,9 +64,5 @@ function collect (root: Root | Document): Rule {
 		list.push(node)
 	})
 
-	let [first] = list
-
-	if (!first) throw new Error(`The stylesheet holds no node of the kind asked for`)
-
-	return first
+	return pick(list)
 }

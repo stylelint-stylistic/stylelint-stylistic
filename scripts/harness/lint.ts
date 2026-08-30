@@ -228,6 +228,7 @@ async function lint ({ code, config, fix = false }: {
 	let [plugin] = config.plugins
 
 	if (!plugin) throw new Error(`The configuration names no plugin`)
+
 	let registry = registries.get(plugin)
 
 	if (!registry) {

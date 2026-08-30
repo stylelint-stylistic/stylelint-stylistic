@@ -2,6 +2,7 @@ import { type AtRule, parse } from "postcss"
 import { parse as parseScss, stringify as stringifyScss } from "postcss-scss"
 import { describe, expect, it } from "vitest"
 
+import { pick } from "../../../vitest.helpers.ts"
 import type { SyntaxRaw } from "../typeGuards/index.ts"
 
 import { setAtRuleParams } from "./index.ts"
@@ -77,11 +78,7 @@ function atRule (css: string): AtRule {
 		list.push(rule)
 	})
 
-	let [first] = list
-
-	if (!first) throw new Error(`The stylesheet holds no node of the kind asked for`)
-
-	return first
+	return pick(list)
 }
 
 /**
@@ -96,9 +93,5 @@ function scssAtRule (css: string): AtRule {
 		list.push(rule)
 	})
 
-	let [first] = list
-
-	if (!first) throw new Error(`The stylesheet holds no node of the kind asked for`)
-
-	return first
+	return pick(list)
 }

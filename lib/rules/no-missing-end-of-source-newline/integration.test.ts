@@ -1,6 +1,7 @@
 import stylelint from "stylelint"
 import { describe, expect, it } from "vitest"
 
+import { pick } from "../../../vitest.helpers.ts"
 import plugins from "../../index.ts"
 
 /**
@@ -18,7 +19,7 @@ async function fix (code: string, rules: object): Promise<{
 	let fixed = await stylelint.lint({ code, config: { plugins, rules }, fix: true })
 	let read = await stylelint.lint({ code: fixed.code ?? code, config: { plugins, rules } })
 
-	return { code: fixed.code ?? code, warnings: read.results[0]?.warnings.length ?? 0 }
+	return { code: fixed.code ?? code, warnings: pick(read.results).warnings.length }
 }
 
 /**
