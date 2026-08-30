@@ -9,8 +9,6 @@
 		"noImplicitAny": true,
 		"forceConsistentCasingInFileNames": true,
 		"noEmit": true,
-		"checkJs": true,
-		"allowJs": true,
 		"skipLibCheck": true,
 		"erasableSyntaxOnly": true,
 		"verbatimModuleSyntax": true,

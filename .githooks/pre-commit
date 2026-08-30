@@ -34,7 +34,7 @@ if [ "$stash_before" != "$stash_after" ]
 then trap "git stash pop --quiet" EXIT
 fi
 
-changed_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|ts)$') || true
+changed_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.ts$') || true
 
 if [ -z "$changed_files" ]
 then exit 0
