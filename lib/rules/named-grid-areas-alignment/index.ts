@@ -105,7 +105,7 @@ function rule (primary: true, secondaryOptions: {
 			let maxRowLength = 0
 			let formatted = table.map((row) => {
 				let formattedRow = row
-					.map((cell, index) => isMultilineDeclaration ? cell.padEnd(maxLengths[index], ` `) : cell)
+					.map((cell, index) => isMultilineDeclaration ? cell.padEnd(maxLengths[index] ?? 0, ` `) : cell)
 					.join(referenceGap)
 
 				maxRowLength = Math.max(maxRowLength, formattedRow.length)

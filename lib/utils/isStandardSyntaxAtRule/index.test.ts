@@ -5,6 +5,20 @@ import { describe, expect, it } from "vitest"
 
 import { isStandardSyntaxAtRule } from "./index.ts"
 
+/**
+ * Takes one at-rule out of a list, which the case knows to hold it.
+ * @param list - The at-rules.
+ * @param index - Which of them.
+ * @returns That at-rule.
+ */
+function at (list: AtRule[], index: number): AtRule {
+	let found = list[index]
+
+	if (!found) throw new Error(`The stylesheet holds no at-rule at that index`)
+
+	return found
+}
+
 describe(`isStandardSyntaxAtRule`, () => {
 	it(`non nested at-rules without quotes`, () => {
 		expect(isStandardSyntaxAtRule(atRule(`@charset UTF-8;`))).toBe(true)
@@ -54,8 +68,8 @@ describe(`isStandardSyntaxAtRule`, () => {
 			`mixin`,
 			`content`,
 		])
-		expect(isStandardSyntaxAtRule(rules[0])).toBe(true)
-		expect(isStandardSyntaxAtRule(rules[1])).toBe(false)
+		expect(isStandardSyntaxAtRule(at(rules, 0))).toBe(true)
+		expect(isStandardSyntaxAtRule(at(rules, 1))).toBe(false)
 	})
 
 	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/357
@@ -68,7 +82,7 @@ describe(`isStandardSyntaxAtRule`, () => {
 			`a { @whatever(x); }`,
 		]
 
-		for (let spelling of spellings) expect(isStandardSyntaxAtRule(lessAtRules(spelling)[0])).toBe(true)
+		for (let spelling of spellings) expect(isStandardSyntaxAtRule(at(lessAtRules(spelling), 0))).toBe(true)
 	})
 
 	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/357
@@ -76,7 +90,7 @@ describe(`isStandardSyntaxAtRule`, () => {
 		let rules = lessAtRules(`@detached-ruleset: { background: red; }; .top { @detached-ruleset (); }`)
 
 		expect(rules.length).toBe(2)
-		expect(isStandardSyntaxAtRule(rules[1])).toBe(true)
+		expect(isStandardSyntaxAtRule(at(rules, 1))).toBe(true)
 	})
 
 	it(`ignore passing rulesets to mixins`, () => {
@@ -85,22 +99,22 @@ describe(`isStandardSyntaxAtRule`, () => {
 		)
 
 		expect(rules.length).toBe(2)
-		expect(isStandardSyntaxAtRule(rules[0])).toBe(false)
-		expect(isStandardSyntaxAtRule(rules[1])).toBe(false)
+		expect(isStandardSyntaxAtRule(at(rules, 0))).toBe(false)
+		expect(isStandardSyntaxAtRule(at(rules, 1))).toBe(false)
 	})
 
 	it(`ignore calling of mixins`, () => {
 		let rules = lessAtRules(`a { .mixin(); }`)
 
 		expect(rules.length).toBe(1)
-		expect(isStandardSyntaxAtRule(rules[0])).toBe(false)
+		expect(isStandardSyntaxAtRule(at(rules, 0))).toBe(false)
 	})
 
 	it(`ignore variables`, () => {
 		let rules = lessAtRules(`@my-variable: 10px; .top { margin-top: @my-variable; }`)
 
 		expect(rules.length).toBe(1)
-		expect(isStandardSyntaxAtRule(rules[0])).toBe(false)
+		expect(isStandardSyntaxAtRule(at(rules, 0))).toBe(false)
 	})
 })
 
@@ -126,7 +140,11 @@ function atRules (code: string, parser: { parse: Parser } = postcss): AtRule[] {
  * @returns That at-rule.
  */
 function atRule (code: string): AtRule {
-	return atRules(code)[0]
+	let [first] = atRules(code)
+
+	if (!first) throw new Error(`The stylesheet holds no at-rule`)
+
+	return first
 }
 
 /**

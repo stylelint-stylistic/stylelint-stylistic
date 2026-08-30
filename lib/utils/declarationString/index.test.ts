@@ -38,7 +38,11 @@ function decl (css: string): Declaration {
 		list.push(d)
 	})
 
-	return list[0]
+	let [first] = list
+
+	if (!first) throw new Error(`The stylesheet holds no node of the kind asked for`)
+
+	return first
 }
 
 /**
@@ -53,5 +57,9 @@ function scssDecl (css: string): Declaration {
 		list.push(d)
 	})
 
-	return list[0]
+	let [first] = list
+
+	if (!first) throw new Error(`The stylesheet holds no node of the kind asked for`)
+
+	return first
 }

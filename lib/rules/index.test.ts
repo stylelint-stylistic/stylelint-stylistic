@@ -53,6 +53,8 @@ describe(`all rules`, () => {
 		it(`"${name}" should have metadata`, async () => {
 			let rule = await rules[name]
 
+			if (!rule) throw new Error(`No rule named "${name}"`)
+
 			expect(rule.meta?.url).toBe(getRuleDocUrl(name))
 			expect([true, undefined]).toContain(rule.meta?.fixable)
 		})
@@ -70,6 +72,8 @@ describe(`fixable rules`, () => {
 		it(`"${name}" should describe fixable in the documents`, async () => {
 			let rule = await rules[name]
 
+			if (!rule) throw new Error(`No rule named "${name}"`)
+
 			if (!rule.meta?.fixable) return
 
 			let ruleDoc = await readFile(new URL(`./${name}/README.md`, import.meta.url), `utf8`)
@@ -84,6 +88,8 @@ describe(`deprecated rules`, () => {
 	for (let name of ruleNames) {
 		it(`"${name}" should describe deprecation in the document`, async () => {
 			let rule = await rules[name]
+
+			if (!rule) throw new Error(`No rule named "${name}"`)
 
 			if (!rule.meta?.deprecated) return
 

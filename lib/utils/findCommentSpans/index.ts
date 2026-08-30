@@ -56,7 +56,7 @@ function skipUrl (text: string, openIndex: number, behindIdentifier: boolean): n
 	let index = behindName
 
 	while (index < text.length && depth > 0) {
-		let character = text[index]
+		let character = text.charAt(index)
 
 		if (character === `\\`) {
 			index += 2
@@ -117,7 +117,7 @@ export function findCommentSpans (text: string, spellsInlineComments: boolean = 
 	let behindIdentifier = false
 
 	while (index < text.length) {
-		let character = text[index]
+		let character = text.charAt(index)
 		let next = text[index + 1]
 
 		if (character === `\\`) {

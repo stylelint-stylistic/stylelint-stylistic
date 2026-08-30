@@ -47,5 +47,9 @@ function getFunction (declValue: string): FunctionNode {
 		if (valueNode.type === `function`) functions.push(valueNode)
 	})
 
-	return functions[0]
+	let [first] = functions
+
+	if (!first) throw new Error(`The stylesheet holds no node of the kind asked for`)
+
+	return first
 }

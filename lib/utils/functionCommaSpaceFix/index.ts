@@ -19,7 +19,7 @@ function runHeldByNeighbour (index: number, functionNode: ValueParserFunctionNod
 
 		let previous = nodes[index - 1]
 
-		return previous.type === `div` ? previous.after.length : 0
+		return previous?.type === `div` ? previous.after.length : 0
 	}
 
 	return index === nodes.length - 1 ? functionNode.after.length : 0

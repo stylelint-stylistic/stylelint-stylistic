@@ -170,9 +170,13 @@ function findRatio (nodes: ValueParserNode[]): Ratio | undefined {
 		return
 	}
 
-	if (numbers.length === 0 || (hasSolidus && numbers.length !== 2)) return
+	if (hasSolidus && numbers.length !== 2) return
 
-	return { width: numbers[0], height: numbers[1] }
+	let [width, height] = numbers
+
+	if (!width) return
+
+	return { width, height }
 }
 
 /**

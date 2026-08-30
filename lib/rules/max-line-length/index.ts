@@ -112,8 +112,8 @@ function rule (primary: number, secondaryOptions: {
 			let spans: Array<[number, number]> = []
 
 			// A substring starting at or past the end of the line stands on a later line
-			while (skippedSubStringsIndex < skippedSubStrings.length && skippedSubStrings[skippedSubStringsIndex][0] < end) {
-				let [startSubString, endSubString] = skippedSubStrings[skippedSubStringsIndex]
+			for (let next = skippedSubStrings[skippedSubStringsIndex]; next && next[0] < end; next = skippedSubStrings[skippedSubStringsIndex]) {
+				let [startSubString, endSubString] = next
 
 				spans.push([Math.max(start, startSubString) - start, Math.min(end, endSubString) - start])
 				skippedSubStringsIndex += 1

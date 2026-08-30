@@ -23,7 +23,7 @@ function skipString (text: string, openIndex: number): number {
  * @returns The index behind what was skipped, or null where code stands there.
  */
 function skipNonCode (text: string, index: number): number | null {
-	let character = text[index]
+	let character = text.charAt(index)
 	let next = text[index + 1]
 
 	if (character === `"` || character === `'`) return skipString(text, index)
@@ -114,7 +114,7 @@ export function findFunctionArgumentSpans (text: string): FunctionArgumentSpan[]
 	let runEnd = -1
 
 	while (index < text.length) {
-		let character = text[index]
+		let character = text.charAt(index)
 		let skipped = skipNonCode(text, index)
 		let escape = character === `\\` ? escapeLength(text, index) : 0
 

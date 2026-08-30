@@ -39,6 +39,9 @@ async function askStylelint (code: string, config: Config, fix: boolean): Promis
 	}
 
 	let [first] = result.results
+
+	if (!first) throw new Error(`Stylelint answered with no result`)
+
 	let parseError = first.warnings.find((warning) => warning.rule === `CssSyntaxError`)
 
 	if (parseError) return { unparsable: true, detail: parseError.text }
@@ -124,7 +127,9 @@ for (let [name, run] of fixtures) {
 		let a = configs[(index * 3) % configs.length]
 		let b = configs[((index * 3) + 1) % configs.length]
 
-		for (let [first, second] of [[a, b], [b, a]]) {
+		if (!a || !b) throw new Error(`The option list holds no pair to run`)
+
+		for (let [first, second] of [[a, b], [b, a]] as const) {
 			// eslint-disable-next-line no-await-in-loop
 			await compare(`${first[0]} then ${second[0]} css ${name}`, run.code, { plugins: run.config.plugins, rules: { [first[0]]: first[1], [second[0]]: second[1] } })
 		}

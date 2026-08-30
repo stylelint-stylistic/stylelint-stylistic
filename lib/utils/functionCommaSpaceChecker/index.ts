@@ -93,7 +93,7 @@ export function functionCommaSpaceChecker (opts: {
 			 * @returns The index of the comma for checking.
 			 */
 			function getCommaCheckIndex (commaNode: ValueParserDivNode, nodeIndex: number): number {
-				let commaIndex = argumentOffsets[nodeIndex] + commaNode.before.length
+				let commaIndex = (argumentOffsets[nodeIndex] ?? 0) + commaNode.before.length
 
 				return commaIndex - commentsRemovedBefore(hiddenArguments, commaIndex, commentSpans)
 			}

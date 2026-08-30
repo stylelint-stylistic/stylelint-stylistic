@@ -178,7 +178,7 @@ function rule (primary: number | `tab`, secondaryOptions: SecondaryOptions = {})
 			if (!parent?.parent?.source || !parent.source?.start) throw new Error(`A styled expression must stand inside a node with a source`)
 
 			// Content of the line where styled expressions starts
-			let expressionStartLine = parent.parent.source.input.css.split(`\n`)[parent.source.start.line - 1]
+			let expressionStartLine = parent.parent.source.input.css.split(`\n`)[parent.source.start.line - 1] ?? ``
 			// Indent characters (spaces/tabs) before the content of the line where the styled expressions starts
 			let indentCharacters = expressionStartLine.match(LEADING_SPACES_AND_TABS)?.[0] ?? ``
 

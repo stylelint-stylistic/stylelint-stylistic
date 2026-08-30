@@ -102,7 +102,11 @@ function rule (primary: `lower` | `upper`): RuleCheck {
 				let index = getIndex(node)
 				// The warning opens where the unit's first character stands and closes one character past its last, so it covers the run that reading was taken from and nothing besides. `getDimension` reads its unit out of a copy with the interpolation and the hack units taken out, and `positions` is the only way from a length counted in that copy to a place in the text the file spells: a bang flag riding behind the unit, a `\9` written after it and the brace an interpolation was broken on all stay outside a run measured this way.
 				let unitStart = positions[number.length]
-				let unitEnd = positions[number.length + unit.length - 1] + 1
+				let unitLast = positions[number.length + unit.length - 1]
+
+				if (unitStart === undefined || unitLast === undefined) return null
+
+				let unitEnd = unitLast + 1
 
 				return {
 					index: index + valueNode.sourceIndex + unitStart,
@@ -212,9 +216,7 @@ function rule (primary: `lower` | `upper`): RuleCheck {
  * @returns What stands in front of the first bang, or the whole text where it holds none.
  */
 function withoutBangFlag (text: string): string {
-	let [beforeFlag] = text.split(`!`)
-
-	return beforeFlag
+	return text.split(`!`)[0] ?? ``
 }
 
 rule.ruleName = ruleName

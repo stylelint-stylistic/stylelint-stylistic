@@ -21,7 +21,7 @@ import { RULE_OPTIONS } from "./options.ts"
 import { isUsable, PLUGIN } from "./runs.ts"
 
 /** Shapes short enough to read and dirty enough that many rules have something to say about each. They are read as CSS alone: a pair races over the shape of the text rather than over the syntax it is written in, and reading each shape three times over would treble a run that is already the square of what the fixture wakes. The last two end on something other than a line break, which is what makes the fix of `no-missing-end-of-source-newline` reachable at all: every other shape here has closed its last line already, so that rule wrote nothing in any run this oracle made, and a class of [#356](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/356) went unseen. `free-semicolon` is what puts a row of that class on the board; `trailing-run` puts none on either checkout — under a maximum of one or two `max-empty-lines` rewrote nothing there before this fix, so the pair was never made at all, and under a maximum of zero, where it did rewrite, the two orders already agreed — and stands guard over a fix rather than reporting one. */
-const CORPUS = [
+const CORPUS: [string, string][] = [
 	[`tight-block`, `a{color:red}\n`],
 	[`multi-decl`, `a {\n\tcolor: red; top: 0;\n}\n`],
 	[`media`, `@media(min-width:100px){a{b:c}}\n`],
@@ -138,12 +138,12 @@ for (let [name, source] of CORPUS) {
 	// eslint-disable-next-line no-await-in-loop
 	let active = await activeOn(source)
 
-	for (let i = 0; i < active.length; i += 1) {
-		for (let j = i + 1; j < active.length; j += 1) {
-			if (active[i].rule === active[j].rule) continue
+	for (let [i, a] of active.entries()) {
+		for (let b of active.slice(i + 1)) {
+			if (a.rule === b.rule) continue
 
 			// eslint-disable-next-line no-await-in-loop
-			let finding = await probe(name, source, active[i], active[j])
+			let finding = await probe(name, source, a, b)
 
 			if (finding) findings.push(finding)
 		}

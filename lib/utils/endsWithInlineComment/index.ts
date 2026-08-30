@@ -14,7 +14,7 @@ export type Scan = {
  * @param scan - Where the scan stands, moved on by what is read.
  */
 function readInsideInlineComment (text: string, scan: Scan): void {
-	let char = text[scan.index]
+	let char = text.charAt(scan.index)
 
 	// Which characters are breaks is the one thing the two languages disagree about, and the reading the scan was opened under is which of the two it is being asked as
 	if (LINE_BREAK.test(char)) scan.state = `code`

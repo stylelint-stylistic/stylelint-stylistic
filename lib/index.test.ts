@@ -14,8 +14,8 @@ describe(`the plugin in the wrong field of a config`, () => {
 			} as unknown as Config,
 		})
 
-		expect(results[0].warnings).toHaveLength(1)
-		expect(results[0].warnings[0].rule).toBe(`@stylistic/color-hex-case`)
+		expect(results[0]?.warnings).toHaveLength(1)
+		expect(results[0]?.warnings[0]?.rule).toBe(`@stylistic/color-hex-case`)
 	})
 
 	it(`stops the run with a configuration error where it is listed in "extends"`, async () => {

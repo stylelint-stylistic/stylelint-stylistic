@@ -90,7 +90,7 @@ function rule (primary: `always` | `never`): RuleCheck {
 				if (primary === `always`) {
 					let match = FRACTION_WITHOUT_LEADING_ZERO.exec(valueNode.value)
 
-					if (match === null || match[0] === null || match[1] === null) return
+					if (match === null || match[1] === undefined) return
 
 					// The match reaches back a character to make sure the dot opens a number, so it is one longer than the number itself wherever it did: subtracting the number's length gives the index the dot stands at, which is 1 for `-.5` and 0 for `.5`.
 					let capturingGroupIndex = match[0].length - match[1].length
@@ -111,10 +111,11 @@ function rule (primary: `always` | `never`): RuleCheck {
 				if (primary === `never`) {
 					let match = FRACTION_WITH_LEADING_ZEROS.exec(valueNode.value)
 
-					if (match === null || match[0] === null || match[1] === null || match[2] === null) return
+					if (match === null || match[1] === undefined || match[2] === undefined) return
 
 					// The match reaches back a character to make sure the zeros open a number, so subtracting the zeros and the fraction behind them from the whole gives the index the first zero stands at, which is 1 for `-00.5` and 0 for `00.5`.
-					let capturingGroupIndex = match[0].length - (match[1].length + match[2].length)
+					let zeros = match[1]
+					let capturingGroupIndex = match[0].length - (zeros.length + match[2].length)
 
 					let index = valueNode.sourceIndex + match.index + capturingGroupIndex
 
@@ -122,7 +123,7 @@ function rule (primary: `always` | `never`): RuleCheck {
 						neverFixPositions.unshift({
 							startIndex: index,
 							// `match[1]` is the run of zeros itself, so its length is how far the fix reaches
-							endIndex: index + match[1].length,
+							endIndex: index + zeros.length,
 						})
 					}
 

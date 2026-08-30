@@ -29,7 +29,7 @@ import { buildRuns, isUsable, type Run } from "./runs.ts"
 const EVERY_BREAK = /\r?\n/gu
 
 /** The spelling a twin is built in, under the name its rows are reported by. */
-const TWINS = [[`crlf`, `\r\n`]]
+const TWINS: [string, string][] = [[`crlf`, `\r\n`]]
 
 /** Every syntax, fixture and spelling already reported as one the syntax cannot read, since the parse happens before any rule does and reporting it per rule would say one thing two hundred and three times. */
 let reportedUnparsable = new Set()

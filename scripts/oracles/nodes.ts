@@ -31,7 +31,11 @@ function tally (code: string, syntaxName: string): string | null {
 	let counts = { decl: 0, rule: 0, atrule: 0 }
 
 	try {
-		PARSERS[syntaxName].parse(code).walk(({ type }) => {
+		let parser = PARSERS[syntaxName]
+
+		if (!parser) return null
+
+		parser.parse(code).walk(({ type }) => {
 			if (type === `decl` || type === `rule` || type === `atrule`) counts[type] += 1
 		})
 	}

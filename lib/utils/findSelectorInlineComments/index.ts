@@ -65,8 +65,10 @@ export function findSelectorInlineComments (rawSelector: string, scssSelector?: 
 
 		delta += (endIndex - startIndex) - value.length
 
-		if (firstOrdinal !== -1) {
-			inlineComments.push({ value, firstOrdinal, lastOrdinal, tailLength: endIndex - comments[lastOrdinal].end, startIndex, endIndex, delta })
+		let lastComment = comments[lastOrdinal]
+
+		if (firstOrdinal !== -1 && lastComment) {
+			inlineComments.push({ value, firstOrdinal, lastOrdinal, tailLength: endIndex - lastComment.end, startIndex, endIndex, delta })
 		}
 
 		rawIndex = endIndex

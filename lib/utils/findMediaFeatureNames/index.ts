@@ -84,7 +84,7 @@ export function findMediaFeatureNames (mediaQueryParams: string, callback: (medi
 				let topLevelTokens = topLevelTokenNodes(node)
 				for (let i = 0; i < topLevelTokens.length; i += 1) {
 					let token = topLevelTokens[i]
-					if (token[0] !== TokenType.Ident) continue
+					if (!token || token[0] !== TokenType.Ident) continue
 
 					let nextToken = topLevelTokens[i + 1]
 					let prevToken = topLevelTokens[i - 1]

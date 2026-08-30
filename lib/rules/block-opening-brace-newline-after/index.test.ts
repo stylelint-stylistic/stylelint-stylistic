@@ -828,7 +828,7 @@ describe(`${ruleName} on a run of comments longer than the stack is deep`, () =>
 			fix: true,
 		})
 
-		expect(results[0].warnings.map((warning) => warning.text)).toEqual([messages.expectedAfter()])
+		expect(results[0]?.warnings.map((warning) => warning.text)).toEqual([messages.expectedAfter()])
 		expect(fixed.code).toBe(`a {${run}\ncolor: pink; }`)
 	})
 
@@ -844,7 +844,7 @@ describe(`${ruleName} on a run of comments longer than the stack is deep`, () =>
 			fix: true,
 		})
 
-		expect(results[0].warnings.map((warning) => warning.text)).toEqual([messages.rejectedAfterMultiLine()])
+		expect(results[0]?.warnings.map((warning) => warning.text)).toEqual([messages.rejectedAfterMultiLine()])
 		expect(fixed.code).toBe(`a {${run}color: pink;\nbackground: orange; }`)
 	})
 })
@@ -869,7 +869,7 @@ async function fixQuietly (code: string, option: string): Promise<{
 		config: { plugins, rules: { [ruleName]: option } },
 	})
 
-	return { code: fixed.code, warnings: reported.results[0].warnings.length }
+	return { code: fixed.code, warnings: reported.results[0]?.warnings.length ?? 0 }
 }
 
 describe(`${ruleName} on the whitespace it carries past a comment`, () => {

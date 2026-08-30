@@ -18,7 +18,7 @@ async function fix (code: string, rules: object): Promise<{
 	let fixed = await stylelint.lint({ code, config: { plugins, rules }, fix: true })
 	let read = await stylelint.lint({ code: fixed.code ?? code, config: { plugins, rules } })
 
-	return { code: fixed.code ?? code, warnings: read.results[0].warnings.length }
+	return { code: fixed.code ?? code, warnings: read.results[0]?.warnings.length ?? 0 }
 }
 
 /**

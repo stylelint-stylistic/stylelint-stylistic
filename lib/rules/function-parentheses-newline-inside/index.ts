@@ -83,7 +83,7 @@ function isFunctionParsedAsWritten (valueNode: FunctionNode, inlineComments: Inl
  * @param ranges - The stretches to take out, in ascending order and none of them overlapping.
  * @returns What is left once they are gone.
  */
-function withoutRanges (text: string, ranges: number[][]): string {
+function withoutRanges (text: string, ranges: [number, number][]): string {
 	let kept = ``
 	let index = 0
 
@@ -102,8 +102,8 @@ function withoutRanges (text: string, ranges: number[][]): string {
  * @param lists - The lists to fold, in whatever order each of them holds its stretches.
  * @returns The one list.
  */
-function mergeRanges (lists: number[][][]): number[][] {
-	let merged: number[][] = []
+function mergeRanges (lists: [number, number][][]): [number, number][] {
+	let merged: [number, number][] = []
 
 	for (let [start, end] of lists.flat().toSorted(([one], [other]) => one - other)) {
 		let last = merged.at(-1)
@@ -127,7 +127,7 @@ function mergeRanges (lists: number[][][]): number[][] {
  * @param reading - What the syntax the value was spelled in makes of a comment opened by a double slash.
  * @returns True where a reading has the character move into a comment.
  */
-function movesIntoComment (declValue: string, characterIndex: number, emptied: number[][], reading: InlineCommentReading): boolean {
+function movesIntoComment (declValue: string, characterIndex: number, emptied: [number, number][], reading: InlineCommentReading): boolean {
 	let standingText = declValue.slice(0, characterIndex + 1)
 
 	return movesEndIntoInlineComment(standingText, withoutRanges(standingText, emptied), reading)
@@ -170,8 +170,8 @@ function getAfterSpan (valueNode: FunctionNode): {
  * @param openingIndex - Where the text behind that parenthesis begins.
  * @returns The stretches, in ascending order and none of them overlapping.
  */
-function getFixEmptiedBefore (valueNode: FunctionNode, openingIndex: number): number[][] {
-	let emptied = [[openingIndex, openingIndex + valueNode.before.length]]
+function getFixEmptiedBefore (valueNode: FunctionNode, openingIndex: number): [number, number][] {
+	let emptied: [number, number][] = [[openingIndex, openingIndex + valueNode.before.length]]
 
 	for (let node of valueNode.nodes) {
 		if (node.type === `comment`) continue
@@ -191,8 +191,8 @@ function getFixEmptiedBefore (valueNode: FunctionNode, openingIndex: number): nu
  * @param valueNode - The function whose closing parenthesis is being fixed.
  * @returns The stretches, in ascending order and none of them overlapping.
  */
-function getFixEmptiedAfter (valueNode: FunctionNode): number[][] {
-	let emptied: number[][] = []
+function getFixEmptiedAfter (valueNode: FunctionNode): [number, number][] {
+	let emptied: [number, number][] = []
 
 	for (let node of [...valueNode.nodes].toReversed()) {
 		if (node.type === `comment`) continue
@@ -225,7 +225,7 @@ function getNeverFixability (read: {
 	checkBefore: string,
 	checkAfter: string,
 	firstIndex: number,
-	measured: number[][],
+	measured: [number, number][],
 	reading: InlineCommentReading,
 }): {
 	isOpeningFixable: boolean,
@@ -399,10 +399,10 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, _se
 function getCheckBefore (valueNode: FunctionNode, openingIndex: number, declValue: string, inlineComments: InlineCommentSpan[]): {
 	before: string,
 	firstIndex: number,
-	measured: number[][],
+	measured: [number, number][],
 } {
 	let before = valueNode.before
-	let measured = [[openingIndex, openingIndex + valueNode.before.length]]
+	let measured: [number, number][] = [[openingIndex, openingIndex + valueNode.before.length]]
 	let firstIndex = valueNode.sourceEndIndex - 1
 
 	for (let node of valueNode.nodes) {

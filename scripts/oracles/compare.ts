@@ -64,19 +64,39 @@ function run (oracle: string, revision: string): Record<string, unknown>[] {
 }
 
 let [base = defaultBase(), head = `worktree`] = argv.slice(2)
-let sides = { base, head }
+
+/** The two sides of a comparison. */
+type Side = `base` | `head`
+
+let sides: Record<Side, string> = { base, head }
 
 let plan: {
-	side: string,
+	side: Side,
 	revision: string,
 	oracle: string,
 	key: string,
 	inputs: Record<string, string>,
 }[] = []
 
-let results: Record<string, Record<string, Record<string, unknown>[]>> = { base: {}, head: {} }
+let results: Record<Side, Record<string, Record<string, unknown>[]>> = { base: {}, head: {} }
 
-for (let [side, revision] of Object.entries(sides)) {
+/**
+ * Hands back the rows of one oracle over one side, which every oracle has by the time the report is written.
+ * @param side - The side.
+ * @param oracle - The oracle.
+ * @returns The rows.
+ */
+function rowsOf (side: Side, oracle: string): Record<string, unknown>[] {
+	let rows = results[side][oracle]
+
+	if (!rows) throw new Error(`${oracle} has no rows over ${side}`)
+
+	return rows
+}
+
+for (let side of [`base`, `head`] as const) {
+	let revision = sides[side]
+
 	for (let oracle of ORACLES) {
 		let inputs = inputsOf(oracle, revision)
 		let key = keyOf(inputs)
@@ -120,10 +140,10 @@ let report = [`# Oracles: ${base} → ${head}`, ``]
 let summary = []
 
 for (let oracle of ORACLES) {
-	let result = diff(keyed(results.base[oracle]), keyed(results.head[oracle]))
+	let result = diff(keyed(rowsOf(`base`, oracle)), keyed(rowsOf(`head`, oracle)))
 
-	summary.push(`${oracle}: ${results.head[oracle].length} rows, +${result.added.length} −${result.removed.length} ~${result.changed.length}`)
-	report.push(`## ${oracle}`, ``, render(result, keyed(results.base[oracle]), keyed(results.head[oracle])))
+	summary.push(`${oracle}: ${rowsOf(`head`, oracle).length} rows, +${result.added.length} −${result.removed.length} ~${result.changed.length}`)
+	report.push(`## ${oracle}`, ``, render(result, keyed(rowsOf(`base`, oracle)), keyed(rowsOf(`head`, oracle))))
 }
 
 mkdirSync(path.join(ROOT, `tmp`), { recursive: true })

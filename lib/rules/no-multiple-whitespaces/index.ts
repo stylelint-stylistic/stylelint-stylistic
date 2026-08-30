@@ -100,8 +100,7 @@ function fixWhitespaceErrors (value: string, errors: {
 }[]): string {
 	let newValue = value
 
-	for (let j = errors.length - 1; j >= 0; j -= 1) {
-		let e = errors[j]
+	for (let e of errors.toReversed()) {
 		newValue = `${newValue.slice(0, e.start)} ${newValue.slice(e.start + e.count)}`
 	}
 
@@ -135,7 +134,7 @@ function rule (primary: true): RuleCheck {
 
 			// Main character iteration to find multiple whitespace errors
 			for (let i = 0; i < value.length; i += 1) {
-				let char = value[i]
+				let char = value.charAt(i)
 
 				let stringState = handleStringChar(char, inString, stringChar, value, i)
 				inString = stringState.inString
@@ -154,7 +153,7 @@ function rule (primary: true): RuleCheck {
 				if (isInlineWhitespace(char)) {
 					// afterNewline: skip leading whitespace (indentation) after a newline
 					if (afterNewline) {
-						while (i < value.length && isInlineWhitespace(value[i])) i += 1
+						while (i < value.length && isInlineWhitespace(value.charAt(i))) i += 1
 						afterNewline = false
 						i -= 1
 						continue
@@ -163,7 +162,7 @@ function rule (primary: true): RuleCheck {
 					let whitespaceStart = i
 					let whitespaceCount = 0
 
-					while (i < value.length && isInlineWhitespace(value[i])) {
+					while (i < value.length && isInlineWhitespace(value.charAt(i))) {
 						whitespaceCount += 1
 						i += 1
 					}

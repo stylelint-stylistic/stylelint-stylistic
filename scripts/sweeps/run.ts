@@ -80,15 +80,22 @@ if (!file) {
 }
 
 let sweep: Sweep = await import(path.resolve(file))
-let sides = { base, head: `worktree` }
 
-/** Each side as its digest, and its rows behind a call, since the rows are read only for the keys the digests say have moved. */
-let results: Record<string, {
+/** The two sides of a comparison. */
+type Side = `base` | `head`
+
+/** One side as its digest, and its rows behind a call, since the rows are read only for the keys the digests say have moved. */
+type Result = {
 	digest: Record<string, string>,
 	rows: () => Record<string, object>,
-}> = {}
+}
 
-for (let [side, revision] of Object.entries(sides)) {
+let sides: Record<Side, string> = { base, head: `worktree` }
+let results: Partial<Record<Side, Result>> = {}
+
+for (let side of [`base`, `head`] as const) {
+	let revision = sides[side]
+
 	// A side is measured once by what it depends on — the rules, the sweep and the runner — and read back on every later run; the two are taken in turn, base first
 	let inputs = { sweep: hashAt(`worktree`, path.relative(ROOT, path.resolve(file))), lib: hashAt(revision, `lib`), harness: hashAt(`worktree`, `scripts/harness`), lock: hashAt(`worktree`, `pnpm-lock.yaml`) }
 	let key = keyOf(inputs)
@@ -123,9 +130,13 @@ let out = path.join(ROOT, `tmp`, `sweeps`)
 
 mkdirSync(out, { recursive: true })
 
-let result = diff(results.base.digest, results.head.digest)
+let { base: baseResult, head: headResult } = results
+
+if (!baseResult || !headResult) throw new Error(`A side was neither read nor measured`)
+
+let result = diff(baseResult.digest, headResult.digest)
 let moved = result.changed.length + result.added.length + result.removed.length > 0
-let report = moved ? render(result, results.base.rows(), results.head.rows()) : render(result, {}, {})
+let report = moved ? render(result, baseResult.rows(), headResult.rows()) : render(result, {}, {})
 
 writeFileSync(path.join(out, `${sweep.name}.md`), `# ${sweep.name}: ${base} → worktree\n\n${report}`)
-stdout.write(`${Object.keys(results.head.digest).length} rows: ${result.same} same, ${result.changed.length} changed, ${result.added.length} added, ${result.removed.length} removed — tmp/sweeps/${sweep.name}.md\n`)
+stdout.write(`${Object.keys(headResult.digest).length} rows: ${result.same} same, ${result.changed.length} changed, ${result.added.length} added, ${result.removed.length} removed — tmp/sweeps/${sweep.name}.md\n`)

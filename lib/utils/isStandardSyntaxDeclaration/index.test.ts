@@ -144,7 +144,9 @@ function decl (css: string, parser: { parse: Parser } = postcss): Declaration {
 		list.push(d)
 	})
 
-	if (list.length === 1) return list[0]
+	let [first] = list
+
+	if (first && list.length === 1) return first
 
 	throw new Error(`Expected length 1, but ${list.length}`)
 }

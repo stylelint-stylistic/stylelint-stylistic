@@ -5,6 +5,7 @@
 		"moduleResolution": "bundler",
 		"esModuleInterop": true,
 		"strict": true,
+		"noUncheckedIndexedAccess": true,
 		"strictNullChecks": true,
 		"noImplicitAny": true,
 		"forceConsistentCasingInFileNames": true,

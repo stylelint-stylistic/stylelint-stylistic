@@ -62,5 +62,9 @@ function collect (root: Root | Document): Rule {
 		list.push(node)
 	})
 
-	return list[0]
+	let [first] = list
+
+	if (!first) throw new Error(`The stylesheet holds no node of the kind asked for`)
+
+	return first
 }

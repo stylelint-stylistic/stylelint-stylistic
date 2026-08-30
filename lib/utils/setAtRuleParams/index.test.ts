@@ -77,7 +77,11 @@ function atRule (css: string): AtRule {
 		list.push(rule)
 	})
 
-	return list[0]
+	let [first] = list
+
+	if (!first) throw new Error(`The stylesheet holds no node of the kind asked for`)
+
+	return first
 }
 
 /**
@@ -92,5 +96,9 @@ function scssAtRule (css: string): AtRule {
 		list.push(rule)
 	})
 
-	return list[0]
+	let [first] = list
+
+	if (!first) throw new Error(`The stylesheet holds no node of the kind asked for`)
+
+	return first
 }

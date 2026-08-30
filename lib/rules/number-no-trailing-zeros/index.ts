@@ -82,7 +82,7 @@ function rule (primary: true): RuleCheck {
 
 				// `match[1]` is whatever digits stand between the decimal point and the trailing zeros, and may be empty
 				// `match[2]` is the trailing zeros themselves
-				if (match === null || match[1] === null || match[2] === null) return
+				if (match === null || match[1] === undefined || match[2] === undefined) return
 
 				// The index is made of four parts:
 				//  where the value node begins +

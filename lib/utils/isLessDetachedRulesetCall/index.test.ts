@@ -55,5 +55,9 @@ function lessAtRule (code: string, index: number = 0): AtRule {
 		atRules.push(atRule)
 	})
 
-	return atRules[index]
+	let atRule = atRules[index]
+
+	if (!atRule) throw new Error(`The stylesheet holds no at-rule at that index`)
+
+	return atRule
 }
