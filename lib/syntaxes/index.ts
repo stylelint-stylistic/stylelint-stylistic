@@ -3,11 +3,11 @@ import type { Node as SelectorNode } from "postcss-selector-parser"
 import type { FunctionNode } from "postcss-value-parser"
 import type { PostcssResult } from "stylelint"
 
+import type { InlineComment } from "../preprocessor/findSelectorInlineComments/index.ts"
+import type { InlineCommentReading } from "../preprocessor/readsInlineComments/index.ts"
 import type { CommentSpan } from "../utils/findCommentSpans/index.ts"
 import type { InlineCommentSpan } from "../utils/findInlineCommentSpans/index.ts"
 import type { InterpolationSpan } from "../utils/findInterpolationSpans/index.ts"
-import type { InlineComment } from "../utils/findSelectorInlineComments/index.ts"
-import type { InlineCommentReading } from "../utils/readsInlineComments/index.ts"
 
 import { styled } from "./styled/index.ts"
 
@@ -260,6 +260,9 @@ export type SelectorCopies = {
 	 */
 	write (fixedSelector: string): void,
 }
+
+export type { InlineComment } from "../preprocessor/findSelectorInlineComments/index.ts"
+export type { InlineCommentReading } from "../preprocessor/readsInlineComments/index.ts"
 
 /** The syntaxes registered beside the core, each under a namespace of its own. A syntax is not registered until it is listed here. */
 export let namespaces: Syntax[] = [styled]

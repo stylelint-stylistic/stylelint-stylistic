@@ -1,5 +1,5 @@
 import { LINE_BREAK } from "../../regexps.ts"
-import { findSelectorBlockComments } from "../findSelectorBlockComments/index.ts"
+import { findSelectorBlockComments } from "../../utils/findSelectorBlockComments/index.ts"
 
 /**
  * Gets the index the line an index stands on ends at, which is the end of the text where the line is the last one.

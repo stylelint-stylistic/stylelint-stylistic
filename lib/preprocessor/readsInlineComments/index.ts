@@ -1,8 +1,8 @@
 import type { Document, Node, Root } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { nodeSyntax } from "../nodeSyntax/index.ts"
-import { isSyntax } from "../typeGuards/index.ts"
+import { nodeSyntax } from "../../utils/nodeSyntax/index.ts"
+import { isSyntax } from "../../utils/typeGuards/index.ts"
 
 /** What the probe of a syntax says about a comment opened by a double slash: whether the syntax spells one at all, and whether it leaves one standing in the value a rule reads. Which break closes one is no question of the syntax's: a line break is what PostCSS reads as one, a line feed with or without a carriage return in front of it, and every scan of a text closes such a comment there. */
 export type InlineCommentReading = {

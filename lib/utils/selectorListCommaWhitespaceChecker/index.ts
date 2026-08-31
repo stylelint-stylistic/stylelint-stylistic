@@ -3,7 +3,7 @@ import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
 import type { SelectorCopies, Syntax } from "../../syntaxes/index.ts"
-import type { InlineComment } from "../findSelectorInlineComments/index.ts"
+import type { InlineComment } from "../../syntaxes/index.ts"
 
 let { utils: { report } } = stylelint
 

@@ -57,7 +57,7 @@ const ALLOWED: Record<string, string[]> = {
 		`const BREAK_OF_OPTION = { unix: \`\\n\`, windows: \`\\r\\n\` }`,
 		`return lineBreakOfFile(node) ?? \`\\n\``,
 	],
-	"lib/utils/readsInlineComments/index.ts": [`const INLINE_COMMENT_PROBE = \`a {}\\n// comment\\na { b: 'x', // comment\\n  'y'; }\\n\``],
+	"lib/preprocessor/readsInlineComments/index.ts": [`const INLINE_COMMENT_PROBE = \`a {}\\n// comment\\na { b: 'x', // comment\\n  'y'; }\\n\``],
 }
 
 /** Every line that reads a break without asking `lib/regexps.ts` what one is. */

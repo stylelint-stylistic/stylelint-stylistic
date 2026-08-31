@@ -1,4 +1,4 @@
-import { findSelectorBlockComments } from "../findSelectorBlockComments/index.ts"
+import { findSelectorBlockComments } from "../../utils/findSelectorBlockComments/index.ts"
 import type { InlineComment } from "../findSelectorInlineComments/index.ts"
 
 /**

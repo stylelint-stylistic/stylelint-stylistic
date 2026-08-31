@@ -1,9 +1,9 @@
 import type { Node } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { blankComments } from "../blankComments/index.ts"
-import { type CommentSpan, findCommentSpans } from "../findCommentSpans/index.ts"
-import { hideFalseInlineComments } from "../hideFalseInlineComments/index.ts"
+import { blankComments } from "../../utils/blankComments/index.ts"
+import { type CommentSpan, findCommentSpans } from "../../utils/findCommentSpans/index.ts"
+import { hideFalseInlineComments } from "../../utils/hideFalseInlineComments/index.ts"
 import { readsInlineComments } from "../readsInlineComments/index.ts"
 
 /**
