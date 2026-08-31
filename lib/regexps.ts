@@ -47,6 +47,9 @@ export const EVERY_INTERPOLATION = /#\{[\s\S]+?\}|@\{.+?\}|\$\(.+?\)/gu
 export const EVERY_INTERPOLATION_CHARACTER = /[#@{}]+/gu
 
 /** Every run of Unix line breaks, the run captured whole. Read by `max-empty-lines`, and narrow for the reason {@link CRLF} is. */
+// A line terminator of the JavaScript around a styled template, as `postcss-styled-syntax` counts the host file's lines: a Windows pair as one, then a line feed, a bare carriage return, or either separator of Unicode — and no form feed. This is a reading of the host, measured of that parser itself, and no stylesheet reading: PostCSS counts a line feed alone.
+export const EVERY_JS_LINE_TERMINATOR = /\r\n|[\n\r\u2028\u2029]/gu
+
 export const EVERY_LF_RUN = /(\n)+/gu
 
 /** Every line of a text that a break ends, the break included, so that a line is read together with the character that ends it. Read by `linebreaks`, which asks of each line which of the two spellings its break is written in. */

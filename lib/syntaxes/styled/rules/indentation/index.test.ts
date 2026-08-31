@@ -1,3 +1,7 @@
+import stylelint, { type Config } from "stylelint"
+import { describe, expect, it } from "vitest"
+
+import plugins from "../../../../index.ts"
 import { createRule } from "../../../../rules/indentation/index.ts"
 import { styled } from "../../index.ts"
 
@@ -669,4 +673,16 @@ testRule({
 			code: `function f () {\r\n\tconst a = styled.div\`\r\n\t\tcolor: red;\r\n\t\`;\r\n}`,
 		},
 	],
+})
+
+// The warning of this case is one no fix can clear — the bare carriage return in the declaration's `raws.before` is no space or tab to the fixer — and a `reject` case asserts `fixed`, so the case is written against the linter itself: what https://github.com/stylelint-stylistic/stylelint-stylistic/issues/377 asks is that the lint ends in a report rather than in a `TypeError`.
+describe(`a template of a carriage-return-broken file`, () => {
+	it(`is reported at a position the file holds rather than ending the lint in a TypeError`, async () => {
+		let { results } = await stylelint.lint({
+			code: `function f () {\r\tconst a = styled.div\`\r\t\tcolor: red;\r\t\`;\r}`,
+			config: { plugins, customSyntax: `postcss-styled-syntax`, rules: { [ruleName]: [`tab`] } } as unknown as Config,
+		})
+
+		expect(results[0]?.warnings).toEqual([expect.objectContaining({ rule: ruleName, line: 2, column: 26, endLine: 2, endColumn: 37, text: `Expected indentation of 1 tab (${ruleName})` })])
+	})
 })
