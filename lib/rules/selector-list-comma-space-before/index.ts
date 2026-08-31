@@ -4,12 +4,9 @@ import stylelint from "stylelint"
 import { TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { findSelectorInlineComments } from "../../utils/findSelectorInlineComments/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { restoreSelectorInlineComments } from "../../utils/restoreSelectorInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { selectorListCommaWhitespaceChecker } from "../../utils/selectorListCommaWhitespaceChecker/index.ts"
-import type { SyntaxRaw } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
 let { utils: { validateOptions } } = stylelint
@@ -76,11 +73,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (fixData) {
 			for (let [ruleNode, commaIndices] of fixData.entries()) {
-				let selectorRaws: SyntaxRaw | undefined = ruleNode.raws.selector
-				let selector = selectorRaws ? selectorRaws.raw : ruleNode.selector
-
-				// The comments are read off the two spellings before anything is written, since the alignment the pair is read by holds only while the copies tell one story.
-				let inlineComments = findSelectorInlineComments(selector, selectorRaws && selectorRaws.scss)
+				let copies = syntax.selectorCopies(ruleNode)
+				let { selector } = copies
 
 				for (let index of commaIndices.toSorted((a, b) => b - a)) {
 					let beforeSelector = selector.slice(0, index)
@@ -92,13 +86,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					selector = beforeSelector + afterSelector
 				}
 
-				if (selectorRaws) {
-					selectorRaws.raw = selector
-
-					// The stringifier reads the copy the source spelled, so the fix has to reach that one as well, with every inline comment spelled the way the file spells it.
-					if (selectorRaws.scss) selectorRaws.scss = restoreSelectorInlineComments(selector, inlineComments)
-				}
-				else ruleNode.selector = selector
+				copies.write(selector)
 			}
 		}
 	}

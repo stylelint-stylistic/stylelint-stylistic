@@ -5,13 +5,10 @@ import { LEADING_WHITESPACE_AND_REST, WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findSelectorBlockComments } from "../../utils/findSelectorBlockComments/index.ts"
-import { findSelectorInlineComments, type InlineComment } from "../../utils/findSelectorInlineComments/index.ts"
+import type { InlineComment } from "../../utils/findSelectorInlineComments/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
-import { restoreSelectorInlineComments } from "../../utils/restoreSelectorInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { toSelectorSourceIndex } from "../../utils/toSelectorSourceIndex/index.ts"
-import type { SyntaxRaw } from "../../utils/typeGuards/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -48,24 +45,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let hasFixed = false
 
-			let selectorRaws: SyntaxRaw | undefined = ruleNode.raws.selector
+			let copies = syntax.selectorCopies(ruleNode)
 
-			let selector = selectorRaws ? selectorRaws.raw : ruleNode.selector
-
-			// `postcss-scss` rewrites every inline comment of a selector into a block comment in the raw parsed here, keeps the source spelling beside it and prints that one, so the two strings drift apart by two characters per comment. Every position is counted in the raw and reported in the file's own coordinates, and a fix is written to both.
-			let inlineComments = findSelectorInlineComments(selector, selectorRaws && selectorRaws.scss)
-
-			/**
-			 * Gives back the way the file spells a stretch of the parsed selector.
-			 * @param text - The text as the parsed selector spells it.
-			 * @param rawIndex - The index that text stands at in the parsed selector.
-			 * @returns The same stretch, spelled as the file spells it.
-			 */
-			function sourceSpelling (text: string, rawIndex: number): string {
-				if (!selectorRaws || !selectorRaws.scss) return text
-
-				return selectorRaws.scss.slice(toSelectorSourceIndex(rawIndex, inlineComments), toSelectorSourceIndex(rawIndex + text.length, inlineComments))
-			}
+			let { selector } = copies
 
 			let fullSelector = parseSelector(selector, result, ruleNode)
 
@@ -89,10 +71,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						result,
 						ruleName,
 						message: messages.rejected,
-						messageArgs: [sourceSpelling(text, combinatorNode.sourceIndex)],
+						messageArgs: [copies.sourceSpelling(text, combinatorNode.sourceIndex)],
 						node: ruleNode,
-						index: toSelectorSourceIndex(combinatorNode.sourceIndex, inlineComments),
-						endIndex: toSelectorSourceIndex(combinatorNode.sourceIndex, inlineComments),
+						index: copies.toSourceIndex(combinatorNode.sourceIndex),
+						endIndex: copies.toSourceIndex(combinatorNode.sourceIndex),
 					})
 
 					return
@@ -102,7 +84,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (isLeftOverOfCombinator(combinatorNode)) return
 
 				// A descendant combinator, on the other hand, keeps whatever comments stand inside it, and they are what the whitespace has to be measured between: each stretch of it is a run of its own, reported at its own position and collapsed on its own, so that every comment stays where the author put it.
-				let segments = splitAtComments(text, combinatorNode.sourceIndex, inlineComments)
+				let segments = splitAtComments(text, combinatorNode.sourceIndex, copies.comments)
 
 				// The combinator prints its raw value where it has one, so writing the whole run there — and emptying the spaces the parser had split it across — is what makes a collapsed run reach the output. It is the shape the parser itself gives a combinator whose text does not come apart into whitespace and a single space.
 				function write (): void {
@@ -127,7 +109,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					// An inline comment ends with the line break standing behind it, and that break is in this run. A single space would close no comment, so there is nothing this rule could ask for here and nothing it could write: the run is passed over, as the whitespace behind a combinator of another kind is.
 					if (segment.closesInlineComment) return
 
-					let index = toSelectorSourceIndex(segment.index, inlineComments)
+					let index = copies.toSourceIndex(segment.index)
 
 					report({
 						result,
@@ -151,13 +133,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (hasFixed) {
 				let fixedSelector = String(fullSelector)
 
-				if (selectorRaws) {
-					selectorRaws.raw = fixedSelector
-
-					// The stringifier reads the copy the source spelled, so the fix has to reach that one as well, with every inline comment spelled the way the file spells it.
-					if (selectorRaws.scss) selectorRaws.scss = restoreSelectorInlineComments(fixedSelector, inlineComments)
-				}
-				else ruleNode.selector = fixedSelector
+				copies.write(fixedSelector)
 			}
 		})
 	}

@@ -8,13 +8,10 @@ import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findInlineCommentSpans, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
-import { findSelectorInlineComments } from "../../utils/findSelectorInlineComments/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
-import { restoreSelectorInlineComments } from "../../utils/restoreSelectorInlineComments/index.ts"
 import { rewriteInlineComments } from "../../utils/rewriteInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { toSelectorSourceIndex } from "../../utils/toSelectorSourceIndex/index.ts"
 import { isAtRule, type SyntaxRaw } from "../../utils/typeGuards/index.ts"
 import { assertString, isBoolean } from "../../utils/validateTypes/index.ts"
 
@@ -92,14 +89,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		function checkRule (ruleNode: Rule): void {
 			if (!syntax.isStandardRule(ruleNode)) return
 
-			let selectorRaws: SyntaxRaw | undefined = ruleNode.raws.selector
+			let copies = syntax.selectorCopies(ruleNode)
 
 			// `ruleNode.selector` is a copy with every comment taken out, so a position counted in it stands short of the file wherever a comment goes before, and a fix written to it prints without the comments. The raw is the text the file holds — except under `postcss-scss`, which spells every inline comment of the raw as a block one and keeps the file's spelling beside it, two characters shorter per comment. The raw is what is parsed here, every position is translated back into the file's coordinates, and a fix is written to both copies.
-			let selector = selectorRaws ? selectorRaws.raw : ruleNode.selector
+			let { selector } = copies
 
 			if (!selector.includes(`[`) || !selector.includes(`=`)) return
 
-			let inlineComments = findSelectorInlineComments(selector, selectorRaws && selectorRaws.scss)
 			let selectorFixed = false
 
 			let selectorTree = parseSelector(selector, result, ruleNode)
@@ -109,7 +105,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			selectorTree.walkAttributes((attributeNode) => {
 				if (!attributeNode.quoted) return
 
-				let maybeProblemIndex = toSelectorSourceIndex(attributeNode.sourceIndex + attributeNode.offsetOf(`value`), inlineComments)
+				let maybeProblemIndex = copies.toSourceIndex(attributeNode.sourceIndex + attributeNode.offsetOf(`value`))
 
 				if (attributeNode.quoteMark === correctQuote && avoidEscape) {
 					assertString(attributeNode.value)
@@ -183,13 +179,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (selectorFixed) {
 				let fixedSelector = String(selectorTree)
 
-				if (selectorRaws) {
-					selectorRaws.raw = fixedSelector
-
-					// The stringifier reads the copy the source spelled, so the fix has to reach that one as well, with every inline comment spelled the way the file spells it.
-					if (selectorRaws.scss) selectorRaws.scss = restoreSelectorInlineComments(fixedSelector, inlineComments)
-				}
-				else ruleNode.selector = fixedSelector
+				copies.write(fixedSelector)
 			}
 		}
 

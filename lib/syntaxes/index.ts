@@ -5,6 +5,7 @@ import type { PostcssResult } from "stylelint"
 
 import type { CommentSpan } from "../utils/findCommentSpans/index.ts"
 import type { InlineCommentSpan } from "../utils/findInlineCommentSpans/index.ts"
+import type { InlineComment } from "../utils/findSelectorInlineComments/index.ts"
 import type { InlineCommentReading } from "../utils/readsInlineComments/index.ts"
 
 import { styled } from "./styled/index.ts"
@@ -194,6 +195,46 @@ export type Syntax = {
 	 * @returns The copy, with the spans of the comments the syntax reads.
 	 */
 	searchCopy (text: string, node: Node, result: PostcssResult): { searchString: string, commentSpans: CommentSpan[] },
+
+	/**
+	 * Opens a rule's selector for a rule that parses it.
+	 *
+	 * `postcss-scss` rewrites every inline comment of a selector into a block comment in the raw copy a parser can read, keeps the source spelling beside it and prints that one, so the two copies drift apart by two characters per comment. What comes back holds the parsed copy, the map from its positions into the file's own coordinates, the file's own spelling of a stretch of it, and the writer that lands a fixed selector in every copy the syntax keeps.
+	 * @param rule - The rule whose selector is opened.
+	 * @returns The copies.
+	 */
+	selectorCopies (rule: PostcssRule): SelectorCopies,
+}
+
+/** A rule's selector, opened for parsing and writing: see {@link Syntax#selectorCopies}. */
+export type SelectorCopies = {
+
+	/** The copy a parser can read, every inline comment rewritten into a block one. */
+	selector: string,
+
+	/** The inline comments the pair of copies holds, each with its span in both. */
+	comments: InlineComment[],
+
+	/**
+	 * Maps a position of the parsed copy into the file's own coordinates.
+	 * @param index - The index in the parsed copy.
+	 * @returns The index in the file's spelling.
+	 */
+	toSourceIndex (index: number): number,
+
+	/**
+	 * Gives back the way the file spells a stretch of the parsed copy.
+	 * @param text - The text as the parsed copy spells it.
+	 * @param rawIndex - The index that text stands at in the parsed copy.
+	 * @returns The same stretch, spelled as the file spells it.
+	 */
+	sourceSpelling (text: string, rawIndex: number): string,
+
+	/**
+	 * Writes a fixed selector into every copy the syntax keeps, the inline comments of the printed one spelled the way the file spells them.
+	 * @param fixedSelector - The selector, as the fix leaves the parsed copy.
+	 */
+	write (fixedSelector: string): void,
 }
 
 /** The syntaxes registered beside the core, each under a namespace of its own. A syntax is not registered until it is listed here. */

@@ -2,10 +2,8 @@ import type { Root, Rule } from "postcss"
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import type { Syntax } from "../../syntaxes/index.ts"
-import { findSelectorInlineComments, type InlineComment } from "../findSelectorInlineComments/index.ts"
-import { toSelectorSourceIndex } from "../toSelectorSourceIndex/index.ts"
-import type { SyntaxRaw } from "../typeGuards/index.ts"
+import type { SelectorCopies, Syntax } from "../../syntaxes/index.ts"
+import type { InlineComment } from "../findSelectorInlineComments/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -47,11 +45,8 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 	opts.root.walkRules((rule) => {
 		if (!opts.syntax.isStandardRule(rule)) return
 
-		let selectorRaws: SyntaxRaw | undefined = rule.raws.selector
-		let selector = selectorRaws ? selectorRaws.raw : rule.selector
-
-		// `postcss-scss` rewrites every inline comment of a selector into a block comment in the raw read here, keeps the source spelling beside it and prints that one, so the two strings drift apart by two characters per comment. Every position is counted in the raw, reported in the file's own coordinates, and handed to the rule's fixer as the raw spells it, since the raw is the copy the rule slices.
-		let inlineComments = findSelectorInlineComments(selector, selectorRaws && selectorRaws.scss)
+		let copies = opts.syntax.selectorCopies(rule)
+		let { selector } = copies
 
 		styleSearch(
 			{
@@ -60,7 +55,7 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 				functionArguments: `skip`,
 			},
 			(match) => {
-				checkDelimiter(selector, match.startIndex, rule, inlineComments)
+				checkDelimiter(selector, match.startIndex, rule, copies)
 			},
 		)
 	})
@@ -70,16 +65,16 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 	 * @param source - The source string being checked.
 	 * @param index - The index of the delimiter.
 	 * @param node - The rule node.
-	 * @param inlineComments - The inline comments of the selector.
+	 * @param copies - The selector, opened by the syntax.
 	 */
-	function checkDelimiter (source: string, index: number, node: Rule, inlineComments: InlineComment[]): void {
+	function checkDelimiter (source: string, index: number, node: Rule, copies: SelectorCopies): void {
 		opts.locationChecker({
 			source,
 			index,
 			err: (message) => {
 				// A rule may know that this particular problem cannot be fixed without breaking the code. The decision has to be made before the report, since Stylelint counts a fixer as applied whatever it does.
-				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, inlineComments))
-				let sourceIndex = toSelectorSourceIndex(index, inlineComments)
+				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, copies.comments))
+				let sourceIndex = copies.toSourceIndex(index)
 
 				report({
 					message,

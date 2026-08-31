@@ -5,13 +5,9 @@ import stylelint, { type FixCallback } from "stylelint"
 import { LEADING_WHITESPACE, TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { findSelectorInlineComments } from "../../utils/findSelectorInlineComments/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
-import { restoreSelectorInlineComments } from "../../utils/restoreSelectorInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { toSelectorSourceIndex } from "../../utils/toSelectorSourceIndex/index.ts"
-import type { SyntaxRaw } from "../../utils/typeGuards/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -50,14 +46,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		root.walkRules((ruleNode) => {
 			if (!syntax.isStandardRule(ruleNode)) return
 
-			let selectorRaws: SyntaxRaw | undefined = ruleNode.raws.selector
+			let copies = syntax.selectorCopies(ruleNode)
 
-			let selector = selectorRaws ? selectorRaws.raw : ruleNode.selector
+			let { selector } = copies
 
 			if (!selector.includes(`[`)) return
-
-			// `postcss-scss` rewrites every inline comment of a selector into a block comment in the raw parsed here, keeps the source spelling beside it and prints that one, so the two strings drift apart by two characters per comment. Every position is counted in the raw and reported in the file's own coordinates, and a fix is written to both copies.
-			let inlineComments = findSelectorInlineComments(selector, selectorRaws && selectorRaws.scss)
 
 			let fix: FixCallback | undefined
 			let hasFixed
@@ -118,13 +111,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (hasFixed) {
 				let fixedSelector = String(selectorTree)
 
-				if (selectorRaws) {
-					selectorRaws.raw = fixedSelector
-
-					// The stringifier reads the copy the source spelled, so the fix has to reach that one as well, with every inline comment spelled the way the file spells it.
-					if (selectorRaws.scss) selectorRaws.scss = restoreSelectorInlineComments(fixedSelector, inlineComments)
-				}
-				else ruleNode.selector = fixedSelector
+				copies.write(fixedSelector)
 			}
 
 			/**
@@ -133,7 +120,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			 * @param index - The index of the violation.
 			 */
 			function complain (message: string, index: number): void {
-				let sourceIndex = toSelectorSourceIndex(index, inlineComments)
+				let sourceIndex = copies.toSourceIndex(index)
 
 				report({
 					message,

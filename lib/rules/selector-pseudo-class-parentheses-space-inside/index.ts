@@ -4,13 +4,9 @@ import stylelint, { type FixCallback } from "stylelint"
 import { LEADING_WHITESPACE_OR_BLOCK_COMMENT, LEADING_WHITESPACE_RUN, LINE_BREAK, TRAILING_WHITESPACE_RUN, WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { findSelectorInlineComments } from "../../utils/findSelectorInlineComments/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
-import { restoreSelectorInlineComments } from "../../utils/restoreSelectorInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { toSelectorSourceIndex } from "../../utils/toSelectorSourceIndex/index.ts"
-import type { SyntaxRaw } from "../../utils/typeGuards/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -62,12 +58,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let fix: FixCallback | undefined
 			let hasFixed = false
 
-			let selectorRaws: SyntaxRaw | undefined = ruleNode.raws.selector
+			let copies = syntax.selectorCopies(ruleNode)
 
-			let selector = selectorRaws ? selectorRaws.raw : ruleNode.selector
+			let { selector } = copies
 
-			// `postcss-scss` rewrites every inline comment of a selector into a block comment in the raw parsed here, keeps the source spelling beside it and prints that one, so the two strings drift apart by two characters per comment. Every position is counted in the raw and reported in the file's own coordinates, and a fix is written to both copies.
-			let inlineComments = findSelectorInlineComments(selector, selectorRaws && selectorRaws.scss)
 			let selectorTree = parseSelector(selector, result, ruleNode)
 
 			if (!selectorTree) return
@@ -108,7 +102,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				}
 
 				// An inline comment ends with the line break standing behind it, and where that break is the whitespace this end is about, it is what an option would write over. A space there would put the closing parenthesis inside the comment, and taking the break away would do the same, so the end is passed over: neither option can be satisfied, and neither can be asked for.
-				if (inlineComments.some((inlineComment) => inlineComment.startIndex < openIndex + paramString.trimEnd().length && openIndex + paramString.trimEnd().length <= inlineComment.endIndex)) lastNode = undefined
+				if (copies.comments.some((inlineComment) => inlineComment.startIndex < openIndex + paramString.trimEnd().length && openIndex + paramString.trimEnd().length <= inlineComment.endIndex)) lastNode = undefined
 
 				if (lastNode) {
 					let prevCharIsSpace = paramString.endsWith(` `)
@@ -135,13 +129,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (hasFixed) {
 				let fixedSelector = String(selectorTree)
 
-				if (selectorRaws) {
-					selectorRaws.raw = fixedSelector
-
-					// The stringifier reads the copy the source spelled, so the fix has to reach that one as well, with every inline comment spelled the way the file spells it.
-					if (selectorRaws.scss) selectorRaws.scss = restoreSelectorInlineComments(fixedSelector, inlineComments)
-				}
-				else ruleNode.selector = fixedSelector
+				copies.write(fixedSelector)
 			}
 
 			/**
@@ -150,7 +138,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			 * @param rawIndex - The index of the violation in the selector as it is parsed.
 			 */
 			function complain (message: string, rawIndex: number): void {
-				let index = toSelectorSourceIndex(rawIndex, inlineComments)
+				let index = copies.toSourceIndex(rawIndex)
 
 				report({
 					message,

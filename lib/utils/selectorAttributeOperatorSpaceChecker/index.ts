@@ -4,11 +4,7 @@ import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
 import type { Syntax } from "../../syntaxes/index.ts"
-import { findSelectorInlineComments } from "../findSelectorInlineComments/index.ts"
 import { parseSelector } from "../parseSelector/index.ts"
-import { restoreSelectorInlineComments } from "../restoreSelectorInlineComments/index.ts"
-import { toSelectorSourceIndex } from "../toSelectorSourceIndex/index.ts"
-import type { SyntaxRaw } from "../typeGuards/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -34,13 +30,10 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 	options.root.walkRules((rule) => {
 		if (!options.syntax.isStandardRule(rule)) return
 
-		let selectorRaws: SyntaxRaw | undefined = rule.raws.selector
-		let selector = selectorRaws ? selectorRaws.raw : rule.selector
+		let copies = options.syntax.selectorCopies(rule)
+		let { selector } = copies
 
 		if (!selector.includes(`[`) || !selector.includes(`=`)) return
-
-		// `postcss-scss` rewrites every inline comment of a selector into a block comment in the raw parsed here, keeps the source spelling beside it and prints that one, so the two strings drift apart by two characters per comment. Every position is counted in the raw and reported in the file's own coordinates, and a fix is written to both copies.
-		let inlineComments = findSelectorInlineComments(selector, selectorRaws && selectorRaws.scss)
 
 		let hasFixed = false
 
@@ -65,13 +58,7 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 		if (hasFixed) {
 			let fixedSelector = String(selectorTree)
 
-			if (selectorRaws) {
-				selectorRaws.raw = fixedSelector
-
-				// The stringifier reads the copy the source spelled, so the fix has to reach that one as well, with every inline comment spelled the way the file spells it.
-				if (selectorRaws.scss) selectorRaws.scss = restoreSelectorInlineComments(fixedSelector, inlineComments)
-			}
-			else rule.selector = fixedSelector
+			copies.write(fixedSelector)
 		}
 
 		/**
@@ -87,7 +74,7 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 				source,
 				index,
 				err: (msg) => {
-					let problemIndex = toSelectorSourceIndex(attributeNode.sourceIndex + index, inlineComments)
+					let problemIndex = copies.toSourceIndex(attributeNode.sourceIndex + index)
 
 					report({
 						message: msg.replace(

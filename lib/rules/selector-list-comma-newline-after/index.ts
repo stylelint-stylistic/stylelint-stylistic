@@ -4,13 +4,9 @@ import stylelint from "stylelint"
 import { LEADING_WHITESPACE, WHITESPACE_THEN_BLOCK_COMMENT, WHITESPACE_THEN_INLINE_COMMENT } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { findSelectorInlineComments } from "../../utils/findSelectorInlineComments/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { restoreSelectorInlineComments } from "../../utils/restoreSelectorInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { toSelectorSourceIndex } from "../../utils/toSelectorSourceIndex/index.ts"
-import type { SyntaxRaw } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -55,11 +51,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// The raw selector is what is read, so that an end-of-line comment is allowed, e.g.
 			//   a, /* comment */
 			//   b {}
-			let selectorRaws: SyntaxRaw | undefined = ruleNode.raws.selector
-			let selector = selectorRaws ? selectorRaws.raw : ruleNode.selector
-
-			// `postcss-scss` rewrites every inline comment of a selector into a block comment in the raw read here, keeps the source spelling beside it and prints that one, so the two strings drift apart by two characters per comment. Every position is counted in the raw and reported in the file's own coordinates, and a fix is written to both copies.
-			let inlineComments = findSelectorInlineComments(selector, selectorRaws && selectorRaws.scss)
+			let copies = syntax.selectorCopies(ruleNode)
+			let { selector } = copies
 
 			let fixIndices: number[] = []
 
@@ -85,8 +78,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 							// Under the `never` options the whitespace behind the comma — or behind the comment standing after it — is taken away, and it may hold the line break that closes an inline comment: without that break everything behind it would land in the comment's text. The problem is reported and the code left as it was. The `always` options only add a break in front of that whitespace, and take nothing.
 							let fixIndex = indextoCheckAfter + 1
 							let runEnd = fixIndex + (selector.slice(fixIndex).length - selector.slice(fixIndex).trimStart().length)
-							let closesInlineComment = primary.startsWith(`never`) && inlineComments.some((inlineComment) => fixIndex <= inlineComment.endIndex && inlineComment.endIndex < runEnd)
-							let sourceIndex = toSelectorSourceIndex(match.startIndex, inlineComments)
+							let closesInlineComment = primary.startsWith(`never`) && copies.comments.some((inlineComment) => fixIndex <= inlineComment.endIndex && inlineComment.endIndex < runEnd)
+							let sourceIndex = copies.toSourceIndex(match.startIndex)
 
 							report({
 								message: m,
@@ -119,13 +112,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					fixedSelector = beforeSelector + afterSelector
 				}
 
-				if (selectorRaws) {
-					selectorRaws.raw = fixedSelector
-
-					// The stringifier reads the copy the source spelled, so the fix has to reach that one as well, with every inline comment spelled the way the file spells it.
-					if (selectorRaws.scss) selectorRaws.scss = restoreSelectorInlineComments(fixedSelector, inlineComments)
-				}
-				else ruleNode.selector = fixedSelector
+				copies.write(fixedSelector)
 			}
 		})
 	}

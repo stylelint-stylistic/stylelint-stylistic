@@ -4,11 +4,7 @@ import stylelint, { type PostcssResult } from "stylelint"
 
 import { WHITESPACE } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
-import { findSelectorInlineComments } from "../findSelectorInlineComments/index.ts"
 import { parseSelector } from "../parseSelector/index.ts"
-import { restoreSelectorInlineComments } from "../restoreSelectorInlineComments/index.ts"
-import { toSelectorSourceIndex } from "../toSelectorSourceIndex/index.ts"
-import type { SyntaxRaw } from "../typeGuards/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -54,9 +50,8 @@ export function selectorCombinatorSpaceChecker (opts: {
 
 		hasFixed = false
 
-		let selectorRaws: SyntaxRaw | undefined = rule.raws.selector
-		let selector = selectorRaws ? selectorRaws.raw : rule.selector
-		let inlineComments = findSelectorInlineComments(selector, selectorRaws && selectorRaws.scss)
+		let copies = opts.syntax.selectorCopies(rule)
+		let { selector } = copies
 
 		let selectorTree = parseSelector(selector, opts.result, rule)
 
@@ -80,19 +75,13 @@ export function selectorCombinatorSpaceChecker (opts: {
 			let sourceIndex = node.sourceIndex
 			let index = node.value.length > 1 && opts.locationType === `before` ? sourceIndex : sourceIndex + node.value.length - 1
 
-			check(selector, node, index, rule, toSelectorSourceIndex(sourceIndex, inlineComments))
+			check(selector, node, index, rule, copies.toSourceIndex(sourceIndex))
 		})
 
 		if (hasFixed) {
 			let fixedSelector = String(selectorTree)
 
-			if (selectorRaws) {
-				selectorRaws.raw = fixedSelector
-
-				// The stringifier reads the copy the source spelled, so the fix has to reach that one as well, with every inline comment spelled the way the file spells it.
-				if (selectorRaws.scss) selectorRaws.scss = restoreSelectorInlineComments(fixedSelector, inlineComments)
-			}
-			else rule.selector = fixedSelector
+			copies.write(fixedSelector)
 		}
 	})
 
