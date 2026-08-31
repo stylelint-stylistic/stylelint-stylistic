@@ -1,5 +1,4 @@
 import postcss, { type AtRule, type Parser } from "postcss"
-import postcssLess from "postcss-less"
 import postcssScss from "postcss-scss"
 import { describe, expect, it } from "vitest"
 
@@ -59,51 +58,6 @@ describe(`isStandardSyntaxAtRule`, () => {
 		expect(isStandardSyntaxAtRule(pick(rules, 0))).toBe(true)
 		expect(isStandardSyntaxAtRule(pick(rules, 1))).toBe(false)
 	})
-
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/357
-	it(`at-rules spelled without a space in front of their options, which Less compiles as at-rules`, () => {
-		let spellings = [
-			`a { @import(reference) "x"; }`,
-			`a { @supports(a: b); }`,
-			`a { @layer(l); }`,
-			`a { @plugin(args) "p"; }`,
-			`a { @whatever(x); }`,
-		]
-
-		for (let spelling of spellings) expect(isStandardSyntaxAtRule(pick(lessAtRules(spelling), 0))).toBe(true)
-	})
-
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/357
-	it(`a call to a detached ruleset spelled with a space in front of its parentheses, which Less reads as an at-rule`, () => {
-		let rules = lessAtRules(`@detached-ruleset: { background: red; }; .top { @detached-ruleset (); }`)
-
-		expect(rules.length).toBe(2)
-		expect(isStandardSyntaxAtRule(pick(rules, 1))).toBe(true)
-	})
-
-	it(`ignore passing rulesets to mixins`, () => {
-		let rules = lessAtRules(
-			`@detached-ruleset: { background: red; }; .top { @detached-ruleset(); }`,
-		)
-
-		expect(rules.length).toBe(2)
-		expect(isStandardSyntaxAtRule(pick(rules, 0))).toBe(false)
-		expect(isStandardSyntaxAtRule(pick(rules, 1))).toBe(false)
-	})
-
-	it(`ignore calling of mixins`, () => {
-		let rules = lessAtRules(`a { .mixin(); }`)
-
-		expect(rules.length).toBe(1)
-		expect(isStandardSyntaxAtRule(pick(rules, 0))).toBe(false)
-	})
-
-	it(`ignore variables`, () => {
-		let rules = lessAtRules(`@my-variable: 10px; .top { margin-top: @my-variable; }`)
-
-		expect(rules.length).toBe(1)
-		expect(isStandardSyntaxAtRule(pick(rules, 0))).toBe(false)
-	})
 })
 
 /**
@@ -138,13 +92,4 @@ function atRule (code: string): AtRule {
  */
 function scssAtRules (code: string): AtRule[] {
 	return atRules(code, postcssScss)
-}
-
-/**
- * Reads every at-rule of a stylesheet written in Less.
- * @param code - The stylesheet.
- * @returns The at-rules.
- */
-function lessAtRules (code: string): AtRule[] {
-	return atRules(code, postcssLess)
 }

@@ -1063,28 +1063,17 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/309
-			// The two blocks stand on one page because that is the question: a style element carries the syntax of its own block rather than the one the page was opened with
-			description: `the same at-rule closing a block of a Less style element and a block of a Sass one, the first keeping its semicolon and the second losing it`,
+			// The other half of this page, the Less block, is the less namespace's since the core turned Less away; a page holding both languages splits its rules between the namespaces the same way
+			description: `an at-rule closing a block of a Sass style element, whose semicolon that syntax parts with`,
 			code: `
-				<style lang="less">a { @extend .b; }</style>
 				<style lang="scss">a { @extend .c; }</style>
 			`,
 			fixed: `
-				<style lang="less">a { @extend .b; }</style>
 				<style lang="scss">a { @extend .c }</style>
 			`,
-			warnings: [
-				{
-					line: 1,
-					column: 34,
-					message: messages.rejected,
-				},
-				{
-					line: 2,
-					column: 34,
-					message: messages.rejected,
-				},
-			],
+			line: 1,
+			column: 34,
+			message: messages.rejected,
 		},
 	],
 })

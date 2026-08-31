@@ -2,7 +2,7 @@ import postcss, { type AtRule, type Node, type Parser } from "postcss"
 import postcssLess from "postcss-less"
 import { describe, expect, it } from "vitest"
 
-import { pick } from "../../../vitest.helpers.ts"
+import { pick } from "../../../../vitest.helpers.ts"
 
 import { syncLessVariableValue } from "./index.ts"
 

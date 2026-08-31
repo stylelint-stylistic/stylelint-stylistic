@@ -17,6 +17,20 @@ async function lintStyled (rules: Record<string, unknown>): Promise<{ rule: stri
 	return (results[0]?.warnings ?? []).map(({ rule, text }) => ({ rule, text }))
 }
 
+describe(`a Less stylesheet under the core's rules`, () => {
+	it(`is refused with one warning naming the less namespace, however many rules are configured`, async () => {
+		let { results } = await stylelint.lint({
+			code: `@x: 1;
+a { b: @x; // c
+}
+`,
+			config: { plugins: [plugins], customSyntax: `postcss-less`, rules: { "@stylistic/color-hex-case": `lower`, "@stylistic/unit-case": `lower` } } as unknown as Config,
+		})
+
+		expect((results[0]?.warnings ?? []).map(({ rule, text }) => ({ rule, text }))).toEqual([{ rule: `@stylistic/color-hex-case`, text: `The "@stylistic/color-hex-case" rule does not read a stylesheet parsed with this syntax; the "@stylistic/less/" rules do (@stylistic/color-hex-case)` }])
+	})
+})
+
 describe(`a styled template under the core's rules`, () => {
 	it(`is refused with one warning naming the styled namespace, however many rules are configured`, async () => {
 		let warnings = await lintStyled({ "@stylistic/indentation": [2], "@stylistic/color-hex-case": `lower` })

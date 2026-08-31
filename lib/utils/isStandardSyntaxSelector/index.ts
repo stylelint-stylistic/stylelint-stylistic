@@ -1,4 +1,3 @@
-import { LESS_EXTEND, LESS_GUARD, LESS_PARAMETRIC_MIXIN, LESS_RESOLVED_MIXIN } from "../../regexps.ts"
 import { hasInterpolation } from "../hasInterpolation/index.ts"
 import { withoutQuotedTextAndComments } from "../withoutQuotedTextAndComments/index.ts"
 
@@ -20,22 +19,8 @@ export function isStandardSyntaxSelector (selector: string): boolean {
 	// SCSS nested properties
 	if (code.endsWith(`:`)) return false
 
-	// Less :extend()
-	if (LESS_EXTEND.test(code)) return false
-
-	// Less mixin with resolved nested selectors (e.g. .foo().bar or .foo(@a, @b)[bar])
-	if (LESS_RESOLVED_MIXIN.test(code)) return false
-
-	// Less non-outputting mixin definition (e.g. .mixin() {})
+	// A selector closing on a parenthesis and carrying no colon — the shape of a Less non-outputting mixin definition (e.g. `.mixin() {}`). The reading stays here after the Less namespace took its own guards, since taking a shape test out of the core would change what the core reports over plain CSS; where its true home is falls to the SCSS phase, which unpicks the rest of this file.
 	if (code.endsWith(`)`) && !code.includes(`:`)) return false
-
-	// Less Parametric mixins (e.g. .mixin(@variable: x) {})
-	if (LESS_PARAMETRIC_MIXIN.test(code)) return false
-
-	// Less CSS guards (e.g. .mixin when (@a > 0) {}).
-	// The two rules above catch a guard only by accident — one because the selector ends in a parenthesis and carries no colon, the other because the condition names a variable — and a guard such as `.a:hover when (1 = 1)` answers to neither.
-	// A parenthesis opening after whitespace is nothing CSS has a selector for, and Less asks for no whitespace in front of the condition — `.a:hover when(1 = 1)` compiles as readily as the spaced form. The word is read in lower case only, as Less reads its keywords: `.a:hover WHEN (1 = 1)` is printed by the compiler as it stands, and `when NOT (1 = 1)` is a syntax error to it.
-	if (LESS_GUARD.test(code)) return false
 
 	// ERB template tags
 	if (code.includes(`<%`) || code.includes(`%>`)) return false

@@ -24,13 +24,4 @@ describe(`isStandardSyntaxProperty`, () => {
 	it(`sass interpolation`, () => {
 		expect(isStandardSyntaxProperty(`#{$Attr}-color`)).toBe(false)
 	})
-	it(`less variable`, () => {
-		expect(isStandardSyntaxProperty(`@{Attr}-color`)).toBe(false)
-	})
-	it(`less append property value with comma`, () => {
-		expect(isStandardSyntaxProperty(`transform+`)).toBe(false)
-	})
-	it(`less append property value with space`, () => {
-		expect(isStandardSyntaxProperty(`transform+_`)).toBe(false)
-	})
 })

@@ -8,8 +8,6 @@ a { color: pink;; }
  *  This semicolons */
 ```
 
-This rule ignores semicolons after Less mixins.
-
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
 ## Options

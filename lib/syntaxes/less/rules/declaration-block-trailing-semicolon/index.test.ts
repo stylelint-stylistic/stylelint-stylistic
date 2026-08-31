@@ -428,3 +428,22 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`never`],
+	customSyntax: `postcss-html`,
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/309
+			// The Sass half of the page this case once shared a fixture with stays with the core: a style element carries the syntax of its own block, and Less will not part with the semicolon behind an at-rule without a block, so the warning stands over code the fix leaves alone
+			description: `an at-rule closing a block of a Less style element, whose semicolon the language keeps`,
+			code: `<style lang="less">a { @extend .b; }</style>`,
+			fixed: `<style lang="less">a { @extend .b; }</style>`,
+			line: 1,
+			column: 34,
+			message: messages.rejected,
+		},
+	],
+})

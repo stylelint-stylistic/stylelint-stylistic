@@ -2,7 +2,6 @@ import type { AtRule } from "postcss"
 
 import { findInlineCommentSpans } from "../findInlineCommentSpans/index.ts"
 import { rewriteInlineComments } from "../rewriteInlineComments/index.ts"
-import { syncLessVariableValue } from "../syncLessVariableValue/index.ts"
 import type { SyntaxRaw } from "../typeGuards/index.ts"
 
 /**
@@ -28,8 +27,6 @@ export function setAtRuleParams (atRule: AtRule, params: string): AtRule {
 	else {
 		atRule.params = params
 	}
-
-	syncLessVariableValue(atRule, params)
 
 	return atRule
 }

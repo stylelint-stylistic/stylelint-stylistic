@@ -2,10 +2,10 @@ import type { Document, Node, Root } from "postcss"
 import type { AtRule } from "postcss-less"
 import type { PostcssResult } from "stylelint"
 
-import { hasBlock } from "../../utils/hasBlock/index.ts"
-import { isLessDetachedRulesetCall } from "../../utils/isLessDetachedRulesetCall/index.ts"
-import { nodeSyntax } from "../../utils/nodeSyntax/index.ts"
-import { isAtRule, isSyntax } from "../../utils/typeGuards/index.ts"
+import { hasBlock } from "../../../utils/hasBlock/index.ts"
+import { nodeSyntax } from "../../../utils/nodeSyntax/index.ts"
+import { isAtRule, isSyntax } from "../../../utils/typeGuards/index.ts"
+import { isLessDetachedRulesetCall } from "../isLessDetachedRulesetCall/index.ts"
 
 /** The verdict of {@link readsAsLess}, per syntax. */
 let lessSyntaxes: WeakMap<object, boolean> = new WeakMap()

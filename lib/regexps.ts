@@ -175,23 +175,8 @@ export const LEADING_WHITESPACE_RUN = /^\s+/u
 /** The whitespace a text opens with, up to its first line break, which is left standing whole — the carriage return of a Windows pair with it. */
 export const LEADING_WHITESPACE_WITHOUT_BREAK = /^(?:(?!\r?\n)\s)*/u
 
-/** The Less `:extend`, with or without the selector list it takes. */
-export const LESS_EXTEND = /:extend(?:\(.*?\))?/u
-
-/** A Less `:extend(…)` carrying a selector list, in whatever case it is written. */
-export const LESS_EXTEND_CALL = /:extend\(.+\)/iu
-
-/** The `when` of a Less CSS guard, read in lower case only, as Less reads its keywords. */
-export const LESS_GUARD = /\swhen\s*(?:not\s*)?\(/u
-
-/** The `@{…}` Less interpolates a value with. */
+/** The `@{…}` Less interpolates a value with. Still spelled here rather than beside the other Less expressions, since the shared `hasInterpolation` reads the union of every preprocessor's spelling until the SCSS phase unpicks it. */
 export const LESS_INTERPOLATION = /@\{.+?\}/u
-
-/** The parameter list of a Less parametric mixin, closing the selector it is written on. */
-export const LESS_PARAMETRIC_MIXIN = /\(@.*\)$/u
-
-/** A Less mixin call with something written after it, as `.foo().bar` and `.foo(@a, @b)[bar]` are. */
-export const LESS_RESOLVED_MIXIN = /\.[\w-]+\(.*\).+/u
 
 /** A line break, as PostCSS reads one: a line feed, with or without the carriage return of a Windows pair in front of it. A bare carriage return and a form feed are whitespace to PostCSS's tokenizer and no line to its line counter, so a rule reading a line in either would report a position the file does not have, and every reading of a break in this file follows PostCSS rather than the grammar of CSS, which folds all four into one. */
 export const LINE_BREAK = /\r?\n/u

@@ -10,10 +10,7 @@ a { color: pink; top: 0; }
 
 This rule also applies to the declarations of an inline `style` attribute in an HTML-like document.
 
-This rule ignores:
-
-- semicolons that are preceded by Less mixins
-- the last semicolon of declaration blocks
+This rule ignores the last semicolon of declaration blocks.
 
 Use the `block-closing-brace-*-before` rules to control the whitespace between the last semicolon and the closing brace instead.
 

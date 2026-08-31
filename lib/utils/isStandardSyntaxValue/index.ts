@@ -21,9 +21,6 @@ export function isStandardSyntaxValue (value: string): boolean {
 	// SCSS namespace (example namespace.function-name())
 	if (SCSS_MODULE_FUNCTION.test(value)) return false
 
-	// Less variable
-	if (normalizedValue.startsWith(`@`)) return false
-
 	// SCSS or Less interpolation
 	if (hasInterpolation(normalizedValue)) return false
 

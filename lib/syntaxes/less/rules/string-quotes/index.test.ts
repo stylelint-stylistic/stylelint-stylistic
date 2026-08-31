@@ -432,3 +432,73 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`single`],
+	customSyntax: `postcss-html`,
+
+	accept: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/101
+			description: `ignores double quotes inside a // comment of a block written in Less`,
+			code: `
+				<style lang="less">
+				a {
+					color: 'bar', // Some "comment"
+						'baz';
+				}
+				</style>
+			`,
+		},
+	],
+
+	reject: [
+		{
+			description: `a string in front of a // comment of such a block is reported, and the fix leaves the comment alone`,
+			code: `
+				<style lang="less">
+				a {
+					color: "bar", // Some "comment"
+						'baz';
+				}
+				</style>
+			`,
+			fixed: `
+				<style lang="less">
+				a {
+					color: 'bar', // Some "comment"
+						'baz';
+				}
+				</style>
+			`,
+			line: 3,
+			column: 9,
+			message: messages.expected(`single`),
+		},
+		{
+			description: `each block of a page is asked about its own language, so a double slash opens a comment in one and not in the next`,
+			code: `
+				<style lang="less">
+				a { color: 'x', // c "q"
+					'y'; }
+				</style>
+				<style>
+				b { --u: //cdn/x "z"; }
+				</style>
+			`,
+			fixed: `
+				<style lang="less">
+				a { color: 'x', // c "q"
+					'y'; }
+				</style>
+				<style>
+				b { --u: //cdn/x 'z'; }
+				</style>
+			`,
+			line: 6,
+			column: 18,
+			message: messages.expected(`single`),
+		},
+	],
+})

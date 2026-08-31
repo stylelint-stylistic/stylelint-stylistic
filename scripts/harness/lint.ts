@@ -20,6 +20,12 @@ import { BREAK_AS_STYLELINT_READS_IT } from "./regexps.ts"
 /** The comment word Stylelint reads its configuration comments by, which no fixture carries and which a rule may still ask about. */
 const CONFIGURATION_COMMENT = `stylelint`
 
+/** The namespace segment of a rule name, `less/` in `@stylistic/less/color-hex-case` and in the `(@stylistic/less/color-hex-case)` a message closes with. */
+const EVERY_NAMESPACE_SEGMENT = /(?<=@stylistic\/)[a-z]+\//gu
+
+/** The namespace segment at the head of a registry key, `less/` in `less/color-hex-case`. */
+const LEADING_NAMESPACE_SEGMENT = /^[a-z]+\//u
+
 /** The severity every rule is given, since a run here has no configuration to set another. */
 const SEVERITY = `error`
 
@@ -124,15 +130,6 @@ async function loadRules (lib: string): Promise<Registry> {
 }
 
 /**
- * Names a rule the way a configuration does.
- * @param name - The short name.
- * @returns The namespaced one.
- */
-function namespaced (name: string): string {
-	return name.startsWith(`@stylistic/`) ? name : `@stylistic/${name}`
-}
-
-/**
  * Reads the rules of a configuration as the runner takes them: by their short names, in the order the configuration spells them.
  * @param rules - The rules of the configuration, under their namespaced names.
  * @returns Each rule with its options.
@@ -153,14 +150,16 @@ function settingsOf (rules: Record<string, unknown>): RuleSetting[] {
  * @param options.registry - The rule registry to take the rules from, as `loadRules` returns it.
  * @param [options.syntax] - The syntax to read the text with; plain CSS where none is given.
  * @param [options.fix] - Whether the rules are let write.
+ * @param [options.stripNamespaces] - Whether the namespace segment is read out of every warning's name and text, which is how the oracles compare a row measured under `@stylistic/less/<rule>` with one measured under `@stylistic/<rule>`; the tests compare texts as they stand, and leave this off.
  * @returns What the rules said and wrote, or why the text could not be read at all. A run is `usable` where no rule objected to its options, as `isUsable` of the oracles has it.
  */
-async function lintDirect ({ code, rules, registry, syntax, fix = false }: {
+async function lintDirect ({ code, rules, registry, syntax, fix = false, stripNamespaces = false }: {
 	code: string,
 	rules: RuleSetting[],
 	registry: Registry,
 	syntax?: string | Syntax | undefined,
 	fix?: boolean,
+	stripNamespaces?: boolean,
 }): Promise<Answer> {
 	let parser = await loadSyntax(syntax)
 
@@ -197,11 +196,13 @@ async function lintDirect ({ code, rules, registry, syntax, fix = false }: {
 	let roots = parsed.type === `document` ? parsed.nodes : [parsed]
 
 	for (let [name, primary, secondary] of rules) {
-		let rule = registry[name]
+		// A base from before a namespace answers under the bare name, which is how one comparison spans the commit that renamed an axis
+		let rule = registry[name] ?? registry[name.replace(LEADING_NAMESPACE_SEGMENT, ``)]
 
 		if (!rule) throw new Error(`No rule named "${name}" in the registry`)
 
-		let fullName = namespaced(name)
+		// The resolved instance's own name, so that the severities and the config a report reads stand under the name the rule reports with — on a base answering under the bare name as much as on this checkout
+		let fullName = rule.ruleName
 
 		config.rules[fullName] = [primary, secondary]
 		ruleSeverities[fullName] = SEVERITY
@@ -231,7 +232,9 @@ async function lintDirect ({ code, rules, registry, syntax, fix = false }: {
 
 		if (warning.stylelintType) continue
 
-		warnings.push({ rule: warning.rule, text: warning.text, line: warning.line, column: warning.column, endLine: warning.endLine, endColumn: warning.endColumn })
+		warnings.push(stripNamespaces
+			? { rule: warning.rule?.replace(EVERY_NAMESPACE_SEGMENT, ``), text: warning.text.replace(EVERY_NAMESPACE_SEGMENT, ``), line: warning.line, column: warning.column, endLine: warning.endLine, endColumn: warning.endColumn }
+			: { rule: warning.rule, text: warning.text, line: warning.line, column: warning.column, endLine: warning.endLine, endColumn: warning.endColumn })
 	}
 
 	return { unparsable: false, usable, warnings, code: result.root.toString(parser.stringify) }
@@ -269,7 +272,7 @@ async function lint ({ code, config, fix = false }: {
 		registries.set(plugin, registry)
 	}
 
-	let answer = await lintDirect({ code, rules: settingsOf(config.rules), registry, syntax: config.customSyntax, fix })
+	let answer = await lintDirect({ code, rules: settingsOf(config.rules), registry, syntax: config.customSyntax, fix, stripNamespaces: true })
 
 	if (answer.unparsable) return { results: [{ warnings: [{ rule: `CssSyntaxError`, text: `${answer.detail} (CssSyntaxError)`, severity: SEVERITY }], invalidOptionWarnings: [] }], code: undefined }
 

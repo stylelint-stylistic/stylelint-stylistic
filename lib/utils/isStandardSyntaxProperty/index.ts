@@ -10,12 +10,6 @@ export function isStandardSyntaxProperty (property: string): boolean {
 	// SCSS var
 	if (isScssVariable(property)) return false
 
-	// Less var (e.g. @var: x)
-	if (property.startsWith(`@`)) return false
-
-	// Less append property value with space (e.g. transform+_: scale(2))
-	if (property.endsWith(`+`) || property.endsWith(`+_`)) return false
-
 	// SCSS or Less interpolation
 	if (hasInterpolation(property)) return false
 

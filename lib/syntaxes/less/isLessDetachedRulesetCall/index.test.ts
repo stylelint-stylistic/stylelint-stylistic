@@ -2,7 +2,7 @@ import type { AtRule } from "postcss"
 import postcssLess from "postcss-less"
 import { describe, expect, it } from "vitest"
 
-import { pick } from "../../../vitest.helpers.ts"
+import { pick } from "../../../../vitest.helpers.ts"
 
 import { isLessDetachedRulesetCall } from "./index.ts"
 

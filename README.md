@@ -42,12 +42,19 @@ Please refer to [Stylelint docs](https://stylelint.io/user-guide/get-started) f
 
 ## Custom syntaxes
 
-The rules above read plain CSS. A stylesheet embedded in JavaScript as a styled template — parsed with [`postcss-styled-syntax`](https://github.com/hudochenkov/postcss-styled-syntax) — is read by the same rules under the `@stylistic/styled/` namespace instead, and the core names report one warning pointing there. Configure the namespace in the `overrides` block that names the syntax:
+The rules above read plain CSS. A stylesheet written in Less (`postcss-less`) is read by the same rules under the `@stylistic/less/` namespace, and one embedded in JavaScript as a styled template (`postcss-styled-syntax`) under `@stylistic/styled/`; on either file the core names report one warning pointing at the right namespace. Configure a namespace in the `overrides` block that names the syntax:
 
 ```json
 {
 	"plugins": ["@stylistic/stylelint-plugin"],
 	"overrides": [
+		{
+			"files": ["**/*.less"],
+			"customSyntax": "postcss-less",
+			"rules": {
+				"@stylistic/less/color-hex-case": "lower"
+			}
+		},
 		{
 			"files": ["**/*.{js,jsx,ts,tsx}"],
 			"customSyntax": "postcss-styled-syntax",
@@ -59,7 +66,7 @@ The rules above read plain CSS. A stylesheet embedded in JavaScript as a st
 }
 ```
 
-What the namespace answers differently is written in [its README](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/styled/README.md).
+What each namespace answers differently is written in its own README: [`less`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/less/README.md), [`styled`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/styled/README.md).
 
 ## Need more?
 

@@ -1,10 +1,10 @@
 import type { AtRule, Declaration, Root, Rule as PostcssRule } from "postcss"
+import type { PostcssResult } from "stylelint"
 
 import { endsWithInlineComment } from "../../preprocessor/endsWithInlineComment/index.ts"
 import { findSelectorInlineComments, type InlineComment } from "../../preprocessor/findSelectorInlineComments/index.ts"
 import { movesEndIntoInlineComment } from "../../preprocessor/movesEndIntoInlineComment/index.ts"
 import { inlineCommentReading, readsInlineComments, syntaxKeepsInlineComments } from "../../preprocessor/readsInlineComments/index.ts"
-import { requiresTrailingSemicolon } from "../../preprocessor/requiresTrailingSemicolon/index.ts"
 import { restoreSelectorInlineComments } from "../../preprocessor/restoreSelectorInlineComments/index.ts"
 import { searchCopy } from "../../preprocessor/searchCopy/index.ts"
 import { toSelectorSourceIndex } from "../../preprocessor/toSelectorSourceIndex/index.ts"
@@ -33,7 +33,16 @@ import type { SelectorCopies, Syntax } from "../index.ts"
 
 /** The syntax of the core: plain CSS, which every rule of the plugin is written for. A styled template is the `styled` namespace's to read, so a root carrying that parser's mark is refused; every other root is still accepted, custom syntaxes without a namespace of their own included. */
 export let css: Syntax = {
-	accepts: (root: Root) => root.raws.styledSyntaxRangeStart === undefined,
+	// A styled template is the styled namespace's, and so is a Less file the less namespace's: a syntax that spells a double slash as a comment and keeps it in the text a rule reads is one the core's rules are no longer written for. Plain CSS — a file opened with no custom syntax at all — asks no probe.
+	accepts (root: Root, result: PostcssResult): boolean {
+		if (root.raws.styledSyntaxRangeStart !== undefined) return false
+
+		if (result.stylelint?.config?.customSyntax === undefined) return true
+
+		let reading = inlineCommentReading(root, result)
+
+		return !(reading.spells && reading.keeps)
+	},
 	embedding: () => ({ indent: ``, multiline: false }),
 	valueEmbedsHostCode: () => false,
 	isStandardAtRule: isStandardSyntaxAtRule,
@@ -63,7 +72,8 @@ export let css: Syntax = {
 	movesEndIntoInlineComment,
 	writesIntoInlineComment,
 	searchCopy,
-	requiresTrailingSemicolon,
+	// The one semicolon a language will not part with is a preprocessor's; no construct of plain CSS or of `postcss-scss` holds one
+	requiresTrailingSemicolon: () => false,
 	readsRuleParams: (rule: PostcssRule) => `params` in rule && Boolean(rule.params),
 	readsAtRuleAsVariable: (atRule: AtRule) => `variable` in atRule,
 	spellsOwnArithmetic: readsInlineComments,

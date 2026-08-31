@@ -27,20 +27,11 @@ describe(`isStandardSyntaxValue`, () => {
 	it(`positive scss var`, () => {
 		expect(isStandardSyntaxValue(`+$sass-variable`)).toBe(false)
 	})
-	it(`less var`, () => {
-		expect(isStandardSyntaxValue(`@less-variable`)).toBe(false)
-	})
-	it(`negative less var`, () => {
-		expect(isStandardSyntaxValue(`-@less-variable`)).toBe(false)
-	})
 	it(`scss interpolation`, () => {
 		expect(isStandardSyntaxValue(`#{$var}`)).toBe(false)
 	})
 	it(`negative scss interpolation`, () => {
 		expect(isStandardSyntaxValue(`-#{$var}`)).toBe(false)
-	})
-	it(`less interpolation`, () => {
-		expect(isStandardSyntaxValue(`@{var}`)).toBe(false)
 	})
 	it(`WebExtension replacement keyword`, () => {
 		expect(isStandardSyntaxValue(`__MSG_@@bidi_dir__`)).toBe(false)

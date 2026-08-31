@@ -34,12 +34,12 @@ export type Sweep = {
  * @returns The row: the warnings the check drew, the text the fix left and whether the syntax reads it — or why the run says nothing.
  */
 async function measureOne (options: Omit<Parameters<typeof lintDirect>[0], `fix`>): Promise<object> {
-	let checked = await lintDirect(options)
+	let checked = await lintDirect({ ...options, stripNamespaces: true })
 
 	if (checked.unparsable) return { unparsable: true }
 	if (!checked.usable) return { usable: false }
 
-	let fixed = await lintDirect({ ...options, fix: true })
+	let fixed = await lintDirect({ ...options, fix: true, stripNamespaces: true })
 
 	if (fixed.unparsable) throw new Error(`The text was read once and not again: ${fixed.detail}`)
 
@@ -59,7 +59,7 @@ async function measure (sweep: Sweep, registry: Registry): Promise<Record<string
 
 	for (let syntaxName of sweep.syntaxes ?? Object.keys(SYNTAXES)) {
 		for (let config of sweep.configs) {
-			let rules: RuleSetting[] = [[config.rule, config.primary, config.secondary]]
+			let rules: RuleSetting[] = [[`${syntaxName === `less` ? `less/` : ``}${config.rule}`, config.primary, config.secondary]]
 
 			for (let [key, code] of sweep.corpus) {
 				// The rows are measured in turn so that a run stays as light on the machine as the one it replaces

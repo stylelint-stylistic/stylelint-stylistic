@@ -1,5 +1,4 @@
 import postcss, { type Declaration, type Parser } from "postcss"
-import postcssLess from "postcss-less"
 import postcssScss from "postcss-scss"
 import { describe, expect, it } from "vitest"
 
@@ -38,18 +37,6 @@ describe(`isStandardSyntaxDeclaration`, () => {
 		expect(isStandardSyntaxDeclaration(scssDecl(`a { prop#{$var}erty: 10px; }`))).toBe(true)
 	})
 
-	it(`property with less variable interpolation (only)`, () => {
-		expect(isStandardSyntaxDeclaration(lessDecl(`a { @{var}: 10px; }`))).toBe(true)
-	})
-
-	it(`property with less variable interpolation (end)`, () => {
-		expect(isStandardSyntaxDeclaration(lessDecl(`a { prop@{var}: 10px; }`))).toBe(true)
-	})
-
-	it(`property with less variable interpolation (middle)`, () => {
-		expect(isStandardSyntaxDeclaration(lessDecl(`a { prop@{var}erty: 10px; }`))).toBe(true)
-	})
-
 	it(`scss var`, () => {
 		expect(isStandardSyntaxDeclaration(scssDecl(`$var: b`))).toBe(false)
 	})
@@ -84,26 +71,6 @@ describe(`isStandardSyntaxDeclaration`, () => {
 
 	it(`nested scss map`, () => {
 		expect(isStandardSyntaxDeclaration(scssDecl(`a { $map: (value, value2) }`))).toBe(false)
-	})
-
-	it(`less &:extend`, () => {
-		expect(isStandardSyntaxDeclaration(lessDecl(`a { &:extend(b) }`))).toBe(false)
-		expect(isStandardSyntaxDeclaration(lessDecl(`a { &:extend(.b all) }`))).toBe(false)
-		expect(isStandardSyntaxDeclaration(lessDecl(`a { &:EXTEND(.b) }`))).toBe(false)
-	})
-	it(`a value spelling an extend, which is no extend of the declaration`, () => {
-		expect(isStandardSyntaxDeclaration(lessDecl(`a { b: "extend(x)" }`))).toBe(true)
-		expect(isStandardSyntaxDeclaration(lessDecl(`a { content: "a:extend(y)" }`))).toBe(true)
-		expect(isStandardSyntaxDeclaration(lessDecl(`a { b: extend(x) }`))).toBe(true)
-		expect(isStandardSyntaxDeclaration(lessDecl(`a { b: myextend(x) }`))).toBe(true)
-	})
-
-	it(`less map`, () => {
-		expect(isStandardSyntaxDeclaration(lessDecl(`@map: { key: value; }`))).toBe(false)
-	})
-
-	it(`less another map`, () => {
-		expect(isStandardSyntaxDeclaration(lessDecl(`#my-map() { key: value; }`))).toBe(false)
 	})
 
 	it(`scss map declaration`, () => {
@@ -158,13 +125,4 @@ function decl (css: string, parser: { parse: Parser } = postcss): Declaration {
  */
 function scssDecl (css: string): Declaration {
 	return decl(css, postcssScss)
-}
-
-/**
- * Reads the one declaration of a stylesheet written in Less.
- * @param css - The stylesheet.
- * @returns That declaration.
- */
-function lessDecl (css: string): Declaration {
-	return decl(css, postcssLess)
 }

@@ -1,5 +1,4 @@
 import postcss, { type Parser, type Rule } from "postcss"
-import postcssLess from "postcss-less"
 import { describe, expect, it } from "vitest"
 
 import { isStandardSyntaxRule } from "./index.ts"
@@ -12,15 +11,6 @@ import { isStandardSyntaxRule } from "./index.ts"
  */
 function node (code: string, parser: { parse: Parser } = postcss): Rule {
 	return parser.parse(code).first as Rule
-}
-
-/**
- * Reads the first statement of a stylesheet written in Less, which the cases spell as a rule.
- * @param code - The stylesheet.
- * @returns That rule.
- */
-function lessNode (code: string): Rule {
-	return node(code, postcssLess)
 }
 
 describe(`isStandardSyntaxRule`, () => {
@@ -53,72 +43,5 @@ describe(`isStandardSyntaxRule`, () => {
 	})
 	it(`scss nested properties`, () => {
 		expect(isStandardSyntaxRule(node(`foo: {};`))).toBe(false)
-	})
-	it(`less class parametric mixin`, () => {
-		expect(isStandardSyntaxRule(lessNode(`.mixin-name(@var) {}`))).toBe(false)
-	})
-	it(`non-outputting parametric Less class mixin definition`, () => {
-		expect(isStandardSyntaxRule(lessNode(`.mixin-name() {}`))).toBe(false)
-	})
-	it(`non-outputting Less class mixin definition`, () => {
-		expect(isStandardSyntaxRule(lessNode(`.mixin-name(@a, @b) {}`))).toBe(false)
-	})
-	it(`non-outputting parametric Less class mixin definition ending in number`, () => {
-		expect(isStandardSyntaxRule(lessNode(`.mixin-name3(@a, @b) {}`))).toBe(false)
-	})
-	it(`non-outputting Less ID mixin definition`, () => {
-		expect(isStandardSyntaxRule(lessNode(`#mixin-name() {}`))).toBe(false)
-	})
-	it(`less mixin`, () => {
-		expect(isStandardSyntaxRule(lessNode(`.box-shadow(@style, @c) when (iscolor(@c)) {}`))).toBe(false)
-	})
-	it(`less extend`, () => {
-		expect(isStandardSyntaxRule(lessNode(`&:extend(.inline) {}`))).toBe(false)
-		expect(isStandardSyntaxRule(lessNode(`.a:extend(.b all) {}`))).toBe(false)
-	})
-	it(`a quoted attribute value spelling a less extend, which \`postcss-less\` marks as one`, () => {
-		expect(isStandardSyntaxRule(lessNode(`[title=":extend(x)"] {}`))).toBe(true)
-		expect(isStandardSyntaxRule(lessNode(`[data-x="a:extend(y)"] {}`))).toBe(true)
-		expect(isStandardSyntaxRule(lessNode(`[title=':extend(x)'] {}`))).toBe(true)
-		expect(isStandardSyntaxRule(lessNode(`[title=":extend(x)"]:extend(.b) {}`))).toBe(false)
-	})
-	it(`a less extend written in another case, which the syntax marks the rule for all the same`, () => {
-		expect(isStandardSyntaxRule(lessNode(`.a:EXTEND(.b) {}`))).toBe(false)
-		expect(isStandardSyntaxRule(lessNode(`.a:Extend(.b) {}`))).toBe(false)
-		expect(isStandardSyntaxRule(lessNode(`[title=":EXTEND(x)"] {}`))).toBe(true)
-		expect(isStandardSyntaxRule(node(`.a:EXTEND(.b) {}`))).toBe(true)
-	})
-	it(`less detached rulesets`, () => {
-		expect(isStandardSyntaxRule(lessNode(`@foo: {};`))).toBe(false)
-	})
-	it(`less guarded namespaces`, () => {
-		expect(isStandardSyntaxRule(lessNode(`#namespace when (@mode=huge) {}`))).toBe(false)
-	})
-	it(`less parametric mixins`, () => {
-		expect(isStandardSyntaxRule(lessNode(`.mixin (@variable: 5) {}`))).toBe(false)
-	})
-	it(`mixin guards`, () => {
-		expect(isStandardSyntaxRule(lessNode(`.mixin (@variable) when (@variable = 10px) {}`))).toBe(false)
-	})
-	it(`css guards`, () => {
-		expect(isStandardSyntaxRule(lessNode(`.foo() when (@variable = true) {}`))).toBe(false)
-	})
-	it(`css guards without spaces`, () => {
-		expect(isStandardSyntaxRule(lessNode(`.foo()when(@variable = true) {}`))).toBe(false)
-	})
-	it(`css guards with multiple spaces`, () => {
-		expect(isStandardSyntaxRule(lessNode(`.foo()   when   (@variable = true) {}`))).toBe(false)
-	})
-	it(`css guards with newlines`, () => {
-		expect(isStandardSyntaxRule(lessNode(`.foo()\nwhen\n(@variable = true) {}`))).toBe(false)
-	})
-	it(`css guards with CRLF`, () => {
-		expect(isStandardSyntaxRule(lessNode(`.foo()\r\nwhen\r\n(@variable = true) {}`))).toBe(false)
-	})
-	it(`css guards with parenthesis`, () => {
-		expect(isStandardSyntaxRule(lessNode(`.foo() when (default()) {}`))).toBe(false)
-	})
-	it(`css guards with not`, () => {
-		expect(isStandardSyntaxRule(lessNode(`.foo() when not (@variable = true) {}`))).toBe(false)
 	})
 })

@@ -4,7 +4,7 @@ import scss from "postcss-scss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
-import type { EmbeddedSource } from "../../utils/typeGuards/index.ts"
+import type { EmbeddedSource } from "../../../utils/typeGuards/index.ts"
 
 import { requiresTrailingSemicolon } from "./index.ts"
 

@@ -8,8 +8,6 @@ a { line-height: 0.5; }
  * This leading zero */
 ```
 
-This rule ignores mixin parameters in Less.
-
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
 ## Options

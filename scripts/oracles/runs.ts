@@ -37,7 +37,7 @@ function buildRuns (corpus?: [string, string][]): Run[] {
 		name,
 		code,
 		config: customSyntax
-			? { plugins: [PLUGIN], customSyntax, rules: { [`@stylistic/${rule}`]: primary } }
+			? { plugins: [PLUGIN], customSyntax, rules: { [`@stylistic/${syntaxName === `less` ? `less/` : ``}${rule}`]: primary } }
 			: { plugins: [PLUGIN], rules: { [`@stylistic/${rule}`]: primary } },
 	})))))
 }
