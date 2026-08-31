@@ -2,9 +2,10 @@ import valueParser, { type Node } from "postcss-value-parser"
 import stylelint from "stylelint"
 
 import { CONTAINS_HEX_COLOR, HEX_COLOR } from "../../regexps.ts"
-import { addNamespace } from "../../utils/addNamespace/index.ts"
+import { css } from "../../syntaxes/css/index.ts"
 import { applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findInlineCommentSpanHolding, findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
 import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -13,13 +14,11 @@ import { readsInlineComments } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 
-let { utils: { report, ruleMessages, validateOptions } } = stylelint
+let { utils: { report, validateOptions } } = stylelint
 
 let shortName = `color-hex-case`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	expected: (actual, expected) => `Expected "${actual}" to be "${expected}"`,
 })
 
@@ -30,10 +29,13 @@ export let meta = {
 
 /**
  * Enforces lowercase or uppercase case for hex color values.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option, one of `lower` and `upper`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: `lower` | `upper`): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `lower` | `upper`): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,
@@ -100,8 +102,6 @@ function isHexColor (node: Node): boolean {
 	return type === `word` && HEX_COLOR.test(value)
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)

@@ -2,9 +2,10 @@ import type { AtRule, Node, Rule } from "postcss"
 import stylelint, { type PostcssResult } from "stylelint"
 
 import { EVERY_LINE_BREAK, LINE_BREAK } from "../../regexps.ts"
-import { addNamespace } from "../../utils/addNamespace/index.ts"
+import { css } from "../../syntaxes/css/index.ts"
 import { beforeBlockString } from "../../utils/beforeBlockString/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
@@ -16,13 +17,11 @@ import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesIntoInlineComment } from "../../utils/writesIntoInlineComment/index.ts"
 
-let { utils: { report, ruleMessages, validateOptions } } = stylelint
+let { utils: { report, validateOptions } } = stylelint
 
 let shortName = `block-opening-brace-newline-after`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	expectedAfter: () => `Expected newline after "{"`,
 	expectedAfterMultiLine: () => `Expected newline after "{" of a multi-line block`,
 	rejectedAfterMultiLine: () => `Unexpected whitespace after "{" of a multi-line block`,
@@ -54,11 +53,14 @@ function fixWouldCommentOutTheBlock (statement: Rule | AtRule, nodeToCheck: Node
 
 /**
  * Requires a newline after the opening brace of blocks.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option, one of `always`, `always-multi-line` and `never-multi-line`.
  * @param secondaryOptions - The secondary options: `ignore`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: `always` | `always-multi-line` | `never-multi-line`, secondaryOptions: { ignore?: `rules` | `rules`[] }): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, secondaryOptions: { ignore?: `rules` | `rules`[] }): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
 
 	return (root, result) => {
@@ -187,8 +189,6 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, sec
 	}
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)

@@ -3,9 +3,10 @@ import valueParser from "postcss-value-parser"
 import stylelint from "stylelint"
 
 import { FRACTION_WITH_TRAILING_ZEROS } from "../../regexps.ts"
-import { addNamespace } from "../../utils/addNamespace/index.ts"
+import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findInlineCommentSpanHolding, findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
 import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
 import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
@@ -17,13 +18,11 @@ import { setAtRuleParams } from "../../utils/setAtRuleParams/index.ts"
 import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 import { isAtRule } from "../../utils/typeGuards/index.ts"
 
-let { utils: { report, ruleMessages, validateOptions } } = stylelint
+let { utils: { report, validateOptions } } = stylelint
 
 let shortName = `number-no-trailing-zeros`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	rejected: `Unexpected trailing zero(s)`,
 })
 
@@ -34,10 +33,13 @@ export let meta = {
 
 /**
  * Disallows trailing zeros in numbers.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option, which is `true`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: true): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, { actual: primary })
 
@@ -142,8 +144,6 @@ function removeTrailingZeros (input: string, startIndex: number, endIndex: numbe
 	return input.slice(0, startIndex) + input.slice(endIndex)
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)

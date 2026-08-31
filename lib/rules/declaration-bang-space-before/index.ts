@@ -1,22 +1,21 @@
 import stylelint from "stylelint"
 
 import { TRAILING_WHITESPACE } from "../../regexps.ts"
-import { addNamespace } from "../../utils/addNamespace/index.ts"
+import { css } from "../../syntaxes/css/index.ts"
 import { declarationBangSpaceChecker } from "../../utils/declarationBangSpaceChecker/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { endsWithInlineComment } from "../../utils/endsWithInlineComment/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { inlineCommentReading } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
-let { utils: { ruleMessages, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `declaration-bang-space-before`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	expectedBefore: () => `Expected single space before "!"`,
 	rejectedBefore: () => `Unexpected whitespace before "!"`,
 })
@@ -28,10 +27,13 @@ export let meta = {
 
 /**
  * Requires a single space or disallows whitespace before the bang of declarations.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option, one of `always` and `never`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: `always` | `never`): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
 
 	return (root, result) => {
@@ -63,8 +65,6 @@ function rule (primary: `always` | `never`): RuleCheck {
 	}
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)

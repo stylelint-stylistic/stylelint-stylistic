@@ -1,6 +1,7 @@
 import stylelint from "stylelint"
 
-import { addNamespace } from "../../utils/addNamespace/index.ts"
+import { css } from "../../syntaxes/css/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
@@ -11,13 +12,11 @@ import { rawNodeString } from "../../utils/rawNodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
-let { utils: { report, ruleMessages, validateOptions } } = stylelint
+let { utils: { report, validateOptions } } = stylelint
 
 let shortName = `at-rule-semicolon-newline-after`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	expectedAfter: () => `Expected newline after ";"`,
 })
 
@@ -28,11 +27,14 @@ export let meta = {
 
 /**
  * Requires a newline after the semicolon of at-rules.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option, which is `always`.
  * @param _secondary - The secondary options, of which this rule takes none.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: `always`, _secondary: unknown): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always`, _secondary: unknown): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
 
 	return (root, result) => {
@@ -80,8 +82,6 @@ function rule (primary: `always`, _secondary: unknown): RuleCheck {
 	}
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)

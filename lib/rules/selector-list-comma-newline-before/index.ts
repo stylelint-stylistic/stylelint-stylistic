@@ -2,7 +2,8 @@ import type { Rule } from "postcss"
 import stylelint from "stylelint"
 
 import { TRAILING_SPACES_AND_TABS, TRAILING_WHITESPACE } from "../../regexps.ts"
-import { addNamespace } from "../../utils/addNamespace/index.ts"
+import { css } from "../../syntaxes/css/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findSelectorInlineComments } from "../../utils/findSelectorInlineComments/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -12,13 +13,11 @@ import { selectorListCommaWhitespaceChecker } from "../../utils/selectorListComm
 import type { SyntaxRaw } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
-let { utils: { ruleMessages, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `selector-list-comma-newline-before`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	expectedBefore: () => `Expected newline before ","`,
 	expectedBeforeMultiLine: () => `Expected newline before "," in a multi-line list`,
 	rejectedBeforeMultiLine: () => `Unexpected whitespace before "," in a multi-line list`,
@@ -31,11 +30,14 @@ export let meta = {
 
 /**
  * Requires a newline or disallows whitespace before the commas of selector lists.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option, one of `always`, `always-multi-line` and `never-multi-line`.
  * @param _secondaryOptions - The secondary options, of which this rule takes none.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
 
 	return (root, result) => {
@@ -107,8 +109,6 @@ function rule (primary: `always` | `always-multi-line` | `never-multi-line`, _se
 	}
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)

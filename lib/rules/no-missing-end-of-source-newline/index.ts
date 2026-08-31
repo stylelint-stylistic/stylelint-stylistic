@@ -1,19 +1,18 @@
 import stylelint from "stylelint"
 
 import { TRAILING_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
-import { addNamespace } from "../../utils/addNamespace/index.ts"
+import { css } from "../../syntaxes/css/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import type { EmbeddedSource } from "../../utils/typeGuards/index.ts"
 
-let { utils: { report, ruleMessages, validateOptions } } = stylelint
+let { utils: { report, validateOptions } } = stylelint
 
 let shortName = `no-missing-end-of-source-newline`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	rejected: `Unexpected missing end-of-source newline`,
 })
 
@@ -24,11 +23,14 @@ export let meta = {
 
 /**
  * Disallows missing end-of-source newlines.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option, which is `true`.
  * @param _secondaryOptions - The secondary options, of which this rule takes none.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: true, _secondaryOptions: unknown): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true, _secondaryOptions: unknown): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, { actual: primary })
 
@@ -71,8 +73,6 @@ function rule (primary: true, _secondaryOptions: unknown): RuleCheck {
 	}
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)

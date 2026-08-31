@@ -2,10 +2,11 @@ import type { AtRule, Declaration, Rule } from "postcss"
 import valueParser from "postcss-value-parser"
 import stylelint from "stylelint"
 
-import { addNamespace } from "../../utils/addNamespace/index.ts"
+import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findInlineCommentSpans, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
 import { findSelectorInlineComments } from "../../utils/findSelectorInlineComments/index.ts"
 import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
@@ -24,13 +25,11 @@ import { toSelectorSourceIndex } from "../../utils/toSelectorSourceIndex/index.t
 import { isAtRule, type SyntaxRaw } from "../../utils/typeGuards/index.ts"
 import { assertString, isBoolean } from "../../utils/validateTypes/index.ts"
 
-let { utils: { report, ruleMessages, validateOptions } } = stylelint
+let { utils: { report, validateOptions } } = stylelint
 
 let shortName = `string-quotes`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	expected: (q) => `Expected ${q} quotes`,
 })
 
@@ -44,11 +43,14 @@ const DOUBLE_QUOTE = `"`
 
 /**
  * Specifies single or double quotes around strings.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option, one of `single` and `double`.
  * @param secondaryOptions - The secondary options: `avoidEscape`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: `single` | `double`, secondaryOptions: { avoidEscape?: boolean }): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `single` | `double`, secondaryOptions: { avoidEscape?: boolean }): RuleCheck {
 	let correctQuote: typeof SINGLE_QUOTE | typeof DOUBLE_QUOTE = primary === `single` ? SINGLE_QUOTE : DOUBLE_QUOTE
 
 	let erroneousQuote: typeof SINGLE_QUOTE | typeof DOUBLE_QUOTE = primary === `single` ? DOUBLE_QUOTE : SINGLE_QUOTE
@@ -384,8 +386,6 @@ function replaceQuote (string: string, index: number, replace: string): string {
 	return string.slice(0, index) + replace + string.slice(index + replace.length)
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)

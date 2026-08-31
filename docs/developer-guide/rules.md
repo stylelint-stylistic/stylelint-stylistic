@@ -153,19 +153,7 @@ The `ignore*` options let users ignore non-standard syntax at the _configurat
 
 Methodologies and language extensions come and go quickly, and this approach ensures our codebase does not become littered with code for obsolete things.
 
-If your rule can accept an array as its primary option, you must designate this by setting the property `primaryOptionArray = true` on your rule function. For example:
-
-```js
-function rule(primary, secondary) {
-  return (root, result) => {
-    /* .. */
-  };
-}
-
-rule.primaryOptionArray = true;
-
-export rule;
-```
+If your rule can accept an array as its primary option, Stylelint has to be told so through the property `primaryOptionArray = true` on the rule. No rule of this plugin takes one, so `defineRule` — which builds the rule Stylelint is handed — has no field for it yet; the first rule to need it adds one there rather than setting the property by hand.
 
 There is one caveat here: If your rule accepts a primary option array, it cannot also accept a primary option object. Whenever possible, if you want your rule to accept a primary option array, you should make an array the only possibility, instead of allowing for various data structures.
 
@@ -197,7 +185,7 @@ let meta = {
 Pass `fix` callback to the [`report` utility](./plugins.md#stylelintutilsreport):
 
 ```diff js
-function rule(primary, secondary) {
+function rule({ ruleName, messages }, primary, secondary) {
 	return (root, result) => {
 		/* .. */
 
@@ -206,7 +194,7 @@ function rule(primary, secondary) {
 		report({
 			result,
 			ruleName,
-			message,
+			message: messages.expected,
 			node,
 +			fix
 		});

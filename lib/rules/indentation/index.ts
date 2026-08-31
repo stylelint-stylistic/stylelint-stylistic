@@ -3,8 +3,9 @@ import styleSearch from "style-search"
 import stylelint from "stylelint"
 
 import { CRLF, EVERY_LINE_BREAK, EVERY_LINE_BREAK_AND_INDENT, EVERY_LINE_INDENT, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, FIRST_LINE, INDENT_AT_END, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, SPACES_AND_TABS_BEFORE_CONTENT, TRAILING_LINE_BREAK, TRAILING_STAR_OR_UNDERSCORE } from "../../regexps.ts"
-import { addNamespace } from "../../utils/addNamespace/index.ts"
+import { css } from "../../syntaxes/css/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
 import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -22,13 +23,11 @@ import { setRuleSelector } from "../../utils/setRuleSelector/index.ts"
 import { isAtRule, isDeclaration, isRoot, isRule } from "../../utils/typeGuards/index.ts"
 import { assertString, isBoolean, isNumber, isString } from "../../utils/validateTypes/index.ts"
 
-let { utils: { report, ruleMessages, validateOptions } } = stylelint
+let { utils: { report, validateOptions } } = stylelint
 
 let shortName = `indentation`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	expected: (x) => `Expected indentation of ${x}`,
 })
 
@@ -48,11 +47,14 @@ type SecondaryOptions = {
 
 /**
  * Specifies indentation.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option: a number of spaces, or `tab`.
  * @param secondaryOptions - The secondary options: `baseIndentLevel`, `except`, `ignore`, `indentInsideParens` and `indentClosingBrace`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: number | `tab`, secondaryOptions: SecondaryOptions = {}): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: number | `tab`, secondaryOptions: SecondaryOptions = {}): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,
@@ -716,8 +718,6 @@ function replaceIndentation (input: string, searchString: string, replaceString:
 	return stringStart + replaceString + stringEnd
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)

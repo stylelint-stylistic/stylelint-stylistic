@@ -5,10 +5,15 @@ import stylelint from "stylelint"
 import { assert, describe, expect, it } from "vitest"
 
 import rules from "./lib/rules/index.ts"
-import { lintDirect } from "./scripts/harness/lint.ts"
+import { css } from "./lib/syntaxes/css/index.ts"
+import { namespaces } from "./lib/syntaxes/index.ts"
+import { buildRegistry, lintDirect } from "./scripts/harness/lint.ts"
 
 // The plugin is named by its path rather than handed over as objects, so that the testing library has no plugin objects to deep-clone for every case that carries no line break — it clones them to force `context.newline`, which no rule of this plugin reads any more
 const PLUGIN = new URL(`./lib/index.ts`, import.meta.url).pathname
+
+/** The rules the runner takes, under the names the cases spell them with. */
+const REGISTRY = buildRegistry(rules, [css, ...namespaces])
 
 // The secondary options a rule's report is shaped by, which the runner below does not model
 const REPORT_OPTIONS = new Set([`severity`, `message`, `url`, `disableFix`, `reportDisables`])
@@ -42,7 +47,7 @@ async function lint (options: LinterOptions): Promise<LinterResult> {
 
 		return [name.replace(`@stylistic/`, ``), primary, secondary]
 	})
-	let answer = await lintDirect({ code: options.code as string, rules: ruleSettings, registry: rules, syntax: options.customSyntax, fix: options.fix === true })
+	let answer = await lintDirect({ code: options.code as string, rules: ruleSettings, registry: REGISTRY, syntax: options.customSyntax, fix: options.fix === true })
 	let warnings = answer.unparsable
 		? [{ rule: `CssSyntaxError`, severity: `error`, text: `${answer.detail} (CssSyntaxError)`, line: 1, column: 1 }]
 		: answer.warnings.map((warning: object) => ({ ...warning, severity: `error` }))

@@ -3,10 +3,11 @@ import valueParser, { type Node as ValueParserNode } from "postcss-value-parser"
 import stylelint from "stylelint"
 
 import { ASPECT_RATIO_PROPERTY, NUMBER_WITHOUT_SIGN_OR_EXPONENT } from "../../regexps.ts"
-import { addNamespace } from "../../utils/addNamespace/index.ts"
+import { css } from "../../syntaxes/css/index.ts"
 import { applyEditsFromEnd } from "../../utils/applyEditsFromEnd/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findCommentSpans } from "../../utils/findCommentSpans/index.ts"
 import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -15,13 +16,11 @@ import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 import { isBoolean } from "../../utils/validateTypes/index.ts"
 
-let { utils: { report, ruleMessages, validateOptions } } = stylelint
+let { utils: { report, validateOptions } } = stylelint
 
 let shortName = `aspect-ratio-notation`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	expected: (actual, expected) => `Expected "${actual}" to be "${expected}"`,
 })
 
@@ -34,11 +33,14 @@ export let meta = {
  * Specifies the notation for the value of `aspect-ratio`.
  *
  * The rule reads one value along two axes that do not depend on each other: the primary option decides how many numbers are written, and `smallestIntegers` decides what those numbers are. Both are settled before anything is written, and the whole value is written once, so neither axis can be applied by halves and no order in the configuration can change the outcome.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option, one of `ratio`, `number-where-possible` and `as-written`.
  * @param secondaryOptions - The secondary options: `smallestIntegers`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: `ratio` | `number-where-possible` | `as-written`, secondaryOptions: { smallestIntegers?: boolean } = {}): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `ratio` | `number-where-possible` | `as-written`, secondaryOptions: { smallestIntegers?: boolean } = {}): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,
@@ -297,8 +299,6 @@ function holdsComment (edit: {
 	return comments.some(({ start, end }) => start < edit.end && end > edit.start)
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)

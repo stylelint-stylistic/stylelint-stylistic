@@ -2,9 +2,10 @@ import type { AtRule, Rule } from "postcss"
 import stylelint from "stylelint"
 
 import { SEMICOLON_RUN } from "../../regexps.ts"
+import { css } from "../../syntaxes/css/index.ts"
 import { addEmptyLineAfter } from "../../utils/addEmptyLineAfter/index.ts"
-import { addNamespace } from "../../utils/addNamespace/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
@@ -16,13 +17,11 @@ import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { removeEmptyLinesAfter } from "../../utils/removeEmptyLinesAfter/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
-let { utils: { report, ruleMessages, validateOptions } } = stylelint
+let { utils: { report, validateOptions } } = stylelint
 
 let shortName = `block-closing-brace-empty-line-before`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	expected: `Expected empty line before closing brace`,
 	rejected: `Unexpected empty line before closing brace`,
 })
@@ -34,11 +33,14 @@ export let meta = {
 
 /**
  * Requires or disallows an empty line before the closing brace of blocks.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option, one of `always-multi-line` and `never`.
  * @param secondaryOptions - The secondary options: `except`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: `always-multi-line` | `never`, secondaryOptions: { except?: `after-closing-brace` | `after-closing-brace`[] }): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always-multi-line` | `never`, secondaryOptions: { except?: `after-closing-brace` | `after-closing-brace`[] }): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,
@@ -118,8 +120,6 @@ function rule (primary: `always-multi-line` | `never`, secondaryOptions: { excep
 	}
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)

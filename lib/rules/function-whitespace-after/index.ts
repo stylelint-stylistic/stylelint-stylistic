@@ -2,9 +2,10 @@ import type { Node } from "postcss"
 import stylelint from "stylelint"
 
 import { IMPORT_AT_RULE, LEADING_SPACED_SIGN, LEADING_SPACED_SUM_OPERATOR } from "../../regexps.ts"
-import { addNamespace } from "../../utils/addNamespace/index.ts"
+import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findFunctionArgumentSpans } from "../../utils/findFunctionArgumentSpans/index.ts"
 import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
 import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
@@ -16,13 +17,11 @@ import { searchCopy } from "../../utils/searchCopy/index.ts"
 import { setAtRuleParams } from "../../utils/setAtRuleParams/index.ts"
 import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 
-let { utils: { report, ruleMessages, validateOptions } } = stylelint
+let { utils: { report, validateOptions } } = stylelint
 
 let shortName = `function-whitespace-after`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	expected: `Expected whitespace after ")"`,
 	rejected: `Unexpected whitespace after ")"`,
 })
@@ -36,10 +35,13 @@ const ACCEPTABLE_AFTER_CLOSING_PAREN = new Set([`)`, `,`, `}`, `:`, `/`, undefin
 
 /**
  * Requires or disallows whitespace after functions.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option, one of `always` and `never`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: `always` | `never`): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,
@@ -202,8 +204,6 @@ function rule (primary: `always` | `never`): RuleCheck {
 	}
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)

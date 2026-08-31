@@ -1,6 +1,7 @@
 import stylelint from "stylelint"
 
-import { addNamespace } from "../../utils/addNamespace/index.ts"
+import { css } from "../../syntaxes/css/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
 import { isStandardSyntaxProperty } from "../../utils/isStandardSyntaxProperty/index.ts"
@@ -9,13 +10,11 @@ import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isRule } from "../../utils/typeGuards/index.ts"
 import { isRegExp, isString } from "../../utils/validateTypes/index.ts"
 
-let { utils: { report, ruleMessages, validateOptions } } = stylelint
+let { utils: { report, validateOptions } } = stylelint
 
 let shortName = `property-case`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	expected: (actual, expected) => `Expected "${actual}" to be "${expected}"`,
 })
 
@@ -26,11 +25,14 @@ export let meta = {
 
 /**
  * Specifies lowercase or uppercase for properties.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option, one of `lower` and `upper`.
  * @param secondaryOptions - The secondary options: `ignoreSelectors`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: `lower` | `upper`, secondaryOptions: { ignoreSelectors?: string | RegExp | (string | RegExp)[] }): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `lower` | `upper`, secondaryOptions: { ignoreSelectors?: string | RegExp | (string | RegExp)[] }): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,
@@ -86,8 +88,6 @@ function rule (primary: `lower` | `upper`, secondaryOptions: { ignoreSelectors?:
 	}
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)

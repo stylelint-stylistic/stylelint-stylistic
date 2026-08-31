@@ -2,12 +2,15 @@ import { readFile } from "node:fs/promises"
 
 import { describe, expect, it } from "vitest"
 
+import { css } from "../syntaxes/css/index.ts"
+import { namespaces } from "../syntaxes/index.ts"
 import { addNamespace } from "../utils/addNamespace/index.ts"
 import { getRuleDocUrl } from "../utils/getRuleDocUrl/index.ts"
 
-import rules from "./index.ts"
+import factories from "./index.ts"
 
-let ruleEntries = Object.entries(rules)
+let ruleEntries = Object.entries(factories).map(([name, createRule]) => [name, createRule(css)] as const)
+let rules = Object.fromEntries(ruleEntries)
 
 describe(`all rules`, () => {
 	it(`not empty`, () => {
@@ -24,6 +27,15 @@ describe(`all rules`, () => {
 				expect(rule.ruleName).toBe(addNamespace(ruleName))
 			})
 
+			for (let syntax of namespaces) {
+				it(`is registered under the "${syntax.namespace}" namespace with its name and messages closed by it`, () => {
+					let namespaced = factories[ruleName]?.(syntax)
+
+					expect(namespaced?.ruleName).toBe(addNamespace(ruleName, syntax.namespace))
+					expect(Object.keys(namespaced?.messages ?? {})).toEqual(Object.keys(rule.messages))
+				})
+			}
+
 			it(`has the "messages" property`, () => {
 				expect(typeof rule.messages).toBe(`object`)
 			})
@@ -36,7 +48,7 @@ describe(`all rules`, () => {
 	}
 })
 
-let ruleNames = Object.keys(rules)
+let ruleNames = Object.keys(factories)
 let rulesListDoc = await getRulesListDoc()
 
 /**
@@ -50,8 +62,8 @@ async function getRulesListDoc (): Promise<string> {
 
 describe(`all rules`, () => {
 	for (let name of ruleNames) {
-		it(`"${name}" should have metadata`, async () => {
-			let rule = await rules[name]
+		it(`"${name}" should have metadata`, () => {
+			let rule = rules[name]
 
 			if (!rule) throw new Error(`No rule named "${name}"`)
 
@@ -70,7 +82,7 @@ describe(`all rules`, () => {
 describe(`fixable rules`, () => {
 	for (let name of ruleNames) {
 		it(`"${name}" should describe fixable in the documents`, async () => {
-			let rule = await rules[name]
+			let rule = rules[name]
 
 			if (!rule) throw new Error(`No rule named "${name}"`)
 
@@ -87,7 +99,7 @@ describe(`fixable rules`, () => {
 describe(`deprecated rules`, () => {
 	for (let name of ruleNames) {
 		it(`"${name}" should describe deprecation in the document`, async () => {
-			let rule = await rules[name]
+			let rule = rules[name]
 
 			if (!rule) throw new Error(`No rule named "${name}"`)
 

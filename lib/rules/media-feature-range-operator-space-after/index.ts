@@ -1,8 +1,9 @@
 import stylelint from "stylelint"
 
 import { LEADING_WHITESPACE, MEDIA_AT_RULE } from "../../regexps.ts"
-import { addNamespace } from "../../utils/addNamespace/index.ts"
+import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findMediaOperator } from "../../utils/findMediaOperator/index.ts"
 import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -10,13 +11,11 @@ import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setAtRuleParams } from "../../utils/setAtRuleParams/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
-let { utils: { report, ruleMessages, validateOptions } } = stylelint
+let { utils: { report, validateOptions } } = stylelint
 
 let shortName = `media-feature-range-operator-space-after`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	expectedAfter: () => `Expected single space after range operator`,
 	rejectedAfter: () => `Unexpected whitespace after range operator`,
 })
@@ -28,10 +27,13 @@ export let meta = {
 
 /**
  * Requires a single space or disallows whitespace after the range operator in media features.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option, one of `always` and `never`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: `always` | `never`): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
 
 	return (root, result) => {
@@ -85,8 +87,6 @@ function rule (primary: `always` | `never`): RuleCheck {
 	}
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)

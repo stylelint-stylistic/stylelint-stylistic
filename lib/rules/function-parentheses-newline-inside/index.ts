@@ -2,9 +2,10 @@ import valueParser, { type FunctionNode } from "postcss-value-parser"
 import stylelint, { type FixCallback } from "stylelint"
 
 import { LEADING_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
-import { addNamespace } from "../../utils/addNamespace/index.ts"
+import { css } from "../../syntaxes/css/index.ts"
 import { addEdit, applyEditsFromEnd, type Edit, toIndexBeforeEdits } from "../../utils/applyEditsFromEnd/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findInlineCommentSpanAt, findInlineCommentSpanHolding, findInlineCommentSpans, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
 import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
@@ -16,13 +17,11 @@ import { type InlineCommentReading, inlineCommentReading } from "../../utils/rea
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 
-let { utils: { report, ruleMessages, validateOptions } } = stylelint
+let { utils: { report, validateOptions } } = stylelint
 
 let shortName = `function-parentheses-newline-inside`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	expectedOpening: `Expected newline after "("`,
 	expectedClosing: `Expected newline before ")"`,
 	expectedOpeningMultiLine: `Expected newline after "(" in a multi-line function`,
@@ -257,11 +256,14 @@ function getNeverFixability (read: {
 
 /**
  * Requires a newline or disallows whitespace on the inside of the parentheses of functions.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option, one of `always`, `always-multi-line` and `never-multi-line`.
  * @param _secondaryOptions - The secondary options, of which this rule takes none.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,
@@ -532,8 +534,6 @@ function fixAfterForNever (valueNode: FunctionNode): Edit[] {
 	return getFixEmptiedAfter(valueNode).map(([start, end]) => ({ start, end, text: `` }))
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)

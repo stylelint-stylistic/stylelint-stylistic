@@ -2,8 +2,9 @@ import type { AtRule, Rule } from "postcss"
 import stylelint from "stylelint"
 
 import { LINE_BREAK, NON_SPACE } from "../../regexps.ts"
-import { addNamespace } from "../../utils/addNamespace/index.ts"
+import { css } from "../../syntaxes/css/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
@@ -14,13 +15,11 @@ import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isString } from "../../utils/validateTypes/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
-let { utils: { report, ruleMessages, validateOptions } } = stylelint
+let { utils: { report, validateOptions } } = stylelint
 
 let shortName = `block-closing-brace-newline-after`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	expectedAfter: () => `Expected newline after "}"`,
 	expectedAfterSingleLine: () => `Expected newline after "}" of a single-line block`,
 	rejectedAfterSingleLine: () => `Unexpected whitespace after "}" of a single-line block`,
@@ -35,11 +34,14 @@ export let meta = {
 
 /**
  * Requires a newline or disallows whitespace after the closing brace of blocks.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option, one of `always`, `always-single-line`, `never-single-line`, `always-multi-line` and `never-multi-line`.
  * @param secondaryOptions - The secondary options: `ignoreAtRules`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: `always` | `always-single-line` | `never-single-line` | `always-multi-line` | `never-multi-line`, secondaryOptions: { ignoreAtRules?: string | string[] }): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `always-single-line` | `never-single-line` | `always-multi-line` | `never-multi-line`, secondaryOptions: { ignoreAtRules?: string | string[] }): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
 
 	return (root, result) => {
@@ -134,8 +136,6 @@ function rule (primary: `always` | `always-single-line` | `never-single-line` | 
 	}
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)

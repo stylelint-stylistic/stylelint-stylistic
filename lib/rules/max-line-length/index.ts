@@ -2,19 +2,18 @@ import styleSearch, { type StyleSearchMatch } from "style-search"
 import stylelint from "stylelint"
 
 import { EVERY_IMPORT_ADDRESS, EVERY_URL_CONTENT, LEADING_WHITESPACE_RUN } from "../../regexps.ts"
-import { addNamespace } from "../../utils/addNamespace/index.ts"
+import { css } from "../../syntaxes/css/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isNumber, isRegExp, isString } from "../../utils/validateTypes/index.ts"
 
-let { utils: { report, ruleMessages, validateOptions } } = stylelint
+let { utils: { report, validateOptions } } = stylelint
 
 let shortName = `max-line-length`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	expected: (max) => `Expected line length to be no more than ${max} ${max === 1 ? `character` : `characters`}`,
 })
 
@@ -30,11 +29,14 @@ const EXCLUDED_PATTERNS = [
 
 /**
  * Limits the length of a line.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option, a number.
  * @param secondaryOptions - The secondary options: `ignore`, `ignorePattern` and `tabSize`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: number, secondaryOptions: {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: number, secondaryOptions: {
 	ignore?: (`non-comments` | `comments`) | (`non-comments` | `comments`)[],
 	ignorePattern?: string | RegExp | (string | RegExp)[],
 	tabSize?: number,
@@ -199,8 +201,6 @@ function rule (primary: number, secondaryOptions: {
 	}
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)

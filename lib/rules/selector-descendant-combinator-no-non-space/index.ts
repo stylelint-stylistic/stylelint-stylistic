@@ -2,7 +2,8 @@ import type { Combinator, Root } from "postcss-selector-parser"
 import stylelint from "stylelint"
 
 import { LEADING_WHITESPACE_AND_REST, WHITESPACE } from "../../regexps.ts"
-import { addNamespace } from "../../utils/addNamespace/index.ts"
+import { css } from "../../syntaxes/css/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findSelectorBlockComments } from "../../utils/findSelectorBlockComments/index.ts"
 import { findSelectorInlineComments, type InlineComment } from "../../utils/findSelectorInlineComments/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -13,13 +14,11 @@ import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { toSelectorSourceIndex } from "../../utils/toSelectorSourceIndex/index.ts"
 import type { SyntaxRaw } from "../../utils/typeGuards/index.ts"
 
-let { utils: { report, ruleMessages, validateOptions } } = stylelint
+let { utils: { report, validateOptions } } = stylelint
 
 let shortName = `selector-descendant-combinator-no-non-space`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	rejected: (nonSpaceCharacter) => `Unexpected "${nonSpaceCharacter}"`,
 })
 
@@ -30,10 +29,13 @@ export let meta = {
 
 /**
  * Disallows non-space characters for descendant combinators of selectors.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option, which is `true`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: true): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,
@@ -254,8 +256,6 @@ function splitAtComments (text: string, offset: number, inlineComments: InlineCo
 	return segments
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)

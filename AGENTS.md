@@ -22,8 +22,9 @@ CI (`.github/workflows/test.yaml`) runs `pnpm ci` and then `make verify` — r
 
 A Stylelint plugin (`@stylistic/stylelint-plugin`) that restores the stylistic rules Stylelint removed in v16 and adds rules of its own. How many there are is `lib/rules/index.ts`, and no number is written here, since a written one falls behind. Pure ESM. `make build` (`tsc -p tsconfig.build.json`) writes `lib/` to `dist/` — every module beside its `.d.ts`, the tests left out — and `dist/` is what the package publishes and what `exports` points at; it is never committed, and `make release` builds it before publishing.
 
-- `lib/index.ts` — maps every entry of the rule registry through `stylelint.createPlugin(addNamespace(name), rule)` and exports the array. `addNamespace` prefixes `@stylistic/`, so users write `"@stylistic/color-hex-case"`.
-- `lib/rules/index.ts` — the registry: static imports of every rule plus a default-exported object keyed by kebab-case rule name. **A new rule is not active until it is added here.**
+- `lib/index.ts` — builds every rule of the registry once per syntax, through `stylelint.createPlugin(addNamespace(name, syntax.namespace), createRule(syntax))`, and exports the array. `addNamespace` prefixes `@stylistic/`, so users write `"@stylistic/color-hex-case"`; a syntax registered beside the core adds its segment, `"@stylistic/scss/color-hex-case"`.
+- `lib/rules/index.ts` — the registry: static imports of every rule's `createRule` plus a default-exported object keyed by kebab-case rule name. **A new rule is not active until it is added here.**
+- `lib/syntaxes/index.ts` — the `Syntax` contract a rule is built over, and the list of the syntaxes registered beside the core, each under a namespace of its own; `lib/syntaxes/css/` is the core's. A syntax's directory holds everything that is its — the adapter, its tests, its README — and nothing under `lib/rules/` or `lib/utils/` imports out of `lib/syntaxes/` beyond the contract and `css/`, which `lib/syntaxes/index.test.ts` enforces.
 - `lib/rules/<rule-name>/` — `index.ts` (rule), `index.test.ts`, `README.md` (user docs).
 - `lib/utils/<utilName>/index.ts` — one util per directory. Many rules are thin wrappers over shared checkers: `whitespaceChecker` (the `always`/`never`/`always-single-line`/… engine behind most `*-space-*` and `*-newline-*` rules), plus the `*CommaSpaceChecker`, `*ColonSpaceChecker`, `isStandardSyntax*`, and `has*Interpolation` families. Look for an existing util before writing new traversal logic. A util puts its helpers above what it exports, and a type is exported where it is declared.
 - `lib/regexps.ts` — every regular expression the plugin reads a stylesheet with, each one a named constant under a line saying what it matches. Nothing else in `lib/` spells a pattern inline, so a pattern wanted in a second place is already there under a name, and whatever had to be worked out about it is written once.
@@ -33,12 +34,15 @@ A Stylelint plugin (`@stylistic/stylelint-plugin`) that restores the stylisti
 
 Follow `lib/rules/color-hex-case/index.ts` as the canonical example. Every rule module:
 
-- declares ``let shortName = `<kebab-name>` `` and `export let ruleName = addNamespace(shortName)`;
-- exports `messages` built with `stylelint.utils.ruleMessages(ruleName, …)`;
+- declares ``let shortName = `<kebab-name>` ``;
+- names its messages in a `const MESSAGES = defineMessages({ … })`, before any rule name closes them;
 - exports `meta` with `url: getRuleDocUrl(shortName)` (points at the rule's own `README.md` on GitHub) and `fixable: true` when autofixable;
+- writes `function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary, secondaryOptions)`: the first parameter is what the namespace the rule is registered under hands it — the name a configuration refers to the rule by, and the messages closed with that name — and the rule reads both from there rather than from the module;
 - calls `validateOptions` first and bails on invalid options;
 - reports via `report({ message, messageArgs, node, index, endIndex, result, ruleName, fix() { … } })` — autofix is the `fix` callback on `report`, not a separate `context.fix` branch;
-- re-attaches `rule.ruleName`, `rule.messages`, `rule.meta` before `export default rule`.
+- ends with `export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })`, the factory the registry takes, and `export let { ruleName, messages } = createRule(css)`, the core's instance of both for the tests beside the module to import.
+
+`defineRule` (`lib/utils/defineRule/index.ts`) is what turns the definition into a factory over a `Syntax`: it names the rule under the syntax's namespace, closes the messages, and gates the check, so that a root the syntax does not accept is answered by one warning per root and read by no rule.
 
 ### Tests
 

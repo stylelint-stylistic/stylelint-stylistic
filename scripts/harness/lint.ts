@@ -6,11 +6,14 @@
  * What is not reproduced, since no corpus of this repository carries it: disable comments and their ranges, `ignoreDisables`, `quiet`, `computeEditInfo`, the lexer and the reference roots. A rule reaching for one of them would show up in the verification as a disagreement rather than as a wrong answer.
  */
 
+import { existsSync } from "node:fs"
 import { EOL } from "node:os"
 import path from "node:path"
 
 import postcss, { type Document, type Root, type Syntax, type Warning as PostcssWarning } from "postcss"
 import type { PostcssResult, Rule, RuleMeta, RuleSeverity, StylelintPostcssResult } from "stylelint"
+
+import type { Syntax as RuleSyntax } from "../../lib/syntaxes/index.ts"
 
 import { BREAK_AS_STYLELINT_READS_IT } from "./regexps.ts"
 
@@ -34,8 +37,11 @@ export type Warning = {
 /** A rule by its short name, with its primary option and, where there is one, its secondary options. */
 export type RuleSetting = [string, unknown, (object | undefined)?]
 
-/** The rules of one checkout by their short names, as `lib/rules/index.ts` exports them. */
+/** The rules of one checkout by the names a configuration spells them with behind `@stylistic/`: the short name for a rule of the core, `scss/<name>` and the like for one registered under a syntax's namespace. */
 export type Registry = Record<string, Rule>
+
+/** What `lib/rules/index.ts` exports: a factory per rule, or — in a checkout from before the factories — the rule itself. */
+type Exported = Rule | ((syntax: RuleSyntax) => Rule)
 
 /** What the rules said and wrote, or why the text could not be read. */
 export type Answer = {
@@ -80,14 +86,41 @@ async function loadSyntax (syntax: string | Syntax | undefined): Promise<Syntax>
 }
 
 /**
+ * Builds the registry out of what `lib/rules/index.ts` exports: every factory called once for the core and once per syntax registered beside it, each result filed under the name a configuration spells it with.
+ *
+ * A checkout from before the factories exports the rules themselves, each already carrying its name, and such an entry is filed as it is: a base is measured through the branch's harness, so the harness reads both shapes until every base a comparison can name has the factories.
+ * @param rules - The default export of a checkout's `lib/rules/index.ts`.
+ * @param adapters - The core's syntax first, then every namespace's; none for a checkout without them.
+ * @returns The registry.
+ */
+function buildRegistry (rules: Record<string, Exported>, adapters: RuleSyntax[]): Registry {
+	let registry: Registry = {}
+
+	for (let [name, exported] of Object.entries(rules)) {
+		if (`ruleName` in exported) {
+			registry[name] = exported
+			continue
+		}
+
+		for (let syntax of adapters) registry[syntax.namespace ? `${syntax.namespace}/${name}` : name] = exported(syntax)
+	}
+
+	return registry
+}
+
+/**
  * Loads the rule registry of a checkout, so that a base and a branch can be asked in one process.
  * @param lib - The path of the checkout's `lib/` directory.
- * @returns The registry, keyed by the rule's short name.
+ * @returns The registry, keyed by the rule's name behind `@stylistic/`.
  */
 async function loadRules (lib: string): Promise<Registry> {
 	let module = await import(path.join(lib, `rules`, `index.ts`))
 
-	return module.default
+	if (!existsSync(path.join(lib, `syntaxes`, `index.ts`))) return buildRegistry(module.default, [])
+
+	let [{ css }, { namespaces }] = await Promise.all([import(path.join(lib, `syntaxes`, `css`, `index.ts`)), import(path.join(lib, `syntaxes`, `index.ts`))])
+
+	return buildRegistry(module.default, [css, ...namespaces])
 }
 
 /**
@@ -245,4 +278,4 @@ async function lint ({ code, config, fix = false }: {
 	}
 }
 
-export { lint, lintDirect, loadRules, loadSyntax, settingsOf }
+export { buildRegistry, lint, lintDirect, loadRules, loadSyntax, settingsOf }

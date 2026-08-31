@@ -2,7 +2,8 @@ import styleSearch from "style-search"
 import stylelint from "stylelint"
 
 import { EVERY_LINE_BREAK, LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
-import { addNamespace } from "../../utils/addNamespace/index.ts"
+import { css } from "../../syntaxes/css/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
 import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -16,13 +17,11 @@ import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 import { setRuleSelector } from "../../utils/setRuleSelector/index.ts"
 import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
 
-let { utils: { report, ruleMessages, validateOptions } } = stylelint
+let { utils: { report, validateOptions } } = stylelint
 
 let shortName = `no-eol-whitespace`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	rejected: `Unexpected whitespace at end of line`,
 })
 
@@ -94,11 +93,14 @@ function findErrorStartIndex (lastEOLIndex: number, string: string, options: {
 
 /**
  * Disallows end-of-line whitespace.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option, which is `true`.
  * @param secondaryOptions - The secondary options: `ignore`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: true, secondaryOptions: { ignore?: `empty-lines` | `empty-lines`[] }): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true, secondaryOptions: { ignore?: `empty-lines` | `empty-lines`[] }): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,
@@ -321,8 +323,6 @@ function rule (primary: true, secondaryOptions: { ignore?: `empty-lines` | `empt
 	}
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)

@@ -2,8 +2,9 @@ import valueParser, { type Node, type StringNode } from "postcss-value-parser"
 import stylelint from "stylelint"
 
 import { EVERY_LINE_BREAK_RUN, EVERY_WHITESPACE_RUN, LAST_LINE } from "../../regexps.ts"
-import { addNamespace } from "../../utils/addNamespace/index.ts"
+import { css } from "../../syntaxes/css/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findInlineCommentSpans, findInlineCommentSpanTouching, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
 import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -12,13 +13,11 @@ import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 import { isBoolean, isNumber } from "../../utils/validateTypes/index.ts"
 
-let { utils: { report, ruleMessages, validateOptions } } = stylelint
+let { utils: { report, validateOptions } } = stylelint
 
 let shortName = `named-grid-areas-alignment`
 
-export let ruleName = addNamespace(shortName)
-
-export let messages = ruleMessages(ruleName, {
+const MESSAGES = defineMessages({
 	expected: () => `Expected \`grid-template-areas\` value to be aligned`,
 })
 
@@ -41,11 +40,14 @@ function isGridRow (node: Node, inlineComments: InlineCommentSpan[]): node is St
 
 /**
  * Requires cell tokens (and optionally ending quotes) within `grid-template-areas` to be aligned.
+ * @param scope - What the namespace the rule is registered under hands it.
+ * @param scope.ruleName - The name a configuration refers to the rule by.
+ * @param scope.messages - The messages, each closing with that name.
  * @param primary - The primary option, which is `true`.
  * @param secondaryOptions - The secondary options: `gap` and `alignQuotes`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule (primary: true, secondaryOptions: {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true, secondaryOptions: {
 	gap?: number,
 	alignQuotes?: boolean,
 } = {}): RuleCheck {
@@ -168,8 +170,6 @@ function rule (primary: true, secondaryOptions: {
 	}
 }
 
-rule.ruleName = ruleName
-rule.messages = messages
-rule.meta = meta
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
 
-export default rule
+export let { ruleName, messages } = createRule(css)
