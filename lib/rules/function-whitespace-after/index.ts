@@ -46,21 +46,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		if (!validOptions) return
 
 		/**
-		 * Asks whether the syntax that spelled a node reads arithmetic of its own, in which the whitespace in front of every sign is what makes the sign an operator.
-		 *
-		 * Nothing in the tree can answer this: `foo($a) -2px`, which Sass reads as a list of two values, and `foo($a)-2px`, which it reads as a subtraction, are one declaration node either way, and the difference lives in the compiler of the language rather than in what PostCSS hands over. What can be asked is whether a double slash opens a comment in that syntax — the very question {@link searchCopy} puts for itself in each of the walks below — and the two answers coincide: Sass and Less spell arithmetic of their own and comments of their own both, and plain CSS spells neither. A syntax the probe learns nothing about is answered yes here as it is there, which leaves the whitespace standing and costs a warning rather than a file.
-		 *
-		 * What this question cannot do is tell Sass from Less, and one place where those two differ is the plus: Less reads the whitespace in front of it as it reads the whitespace in front of a minus, and Sass reads a plus as an operator whatever whitespace stands beside it. So one reading answers for both syntaxes, and a plus behind a call is left alone under Sass as well, where closing it up would have been safe. That is a warning left unsaid, which is the side of the answer this whole question is decided on. A probe telling those two apart is there to be written — `postcss-less` reads `@a: 1;` as an at-rule it marks a variable and `postcss-scss` reads a plain one — so this is one reading chosen for two languages rather than a wall, and what it buys is a second question the plugin does not have to keep answering.
-		 *
-		 * The question is put to the node rather than to the file, since a page may hold a plain `<style>` beside a `<style lang="scss">` and each block carries the syntax that spelled it.
-		 * @param node - The node whose text is being read.
-		 * @returns True where the syntax that spelled that node spells arithmetic of its own.
-		 */
-		function readsOwnArithmetic (node: Node): boolean {
-			return syntax.readsInlineComments(node, result)
-		}
-
-		/**
 		 * Checks a node for function whitespace after violations.
 		 * @param node - The node to check.
 		 * @param value - The value to check.
@@ -117,7 +102,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			}
 			else if (primary === `never` && isWhitespace(nextChar)) {
 				// The whitespace in front of a `+` or a `-` that stands as an operator belongs to the sum rather than to the call: it is what makes the sign one, so `a { b: calc(var(--x) + 1px); }` closed up is a calculation no browser reads and a declaration it drops. Which signs stand as operators is what the syntax says: CSS reads `-1px` as a single number token, so a sign opening a number is part of that number and the whitespace in front of it is the call's, while a syntax spelling arithmetic of its own reads that whitespace as the whole of what tells a list of two values from a subtraction
-				if ((readsOwnArithmetic(node) ? LEADING_SPACED_SIGN : LEADING_SPACED_SUM_OPERATOR).test(searchString.slice(index))) return
+				if ((syntax.spellsOwnArithmetic(node, result) ? LEADING_SPACED_SIGN : LEADING_SPACED_SUM_OPERATOR).test(searchString.slice(index))) return
 
 				report({
 					message: messages.rejected,

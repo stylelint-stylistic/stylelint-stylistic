@@ -13,7 +13,6 @@ import { lastNonCommentNode } from "../../utils/lastNonCommentNode/index.ts"
 import { nextNonCommentNode } from "../../utils/nextNonCommentNode/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
-import { requiresTrailingSemicolon } from "../../utils/requiresTrailingSemicolon/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isAtRule, isDeclaration, isRoot } from "../../utils/typeGuards/index.ts"
 
@@ -194,7 +193,7 @@ function takeTheTrailingSemicolonsAway (node: ChildNode): void {
  * @returns True where the fix may be written.
  */
 function isFixable (syntax: Syntax, node: ChildNode, primary: `always` | `never`, spelledBetween: string | undefined, result: PostcssResult): boolean {
-	if (primary === `never`) return !semicolonOutlivesTheFlag(node) && !requiresTrailingSemicolon(node, result)
+	if (primary === `never`) return !semicolonOutlivesTheFlag(node) && !syntax.requiresTrailingSemicolon(node, result)
 
 	return !hasBlock(node) && !syntax.writesIntoInlineComment(node, result, spelledBetween)
 }

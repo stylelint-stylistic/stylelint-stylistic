@@ -10,7 +10,7 @@ import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findInlineCommentSpanHolding } from "../../utils/findInlineCommentSpans/index.ts"
-import { findInterpolationSpans, findInterpolationSpanTouching } from "../../utils/findInterpolationSpans/index.ts"
+import { findInterpolationSpanTouching } from "../../utils/findInterpolationSpans/index.ts"
 import { getDimension } from "../../utils/getDimension/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
@@ -74,7 +74,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind: what such a comment holds comes back as ordinary words and calls
 			let inlineComments = comments.filter(({ isInline }) => isInline)
 			// An interpolation is written in a language of its own, and the compiler expanding it settles what the text beside it means, so nothing a value spells next to one is a dimension this rule can read. The interpolations are found in the value once, and every node of the walk is measured against them. They are sought in a copy with every comment blanked out, since a brace written in a comment closes no interpolation and the code standing behind such a brace is code the file spells
-			let interpolations = findInterpolationSpans(blankComments(checkedValue, comments))
+			let interpolations = syntax.interpolationSpans(blankComments(checkedValue, comments))
 
 			/**
 			 * Reads the dimension a value node holds and says where its unit is written in the case the option does not ask for.

@@ -3,6 +3,7 @@ import type { AtRule, Declaration, Root, Rule as PostcssRule } from "postcss"
 import { endsWithInlineComment } from "../../utils/endsWithInlineComment/index.ts"
 import { findCommentSpans } from "../../utils/findCommentSpans/index.ts"
 import { findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
+import { findInterpolationSpans } from "../../utils/findInterpolationSpans/index.ts"
 import { findSelectorInlineComments } from "../../utils/findSelectorInlineComments/index.ts"
 import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
 import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
@@ -19,6 +20,7 @@ import { isStandardSyntaxValue } from "../../utils/isStandardSyntaxValue/index.t
 import { movesEndIntoInlineComment } from "../../utils/movesEndIntoInlineComment/index.ts"
 import { nodeSyntax } from "../../utils/nodeSyntax/index.ts"
 import { inlineCommentReading, readsInlineComments, syntaxKeepsInlineComments } from "../../utils/readsInlineComments/index.ts"
+import { requiresTrailingSemicolon } from "../../utils/requiresTrailingSemicolon/index.ts"
 import { restoreSelectorInlineComments } from "../../utils/restoreSelectorInlineComments/index.ts"
 import { searchCopy } from "../../utils/searchCopy/index.ts"
 import { setAtRuleParams } from "../../utils/setAtRuleParams/index.ts"
@@ -62,6 +64,9 @@ export let css: Syntax = {
 	movesEndIntoInlineComment,
 	writesIntoInlineComment,
 	searchCopy,
+	requiresTrailingSemicolon,
+	spellsOwnArithmetic: readsInlineComments,
+	interpolationSpans: findInterpolationSpans,
 	selectorCopies (rule: PostcssRule): SelectorCopies {
 		let selectorRaws: SyntaxRaw | undefined = rule.raws.selector
 		let selector = selectorRaws ? selectorRaws.raw : rule.selector

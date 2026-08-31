@@ -5,6 +5,7 @@ import type { PostcssResult } from "stylelint"
 
 import type { CommentSpan } from "../utils/findCommentSpans/index.ts"
 import type { InlineCommentSpan } from "../utils/findInlineCommentSpans/index.ts"
+import type { InterpolationSpan } from "../utils/findInterpolationSpans/index.ts"
 import type { InlineComment } from "../utils/findSelectorInlineComments/index.ts"
 import type { InlineCommentReading } from "../utils/readsInlineComments/index.ts"
 
@@ -204,6 +205,35 @@ export type Syntax = {
 	 * @returns The copies.
 	 */
 	selectorCopies (rule: PostcssRule): SelectorCopies,
+
+	/**
+	 * Asks whether the node must keep its trailing semicolon whatever an option says, because the language will not part with it.
+	 * @param node - The node the semicolon stands behind.
+	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
+	 * @returns True where the semicolon has to stay.
+	 */
+	requiresTrailingSemicolon (node: Node, result: PostcssResult): boolean,
+
+	/**
+	 * Asks whether the syntax that spelled a node reads arithmetic of its own, in which the whitespace in front of every sign is what makes the sign an operator.
+	 *
+	 * Nothing in the tree can answer this: `foo($a) -2px`, which Sass reads as a list of two values, and `foo($a)-2px`, which it reads as a subtraction, are one declaration node either way, and the difference lives in the compiler of the language rather than in what PostCSS hands over. What can be asked is whether a double slash opens a comment in that syntax, and the two answers coincide: Sass and Less spell arithmetic of their own and comments of their own both, and plain CSS spells neither. A syntax the probe learns nothing about is answered yes, which leaves the whitespace standing and costs a warning rather than a file.
+	 *
+	 * What this question cannot do is tell Sass from Less, and one place where those two differ is the plus: Less reads the whitespace in front of it as it reads the whitespace in front of a minus, and Sass reads a plus as an operator whatever whitespace stands beside it. So one reading answers for both syntaxes, and a plus behind a call is left alone under Sass as well, where closing it up would have been safe. That is a warning left unsaid, which is the side of the answer this whole question is decided on. A probe telling those two apart is there to be written — `postcss-less` reads `@a: 1;` as an at-rule it marks a variable and `postcss-scss` reads a plain one — so this is one reading chosen for two languages rather than a wall.
+	 *
+	 * The question is put to the node rather than to the file, since a page may hold a plain `<style>` beside a `<style lang="scss">` and each block carries the syntax that spelled it.
+	 * @param node - The node whose text is being read.
+	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
+	 * @returns True where the syntax that spelled that node spells arithmetic of its own.
+	 */
+	spellsOwnArithmetic (node: Node, result: PostcssResult): boolean,
+
+	/**
+	 * Finds the spans the interpolations of a preprocessor occupy in a text — a stretch written in a language of its own, which no rule reads code beside.
+	 * @param text - The text, with its comments blanked where a brace inside one must not close an interpolation.
+	 * @returns The spans, in the text's own coordinates.
+	 */
+	interpolationSpans (text: string): InterpolationSpan[],
 }
 
 /** A rule's selector, opened for parsing and writing: see {@link Syntax#selectorCopies}. */
