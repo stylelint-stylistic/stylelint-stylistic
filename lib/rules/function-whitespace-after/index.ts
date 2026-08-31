@@ -7,15 +7,11 @@ import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findFunctionArgumentSpans } from "../../utils/findFunctionArgumentSpans/index.ts"
-import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
-import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isWhitespace } from "../../utils/isWhitespace/index.ts"
 import { readsInlineComments } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { searchCopy } from "../../utils/searchCopy/index.ts"
-import { setAtRuleParams } from "../../utils/setAtRuleParams/index.ts"
-import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -38,10 +34,11 @@ const ACCEPTABLE_AFTER_CLOSING_PAREN = new Set([`)`, `,`, `}`, `:`, `/`, undefin
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `always` and `never`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,
@@ -184,22 +181,22 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 		}
 
 		root.walkAtRules(IMPORT_AT_RULE, (atRule) => {
-			let param = getAtRuleParams(atRule)
+			let param = syntax.read(atRule)
 			let { searchString } = searchCopy(param, atRule, result)
 			let fixer = createFixer(param)
 
 			check(atRule, param, searchString, atRuleParamIndex(atRule), fixer.applyFix)
 
-			if (fixer.hasFixed) setAtRuleParams(atRule, fixer.fixed)
+			if (fixer.hasFixed) syntax.write(atRule, fixer.fixed)
 		})
 		root.walkDecls((decl) => {
-			let value = getDeclarationValue(decl)
+			let value = syntax.read(decl)
 			let { searchString } = searchCopy(value, decl, result)
 			let fixer = createFixer(value)
 
 			check(decl, value, searchString, declarationValueIndex(decl), fixer.applyFix)
 
-			if (fixer.hasFixed) setDeclarationValue(decl, fixer.fixed)
+			if (fixer.hasFixed) syntax.write(decl, fixer.fixed)
 		})
 	}
 }

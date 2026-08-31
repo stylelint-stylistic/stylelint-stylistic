@@ -3,6 +3,7 @@ import less from "postcss-less"
 import scss from "postcss-scss"
 import { describe, expect, it } from "vitest"
 
+import { css as syntax } from "../../syntaxes/css/index.ts"
 import { getDeclarationValue } from "../getDeclarationValue/index.ts"
 
 import { moveDeclarationValueHeadIntoBetween } from "./index.ts"
@@ -22,7 +23,7 @@ function move (parser: { parse: Parser }, css: string, length: number): {
 	let rule = parser.parse(css).first as Rule
 	let decl = rule.first as Declaration
 
-	moveDeclarationValueHeadIntoBetween(decl, length)
+	moveDeclarationValueHeadIntoBetween(syntax, decl, length)
 
 	return { printed: rule.root().toResult({ syntax: parser }).css, value: getDeclarationValue(decl), between: decl.raws.between }
 }

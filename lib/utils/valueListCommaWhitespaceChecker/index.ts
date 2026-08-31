@@ -49,7 +49,7 @@ export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceC
 	opts.root.walkDecls((decl) => {
 		if (!opts.syntax.isStandardDeclaration(decl) || !opts.syntax.isStandardProperty(decl.prop)) return
 
-		let declString = declarationString(decl)
+		let declString = declarationString(opts.syntax, decl)
 		let { searchString } = searchCopy(declString, decl, opts.result)
 
 		styleSearch(

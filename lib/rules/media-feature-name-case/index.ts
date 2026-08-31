@@ -6,11 +6,9 @@ import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findMediaFeatureNames } from "../../utils/findMediaFeatureNames/index.ts"
-import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isCustomMediaQuery } from "../../utils/isCustomMediaQuery/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setAtRuleParams } from "../../utils/setAtRuleParams/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -30,10 +28,11 @@ export let meta = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `lower` and `upper`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `lower` | `upper`): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `lower` | `upper`): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,
@@ -43,7 +42,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `low
 		if (!validOptions) return
 
 		root.walkAtRules(MEDIA_AT_RULE, (atRule) => {
-			let mediaRule = getAtRuleParams(atRule)
+			let mediaRule = syntax.read(atRule)
 
 			let hasFixes = false
 
@@ -73,7 +72,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `low
 				})
 			}).stringify()
 
-			if (hasFixes) setAtRuleParams(atRule, mediaRule)
+			if (hasFixes) syntax.write(atRule, mediaRule)
 		})
 	}
 }

@@ -38,7 +38,7 @@ export function declarationColonSpaceChecker (opts: {
 		if (!decl.raws.between) return
 
 		// The declaration down to the end of its value, as the file prints it: whatever the shape of that value, the run standing behind the colon is in this text wherever the declaration keeps it.
-		let source = declarationColonSource(decl)
+		let source = declarationColonSource(opts.syntax, decl)
 
 		// The declaration's own colon is the one PostCSS filed in `raws.between`, that raw holding everything the file spells between the property and the value, so the search is over that raw's span and no further.
 		// A colon standing anywhere else opens no declaration: the value may spell one, a data URI's, and the property may spell one of its own, an escaped `\:`, and reading either as the declaration's sends the check and the fix to a character they are not about.

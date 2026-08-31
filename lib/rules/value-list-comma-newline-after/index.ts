@@ -5,11 +5,9 @@ import { LEADING_WHITESPACE, SPACES_THEN_BLOCK_COMMENT, SPACES_THEN_INLINE_COMME
 import { css } from "../../syntaxes/css/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 import { valueListCommaWhitespaceChecker } from "../../utils/valueListCommaWhitespaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
@@ -82,7 +80,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		if (fixData) {
 			for (let [decl, commaIndices] of fixData.entries()) {
 				for (let index of commaIndices.toSorted((a, b) => a - b).toReversed()) {
-					let value = getDeclarationValue(decl)
+					let value = syntax.read(decl)
 					let valueIndex = index - declarationValueIndex(decl)
 					let beforeValue = value.slice(0, valueIndex + 1)
 					let afterValue = value.slice(valueIndex + 1)
@@ -90,7 +88,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					if (primary.startsWith(`always`)) afterValue = getLineBreak(root, result) + afterValue
 					else if (primary.startsWith(`never-multi-line`)) afterValue = afterValue.replace(LEADING_WHITESPACE, ``)
 
-					setDeclarationValue(decl, beforeValue + afterValue)
+					syntax.write(decl, beforeValue + afterValue)
 				}
 			}
 		}

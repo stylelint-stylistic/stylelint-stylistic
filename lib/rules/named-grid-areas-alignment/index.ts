@@ -6,11 +6,9 @@ import { css } from "../../syntaxes/css/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findInlineCommentSpans, findInlineCommentSpanTouching, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
-import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { readsInlineComments } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 import { isBoolean, isNumber } from "../../utils/validateTypes/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -43,11 +41,12 @@ function isGridRow (node: Node, inlineComments: InlineCommentSpan[]): node is St
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, which is `true`.
  * @param secondaryOptions - The secondary options: `gap` and `alignQuotes`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true, secondaryOptions: {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: true, secondaryOptions: {
 	gap?: number,
 	alignQuotes?: boolean,
 } = {}): RuleCheck {
@@ -74,7 +73,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true
 		let referenceGap = ` `.repeat(gap)
 
 		root.walkDecls(`grid-template-areas`, (declaration) => {
-			let declarationValue = getDeclarationValue(declaration)
+			let declarationValue = syntax.read(declaration)
 			let parsedValue = valueParser(declarationValue)
 			let isMultilineDeclaration = declarationValue.includes(`\n`)
 			let inlineComments = findInlineCommentSpans(declarationValue, readsInlineComments(declaration, result))
@@ -163,7 +162,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true
 					}
 					let formattedValue = acc.join(``)
 
-					setDeclarationValue(declaration, formattedValue)
+					syntax.write(declaration, formattedValue)
 				},
 			})
 		})

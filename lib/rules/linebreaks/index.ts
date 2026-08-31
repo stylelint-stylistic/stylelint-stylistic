@@ -4,14 +4,8 @@ import stylelint from "stylelint"
 import { CRLF, EVERY_LINE_BREAK, EVERY_LINE_WITH_BREAK, LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
-import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { getRuleSelector } from "../../utils/getRuleSelector/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setAtRuleParams } from "../../utils/setAtRuleParams/index.ts"
-import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
-import { setRuleSelector } from "../../utils/setRuleSelector/index.ts"
 import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -32,10 +26,11 @@ export let meta = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `unix` and `windows`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `unix` | `windows`): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `unix` | `windows`): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,
@@ -57,16 +52,16 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `uni
 		 */
 		function fix (): void {
 			root.walk((node) => {
-				if (isRule(node)) setRuleSelector(node, fixData(getRuleSelector(node)))
+				if (isRule(node)) syntax.write(node, fixData(syntax.read(node)))
 
 				if (isAtRule(node)) {
-					setAtRuleParams(node, fixData(getAtRuleParams(node)))
+					syntax.write(node, fixData(syntax.read(node)))
 
 					if (node.raws.afterName) node.raws.afterName = fixData(node.raws.afterName)
 				}
 
 				if (isDeclaration(node)) {
-					setDeclarationValue(node, fixData(getDeclarationValue(node)))
+					syntax.write(node, fixData(syntax.read(node)))
 
 					if (node.raws.important) node.raws.important = fixData(node.raws.important)
 				}

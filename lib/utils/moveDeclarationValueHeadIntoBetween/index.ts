@@ -1,7 +1,6 @@
 import type { Declaration } from "postcss"
 
-import { getDeclarationValue } from "../getDeclarationValue/index.ts"
-import { setDeclarationValue } from "../setDeclarationValue/index.ts"
+import type { Syntax } from "../../syntaxes/index.ts"
 
 /**
  * Moves the head of a declaration's value into `raws.between`, so that a fix writing behind the colon can reach it.
@@ -13,12 +12,12 @@ import { setDeclarationValue } from "../setDeclarationValue/index.ts"
  * What becomes of `decl.value` goes three ways. Where PostCSS keeps a raw beside the value and the move leaves something in it, the copy is left as the parser wrote it, which is what {@link setDeclarationValue} does wherever it is called: that copy is the one saying the raw may still be printed, and leaving it untouched is what keeps the two standing for each other. It goes stale by what the move took, and that costs nothing — {@link getDeclarationValue} hands out the raw, so a rule reading a value through the pair reads the text the file prints, and the few that read `decl.value` for themselves read what they would have read had no fix run at all.
  *
  * Where the move empties that raw, the copy cannot be left: an empty raw is read as no raw at all, and `decl.value` would then be handed out for text that is no longer in the file. The raw goes with the head it held and the value is emptied to match, which is what PostCSS itself writes for a declaration whose value is nothing. Where PostCSS keeps no raw beside the value at all — a custom property whose value is nothing but whitespace — the value is the printed text itself, and the move writes it.
+ * @param syntax - The syntax the rule is built over.
  * @param decl - The CSS declaration node, whose `raws.between` the parser filled: both rules pass over one whose it did not.
  * @param length - How many characters of the printed value to move, never more than that value holds. Both rules hand over nothing at all where no run stands at its head — a value opening on the word it holds, and a value that is empty.
- * @returns The declaration that was passed in.
  */
-export function moveDeclarationValueHeadIntoBetween (decl: Declaration, length: number): Declaration {
-	let value = getDeclarationValue(decl)
+export function moveDeclarationValueHeadIntoBetween (syntax: Syntax, decl: Declaration, length: number): void {
+	let value = syntax.read(decl)
 	let tail = value.slice(length)
 
 	decl.raws.between += value.slice(0, length)
@@ -28,8 +27,8 @@ export function moveDeclarationValueHeadIntoBetween (decl: Declaration, length: 
 		delete decl.raws.value
 		decl.value = ``
 
-		return decl
+		return
 	}
 
-	return setDeclarationValue(decl, tail)
+	syntax.write(decl, tail)
 }

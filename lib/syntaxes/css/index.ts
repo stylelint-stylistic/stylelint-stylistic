@@ -1,5 +1,8 @@
-import type { Root } from "postcss"
+import type { AtRule, Declaration, Root, Rule as PostcssRule } from "postcss"
 
+import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
+import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
+import { getRuleSelector } from "../../utils/getRuleSelector/index.ts"
 import { isStandardSyntaxAtRule } from "../../utils/isStandardSyntaxAtRule/index.ts"
 import { isStandardSyntaxCombinator } from "../../utils/isStandardSyntaxCombinator/index.ts"
 import { isStandardSyntaxComment } from "../../utils/isStandardSyntaxComment/index.ts"
@@ -9,6 +12,10 @@ import { isStandardSyntaxProperty } from "../../utils/isStandardSyntaxProperty/i
 import { isStandardSyntaxRule } from "../../utils/isStandardSyntaxRule/index.ts"
 import { isStandardSyntaxSelector } from "../../utils/isStandardSyntaxSelector/index.ts"
 import { isStandardSyntaxValue } from "../../utils/isStandardSyntaxValue/index.ts"
+import { setAtRuleParams } from "../../utils/setAtRuleParams/index.ts"
+import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
+import { setRuleSelector } from "../../utils/setRuleSelector/index.ts"
+import { isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
 import type { Syntax } from "../index.ts"
 
 /** The syntax of the core: plain CSS, which every rule of the plugin is written for. A styled template is the `styled` namespace's to read, so a root carrying that parser's mark is refused; every other root is still accepted, custom syntaxes without a namespace of their own included. */
@@ -25,4 +32,14 @@ export let css: Syntax = {
 	isStandardFunction: isStandardSyntaxFunction,
 	isStandardComment: isStandardSyntaxComment,
 	isStandardCombinator: isStandardSyntaxCombinator,
+	read (node: AtRule | Declaration | PostcssRule): string {
+		if (isDeclaration(node)) return getDeclarationValue(node)
+
+		return isRule(node) ? getRuleSelector(node) : getAtRuleParams(node)
+	},
+	write (node: AtRule | Declaration | PostcssRule, text: string): void {
+		if (isDeclaration(node)) setDeclarationValue(node, text)
+		else if (isRule(node)) setRuleSelector(node, text)
+		else setAtRuleParams(node, text)
+	},
 }

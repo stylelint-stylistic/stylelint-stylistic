@@ -5,14 +5,12 @@ import { css } from "../../syntaxes/css/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
 import { isInlineStyleAttribute } from "../../utils/isInlineStyleAttribute/index.ts"
 import { isLastDeclarationWithoutSemicolon } from "../../utils/isLastDeclarationWithoutSemicolon/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesIntoInlineComment } from "../../utils/writesIntoInlineComment/index.ts"
@@ -37,11 +35,12 @@ export let meta = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `always`, `always-multi-line` and `never-multi-line`.
  * @param _secondaryOptions - The secondary options, of which this rule takes none.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
 
 	return (root, result) => {
@@ -61,13 +60,13 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 
 			if (isLastDeclarationWithoutSemicolon(decl)) return
 
-			let value = getDeclarationValue(decl)
+			let value = syntax.read(decl)
 			let isCustomPropertyWithOnlyHorizontalSpaces = isCustomProperty(decl.prop) && SPACES_AND_TABS_ONLY.test(value)
 
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/50
 			if (primary.startsWith(`never`) && value === ` `) return
 
-			let declString = declarationString(decl)
+			let declString = declarationString(syntax, decl)
 			let problemIndex = declString.length - 1
 			// The semicolon goes right after the declaration's text, and where an inline comment ends that text, the line break the trailing whitespace opens with is what closes the comment: taking it away, as `never-multi-line` does, would take the semicolon into the comment's text. Nothing can be written there, so the declaration is left alone and the warning stands. The `always` options are in no such danger, since the break they write is what closes such a comment anyway
 			let isFixable = primary.startsWith(`always`) || !writesIntoInlineComment(decl, result)
@@ -89,7 +88,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 								if (primary.startsWith(`always`)) {
 									// The semicolon stands behind `!important`, so wherever the declaration carries the flag, the raw holding it is the text the break goes into, and PostCSS keeps that raw only where the flag is spelled some other way than ` !important`. The raw is kept rather than written anew, so that a comment, and any other layout standing in front of the flag, survives the fix
 									if (decl.important) decl.raws.important = (decl.raws.important || ` !important`).replace(TRAILING_WHITESPACE, getLineBreak(root, result))
-									else setDeclarationValue(decl, value.replace(TRAILING_WHITESPACE, getLineBreak(root, result)))
+									else syntax.write(decl, value.replace(TRAILING_WHITESPACE, getLineBreak(root, result)))
 
 									return
 								}
@@ -103,7 +102,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 											? ` `
 											: value.replace(TRAILING_WHITESPACE, ``)
 
-										setDeclarationValue(decl, newValue)
+										syntax.write(decl, newValue)
 									}
 								}
 							},

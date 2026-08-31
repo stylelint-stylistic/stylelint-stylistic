@@ -3,6 +3,8 @@ import less from "postcss-less"
 import scss from "postcss-scss"
 import { describe, expect, it } from "vitest"
 
+import { css as syntax } from "../../syntaxes/css/index.ts"
+
 import { declarationColonSource } from "./index.ts"
 
 /**
@@ -14,7 +16,7 @@ import { declarationColonSource } from "./index.ts"
 function source (parser: { parse: Parser }, css: string): string {
 	let rule = parser.parse(css).first as Rule
 
-	return declarationColonSource(rule.first as Declaration)
+	return declarationColonSource(syntax, rule.first as Declaration)
 }
 
 describe(`declarationColonSource`, () => {

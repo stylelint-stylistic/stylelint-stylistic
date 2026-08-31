@@ -99,6 +99,20 @@ export type Syntax = {
 	 * @returns True where it is standard.
 	 */
 	isStandardCombinator (combinator: SelectorNode): boolean,
+
+	/**
+	 * Reads the text of a node as the file spells it — a declaration's value, a rule's selector, an at-rule's params — whichever copies the syntax keeps of it.
+	 * @param node - The declaration, rule or at-rule.
+	 * @returns The text, in the file's own spelling.
+	 */
+	read (node: AtRule | Declaration | PostcssRule): string,
+
+	/**
+	 * Writes the text of a node into the copy of it the syntax prints, keeping whatever other copies it holds in step.
+	 * @param node - The declaration, rule or at-rule.
+	 * @param text - The text to write.
+	 */
+	write (node: AtRule | Declaration | PostcssRule, text: string): void,
 }
 
 /** The syntaxes registered beside the core, each under a namespace of its own. A syntax is not registered until it is listed here. */

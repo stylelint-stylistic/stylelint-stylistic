@@ -5,12 +5,10 @@ import { css } from "../../syntaxes/css/index.ts"
 import { declarationColonSource } from "../../utils/declarationColonSource/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { moveDeclarationValueHeadIntoBetween } from "../../utils/moveDeclarationValueHeadIntoBetween/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 import { assertString } from "../../utils/validateTypes/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
@@ -56,7 +54,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (!decl.raws.between) return
 
 			// The declaration down to the end of its value, as the file prints it: whatever the shape of that value, the run standing behind the colon is in this text wherever the declaration keeps it.
-			let source = declarationColonSource(decl)
+			let source = declarationColonSource(syntax, decl)
 
 			// The declaration's own colon is the one PostCSS filed in `raws.between`, that raw holding everything the file spells between the property and the value, so the walk is over that raw's span and no further.
 			// A colon standing anywhere else opens no declaration: the value may spell one, a data URI's, and the property may spell one of its own, an escaped `\:`, and reading either as the declaration's sends the check and the fix to a character they are not about.
@@ -107,11 +105,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								}
 
 								// Only what stands in front of the break is taken over, so that the run behind it is left in the value for whichever rule is asked about the run in front of the semicolon
-								moveDeclarationValueHeadIntoBetween(decl, headLength)
+								moveDeclarationValueHeadIntoBetween(syntax, decl, headLength)
 
-								let valueAfter = getDeclarationValue(decl)
+								let valueAfter = syntax.read(decl)
 
-								if (OPENS_WITH_LINE_BREAK.test(valueAfter)) setDeclarationValue(decl, valueAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``))
+								if (OPENS_WITH_LINE_BREAK.test(valueAfter)) syntax.write(decl, valueAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``))
 								else decl.raws.between += getLineBreak(root, result)
 							},
 						})

@@ -6,18 +6,12 @@ import { CRLF, EVERY_LINE_BREAK, EVERY_LINE_BREAK_AND_INDENT, EVERY_LINE_INDENT,
 import { css } from "../../syntaxes/css/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
-import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { getRuleSelector } from "../../utils/getRuleSelector/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { searchCopy } from "../../utils/searchCopy/index.ts"
-import { setAtRuleParams } from "../../utils/setAtRuleParams/index.ts"
-import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
-import { setRuleSelector } from "../../utils/setRuleSelector/index.ts"
 import { isAtRule, isDeclaration, isRoot, isRule } from "../../utils/typeGuards/index.ts"
 import { assertString, isBoolean, isNumber, isString } from "../../utils/validateTypes/index.ts"
 
@@ -208,7 +202,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (optionsMatches(secondaryOptions, `ignore`, `value`)) return
 
-			let declString = declarationString(decl)
+			let declString = declarationString(syntax, decl)
 			let valueLevel = optionsMatches(secondaryOptions, `except`, `value`) ? declLevel : declLevel + 1
 
 			checkMultilineBit(declString, valueLevel, decl, declLevel)
@@ -226,7 +220,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (`params` in ruleNode && ruleNode.params) level += 1
 
 			// The lines are measured in the copy the file spells, since that is the text the positions of a warning are counted in and the text a fix is written to
-			checkMultilineBit(getRuleSelector(ruleNode), level, ruleNode, ruleLevel)
+			checkMultilineBit(syntax.read(ruleNode), level, ruleNode, ruleLevel)
 		}
 
 		/**
@@ -240,7 +234,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// @nest and SCSS's @at-root rules should be treated like regular rules, not expected to have their params (selectors) indented
 			let paramLevel = optionsMatches(secondaryOptions, `except`, `param`) || atRule.name === `nest` || atRule.name === `at-root` ? ruleLevel : ruleLevel + 1
 
-			checkMultilineBit(`@${atRule.name}${atRule.raws.afterName || ``}${getAtRuleParams(atRule)}${atRule.raws.between || ``}`.trim(), paramLevel, atRule, ruleLevel)
+			checkMultilineBit(`@${atRule.name}${atRule.raws.afterName || ``}${syntax.read(atRule)}${atRule.raws.between || ``}`.trim(), paramLevel, atRule, ruleLevel)
 		}
 
 		/**
@@ -367,7 +361,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (fixPositions.length > 0) {
 				if (isRule(node)) {
-					let fixedSelector = getRuleSelector(node)
+					let fixedSelector = syntax.read(node)
 
 					for (let fixPosition of fixPositions) {
 						fixedSelector = replaceIndentation(
@@ -378,13 +372,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						)
 					}
 
-					setRuleSelector(node, fixedSelector)
+					syntax.write(node, fixedSelector)
 				}
 
 				if (isDeclaration(node)) {
 					let declProp = node.prop
 					let declBetween = node.raws.between
-					let declValue = getDeclarationValue(node)
+					let declValue = syntax.read(node)
 
 					if (!isString(declBetween)) throw new TypeError(`The \`between\` property must be a string`)
 
@@ -405,7 +399,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								fixPosition.startIndex - declProp.length - declBetween.length,
 							)
 
-							setDeclarationValue(node, declValue)
+							syntax.write(node, declValue)
 						}
 					}
 				}
@@ -413,7 +407,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (isAtRule(node)) {
 					let atRuleName = node.name
 					let atRuleAfterName = node.raws.afterName
-					let atRuleParams = getAtRuleParams(node)
+					let atRuleParams = syntax.read(node)
 
 					if (!isString(atRuleAfterName)) throw new TypeError(`The \`afterName\` property must be a string`)
 
@@ -440,7 +434,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								fixPosition.startIndex - paramsStartIndex,
 							)
 
-							setAtRuleParams(node, atRuleParams)
+							syntax.write(node, atRuleParams)
 						}
 					}
 				}

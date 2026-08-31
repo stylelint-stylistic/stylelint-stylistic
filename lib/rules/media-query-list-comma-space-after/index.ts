@@ -5,11 +5,9 @@ import { LEADING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { mediaQueryListCommaWhitespaceChecker } from "../../utils/mediaQueryListCommaWhitespaceChecker/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setAtRuleParams } from "../../utils/setAtRuleParams/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
 let { utils: { validateOptions } } = stylelint
@@ -33,10 +31,11 @@ export let meta = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `always`, `never`, `always-single-line` and `never-single-line`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line`): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line`): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
 
 	return (root, result) => {
@@ -52,6 +51,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 		mediaQueryListCommaWhitespaceChecker({
 			root,
 			result,
+			syntax,
 			locationChecker: checker.after,
 			checkedRuleName: ruleName,
 			fix: (atRule, index) => {
@@ -70,7 +70,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 
 		if (fixData) {
 			for (let [atRule, commaIndices] of fixData.entries()) {
-				let params = getAtRuleParams(atRule)
+				let params = syntax.read(atRule)
 
 				for (let index of commaIndices.toSorted((a, b) => b - a)) {
 					let beforeComma = params.slice(0, index + 1)
@@ -80,7 +80,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 					else if (primary.startsWith(`never`)) params = beforeComma + afterComma.replace(LEADING_WHITESPACE, ``)
 				}
 
-				setAtRuleParams(atRule, params)
+				syntax.write(atRule, params)
 			}
 		}
 	}

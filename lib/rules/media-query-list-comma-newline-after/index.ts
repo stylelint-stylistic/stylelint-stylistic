@@ -5,12 +5,10 @@ import { LEADING_WHITESPACE, LEADING_WHITESPACE_WITHOUT_BREAK, OPENS_WITH_LINE_B
 import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { mediaQueryListCommaWhitespaceChecker } from "../../utils/mediaQueryListCommaWhitespaceChecker/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setAtRuleParams } from "../../utils/setAtRuleParams/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
 let { utils: { validateOptions } } = stylelint
@@ -33,11 +31,12 @@ export let meta = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `always`, `always-multi-line` and `never-multi-line`.
  * @param _secondaryOptions - The secondary options, of which this rule takes none.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
 
 	return (root, result) => {
@@ -54,6 +53,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 		mediaQueryListCommaWhitespaceChecker({
 			root,
 			result,
+			syntax,
 			locationChecker: checker.afterOneOnly,
 			checkedRuleName: ruleName,
 			allowTrailingComments: primary.startsWith(`always`),
@@ -73,7 +73,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 
 		if (fixData) {
 			for (let [atRule, commaIndices] of fixData.entries()) {
-				let params = getAtRuleParams(atRule)
+				let params = syntax.read(atRule)
 
 				for (let index of commaIndices.toSorted((a, b) => b - a)) {
 					let beforeComma = params.slice(0, index + 1)
@@ -84,7 +84,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 					else if (primary.startsWith(`never`)) params = beforeComma + afterComma.replace(LEADING_WHITESPACE, ``)
 				}
 
-				setAtRuleParams(atRule, params)
+				syntax.write(atRule, params)
 			}
 		}
 	}

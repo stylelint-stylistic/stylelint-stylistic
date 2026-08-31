@@ -8,11 +8,9 @@ import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { endsWithInlineComment } from "../../utils/endsWithInlineComment/index.ts"
 import { findInlineCommentSpanHolding, findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
-import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { inlineCommentReading } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setAtRuleParams } from "../../utils/setAtRuleParams/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -66,10 +64,11 @@ function closingEdit (node: FunctionNode, text: string, params: string): Edit {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `always` and `never`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,
@@ -79,7 +78,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 		if (!validOptions) return
 
 		root.walkAtRules(MEDIA_AT_RULE, (atRule) => {
-			let params = getAtRuleParams(atRule)
+			let params = syntax.read(atRule)
 			let indexBoost = atRuleParamIndex(atRule)
 			// A double slash spells a comment only where the syntax says one, and a file of plain CSS spells none: the pair in `myurl(//a)` is code there, and taking it for a comment would silence every feature standing behind it on the line
 			let reading = inlineCommentReading(atRule, result)
@@ -157,7 +156,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 					})
 				}
 
-				if (edits.length > 0) setAtRuleParams(atRule, applyEditsFromEnd(params, edits))
+				if (edits.length > 0) syntax.write(atRule, applyEditsFromEnd(params, edits))
 			}
 		})
 	}

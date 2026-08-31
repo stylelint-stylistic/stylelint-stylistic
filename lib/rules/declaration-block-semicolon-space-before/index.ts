@@ -5,13 +5,11 @@ import { css } from "../../syntaxes/css/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
 import { isInlineStyleAttribute } from "../../utils/isInlineStyleAttribute/index.ts"
 import { isLastDeclarationWithoutSemicolon } from "../../utils/isLastDeclarationWithoutSemicolon/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesIntoInlineComment } from "../../utils/writesIntoInlineComment/index.ts"
@@ -37,10 +35,11 @@ export let meta = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `always`, `never`, `always-single-line` and `never-single-line`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line`): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line`): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
 
 	return (root, result) => {
@@ -60,7 +59,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 
 			if (isLastDeclarationWithoutSemicolon(decl)) return
 
-			let value = getDeclarationValue(decl)
+			let value = syntax.read(decl)
 			let isCustomPropertyWithOnlySpaces = false
 
 			if (isCustomProperty(decl.prop)) {
@@ -71,7 +70,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 				if (primary.startsWith(`never`) && value === ` `) return
 			}
 
-			let declString = declarationString(decl)
+			let declString = declarationString(syntax, decl)
 			let problemIndex = declString.length - 1
 			// The semicolon goes right after the declaration's text, and the whitespace run the fix cuts into ends it. Where an inline comment stands there, the line break that run begins with is what closes the comment, so either option would take the semicolon into the comment's text: neither can be satisfied, so leave the declaration alone and let the warning stand
 			let isFixable = !writesIntoInlineComment(decl, result)
@@ -93,7 +92,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 								if (primary.startsWith(`always`)) {
 									// The raw is kept rather than written anew, so that a comment, and any other layout standing in front of the flag, survives the fix
 									if (decl.important) decl.raws.important = (decl.raws.important || ` !important`).replace(TRAILING_WHITESPACE, ` `)
-									else setDeclarationValue(decl, value.replace(TRAILING_WHITESPACE, ` `))
+									else syntax.write(decl, value.replace(TRAILING_WHITESPACE, ` `))
 
 									return
 								}
@@ -105,7 +104,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 											? ` `
 											: value.replace(TRAILING_WHITESPACE, ``)
 
-										setDeclarationValue(decl, newValue)
+										syntax.write(decl, newValue)
 									}
 								}
 							},

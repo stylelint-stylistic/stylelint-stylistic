@@ -8,14 +8,12 @@ import { addEdit, applyEditsFromEnd, type Edit, toIndexBeforeEdits } from "../..
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findInlineCommentSpanAt, findInlineCommentSpanHolding, findInlineCommentSpans, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
-import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { movesEndIntoInlineComment } from "../../utils/movesEndIntoInlineComment/index.ts"
 import { type InlineCommentReading, inlineCommentReading } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -280,7 +278,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let fix: FixCallback | undefined
 			// What a fix changed, and nothing else: the value is edited at the positions the fixes name rather than printed anew from the parsed tree, since `postcss-value-parser` does not always give back the text it was handed — a comment opening `/*/` comes back as `/**/` — and a fix made anywhere in such a value would rewrite a comment standing elsewhere in it
 			let edits: Edit[] = []
-			let declValue = getDeclarationValue(decl)
+			let declValue = syntax.read(decl)
 			// A double slash spells a comment only where the syntax says one, and a file of plain CSS spells none: the pair in `myurl(//a)` is code there, and taking it for a comment would silence everything standing behind it on the line
 			let reading = inlineCommentReading(decl, result)
 			// A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind: what such a comment holds comes back as ordinary nodes
@@ -347,7 +345,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				}
 			})
 
-			if (edits.length > 0) setDeclarationValue(decl, applyEditsFromEnd(declValue, edits))
+			if (edits.length > 0) syntax.write(decl, applyEditsFromEnd(declValue, edits))
 
 			/**
 			 * Hands `report` a fix that adds the spans a write changes to the list the value is edited by.

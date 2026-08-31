@@ -2,12 +2,11 @@ import type { Declaration, Root } from "postcss"
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
+import type { Syntax } from "../../syntaxes/index.ts"
 import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import { declarationString } from "../declarationString/index.ts"
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
-import { getDeclarationValue } from "../getDeclarationValue/index.ts"
 import { searchCopy } from "../searchCopy/index.ts"
-import { setDeclarationValue } from "../setDeclarationValue/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -64,6 +63,7 @@ export function declarationBangSpaceChecker (opts: {
 	root: Root,
 	locationChecker: LocationChecker,
 	result: PostcssResult,
+	syntax: Syntax,
 	checkedRuleName: string,
 	fix?: ((target: BangTarget) => Edit[]),
 	isFixable?: ((decl: Declaration, index: number) => boolean),
@@ -72,19 +72,19 @@ export function declarationBangSpaceChecker (opts: {
 
 	opts.root.walkDecls((decl) => {
 		let indexOffset = declarationValueIndex(decl)
-		let declString = declarationString(decl)
+		let declString = declarationString(opts.syntax, decl)
 		let { searchString } = searchCopy(declString, decl, opts.result)
 		let valueString = searchString.slice(indexOffset)
 
 		if (!valueString.includes(`!`)) return
 
 		let between = decl.raws.between || `:`
-		let value = getDeclarationValue(decl)
+		let value = opts.syntax.read(decl)
 
 		// A declaration is printed from four texts laid end to end — the property, what stands between it and the value, the value, and the raw of the flag — and where PostCSS puts the whitespace standing in front of a bang depends on what stands in front of that: it reaches the raw of the flag only where the value has a word of its own to leave behind, it stays at the tail of the value where the value is nothing but comments and whitespace, and it stays at the tail of `raws.between` where the flag is not `!important` and is no raw at all. The colon `raws.between` always carries is where any such run stops, so the property is never written into and the three texts behind it are all a fix needs. Where each of them opens follows from `declarationValueIndex`, which counts the property and that one raw and nothing else, since no syntax this plugin reads through spells a prefix in front of a value
 		let parts: DeclarationPart[] = [
 			{ start: indexOffset - between.length, text: between, write: (text) => { decl.raws.between = text }, edits: [] },
-			{ start: indexOffset, text: value, write: (text) => { setDeclarationValue(decl, text) }, edits: [] },
+			{ start: indexOffset, text: value, write: (text) => { opts.syntax.write(decl, text) }, edits: [] },
 		]
 
 		// A declaration carrying no flag has no third text: `raws.important` is printed behind the flag and nowhere else, so a write into it there would be dropped without a trace

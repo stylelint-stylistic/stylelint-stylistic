@@ -8,14 +8,10 @@ import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findInlineCommentSpanHolding, findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
-import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
-import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import { readsInlineComments } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setAtRuleParams } from "../../utils/setAtRuleParams/index.ts"
-import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 import { isAtRule } from "../../utils/typeGuards/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -36,10 +32,11 @@ export let meta = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, which is `true`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: true): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, { actual: primary })
 
@@ -48,10 +45,10 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true
 		root.walkAtRules((atRule) => {
 			if (atRule.name.toLowerCase() === `import`) return
 
-			check(atRule, getAtRuleParams(atRule))
+			check(atRule, syntax.read(atRule))
 		})
 
-		root.walkDecls((decl) => check(decl, getDeclarationValue(decl)))
+		root.walkDecls((decl) => check(decl, syntax.read(decl)))
 
 		/**
 		 * Checks a node for trailing zeros violations.
@@ -125,8 +122,8 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true
 					let startIndex = fixPosition.startIndex
 					let endIndex = fixPosition.endIndex
 
-					if (isAtRule(node)) setAtRuleParams(node, removeTrailingZeros(getAtRuleParams(node), startIndex, endIndex))
-					else setDeclarationValue(node, removeTrailingZeros(getDeclarationValue(node), startIndex, endIndex))
+					if (isAtRule(node)) syntax.write(node, removeTrailingZeros(syntax.read(node), startIndex, endIndex))
+					else syntax.write(node, removeTrailingZeros(syntax.read(node), startIndex, endIndex))
 				}
 			}
 		}

@@ -9,11 +9,9 @@ import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findCommentSpans } from "../../utils/findCommentSpans/index.ts"
-import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { readsInlineComments } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 import { isBoolean } from "../../utils/validateTypes/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -36,11 +34,12 @@ export let meta = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `ratio`, `number-where-possible` and `as-written`.
  * @param secondaryOptions - The secondary options: `smallestIntegers`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `ratio` | `number-where-possible` | `as-written`, secondaryOptions: { smallestIntegers?: boolean } = {}): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `ratio` | `number-where-possible` | `as-written`, secondaryOptions: { smallestIntegers?: boolean } = {}): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,
@@ -66,7 +65,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `rat
 		if (primary === `as-written` && !smallestIntegers) return
 
 		root.walkDecls(ASPECT_RATIO_PROPERTY, (decl) => {
-			check(decl, getDeclarationValue(decl), declarationValueIndex(decl), (fixed) => setDeclarationValue(decl, fixed))
+			check(decl, syntax.read(decl), declarationValueIndex(decl), (fixed) => syntax.write(decl, fixed))
 		})
 
 		/**

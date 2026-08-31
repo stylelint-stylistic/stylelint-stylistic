@@ -7,12 +7,10 @@ import { applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/inde
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findInlineCommentSpanHolding, findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
-import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import { readsInlineComments } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -32,10 +30,11 @@ export let meta = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `lower` and `upper`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `lower` | `upper`): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `lower` | `upper`): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,
@@ -47,7 +46,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `low
 		root.walkDecls((decl) => {
 			if (!CONTAINS_HEX_COLOR.test(decl.value)) return
 
-			let declValue = getDeclarationValue(decl)
+			let declValue = syntax.read(decl)
 			// A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind: what such a comment holds comes back as ordinary words and calls
 			let inlineComments = findInlineCommentSpans(declValue, readsInlineComments(decl, result))
 			let parsedValue = valueParser(declValue)
@@ -86,7 +85,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `low
 				})
 			})
 
-			if (edits.length > 0) setDeclarationValue(decl, applyEditsFromEnd(declValue, edits))
+			if (edits.length > 0) syntax.write(decl, applyEditsFromEnd(declValue, edits))
 		})
 	}
 }

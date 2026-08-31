@@ -9,8 +9,6 @@ import { declarationValueIndex } from "../../utils/declarationValueIndex/index.t
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findInlineCommentSpans, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
 import { findSelectorInlineComments } from "../../utils/findSelectorInlineComments/index.ts"
-import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
-import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { nodeSyntax } from "../../utils/nodeSyntax/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
@@ -18,8 +16,6 @@ import { syntaxKeepsInlineComments } from "../../utils/readsInlineComments/index
 import { restoreSelectorInlineComments } from "../../utils/restoreSelectorInlineComments/index.ts"
 import { rewriteInlineComments } from "../../utils/rewriteInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setAtRuleParams } from "../../utils/setAtRuleParams/index.ts"
-import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 import { toSelectorSourceIndex } from "../../utils/toSelectorSourceIndex/index.ts"
 import { isAtRule, type SyntaxRaw } from "../../utils/typeGuards/index.ts"
 import { assertString, isBoolean } from "../../utils/validateTypes/index.ts"
@@ -84,10 +80,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		root.walk((node) => {
 			switch (node.type) {
 				case `atrule`:
-					checkDeclOrAtRule(node, getAtRuleParams(node), atRuleParamIndex)
+					checkDeclOrAtRule(node, syntax.read(node), atRuleParamIndex)
 					break
 				case `decl`:
-					checkDeclOrAtRule(node, getDeclarationValue(node), declarationValueIndex)
+					checkDeclOrAtRule(node, syntax.read(node), declarationValueIndex)
 					break
 				case `rule`:
 					checkRule(node)
@@ -277,8 +273,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let fixed = replaceQuotes(value, fixPositions)
 
-			if (isAtRule(node)) setAtRuleParams(node, fixed)
-			else setDeclarationValue(node, fixed)
+			if (isAtRule(node)) syntax.write(node, fixed)
+			else syntax.write(node, fixed)
 		}
 
 		/**

@@ -8,14 +8,10 @@ import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findInlineCommentSpanHolding, findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
-import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
-import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import { readsInlineComments } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setAtRuleParams } from "../../utils/setAtRuleParams/index.ts"
-import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 import { isAtRule } from "../../utils/typeGuards/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -37,10 +33,11 @@ export let meta = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `always` and `never`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,
@@ -54,10 +51,10 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 		root.walkAtRules((atRule) => {
 			if (atRule.name.toLowerCase() === `import`) return
 
-			check(atRule, getAtRuleParams(atRule))
+			check(atRule, syntax.read(atRule))
 		})
 
-		root.walkDecls((decl) => check(decl, getDeclarationValue(decl)))
+		root.walkDecls((decl) => check(decl, syntax.read(decl)))
 
 		/**
 		 * Checks a node for leading zero violations.
@@ -139,8 +136,8 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 				for (let fixPosition of alwaysFixPositions) {
 					let index = fixPosition.index
 
-					if (isAtRule(node)) setAtRuleParams(node, addLeadingZero(getAtRuleParams(node), index))
-					else setDeclarationValue(node, addLeadingZero(getDeclarationValue(node), index))
+					if (isAtRule(node)) syntax.write(node, addLeadingZero(syntax.read(node), index))
+					else syntax.write(node, addLeadingZero(syntax.read(node), index))
 				}
 			}
 
@@ -149,8 +146,8 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 					let startIndex = fixPosition.startIndex
 					let endIndex = fixPosition.endIndex
 
-					if (isAtRule(node)) setAtRuleParams(node, removeLeadingZeros(getAtRuleParams(node), startIndex, endIndex))
-					else setDeclarationValue(node, removeLeadingZeros(getDeclarationValue(node), startIndex, endIndex))
+					if (isAtRule(node)) syntax.write(node, removeLeadingZeros(syntax.read(node), startIndex, endIndex))
+					else syntax.write(node, removeLeadingZeros(syntax.read(node), startIndex, endIndex))
 				}
 			}
 		}

@@ -6,11 +6,9 @@ import { css } from "../../syntaxes/css/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { endsWithInlineComment } from "../../utils/endsWithInlineComment/index.ts"
-import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { inlineCommentReading } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 import { valueListCommaWhitespaceChecker } from "../../utils/valueListCommaWhitespaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
@@ -87,14 +85,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						continue
 					}
 
-					let value = getDeclarationValue(decl)
+					let value = syntax.read(decl)
 					let beforeValue = value.slice(0, valueIndex)
 					let afterValue = value.slice(valueIndex)
 
 					if (primary.startsWith(`always`)) beforeValue = beforeValue.replace(TRAILING_WHITESPACE, ` `)
 					else if (primary.startsWith(`never`)) beforeValue = beforeValue.replace(TRAILING_WHITESPACE, ``)
 
-					setDeclarationValue(decl, beforeValue + afterValue)
+					syntax.write(decl, beforeValue + afterValue)
 				}
 			}
 		}

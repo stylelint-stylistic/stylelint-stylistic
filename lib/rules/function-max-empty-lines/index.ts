@@ -5,11 +5,9 @@ import stylelint from "stylelint"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findInlineCommentSpanHolding, findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
-import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { readsInlineComments } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 import { assertString, isNumber } from "../../utils/validateTypes/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -41,10 +39,11 @@ function placeIndexOnValueStart (decl: Declaration): number {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, a number.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: number): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: number): RuleCheck {
 	let maxAdjacentNewlines = primary + 1
 
 	return (root, result) => {
@@ -63,7 +62,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 		root.walkDecls((decl) => {
 			if (!decl.value.includes(`(`)) return
 
-			let stringValue = getDeclarationValue(decl)
+			let stringValue = syntax.read(decl)
 
 			// A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind: what such a comment holds comes back as ordinary words and calls
 			let inlineComments = findInlineCommentSpans(stringValue, readsInlineComments(decl, result))
@@ -115,7 +114,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 			if (splittedValue.length > 0) {
 				let updatedValue = splittedValue.reduce((acc, curr) => acc + curr[0] + curr[1], ``) + stringValue.slice(sourceIndexStart)
 
-				setDeclarationValue(decl, updatedValue)
+				syntax.write(decl, updatedValue)
 			}
 		})
 	}

@@ -4,16 +4,10 @@ import stylelint from "stylelint"
 import { EVERY_LINE_BREAK, LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
-import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { getRuleSelector } from "../../utils/getRuleSelector/index.ts"
 import { isOnlyWhitespace } from "../../utils/isOnlyWhitespace/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setAtRuleParams } from "../../utils/setAtRuleParams/index.ts"
-import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
-import { setRuleSelector } from "../../utils/setRuleSelector/index.ts"
 import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -212,15 +206,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						node.raws.afterName = fixed
 					})
 
-					fixText(getAtRuleParams(node), (fixed) => {
-						setAtRuleParams(node, fixed)
+					fixText(syntax.read(node), (fixed) => {
+						syntax.write(node, fixed)
 					})
 				}
 
 				// The whitespace this rule takes away may stand in the text of an inline comment the selector carries — `.a // c ` ends in a space the file holds and the raw hides two characters further along — so the selector is read and written through the pair, which works on the copy the file spells and refills the raw beside it.
 				if (isRule(node)) {
-					fixText(getRuleSelector(node), (fixed) => {
-						setRuleSelector(node, fixed)
+					fixText(syntax.read(node), (fixed) => {
+						syntax.write(node, fixed)
 					})
 				}
 
@@ -231,8 +225,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				}
 
 				if (isDeclaration(node)) {
-					fixText(getDeclarationValue(node), (fixed) => {
-						setDeclarationValue(node, fixed)
+					fixText(syntax.read(node), (fixed) => {
+						syntax.write(node, fixed)
 					})
 				}
 

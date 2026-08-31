@@ -12,15 +12,11 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { findCommentSpans } from "../../utils/findCommentSpans/index.ts"
 import { findInlineCommentSpanHolding } from "../../utils/findInlineCommentSpans/index.ts"
 import { findInterpolationSpans, findInterpolationSpanTouching } from "../../utils/findInterpolationSpans/index.ts"
-import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
-import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getDimension } from "../../utils/getDimension/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import { readsInlineComments } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setAtRuleParams } from "../../utils/setAtRuleParams/index.ts"
-import { setDeclarationValue } from "../../utils/setDeclarationValue/index.ts"
 import { isAtRule } from "../../utils/typeGuards/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -49,10 +45,11 @@ type Problem = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `lower` and `upper`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `lower` | `upper`): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `lower` | `upper`): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,
@@ -195,8 +192,8 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `low
 				if (hasFixed) {
 					let fixedValue = applyEditsFromEnd(checkedValue, edits)
 
-					if (isAtRule(node)) setAtRuleParams(node, fixedValue)
-					else setDeclarationValue(node, fixedValue)
+					if (isAtRule(node)) syntax.write(node, fixedValue)
+					else syntax.write(node, fixedValue)
 				}
 			}
 		}
@@ -204,9 +201,9 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `low
 		root.walkAtRules((atRule) => {
 			if (!MEDIA_AT_RULE.test(atRule.name) && !(`variable` in atRule)) return
 
-			check(atRule, getAtRuleParams(atRule), atRuleParamIndex)
+			check(atRule, syntax.read(atRule), atRuleParamIndex)
 		})
-		root.walkDecls((decl) => check(decl, getDeclarationValue(decl), declarationValueIndex))
+		root.walkDecls((decl) => check(decl, syntax.read(decl), declarationValueIndex))
 	}
 }
 
