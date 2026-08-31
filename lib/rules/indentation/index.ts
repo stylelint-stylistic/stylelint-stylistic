@@ -11,8 +11,6 @@ import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { getRuleSelector } from "../../utils/getRuleSelector/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
-import { isStyledSyntaxDeclaration } from "../../utils/isStyledSyntaxDeclaration/index.ts"
-import { isStyledSyntaxNode } from "../../utils/isStyledSyntaxNode/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -50,11 +48,12 @@ type SecondaryOptions = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option: a number of spaces, or `tab`.
  * @param secondaryOptions - The secondary options: `baseIndentLevel`, `except`, `ignore`, `indentInsideParens` and `indentClosingBrace`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: number | `tab`, secondaryOptions: SecondaryOptions = {}): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: number | `tab`, secondaryOptions: SecondaryOptions = {}): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,
@@ -105,7 +104,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 			}
 
 			let nodeLevel = indentationLevel(node)
-			let styledDeclarationLevel = isStyledSyntaxNode(node) ? getStyledDeclarationLevel(node) : 0
+			let hostLevel = Math.ceil(syntax.embedding(node).indent.length / indentChar.length)
 
 			// Cut out any * and _ hacks from `before`
 			let before = (node.raws.before || ``).replace(TRAILING_STAR_OR_UNDERSCORE, ``)
@@ -125,7 +124,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 			if ((beforeLines.length > 1 || (isFirstChild && (!getDocument(parent) || (parent.raws.codeBefore && TRAILING_LINE_BREAK.test(parent.raws.codeBefore))))) && indentationBefore !== expectedOpeningBraceIndentation) {
 				report({
 					message: messages.expected,
-					messageArgs: [legibleExpectation(nodeLevel - styledDeclarationLevel)],
+					messageArgs: [legibleExpectation(nodeLevel - hostLevel)],
 					node,
 					result,
 					ruleName,
@@ -147,7 +146,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 
 				report({
 					message: messages.expected,
-					messageArgs: [legibleExpectation(closingBraceLevel - styledDeclarationLevel)],
+					messageArgs: [legibleExpectation(closingBraceLevel - hostLevel)],
 					node,
 					index: problemIndex,
 					endIndex: problemIndex,
@@ -170,24 +169,6 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 		})
 
 		/**
-		 * Roughly calculates the indentation level of the line where styled expression starts. Required to format the error text relative to this level, not the beginning of a line.
-		 * @param node - The node to calculate level for.
-		 * @returns The calculated indentation level.
-		 */
-		function getStyledDeclarationLevel (node: Node): number {
-			let { parent } = node
-
-			if (!parent?.parent?.source || !parent.source?.start) throw new Error(`A styled expression must stand inside a node with a source`)
-
-			// Content of the line where styled expressions starts
-			let expressionStartLine = lineAt(parent.parent.source.input.css, parent.source.start.line)
-			// Indent characters (spaces/tabs) before the content of the line where the styled expressions starts
-			let indentCharacters = expressionStartLine.match(LEADING_SPACES_AND_TABS)?.[0] ?? ``
-
-			return Math.ceil(indentCharacters.length / indentChar.length)
-		}
-
-		/**
 		 * Calculates the indentation level for a node.
 		 * @param node - The node to calculate level for.
 		 * @param level - The current level.
@@ -198,13 +179,11 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 
 			let calculatedLevel = level
 
-			if (isStyledSyntaxNode(node)) {
-				let isMultilineDeclaration = !!node.parent.source && LINE_BREAK.test(node.parent.source.input.css)
+			let { indent: hostIndent, multiline } = syntax.embedding(node)
 
-				if (isMultilineDeclaration) calculatedLevel += 1
+			if (multiline) calculatedLevel += 1
 
-				calculatedLevel += getStyledDeclarationLevel(node)
-			}
+			calculatedLevel += Math.ceil(hostIndent.length / indentChar.length)
 
 			if (isRoot(node.parent)) return calculatedLevel + getRootBaseIndentLevel(node.parent, baseIndentLevel, primary)
 
@@ -225,7 +204,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 		function checkValue (decl: Declaration, declLevel: number): void {
 			if (!LINE_BREAK.test(decl.value)) return
 
-			if (isStyledSyntaxDeclaration(decl) && decl.value.includes(`\${`)) return
+			if (syntax.valueEmbedsHostCode(decl)) return
 
 			if (optionsMatches(secondaryOptions, `ignore`, `value`)) return
 
@@ -676,20 +655,6 @@ function inferRootIndentLevel (root: Root, baseIndentLevel: number | `auto` | un
 	if (indents.length > 0) return Math.max(...indents.map((indent) => getIndentLevel(indent))) + newBaseIndentLevel
 
 	return newBaseIndentLevel
-}
-
-/**
- * Reads one line of a text, counted from one as a source position counts them.
- * @param text - The text.
- * @param line - The number of the line.
- * @returns The line, without its break.
- */
-function lineAt (text: string, line: number): string {
-	let found = text.split(`\n`)[line - 1]
-
-	if (found === undefined) throw new Error(`A styled expression starts on a line its file does not hold`)
-
-	return found
 }
 
 /**

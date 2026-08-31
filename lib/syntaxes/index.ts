@@ -1,4 +1,4 @@
-import type { Root } from "postcss"
+import type { Declaration, Node, Root } from "postcss"
 import type { PostcssResult } from "stylelint"
 
 /**
@@ -18,6 +18,20 @@ export type Syntax = {
 	 * @returns True where the rules are written for it; a root refused here is answered by one warning naming the rule, and checked by nothing.
 	 */
 	accepts (root: Root, result: PostcssResult): boolean,
+
+	/**
+	 * Reads what the code around an embedded stylesheet gives a node of it: the indentation of the line the embedding expression opens on, and whether the expression is broken over lines, which puts what it holds one level deeper.
+	 * @param node - The node whose stylesheet may be embedded.
+	 * @returns The indentation and the spread; an empty indent, unbroken, for a stylesheet standing on its own.
+	 */
+	embedding (node: Node): { indent: string, multiline: boolean },
+
+	/**
+	 * Asks whether a declaration's value embeds an expression of the host language, whose lines are the host's rather than the stylesheet's.
+	 * @param decl - The declaration.
+	 * @returns True where the value holds such an expression.
+	 */
+	valueEmbedsHostCode (decl: Declaration): boolean,
 }
 
 /** The syntaxes registered beside the core, each under a namespace of its own. A syntax is not registered until it is listed here. */

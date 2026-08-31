@@ -2,6 +2,7 @@ import { parse } from "postcss"
 import stylelint, { type Config, type PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
+import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import type { RuleCheck } from "../ruleCheck/index.ts"
 
@@ -31,8 +32,8 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: stri
 
 let createRule = defineRule({ shortName: `property-found`, meta: { url: `https://example.test/property-found` }, messages: MESSAGES, rule })
 
-let core: Syntax = { accepts: () => true }
-let refusing: Syntax = { namespace: `never`, accepts: () => false }
+let core: Syntax = { ...css }
+let refusing: Syntax = { ...css, namespace: `never`, accepts: () => false }
 
 /**
  * Lints a text under the rules given, each registered as a plugin of its own and configured to look for `color`.
@@ -87,6 +88,7 @@ describe(`a rule built for a syntax`, () => {
 	it(`asks the syntax about the root a check was handed`, () => {
 		let seen: unknown[] = []
 		let asked: Syntax = {
+			...css,
 			accepts: (root) => {
 				seen.push(root)
 

@@ -11,6 +11,7 @@ let { utils: { report, ruleMessages } } = stylelint
 export type RuleScope<M extends RuleMessages> = {
 	ruleName: string,
 	messages: M,
+	syntax: Syntax,
 }
 
 /** What a rule module defines once, whichever namespaces the rule is then registered under. */
@@ -55,7 +56,7 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 		 * @returns The check, run over every stylesheet the rule is configured for, unless the syntax refuses it.
 		 */
 		function scoped (primary: P, secondaryOptions: S): RuleCheck {
-			let check = rule({ ruleName, messages: scopedMessages }, primary, secondaryOptions)
+			let check = rule({ ruleName, messages: scopedMessages, syntax }, primary, secondaryOptions)
 
 			return (root, result) => {
 				if (syntax.accepts(root, result)) return check(root, result)

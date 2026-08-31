@@ -75,10 +75,8 @@ const DEBT: Record<string, string[]> = {
 		`if (nextChar === \`\\n\`) return`,
 		`if (source.slice(index, index + 2) === \`\\r\\n\`) return`,
 	],
-	"lib/rules/indentation/index.ts": [
-		`let found = text.split(\`\\n\`)[line - 1]`,
-		`target: \`\\n\`,`,
-	],
+	"lib/rules/indentation/index.ts": [`target: \`\\n\`,`],
+	"lib/syntaxes/css/index.ts": [`let found = text.split(\`\\n\`)[line - 1]`],
 	"lib/rules/max-empty-lines/index.ts": [`target: CRLF.test(rootString) ? \`\\r\\n\` : \`\\n\`,`],
 	"lib/rules/max-line-length/index.ts": [
 		`styleSearch({ source: rootString, target: [\`\\n\`], comments: \`check\` }, (match) => checkNewline(match))`,
