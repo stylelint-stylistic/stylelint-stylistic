@@ -71,7 +71,7 @@ When writing the rule, you should:
 
 - make the rule strict by default
 - add secondary `ignore` options to make the rule more permissive
-- not include code specific to language extensions like SCSS
+- keep code specific to a language extension out of the rule: what SCSS or Less spells is answered by the namespaces under `lib/syntaxes/` and the machinery they share in `lib/preprocessor/`, and a rule reaches it only through the `Syntax` contract
 
 You should make use of the:
 

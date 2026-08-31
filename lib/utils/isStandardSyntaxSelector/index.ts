@@ -1,4 +1,4 @@
-import { hasInterpolation } from "../hasInterpolation/index.ts"
+import { hasTplInterpolation } from "../hasTplInterpolation/index.ts"
 import { withoutQuotedTextAndComments } from "../withoutQuotedTextAndComments/index.ts"
 
 /**
@@ -17,16 +17,10 @@ export function isStandardSyntaxSelector (selector: string): boolean {
  * @returns True if the selector is standard syntax, false otherwise.
  */
 export function isStandardSyntaxSelectorCode (code: string): boolean {
-	// SCSS or Less interpolation
-	if (hasInterpolation(code)) return false
+	// Template interpolation, a pair of braces included, whatever spells them
+	if (hasTplInterpolation(code)) return false
 
-	// SCSS placeholder selectors
-	if (code.startsWith(`%`)) return false
-
-	// SCSS nested properties
-	if (code.endsWith(`:`)) return false
-
-	// A selector closing on a parenthesis and carrying no colon — the shape of a Less non-outputting mixin definition (e.g. `.mixin() {}`). The reading stays here after the Less namespace took its own guards, since taking a shape test out of the core would change what the core reports over plain CSS; where its true home is falls to the SCSS phase, which unpicks the rest of this file.
+	// A selector closing on a parenthesis and carrying no colon — the shape of a Less non-outputting mixin definition (e.g. `.mixin() {}`). The reading stays here after the namespaces took their own guards, since taking a shape test out of the core would change what the core reports over plain CSS.
 	if (code.endsWith(`)`) && !code.includes(`:`)) return false
 
 	// ERB template tags

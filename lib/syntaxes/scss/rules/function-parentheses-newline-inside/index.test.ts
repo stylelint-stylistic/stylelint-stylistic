@@ -157,3 +157,51 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`always`],
+	customSyntax: `postcss-scss`,
+
+	accept: [
+		{
+			description: `an SCSS map, whose parentheses open no call`,
+			code: `$map: (key: value,key2: value2)`,
+		},
+		{
+			description: `an SCSS list, whose parentheses open no call either`,
+			code: `$list: (value, value2)`,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always-multi-line`],
+	customSyntax: `postcss-scss`,
+
+	accept: [
+		{
+			description: `an SCSS map broken across lines, whose parentheses open no call`,
+			code: `$map: (key: value,\nkey2: value2)`,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never-multi-line`],
+	customSyntax: `postcss-scss`,
+
+	accept: [
+		{
+			description: `an SCSS map broken on the inside of both parentheses`,
+			code: `
+				$map: (
+				key: value,
+				key2: value2
+				)
+			`,
+		},
+	],
+})

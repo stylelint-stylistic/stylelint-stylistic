@@ -474,11 +474,6 @@ testRule({
 	accept: [
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/326
-			description: `a Sass variable standing on the root of a style element, which is a stylesheet of its own and closes no block`,
-			code: `<style lang="scss">$var: pink</style>`,
-		},
-		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/326
 			description: `an at-rule standing on the root of an inline style attribute, which holds declarations and nothing else, so the semicolon behind it is not this rule's to write`,
 			code: `<div style="@import 'a'">x</div>`,
 		},
@@ -515,11 +510,6 @@ testRule({
 	accept: [
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/326
-			description: `a Sass variable standing on the root of a style element, which is a stylesheet of its own however the page carries it`,
-			code: `<style lang="scss">$var: pink;</style>`,
-		},
-		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/326
 			description: `an at-rule standing on the root of an inline style attribute, which holds declarations and nothing else, so the semicolon behind it is not this rule's to take away`,
 			code: `<div style="@import 'a';">x</div>`,
 		},
@@ -552,20 +542,6 @@ testRule({
 			fixed: `<div style="color: pink">x</div>`,
 			line: 1,
 			column: 25,
-			message: messages.rejected,
-		},
-		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/309
-			// The other half of this page, the Less block, is the less namespace's since the core turned Less away; a page holding both languages splits its rules between the namespaces the same way
-			description: `an at-rule closing a block of a Sass style element, whose semicolon that syntax parts with`,
-			code: `
-				<style lang="scss">a { @extend .c; }</style>
-			`,
-			fixed: `
-				<style lang="scss">a { @extend .c }</style>
-			`,
-			line: 1,
-			column: 34,
 			message: messages.rejected,
 		},
 	],

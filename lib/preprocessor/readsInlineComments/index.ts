@@ -4,10 +4,11 @@ import type { PostcssResult } from "stylelint"
 import { nodeSyntax } from "../../utils/nodeSyntax/index.ts"
 import { isSyntax } from "../../utils/typeGuards/index.ts"
 
-/** What the probe of a syntax says about a comment opened by a double slash: whether the syntax spells one at all, and whether it leaves one standing in the value a rule reads. Which break closes one is no question of the syntax's: a line break is what PostCSS reads as one, a line feed with or without a carriage return in front of it, and every scan of a text closes such a comment there. */
+/** What the probe of a syntax says about a comment opened by a double slash: whether the syntax spells one at all, whether it leaves one standing in the value a rule reads, and whether those two answers are the syntax's own. A syntax that read the probe as the stylesheet it is has answered for itself; one that threw, read nothing out of it, or could not be asked at all is given the default that reads a comment as a comment, and `answered` says which of the two a caller is holding — a gate refusing a file on the syntax's own account must not refuse one on the default. Which break closes one is no question of the syntax's: a line break is what PostCSS reads as one, a line feed with or without a carriage return in front of it, and every scan of a text closes such a comment there. */
 export type InlineCommentReading = {
 	spells: boolean,
 	keeps: boolean,
+	answered: boolean,
 }
 
 /** The reading of {@link probeSyntax}, per syntax. */
@@ -23,17 +24,17 @@ const INLINE_COMMENT_PROBE = `a {}\n// comment\na { b: 'x', // comment\n  'y'; }
  */
 function probeSyntax (syntax?: unknown): InlineCommentReading {
 	// No syntax at all is plain CSS, which spells no comment with a double slash, so no break of any kind closes one
-	if (!syntax) return { spells: false, keeps: false }
+	if (!syntax) return { spells: false, keeps: false, answered: true }
 
 	// Something is there that cannot be asked, so it is answered as anything else that says nothing
-	if (!isSyntax(syntax)) return { spells: true, keeps: false }
+	if (!isSyntax(syntax)) return { spells: true, keeps: false, answered: false }
 
 	let known = inlineCommentSyntaxes.get(syntax)
 
 	if (known !== undefined) return known
 
 	// A syntax that makes nothing of the probe has said nothing, and the answer that costs nothing is the one that reads a comment as a comment
-	let reading: InlineCommentReading = { spells: true, keeps: false }
+	let reading: InlineCommentReading = { spells: true, keeps: false, answered: false }
 
 	try {
 		let probe: Root | Document = syntax.parse(INLINE_COMMENT_PROBE, { from: undefined })
@@ -44,6 +45,7 @@ function probeSyntax (syntax?: unknown): InlineCommentReading {
 		})
 
 		if (readsTheProbe) {
+			reading.answered = true
 			reading.spells = false
 
 			probe.walkComments((comment) => {

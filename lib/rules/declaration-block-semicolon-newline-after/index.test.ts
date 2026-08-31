@@ -578,10 +578,6 @@ testRule({
 				top: 0; }</style>
 			`,
 		},
-		{
-			description: `Sass variables at the top level of a style element, which are no declaration block`,
-			code: `<style lang="scss">$a: 1;$b: 2;</style>`,
-		},
 	],
 
 	reject: [

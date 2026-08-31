@@ -1,6 +1,8 @@
 import type { AtRule, Declaration, Root, Rule as PostcssRule } from "postcss"
 import type { PostcssResult } from "stylelint"
 
+import { findInterpolationSpans } from "../../preprocessor/findInterpolationSpans/index.ts"
+import { isStandardPreprocessorFunction } from "../../preprocessor/guards/index.ts"
 import { inlineCommentReading } from "../../preprocessor/readsInlineComments/index.ts"
 import { isAtRule } from "../../utils/typeGuards/index.ts"
 import { css } from "../css/index.ts"
@@ -21,6 +23,8 @@ export let less: Syntax = {
 	isStandardProperty: isStandardLessProperty,
 	isStandardValue: isStandardLessValue,
 	isStandardComment: isStandardLessComment,
+	isStandardFunction: isStandardPreprocessorFunction,
+	interpolationSpans: (text) => findInterpolationSpans(text),
 	requiresTrailingSemicolon,
 	readsRuleParams: (rule: PostcssRule) => `params` in rule && Boolean(rule.params),
 	readsAtRuleAsVariable: (atRule: AtRule) => `variable` in atRule,

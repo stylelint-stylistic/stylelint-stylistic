@@ -23,10 +23,6 @@ describe(`getDeclarationValue`, () => {
 		expect(getDeclarationValue(decl(`a { --foo: 0 /* c */ 1px }`))).toBe(`0 /* c */ 1px `)
 	})
 
-	it(`has an inline comment inside the value, which the syntax spells in a copy of its own`, () => {
-		expect(getDeclarationValue(scssDecl(`a { margin: 0 // c\n  1px }`))).toBe(`0 // c\n  1px`)
-	})
-
 	it(`has a block comment inside the value, which the syntax keeps one copy of`, () => {
 		expect(getDeclarationValue(scssDecl(`a { margin: 0 /* c */ 1px }`))).toBe(`0 /* c */ 1px`)
 	})

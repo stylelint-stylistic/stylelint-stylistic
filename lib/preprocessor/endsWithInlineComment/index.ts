@@ -94,7 +94,7 @@ const READ_INSIDE = {
 }
 
 /** The reading a caller naming none is answered under: a syntax that spells such a comment. */
-const NOTHING_SAID = { spells: true, keeps: false }
+const NOTHING_SAID = { spells: true, keeps: false, answered: false }
 
 /**
  * Scans a text for the comment it may end inside.

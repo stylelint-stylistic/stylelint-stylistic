@@ -41,7 +41,4 @@ describe(`isStandardSyntaxRule`, () => {
 	it(`custom-property-set`, () => {
 		expect(isStandardSyntaxRule(node(`--custom-property-set: {}`))).toBe(false)
 	})
-	it(`scss nested properties`, () => {
-		expect(isStandardSyntaxRule(node(`foo: {};`))).toBe(false)
-	})
 })

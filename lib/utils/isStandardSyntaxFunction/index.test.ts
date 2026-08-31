@@ -14,18 +14,13 @@ describe(`isStandardSyntaxFunction`, () => {
 		expect(isStandardSyntaxFunction(getFunction(`url('x.css')`))).toBe(true)
 	})
 
+	it(`a parenthesised group inside a call, which is no call of its own`, () => {
+		expect(isStandardSyntaxFunction(getFunction(`(1px + 2px) * 2`))).toBe(false)
+	})
+
 	it(`scss list`, () => {
 		// as in $list: (list)
 		expect(isStandardSyntaxFunction(getFunction(`(list)`))).toBe(false)
-	})
-
-	it(`scss map`, () => {
-		// as in $map: (key: value)
-		expect(isStandardSyntaxFunction(getFunction(`(key: value)`))).toBe(false)
-	})
-
-	it(`scss function in scss interpolation`, () => {
-		expect(isStandardSyntaxFunction(getFunction(`#{darken(#fff, 0.2)}`))).toBe(false)
 	})
 
 	it(`CSS-in-JS interpolation`, () => {

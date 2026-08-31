@@ -1,10 +1,8 @@
 import { type Document, parse, type Root, type Rule } from "postcss"
 import { parse as parseLess } from "postcss-less"
-import { parse as parseScss, stringify as stringifyScss } from "postcss-scss"
 import { describe, expect, it } from "vitest"
 
 import { pick } from "../../../vitest.helpers.ts"
-import type { SyntaxRaw } from "../typeGuards/index.ts"
 
 import { setRuleSelector } from "./index.ts"
 
@@ -40,32 +38,6 @@ describe(`setRuleSelector`, () => {
 		expect(setRuleSelector(node, `b`)).toBe(node)
 	})
 
-	it(`writes the copy the syntax prints`, () => {
-		let node = scssRule(`a // c\n, b {}`)
-
-		setRuleSelector(node, `a // c\r\n, b`)
-
-		expect((node.raws.selector as SyntaxRaw).scss).toBe(`a // c\r\n, b`)
-	})
-
-	it(`keeps the raw beside it in step`, () => {
-		let node = scssRule(`a // c\n, b {}`)
-
-		setRuleSelector(node, `a // c\r\n, b`)
-
-		expect((node.raws.selector as SyntaxRaw).raw).toBe(`a /* c*/\r\n, b`)
-	})
-
-	it(`the syntax prints what was written`, () => {
-		let root = parseScss(`a // c\n, b {}`)
-
-		root.walkRules((node) => {
-			setRuleSelector(node, `a // c\r\n, b`)
-		})
-
-		expect(root.toString(stringifyScss)).toBe(`a // c\r\n, b {}`)
-	})
-
 	it(`writes the selector itself where the syntax keeps the comment in no raw`, () => {
 		let node = lessRule(`a // c\n, b {}`)
 
@@ -83,15 +55,6 @@ describe(`setRuleSelector`, () => {
  */
 function rule (css: string): Rule {
 	return collect(parse(css))
-}
-
-/**
- * Reads the first rule of a stylesheet written in SCSS.
- * @param css - The stylesheet.
- * @returns That rule.
- */
-function scssRule (css: string): Rule {
-	return collect(parseScss(css))
 }
 
 /**

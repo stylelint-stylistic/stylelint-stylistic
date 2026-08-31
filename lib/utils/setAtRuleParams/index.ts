@@ -1,13 +1,11 @@
 import type { AtRule } from "postcss"
 
-import { findInlineCommentSpans } from "../findInlineCommentSpans/index.ts"
-import { rewriteInlineComments } from "../rewriteInlineComments/index.ts"
 import type { SyntaxRaw } from "../typeGuards/index.ts"
 
 /**
  * Sets the params of an at-rule, in the copy of them the syntax prints.
  *
- * Where `postcss-scss` keeps two copies of a set of parameters, the raw one it rewrote the `//` comments in and the one spelled as the file spells it, the second is the one that is printed, so the fix goes there. The raw is kept beside it in step, for the rules that come after: rewriting the comments of the fixed parameters the way the syntax rewrites them is what fills it, so a rule reading the pair is still handed the two copies of one text.
+ * Where PostCSS keeps a raw of the parameters beside the copy with the comments taken out, the raw is the one that is printed, so the fix goes there. The pair a preprocessor keeps beside it is its own namespace\u2019s to write.
  * @param atRule - The at-rule node.
  * @param params - The new params to set.
  * @returns The at-rule that was passed in.
@@ -16,13 +14,7 @@ export function setAtRuleParams (atRule: AtRule, params: string): AtRule {
 	let syntaxRaw: SyntaxRaw | undefined = atRule.raws.params
 
 	if (syntaxRaw) {
-		if (typeof syntaxRaw.scss === `string`) {
-			syntaxRaw.scss = params
-			syntaxRaw.raw = rewriteInlineComments(params, findInlineCommentSpans(params, true))
-		}
-		else {
-			syntaxRaw.raw = params
-		}
+		syntaxRaw.raw = params
 	}
 	else {
 		atRule.params = params

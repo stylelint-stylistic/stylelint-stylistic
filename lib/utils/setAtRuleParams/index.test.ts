@@ -1,9 +1,7 @@
 import { type AtRule, parse } from "postcss"
-import { parse as parseScss, stringify as stringifyScss } from "postcss-scss"
 import { describe, expect, it } from "vitest"
 
 import { pick } from "../../../vitest.helpers.ts"
-import type { SyntaxRaw } from "../typeGuards/index.ts"
 
 import { setAtRuleParams } from "./index.ts"
 
@@ -38,32 +36,6 @@ describe(`setAtRuleParams`, () => {
 
 		expect(setAtRuleParams(node, `print`)).toBe(node)
 	})
-
-	it(`writes the copy the syntax prints`, () => {
-		let node = scssAtRule(`@media screen // c\n  and (min-width: 1px) {}`)
-
-		setAtRuleParams(node, `screen // c\n  and (min-width: 2px)`)
-
-		expect((node.raws.params as SyntaxRaw).scss).toBe(`screen // c\n  and (min-width: 2px)`)
-	})
-
-	it(`keeps the raw beside it in step`, () => {
-		let node = scssAtRule(`@media screen // c\n  and (min-width: 1px) {}`)
-
-		setAtRuleParams(node, `screen // c\n  and (min-width: 2px)`)
-
-		expect((node.raws.params as SyntaxRaw).raw).toBe(`screen /* c*/\n  and (min-width: 2px)`)
-	})
-
-	it(`the syntax prints what was written`, () => {
-		let root = parseScss(`@media screen // c\n  and (min-width: 1px) {}`)
-
-		root.walkAtRules((node) => {
-			setAtRuleParams(node, `screen // c\n  and (min-width: 2px)`)
-		})
-
-		expect(root.toString(stringifyScss)).toBe(`@media screen // c\n  and (min-width: 2px) {}`)
-	})
 })
 
 /**
@@ -75,21 +47,6 @@ function atRule (css: string): AtRule {
 	let list: AtRule[] = []
 
 	parse(css).walkAtRules((rule) => {
-		list.push(rule)
-	})
-
-	return pick(list)
-}
-
-/**
- * Reads the first at-rule of a stylesheet written in SCSS.
- * @param css - The stylesheet.
- * @returns That at-rule.
- */
-function scssAtRule (css: string): AtRule {
-	let list: AtRule[] = []
-
-	parseScss(css).walkAtRules((rule) => {
 		list.push(rule)
 	})
 

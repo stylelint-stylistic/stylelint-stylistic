@@ -39,3 +39,33 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`always`],
+	customSyntax: `postcss-scss`,
+
+	accept: [
+		{
+			description: `an SCSS map written on one line, whose inner colon opens no declaration`,
+			code: `$map:(key:value)`,
+		},
+		{
+			description: `an SCSS list written on one line`,
+			code: `$list:('value1', 'value2')`,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never`],
+	customSyntax: `postcss-scss`,
+
+	accept: [
+		{
+			description: `an SCSS map, whose inner colon opens no declaration`,
+			code: `$map: (key: value)`,
+		},
+	],
+})

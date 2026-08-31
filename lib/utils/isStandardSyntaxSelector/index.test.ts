@@ -42,9 +42,6 @@ describe(`isStandardSyntaxSelector`, () => {
 	it(`SCSS interpolation (pseudo)`, () => {
 		expect(isStandardSyntaxSelector(`:n-#{$n}`)).toBe(false)
 	})
-	it(`SCSS placeholder`, () => {
-		expect(isStandardSyntaxSelector(`%foo`)).toBe(false)
-	})
 	it(`SCSS nested properties`, () => {
 		expect(isStandardSyntaxSelector(`.a { .b }`)).toBe(false)
 		expect(isStandardSyntaxSelector(`.a { &:hover }`)).toBe(false)

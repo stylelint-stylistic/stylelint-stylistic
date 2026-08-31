@@ -508,3 +508,48 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`always`],
+	customSyntax: `postcss-html`,
+
+	accept: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/326
+			description: `a Sass variable standing on the root of a style element, which is a stylesheet of its own and closes no block`,
+			code: `<style lang="scss">$var: pink</style>`,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never`],
+	customSyntax: `postcss-html`,
+
+	accept: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/326
+			description: `a Sass variable standing on the root of a style element, which is a stylesheet of its own however the page carries it`,
+			code: `<style lang="scss">$var: pink;</style>`,
+		},
+	],
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/309
+			// The Less half of the page this case once carried is the less namespace's, and the Sass half here is this one's: a page holding both languages splits its rules between the namespaces
+			description: `an at-rule closing a block of a Sass style element, whose semicolon that syntax parts with`,
+			code: `
+				<style lang="scss">a { @extend .c; }</style>
+			`,
+			fixed: `
+				<style lang="scss">a { @extend .c }</style>
+			`,
+			line: 1,
+			column: 34,
+			message: messages.rejected,
+		},
+	],
+})

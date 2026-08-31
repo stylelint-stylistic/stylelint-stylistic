@@ -40,15 +40,6 @@ testRule({
 			code: `a { transform: translate(1,1); }`,
 		},
 		{
-			description: `an SCSS map, whose inner commas the rule does not measure`,
-			code: `
-				$grid-breakpoints: (
-				(xs),
-				(sm, 768px)
-				) !default;
-			`,
-		},
-		{
 			description: `an end-of-line comment standing between the comma and the newline`,
 			code: `a { background-size: 0, //\n0; }`,
 		},

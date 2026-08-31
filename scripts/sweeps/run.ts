@@ -59,7 +59,7 @@ async function measure (sweep: Sweep, registry: Registry): Promise<Record<string
 
 	for (let syntaxName of sweep.syntaxes ?? Object.keys(SYNTAXES)) {
 		for (let config of sweep.configs) {
-			let rules: RuleSetting[] = [[`${syntaxName === `less` ? `less/` : ``}${config.rule}`, config.primary, config.secondary]]
+			let rules: RuleSetting[] = [[`${syntaxName === `css` ? `` : `${syntaxName}/`}${config.rule}`, config.primary, config.secondary]]
 
 			for (let [key, code] of sweep.corpus) {
 				// The rows are measured in turn so that a run stays as light on the machine as the one it replaces

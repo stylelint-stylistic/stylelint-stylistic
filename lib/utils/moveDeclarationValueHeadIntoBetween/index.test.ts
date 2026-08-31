@@ -1,6 +1,5 @@
 import postcss, { type Declaration, type Parser, type Rule } from "postcss"
 import less from "postcss-less"
-import scss from "postcss-scss"
 import { describe, expect, it } from "vitest"
 
 import { css as syntax } from "../../syntaxes/css/index.ts"
@@ -47,14 +46,6 @@ describe(`moveDeclarationValueHeadIntoBetween`, () => {
 
 	it(`the whole of a custom property's value, which PostCSS keeps no raw beside at all`, () => {
 		expect(move(postcss, `a { --b:  ; }`, 2)).toEqual({ printed: `a { --b:  ; }`, value: ``, between: `:  ` })
-	})
-
-	it(`the whitespace in front of an inline comment under SCSS, which is all that reaches \`raws.between\`, the comment staying in the value`, () => {
-		expect(move(scss, `a { b:  //c\n!important; }`, 2)).toEqual({ printed: `a { b:  //c\n!important; }`, value: `//c\n`, between: `:  ` })
-	})
-
-	it(`the whole of that same value, comment and all`, () => {
-		expect(move(scss, `a { b:  //c\n!important; }`, 6)).toEqual({ printed: `a { b:  //c\n!important; }`, value: ``, between: `:  //c\n` })
 	})
 
 	it(`the whole of a value under Less, where the flag stands behind it`, () => {

@@ -191,3 +191,27 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`never`],
+	customSyntax: `postcss-html`,
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/264
+			description: `a page holding a block of each syntax, each of which carries its own reading of the sign behind the call: the plain one closes up and the Sass one is left as it is written`,
+			code: `
+				<style>a { b: url(x) -1px; }</style>
+				<style lang="scss">a { b: foo($a) -2px; }</style>
+			`,
+			fixed: `
+				<style>a { b: url(x)-1px; }</style>
+				<style lang="scss">a { b: foo($a) -2px; }</style>
+			`,
+			line: 1,
+			column: 21,
+			message: messages.rejected,
+		},
+	],
+})

@@ -58,14 +58,6 @@ testRule({
 			`,
 		},
 		{
-			description: `an SCSS map, whose parentheses open no call`,
-			code: `$map: (key: value,key2: value2)`,
-		},
-		{
-			description: `an SCSS list, whose parentheses open no call either`,
-			code: `$list: (value, value2)`,
-		},
-		{
 			description: `a comment behind the opening parenthesis, with the break behind the comment`,
 			code: `a { transform: translate( /*comment*/\n1,\n  1\n); }`,
 		},
@@ -327,10 +319,6 @@ testRule({
 			code: `a { transform: translate(  1, 1\t); }`,
 		},
 		{
-			description: `an SCSS map broken across lines, whose parentheses open no call`,
-			code: `$map: (key: value,\nkey2: value2)`,
-		},
-		{
 			description: `a comment behind the break that opens the arguments`,
 			code: `
 				a { transform: translate(
@@ -520,15 +508,6 @@ testRule({
 		{
 			description: `the same break with tabs of indentation`,
 			code: `a { transform: translate(1,\n\t\t1); }`,
-		},
-		{
-			description: `an SCSS map broken on the inside of both parentheses`,
-			code: `
-				$map: (
-				key: value,
-				key2: value2
-				)
-			`,
 		},
 		{
 			description: `a comment abutting the opening parenthesis`,

@@ -239,17 +239,6 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/298
-			description: `an upper-case unit in front of a text spelled the way postcss-simple-vars spells an interpolation, whitespace and all, and another unit inside that text`,
-			code: `a { b: 1PX $(a 2PX); }`,
-			fixed: `a { b: 1px $(a 2PX); }`,
-			line: 1,
-			column: 9,
-			endLine: 1,
-			endColumn: 11,
-			message: messages.expected(`PX`, `px`),
-		},
-		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/298
 			description: `an upper-case unit inside a block written as the value of a custom property, which is where plain CSS does let a bare brace stand in the code`,
 			code: `a { --x: 1px { 10PX } 2px; }`,
 			fixed: `a { --x: 1px { 10px } 2px; }`,
@@ -697,16 +686,6 @@ testRule({
 		{
 			description: `a percentage`,
 			code: `a { font-size: 100%; }`,
-		},
-		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/298
-			description: `a lower-case unit in front of an interpolation whose text holds whitespace, in a custom property, which plain CSS carries as readily as either custom syntax does`,
-			code: `a { --x: 10px#{$aB != $b}; }`,
-		},
-		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/298
-			description: `the same interpolation written in a set of media parameters`,
-			code: `@media (min-width: 10px#{$aB != $b}) { a { b: c; } }`,
 		},
 		{
 			description: `a unit after a fraction with no leading zero`,

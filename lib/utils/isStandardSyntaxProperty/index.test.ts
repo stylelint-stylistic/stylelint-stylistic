@@ -15,12 +15,6 @@ describe(`isStandardSyntaxProperty`, () => {
 	it(`vendor prefix`, () => {
 		expect(isStandardSyntaxProperty(`-webkit-appearance`)).toBe(true)
 	})
-	it(`sass variable`, () => {
-		expect(isStandardSyntaxProperty(`$sass-variable`)).toBe(false)
-	})
-	it(`sass variable within namespace`, () => {
-		expect(isStandardSyntaxProperty(`namespace.$sass-variable`)).toBe(false)
-	})
 	it(`sass interpolation`, () => {
 		expect(isStandardSyntaxProperty(`#{$Attr}-color`)).toBe(false)
 	})

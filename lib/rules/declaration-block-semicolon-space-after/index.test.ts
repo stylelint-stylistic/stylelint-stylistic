@@ -321,10 +321,6 @@ testRule({
 			description: `a style binding, which is no style attribute`,
 			code: `<span :style="{ color: 'pink' }">x</span>`,
 		},
-		{
-			description: `Sass variables at the top level of a style element, which are no declaration block`,
-			code: `<style lang="scss">$a: 1;$b: 2;</style>`,
-		},
 	],
 
 	reject: [

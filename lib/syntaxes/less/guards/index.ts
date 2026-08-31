@@ -1,13 +1,8 @@
 import type { AtRule, Comment, Declaration, Rule } from "postcss"
 import type { AtRule as LessAtRule, Comment as LessComment, Declaration as LessDeclaration, Rule as LessRule } from "postcss-less"
 
+import { isStandardPreprocessorAtRule, isStandardPreprocessorComment, isStandardPreprocessorDeclaration, isStandardPreprocessorProperty, isStandardPreprocessorSelectorCode, isStandardPreprocessorValue } from "../../../preprocessor/guards/index.ts"
 import { LEADING_OPERATOR } from "../../../regexps.ts"
-import { isStandardSyntaxAtRule } from "../../../utils/isStandardSyntaxAtRule/index.ts"
-import { isStandardSyntaxComment } from "../../../utils/isStandardSyntaxComment/index.ts"
-import { isStandardSyntaxDeclaration } from "../../../utils/isStandardSyntaxDeclaration/index.ts"
-import { isStandardSyntaxProperty } from "../../../utils/isStandardSyntaxProperty/index.ts"
-import { isStandardSyntaxSelectorCode } from "../../../utils/isStandardSyntaxSelector/index.ts"
-import { isStandardSyntaxValue } from "../../../utils/isStandardSyntaxValue/index.ts"
 import { isRule } from "../../../utils/typeGuards/index.ts"
 import { withoutQuotedTextAndComments } from "../../../utils/withoutQuotedTextAndComments/index.ts"
 import { isLessDetachedRulesetCall } from "../isLessDetachedRulesetCall/index.ts"
@@ -19,7 +14,7 @@ import { LESS_EXTEND, LESS_EXTEND_CALL, LESS_GUARD, LESS_PARAMETRIC_MIXIN, LESS_
  * @returns True if the at-rule is standard, false otherwise.
  */
 export function isStandardLessAtRule (atRule: AtRule | LessAtRule): boolean {
-	if (!isStandardSyntaxAtRule(atRule)) return false
+	if (!isStandardPreprocessorAtRule(atRule)) return false
 
 	// Ignore Less mixins
 	if (`mixin` in atRule && atRule.mixin) return false
@@ -61,7 +56,7 @@ export function isStandardLessSelector (selector: string): boolean {
  * @returns True if the selector is standard syntax, false otherwise.
  */
 function isStandardLessSelectorCode (code: string): boolean {
-	if (!isStandardSyntaxSelectorCode(code)) return false
+	if (!isStandardPreprocessorSelectorCode(code)) return false
 
 	// Less :extend()
 	if (LESS_EXTEND.test(code)) return false
@@ -85,7 +80,7 @@ function isStandardLessSelectorCode (code: string): boolean {
  * @returns True if the declaration is standard syntax, false otherwise.
  */
 export function isStandardLessDeclaration (decl: Declaration | LessDeclaration): boolean {
-	if (!isStandardSyntaxDeclaration(decl)) return false
+	if (!isStandardPreprocessorDeclaration(decl)) return false
 
 	let prop = decl.prop
 	let parent = decl.parent
@@ -111,7 +106,7 @@ export function isStandardLessDeclaration (decl: Declaration | LessDeclaration):
  * @returns True if the property is standard syntax, false otherwise.
  */
 export function isStandardLessProperty (property: string): boolean {
-	if (!isStandardSyntaxProperty(property)) return false
+	if (!isStandardPreprocessorProperty(property)) return false
 
 	// Less var (e.g. @var: x)
 	if (property.startsWith(`@`)) return false
@@ -128,7 +123,7 @@ export function isStandardLessProperty (property: string): boolean {
  * @returns True if the value is standard syntax, false otherwise.
  */
 export function isStandardLessValue (value: string): boolean {
-	if (!isStandardSyntaxValue(value)) return false
+	if (!isStandardPreprocessorValue(value)) return false
 
 	// The same operator strip the core makes, so that `*@var` and `/@var` are the variables they were before the core stopped reading them
 	let normalizedValue = LEADING_OPERATOR.test(value.charAt(0)) ? value.slice(1) : value
@@ -145,7 +140,7 @@ export function isStandardLessValue (value: string): boolean {
  * @returns True if the comment has standard syntax, false otherwise.
  */
 export function isStandardLessComment (comment: Comment | LessComment): boolean {
-	if (!isStandardSyntaxComment(comment)) return false
+	if (!isStandardPreprocessorComment(comment)) return false
 
 	return !(`inline` in comment)
 }

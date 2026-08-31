@@ -1,6 +1,5 @@
 import postcss, { type Declaration, type Parser, type Rule } from "postcss"
 import less from "postcss-less"
-import scss from "postcss-scss"
 import { describe, expect, it } from "vitest"
 
 import { css as syntax } from "../../syntaxes/css/index.ts"
@@ -38,10 +37,6 @@ describe(`declarationColonSource`, () => {
 
 	it(`a custom property whose whitespace PostCSS keeps no raw for`, () => {
 		expect(source(postcss, `a { --b:  ; }`)).toBe(`--b:  xxx`)
-	})
-
-	it(`an inline comment under SCSS, spelled as the file spells it rather than rewritten into a block comment`, () => {
-		expect(source(scss, `a { color:  //c\n!important; }`)).toBe(`color:  //c\nxxx`)
 	})
 
 	it(`the same comment under Less, where the parser reads it as the value's own word and hands the run to \`raws.between\``, () => {

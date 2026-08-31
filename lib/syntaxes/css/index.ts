@@ -2,24 +2,16 @@ import type { AtRule, Declaration, Root, Rule as PostcssRule } from "postcss"
 import type { PostcssResult } from "stylelint"
 
 import { endsWithInlineComment } from "../../preprocessor/endsWithInlineComment/index.ts"
-import { findRewrittenCommentSpans } from "../../preprocessor/findRewrittenCommentSpans/index.ts"
-import { findSelectorInlineComments, type InlineComment } from "../../preprocessor/findSelectorInlineComments/index.ts"
 import { movesEndIntoInlineComment } from "../../preprocessor/movesEndIntoInlineComment/index.ts"
 import { inlineCommentReading, readsInlineComments, syntaxKeepsInlineComments } from "../../preprocessor/readsInlineComments/index.ts"
-import { restoreSelectorInlineComments } from "../../preprocessor/restoreSelectorInlineComments/index.ts"
 import { searchCopy } from "../../preprocessor/searchCopy/index.ts"
-import { toSelectorSourceIndex } from "../../preprocessor/toSelectorSourceIndex/index.ts"
 import { writesIntoInlineComment } from "../../preprocessor/writesIntoInlineComment/index.ts"
 import { findCommentSpans } from "../../utils/findCommentSpans/index.ts"
 import { findInlineCommentSpans, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
-import { findInterpolationSpans } from "../../utils/findInterpolationSpans/index.ts"
 import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
 import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleSelector } from "../../utils/getRuleSelector/index.ts"
-import { isStandardSyntaxAtRule } from "../../utils/isStandardSyntaxAtRule/index.ts"
 import { isStandardSyntaxCombinator } from "../../utils/isStandardSyntaxCombinator/index.ts"
-import { isStandardSyntaxComment } from "../../utils/isStandardSyntaxComment/index.ts"
-import { isStandardSyntaxDeclaration } from "../../utils/isStandardSyntaxDeclaration/index.ts"
 import { isStandardSyntaxFunction } from "../../utils/isStandardSyntaxFunction/index.ts"
 import { isStandardSyntaxProperty } from "../../utils/isStandardSyntaxProperty/index.ts"
 import { isStandardSyntaxRule } from "../../utils/isStandardSyntaxRule/index.ts"
@@ -32,9 +24,9 @@ import { setRuleSelector } from "../../utils/setRuleSelector/index.ts"
 import { isDeclaration, isRule, type SyntaxRaw } from "../../utils/typeGuards/index.ts"
 import type { SelectorCopies, Syntax } from "../index.ts"
 
-/** The syntax of the core: plain CSS, which every rule of the plugin is written for. A styled template is the `styled` namespace's to read, so a root carrying that parser's mark is refused; every other root is still accepted, custom syntaxes without a namespace of their own included. */
+/** The syntax of the core: plain CSS, which every rule of the plugin is written for. A root a namespace's syntax reads is refused — a styled template by its parser's mark, a Less or SCSS stylesheet by the probe of a double slash — and every other root is still accepted, custom syntaxes without a namespace of their own included. */
 export let css: Syntax = {
-	// A styled template is the styled namespace's, and so is a Less file the less namespace's: a syntax that spells a double slash as a comment and keeps it in the text a rule reads is one the core's rules are no longer written for. Plain CSS — a file opened with no custom syntax at all — asks no probe.
+	// A styled template is the styled namespace's, a Less file the less namespace's and an SCSS file the scss namespace's: a syntax that spells a double slash as a comment at all is one the core's rules are no longer written for, whether it keeps such a comment in the text a rule reads or rewrites it away. Plain CSS — a file opened with no custom syntax at all — asks no probe, and a syntax the probe learned nothing about is still the core's: only a syntax's own answer turns a file away.
 	accepts (root: Root, result: PostcssResult): boolean {
 		if (root.raws.styledSyntaxRangeStart !== undefined) return false
 
@@ -42,18 +34,19 @@ export let css: Syntax = {
 
 		let reading = inlineCommentReading(root, result)
 
-		return !(reading.spells && reading.keeps)
+		return !reading.answered || !reading.spells
 	},
 	embedding: () => ({ indent: ``, multiline: false }),
 	valueEmbedsHostCode: () => false,
-	isStandardAtRule: isStandardSyntaxAtRule,
+	// Every at-rule, declaration and comment the core once turned away was a preprocessor's construct, and a file of such a syntax no longer reaches these rules
+	isStandardAtRule: () => true,
 	isStandardRule: isStandardSyntaxRule,
-	isStandardDeclaration: isStandardSyntaxDeclaration,
+	isStandardDeclaration: () => true,
 	isStandardProperty: isStandardSyntaxProperty,
 	isStandardValue: isStandardSyntaxValue,
 	isStandardSelector: isStandardSyntaxSelector,
 	isStandardFunction: isStandardSyntaxFunction,
-	isStandardComment: isStandardSyntaxComment,
+	isStandardComment: () => true,
 	isStandardCombinator: isStandardSyntaxCombinator,
 	read (node: AtRule | Declaration | PostcssRule): string {
 		if (isDeclaration(node)) return getDeclarationValue(node)
@@ -73,16 +66,10 @@ export let css: Syntax = {
 	movesEndIntoInlineComment,
 	writesIntoInlineComment,
 	searchCopy,
-	// The one semicolon a language will not part with is a preprocessor's; no construct of plain CSS or of `postcss-scss` holds one
+	// A double slash of plain CSS is code — part of an address, most often — and no syntax the core accepts both spells an inline comment and keeps it in the text a rule reads
 	printedInlineComments (node: AtRule | Declaration, text: string, result: PostcssResult): InlineCommentSpan[] {
-		let raws: SyntaxRaw | undefined = isDeclaration(node) ? node.raws.value : node.raws.params
-
-		// The comments the syntax rewrote in the raw are the comments it found, and the two copies say between them where each of them runs — while both still measure the same text; a pair out of step leaves the text to be scanned as one carrying no pair at all
-		if (raws && typeof raws.scss === `string`) return findRewrittenCommentSpans(raws.raw, raws.scss) ?? (text.includes(`//`) ? findInlineCommentSpans(text) : [])
-
 		if (!text.includes(`//`)) return []
 
-		// A double slash of a syntax that marks its comments in a copy of its own is code — part of an address, most often
 		return syntaxKeepsInlineComments(nodeSyntax(node, result)) ? findInlineCommentSpans(text) : []
 	},
 	requiresTrailingSemicolon: () => false,
@@ -90,37 +77,20 @@ export let css: Syntax = {
 	readsRuleParams: () => false,
 	readsAtRuleAsVariable: () => false,
 	spellsOwnArithmetic: readsInlineComments,
-	interpolationSpans: findInterpolationSpans,
+	// No spelling of plain CSS interpolates
+	interpolationSpans: () => [],
+	// PostCSS keeps the text of a selector holding comments in a raw beside the copy it hands back, and no third copy stands anywhere: the parsed text is the file's own spelling, so nothing maps and nothing restores
 	selectorCopies (rule: PostcssRule): SelectorCopies {
 		let selectorRaws: SyntaxRaw | undefined = rule.raws.selector
 		let selector = selectorRaws ? selectorRaws.raw : rule.selector
-		let inlineComments: InlineComment[] | undefined
-
-		// The comments are scanned on the first question that needs them rather than up front: most call sites throw the copies away behind a cheap guard, and the scan reads both spellings character by character
-		function commentsOf (): InlineComment[] {
-			inlineComments ??= findSelectorInlineComments(selector, selectorRaws && selectorRaws.scss)
-
-			return inlineComments
-		}
 
 		return {
 			selector,
-			get comments (): InlineComment[] {
-				return commentsOf()
-			},
-			toSourceIndex: (index: number) => toSelectorSourceIndex(index, commentsOf()),
-			sourceSpelling (text: string, rawIndex: number): string {
-				if (!selectorRaws || typeof selectorRaws.scss !== `string`) return text
-
-				return selectorRaws.scss.slice(toSelectorSourceIndex(rawIndex, commentsOf()), toSelectorSourceIndex(rawIndex + text.length, commentsOf()))
-			},
+			comments: [],
+			toSourceIndex: (index: number) => index,
+			sourceSpelling: (text: string) => text,
 			write (fixedSelector: string): void {
-				if (selectorRaws) {
-					selectorRaws.raw = fixedSelector
-
-					// The stringifier reads the copy the source spelled, so the fix has to reach that one as well, with every inline comment spelled the way the file spells it
-					if (typeof selectorRaws.scss === `string`) selectorRaws.scss = restoreSelectorInlineComments(fixedSelector, commentsOf())
-				}
+				if (selectorRaws) selectorRaws.raw = fixedSelector
 				else rule.selector = fixedSelector
 			},
 		}
