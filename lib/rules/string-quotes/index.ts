@@ -256,8 +256,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let fixed = replaceQuotes(value, fixPositions)
 
-			if (isAtRule(node)) syntax.write(node, fixed)
-			else syntax.write(node, fixed)
+			syntax.write(node, fixed)
 		}
 
 		/**

@@ -121,8 +121,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let startIndex = fixPosition.startIndex
 					let endIndex = fixPosition.endIndex
 
-					if (isAtRule(node)) syntax.write(node, removeTrailingZeros(syntax.read(node), startIndex, endIndex))
-					else syntax.write(node, removeTrailingZeros(syntax.read(node), startIndex, endIndex))
+					syntax.write(node, removeTrailingZeros(syntax.read(node), startIndex, endIndex))
 				}
 			}
 		}

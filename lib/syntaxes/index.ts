@@ -14,7 +14,7 @@ import { styled } from "./styled/index.ts"
 /**
  * How a family of the plugin's rules reads a stylesheet: the namespace the family is registered under, and the syntaxes it answers for.
  *
- * Every rule module exports a factory taking one of these, and `lib/index.ts` registers the factory's rule once per syntax listed below beside the core, under `@stylistic/<namespace>/<rule>`. What a syntax adds to this contract as the rules come to ask it more — where the comments of a text stand, what a construct of a preprocessor is — is added here, and answered for plain CSS by the core's own syntax.
+ * Every rule module exports a factory taking one of these, and `lib/index.ts` registers the factory's rule once per syntax listed below beside the core, under `@stylistic/<namespace>/<rule>`. An adapter defines the whole contract coherently: no member derives from another at run time, so overriding one method of an existing adapter changes no answer of its neighbours — a new syntax implements the family, not a patch. What a syntax adds to this contract as the rules come to ask it more — where the comments of a text stand, what a construct of a preprocessor is — is added here, and answered for plain CSS by the core's own syntax.
  */
 export type Syntax = {
 
@@ -129,18 +129,10 @@ export type Syntax = {
 	inlineComments (node: Node, result: PostcssResult): InlineCommentReading,
 
 	/**
-	 * Asks whether the text a rule reads of the node spells inline comments — whether the syntax both opens one on a double slash and keeps it in that text.
+	 * Asks whether a double slash left standing in the text a rule reads is a comment there: the node's own syntax both spells one that way and leaves it in that text. A syntax that rewrites them into block comments as it parses spells them and keeps none, and whatever double slash survives in its text is code.
 	 * @param node - The node whose stylesheet's syntax is asked.
 	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
-	 * @returns True where it does.
-	 */
-	readsInlineComments (node: Node, result: PostcssResult): boolean,
-
-	/**
-	 * Asks whether the node's own syntax keeps an inline comment in the text a rule reads, whatever it does about opening one.
-	 * @param node - The node whose stylesheet's syntax is asked.
-	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
-	 * @returns True where it keeps them.
+	 * @returns True where such a double slash is a comment of the text.
 	 */
 	keepsInlineComments (node: Node, result: PostcssResult): boolean,
 
@@ -165,10 +157,10 @@ export type Syntax = {
 	/**
 	 * Asks whether a text ends inside an inline comment, under the reading given.
 	 * @param text - The text.
-	 * @param [reading] - What the syntax makes of a double slash; nothing read where none is given.
+	 * @param reading - What the syntax makes of a double slash.
 	 * @returns True where the end of the text stands inside such a comment.
 	 */
-	endsWithInlineComment (text: string, reading?: InlineCommentReading): boolean,
+	endsWithInlineComment (text: string, reading: InlineCommentReading): boolean,
 
 	/**
 	 * Asks whether a fix would take the end of a text from outside an inline comment into one, under the reading given.
@@ -231,9 +223,11 @@ export type Syntax = {
 	/**
 	 * Finds the spans the interpolations of a preprocessor occupy in a text — a stretch written in a language of its own, which no rule reads code beside.
 	 * @param text - The text, with its comments blanked where a brace inside one must not close an interpolation.
+	 * @param node - The node the text belongs to, whose own syntax says which spellings interpolate at all.
+	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
 	 * @returns The spans, in the text's own coordinates.
 	 */
-	interpolationSpans (text: string): InterpolationSpan[],
+	interpolationSpans (text: string, node: Node, result: PostcssResult): InterpolationSpan[],
 }
 
 /** A rule's selector, opened for parsing and writing: see {@link Syntax#selectorCopies}. */

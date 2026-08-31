@@ -135,8 +135,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				for (let fixPosition of alwaysFixPositions) {
 					let index = fixPosition.index
 
-					if (isAtRule(node)) syntax.write(node, addLeadingZero(syntax.read(node), index))
-					else syntax.write(node, addLeadingZero(syntax.read(node), index))
+					syntax.write(node, addLeadingZero(syntax.read(node), index))
 				}
 			}
 
@@ -145,8 +144,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let startIndex = fixPosition.startIndex
 					let endIndex = fixPosition.endIndex
 
-					if (isAtRule(node)) syntax.write(node, removeLeadingZeros(syntax.read(node), startIndex, endIndex))
-					else syntax.write(node, removeLeadingZeros(syntax.read(node), startIndex, endIndex))
+					syntax.write(node, removeLeadingZeros(syntax.read(node), startIndex, endIndex))
 				}
 			}
 		}

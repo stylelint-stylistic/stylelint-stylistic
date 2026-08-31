@@ -4,7 +4,7 @@ import { endsWithInlineComment } from "../../utils/endsWithInlineComment/index.t
 import { findCommentSpans } from "../../utils/findCommentSpans/index.ts"
 import { findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
 import { findInterpolationSpans } from "../../utils/findInterpolationSpans/index.ts"
-import { findSelectorInlineComments } from "../../utils/findSelectorInlineComments/index.ts"
+import { findSelectorInlineComments, type InlineComment } from "../../utils/findSelectorInlineComments/index.ts"
 import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
 import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleSelector } from "../../utils/getRuleSelector/index.ts"
@@ -56,7 +56,6 @@ export let css: Syntax = {
 		else setAtRuleParams(node, text)
 	},
 	inlineComments: inlineCommentReading,
-	readsInlineComments,
 	keepsInlineComments: (node, result) => syntaxKeepsInlineComments(nodeSyntax(node, result)),
 	commentSpans: (text, node, result) => findCommentSpans(text, readsInlineComments(node, result)),
 	inlineCommentSpans: (text, node, result) => findInlineCommentSpans(text, readsInlineComments(node, result)),
@@ -70,23 +69,32 @@ export let css: Syntax = {
 	selectorCopies (rule: PostcssRule): SelectorCopies {
 		let selectorRaws: SyntaxRaw | undefined = rule.raws.selector
 		let selector = selectorRaws ? selectorRaws.raw : rule.selector
-		let inlineComments = findSelectorInlineComments(selector, selectorRaws && selectorRaws.scss)
+		let inlineComments: InlineComment[] | undefined
+
+		// The comments are scanned on the first question that needs them rather than up front: most call sites throw the copies away behind a cheap guard, and the scan reads both spellings character by character
+		function commentsOf (): InlineComment[] {
+			inlineComments ??= findSelectorInlineComments(selector, selectorRaws && selectorRaws.scss)
+
+			return inlineComments
+		}
 
 		return {
 			selector,
-			comments: inlineComments,
-			toSourceIndex: (index: number) => toSelectorSourceIndex(index, inlineComments),
+			get comments (): InlineComment[] {
+				return commentsOf()
+			},
+			toSourceIndex: (index: number) => toSelectorSourceIndex(index, commentsOf()),
 			sourceSpelling (text: string, rawIndex: number): string {
-				if (!selectorRaws || !selectorRaws.scss) return text
+				if (!selectorRaws || typeof selectorRaws.scss !== `string`) return text
 
-				return selectorRaws.scss.slice(toSelectorSourceIndex(rawIndex, inlineComments), toSelectorSourceIndex(rawIndex + text.length, inlineComments))
+				return selectorRaws.scss.slice(toSelectorSourceIndex(rawIndex, commentsOf()), toSelectorSourceIndex(rawIndex + text.length, commentsOf()))
 			},
 			write (fixedSelector: string): void {
 				if (selectorRaws) {
 					selectorRaws.raw = fixedSelector
 
 					// The stringifier reads the copy the source spelled, so the fix has to reach that one as well, with every inline comment spelled the way the file spells it
-					if (selectorRaws.scss) selectorRaws.scss = restoreSelectorInlineComments(fixedSelector, inlineComments)
+					if (typeof selectorRaws.scss === `string`) selectorRaws.scss = restoreSelectorInlineComments(fixedSelector, commentsOf())
 				}
 				else rule.selector = fixedSelector
 			},

@@ -15,7 +15,6 @@ import { getDimension } from "../../utils/getDimension/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { isAtRule } from "../../utils/typeGuards/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -74,7 +73,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind: what such a comment holds comes back as ordinary words and calls
 			let inlineComments = comments.filter(({ isInline }) => isInline)
 			// An interpolation is written in a language of its own, and the compiler expanding it settles what the text beside it means, so nothing a value spells next to one is a dimension this rule can read. The interpolations are found in the value once, and every node of the walk is measured against them. They are sought in a copy with every comment blanked out, since a brace written in a comment closes no interpolation and the code standing behind such a brace is code the file spells
-			let interpolations = syntax.interpolationSpans(blankComments(checkedValue, comments))
+			let interpolations = syntax.interpolationSpans(blankComments(checkedValue, comments), node, result)
 
 			/**
 			 * Reads the dimension a value node holds and says where its unit is written in the case the option does not ask for.
@@ -190,8 +189,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (hasFixed) {
 					let fixedValue = applyEditsFromEnd(checkedValue, edits)
 
-					if (isAtRule(node)) syntax.write(node, fixedValue)
-					else syntax.write(node, fixedValue)
+					syntax.write(node, fixedValue)
 				}
 			}
 		}
