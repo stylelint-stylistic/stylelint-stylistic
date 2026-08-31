@@ -1,11 +1,10 @@
 import postcss, { type AtRule, type Comment, type Declaration, parse as parseCss, type Parser, type Rule } from "postcss"
 import postcssScss, { parse as parseScss } from "postcss-scss"
-import valueParser, { type FunctionNode } from "postcss-value-parser"
 import { describe, expect, it } from "vitest"
 
 import { pick } from "../../../vitest.helpers.ts"
 
-import { isStandardPreprocessorAtRule, isStandardPreprocessorComment, isStandardPreprocessorDeclaration, isStandardPreprocessorFunction, isStandardPreprocessorProperty, isStandardPreprocessorRule, isStandardPreprocessorSelector, isStandardPreprocessorValue } from "./index.ts"
+import { isStandardPreprocessorAtRule, isStandardPreprocessorComment, isStandardPreprocessorDeclaration, isStandardPreprocessorRule, isStandardPreprocessorSelector, isStandardPreprocessorValue } from "./index.ts"
 
 describe(`isStandardPreprocessorAtRule`, () => {
 	it(`non nested at-rules without quotes`, () => {
@@ -250,21 +249,6 @@ function scssDecl (css: string): Declaration {
 	return decl(css, postcssScss)
 }
 
-describe(`isStandardPreprocessorProperty`, () => {
-	it(`sass variable`, () => {
-		expect(isStandardPreprocessorProperty(`$sass-variable`)).toBe(false)
-	})
-	it(`sass variable within namespace`, () => {
-		expect(isStandardPreprocessorProperty(`namespace.$sass-variable`)).toBe(false)
-	})
-	it(`sass interpolation`, () => {
-		expect(isStandardPreprocessorProperty(`#{$Attr}-color`)).toBe(false)
-	})
-	it(`single word`, () => {
-		expect(isStandardPreprocessorProperty(`top`)).toBe(true)
-	})
-})
-
 describe(`isStandardPreprocessorValue`, () => {
 	it(`scss var`, () => {
 		expect(isStandardPreprocessorValue(`$sass-variable`)).toBe(false)
@@ -322,23 +306,6 @@ describe(`isStandardPreprocessorRule`, () => {
 	})
 })
 
-describe(`isStandardPreprocessorFunction`, () => {
-	it(`scss list`, () => {
-		// as in $list: (list)
-		expect(isStandardPreprocessorFunction(getFunction(`(list)`))).toBe(false)
-	})
-	it(`scss map`, () => {
-		// as in $map: (key: value)
-		expect(isStandardPreprocessorFunction(getFunction(`(key: value)`))).toBe(false)
-	})
-	it(`scss function in scss interpolation`, () => {
-		expect(isStandardPreprocessorFunction(getFunction(`#{darken(#fff, 0.2)}`))).toBe(false)
-	})
-	it(`calc`, () => {
-		expect(isStandardPreprocessorFunction(getFunction(`calc(a + b)`))).toBe(true)
-	})
-})
-
 /**
  * Reads the first node of a stylesheet, which the cases spell as a rule.
  * @param code - The stylesheet.
@@ -346,19 +313,4 @@ describe(`isStandardPreprocessorFunction`, () => {
  */
 function firstRule (code: string): Rule {
 	return parseCss(code).first as Rule
-}
-
-/**
- * Reads the first call of a value.
- * @param declValue - The value.
- * @returns That call.
- */
-function getFunction (declValue: string): FunctionNode {
-	let functions: FunctionNode[] = []
-
-	valueParser(declValue).walk((valueNode) => {
-		if (valueNode.type === `function`) functions.push(valueNode)
-	})
-
-	return pick(functions)
 }

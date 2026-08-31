@@ -1,4 +1,4 @@
-import { PSV_INTERPOLATION } from "../regexps.ts"
+import { PSV_INTERPOLATION } from "../../regexps.ts"
 
 /**
  * Checks whether a string has postcss-simple-vars interpolation.

@@ -1,4 +1,4 @@
-import { LESS_INTERPOLATION } from "../regexps.ts"
+import { LESS_INTERPOLATION } from "../../regexps.ts"
 
 /**
  * Checks whether a string has Less interpolation.

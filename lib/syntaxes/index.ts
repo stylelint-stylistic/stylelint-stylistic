@@ -131,14 +131,6 @@ export type Syntax = {
 	inlineComments (node: Node, result: PostcssResult): InlineCommentReading,
 
 	/**
-	 * Asks whether a double slash left standing in the text a rule reads is a comment there: the node's own syntax both spells one that way and leaves it in that text. A syntax that rewrites them into block comments as it parses spells them and keeps none, and whatever double slash survives in its text is code.
-	 * @param node - The node whose stylesheet's syntax is asked.
-	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
-	 * @returns True where such a double slash is a comment of the text.
-	 */
-	keepsInlineComments (node: Node, result: PostcssResult): boolean,
-
-	/**
 	 * Finds the spans every comment occupies in a text of the node's stylesheet — the block comments, and the inline ones where the node's syntax reads them there.
 	 * @param text - The text, as the rule reads it.
 	 * @param node - The node the text belongs to.

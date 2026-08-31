@@ -40,6 +40,9 @@ export const EVERY_ESCAPE_STRING_OR_COMMENT = /\\.|\/\/|"[^"\\]*(?:\\.[^"\\]*)*"
 /** The quoted address of every `@import`, captured without the at-rule around it. */
 export const EVERY_IMPORT_ADDRESS = /@import\s+(['"].*['"])/gui
 
+/** Every interpolation a preprocessor writes, placed rather than tallied: the three spellings {@link SCSS_INTERPOLATION}, {@link LESS_INTERPOLATION} and {@link PSV_INTERPOLATION} read one at a time. Each alternative reads what its own name reads, the line break the Sass one crosses and the two others do not included, and the run handed back opens at the character in front of the delimiter where the spelling carries one. Narrow of the four an interpolation is spelled in: the `{…}` of {@link TPL_INTERPOLATION} is not among them, since in a value a pair of bare braces is far likelier to be a pair of characters than an interpolation — the braces of a string, of a comment, or of the block a custom property is allowed to carry — and reading such a pair as one would carry off the code standing between them. */
+export const EVERY_INTERPOLATION = /#\{[\s\S]+?\}|@\{.+?\}|\$\(.+?\)/gu
+
 /** Every run of the characters an interpolation is spelled with, so that something harmless can be put in their place. */
 export const EVERY_INTERPOLATION_CHARACTER = /[#@{}]+/gu
 
@@ -172,6 +175,9 @@ export const LEADING_WHITESPACE_RUN = /^\s+/u
 /** The whitespace a text opens with, up to its first line break, which is left standing whole — the carriage return of a Windows pair with it. */
 export const LEADING_WHITESPACE_WITHOUT_BREAK = /^(?:(?!\r?\n)\s)*/u
 
+/** The `@{…}` Less interpolates a value with. */
+export const LESS_INTERPOLATION = /@\{.+?\}/u
+
 /** A line break, as PostCSS reads one: a line feed, with or without the carriage return of a Windows pair in front of it. A bare carriage return and a form feed are whitespace to PostCSS's tokenizer and no line to its line counter, so a rule reading a line in either would report a position the file does not have, and every reading of a break in this file follows PostCSS rather than the grammar of CSS, which folds all four into one. */
 export const LINE_BREAK = /\r?\n/u
 
@@ -208,6 +214,9 @@ export const OPENS_WITH_QUOTE = /^\s*["']/u
 /** A text opening on a tag, whitespace aside, as a stylesheet read out of a page does. */
 export const OPENS_WITH_TAG = /^\s*</u
 
+/** The `$(…)` postcss-simple-vars interpolates a value with — a plugin's spelling over plain CSS rather than a syntax's, which is why the core reads it beside the two the preprocessors write. */
+export const PSV_INTERPOLATION = /\$\(.+?\)/u
+
 /** An operator of a range media feature. */
 export const RANGE_FEATURE_OPERATOR = /[<>=]/u
 
@@ -225,6 +234,9 @@ export const SPACES_THEN_BLOCK_COMMENT = /^[ \t]*\/\*/u
 
 /** An inline comment opening a text, spaces and tabs aside. */
 export const SPACES_THEN_INLINE_COMMENT = /^[ \t]*\/\//u
+
+/** The `#{…}` Sass interpolates a value with. */
+export const SCSS_INTERPOLATION = /#\{.+?\}/su
 
 /** A single space or tab. */
 export const SPACE_OR_TAB = /[ \t]/u

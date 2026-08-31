@@ -15,6 +15,15 @@ describe(`isStandardSyntaxValue`, () => {
 	it(`angle`, () => {
 		expect(isStandardSyntaxValue(`45deg`)).toBe(true)
 	})
+	it(`scss var`, () => {
+		expect(isStandardSyntaxValue(`$sass-variable`)).toBe(false)
+	})
+	it(`negative scss var`, () => {
+		expect(isStandardSyntaxValue(`-$sass-variable`)).toBe(false)
+	})
+	it(`positive scss var`, () => {
+		expect(isStandardSyntaxValue(`+$sass-variable`)).toBe(false)
+	})
 	it(`scss interpolation`, () => {
 		expect(isStandardSyntaxValue(`#{$var}`)).toBe(false)
 	})

@@ -1,19 +1,15 @@
 import type { AtRule, Comment, Declaration, Rule } from "postcss"
-import type { FunctionNode } from "postcss-value-parser"
 
-import { LEADING_OPERATOR } from "../../regexps.ts"
-import { isStandardSyntaxFunction } from "../../utils/isStandardSyntaxFunction/index.ts"
-import { isStandardSyntaxProperty } from "../../utils/isStandardSyntaxProperty/index.ts"
+import { isStandardSyntaxDeclaration } from "../../utils/isStandardSyntaxDeclaration/index.ts"
 import { isStandardSyntaxSelectorCode } from "../../utils/isStandardSyntaxSelector/index.ts"
 import { isStandardSyntaxValue } from "../../utils/isStandardSyntaxValue/index.ts"
 import { isRule } from "../../utils/typeGuards/index.ts"
 import { withoutQuotedTextAndComments } from "../../utils/withoutQuotedTextAndComments/index.ts"
-import { hasInterpolation } from "../hasInterpolation/index.ts"
-import { isScssVariable } from "../isScssVariable/index.ts"
+import { isInlineComment } from "../isInlineComment/index.ts"
 import { SCSS_MODULE_FUNCTION, SCSS_MODULE_VARIABLE } from "../regexps.ts"
 
 /**
- * Checks whether an at-rule is standard under a preprocessor: what the core turns away, and the constructs both languages spell an at-rule for.
+ * Checks whether an at-rule is standard under a preprocessor: what the core turns away, and the one shape Sass spells an at-rule in that no plain CSS does.
  * @param atRule - The at-rule node to check.
  * @returns True if the at-rule is standard, false otherwise.
  */
@@ -25,25 +21,23 @@ export function isStandardPreprocessorAtRule (atRule: AtRule): boolean {
 }
 
 /**
- * Checks whether a comment is standard under a preprocessor: the Sass parser marks an inline comment with `raws.inline`, and the Less parser's own `inline` mark is asked about on top of this by the less namespace.
+ * Checks whether a comment is standard under a preprocessor: one the syntax has not marked as opened by a double slash.
  * @param comment - The comment node to check.
  * @returns True if the comment has standard syntax, false otherwise.
  */
 export function isStandardPreprocessorComment (comment: Comment): boolean {
-	return !(`inline` in comment.raws)
+	return !isInlineComment(comment)
 }
 
 /**
- * Checks whether a declaration is standard under a preprocessor.
+ * Checks whether a declaration is standard under a preprocessor: what the core turns away, and a Sass nested property on top.
  * @param decl - The declaration node to check.
  * @returns True if the declaration is standard syntax, false otherwise.
  */
 export function isStandardPreprocessorDeclaration (decl: Declaration): boolean {
-	let prop = decl.prop
-	let parent = decl.parent
+	if (!isStandardSyntaxDeclaration(decl)) return false
 
-	// SCSS var; covers map and list declarations
-	if (isScssVariable(prop)) return false
+	let parent = decl.parent
 
 	// Sass nested properties (e.g. border: { style: solid; color: red; })
 	if (parent && isRule(parent) && parent.selector && parent.selector.at(-1) === `:` && parent.selector.slice(0, 2) !== `--`) return false
@@ -52,35 +46,12 @@ export function isStandardPreprocessorDeclaration (decl: Declaration): boolean {
 }
 
 /**
- * Checks whether a property is standard under a preprocessor: what the core turns away, and the variables and interpolations either language spells a property with.
- * @param property - The property to check.
- * @returns True if the property is standard syntax, false otherwise.
- */
-export function isStandardPreprocessorProperty (property: string): boolean {
-	if (!isStandardSyntaxProperty(property)) return false
-
-	// SCSS var
-	if (isScssVariable(property)) return false
-
-	// SCSS or Less interpolation
-	if (hasInterpolation(property)) return false
-
-	return true
-}
-
-/**
- * Checks whether a value is standard under a preprocessor: what the core turns away, and the variables, module readings and interpolations either language spells a value with.
+ * Checks whether a value is standard under a preprocessor: what the core turns away, and a reading through a Sass module on top.
  * @param value - The value to check.
  * @returns True if the value is standard syntax, false otherwise.
  */
 export function isStandardPreprocessorValue (value: string): boolean {
 	if (!isStandardSyntaxValue(value)) return false
-
-	// Ignore operators before variables (example -$variable)
-	let normalizedValue = LEADING_OPERATOR.test(value.charAt(0)) ? value.slice(1) : value
-
-	// SCSS variable (example $variable)
-	if (normalizedValue.startsWith(`$`)) return false
 
 	// SCSS namespace (example namespace.$variable)
 	if (SCSS_MODULE_VARIABLE.test(value)) return false
@@ -88,14 +59,11 @@ export function isStandardPreprocessorValue (value: string): boolean {
 	// SCSS namespace (example namespace.function-name())
 	if (SCSS_MODULE_FUNCTION.test(value)) return false
 
-	// SCSS or Less interpolation
-	if (hasInterpolation(normalizedValue)) return false
-
 	return true
 }
 
 /**
- * Checks whether a selector is standard under a preprocessor: what the core turns away, and the placeholders, nested properties and interpolations either language spells a selector with.
+ * Checks whether a selector is standard under a preprocessor: what the core turns away, and the placeholders and nested properties Sass spells a selector with.
  * @param selector - The selector to check.
  * @returns True if the selector is standard syntax, false otherwise.
  */
@@ -110,9 +78,6 @@ export function isStandardPreprocessorSelector (selector: string): boolean {
  */
 export function isStandardPreprocessorSelectorCode (code: string): boolean {
 	if (!isStandardSyntaxSelectorCode(code)) return false
-
-	// SCSS or Less interpolation
-	if (hasInterpolation(code)) return false
 
 	// SCSS placeholder selectors
 	if (code.startsWith(`%`)) return false
@@ -132,16 +97,4 @@ export function isStandardPreprocessorRule (rule: Rule): boolean {
 	if (rule.type !== `rule`) return false
 
 	return isStandardPreprocessorSelectorCode(withoutQuotedTextAndComments(rule.selector))
-}
-
-/**
- * Checks whether a function of a value is standard under a preprocessor: what the core turns away, and a call Sass opens on an interpolation.
- * @param fn - The function node to check.
- * @returns True if the function is standard syntax, false otherwise.
- */
-export function isStandardPreprocessorFunction (fn: FunctionNode): boolean {
-	// A call opening on a Sass interpolation, whose name is the interpolation's to spell
-	if (fn.value.startsWith(`#{`)) return false
-
-	return isStandardSyntaxFunction(fn)
 }

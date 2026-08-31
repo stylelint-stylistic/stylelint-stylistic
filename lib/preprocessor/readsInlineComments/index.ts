@@ -3,6 +3,7 @@ import type { PostcssResult } from "stylelint"
 
 import { nodeSyntax } from "../../utils/nodeSyntax/index.ts"
 import { isSyntax } from "../../utils/typeGuards/index.ts"
+import { isInlineComment } from "../isInlineComment/index.ts"
 
 /** What the probe of a syntax says about a comment opened by a double slash: whether the syntax spells one at all, whether it leaves one standing in the value a rule reads, and whether those two answers are the syntax's own. A syntax that read the probe as the stylesheet it is has answered for itself; one that threw, read nothing out of it, or could not be asked at all is given the default that reads a comment as a comment, and `answered` says which of the two a caller is holding — a gate refusing a file on the syntax's own account must not refuse one on the default. Which break closes one is no question of the syntax's: a line break is what PostCSS reads as one, a line feed with or without a carriage return in front of it, and every scan of a text closes such a comment there. */
 export type InlineCommentReading = {
@@ -49,7 +50,7 @@ function probeSyntax (syntax?: unknown): InlineCommentReading {
 			reading.spells = false
 
 			probe.walkComments((comment) => {
-				if ((`inline` in comment && comment.inline) || comment.raws.inline) reading.spells = true
+				if (isInlineComment(comment)) reading.spells = true
 			})
 		}
 		// The raw is the copy a syntax rewrites the comments of a value in, and the second question is asked only where that copy is the one the rule reads, so a double slash surviving there is what it turns on — not one the syntax has left standing in a copy beside it

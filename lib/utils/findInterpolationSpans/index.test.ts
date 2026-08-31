@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { findInterpolationSpanTouching } from "../../utils/findInterpolationSpans/index.ts"
-
-import { findInterpolationSpans } from "./index.ts"
+import { findInterpolationSpans, findInterpolationSpanTouching } from "./index.ts"
 
 /**
  * Builds the node a value parse would hand a rule for a run of a text.

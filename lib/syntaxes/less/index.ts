@@ -1,14 +1,13 @@
 import type { AtRule, Declaration, Root, Rule as PostcssRule } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { findInterpolationSpans } from "../../preprocessor/findInterpolationSpans/index.ts"
-import { isStandardPreprocessorFunction } from "../../preprocessor/guards/index.ts"
+import { isStandardPreprocessorComment } from "../../preprocessor/guards/index.ts"
 import { inlineCommentReading } from "../../preprocessor/readsInlineComments/index.ts"
 import { isAtRule } from "../../utils/typeGuards/index.ts"
 import { css } from "../css/index.ts"
 import type { Syntax } from "../index.ts"
 
-import { isStandardLessAtRule, isStandardLessComment, isStandardLessDeclaration, isStandardLessProperty, isStandardLessRule, isStandardLessSelector, isStandardLessValue } from "./guards/index.ts"
+import { isStandardLessAtRule, isStandardLessDeclaration, isStandardLessProperty, isStandardLessRule, isStandardLessSelector, isStandardLessValue } from "./guards/index.ts"
 import { requiresTrailingSemicolon } from "./requiresTrailingSemicolon/index.ts"
 import { syncLessVariableValue } from "./syncLessVariableValue/index.ts"
 
@@ -22,9 +21,7 @@ export let less: Syntax = {
 	isStandardDeclaration: isStandardLessDeclaration,
 	isStandardProperty: isStandardLessProperty,
 	isStandardValue: isStandardLessValue,
-	isStandardComment: isStandardLessComment,
-	isStandardFunction: isStandardPreprocessorFunction,
-	interpolationSpans: (text) => findInterpolationSpans(text),
+	isStandardComment: isStandardPreprocessorComment,
 	requiresTrailingSemicolon,
 	readsRuleParams: (rule: PostcssRule) => `params` in rule && Boolean(rule.params),
 	readsAtRuleAsVariable: (atRule: AtRule) => `variable` in atRule,

@@ -4,20 +4,12 @@ import type { PostcssResult } from "stylelint"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { isAtRule, isComment, isDeclaration } from "../../utils/typeGuards/index.ts"
 import { endsWithInlineComment } from "../endsWithInlineComment/index.ts"
+import { isInlineComment } from "../isInlineComment/index.ts"
 import { printedText } from "../printedText/index.ts"
 import { inlineCommentReading } from "../readsInlineComments/index.ts"
 
 /** A character standing in for the one the fix would write, put on the end of a run a caller has spelled out. `endsWithInlineComment` reads the trailing whitespace of a text as room a write is about to go into, and such a run is the opposite of that, so something has to stand behind it; only this character's not being whitespace matters, since it neither opens anything nor closes anything. */
 const A_WRITTEN_CHARACTER = `;`
-
-/**
- * Asks whether the syntax has already read a node as a comment opened by a double slash.
- * @param node - The node to ask about.
- * @returns True where it is such a comment.
- */
-function isInlineComment (node: Node): boolean {
-	return isComment(node) && Boolean((`inline` in node && node.inline) || node.raws.inline)
-}
 
 /**
  * The text a character written right behind a node would follow, spelled as the file spells it.

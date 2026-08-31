@@ -19,7 +19,7 @@ The rules of the core under `@stylistic/scss/<rule>`, for stylesheets writt
 
 Every rule of the core is here, with the same options and the same documentation, and plain CSS is read exactly as the core reads it — a plain block of an HTML page beside a `lang="scss"` one included, so a mixed page is configured with these rules alone. What the namespace reads beyond the core:
 
-- the constructs `postcss-scss` hands over — variables (`$a: b`) and the maps and lists they hold, placeholder selectors (`%a`), nested properties (`font: { family: x }`), `@content`, module readings (`ns.$a`, `ns.f()`) and interpolation (`#{…}`) — are passed over the way the core passes over what is not standard CSS, rather than misread as code;
+- the constructs only Sass spells — placeholder selectors (`%a`), nested properties (`font: { family: x }`), `@content` and a reading through a module (`ns.$a`, `ns.f()`) — are passed over the way the core passes over what is not standard CSS, rather than misread as code; a variable (`$a: b`) with its map or list, and an interpolation (`#{…}`), the core passes over as well, since a plugin spells both over plain CSS;
 - an inline comment (`//`) is a comment of the file: the parser rewrites it into a block comment in the copy it hands a rule and keeps the file's own spelling in a copy beside it, and every rule here reads and writes the copy the file spells, so a position is counted in the file, a fix lands in it, and no fix writes into such a comment;
 - `function-whitespace-after` under `never` leaves the whitespace in front of a `+` or a `-` standing behind a call, since Sass reads such a sign as an operator (see the rule's README).
 

@@ -2,7 +2,7 @@ import type { InlineCommentSpan } from "../../utils/findInlineCommentSpans/index
 import { rewriteInlineComments } from "../../utils/rewriteInlineComments/index.ts"
 
 /**
- * Finds the spans the inline comments of a value occupy in it, out of the two copies `postcss-scss` keeps of that value: one with every inline comment rewritten into a block comment, and one spelled as the file spells it. Only the comments set the two apart, so the first character they disagree on is the second character of one — the asterisk of a block comment against the second slash of an inline one. A comment ends with its line in both copies, and none of them holds a line break, so the next line break puts the two back in step whatever the rewriting did to the text in between, and the distance between them there is what a position behind the comment has to be moved by to be read in the rewritten copy.
+ * Finds the spans the inline comments of a value occupy in it, out of the two copies `postcss-scss` keeps of that value: one with every inline comment rewritten into a block comment, and one spelled as the file spells it. Only the comments set the two apart, so the first character they disagree on is the second character of one — the asterisk of a block comment against the second slash of an inline one. A comment ends with its line in both copies, and none of them holds a line break, so the next line break puts the two back in step whatever the rewriting did to the text in between.
  *
  * Everything here rests on the two copies being the two copies of one text, which holds only until a rule writes to one of them and leaves the other where it was — a line break of the raw taken away, a colour spelled differently in it, a space put in front of it. The reading is therefore checked against the raw before it is handed out, by rewriting the comments it found the way the syntax rewrote them, and nothing is returned unless the raw comes back character for character.
  * @param rewritten - The copy the comments were rewritten in.
@@ -29,11 +29,7 @@ export function findRewrittenCommentSpans (rewritten: string, spelled: string): 
 		let rewrittenLineBreakIndex = rewritten.indexOf(`\n`, rewrittenIndex)
 		let runsToTheEnd = lineBreakIndex === -1 || rewrittenLineBreakIndex === -1
 
-		spans.push({
-			start: spelledIndex - 1,
-			end: runsToTheEnd ? spelled.length : lineBreakIndex,
-			delta: runsToTheEnd ? rewritten.length - spelled.length : rewrittenLineBreakIndex - lineBreakIndex,
-		})
+		spans.push({ start: spelledIndex - 1, end: runsToTheEnd ? spelled.length : lineBreakIndex })
 
 		if (runsToTheEnd) break
 

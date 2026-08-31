@@ -37,6 +37,10 @@ testRule({
 			code: `a { color\r\n\r\n:\r\n\r\npink }`,
 		},
 		{
+			description: `an SCSS map written on one line, whose inner colon opens no declaration`,
+			code: `$map: (key: value)`,
+		},
+		{
 			description: `a data URI, whose own colon opens no declaration either`,
 			code: `a { background:\n  url(data:application/font-woff;...); }`,
 		},
@@ -241,6 +245,19 @@ testRule({
 		{
 			description: `a value broken across lines, with the break behind the colon`,
 			code: `a {\n  box-shadow:\n    0 0 0 1px #5b9dd9\n    0 0 2px 1px rgba(30, 140, 190, 0.8);\n}`,
+		},
+		{
+			description: `an SCSS map broken across lines, with the break behind its outer colon`,
+			code: `$map\n: (\nkey: value,\nkey2 :value2)`,
+		},
+		{
+			description: `an SCSS list broken across lines`,
+			code: `
+				$list: (
+				'value1',
+				'value2',
+				)
+			`,
 		},
 		{
 			description: `a single-line declaration whose value abuts the colon`,

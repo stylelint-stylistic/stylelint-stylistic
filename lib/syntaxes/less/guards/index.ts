@@ -1,8 +1,9 @@
-import type { AtRule, Comment, Declaration, Rule } from "postcss"
-import type { AtRule as LessAtRule, Comment as LessComment, Declaration as LessDeclaration, Rule as LessRule } from "postcss-less"
+import type { AtRule, Declaration, Rule } from "postcss"
+import type { AtRule as LessAtRule, Declaration as LessDeclaration, Rule as LessRule } from "postcss-less"
 
-import { isStandardPreprocessorAtRule, isStandardPreprocessorComment, isStandardPreprocessorDeclaration, isStandardPreprocessorProperty, isStandardPreprocessorSelectorCode, isStandardPreprocessorValue } from "../../../preprocessor/guards/index.ts"
+import { isStandardPreprocessorAtRule, isStandardPreprocessorDeclaration, isStandardPreprocessorSelectorCode, isStandardPreprocessorValue } from "../../../preprocessor/guards/index.ts"
 import { LEADING_OPERATOR } from "../../../regexps.ts"
+import { isStandardSyntaxProperty } from "../../../utils/isStandardSyntaxProperty/index.ts"
 import { isRule } from "../../../utils/typeGuards/index.ts"
 import { withoutQuotedTextAndComments } from "../../../utils/withoutQuotedTextAndComments/index.ts"
 import { isLessDetachedRulesetCall } from "../isLessDetachedRulesetCall/index.ts"
@@ -106,7 +107,7 @@ export function isStandardLessDeclaration (decl: Declaration | LessDeclaration):
  * @returns True if the property is standard syntax, false otherwise.
  */
 export function isStandardLessProperty (property: string): boolean {
-	if (!isStandardPreprocessorProperty(property)) return false
+	if (!isStandardSyntaxProperty(property)) return false
 
 	// Less var (e.g. @var: x)
 	if (property.startsWith(`@`)) return false
@@ -132,15 +133,4 @@ export function isStandardLessValue (value: string): boolean {
 	if (normalizedValue.startsWith(`@`)) return false
 
 	return true
-}
-
-/**
- * Checks whether a comment is standard under Less: neither parser's inline mark stands on it.
- * @param comment - The comment node to check.
- * @returns True if the comment has standard syntax, false otherwise.
- */
-export function isStandardLessComment (comment: Comment | LessComment): boolean {
-	if (!isStandardPreprocessorComment(comment)) return false
-
-	return !(`inline` in comment)
 }

@@ -44,6 +44,24 @@ describe(`writePrintedText`, () => {
 		expect(node.toString()).toBe(`color: red`)
 	})
 
+	it(`writes the raw where PostCSS keeps one, and leaves the cleaned copy as the parser wrote it`, () => {
+		let node = decl(`a { margin: 0 /* c */ 1px }`)
+
+		writePrintedText(node, `0 /* c */ 2px`)
+
+		expect(node.toString()).toBe(`margin: 0 /* c */ 2px`)
+		expect(node.value).toBe(`0  1px`)
+	})
+
+	it(`writes the selector itself where the syntax keeps the comment in no raw`, () => {
+		let node = lessRule(`a // c\n, b {}`)
+
+		writePrintedText(node, `a // c\r\n, b`)
+
+		expect(node.selector).toBe(`a // c\r\n, b`)
+		expect(node.toString()).toBe(`a // c\r\n, b {}`)
+	})
+
 	it(`writes the copy the syntax prints`, () => {
 		let node = scssDecl(`a { margin: 0 // c\n  1px }`)
 

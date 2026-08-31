@@ -3,8 +3,9 @@ import { parse as parseLess } from "postcss-less"
 import { describe, expect, it } from "vitest"
 
 import { pick } from "../../../../vitest.helpers.ts"
+import { isStandardPreprocessorComment } from "../../../preprocessor/guards/index.ts"
 
-import { isStandardLessAtRule, isStandardLessComment, isStandardLessDeclaration, isStandardLessProperty, isStandardLessRule, isStandardLessSelector, isStandardLessValue } from "./index.ts"
+import { isStandardLessAtRule, isStandardLessDeclaration, isStandardLessProperty, isStandardLessRule, isStandardLessSelector, isStandardLessValue } from "./index.ts"
 
 describe(`isStandardLessAtRule`, () => {
 	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/357
@@ -53,9 +54,9 @@ describe(`isStandardLessAtRule`, () => {
 	})
 })
 
-describe(`isStandardLessComment`, () => {
+describe(`isStandardPreprocessorComment`, () => {
 	it(`LESS inline comment`, () => {
-		expect(isStandardLessComment(less(`// foo`))).toBe(false)
+		expect(isStandardPreprocessorComment(less(`// foo`))).toBe(false)
 	})
 })
 

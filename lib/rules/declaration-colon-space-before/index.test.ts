@@ -24,6 +24,14 @@ testRule({
 			code: `a { color :\r\npink }`,
 		},
 		{
+			description: `an SCSS map written on one line, whose inner colon opens no declaration`,
+			code: `$map:(key:value)`,
+		},
+		{
+			description: `an SCSS list written on one line`,
+			code: `$list:('value1', 'value2')`,
+		},
+		{
 			description: `a data URI, whose own colon opens no declaration either`,
 			code: `a { background : url(data:application/font-woff;...); }`,
 		},
@@ -162,6 +170,10 @@ testRule({
 		{
 			description: `the same break spelled with a carriage return`,
 			code: `a { color:\r\npink }`,
+		},
+		{
+			description: `an SCSS map, whose inner colon is spaced as the outer one is`,
+			code: `$map :(key :value)`,
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/92

@@ -31,6 +31,14 @@ testRule({
 			description: `nested calls, each with the spaces inside its own parentheses`,
 			code: `a { color: color( rgb( 0, 0, 0 ) lightness( 50% ) ); }`,
 		},
+		{
+			description: `SCSS map`,
+			code: `$map: (key: value, key2: value2)`,
+		},
+		{
+			description: `Sass list ignored`,
+			code: `$list: (value, value2)`,
+		},
 	],
 
 	reject: [
@@ -242,6 +250,10 @@ testRule({
 				0 ) lightness( 50% )); }
 			`,
 		},
+		{
+			description: `SCSS map`,
+			code: `$map: (key: value, key2: value2)`,
+		},
 	],
 
 	reject: [
@@ -406,6 +418,10 @@ testRule({
 		{
 			description: `nested calls, all of them abutting their parentheses`,
 			code: `a { color: color(rgb(0, 0, 0) lightness(50%)); }`,
+		},
+		{
+			description: `SCSS map`,
+			code: `$map: ( key: value, key2: value2 )`,
 		},
 	],
 
@@ -656,6 +672,10 @@ testRule({
 				0,
 				0 ) lightness(50%)); }
 			`,
+		},
+		{
+			description: `SCSS map`,
+			code: `$map: ( key: value, key2: value2 )`,
 		},
 	],
 

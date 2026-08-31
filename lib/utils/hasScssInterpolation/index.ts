@@ -1,4 +1,4 @@
-import { SCSS_INTERPOLATION } from "../regexps.ts"
+import { SCSS_INTERPOLATION } from "../../regexps.ts"
 
 /**
  * Checks whether a string has SCSS interpolation.

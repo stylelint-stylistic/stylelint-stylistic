@@ -1,6 +1,5 @@
 import type { AtRule, Declaration, Rule } from "postcss"
 
-import { findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
 import { rewriteInlineComments } from "../../utils/rewriteInlineComments/index.ts"
 import { isDeclaration, isRule, type SyntaxRaw } from "../../utils/typeGuards/index.ts"
 
@@ -9,7 +8,7 @@ import { isDeclaration, isRule, type SyntaxRaw } from "../../utils/typeGuards/in
  * @param node - The declaration, rule or at-rule.
  * @returns The raw, where the parser filled one.
  */
-function rawsOf (node: AtRule | Declaration | Rule): SyntaxRaw | undefined {
+export function rawsOf (node: AtRule | Declaration | Rule): SyntaxRaw | undefined {
 	if (isDeclaration(node)) return node.raws.value
 
 	return isRule(node) ? node.raws.selector : node.raws.params
@@ -29,7 +28,7 @@ function plainText (node: AtRule | Declaration | Rule): string {
 /**
  * Reads the text of a node as the file spells it — a declaration's value, a rule's selector, an at-rule's params — whichever copies the syntax keeps of it.
  *
- * `postcss-scss` rewrites every `//` comment of such a text into a block comment inside the raw, keeps the spelling of the file in a copy of its own under `scss` and prints that second copy. The copy that is printed is the one a rule has to read: it is the text the file holds, the text the positions of a warning are counted in, and the only text a fix can reach. A syntax keeping no such copy prints the raw, and a node carrying no raw at all prints its own text.
+ * PostCSS keeps a text holding comments in a raw beside the copy it hands back with the comments taken out, and `postcss-scss` rewrites every `//` comment of that raw into a block comment, keeps the spelling of the file in a copy of its own under `scss` and prints that one. The copy that is printed is the one a rule has to read: it is the text the file holds, the text the positions of a warning are counted in, and the only text a fix can reach. So the spelled copy is read where a syntax keeps one, the raw where PostCSS kept one, and the node's own text otherwise — the core and the namespaces alike, since which copies stand on a node is the parser's doing and not the rule's.
  * @param node - The declaration, rule or at-rule.
  * @returns The text, in the file's own spelling.
  */
@@ -56,7 +55,7 @@ export function writePrintedText (node: AtRule | Declaration | Rule, text: strin
 	if (syntaxRaw) {
 		if (typeof syntaxRaw.scss === `string`) {
 			syntaxRaw.scss = text
-			syntaxRaw.raw = rewriteInlineComments(text, findInlineCommentSpans(text, true))
+			syntaxRaw.raw = rewriteInlineComments(text)
 		}
 		else {
 			syntaxRaw.raw = text

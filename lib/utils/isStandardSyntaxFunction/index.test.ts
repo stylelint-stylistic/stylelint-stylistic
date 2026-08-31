@@ -23,6 +23,15 @@ describe(`isStandardSyntaxFunction`, () => {
 		expect(isStandardSyntaxFunction(getFunction(`(list)`))).toBe(false)
 	})
 
+	it(`scss map`, () => {
+		// as in $map: (key: value)
+		expect(isStandardSyntaxFunction(getFunction(`(key: value)`))).toBe(false)
+	})
+
+	it(`scss function in scss interpolation`, () => {
+		expect(isStandardSyntaxFunction(getFunction(`#{darken(#fff, 0.2)}`))).toBe(false)
+	})
+
 	it(`CSS-in-JS interpolation`, () => {
 		expect(isStandardSyntaxFunction(getFunction(`\${({ size }) => (size === "small") ? "0.8em" : "1em"}`))).toBe(false)
 	})

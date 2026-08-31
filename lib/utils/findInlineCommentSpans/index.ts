@@ -2,11 +2,10 @@ import type { Node } from "postcss-value-parser"
 
 import { findCommentSpans } from "../findCommentSpans/index.ts"
 
-/** The span an inline comment occupies in a value, in the coordinates of the file, and how far the copy a syntax rewrote its comments in has run away from that value by the end of the comment. */
+/** The span an inline comment occupies in a value, in the coordinates of the file. */
 export type InlineCommentSpan = {
 	start: number,
 	end: number,
-	delta?: number,
 }
 
 /**
