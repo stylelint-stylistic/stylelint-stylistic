@@ -1,4 +1,7 @@
-import { messages, ruleName } from "./index.ts"
+import { createRule } from "../../../../rules/indentation/index.ts"
+import { styled } from "../../index.ts"
+
+let { ruleName, messages } = createRule(styled)
 
 let testRule = createTestRule({ ruleName })
 

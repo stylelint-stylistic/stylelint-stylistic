@@ -1,6 +1,8 @@
 import type { Declaration, Node, Root } from "postcss"
 import type { PostcssResult } from "stylelint"
 
+import { styled } from "./styled/index.ts"
+
 /**
  * How a family of the plugin's rules reads a stylesheet: the namespace the family is registered under, and the syntaxes it answers for.
  *
@@ -35,4 +37,4 @@ export type Syntax = {
 }
 
 /** The syntaxes registered beside the core, each under a namespace of its own. A syntax is not registered until it is listed here. */
-export let namespaces: Syntax[] = []
+export let namespaces: Syntax[] = [styled]

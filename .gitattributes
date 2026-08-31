@@ -3,3 +3,6 @@
 
 # A unified diff puts its context marker in front of the indentation the patched file already has, which every whitespace check reads as a space before a tab.
 patches/*.patch -whitespace
+
+# A test fixture spells whatever whitespace its case is about, a space in front of a tab included, so the whitespace check of the pre-commit hook keeps out of the fixtures.
+*.test.ts whitespace=-space-before-tab
