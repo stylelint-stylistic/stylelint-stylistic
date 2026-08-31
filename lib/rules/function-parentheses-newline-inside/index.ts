@@ -3,6 +3,7 @@ import stylelint, { type FixCallback } from "stylelint"
 
 import { LEADING_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import type { Syntax } from "../../syntaxes/index.ts"
 import { addEdit, applyEditsFromEnd, type Edit, toIndexBeforeEdits } from "../../utils/applyEditsFromEnd/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -11,7 +12,6 @@ import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
-import { isStandardSyntaxFunction } from "../../utils/isStandardSyntaxFunction/index.ts"
 import { movesEndIntoInlineComment } from "../../utils/movesEndIntoInlineComment/index.ts"
 import { type InlineCommentReading, inlineCommentReading } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -63,12 +63,13 @@ function findInlineCommentSpansAfterEdits (declValue: string, edits: Edit[], spe
  * Half the node is no answer, though the halves are not alike. The opening parenthesis of such a call is one the file really writes, and so is the whitespace behind it, so the opening half of an option could be read and fixed where it stands. The closing half could not: the parenthesis the file closes the call on is one the parser never hands over, so whether the option is satisfied there is a question the rule cannot put at all. Sometimes it already is — the last parenthesis of `f(1px // c) h(2px`, a break, `2px` and a break and `)` has the break an `always` option wants in front of it, the file reading `f(1px`, the break, `2px`, the break and `)` — and sometimes it is not, as in the same value without that second break. A rule keeping the opening half would write its whitespace and report the problem solved in both, and in the second it would hand back a value still violating the option at a parenthesis no run can ever reach, which is the shape #285 is about. Nothing the rule can see tells the two apart, so reporting nothing is the honest answer, and the warnings that costs are the price of a parse it cannot mend.
  *
  * The whole node is turned away rather than the closing half of it, warning and all: the parentheses the options are about are not where the parser puts them, and nothing read out of a value the parser has misread this way is worth reporting. A closed call standing inside such a function is reached by the walk as ever, and read and fixed where it stands. A bracket the file really leaves open never gets here — PostCSS throws on one of those before any rule sees the declaration — so a comment is the only thing the second question turns away.
+ * @param syntax - The syntax the rule is built over.
  * @param valueNode - The function the walk has reached.
  * @param inlineComments - The spans the inline comments of the value occupy in it.
  * @returns True where the rule may read the function's parentheses and write between them.
  */
-function isFunctionParsedAsWritten (valueNode: FunctionNode, inlineComments: InlineCommentSpan[]): boolean {
-	if (!isStandardSyntaxFunction(valueNode)) return false
+function isFunctionParsedAsWritten (syntax: Syntax, valueNode: FunctionNode, inlineComments: InlineCommentSpan[]): boolean {
+	if (!syntax.isStandardFunction(valueNode)) return false
 
 	if (valueNode.unclosed) return false
 
@@ -259,11 +260,12 @@ function getNeverFixability (read: {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `always`, `always-multi-line` and `never-multi-line`.
  * @param _secondaryOptions - The secondary options, of which this rule takes none.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,
@@ -298,7 +300,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 				// A call standing in the text of an inline comment is no call of the value, and its parentheses are none of this rule's: leave it alone. A call nested inside it is still walked and asked the same question, since one opened inside such a comment reaches past the break that closes it and gathers code the file spells.
 				if (findInlineCommentSpanHolding(valueNode, inlineComments)) return
 
-				if (!isFunctionParsedAsWritten(valueNode, inlineComments)) return
+				if (!isFunctionParsedAsWritten(syntax, valueNode, inlineComments)) return
 
 				let functionString = valueParser.stringify(valueNode)
 				let isMultiLine = !isSingleLineString(functionString)

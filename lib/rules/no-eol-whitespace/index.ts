@@ -9,7 +9,6 @@ import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { getRuleSelector } from "../../utils/getRuleSelector/index.ts"
 import { isOnlyWhitespace } from "../../utils/isOnlyWhitespace/index.ts"
-import { isStandardSyntaxComment } from "../../utils/isStandardSyntaxComment/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setAtRuleParams } from "../../utils/setAtRuleParams/index.ts"
@@ -96,11 +95,12 @@ function findErrorStartIndex (lastEOLIndex: number, string: string, options: {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, which is `true`.
  * @param secondaryOptions - The secondary options: `ignore`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true, secondaryOptions: { ignore?: `empty-lines` | `empty-lines`[] }): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: true, secondaryOptions: { ignore?: `empty-lines` | `empty-lines`[] }): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,
@@ -241,7 +241,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true
 						node.raws.left = fixed
 					})
 
-					if (isStandardSyntaxComment(node)) {
+					if (syntax.isStandardComment(node)) {
 						fixText(node.raws.right, (fixed) => {
 							node.raws.right = fixed
 						})

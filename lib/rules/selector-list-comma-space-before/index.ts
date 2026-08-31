@@ -33,10 +33,11 @@ export let meta = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `always`, `never`, `always-single-line` and `never-single-line`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line`): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line`): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
 
 	return (root, result) => {
@@ -52,6 +53,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 		selectorListCommaWhitespaceChecker({
 			root,
 			result,
+			syntax,
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
 			// The whitespace in front of the comma may hold the line break that closes an inline comment, and that break is nothing a fix may write over: taking it away or replacing it with the space `always` asks for would carry the comma, and the rest of the list, into the comment's text. The problem is reported and the code left as it was.

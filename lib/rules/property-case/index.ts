@@ -4,7 +4,6 @@ import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
-import { isStandardSyntaxProperty } from "../../utils/isStandardSyntaxProperty/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isRule } from "../../utils/typeGuards/index.ts"
@@ -28,11 +27,12 @@ export let meta = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `lower` and `upper`.
  * @param secondaryOptions - The secondary options: `ignoreSelectors`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `lower` | `upper`, secondaryOptions: { ignoreSelectors?: string | RegExp | (string | RegExp)[] }): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `lower` | `upper`, secondaryOptions: { ignoreSelectors?: string | RegExp | (string | RegExp)[] }): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,
@@ -55,7 +55,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `low
 		root.walkDecls((decl) => {
 			let prop = decl.prop
 
-			if (!isStandardSyntaxProperty(prop)) return
+			if (!syntax.isStandardProperty(prop)) return
 
 			if (isCustomProperty(prop)) return
 

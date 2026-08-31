@@ -2,8 +2,8 @@ import type { Root, Rule } from "postcss"
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
+import type { Syntax } from "../../syntaxes/index.ts"
 import { findSelectorInlineComments, type InlineComment } from "../findSelectorInlineComments/index.ts"
-import { isStandardSyntaxRule } from "../isStandardSyntaxRule/index.ts"
 import { toSelectorSourceIndex } from "../toSelectorSourceIndex/index.ts"
 import type { SyntaxRaw } from "../typeGuards/index.ts"
 
@@ -16,6 +16,9 @@ export interface SelectorListCommaWhitespaceCheckerOptions {
 
 	/** The Stylelint result. */
 	result: PostcssResult,
+
+	/** The syntax the rule is built over. */
+	syntax: Syntax,
 
 	/** The location checker function. */
 	locationChecker: (opts: {
@@ -42,7 +45,7 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 	let { fix } = opts
 
 	opts.root.walkRules((rule) => {
-		if (!isStandardSyntaxRule(rule)) return
+		if (!opts.syntax.isStandardRule(rule)) return
 
 		let selectorRaws: SyntaxRaw | undefined = rule.raws.selector
 		let selector = selectorRaws ? selectorRaws.raw : rule.selector

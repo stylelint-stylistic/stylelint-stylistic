@@ -1,7 +1,7 @@
 import type { AtRule, Root } from "postcss"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { isStandardSyntaxAtRule } from "../isStandardSyntaxAtRule/index.ts"
+import type { Syntax } from "../../syntaxes/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -18,11 +18,12 @@ export function atRuleNameSpaceChecker (options: {
 		errTarget: string,
 	}) => void,
 	result: PostcssResult,
+	syntax: Syntax,
 	checkedRuleName: string,
 	fix?: ((atRule: AtRule) => void) | null,
 }): void {
 	options.root.walkAtRules((atRule) => {
-		if (!isStandardSyntaxAtRule(atRule)) return
+		if (!options.syntax.isStandardAtRule(atRule)) return
 
 		checkColon(
 			`@${atRule.name}${atRule.raws.afterName || ``}${atRule.params}`,

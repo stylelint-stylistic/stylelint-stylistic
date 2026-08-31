@@ -7,7 +7,6 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { findSelectorBlockComments } from "../../utils/findSelectorBlockComments/index.ts"
 import { findSelectorInlineComments, type InlineComment } from "../../utils/findSelectorInlineComments/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { isStandardSyntaxRule } from "../../utils/isStandardSyntaxRule/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
 import { restoreSelectorInlineComments } from "../../utils/restoreSelectorInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -32,10 +31,11 @@ export let meta = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, which is `true`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: true): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,
@@ -44,7 +44,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true
 		if (!validOptions) return
 
 		root.walkRules((ruleNode) => {
-			if (!isStandardSyntaxRule(ruleNode)) return
+			if (!syntax.isStandardRule(ruleNode)) return
 
 			let hasFixed = false
 

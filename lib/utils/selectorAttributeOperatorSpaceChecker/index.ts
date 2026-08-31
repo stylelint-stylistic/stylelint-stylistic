@@ -3,8 +3,8 @@ import type { Attribute } from "postcss-selector-parser"
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
+import type { Syntax } from "../../syntaxes/index.ts"
 import { findSelectorInlineComments } from "../findSelectorInlineComments/index.ts"
-import { isStandardSyntaxRule } from "../isStandardSyntaxRule/index.ts"
 import { parseSelector } from "../parseSelector/index.ts"
 import { restoreSelectorInlineComments } from "../restoreSelectorInlineComments/index.ts"
 import { toSelectorSourceIndex } from "../toSelectorSourceIndex/index.ts"
@@ -19,6 +19,7 @@ let { utils: { report } } = stylelint
 export function selectorAttributeOperatorSpaceChecker (options: {
 	root: Root,
 	result: PostcssResult,
+	syntax: Syntax,
 	locationChecker: (opts: {
 		source: string,
 		index: number,
@@ -31,7 +32,7 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 	let { fix } = options
 
 	options.root.walkRules((rule) => {
-		if (!isStandardSyntaxRule(rule)) return
+		if (!options.syntax.isStandardRule(rule)) return
 
 		let selectorRaws: SyntaxRaw | undefined = rule.raws.selector
 		let selector = selectorRaws ? selectorRaws.raw : rule.selector

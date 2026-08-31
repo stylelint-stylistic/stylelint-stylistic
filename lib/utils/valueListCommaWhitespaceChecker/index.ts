@@ -2,9 +2,8 @@ import type { Declaration, Root } from "postcss"
 import styleSearch, { type StyleSearchMatch } from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
+import type { Syntax } from "../../syntaxes/index.ts"
 import { declarationString } from "../declarationString/index.ts"
-import { isStandardSyntaxDeclaration } from "../isStandardSyntaxDeclaration/index.ts"
-import { isStandardSyntaxProperty } from "../isStandardSyntaxProperty/index.ts"
 import { searchCopy } from "../searchCopy/index.ts"
 
 let { utils: { report } } = stylelint
@@ -16,6 +15,9 @@ export interface ValueListCommaWhitespaceCheckerOptions {
 
 	/** The Stylelint result. */
 	result: PostcssResult,
+
+	/** The syntax the rule is built over. */
+	syntax: Syntax,
 
 	/** The location checker function. */
 	locationChecker: (opts: {
@@ -45,7 +47,7 @@ export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceC
 	let { fix } = opts
 
 	opts.root.walkDecls((decl) => {
-		if (!isStandardSyntaxDeclaration(decl) || !isStandardSyntaxProperty(decl.prop)) return
+		if (!opts.syntax.isStandardDeclaration(decl) || !opts.syntax.isStandardProperty(decl.prop)) return
 
 		let declString = declarationString(decl)
 		let { searchString } = searchCopy(declString, decl, opts.result)

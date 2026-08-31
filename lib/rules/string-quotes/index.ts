@@ -12,7 +12,6 @@ import { findSelectorInlineComments } from "../../utils/findSelectorInlineCommen
 import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
 import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { isStandardSyntaxRule } from "../../utils/isStandardSyntaxRule/index.ts"
 import { nodeSyntax } from "../../utils/nodeSyntax/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
 import { syntaxKeepsInlineComments } from "../../utils/readsInlineComments/index.ts"
@@ -46,11 +45,12 @@ const DOUBLE_QUOTE = `"`
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `single` and `double`.
  * @param secondaryOptions - The secondary options: `avoidEscape`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `single` | `double`, secondaryOptions: { avoidEscape?: boolean }): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `single` | `double`, secondaryOptions: { avoidEscape?: boolean }): RuleCheck {
 	let correctQuote: typeof SINGLE_QUOTE | typeof DOUBLE_QUOTE = primary === `single` ? SINGLE_QUOTE : DOUBLE_QUOTE
 
 	let erroneousQuote: typeof SINGLE_QUOTE | typeof DOUBLE_QUOTE = primary === `single` ? DOUBLE_QUOTE : SINGLE_QUOTE
@@ -79,7 +79,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `sin
 		// A double slash opens a comment only where the syntax says it does. Elsewhere it is part of a value — an address, most often — and reading it as a comment would silence every string behind it on the line. The two spellings are identical, so the text cannot answer this and the syntax has to. The question waits until a double slash turns up, since answering it costs two parses of a probe and most stylesheets never ask.
 		//
 		// A stylesheet embedded in a page carries the syntax of its own block, and it is that one the question belongs to: the syntax the file was opened with parses the page rather than the style, and one page may hold blocks written in several languages.
-		let syntax = nodeSyntax(root, result)
+		let blockSyntax = nodeSyntax(root, result)
 
 		root.walk((node) => {
 			switch (node.type) {
@@ -101,7 +101,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `sin
 		 * @param ruleNode - The rule node to check.
 		 */
 		function checkRule (ruleNode: Rule): void {
-			if (!isStandardSyntaxRule(ruleNode)) return
+			if (!syntax.isStandardRule(ruleNode)) return
 
 			let selectorRaws: SyntaxRaw | undefined = ruleNode.raws.selector
 
@@ -291,7 +291,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `sin
 			if (!value.includes(`//`)) return []
 
 			// A double slash of a syntax that marks its comments in a copy of its own is code — part of an address, most often. Unless that copy has gone out of step with the value and left the scan to answer after all, and then the comments are the ones the text spells.
-			if (!(raws && raws.scss) && !syntaxKeepsInlineComments(syntax)) return []
+			if (!(raws && raws.scss) && !syntaxKeepsInlineComments(blockSyntax)) return []
 
 			return findInlineCommentSpans(value)
 		}

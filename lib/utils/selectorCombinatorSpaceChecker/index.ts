@@ -3,9 +3,8 @@ import type { Combinator, Node as SelectorParserNode } from "postcss-selector-pa
 import stylelint, { type PostcssResult } from "stylelint"
 
 import { WHITESPACE } from "../../regexps.ts"
+import type { Syntax } from "../../syntaxes/index.ts"
 import { findSelectorInlineComments } from "../findSelectorInlineComments/index.ts"
-import { isStandardSyntaxCombinator } from "../isStandardSyntaxCombinator/index.ts"
-import { isStandardSyntaxRule } from "../isStandardSyntaxRule/index.ts"
 import { parseSelector } from "../parseSelector/index.ts"
 import { restoreSelectorInlineComments } from "../restoreSelectorInlineComments/index.ts"
 import { toSelectorSourceIndex } from "../toSelectorSourceIndex/index.ts"
@@ -41,6 +40,7 @@ function prevNonComment (node: SelectorParserNode): SelectorParserNode | undefin
 export function selectorCombinatorSpaceChecker (opts: {
 	root: Root,
 	result: PostcssResult,
+	syntax: Syntax,
 	locationChecker: LocationChecker,
 	locationType: `before` | `after`,
 	checkedRuleName: string,
@@ -50,7 +50,7 @@ export function selectorCombinatorSpaceChecker (opts: {
 	let hasFixed
 
 	opts.root.walkRules((rule) => {
-		if (!isStandardSyntaxRule(rule)) return
+		if (!opts.syntax.isStandardRule(rule)) return
 
 		hasFixed = false
 
@@ -64,7 +64,7 @@ export function selectorCombinatorSpaceChecker (opts: {
 
 		selectorTree.walkCombinators((node) => {
 			// Ignore non-standard combinators
-			if (!isStandardSyntaxCombinator(node)) return
+			if (!opts.syntax.isStandardCombinator(node)) return
 
 			// Ignore spaced descendant combinator
 			if (WHITESPACE.test(node.value)) return

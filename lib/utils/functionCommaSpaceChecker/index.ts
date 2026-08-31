@@ -2,13 +2,13 @@ import type { Root } from "postcss"
 import valueParser, { type DivNode as ValueParserDivNode, type FunctionNode as ValueParserFunctionNode } from "postcss-value-parser"
 import stylelint, { type PostcssResult } from "stylelint"
 
+import type { Syntax } from "../../syntaxes/index.ts"
 import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
 import { endsWithInlineComment } from "../endsWithInlineComment/index.ts"
 import { findCommentSpans } from "../findCommentSpans/index.ts"
 import { getDeclarationValue } from "../getDeclarationValue/index.ts"
 import { hideFalseInlineComments } from "../hideFalseInlineComments/index.ts"
-import { isStandardSyntaxFunction } from "../isStandardSyntaxFunction/index.ts"
 import { opensAnAddress } from "../opensAnAddress/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
 import { inlineCommentReading } from "../readsInlineComments/index.ts"
@@ -34,6 +34,7 @@ export function functionCommaSpaceChecker (opts: {
 	locationChecker: LocationChecker,
 	fix?: ((node: ValueParserDivNode, index: number, functionNode: ValueParserFunctionNode) => Edit[]),
 	result: PostcssResult,
+	syntax: Syntax,
 	checkedRuleName: string,
 	fixPosition?: `before` | `after`,
 	ignoreFunctions?: string | RegExp | Array<string | RegExp> | undefined,
@@ -58,7 +59,7 @@ export function functionCommaSpaceChecker (opts: {
 			// The node narrowed to a call, under a name the closures below can read it by: a narrowing made in this callback is not carried into a function created inside it
 			let functionNode = valueNode
 
-			if (!isStandardSyntaxFunction(valueNode)) return
+			if (!opts.syntax.isStandardFunction(valueNode)) return
 
 			// The arguments of an address are no list of arguments at all — a data URI, a query string, whatever the address holds — so a comma standing there is none of this checker's. The name is read rather than matched against four characters, so that `u\rl(`, `\75 rl(` and `URL(` are the token `url(` is here as they are to the scan that finds the comments.
 			if (opensAnAddress(valueNode, at, siblings)) return

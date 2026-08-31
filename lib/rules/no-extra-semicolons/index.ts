@@ -5,8 +5,6 @@ import stylelint, { type FixCallback } from "stylelint"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { isStandardSyntaxAtRule } from "../../utils/isStandardSyntaxAtRule/index.ts"
-import { isStandardSyntaxRule } from "../../utils/isStandardSyntaxRule/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isAtRule } from "../../utils/typeGuards/index.ts"
@@ -68,10 +66,11 @@ function getOffsetByNode (node: Node): number {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, which is `true`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: true): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, { actual: primary })
 
@@ -98,9 +97,9 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true
 		}
 
 		root.walk((node) => {
-			if (isAtRule(node) && !isStandardSyntaxAtRule(node)) return
+			if (isAtRule(node) && !syntax.isStandardAtRule(node)) return
 
-			if (node.type === `rule` && !isStandardSyntaxRule(node)) return
+			if (node.type === `rule` && !syntax.isStandardRule(node)) return
 
 			if (node.raws.before && node.raws.before.trim().length > 0) {
 				let rawBeforeNode = node.raws.before
@@ -127,7 +126,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true
 				let rawAfterNode = node.raws.after
 
 				// Where the last child is a Less mixin followed by more than one semicolon, `node.raws.after` holds that semicolon. Less mixins are passed over, so this one is too
-				if (`last` in node && node.last && node.last.type === `atrule` && !isStandardSyntaxAtRule(node.last)) return
+				if (`last` in node && node.last && node.last.type === `atrule` && !syntax.isStandardAtRule(node.last)) return
 
 				let fixSemiIndices: number[] = []
 

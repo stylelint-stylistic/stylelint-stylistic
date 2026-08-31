@@ -1,4 +1,6 @@
-import type { Declaration, Node, Root } from "postcss"
+import type { AtRule, Comment, Declaration, Node, Root, Rule as PostcssRule } from "postcss"
+import type { Node as SelectorNode } from "postcss-selector-parser"
+import type { FunctionNode } from "postcss-value-parser"
 import type { PostcssResult } from "stylelint"
 
 import { styled } from "./styled/index.ts"
@@ -34,6 +36,69 @@ export type Syntax = {
 	 * @returns True where the value holds such an expression.
 	 */
 	valueEmbedsHostCode (decl: Declaration): boolean,
+
+	/**
+	 * Asks whether an at-rule is standard CSS rather than a construct of a preprocessor.
+	 * @param atRule - The at-rule.
+	 * @returns True where it is standard.
+	 */
+	isStandardAtRule (atRule: AtRule): boolean,
+
+	/**
+	 * Asks whether a rule is standard CSS rather than a construct of a preprocessor.
+	 * @param rule - The rule.
+	 * @returns True where it is standard.
+	 */
+	isStandardRule (rule: PostcssRule): boolean,
+
+	/**
+	 * Asks whether a declaration is standard CSS rather than a construct of a preprocessor.
+	 * @param decl - The declaration.
+	 * @returns True where it is standard.
+	 */
+	isStandardDeclaration (decl: Declaration): boolean,
+
+	/**
+	 * Asks whether a property is standard CSS rather than a variable or an interpolation.
+	 * @param property - The property's text.
+	 * @returns True where it is standard.
+	 */
+	isStandardProperty (property: string): boolean,
+
+	/**
+	 * Asks whether a value is standard CSS rather than a variable, an interpolation or an operation.
+	 * @param value - The value's text.
+	 * @returns True where it is standard.
+	 */
+	isStandardValue (value: string): boolean,
+
+	/**
+	 * Asks whether a selector is standard CSS rather than a construct of a preprocessor.
+	 * @param selector - The selector's text.
+	 * @returns True where it is standard.
+	 */
+	isStandardSelector (selector: string): boolean,
+
+	/**
+	 * Asks whether a function of a value is standard CSS rather than a list of Sass or an interpolation.
+	 * @param fn - The function node, as the value parser hands it over.
+	 * @returns True where it is standard.
+	 */
+	isStandardFunction (fn: FunctionNode): boolean,
+
+	/**
+	 * Asks whether a comment is one CSS spells, rather than an inline comment of a preprocessor.
+	 * @param comment - The comment.
+	 * @returns True where it is standard.
+	 */
+	isStandardComment (comment: Comment): boolean,
+
+	/**
+	 * Asks whether a combinator of a parsed selector is standard CSS.
+	 * @param combinator - The combinator node, as the selector parser hands it over.
+	 * @returns True where it is standard.
+	 */
+	isStandardCombinator (combinator: SelectorNode): boolean,
 }
 
 /** The syntaxes registered beside the core, each under a namespace of its own. A syntax is not registered until it is listed here. */

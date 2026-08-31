@@ -2,10 +2,12 @@ import type { Container, Declaration, Document, Node, Root } from "postcss"
 import type { PostcssResult } from "stylelint"
 
 import { EVERY_JS_LINE_TERMINATOR, LEADING_SPACES_AND_TABS } from "../../regexps.ts"
+import { css } from "../css/index.ts"
 import type { Syntax } from "../index.ts"
 
 /** The syntax of the `styled` namespace: a stylesheet embedded in JavaScript as a styled template, parsed with `postcss-styled-syntax`. The namespace is a superset of the core — plain CSS is read exactly as the core reads it — so a project holding both configures these rules alone for the files that carry templates. */
 export let styled: Syntax = {
+	...css,
 	namespace: `styled`,
 	// A styled root carries the parser's mark, and plain CSS is a file opened with no custom syntax at all: `opts.syntax` cannot answer that, since Stylelint hands PostCSS a syntax of its own for plain CSS too, so the configuration is what is asked
 	accepts: (root: Root, result: PostcssResult) => root.raws.styledSyntaxRangeStart !== undefined || result.stylelint?.config?.customSyntax === undefined,

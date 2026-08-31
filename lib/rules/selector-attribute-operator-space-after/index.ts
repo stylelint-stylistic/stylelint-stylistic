@@ -27,10 +27,11 @@ export let meta = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `always` and `never`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
 	return (root, result) => {
 		let checker = whitespaceChecker(`space`, primary, messages)
 		let validOptions = validateOptions(result, ruleName, {
@@ -43,6 +44,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 		selectorAttributeOperatorSpaceChecker({
 			root,
 			result,
+			syntax,
 			locationChecker: checker.after,
 			checkedRuleName: ruleName,
 			checkBeforeOperator: false,

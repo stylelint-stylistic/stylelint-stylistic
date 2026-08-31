@@ -2,9 +2,9 @@ import type { Declaration, Root } from "postcss"
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
+import type { Syntax } from "../../syntaxes/index.ts"
 import { declarationColonSource } from "../declarationColonSource/index.ts"
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
-import { isStandardSyntaxDeclaration } from "../isStandardSyntaxDeclaration/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -26,12 +26,13 @@ export function declarationColonSpaceChecker (opts: {
 	fix?: ((decl: Declaration, index: number) => void),
 	isFixable?: ((decl: Declaration, index: number) => boolean),
 	result: PostcssResult,
+	syntax: Syntax,
 	checkedRuleName: string,
 }): void {
 	let { fix } = opts
 
 	opts.root.walkDecls((decl) => {
-		if (!isStandardSyntaxDeclaration(decl)) return
+		if (!opts.syntax.isStandardDeclaration(decl)) return
 
 		// A declaration the parser did not build has no text between its property and its value for either rule to read: PostCSS prints a colon and a space in place of the raw it lacks, and `declarationValueIndex` counts a colon alone, so the two disagree by the very character these rules are about. No syntax this plugin reads through leaves that raw empty; a declaration another plugin's fix built and put in the tree does.
 		if (!decl.raws.between) return
