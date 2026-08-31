@@ -2,6 +2,7 @@ import type { AtRule, Declaration, Root, Rule as PostcssRule } from "postcss"
 import type { PostcssResult } from "stylelint"
 
 import { endsWithInlineComment } from "../../preprocessor/endsWithInlineComment/index.ts"
+import { findRewrittenCommentSpans } from "../../preprocessor/findRewrittenCommentSpans/index.ts"
 import { findSelectorInlineComments, type InlineComment } from "../../preprocessor/findSelectorInlineComments/index.ts"
 import { movesEndIntoInlineComment } from "../../preprocessor/movesEndIntoInlineComment/index.ts"
 import { inlineCommentReading, readsInlineComments, syntaxKeepsInlineComments } from "../../preprocessor/readsInlineComments/index.ts"
@@ -10,7 +11,7 @@ import { searchCopy } from "../../preprocessor/searchCopy/index.ts"
 import { toSelectorSourceIndex } from "../../preprocessor/toSelectorSourceIndex/index.ts"
 import { writesIntoInlineComment } from "../../preprocessor/writesIntoInlineComment/index.ts"
 import { findCommentSpans } from "../../utils/findCommentSpans/index.ts"
-import { findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
+import { findInlineCommentSpans, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
 import { findInterpolationSpans } from "../../utils/findInterpolationSpans/index.ts"
 import { getAtRuleParams } from "../../utils/getAtRuleParams/index.ts"
 import { getDeclarationValue } from "../../utils/getDeclarationValue/index.ts"
@@ -73,6 +74,17 @@ export let css: Syntax = {
 	writesIntoInlineComment,
 	searchCopy,
 	// The one semicolon a language will not part with is a preprocessor's; no construct of plain CSS or of `postcss-scss` holds one
+	printedInlineComments (node: AtRule | Declaration, text: string, result: PostcssResult): InlineCommentSpan[] {
+		let raws: SyntaxRaw | undefined = isDeclaration(node) ? node.raws.value : node.raws.params
+
+		// The comments the syntax rewrote in the raw are the comments it found, and the two copies say between them where each of them runs — while both still measure the same text; a pair out of step leaves the text to be scanned as one carrying no pair at all
+		if (raws && typeof raws.scss === `string`) return findRewrittenCommentSpans(raws.raw, raws.scss) ?? (text.includes(`//`) ? findInlineCommentSpans(text) : [])
+
+		if (!text.includes(`//`)) return []
+
+		// A double slash of a syntax that marks its comments in a copy of its own is code — part of an address, most often
+		return syntaxKeepsInlineComments(nodeSyntax(node, result)) ? findInlineCommentSpans(text) : []
+	},
 	requiresTrailingSemicolon: () => false,
 	// No rule of plain CSS carries a parameter list, and no at-rule of it is a variable: both marks are `postcss-less`'s, and the less namespace reads them
 	readsRuleParams: () => false,

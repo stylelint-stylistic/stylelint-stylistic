@@ -7,12 +7,10 @@ import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { findInlineCommentSpans, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
-import { rewriteInlineComments } from "../../utils/rewriteInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { isAtRule, type SyntaxRaw } from "../../utils/typeGuards/index.ts"
+import { isAtRule } from "../../utils/typeGuards/index.ts"
 import { assertString, isBoolean } from "../../utils/validateTypes/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -191,18 +189,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		 */
 		function checkDeclOrAtRule<T extends AtRule | Declaration> (node: T, rawValue: string, getIndex: (node: T) => number): void {
 			let fixPositions: number[] = []
-
-			let raws: SyntaxRaw | undefined = isAtRule(node) ? node.raws.params : node.raws.value
-
-			// `postcss-scss` rewrites every `//` comment inside the raw into a block comment, keeps the spelling of the file in a copy of its own and prints that copy. The rule works in that copy, since it is the file it reports positions in and the text a fix has to reach.
-			let value = (raws && raws.scss) || rawValue
+			let value = rawValue
 
 			// Get out quickly if there are no erroneous quotes
 			if (!value.includes(erroneousQuote)) return
 
-			// The comments the syntax rewrote in the raw are the comments it found, and the two copies say between them where each of them runs. They say it only while both still measure the same text: a rule that has written to one of them and left the other behind takes that away, and the text is then scanned as one carrying no such pair at all.
-			let rewrittenSpans = raws && raws.scss ? findRewrittenCommentSpans(raws.raw, raws.scss) : null
-			let inlineCommentSpans = rewrittenSpans || scanCommentSpans(raws, value)
+			// Where the comments of the text stand is the syntax's to say: off the pair of copies it keeps while the pair is in step, off a scan of the text otherwise
+			let inlineCommentSpans = syntax.printedInlineComments(node, value, result)
 
 			if (isAtRule(node) && node.name === `charset`) {
 				let hasValidQuotes = node.params.startsWith(`"`) && node.params.endsWith(`"`)
@@ -245,33 +238,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (fixPositions.length === 0) return
 
-			// The copy spelled as the file spells it is the one that is printed, so the fix goes there; the raw beside it is kept in step with it, for the rules that come after — as far as the two still measure the same text and a position can be carried between them.
-			if (raws && raws.scss) {
-				raws.scss = replaceQuotes(value, fixPositions)
-
-				if (rewrittenSpans) raws.raw = replaceQuotes(raws.raw, fixPositions.map((fixIndex) => toRewrittenIndex(fixIndex, rewrittenSpans)))
-
-				return
-			}
-
-			let fixed = replaceQuotes(value, fixPositions)
-
-			syntax.write(node, fixed)
-		}
-
-		/**
-		 * Scans a value for the inline comments it carries, where nothing else says where they are. `postcss-less` leaves the `//` comment of a variable spanning more than one line inside the params, where the value tokenizer takes the quotes in its text for a string of code.
-		 * @param raws - The raws of the value, if it has any.
-		 * @param value - The value, as the file spells it.
-		 * @returns The spans, in the coordinates of the value.
-		 */
-		function scanCommentSpans (raws: SyntaxRaw | undefined, value: string): InlineCommentSpan[] {
-			if (!value.includes(`//`)) return []
-
-			// A double slash of a syntax that marks its comments in a copy of its own is code — part of an address, most often. Unless that copy has gone out of step with the value and left the scan to answer after all, and then the comments are the ones the text spells.
-			if (!(raws && raws.scss) && !syntax.keepsInlineComments(root, result)) return []
-
-			return findInlineCommentSpans(value)
+			// The write lands in every copy the syntax keeps, the raw regenerated from the fixed text the way the syntax itself fills it — which is byte for byte the old raw with the quotes replaced, since a quote the rule fixes never stands inside a comment
+			syntax.write(node, replaceQuotes(value, fixPositions))
 		}
 
 		/**
@@ -288,69 +256,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			return fixed
 		}
 	}
-}
-
-/**
- * Finds the spans the inline comments of a value occupy in it, out of the two copies `postcss-scss` keeps of that value: one with every inline comment rewritten into a block comment, and one spelled as the file spells it. Only the comments set the two apart, so the first character they disagree on is the second character of one — the asterisk of a block comment against the second slash of an inline one. A comment ends with its line in both copies, and none of them holds a line break, so the next line break puts the two back in step whatever the rewriting did to the text in between, and the distance between them there is what a position behind the comment has to be moved by to be read in the rewritten copy.
- *
- * Everything here rests on the two copies being the two copies of one text, which holds only until a rule writes to one of them and leaves the other where it was — a line break of the raw taken away, a colour spelled differently in it, a space put in front of it. The reading is therefore checked against the raw before it is handed out, by rewriting the comments it found the way the syntax rewrote them, and nothing is returned unless the raw comes back character for character.
- * @param rewritten - The copy the comments were rewritten in.
- * @param spelled - The copy spelled as the file spells it.
- * @returns The spans, in the coordinates of the spelled copy, or `null` if the two copies have gone out of step.
- */
-function findRewrittenCommentSpans (rewritten: string, spelled: string): InlineCommentSpan[] | null {
-	let spans: InlineCommentSpan[] = []
-	let rewrittenIndex = 0
-	let spelledIndex = 0
-
-	while (rewrittenIndex < rewritten.length && spelledIndex < spelled.length) {
-		if (rewritten[rewrittenIndex] === spelled[spelledIndex]) {
-			rewrittenIndex += 1
-			spelledIndex += 1
-
-			continue
-		}
-
-		// The asterisk of a block comment against the second slash of an inline one, and the first slash of both already behind. Anything else is two texts that have parted ways.
-		if (spelledIndex === 0 || rewritten[rewrittenIndex] !== `*` || spelled[spelledIndex] !== `/` || spelled[spelledIndex - 1] !== `/`) return null
-
-		let lineBreakIndex = spelled.indexOf(`\n`, spelledIndex)
-		let rewrittenLineBreakIndex = rewritten.indexOf(`\n`, rewrittenIndex)
-		let runsToTheEnd = lineBreakIndex === -1 || rewrittenLineBreakIndex === -1
-
-		spans.push({
-			start: spelledIndex - 1,
-			end: runsToTheEnd ? spelled.length : lineBreakIndex,
-			delta: runsToTheEnd ? rewritten.length - spelled.length : rewrittenLineBreakIndex - lineBreakIndex,
-		})
-
-		if (runsToTheEnd) break
-
-		spelledIndex = lineBreakIndex
-		rewrittenIndex = rewrittenLineBreakIndex
-	}
-
-	// A reading of one copy against the other proves nothing by itself: the walk above sees where the two part company, not whether they ever meant the same text. Rewriting the comments it found the way the syntax rewrites them does prove it — the raw comes back or it does not.
-	return rewriteInlineComments(spelled, spans) === rewritten ? spans : null
-}
-
-/**
- * Moves a position of the value into the copy of it a syntax rewrote the comments in.
- * @param index - The position, in the coordinates of the value.
- * @param spans - The spans of the inline comments the value carries.
- * @returns The position, in the coordinates of the rewritten copy.
- */
-function toRewrittenIndex (index: number, spans: InlineCommentSpan[]): number {
-	let delta = 0
-
-	// A position inside a comment is not one the rule ever fixes, so every span the position does not stand behind is passed over.
-	for (let span of spans) {
-		if (index < span.end) break
-
-		delta = span.delta || 0
-	}
-
-	return index + delta
 }
 
 /**

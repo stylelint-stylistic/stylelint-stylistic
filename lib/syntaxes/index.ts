@@ -192,6 +192,17 @@ export type Syntax = {
 	searchCopy (text: string, node: Node, result: PostcssResult): { searchString: string, commentSpans: CommentSpan[] },
 
 	/**
+	 * Finds the spans the inline comments occupy in the text a node prints — a declaration's value or an at-rule's params, as `read` hands it over.
+	 *
+	 * Where the syntax keeps a pair of copies and the pair is still in step, the spans are read off the pair, exactly as the parser saw them; where the pair has gone out of step, the text is scanned as one carrying no pair at all; and where the syntax spells no inline comment in that text, there are none.
+	 * @param node - The declaration or at-rule.
+	 * @param text - The text the node prints, as `read` hands it over.
+	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
+	 * @returns The spans, in the text's own coordinates.
+	 */
+	printedInlineComments (node: AtRule | Declaration, text: string, result: PostcssResult): InlineCommentSpan[],
+
+	/**
 	 * Opens a rule's selector for a rule that parses it.
 	 *
 	 * `postcss-scss` rewrites every inline comment of a selector into a block comment in the raw copy a parser can read, keeps the source spelling beside it and prints that one, so the two copies drift apart by two characters per comment. What comes back holds the parsed copy, the map from its positions into the file's own coordinates, the file's own spelling of a stretch of it, and the writer that lands a fixed selector in every copy the syntax keeps.
