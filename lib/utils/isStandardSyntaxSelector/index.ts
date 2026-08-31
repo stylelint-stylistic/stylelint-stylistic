@@ -8,8 +8,15 @@ import { withoutQuotedTextAndComments } from "../withoutQuotedTextAndComments/in
  */
 export function isStandardSyntaxSelector (selector: string): boolean {
 	// An attribute value may quote any text at all, and a comment may hold any text at all, and none of it is selector syntax. So the checks that match on text rather than on shape are made against a copy with the quoted runs emptied and the comments taken out. The copy keeps its length, and the quotes stay where they are, so a check describing a shape reads the same selector either way.
-	let code = withoutQuotedTextAndComments(selector)
+	return isStandardSyntaxSelectorCode(withoutQuotedTextAndComments(selector))
+}
 
+/**
+ * The same reading over a copy the caller has already emptied, so that a caller stacking further checks on the same copy blanks the selector once.
+ * @param code - The selector, its quoted runs emptied and its comments taken out.
+ * @returns True if the selector is standard syntax, false otherwise.
+ */
+export function isStandardSyntaxSelectorCode (code: string): boolean {
 	// SCSS or Less interpolation
 	if (hasInterpolation(code)) return false
 

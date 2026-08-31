@@ -66,7 +66,7 @@ The rules above read plain CSS. A stylesheet written in Less (`postcss-less`)
 }
 ```
 
-What each namespace answers differently is written in its own README: [`less`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/less/README.md), [`styled`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/styled/README.md).
+What each namespace answers differently is written in its own README: [`less`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/less/README.md), [`styled`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/styled/README.md). Configure one family of names per file: a namespace reads plain CSS too, so listing the core and a namespace over the same files would run every rule twice.
 
 ## Need more?
 

@@ -81,7 +81,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			 * @returns What to report about the unit, or `null` where the node carries no miscased one.
 			 */
 			function readMiscasedUnit (valueNode: Node): Problem | null {
-				let dimension = getDimension(valueNode)
+				let dimension = getDimension(syntax, valueNode)
 
 				if (!dimension.number || !dimension.unit) return null
 

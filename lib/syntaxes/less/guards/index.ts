@@ -1,10 +1,12 @@
 import type { AtRule, Comment, Declaration, Rule } from "postcss"
 import type { AtRule as LessAtRule, Comment as LessComment, Declaration as LessDeclaration, Rule as LessRule } from "postcss-less"
 
-import { hasInterpolation } from "../../../utils/hasInterpolation/index.ts"
-import { isScssVariable } from "../../../utils/isScssVariable/index.ts"
+import { LEADING_OPERATOR } from "../../../regexps.ts"
+import { isStandardSyntaxAtRule } from "../../../utils/isStandardSyntaxAtRule/index.ts"
+import { isStandardSyntaxComment } from "../../../utils/isStandardSyntaxComment/index.ts"
+import { isStandardSyntaxDeclaration } from "../../../utils/isStandardSyntaxDeclaration/index.ts"
 import { isStandardSyntaxProperty } from "../../../utils/isStandardSyntaxProperty/index.ts"
-import { isStandardSyntaxSelector } from "../../../utils/isStandardSyntaxSelector/index.ts"
+import { isStandardSyntaxSelectorCode } from "../../../utils/isStandardSyntaxSelector/index.ts"
 import { isStandardSyntaxValue } from "../../../utils/isStandardSyntaxValue/index.ts"
 import { isRule } from "../../../utils/typeGuards/index.ts"
 import { withoutQuotedTextAndComments } from "../../../utils/withoutQuotedTextAndComments/index.ts"
@@ -17,8 +19,7 @@ import { LESS_EXTEND, LESS_EXTEND_CALL, LESS_GUARD, LESS_PARAMETRIC_MIXIN, LESS_
  * @returns True if the at-rule is standard, false otherwise.
  */
 export function isStandardLessAtRule (atRule: AtRule | LessAtRule): boolean {
-	// Ignore scss `@content` inside mixins
-	if (!atRule.nodes && atRule.params === ``) return false
+	if (!isStandardSyntaxAtRule(atRule)) return false
 
 	// Ignore Less mixins
 	if (`mixin` in atRule && atRule.mixin) return false
@@ -38,11 +39,11 @@ export function isStandardLessRule (rule: Rule | LessRule): boolean {
 	if (rule.type !== `rule`) return false
 
 	// Ignore a Less `:extend`, which `postcss-less` marks the rule for by matching the text of its selector, quotes and all — so `[title=":extend(x)"]` carries the mark though what stands inside the quotes is an attribute value and nothing else. The mark is asked of the code instead, of the same copy `isStandardLessSelector` reads, with every quoted run emptied. The case is left as the mark reads it, which is any case at all, though Less reads its keywords in lower case only and prints `.a:EXTEND(.b)` as it stands: the one thing this plugin would write there is the lower case `selector-pseudo-class-case` asks for, and that would turn a selector matching nothing into an extend that changes what Less compiles.
-	if (`extend` in rule && rule.extend && LESS_EXTEND_CALL.test(withoutQuotedTextAndComments(rule.selector))) return false
+	let code = withoutQuotedTextAndComments(rule.selector)
 
-	if (!isStandardLessSelector(rule.selector)) return false
+	if (`extend` in rule && rule.extend && LESS_EXTEND_CALL.test(code)) return false
 
-	return true
+	return isStandardLessSelectorCode(code)
 }
 
 /**
@@ -51,9 +52,16 @@ export function isStandardLessRule (rule: Rule | LessRule): boolean {
  * @returns True if the selector is standard syntax, false otherwise.
  */
 export function isStandardLessSelector (selector: string): boolean {
-	if (!isStandardSyntaxSelector(selector)) return false
+	return isStandardLessSelectorCode(withoutQuotedTextAndComments(selector))
+}
 
-	let code = withoutQuotedTextAndComments(selector)
+/**
+ * The same reading over a copy the caller has already emptied, blanking the selector once however many checks stack on it.
+ * @param code - The selector, its quoted runs emptied and its comments taken out.
+ * @returns True if the selector is standard syntax, false otherwise.
+ */
+function isStandardLessSelectorCode (code: string): boolean {
+	if (!isStandardSyntaxSelectorCode(code)) return false
 
 	// Less :extend()
 	if (LESS_EXTEND.test(code)) return false
@@ -77,11 +85,10 @@ export function isStandardLessSelector (selector: string): boolean {
  * @returns True if the declaration is standard syntax, false otherwise.
  */
 export function isStandardLessDeclaration (decl: Declaration | LessDeclaration): boolean {
+	if (!isStandardSyntaxDeclaration(decl)) return false
+
 	let prop = decl.prop
 	let parent = decl.parent
-
-	// SCSS var; covers map and list declarations
-	if (isScssVariable(prop)) return false
 
 	// Less var (e.g. @var: x), but exclude variable interpolation (e.g. @{var})
 	if (prop[0] === `@` && prop[1] !== `{`) return false
@@ -91,9 +98,6 @@ export function isStandardLessDeclaration (decl: Declaration | LessDeclaration):
 
 	// Less map (e.g. #my-map() { myprop: red; })
 	if (parent && isRule(parent) && parent.selector && parent.selector.startsWith(`#`) && parent.selector.endsWith(`()`)) return false
-
-	// Sass nested properties (e.g. border: { style: solid; color: red; })
-	if (parent && isRule(parent) && parent.selector && parent.selector.at(-1) === `:` && parent.selector.slice(0, 2) !== `--`) return false
 
 	// A Less `&:extend(...)`, which the parser splits at its colon: the property is `&` and the value is the extend call. A property `&` is nothing CSS has, whatever the value — the compiler reads an extend there and answers anything else, `&:EXTEND(.b)` and `& :extend(.b)` among it, with a syntax error — so the shape alone is the answer. The `extend` mark the syntax puts beside the node goes unasked: it is matched against the text of any value at all, quotes and all, so `b: "extend(x)"` and `b: myextend(y)` carried it too, though both are plain declarations Less compiles as they stand.
 	if (prop === `&`) return false
@@ -126,13 +130,11 @@ export function isStandardLessProperty (property: string): boolean {
 export function isStandardLessValue (value: string): boolean {
 	if (!isStandardSyntaxValue(value)) return false
 
-	let normalizedValue = value.charAt(0) === `-` || value.charAt(0) === `+` ? value.slice(1) : value
+	// The same operator strip the core makes, so that `*@var` and `/@var` are the variables they were before the core stopped reading them
+	let normalizedValue = LEADING_OPERATOR.test(value.charAt(0)) ? value.slice(1) : value
 
 	// Less variable
 	if (normalizedValue.startsWith(`@`)) return false
-
-	// SCSS or Less interpolation of the run an operator opens
-	if (hasInterpolation(normalizedValue)) return false
 
 	return true
 }
@@ -143,9 +145,7 @@ export function isStandardLessValue (value: string): boolean {
  * @returns True if the comment has standard syntax, false otherwise.
  */
 export function isStandardLessComment (comment: Comment | LessComment): boolean {
-	if (`inline` in comment) return false
+	if (!isStandardSyntaxComment(comment)) return false
 
-	if (`inline` in comment.raws) return false
-
-	return true
+	return !(`inline` in comment)
 }

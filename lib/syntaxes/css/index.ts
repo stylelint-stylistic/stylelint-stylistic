@@ -74,8 +74,9 @@ export let css: Syntax = {
 	searchCopy,
 	// The one semicolon a language will not part with is a preprocessor's; no construct of plain CSS or of `postcss-scss` holds one
 	requiresTrailingSemicolon: () => false,
-	readsRuleParams: (rule: PostcssRule) => `params` in rule && Boolean(rule.params),
-	readsAtRuleAsVariable: (atRule: AtRule) => `variable` in atRule,
+	// No rule of plain CSS carries a parameter list, and no at-rule of it is a variable: both marks are `postcss-less`'s, and the less namespace reads them
+	readsRuleParams: () => false,
+	readsAtRuleAsVariable: () => false,
 	spellsOwnArithmetic: readsInlineComments,
 	interpolationSpans: findInterpolationSpans,
 	selectorCopies (rule: PostcssRule): SelectorCopies {

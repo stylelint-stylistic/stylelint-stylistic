@@ -81,6 +81,10 @@ describe(`isStandardLessValue`, () => {
 	it(`negative less var`, () => {
 		expect(isStandardLessValue(`-@less-variable`)).toBe(false)
 	})
+	it(`a less var behind the other operators, which the same strip uncovers`, () => {
+		expect(isStandardLessValue(`*@ratio`)).toBe(false)
+		expect(isStandardLessValue(`/@ratio`)).toBe(false)
+	})
 
 	it(`less interpolation`, () => {
 		expect(isStandardLessValue(`@{var}`)).toBe(false)

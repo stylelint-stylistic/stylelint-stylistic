@@ -22,6 +22,8 @@ export let less: Syntax = {
 	isStandardValue: isStandardLessValue,
 	isStandardComment: isStandardLessComment,
 	requiresTrailingSemicolon,
+	readsRuleParams: (rule: PostcssRule) => `params` in rule && Boolean(rule.params),
+	readsAtRuleAsVariable: (atRule: AtRule) => `variable` in atRule,
 	// The core writes every copy PostCSS and `postcss-scss` keep; a Less variable holds one more, the `value` its stringifier prints, and it is kept in step here
 	write (node: AtRule | Declaration | PostcssRule, text: string): void {
 		css.write(node, text)

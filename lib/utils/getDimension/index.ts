@@ -1,14 +1,15 @@
 import valueParser, { type Node } from "postcss-value-parser"
 
 import { EVERY_INTERPOLATION_CHARACTER } from "../../regexps.ts"
-import { isStandardSyntaxValue } from "../isStandardSyntaxValue/index.ts"
+import type { Syntax } from "../../syntaxes/index.ts"
 
 /**
  * Gets the dimension (number and unit) from a value node, and says where the text it was read out of stands in the node.
+ * @param syntax - The syntax the rule is built over.
  * @param node - The value parser node, or nothing at all.
  * @returns The dimension object, or null values where the node carries no dimension.
  */
-export function getDimension (node?: Partial<Node>): {
+export function getDimension (syntax: Syntax, node?: Partial<Node>): {
 	unit: null,
 	number: null,
 	positions: null,
@@ -31,7 +32,7 @@ export function getDimension (node?: Partial<Node>): {
 	}
 
 	// Ignore non standard syntax
-	if (!isStandardSyntaxValue(node.value)) {
+	if (!syntax.isStandardValue(node.value)) {
 		return {
 			unit: null,
 			number: null,
