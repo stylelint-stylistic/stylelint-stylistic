@@ -11,7 +11,6 @@ import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { searchCopy } from "../../utils/searchCopy/index.ts"
 import { isAtRule, isDeclaration, isRoot, isRule } from "../../utils/typeGuards/index.ts"
 import { assertString, isBoolean, isNumber, isString } from "../../utils/validateTypes/index.ts"
 
@@ -250,7 +249,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// The search is handed a copy with every comment blanked out of it rather than the text itself, since `style-search` reads the line break that closes an inline comment as part of that comment and never hands the position over — so every line standing behind such a comment went unmeasured, which is #236. The copy is as long as the text and spells it character for character everywhere else, so the positions of the search are the positions of the file, which is the text a warning is counted in and the text a fix is written to.
 			//
 			// Nothing else below is handed the copy, save the one test whose pattern already spells a block comment out for itself: a reader that stops at a comment stops at both kinds of it today, and handing it the copy would teach it to look past the block kind as well — a reading of its own, which no comment of this issue's kind is needed to see.
-			let { searchString } = searchCopy(source, node, result)
+			let { searchString } = syntax.searchCopy(source, node, result)
 
 			// Data for current node fixing
 			let fixPositions: Array<{

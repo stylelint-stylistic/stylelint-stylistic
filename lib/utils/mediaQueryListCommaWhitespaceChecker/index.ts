@@ -7,7 +7,6 @@ import { LEADING_BLOCK_COMMENT, MEDIA_AT_RULE, OPENS_WITH_INLINE_COMMENT } from 
 import type { Syntax } from "../../syntaxes/index.ts"
 import { atRuleParamIndex } from "../atRuleParamIndex/index.ts"
 import { findFunctionArgumentSpans } from "../findFunctionArgumentSpans/index.ts"
-import { searchCopy } from "../searchCopy/index.ts"
 import { assertString } from "../validateTypes/index.ts"
 
 let { utils: { report } } = stylelint
@@ -34,7 +33,7 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 
 	opts.root.walkAtRules(MEDIA_AT_RULE, (atRule) => {
 		let params = opts.syntax.read(atRule)
-		let { searchString, commentSpans } = searchCopy(params, atRule, opts.result)
+		let { searchString, commentSpans } = opts.syntax.searchCopy(params, atRule, opts.result)
 
 		// A comma standing inside the arguments of a function is a comma of those arguments and of no list: the one in `url(x/a,b.png)` names the file as surely as the letters around it do, and whitespace written beside it would name another file. `valueListCommaWhitespaceChecker` has asked the search itself to pass such a comma over since it was written; the search cannot be asked here, since it reads the parenthesis a set of media parameters opens on as the opening of a call and would pass over the whole of the first query.
 		let functionArguments = findFunctionArgumentSpans(searchString).filter(({ name }) => !MEDIA_QUERY_COMBINATORS.has(name))

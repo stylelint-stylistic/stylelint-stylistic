@@ -5,9 +5,8 @@ import { EVERY_LINE_BREAK_RUN, EVERY_WHITESPACE_RUN, LAST_LINE } from "../../reg
 import { css } from "../../syntaxes/css/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { findInlineCommentSpans, findInlineCommentSpanTouching, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
+import { findInlineCommentSpanTouching, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { readsInlineComments } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isBoolean, isNumber } from "../../utils/validateTypes/index.ts"
 
@@ -76,7 +75,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let declarationValue = syntax.read(declaration)
 			let parsedValue = valueParser(declarationValue)
 			let isMultilineDeclaration = declarationValue.includes(`\n`)
-			let inlineComments = findInlineCommentSpans(declarationValue, readsInlineComments(declaration, result))
+			let inlineComments = syntax.inlineCommentSpans(declarationValue, declaration, result)
 
 			let gridRows = parsedValue.nodes.filter((node) => isGridRow(node, inlineComments))
 

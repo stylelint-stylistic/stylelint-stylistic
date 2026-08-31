@@ -10,9 +10,7 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { findInlineCommentSpans, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
 import { findSelectorInlineComments } from "../../utils/findSelectorInlineComments/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { nodeSyntax } from "../../utils/nodeSyntax/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
-import { syntaxKeepsInlineComments } from "../../utils/readsInlineComments/index.ts"
 import { restoreSelectorInlineComments } from "../../utils/restoreSelectorInlineComments/index.ts"
 import { rewriteInlineComments } from "../../utils/rewriteInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -71,11 +69,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		if (!validOptions) return
 
 		let avoidEscape = secondaryOptions && secondaryOptions.avoidEscape !== undefined ? secondaryOptions.avoidEscape : true
-
-		// A double slash opens a comment only where the syntax says it does. Elsewhere it is part of a value — an address, most often — and reading it as a comment would silence every string behind it on the line. The two spellings are identical, so the text cannot answer this and the syntax has to. The question waits until a double slash turns up, since answering it costs two parses of a probe and most stylesheets never ask.
-		//
-		// A stylesheet embedded in a page carries the syntax of its own block, and it is that one the question belongs to: the syntax the file was opened with parses the page rather than the style, and one page may hold blocks written in several languages.
-		let blockSyntax = nodeSyntax(root, result)
 
 		root.walk((node) => {
 			switch (node.type) {
@@ -287,7 +280,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (!value.includes(`//`)) return []
 
 			// A double slash of a syntax that marks its comments in a copy of its own is code — part of an address, most often. Unless that copy has gone out of step with the value and left the scan to answer after all, and then the comments are the ones the text spells.
-			if (!(raws && raws.scss) && !syntaxKeepsInlineComments(blockSyntax)) return []
+			if (!(raws && raws.scss) && !syntax.keepsInlineComments(root, result)) return []
 
 			return findInlineCommentSpans(value)
 		}

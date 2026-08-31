@@ -6,12 +6,10 @@ import { css } from "../../syntaxes/css/index.ts"
 import { beforeBlockString } from "../../utils/beforeBlockString/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { endsWithInlineComment } from "../../utils/endsWithInlineComment/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
-import { inlineCommentReading } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isRegExp, isString } from "../../utils/validateTypes/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
@@ -39,11 +37,12 @@ export let meta = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `always`, `never`, `always-single-line`, `never-single-line`, `always-multi-line` and `never-multi-line`.
  * @param secondaryOptions - The secondary options: `ignoreAtRules` and `ignoreSelectors`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line` | `always-multi-line` | `never-multi-line`, secondaryOptions: {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line` | `always-multi-line` | `never-multi-line`, secondaryOptions: {
 	ignoreAtRules?: string | RegExp | (string | RegExp)[],
 	ignoreSelectors?: string | RegExp | (string | RegExp)[],
 }): RuleCheck {
@@ -112,7 +111,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 					// Only the whitespace run right before the brace may be replaced, so that comments survive
 					let beforeWhitespace = between.replace(TRAILING_WHITESPACE, ``)
 					// An inline comment ends only with a line break, so the brace can never join its line, and neither option is satisfiable there: leave the code alone and let the warning stand
-					let isFixable = !endsWithInlineComment(between, inlineCommentReading(statement, result))
+					let isFixable = !syntax.endsWithInlineComment(between, syntax.inlineComments(statement, result))
 
 					report({
 						message: m,

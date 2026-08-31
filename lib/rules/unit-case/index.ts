@@ -9,13 +9,11 @@ import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { findCommentSpans } from "../../utils/findCommentSpans/index.ts"
 import { findInlineCommentSpanHolding } from "../../utils/findInlineCommentSpans/index.ts"
 import { findInterpolationSpans, findInterpolationSpanTouching } from "../../utils/findInterpolationSpans/index.ts"
 import { getDimension } from "../../utils/getDimension/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
-import { readsInlineComments } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isAtRule } from "../../utils/typeGuards/index.ts"
 
@@ -72,7 +70,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let hasFixed = false
 
 			// Every comment of the value, both kinds: one of the two readings below wants the inline ones and the other wants them all. The inline ones are taken out of this list rather than asked of `findInlineCommentSpans`, since that helper is this very scan with the filter below already applied, and asking it as well would read one text twice over for one answer
-			let comments = findCommentSpans(checkedValue, readsInlineComments(node, result))
+			let comments = syntax.commentSpans(checkedValue, node, result)
 			// A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind: what such a comment holds comes back as ordinary words and calls
 			let inlineComments = comments.filter(({ isInline }) => isInline)
 			// An interpolation is written in a language of its own, and the compiler expanding it settles what the text beside it means, so nothing a value spells next to one is a dimension this rule can read. The interpolations are found in the value once, and every node of the walk is measured against them. They are sought in a copy with every comment blanked out, since a brace written in a comment closes no interpolation and the code standing behind such a brace is code the file spells

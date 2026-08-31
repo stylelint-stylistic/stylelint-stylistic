@@ -15,7 +15,6 @@ import { lastNodeHoldsTheBlockAfter } from "../../utils/lastNodeHoldsTheBlockAft
 import { nodeString } from "../../utils/nodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
-import { writesIntoInlineComment } from "../../utils/writesIntoInlineComment/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -37,11 +36,12 @@ export let meta = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `always`, `always-multi-line` and `never-multi-line`.
  * @param _secondaryOptions - The secondary options, of which this rule takes none.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,
@@ -81,7 +81,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 
 			if (!last) throw new Error(`The block must hold a node`)
 
-			let isFixable = primary.startsWith(`always`) || !writesIntoInlineComment(last, result, lastNodeHoldsTheBlockAfter(statement) ? undefined : blockAfter.replaceAll(EVERY_WHITESPACE, ``))
+			let isFixable = primary.startsWith(`always`) || !syntax.writesIntoInlineComment(last, result, lastNodeHoldsTheBlockAfter(statement) ? undefined : blockAfter.replaceAll(EVERY_WHITESPACE, ``))
 
 			// What is checked is whether a break *starts* the block's final space — the run between the last declaration and the closing brace. The rest of that whitespace is the indentation rule's business, which is why the question is asked with `LEADING_LINE_BREAK` rather than with `OPENS_WITH_LINE_BREAK`: whitespace in front of the break is the very thing this rule reports.
 			if (!LEADING_LINE_BREAK.test(after)) {

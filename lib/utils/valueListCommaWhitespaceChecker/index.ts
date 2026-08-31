@@ -4,7 +4,6 @@ import stylelint, { type PostcssResult } from "stylelint"
 
 import type { Syntax } from "../../syntaxes/index.ts"
 import { declarationString } from "../declarationString/index.ts"
-import { searchCopy } from "../searchCopy/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -50,7 +49,7 @@ export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceC
 		if (!opts.syntax.isStandardDeclaration(decl) || !opts.syntax.isStandardProperty(decl.prop)) return
 
 		let declString = declarationString(opts.syntax, decl)
-		let { searchString } = searchCopy(declString, decl, opts.result)
+		let { searchString } = opts.syntax.searchCopy(declString, decl, opts.result)
 
 		styleSearch(
 			{

@@ -4,9 +4,8 @@ import stylelint from "stylelint"
 
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { findInlineCommentSpanHolding, findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
+import { findInlineCommentSpanHolding } from "../../utils/findInlineCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { readsInlineComments } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { assertString, isNumber } from "../../utils/validateTypes/index.ts"
 
@@ -65,7 +64,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let stringValue = syntax.read(decl)
 
 			// A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind: what such a comment holds comes back as ordinary words and calls
-			let inlineComments = findInlineCommentSpans(stringValue, readsInlineComments(decl, result))
+			let inlineComments = syntax.inlineCommentSpans(stringValue, decl, result)
 
 			let splittedValue: Array<[string, string]> = []
 			let sourceIndexStart = 0

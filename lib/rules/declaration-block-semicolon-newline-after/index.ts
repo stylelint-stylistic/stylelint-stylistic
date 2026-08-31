@@ -15,7 +15,6 @@ import { rawNodeString } from "../../utils/rawNodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
-import { writesIntoInlineComment } from "../../utils/writesIntoInlineComment/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -37,11 +36,12 @@ export let meta = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `always`, `always-multi-line` and `never-multi-line`.
  * @param _secondaryOptions - The secondary options, of which this rule takes none.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
 
 	return (root, result) => {
@@ -75,7 +75,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 			// Under `never-multi-line` the fix takes away the whitespace standing in front of the node it checks, and where an inline comment stands in front of that whitespace, the line break the whitespace opens with is what closes the comment: taking it away would put the node inside the comment's text, and the declaration it holds out of the stylesheet altogether. Nothing can be written there, so the block is left alone and the warning stands. The `always` options are in no such danger, since the break they keep or write is what closes such a comment anyway
 			//
 			// The semicolon stands between the declaration and that whitespace, so it is handed in with the declaration: a value ending in the break that closes its own comment is asked about with the semicolon behind it, which is where the write lands. Where a comment node stands between the two instead, the semicolon is in front of that comment rather than behind it, and there is nothing to hand in
-			let isFixable = primary.startsWith(`always`) || !writesIntoInlineComment(previousNode, result, previousNode === decl ? `;` : ``)
+			let isFixable = primary.startsWith(`always`) || !syntax.writesIntoInlineComment(previousNode, result, previousNode === decl ? `;` : ``)
 
 			checker.afterOneOnly({
 				source: rawNodeString(nodeToCheck, result),

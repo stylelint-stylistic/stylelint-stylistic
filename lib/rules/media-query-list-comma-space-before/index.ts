@@ -5,10 +5,8 @@ import { TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { endsWithInlineComment } from "../../utils/endsWithInlineComment/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { mediaQueryListCommaWhitespaceChecker } from "../../utils/mediaQueryListCommaWhitespaceChecker/index.ts"
-import { inlineCommentReading } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
@@ -57,7 +55,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
 			// The comma goes right after this text, and the whitespace run the fix writes ends it. Where an inline comment stands there, the line break that run holds is what closes the comment, so either option would take the comma, and the whole query behind it, into the comment's text: leave the parameters alone and let the warning stand
-			isFixable: (params, index, atRule) => !endsWithInlineComment(params.slice(0, index), inlineCommentReading(atRule, result)),
+			isFixable: (params, index, atRule) => !syntax.endsWithInlineComment(params.slice(0, index), syntax.inlineComments(atRule, result)),
 			fix: (atRule, index) => {
 				let paramCommaIndex = index - atRuleParamIndex(atRule)
 

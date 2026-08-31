@@ -9,9 +9,7 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { findFunctionArgumentSpans } from "../../utils/findFunctionArgumentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isWhitespace } from "../../utils/isWhitespace/index.ts"
-import { readsInlineComments } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { searchCopy } from "../../utils/searchCopy/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -59,7 +57,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		 * @returns True where the syntax that spelled that node spells arithmetic of its own.
 		 */
 		function readsOwnArithmetic (node: Node): boolean {
-			return readsInlineComments(node, result)
+			return syntax.readsInlineComments(node, result)
 		}
 
 		/**
@@ -182,7 +180,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		root.walkAtRules(IMPORT_AT_RULE, (atRule) => {
 			let param = syntax.read(atRule)
-			let { searchString } = searchCopy(param, atRule, result)
+			let { searchString } = syntax.searchCopy(param, atRule, result)
 			let fixer = createFixer(param)
 
 			check(atRule, param, searchString, atRuleParamIndex(atRule), fixer.applyFix)
@@ -191,7 +189,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		})
 		root.walkDecls((decl) => {
 			let value = syntax.read(decl)
-			let { searchString } = searchCopy(value, decl, result)
+			let { searchString } = syntax.searchCopy(value, decl, result)
 			let fixer = createFixer(value)
 
 			check(decl, value, searchString, declarationValueIndex(decl), fixer.applyFix)

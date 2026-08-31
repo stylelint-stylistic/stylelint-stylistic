@@ -7,7 +7,6 @@ import { MEDIA_AT_RULE } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { atRuleParamIndex } from "../atRuleParamIndex/index.ts"
 import { findFunctionArgumentSpans } from "../findFunctionArgumentSpans/index.ts"
-import { searchCopy } from "../searchCopy/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -31,7 +30,7 @@ export function mediaFeatureColonSpaceChecker (opts: {
 
 	opts.root.walkAtRules(MEDIA_AT_RULE, (atRule) => {
 		let params = opts.syntax.read(atRule)
-		let { searchString } = searchCopy(params, atRule, opts.result)
+		let { searchString } = opts.syntax.searchCopy(params, atRule, opts.result)
 
 		// A colon standing inside the arguments of a function belongs to those arguments and to no media feature: the one in `url(http://x)` is part of the protocol, and a space written beside it names no resource at all
 		let functionArguments = findFunctionArgumentSpans(searchString).filter(({ name }) => !MEDIA_QUERY_COMBINATORS.has(name))

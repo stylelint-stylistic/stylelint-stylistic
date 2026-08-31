@@ -11,8 +11,7 @@ import { findInlineCommentSpanAt, findInlineCommentSpanHolding, findInlineCommen
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
-import { movesEndIntoInlineComment } from "../../utils/movesEndIntoInlineComment/index.ts"
-import { type InlineCommentReading, inlineCommentReading } from "../../utils/readsInlineComments/index.ts"
+import type { InlineCommentReading } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -119,16 +118,17 @@ function mergeRanges (lists: [number, number][][]): [number, number][] {
  * The text the character ends is cut out of the value, and what the fixes would leave of it is spelled out rather than measured: closing a gap up can bring a slash against a comment's own and open a comment that was never there. What they would leave behind is the stretches they empty and nothing besides — taking out more than that, every character JavaScript calls whitespace between the last node and the parenthesis, which is what the closing guard used to do, closes a block comment early wherever a break is written inside its own text and holds back a fix nothing is at risk from.
  *
  * The two separators of Unicode need no reading of their own. A fix here writes over whitespace, and the value parser counts as space only what stands below the blank, so a separator survives every fix this guard stands in front of — whatever a reading makes of it, it makes the same of it before the fix and after, and it can never be what carries a parenthesis or an argument into a comment.
+ * @param syntax - The syntax the rule is built over.
  * @param declValue - The value the rule has read and parsed, which the positions count in.
  * @param characterIndex - Where the character the question is about stands.
  * @param emptied - The stretches the fixes empty, in ascending order and none of them overlapping.
  * @param reading - What the syntax the value was spelled in makes of a comment opened by a double slash.
  * @returns True where a reading has the character move into a comment.
  */
-function movesIntoComment (declValue: string, characterIndex: number, emptied: [number, number][], reading: InlineCommentReading): boolean {
+function movesIntoComment (syntax: Syntax, declValue: string, characterIndex: number, emptied: [number, number][], reading: InlineCommentReading): boolean {
 	let standingText = declValue.slice(0, characterIndex + 1)
 
-	return movesEndIntoInlineComment(standingText, withoutRanges(standingText, emptied), reading)
+	return syntax.movesEndIntoInlineComment(standingText, withoutRanges(standingText, emptied), reading)
 }
 
 /**
@@ -213,10 +213,11 @@ function getFixEmptiedAfter (valueNode: FunctionNode): [number, number][] {
  * The two are written in one pass over one value, and each of them is guarded by the question whether it would carry a character of the function into an inline comment: the opening one asks about the first significant thing the function holds, the closing one about the parenthesis itself. A function holding nothing but comments and whitespace has no significant node at all, so the first question is about that same parenthesis, and both fixes empty whitespace standing in front of it.
  *
  * Each fix has to be safe on its own, and the two have to be safe together. A fix that is not safe on its own is never written, and the other is then asked about the value as it alone would leave it: weighing it against a stretch nothing empties would decline a fix nothing is at risk from. Where both are safe on their own, the two questions are put again over the union of what either empties, since that union is the text the pass really leaves behind — putting them over two texts, each of which still holds the other fix's whitespace, is what let two writes safe apart destroy the value together (#312). Neither is written where that union carries a character into a comment: both problems are reported and nothing goes into the file.
+ * @param syntax - The syntax the rule is built over.
  * @param read - What the walk has read of the function, and the value it was read from.
  * @returns Whether each of the two fixes may be written.
  */
-function getNeverFixability (read: {
+function getNeverFixability (syntax: Syntax, read: {
 	declValue: string,
 	valueNode: FunctionNode,
 	openingIndex: number,
@@ -240,12 +241,12 @@ function getNeverFixability (read: {
 	// Asking it over either answers the same, and by a shorter road than it used to be given here: with the question above answered yes, the two are not two lists at all. Both walks push the whitespace nodes of the function, stepping over the block comments among them, and the fix stops at the node the parser files an inline comment's first slash under — so a stretch the walk measures past that node is one the fix does not reach, and the question is never asked where there is one. Everything in front of that node is walked alike by both.
 	//
 	// The reason given before was that the two differ only by whitespace standing inside a comment's span, and that no such whitespace can hold the break closing that comment, the span ending at that break. The second half is not true of every span the rule reads: a span the scan of this value cuts does end in front of a break, but one found again over what the fixes collected so far would leave behind is mapped back, and an end standing inside text a fix wrote maps to the index that text was written at (#288). `bar(foo(// c))` under `postcss-less` and `always` hands the walk a span ending on a closing parenthesis. Nothing here rests on that reading any longer, and a walk widened to reach past an inline comment would want the argument above rather than that one.
-	let isOpeningFixable = checkBefore !== `` && measured.every(([start, end]) => emptiedBefore.some(([from, to]) => from <= start && to >= end)) && !movesIntoComment(declValue, firstCharacterIndex, emptiedBefore, reading)
-	let isClosingFixable = checkAfter !== `` && !movesIntoComment(declValue, closingParenthesisIndex, emptiedAfter, reading)
+	let isOpeningFixable = checkBefore !== `` && measured.every(([start, end]) => emptiedBefore.some(([from, to]) => from <= start && to >= end)) && !movesIntoComment(syntax, declValue, firstCharacterIndex, emptiedBefore, reading)
+	let isClosingFixable = checkAfter !== `` && !movesIntoComment(syntax, declValue, closingParenthesisIndex, emptiedAfter, reading)
 
 	if (isOpeningFixable && isClosingFixable) {
 		let emptied = mergeRanges([emptiedBefore, emptiedAfter])
-		let movesTogether = movesIntoComment(declValue, firstCharacterIndex, emptied, reading) || movesIntoComment(declValue, closingParenthesisIndex, emptied, reading)
+		let movesTogether = movesIntoComment(syntax, declValue, firstCharacterIndex, emptied, reading) || movesIntoComment(syntax, declValue, closingParenthesisIndex, emptied, reading)
 
 		if (movesTogether) return { isOpeningFixable: false, isClosingFixable: false }
 	}
@@ -280,7 +281,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let edits: Edit[] = []
 			let declValue = syntax.read(decl)
 			// A double slash spells a comment only where the syntax says one, and a file of plain CSS spells none: the pair in `myurl(//a)` is code there, and taking it for a comment would silence everything standing behind it on the line
-			let reading = inlineCommentReading(decl, result)
+			let reading = syntax.inlineComments(decl, result)
 			// A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind: what such a comment holds comes back as ordinary nodes
 			let inlineComments = findInlineCommentSpans(declValue, reading.spells)
 			// A break this rule writes closes such a comment where the file left one open, so the spans above describe a value the functions behind that write no longer stand in. They are found again before the next function is read, and only there: a value nothing has been written into holds the comments it was scanned for, and a run without `--fix` writes nothing at all.
@@ -309,7 +310,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let closingIndex = valueNode.sourceIndex + functionString.length - 2
 				let checkAfter = getCheckAfter(valueNode)
 				let { isOpeningFixable, isClosingFixable } = isMultiLine && primary === `never-multi-line`
-					? getNeverFixability({ declValue, valueNode, openingIndex, checkBefore, checkAfter, firstIndex, measured, reading })
+					? getNeverFixability(syntax, { declValue, valueNode, openingIndex, checkBefore, checkAfter, firstIndex, measured, reading })
 					: { isOpeningFixable: false, isClosingFixable: false }
 
 				// Check opening ...

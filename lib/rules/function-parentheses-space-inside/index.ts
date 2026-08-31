@@ -9,8 +9,7 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { findInlineCommentSpanAt, findInlineCommentSpanHolding, findInlineCommentSpans, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
-import { movesEndIntoInlineComment } from "../../utils/movesEndIntoInlineComment/index.ts"
-import { type InlineCommentReading, inlineCommentReading } from "../../utils/readsInlineComments/index.ts"
+import type { InlineCommentReading } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -68,38 +67,40 @@ function isFunctionParsedAsWritten (syntax: Syntax, valueNode: FunctionNode, inl
  * The fix writes the whitespace the function keeps behind its opening parenthesis and nothing else, so everything in front of that parenthesis stays where it is written and the argument closes up against it. Where an inline comment stands in front of the whitespace, the line break that whitespace holds is what closes the comment, so taking the break away leaves the argument, and everything the declaration has behind it, inside the comment's text.
  *
  * The stand-in stands where the argument's first character does, since {@link movesEndIntoInlineComment} asks about the character a text ends with.
+ * @param syntax - The syntax the rule is built over.
  * @param declValue - The value the rule has read and parsed, which the node's positions count in.
  * @param valueNode - The function whose opening parenthesis is being fixed.
  * @param reading - What the syntax the value was spelled in makes of a comment opened by a double slash.
  * @returns True where a reading has the argument move into a comment.
  */
-function movesOpeningIntoComment (declValue: string, valueNode: FunctionNode, reading: InlineCommentReading): boolean {
+function movesOpeningIntoComment (syntax: Syntax, declValue: string, valueNode: FunctionNode, reading: InlineCommentReading): boolean {
 	let openingIndex = valueNode.sourceIndex + valueNode.value.length + 1
 	let firstIndex = openingIndex + valueNode.before.length
 	let standingText = declValue.slice(0, firstIndex)
 	// The fix writes the whitespace behind the parenthesis and nothing else, so everything in front of that parenthesis stays where it is written and the argument closes up against it. A single space is all the `always` options put there, and a space closes no comment, so both options leave the argument standing behind the same text.
 	let fixedText = declValue.slice(0, openingIndex)
 
-	return movesEndIntoInlineComment(`${standingText}${ARGUMENT_STAND_IN}`, `${fixedText}${ARGUMENT_STAND_IN}`, reading)
+	return syntax.movesEndIntoInlineComment(`${standingText}${ARGUMENT_STAND_IN}`, `${fixedText}${ARGUMENT_STAND_IN}`, reading)
 }
 
 /**
  * Asks whether the fix would take a function's closing parenthesis from outside an inline comment into one.
  *
  * The fix writes the whitespace the function keeps in front of that parenthesis and nothing else, so the line break standing in that whitespace — the one closing a comment the value left open — is exactly what it takes away.
+ * @param syntax - The syntax the rule is built over.
  * @param declValue - The value the rule has read and parsed, which the node's positions count in.
  * @param valueNode - The function whose closing parenthesis is being fixed.
  * @param reading - What the syntax the value was spelled in makes of a comment opened by a double slash.
  * @returns True where a reading has the parenthesis move into a comment.
  */
-function movesClosingIntoComment (declValue: string, valueNode: FunctionNode, reading: InlineCommentReading): boolean {
+function movesClosingIntoComment (syntax: Syntax, declValue: string, valueNode: FunctionNode, reading: InlineCommentReading): boolean {
 	let closingIndex = valueNode.sourceEndIndex - 1
 	let standingText = declValue.slice(0, closingIndex)
 	// The fix writes the whitespace the function keeps in front of the parenthesis and nothing else, so everything behind that whitespace stays on the line it is written on, and only the parenthesis moves. A single space is all the `always` options put there, and a space closes no comment, so both options leave the parenthesis standing behind the same text.
 	let fixedText = declValue.slice(0, closingIndex - valueNode.after.length)
 
 	// The parenthesis is written back on the end of each text, since it is the character the fix moves
-	return movesEndIntoInlineComment(`${standingText})`, `${fixedText})`, reading)
+	return syntax.movesEndIntoInlineComment(`${standingText})`, `${fixedText})`, reading)
 }
 
 /**
@@ -156,7 +157,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let edits: Edit[] = []
 			let declValue = syntax.read(decl)
 			// A double slash spells a comment only where the syntax says one, and a file of plain CSS spells none: the pair in `myurl(//a)` is code there, and taking it for a comment would silence everything standing behind it on the line
-			let reading = inlineCommentReading(decl, result)
+			let reading = syntax.inlineComments(decl, result)
 			// A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind: what such a comment holds comes back as ordinary words and calls
 			let inlineComments = findInlineCommentSpans(declValue, reading.spells)
 			let parsedValue = valueParser(declValue)
@@ -190,7 +191,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				 * @returns True if the fix can write without commenting the first argument out.
 				 */
 				function isOpeningFixable (): boolean {
-					return !movesOpeningIntoComment(declValue, functionNode, reading)
+					return !movesOpeningIntoComment(syntax, declValue, functionNode, reading)
 				}
 
 				if (primary === `always` && valueNode.before !== ` `) {
@@ -225,7 +226,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				 * @returns True if the fix can write without commenting the parenthesis out.
 				 */
 				function isClosingFixable (): boolean {
-					return !movesClosingIntoComment(declValue, functionNode, reading)
+					return !movesClosingIntoComment(syntax, declValue, functionNode, reading)
 				}
 
 				if (primary === `always` && valueNode.after !== ` `) {

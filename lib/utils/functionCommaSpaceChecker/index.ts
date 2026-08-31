@@ -5,12 +5,10 @@ import stylelint, { type PostcssResult } from "stylelint"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
-import { endsWithInlineComment } from "../endsWithInlineComment/index.ts"
 import { findCommentSpans } from "../findCommentSpans/index.ts"
 import { hideFalseInlineComments } from "../hideFalseInlineComments/index.ts"
 import { opensAnAddress } from "../opensAnAddress/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
-import { inlineCommentReading } from "../readsInlineComments/index.ts"
 import { isValueFunction } from "../typeGuards/index.ts"
 import { commentsRemovedBefore, withoutComments } from "../withoutComments/index.ts"
 
@@ -43,7 +41,7 @@ export function functionCommaSpaceChecker (opts: {
 		let declValue = opts.syntax.read(decl)
 		// A double slash opens a comment that runs to the end of its line, and `postcss-value-parser` knows nothing of the kind: it reads the text of such a comment as code of the value, and every comma standing in that text as a comma of the value
 		// A double slash spells a comment only where the syntax says one, and a file of plain CSS spells none: the pair in `myurl(//a)` is code there, and taking it for a comment would silence everything standing behind it on the line
-		let reading = inlineCommentReading(decl, opts.result)
+		let reading = opts.syntax.inlineComments(decl, opts.result)
 		// Every comment the file spells, and not the inline ones alone. `postcss-value-parser` has a node for a block comment, but looks for the closing delimiter from the opening slash itself, so the star of the opening serves as the star of that delimiter: it reads `/*/` as a comment entire where CSS reads an opening and goes on looking for a `*/` behind it. The rest of what the file spells as the text of that comment then comes back out of the parser as ordinary nodes of the value, the commas standing in it among them as `div` nodes (#275)
 		let valueCommentSpans = findCommentSpans(declValue, reading.spells)
 
@@ -144,7 +142,7 @@ export function functionCommaSpaceChecker (opts: {
 			function isFixable (commaNode: ValueParserDivNode): boolean {
 				if (opts.fixPosition !== `before`) return true
 
-				return !endsWithInlineComment(declValue.slice(0, commaNode.sourceIndex), reading)
+				return !opts.syntax.endsWithInlineComment(declValue.slice(0, commaNode.sourceIndex), reading)
 			}
 
 			/**

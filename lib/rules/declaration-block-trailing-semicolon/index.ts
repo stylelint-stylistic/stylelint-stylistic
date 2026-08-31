@@ -3,6 +3,7 @@ import stylelint, { type PostcssResult } from "stylelint"
 
 import { TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import type { Syntax } from "../../syntaxes/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
@@ -15,7 +16,6 @@ import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { requiresTrailingSemicolon } from "../../utils/requiresTrailingSemicolon/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isAtRule, isDeclaration, isRoot } from "../../utils/typeGuards/index.ts"
-import { writesIntoInlineComment } from "../../utils/writesIntoInlineComment/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -186,16 +186,17 @@ function takeTheTrailingSemicolonsAway (node: ChildNode): void {
  * Under `never` nothing is written, and two other things stand in the way instead. The first is the one semicolon PostCSS keeps writing whatever the flag is set to. The second is the one the language will not part with: Less reads an at-rule carrying no block of its own as running to its semicolon, so taking that semicolon away leaves a file its compiler refuses, whatever the parser makes of the output.
  *
  * Where any of them holds, the option cannot be satisfied over that node at all, and the warning stands over code the fix leaves alone rather than being called fixed over a write that never lands or one that breaks the file.
+ * @param syntax - The syntax the rule is built over.
  * @param node - The node the semicolon stands behind.
  * @param primary - The primary option.
  * @param spelledBetween - The run that will stand between the node and an `always` write once the fix has run, where that write does not land on the whitespace the node ends with.
  * @param result - The Stylelint result, which holds the syntax the file was opened with.
  * @returns True where the fix may be written.
  */
-function isFixable (node: ChildNode, primary: `always` | `never`, spelledBetween: string | undefined, result: PostcssResult): boolean {
+function isFixable (syntax: Syntax, node: ChildNode, primary: `always` | `never`, spelledBetween: string | undefined, result: PostcssResult): boolean {
 	if (primary === `never`) return !semicolonOutlivesTheFlag(node) && !requiresTrailingSemicolon(node, result)
 
-	return !hasBlock(node) && !writesIntoInlineComment(node, result, spelledBetween)
+	return !hasBlock(node) && !syntax.writesIntoInlineComment(node, result, spelledBetween)
 }
 
 /**
@@ -203,11 +204,12 @@ function isFixable (node: ChildNode, primary: `always` | `never`, spelledBetween
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `always` and `never`.
  * @param secondaryOptions - The secondary options: `ignore`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `never`, secondaryOptions: { ignore?: `single-declaration` | `single-declaration`[] }): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never`, secondaryOptions: { ignore?: `single-declaration` | `single-declaration`[] }): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,
@@ -285,7 +287,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 					endIndex: problemIndex,
 					result,
 					ruleName,
-					...(isFixable(node, primary, spelledBetween, result) && {
+					...(isFixable(syntax, node, primary, spelledBetween, result) && {
 						fix: (): void => {
 							if (primary === `always` && !hasSemicolon) {
 								parent.raws.semicolon = true

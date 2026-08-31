@@ -3,6 +3,10 @@ import type { Node as SelectorNode } from "postcss-selector-parser"
 import type { FunctionNode } from "postcss-value-parser"
 import type { PostcssResult } from "stylelint"
 
+import type { CommentSpan } from "../utils/findCommentSpans/index.ts"
+import type { InlineCommentSpan } from "../utils/findInlineCommentSpans/index.ts"
+import type { InlineCommentReading } from "../utils/readsInlineComments/index.ts"
+
 import { styled } from "./styled/index.ts"
 
 /**
@@ -113,6 +117,83 @@ export type Syntax = {
 	 * @param text - The text to write.
 	 */
 	write (node: AtRule | Declaration | PostcssRule, text: string): void,
+
+	/**
+	 * Reads what the node's own syntax makes of a comment opened by a double slash: whether it opens one at all, and whether such a comment survives in the text the rule reads.
+	 * @param node - The node whose stylesheet's syntax is asked.
+	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
+	 * @returns The reading.
+	 */
+	inlineComments (node: Node, result: PostcssResult): InlineCommentReading,
+
+	/**
+	 * Asks whether the text a rule reads of the node spells inline comments — whether the syntax both opens one on a double slash and keeps it in that text.
+	 * @param node - The node whose stylesheet's syntax is asked.
+	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
+	 * @returns True where it does.
+	 */
+	readsInlineComments (node: Node, result: PostcssResult): boolean,
+
+	/**
+	 * Asks whether the node's own syntax keeps an inline comment in the text a rule reads, whatever it does about opening one.
+	 * @param node - The node whose stylesheet's syntax is asked.
+	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
+	 * @returns True where it keeps them.
+	 */
+	keepsInlineComments (node: Node, result: PostcssResult): boolean,
+
+	/**
+	 * Finds the spans every comment occupies in a text of the node's stylesheet — the block comments, and the inline ones where the node's syntax reads them there.
+	 * @param text - The text, as the rule reads it.
+	 * @param node - The node the text belongs to.
+	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
+	 * @returns The spans, in the text's own coordinates.
+	 */
+	commentSpans (text: string, node: Node, result: PostcssResult): CommentSpan[],
+
+	/**
+	 * Finds the spans the inline comments alone occupy in a text of the node's stylesheet, where the node's syntax reads them there.
+	 * @param text - The text, as the rule reads it.
+	 * @param node - The node the text belongs to.
+	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
+	 * @returns The spans, in the text's own coordinates.
+	 */
+	inlineCommentSpans (text: string, node: Node, result: PostcssResult): InlineCommentSpan[],
+
+	/**
+	 * Asks whether a text ends inside an inline comment, under the reading given.
+	 * @param text - The text.
+	 * @param [reading] - What the syntax makes of a double slash; nothing read where none is given.
+	 * @returns True where the end of the text stands inside such a comment.
+	 */
+	endsWithInlineComment (text: string, reading?: InlineCommentReading): boolean,
+
+	/**
+	 * Asks whether a fix would take the end of a text from outside an inline comment into one, under the reading given.
+	 * @param standingText - The text as it stands, up to and including the character the fix moves.
+	 * @param fixedText - The same text as the fix would leave it.
+	 * @param reading - What the syntax makes of a double slash.
+	 * @returns True where the end moves into a comment.
+	 */
+	movesEndIntoInlineComment (standingText: string, fixedText: string, reading: InlineCommentReading): boolean,
+
+	/**
+	 * Asks whether a write onto the whitespace the node ends with would land inside an inline comment.
+	 * @param node - The node the write is about.
+	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
+	 * @param [spelledBetween] - The run that will stand between the node and the write once the fix has run, where the write does not land on the node's own trailing whitespace.
+	 * @returns True where such a write would land inside an inline comment.
+	 */
+	writesIntoInlineComment (node: Node, result: PostcssResult, spelledBetween?: string): boolean,
+
+	/**
+	 * Builds the copy of a text a search runs over: the double slashes the node's syntax reads as code are hidden, so a scan finds only the comments the syntax reads.
+	 * @param text - The text, as the rule reads it.
+	 * @param node - The node the text belongs to.
+	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
+	 * @returns The copy, with the spans of the comments the syntax reads.
+	 */
+	searchCopy (text: string, node: Node, result: PostcssResult): { searchString: string, commentSpans: CommentSpan[] },
 }
 
 /** The syntaxes registered beside the core, each under a namespace of its own. A syntax is not registered until it is listed here. */

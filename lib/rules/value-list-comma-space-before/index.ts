@@ -5,9 +5,7 @@ import { TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { endsWithInlineComment } from "../../utils/endsWithInlineComment/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { inlineCommentReading } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { valueListCommaWhitespaceChecker } from "../../utils/valueListCommaWhitespaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
@@ -59,7 +57,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Stylelint counts a fixer as applied whatever it does, so a rule that cannot repair a problem has to say so here rather than from inside the fixer. Two of them are such, and the comma has to clear both.
 			// A comma standing before the value belongs to the property name, and nothing this rule could write would reach it.
 			// A comma standing behind an inline comment cannot be moved either: the comma goes right after the whitespace the fix writes, and the line break that whitespace holds is what closes the comment, so either option would take the comma, and everything the declaration has left, into the comment's text.
-			isFixable: (declNode, index, declString) => index >= declarationValueIndex(declNode) && !endsWithInlineComment(declString.slice(0, index), inlineCommentReading(declNode, result)),
+			isFixable: (declNode, index, declString) => index >= declarationValueIndex(declNode) && !syntax.endsWithInlineComment(declString.slice(0, index), syntax.inlineComments(declNode, result)),
 			fix: (declNode, index) => {
 				fixData = fixData || (new Map())
 

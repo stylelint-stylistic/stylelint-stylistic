@@ -12,7 +12,6 @@ import { isLastDeclarationWithoutSemicolon } from "../../utils/isLastDeclaration
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
-import { writesIntoInlineComment } from "../../utils/writesIntoInlineComment/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -73,7 +72,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let declString = declarationString(syntax, decl)
 			let problemIndex = declString.length - 1
 			// The semicolon goes right after the declaration's text, and the whitespace run the fix cuts into ends it. Where an inline comment stands there, the line break that run begins with is what closes the comment, so either option would take the semicolon into the comment's text: neither can be satisfied, so leave the declaration alone and let the warning stand
-			let isFixable = !writesIntoInlineComment(decl, result)
+			let isFixable = !syntax.writesIntoInlineComment(decl, result)
 
 			checker.before({
 				source: declString,

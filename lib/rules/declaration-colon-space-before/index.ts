@@ -6,9 +6,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { declarationColonSpaceChecker } from "../../utils/declarationColonSpaceChecker/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { endsWithInlineComment } from "../../utils/endsWithInlineComment/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { inlineCommentReading } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { assertString } from "../../utils/validateTypes/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
@@ -68,7 +66,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
 			// The colon stands right after this part, so an inline comment ending it would swallow the colon
-			isFixable: (decl, index) => !endsWithInlineComment(beforeColonString(decl, index), inlineCommentReading(decl, result)),
+			isFixable: (decl, index) => !syntax.endsWithInlineComment(beforeColonString(decl, index), syntax.inlineComments(decl, result)),
 			fix: (decl, index) => {
 				let beforeColon = beforeColonString(decl, index)
 

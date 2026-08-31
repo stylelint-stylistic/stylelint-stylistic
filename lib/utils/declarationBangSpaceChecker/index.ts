@@ -6,7 +6,6 @@ import type { Syntax } from "../../syntaxes/index.ts"
 import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import { declarationString } from "../declarationString/index.ts"
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
-import { searchCopy } from "../searchCopy/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -73,7 +72,7 @@ export function declarationBangSpaceChecker (opts: {
 	opts.root.walkDecls((decl) => {
 		let indexOffset = declarationValueIndex(decl)
 		let declString = declarationString(opts.syntax, decl)
-		let { searchString } = searchCopy(declString, decl, opts.result)
+		let { searchString } = opts.syntax.searchCopy(declString, decl, opts.result)
 		let valueString = searchString.slice(indexOffset)
 
 		if (!valueString.includes(`!`)) return

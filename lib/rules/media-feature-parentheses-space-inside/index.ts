@@ -6,10 +6,8 @@ import { css } from "../../syntaxes/css/index.ts"
 import { addEdit, applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { endsWithInlineComment } from "../../utils/endsWithInlineComment/index.ts"
 import { findInlineCommentSpanHolding, findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { inlineCommentReading } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -81,7 +79,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let params = syntax.read(atRule)
 			let indexBoost = atRuleParamIndex(atRule)
 			// A double slash spells a comment only where the syntax says one, and a file of plain CSS spells none: the pair in `myurl(//a)` is code there, and taking it for a comment would silence every feature standing behind it on the line
-			let reading = inlineCommentReading(atRule, result)
+			let reading = syntax.inlineComments(atRule, result)
 			// A double slash opens a comment that runs to the end of its line, and `postcss-value-parser` knows nothing of the kind: a parenthesis standing in the text of one opens a media feature as far as that parser is concerned, and the fix then writes inside the comment
 			let inlineComments = findInlineCommentSpans(params, reading.spells)
 
@@ -114,7 +112,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 						if (SPACE_OR_TAB.test(node.after)) {
 							// The parenthesis goes right after this text, and the whitespace the fix empties ends it. Where an inline comment stands there, the line break that whitespace holds is what closes the comment, so the option cannot be satisfied without taking the parenthesis, and the whole query behind it, into the comment's text: leave the parameters alone and let the warning stand.
-							let isFixable = !endsWithInlineComment(params.slice(0, node.sourceEndIndex - 1 - node.after.length), reading)
+							let isFixable = !syntax.endsWithInlineComment(params.slice(0, node.sourceEndIndex - 1 - node.after.length), reading)
 
 							problems.push({
 								message: messages.rejectedClosing,

@@ -8,9 +8,7 @@ import { applyEditsFromEnd } from "../../utils/applyEditsFromEnd/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { findCommentSpans } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { readsInlineComments } from "../../utils/readsInlineComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isBoolean } from "../../utils/validateTypes/index.ts"
 
@@ -78,7 +76,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		 * @param write - Writes the fixed text back to the node.
 		 */
 		function check (node: Node, text: string, textIndex: number, write: (fixed: string) => void): void {
-			let comments = findCommentSpans(text, readsInlineComments(node, result))
+			let comments = syntax.commentSpans(text, node, result)
 			// The value parser has a node for a block comment and none for a comment opened by a double slash, whose text comes back as ordinary words and divs. Blanking every comment out answers both at once: the copy spells the text character for character everywhere else, so every position below counts in the text itself, and what the parse holds is code the file spells and nothing else.
 			let ratio = findRatio(valueParser(blankComments(text, comments)).nodes)
 
