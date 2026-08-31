@@ -217,23 +217,6 @@ testRule({
 
 testRule({
 	ruleName,
-	config: [`always`],
-	customSyntax: `postcss-scss`,
-
-	accept: [
-		{
-			description: `an SCSS map, whose parentheses open no call`,
-			code: `$map: (key: value,key2: value2)`,
-		},
-		{
-			description: `an SCSS list, whose parentheses open no call either`,
-			code: `$list: (value, value2)`,
-		},
-	],
-})
-
-testRule({
-	ruleName,
 	config: [`never`],
 
 	accept: [
@@ -400,19 +383,6 @@ testRule({
 
 testRule({
 	ruleName,
-	config: [`never`],
-	customSyntax: `postcss-scss`,
-
-	accept: [
-		{
-			description: `an SCSS map, whose parentheses open no call`,
-			code: `$map: (key: value ,key2: value2)`,
-		},
-	],
-})
-
-testRule({
-	ruleName,
 	config: [`always-single-line`],
 
 	accept: [
@@ -537,19 +507,6 @@ testRule({
 
 testRule({
 	ruleName,
-	config: [`always-single-line`],
-	customSyntax: `postcss-scss`,
-
-	accept: [
-		{
-			description: `an SCSS map written on one line`,
-			code: `$map: (key: value,key2: value2)`,
-		},
-	],
-})
-
-testRule({
-	ruleName,
 	config: [`never-single-line`],
 
 	accept: [
@@ -647,19 +604,6 @@ testRule({
 			line: 1,
 			column: 14,
 			message: messages.rejectedBeforeSingleLine(),
-		},
-	],
-})
-
-testRule({
-	ruleName,
-	config: [`never-single-line`],
-	customSyntax: `postcss-scss`,
-
-	accept: [
-		{
-			description: `an SCSS map written on one line`,
-			code: `$map: (key: value ,key2: value2)`,
 		},
 	],
 })

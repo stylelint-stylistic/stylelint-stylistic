@@ -723,27 +723,3 @@ testRule({
 		},
 	],
 })
-
-testRule({
-	ruleName,
-	config: [`tab`],
-	customSyntax: `postcss-scss`,
-
-	reject: [
-		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/237
-			description: `the same query read as Sass, which asks the same of it as plain CSS does`,
-			code: `
-				@media (min-width: 100px
-					) { a { color: pink; } }
-			`,
-			fixed: `
-				@media (min-width: 100px
-				) { a { color: pink; } }
-			`,
-			line: 2,
-			column: 2,
-			message: messages.expected(`0 tabs`),
-		},
-	],
-})

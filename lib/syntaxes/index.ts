@@ -10,6 +10,7 @@ import type { InlineCommentSpan } from "../utils/findInlineCommentSpans/index.ts
 import type { InterpolationSpan } from "../utils/findInterpolationSpans/index.ts"
 
 import { less } from "./less/index.ts"
+import { scss } from "./scss/index.ts"
 import { styled } from "./styled/index.ts"
 
 /**
@@ -280,4 +281,4 @@ export type { InlineComment } from "../preprocessor/findSelectorInlineComments/i
 export type { InlineCommentReading } from "../preprocessor/readsInlineComments/index.ts"
 
 /** The syntaxes registered beside the core, each under a namespace of its own. A syntax is not registered until it is listed here. */
-export let namespaces: Syntax[] = [less, styled]
+export let namespaces: Syntax[] = [less, scss, styled]

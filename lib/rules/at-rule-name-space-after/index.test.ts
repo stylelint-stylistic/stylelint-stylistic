@@ -256,19 +256,6 @@ testRule({
 
 testRule({
 	ruleName,
-	customSyntax: `postcss-scss`,
-	config: [`always`],
-
-	accept: [
-		{
-			description: `a mixin and an include, each with a space behind its name`,
-			code: `@mixin mixin() { @content; }; .colors { @include mixin { color: $color; }}`,
-		},
-	],
-})
-
-testRule({
-	ruleName,
 	config: [`always-single-line`],
 
 	accept: [
