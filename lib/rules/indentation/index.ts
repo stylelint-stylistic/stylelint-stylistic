@@ -216,7 +216,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let level = ruleLevel
 
 			// Less mixins have params, and they should be indented extra
-			if (`params` in ruleNode && ruleNode.params) level += 1
+			if (syntax.readsRuleParams(ruleNode)) level += 1
 
 			// The lines are measured in the copy the file spells, since that is the text the positions of a warning are counted in and the text a fix is written to
 			checkMultilineBit(syntax.read(ruleNode), level, ruleNode, ruleLevel)

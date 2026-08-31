@@ -593,58 +593,6 @@ testRule({
 
 testRule({
 	ruleName,
-	config: [1],
-	customSyntax: `postcss-less`,
-
-	reject: [
-		{
-			description: `a Less at-variable keeps the fix written to its params`,
-			code: `
-				@foo: (
-						'a'
-				);
-			`,
-			fixed: `
-				@foo: (
-				 'a'
-				);
-			`,
-			line: 2,
-			column: 3,
-			message: messages.expected(`1 space`),
-		},
-		{
-			description: `a Less at-variable keeps every fix written to its params`,
-			code: `
-				@foo: (
-							'a',
-							'b'
-				);
-			`,
-			fixed: `
-				@foo: (
-				 'a',
-				 'b'
-				);
-			`,
-			warnings: [
-				{
-					line: 2,
-					column: 4,
-					message: messages.expected(`1 space`),
-				},
-				{
-					line: 3,
-					column: 4,
-					message: messages.expected(`1 space`),
-				},
-			],
-		},
-	],
-})
-
-testRule({
-	ruleName,
 	config: [`tab`],
 
 	accept: [
@@ -785,30 +733,6 @@ testRule({
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/237
 			description: `the same query read as Sass, which asks the same of it as plain CSS does`,
-			code: `
-				@media (min-width: 100px
-					) { a { color: pink; } }
-			`,
-			fixed: `
-				@media (min-width: 100px
-				) { a { color: pink; } }
-			`,
-			line: 2,
-			column: 2,
-			message: messages.expected(`0 tabs`),
-		},
-	],
-})
-
-testRule({
-	ruleName,
-	config: [`tab`],
-	customSyntax: `postcss-less`,
-
-	reject: [
-		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/237
-			description: `the same query read as Less`,
 			code: `
 				@media (min-width: 100px
 					) { a { color: pink; } }

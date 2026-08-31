@@ -9,6 +9,7 @@ import type { CommentSpan } from "../utils/findCommentSpans/index.ts"
 import type { InlineCommentSpan } from "../utils/findInlineCommentSpans/index.ts"
 import type { InterpolationSpan } from "../utils/findInterpolationSpans/index.ts"
 
+import { less } from "./less/index.ts"
 import { styled } from "./styled/index.ts"
 
 /**
@@ -228,6 +229,20 @@ export type Syntax = {
 	 * @returns The spans, in the text's own coordinates.
 	 */
 	interpolationSpans (text: string, node: Node, result: PostcssResult): InterpolationSpan[],
+
+	/**
+	 * Asks whether the parser hung a parameter list of the syntax's own on a rule — a Less mixin definition — which `indentation` holds one level deeper than the selector it closes.
+	 * @param rule - The rule.
+	 * @returns True where the rule carries such a list.
+	 */
+	readsRuleParams (rule: PostcssRule): boolean,
+
+	/**
+	 * Asks whether an at-rule is a variable of the syntax — `@foo: bar;` under Less — whose params are a value to walk the way a declaration's is walked.
+	 * @param atRule - The at-rule.
+	 * @returns True where the at-rule is such a variable.
+	 */
+	readsAtRuleAsVariable (atRule: AtRule): boolean,
 }
 
 /** A rule's selector, opened for parsing and writing: see {@link Syntax#selectorCopies}. */
@@ -265,4 +280,4 @@ export type { InlineComment } from "../preprocessor/findSelectorInlineComments/i
 export type { InlineCommentReading } from "../preprocessor/readsInlineComments/index.ts"
 
 /** The syntaxes registered beside the core, each under a namespace of its own. A syntax is not registered until it is listed here. */
-export let namespaces: Syntax[] = [styled]
+export let namespaces: Syntax[] = [less, styled]

@@ -64,6 +64,8 @@ export let css: Syntax = {
 	writesIntoInlineComment,
 	searchCopy,
 	requiresTrailingSemicolon,
+	readsRuleParams: (rule: PostcssRule) => `params` in rule && Boolean(rule.params),
+	readsAtRuleAsVariable: (atRule: AtRule) => `variable` in atRule,
 	spellsOwnArithmetic: readsInlineComments,
 	interpolationSpans: findInterpolationSpans,
 	selectorCopies (rule: PostcssRule): SelectorCopies {

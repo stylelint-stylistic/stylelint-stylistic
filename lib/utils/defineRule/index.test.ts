@@ -74,7 +74,7 @@ describe(`a rule built for a syntax`, () => {
 	})
 
 	it(`refuses a root the syntax does not accept with one warning, and reads nothing of it`, async () => {
-		await expect(lint([createRule(refusing)], `a { color: red; color: blue; }`)).resolves.toEqual([{ rule: `@stylistic/never/property-found`, text: `The "@stylistic/never/property-found" rule does not read a stylesheet parsed with this syntax; the "@stylistic/styled/" rules do (@stylistic/never/property-found)` }])
+		await expect(lint([createRule(refusing)], `a { color: red; color: blue; }`)).resolves.toEqual([{ rule: `@stylistic/never/property-found`, text: `The "@stylistic/never/property-found" rule does not read a stylesheet parsed with this syntax; the "@stylistic/less/" and "@stylistic/styled/" rules do (@stylistic/never/property-found)` }])
 	})
 
 	it(`refuses a root once, however many rules of the namespace are configured`, async () => {

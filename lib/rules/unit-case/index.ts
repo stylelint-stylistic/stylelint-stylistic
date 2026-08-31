@@ -195,7 +195,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		}
 
 		root.walkAtRules((atRule) => {
-			if (!MEDIA_AT_RULE.test(atRule.name) && !(`variable` in atRule)) return
+			if (!MEDIA_AT_RULE.test(atRule.name) && !syntax.readsAtRuleAsVariable(atRule)) return
 
 			check(atRule, syntax.read(atRule), atRuleParamIndex)
 		})

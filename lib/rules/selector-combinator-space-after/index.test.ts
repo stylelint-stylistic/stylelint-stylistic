@@ -521,28 +521,6 @@ testRule({
 
 testRule({
 	ruleName,
-	customSyntax: `postcss-less`,
-	config: [`always`],
-
-	accept: [
-		{
-			description: `a Less guard, whose comparisons are no combinators`,
-			code: `.a when (@size>=60) and (@size<102) {}`,
-		},
-	],
-
-	reject: [
-		{
-			description: `two spaces after the adjacent-sibling combinator`,
-			code: `a+  a {}`,
-			fixed: `a+ a {}`,
-			message: messages.expectedAfter(`+`),
-		},
-	],
-})
-
-testRule({
-	ruleName,
 	customSyntax: `postcss-scss`,
 	config: [`always`],
 

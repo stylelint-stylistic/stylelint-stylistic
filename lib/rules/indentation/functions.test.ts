@@ -663,36 +663,3 @@ testRule({
 		},
 	],
 })
-
-testRule({
-	ruleName,
-	config: [2],
-	customSyntax: `postcss-less`,
-	// fix: true,
-
-	accept: [
-		{
-			description: `a Less mixin call whose arguments each stand a level deeper`,
-			code:
-				`.foo {\n  .mixin(\n    @foo,\n    @bar,\n    @baz\n  );\n}`,
-		},
-		{
-			description: `the same call written with carriage-return line breaks`,
-			code:
-				`.foo {\r\n  .mixin(\r\n    @foo,\r\n    @bar,\r\n    @baz\r\n  );\r\n}`,
-		},
-		{
-			description: `a Less mixin call taking a block for one of its arguments`,
-			code:
-				`.foo {\r\n  .mixin(\r\n    {\r\n      @baz\r\n    }\r\n  );\r\n}`,
-		},
-		{
-			description: `the same call with the block opening on the line of the call`,
-			code: `.foo {\r\n  .mixin(@foo, {\r\n    @baz\r\n  });\r\n}`,
-		},
-		{
-			description: `a Less mixin call at the root whose first argument is a block`,
-			code: `.mixin({\r\n  @foo\r\n}, @bar);`,
-		},
-	],
-})
