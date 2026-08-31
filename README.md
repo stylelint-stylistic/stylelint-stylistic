@@ -40,6 +40,27 @@ Create the `.stylelintrc` config file (or open the existing one), add `@styli
 
 Please refer to [Stylelint docs](https://stylelint.io/user-guide/get-started) for detailed info on using this linter.
 
+## Custom syntaxes
+
+The rules above read plain CSS. A stylesheet embedded in JavaScript as a styled template — parsed with [`postcss-styled-syntax`](https://github.com/hudochenkov/postcss-styled-syntax) — is read by the same rules under the `@stylistic/styled/` namespace instead, and the core names report one warning pointing there. Configure the namespace in the `overrides` block that names the syntax:
+
+```json
+{
+	"plugins": ["@stylistic/stylelint-plugin"],
+	"overrides": [
+		{
+			"files": ["**/*.{js,jsx,ts,tsx}"],
+			"customSyntax": "postcss-styled-syntax",
+			"rules": {
+				"@stylistic/styled/indentation": ["tab"]
+			}
+		}
+	]
+}
+```
+
+What the namespace answers differently is written in [its README](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/styled/README.md).
+
 ## Need more?
 
 ESLint deprecates stylistic rules, too. But you can continue to use them thanks to [ESLint Stylistic](https://eslint.style).

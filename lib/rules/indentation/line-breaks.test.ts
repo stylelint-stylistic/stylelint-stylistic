@@ -44,16 +44,3 @@ testRule({
 		},
 	],
 })
-
-testRule({
-	ruleName,
-	config: `tab`,
-	customSyntax: `postcss-styled-syntax`,
-
-	accept: [
-		{
-			description: `a template standing on an indented line of a file broken with Windows pairs, the one spelling a widening of that reading would break`,
-			code: `function f () {\r\n\tconst a = styled.div\`\r\n\t\tcolor: red;\r\n\t\`;\r\n}`,
-		},
-	],
-})

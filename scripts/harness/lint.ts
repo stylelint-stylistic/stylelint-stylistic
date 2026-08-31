@@ -181,7 +181,8 @@ async function lintDirect ({ code, rules, registry, syntax, fix = false }: {
 	let config: {
 		fix: boolean,
 		rules: Record<string, [unknown, object | undefined]>,
-	} = { fix, rules: {} }
+		customSyntax?: string,
+	} = { fix, rules: {}, ...(typeof syntax === `string` && { customSyntax: syntax }) }
 
 	let ruleSeverities: Record<string, RuleSeverity> = {}
 

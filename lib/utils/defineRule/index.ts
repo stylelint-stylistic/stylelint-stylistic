@@ -1,7 +1,7 @@
 import type { Root } from "postcss"
 import stylelint, { type Rule, type RuleMessages, type RuleMeta } from "stylelint"
 
-import type { Syntax } from "../../syntaxes/index.ts"
+import { namespaces, type Syntax } from "../../syntaxes/index.ts"
 import { addNamespace } from "../addNamespace/index.ts"
 import type { RuleCheck } from "../ruleCheck/index.ts"
 
@@ -46,7 +46,7 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 		let ruleName = addNamespace(shortName, syntax.namespace)
 		let scopedMessages = ruleMessages(ruleName, messages) as M
 		let { refusal } = ruleMessages(ruleName, {
-			refusal: () => `The "${ruleName}" rule does not read a stylesheet parsed with this syntax`,
+			refusal: (names: string) => (names ? `The "${ruleName}" rule does not read a stylesheet parsed with this syntax; the ${names} rules do` : `The "${ruleName}" rule does not read a stylesheet parsed with this syntax`),
 		})
 
 		/**
@@ -64,7 +64,11 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 				if (refused.has(root)) return
 
 				refused.add(root)
-				report({ message: refusal, node: root, index: 0, endIndex: 0, result, ruleName })
+
+				// The namespaces that do read the root are what the warning teaches, so a user meeting the refusal knows the names to configure instead
+				let takers = namespaces.filter((namespace) => namespace.accepts(root, result)).map((namespace) => `"@stylistic/${namespace.namespace}/"`).join(` and `)
+
+				report({ message: refusal, messageArgs: [takers], node: root, index: 0, endIndex: 0, result, ruleName })
 			}
 		}
 
