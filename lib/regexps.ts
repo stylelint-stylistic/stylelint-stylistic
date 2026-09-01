@@ -274,6 +274,9 @@ export const WHITESPACE = /\s/u
 /** A text made of whitespace, and of at least one character of it. */
 export const WHITESPACE_ONLY = /^\s+$/u
 
+/** A text made of whitespace or of nothing at all. */
+export const WHITESPACE_OR_NOTHING = /^\s*$/u
+
 /** A block comment opening a text behind whitespace, of which there must be some. */
 export const WHITESPACE_THEN_BLOCK_COMMENT = /^\s+\/\*/u
 

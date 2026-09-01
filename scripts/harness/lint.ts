@@ -195,19 +195,26 @@ async function lintDirect ({ code, rules, registry, syntax, fix = false, stripNa
 	let parsed = result.root as Root | Document
 	let roots = parsed.type === `document` ? parsed.nodes : [parsed]
 
-	for (let [name, primary, secondary] of rules) {
+	let resolved = rules.map(([name, primary, secondary]): [Rule, unknown, object | undefined] => {
 		// A base from before a namespace answers under the bare name, which is how one comparison spans the commit that renamed an axis
 		let rule = registry[name] ?? registry[name.replace(LEADING_NAMESPACE_SEGMENT, ``)]
 
 		if (!rule) throw new Error(`No rule named "${name}" in the registry`)
 
+		return [rule, primary, secondary]
+	})
+
+	// The whole configuration stands before any rule runs, as it does in Stylelint, where `result.stylelint.config` is assigned once and a rule reads a neighbour's setting out of it whichever of the two the configuration lists first
+	for (let [rule, primary, secondary] of resolved) {
 		// The resolved instance's own name, so that the severities and the config a report reads stand under the name the rule reports with — on a base answering under the bare name as much as on this checkout
 		let fullName = rule.ruleName
 
 		config.rules[fullName] = [primary, secondary]
 		ruleSeverities[fullName] = SEVERITY
 		ruleMetadata[fullName] = rule.meta ?? {}
+	}
 
+	for (let [rule, primary, secondary] of resolved) {
 		let check = rule(primary, secondary, context)
 
 		for (let root of roots) {

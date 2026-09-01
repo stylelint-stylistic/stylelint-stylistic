@@ -10,6 +10,7 @@ import { moveDeclarationValueHeadIntoBetween } from "../../utils/moveDeclaration
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { assertString } from "../../utils/validateTypes/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { writesSharedRun } from "../../utils/writesSharedRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -52,6 +53,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.after,
 			checkedRuleName: ruleName,
+			// Where the value is nothing but the run behind the colon, that run is the one in front of the semicolon as well, and the rules asked about it settle between them which of them write it (#416)
+			isFixable: (decl) => writesSharedRun(syntax, decl, result, ruleName),
 			fix: (decl, index) => {
 				let between = decl.raws.between
 

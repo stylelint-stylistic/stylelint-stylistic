@@ -1,0 +1,159 @@
+import { messages as semicolonNewlineBeforeMessages } from "../declaration-block-semicolon-newline-before/index.ts"
+
+import { messages, ruleName } from "./index.ts"
+
+// Where a declaration's value is nothing but whitespace, the run this rule reads behind the colon is the run the `declaration-block-semicolon-*-before` rules read in front of the semicolon (#416). The library lists the rule a block names first and its extra rules behind it, so every block below has the neighbour run last: that is the order in which the neighbour used to be blind to what this rule wrote, and the two took the run in turns.
+let testRule = createTestRule({ ruleName })
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-block-semicolon-space-before": `always` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/416
+			description: `a value that is nothing but a space, which the neighbour asks to stand in front of the semicolon and this rule asks to stand behind a break: the neighbour is listed last and has the last word, so the break is not written and the warning stands`,
+			code: `a { color: ; }`,
+			fixed: `a { color: ; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a comment on the colon's line, behind which the run this rule reads is the run in front of the semicolon as well`,
+			code: `a { color: /*c*/ ; }`,
+			fixed: `a { color: /*c*/ ; }`,
+			line: 1,
+			column: 16,
+			endLine: 1,
+			endColumn: 17,
+			message: messages.expectedAfter(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-block-semicolon-space-before": `never` },
+
+	reject: [
+		{
+			description: `a value that is nothing at all, which the neighbour asks to stay nothing`,
+			code: `a { color:; }`,
+			fixed: `a { color:; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expectedAfter(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-block-semicolon-newline-before": `never-multi-line` },
+
+	reject: [
+		{
+			description: `a block on one line, which the neighbour is silent about as it stands and speaks of the moment this rule's break puts it over two`,
+			code: `a { color:; }`,
+			fixed: `a { color:; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a block over several lines, where the second declaration has a word of its own and takes its break as it always did`,
+			code: `
+				a {
+					color:;
+					top: 0;
+				}
+			`,
+			fixed: `
+				a {
+					color:;
+					top:
+				 0;
+				}
+			`,
+			warnings: [
+				{
+					line: 2,
+					column: 7,
+					endLine: 2,
+					endColumn: 8,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 3,
+					column: 5,
+					endLine: 3,
+					endColumn: 6,
+					message: messages.expectedAfter(),
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-colon-space-after": `always-single-line` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/484
+			description: `a custom property whose single space the other colon rule asks for: the break this rule writes would stand in the raw between until the next parse, so that rule still reads the value as one line and would fold the break away, and the break is not written`,
+			code: `a { --a: ; }`,
+			fixed: `a { --a: ; }`,
+			line: 1,
+			column: 8,
+			endLine: 1,
+			endColumn: 9,
+			message: messages.expectedAfter(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-block-semicolon-newline-before": `always` },
+
+	reject: [
+		{
+			description: `a neighbour asking for a break of its own, which the one this rule writes answers as well`,
+			code: `a { color: ; }`,
+			fixed: `
+				a { color:
+				 ; }
+			`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 11,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 11,
+					endLine: 1,
+					endColumn: 12,
+					message: semicolonNewlineBeforeMessages.expectedBefore(),
+				},
+			],
+		},
+	],
+})

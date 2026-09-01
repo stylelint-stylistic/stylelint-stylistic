@@ -151,3 +151,102 @@ testRule({
 		},
 	],
 })
+
+// Where a declaration's value is nothing but whitespace, the run this rule reads behind the colon is the run the `declaration-block-semicolon-*-before` rules read in front of the semicolon (#416). The library lists the rule a block names first and its extra rules behind it, so every block below has the neighbour run last: that is the order in which the neighbour used to be blind to what this rule wrote, and the two took the run in turns.
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-block-semicolon-space-before": `never` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/416
+			description: `a value that is nothing at all, which the neighbour asks to stay nothing and this rule asks to open with a space: the neighbour is listed last and has the last word, so the space is not written and the warning stands`,
+			code: `a { color:; }`,
+			fixed: `a { color:; }`,
+			line: 1,
+			column: 11,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a custom property whose value is nothing at all, where the neighbour leaves a single space alone and the space is written`,
+			code: `a { --a:; }`,
+			fixed: `a { --a: ; }`,
+			line: 1,
+			column: 9,
+			endLine: 1,
+			endColumn: 10,
+			message: messages.expectedAfter(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always-single-line`],
+	extraRules: { "@stylistic/declaration-block-semicolon-space-before": `never-single-line` },
+
+	reject: [
+		{
+			description: `the same pair under the single-line options, over a block on one line`,
+			code: `a { color:; }`,
+			fixed: `a { color:; }`,
+			line: 1,
+			column: 11,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expectedAfterSingleLine(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never`],
+	extraRules: { "@stylistic/declaration-block-semicolon-space-before": `always` },
+
+	reject: [
+		{
+			description: `a value that is nothing but a space, which the neighbour asks to stay in front of the semicolon and this rule asks to take away`,
+			code: `a { color: ; }`,
+			fixed: `a { color: ; }`,
+			line: 1,
+			column: 11,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.rejectedAfter(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-block-semicolon-space-before": `always` },
+
+	reject: [
+		{
+			description: `a neighbour asking for the same single space, which is written once and answers both`,
+			code: `a { color:; }`,
+			fixed: `a { color: ; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 11,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 11,
+					message: declarationBlockSemicolonSpaceBeforeMessages.expectedBefore(),
+				},
+			],
+		},
+	],
+})

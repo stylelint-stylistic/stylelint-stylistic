@@ -11,6 +11,7 @@ import { moveDeclarationValueHeadIntoBetween } from "../../utils/moveDeclaration
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { assertString } from "../../utils/validateTypes/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { writesSharedRun } from "../../utils/writesSharedRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -61,6 +62,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/408
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/421
 			let walkStart = declarationValueIndex(decl) - decl.raws.between.length
+			// Where nothing but whitespace stands behind the colon, or behind the comment on its line, down to the end of the value, the run this rule asks about is the one in front of the semicolon as well, and the rules asked about it settle between them which of them write it (#416)
+			let isFixable = writesSharedRun(syntax, decl, result, ruleName)
 
 			for (let i = walkStart, l = declarationValueIndex(decl); i < l; i += 1) {
 				if (source[i] !== `:`) continue
@@ -84,34 +87,36 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 							endIndex: indexToCheck,
 							result,
 							ruleName,
-							fix () {
-								let between = decl.raws.between
+							...(isFixable && {
+								fix (): void {
+									let between = decl.raws.between
 
-								assertString(between)
+									assertString(between)
 
-								// The break goes where the text was read, so the place for it is counted in that text; what stands behind that place is `between`'s own where the value has a word of its own, and the head of the value where it has none
-								let betweenStart = declarationValueIndex(decl) - between.length
-								let sliceIndex = indexToCheck - betweenStart + 1
-								let headLength = sliceIndex - between.length
+									// The break goes where the text was read, so the place for it is counted in that text; what stands behind that place is `between`'s own where the value has a word of its own, and the head of the value where it has none
+									let betweenStart = declarationValueIndex(decl) - between.length
+									let sliceIndex = indexToCheck - betweenStart + 1
+									let headLength = sliceIndex - between.length
 
-								if (headLength < 0) {
-									let betweenBefore = between.slice(0, sliceIndex)
-									let betweenAfter = between.slice(sliceIndex)
+									if (headLength < 0) {
+										let betweenBefore = between.slice(0, sliceIndex)
+										let betweenAfter = between.slice(sliceIndex)
 
-									// Trim up to the break that already stands there, whichever character it is, and add one only where none does
-									decl.raws.between = OPENS_WITH_LINE_BREAK.test(betweenAfter) ? betweenBefore + betweenAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : betweenBefore + getLineBreak(syntax, root, result) + betweenAfter
+										// Trim up to the break that already stands there, whichever character it is, and add one only where none does
+										decl.raws.between = OPENS_WITH_LINE_BREAK.test(betweenAfter) ? betweenBefore + betweenAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : betweenBefore + getLineBreak(syntax, root, result) + betweenAfter
 
-									return
-								}
+										return
+									}
 
-								// Only what stands in front of the break is taken over, so that the run behind it is left in the value for whichever rule is asked about the run in front of the semicolon
-								moveDeclarationValueHeadIntoBetween(syntax, decl, headLength)
+									// Only what stands in front of the break is taken over, so that the run behind it is left in the value for whichever rule is asked about the run in front of the semicolon
+									moveDeclarationValueHeadIntoBetween(syntax, decl, headLength)
 
-								let valueAfter = syntax.read(decl)
+									let valueAfter = syntax.read(decl)
 
-								if (OPENS_WITH_LINE_BREAK.test(valueAfter)) syntax.write(decl, valueAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``))
-								else decl.raws.between += getLineBreak(syntax, root, result)
-							},
+									if (OPENS_WITH_LINE_BREAK.test(valueAfter)) syntax.write(decl, valueAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``))
+									else decl.raws.between += getLineBreak(syntax, root, result)
+								},
+							}),
 						})
 					},
 				})

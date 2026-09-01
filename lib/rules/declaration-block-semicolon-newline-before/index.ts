@@ -14,6 +14,7 @@ import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
 import { writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { writesSharedRun } from "../../utils/writesSharedRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -68,8 +69,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let declString = declarationString(syntax, decl)
 			let problemIndex = declString.length - 1
-			// The semicolon goes right after the declaration's text, and where an inline comment ends that text, the line break the trailing whitespace opens with is what closes the comment: taking it away, as `never-multi-line` does, would take the semicolon into the comment's text. Nothing can be written there, so the declaration is left alone and the warning stands. The `always` options are in no such danger, since the break they write is what closes such a comment anyway
-			let isFixable = primary.startsWith(`always`) || !syntax.writesIntoInlineComment(decl, result)
+			// The semicolon goes right after the declaration's text, and where an inline comment ends that text, the line break the trailing whitespace opens with is what closes the comment: taking it away, as `never-multi-line` does, would take the semicolon into the comment's text. Nothing can be written there, so the declaration is left alone and the warning stands. The `always` options are in no such danger, since the break they write is what closes such a comment anyway. Where the value is nothing but that trailing whitespace, it is the run behind the colon as well, and the rules asked about it settle between them which of them write it (#416)
+			let isFixable = (primary.startsWith(`always`) || !syntax.writesIntoInlineComment(decl, result)) && writesSharedRun(syntax, decl, result, ruleName)
 
 			checker.beforeAllowingIndentation({
 				source: declString,
