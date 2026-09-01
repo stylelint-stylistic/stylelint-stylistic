@@ -23,16 +23,16 @@ function primaryOf (setting: unknown): string | undefined {
 /**
  * Reads the settings of some neighbouring rules out of the configuration, in the order the run makes them.
  *
- * Stylelint runs each rule once and in the order the configuration lists them: it sorts the rules of a run by its own registry, a plugin's rules stand nowhere in it, and the sort is stable, so the order of the keys is the order of the run. The settings are read out of `result.stylelint.config`, which holds every rule's normalised settings and is assigned before any rule runs, under the names of the namespace the asking rule is registered under: the configuration of a file lists the core's names and a namespace's alike, and the family that reads the file is the one the rule belongs to. A rule listed with an option outside the ones it accepts is passed over, since it refuses such an option and runs over nothing.
+ * Stylelint runs each rule once and in the order the configuration lists them: it sorts the rules of a run by its own registry, a plugin's rules stand nowhere in it, and the sort is stable, so the order of the keys is the order of the run. The settings are read out of `result.stylelint.config`, which holds every rule's normalised settings and is assigned before any rule runs, under the names of the namespace the asking rule is registered under: the configuration of a file lists the core's names and a namespace's alike, and the family that reads the file is the one the rule belongs to. A rule listed with an option outside the ones it accepts is passed over, since it refuses such an option and runs over nothing. Whether the fix of a neighbour is turned off travels with its option, since a neighbour that speaks and reports but cannot write is a different thing to a writer than one that will rewrite what it is not content with (#485).
  * @param syntax - The syntax the asking rule is built over, whose namespace names the neighbours.
  * @param result - The Stylelint result, which holds the configuration.
  * @param rules - The neighbours to read, each under a key of the caller's; a key may stand empty, as a table shared by callers with unlike neighbours leaves some.
- * @returns Each neighbour the configuration lists with an option it accepts, by the caller's key and with that option, in the order the run makes them.
+ * @returns Each neighbour the configuration lists with an option it accepts, by the caller's key, with that option and with whether the configuration turned the neighbour's fix off, in the order the run makes them.
  */
-export function neighbourSettings<Key extends string> (syntax: Syntax, result: PostcssResult, rules: Partial<Record<Key, NeighbourRule>>): [Key, string][] {
+export function neighbourSettings<Key extends string> (syntax: Syntax, result: PostcssResult, rules: Partial<Record<Key, NeighbourRule>>): [Key, string, boolean][] {
 	let settings: Record<string, unknown> = result.stylelint?.config?.rules ?? {}
 	let neighbours = Object.entries(rules) as [Key, NeighbourRule][]
-	let found: [Key, string][] = []
+	let found: [Key, string, boolean][] = []
 
 	for (let name of Object.keys(settings)) {
 		let neighbour = neighbours.find(([, rule]) => name === addNamespace(rule.name, syntax.namespace))
@@ -40,12 +40,28 @@ export function neighbourSettings<Key extends string> (syntax: Syntax, result: P
 		if (!neighbour) continue
 
 		let [key, rule] = neighbour
-		let option = primaryOf(settings[name])
+		let setting = settings[name]
+		let option = primaryOf(setting)
 
-		if (option !== undefined && rule.options.includes(option)) found.push([key, option])
+		if (option !== undefined && rule.options.includes(option)) found.push([key, option, fixDisabledBy(setting)])
 	}
 
 	return found
+}
+
+/**
+ * Reads whether a setting turns the rule's fix off: `disableFix` stands among the secondary options, which close the array a normalised configuration wraps every setting in.
+ *
+ * Stylelint holds two readings of it, and the one that governs this plugin is the wider: `report` refuses to run a fix wherever the option is truthy, and every rule here fixes through the callback it hands `report`, while the `disableFix === true` of `lintPostcssResult` only unsets the `context.fix` no rule of this plugin reads. So the reading here is the truthy one — a neighbour whose spelling of the option `report` honours is one that cannot write, however that spelling reads elsewhere.
+ * @param setting - The setting.
+ * @returns True where the fix is turned off.
+ */
+function fixDisabledBy (setting: unknown): boolean {
+	if (!Array.isArray(setting)) return false
+
+	let secondary: unknown = setting[1]
+
+	return typeof secondary === `object` && secondary !== null && Boolean((secondary as { disableFix?: unknown }).disableFix)
 }
 
 /**

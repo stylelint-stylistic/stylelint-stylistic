@@ -261,3 +261,26 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-colon-space-after": [`always`, { disableFix: true }] },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/485
+			description: `the other colon rule with its fix turned off, which this rule no longer defers to: the break is written, and that rule's report stands over it as the configuration asked`,
+			code: `a { color: !important ; }`,
+			fixed: `
+				a { color:
+				 !important ; }
+			`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expectedAfter(),
+		},
+	],
+})

@@ -164,6 +164,12 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { b: /*c*/ x; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `never` }, COLON_NEWLINE)).toBe(true)
 	})
 
+	it(`a rule behind whose fix the configuration turned off, which reports the run and cannot rewrite it, so it gates nothing`, () => {
+		expect(ask(`a { b:\n; }`, { [COLON_SPACE]: `always`, [SEMICOLON_SPACE]: [`never`, { disableFix: true }] }, COLON_SPACE)).toBe(true)
+		expect(ask(`a { b:\n; }`, { [COLON_SPACE]: `always`, [SEMICOLON_SPACE]: `never` }, COLON_SPACE)).toBe(false)
+		expect(ask(`a { b: !important ; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: [`always`, { disableFix: true }] }, COLON_NEWLINE)).toBe(true)
+	})
+
 	it(`the rules of the asking rule's own namespace, and not the core's`, () => {
 		let scss: Syntax = { ...css, namespace: `scss` }
 
