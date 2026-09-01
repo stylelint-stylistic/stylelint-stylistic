@@ -1,4 +1,5 @@
 import { messages as semicolonNewlineBeforeMessages } from "../declaration-block-semicolon-newline-before/index.ts"
+import { messages as colonSpaceAfterMessages } from "../declaration-colon-space-after/index.ts"
 
 import { messages, ruleName } from "./index.ts"
 
@@ -213,6 +214,48 @@ testRule({
 					endLine: 1,
 					endColumn: 10,
 					message: semicolonNewlineBeforeMessages.expectedBefore(),
+				},
+			],
+		},
+	],
+})
+
+// The two colon rules read one and the same run behind the colon of every declaration, and settle between them who writes it (#484). The library lists the rule a block names first and its extra rules behind it, so the block below runs this rule first — the order in which its blind break used to grow the file — and the SCSS spelling of the shape stands in that namespace's own file.
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-colon-space-after": `always` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/484
+			description: `a value that is a flag behind its run, over which the file used to grow by a space on every run of the fixer: the space rule is listed last and has the last word, so the break is not written and the warning stands`,
+			code: `a { color: !important ; }`,
+			fixed: `a { color: !important ; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a value carrying a word behind two spaces, where the space rule listed last writes the run down to its one space`,
+			code: `a { color:  red; }`,
+			fixed: `a { color: red; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 11,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 11,
+					endLine: 1,
+					endColumn: 12,
+					message: colonSpaceAfterMessages.expectedAfter(),
 				},
 			],
 		},

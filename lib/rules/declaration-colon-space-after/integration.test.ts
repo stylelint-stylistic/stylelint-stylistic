@@ -250,3 +250,30 @@ testRule({
 		},
 	],
 })
+
+// The other side of #484: this rule listed first declines in favour of the newline rule behind, and the file it used to fold the break out of rests as it stands.
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-colon-newline-after": `always` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/484
+			description: `a break already standing behind the colon of a value that is a flag behind its run, which the newline rule listed last asks to stay: the space is not written and the warning stands`,
+			code: `
+				a { color:
+				 !important ; }
+			`,
+			fixed: `
+				a { color:
+				 !important ; }
+			`,
+			line: 1,
+			column: 11,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expectedAfter(),
+		},
+	],
+})

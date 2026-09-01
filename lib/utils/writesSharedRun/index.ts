@@ -46,24 +46,27 @@ const PARTICIPANTS: Record<Participant, NeighbourRule & { writes: Run }> = {
 /** The two rules reading the run from the semicolon, which every shared run is read by. */
 const FROM_THE_SEMICOLON: Participant[] = [`semicolonSpace`, `semicolonNewline`]
 
+/** The runs of one declaration that more than one rule reads, each with the rules reading it: the run at the head of the text behind the colon, and the run in front of the semicolon. A set stands empty where no two rules share that run. */
+type SharedRuns = {
+	head: Set<Participant>,
+	semicolon: Set<Participant>,
+	semicolonRun: string,
+}
+
 /**
- * Finds the run behind a declaration's colon that is also the run in front of its semicolon, and the rules reading it.
+ * Finds the runs of a declaration that more than one rule is asked about, and the rules reading each.
  *
- * Where the value has a word of its own, the two runs are two: one ends at the word and the other begins behind it. Where it has none, the text behind the colon down to the end of the value is whitespace, and the one run is what both `declaration-colon-space-after` and `declaration-colon-newline-after` read behind the colon and what the two `declaration-block-semicolon-*-before` rules read in front of the semicolon. `declaration-colon-newline-after` reads one shape more: behind a block comment standing on the colon's own line it asks about the run behind that comment, and where nothing but whitespace follows it, that run is the semicolon's too. A flag parts the runs whatever the value holds, since the semicolon's run is then the end of the flag's raw. And a declaration one side passes over shares its run with nobody, whatever the value holds: the colon rules read the declarations of standard CSS alone, and the semicolon rules pass over the last of a block where the file writes no semicolon behind it and over one standing outside a block and an inline style attribute.
+ * The run at the head of the text behind the colon is read by both `declaration-colon-space-after` and `declaration-colon-newline-after` on every standard declaration — a word, a flag or an inline comment further along parts them from the semicolon's run, never from each other's — save one shape: behind a block comment standing right on the colon, the newline rule asks about the run behind that comment instead, and the head run is the space rule's alone.
+ *
+ * The run in front of the semicolon is the two `declaration-block-semicolon-*-before` rules', and the colon rules join them only where their own run reaches it: where the text behind the colon down to the end of the printed value is nothing but whitespace, the one run is every one of the four's; where it is a block comment with nothing but whitespace behind, that tail is the newline rule's and the semicolon rules'. A flag parts the runs whatever the value holds, since the semicolon's run is then the end of the flag's raw; and a declaration the semicolon rules pass over — the last of its block where the file writes no semicolon behind it, or one standing outside a block and an inline style attribute — keeps its semicolon run to itself, whatever the value holds.
  * @param syntax - The syntax the rule is built over.
  * @param decl - The declaration.
- * @returns The run and the participants reading it, or no participants where the declaration has no such run.
+ * @returns The two runs with their readers.
  */
-function sharedRunOf (syntax: Syntax, decl: Declaration): {
-	run: string,
-	readers: Set<Participant>,
-} {
-	let readers = new Set<Participant>()
-	let run = ``
-	let { parent } = decl
+function sharedRunsOf (syntax: Syntax, decl: Declaration): SharedRuns {
+	let runs: SharedRuns = { head: new Set(), semicolon: new Set(), semicolonRun: `` }
 
-	if (decl.important || !syntax.isStandardDeclaration(decl)) return { run, readers }
-	if (!parent || !(isAtRule(parent) || isRule(parent) || isInlineStyleAttribute(parent)) || isLastDeclarationWithoutSemicolon(decl)) return { run, readers }
+	if (!syntax.isStandardDeclaration(decl)) return runs
 
 	let between = decl.raws.between ?? ``
 	let colonIndex = -1
@@ -73,28 +76,42 @@ function sharedRunOf (syntax: Syntax, decl: Declaration): {
 		colonIndex = startIndex
 	})
 
-	if (colonIndex === -1) return { run, readers }
+	if (colonIndex === -1) return runs
 
+	let { parent } = decl
+	let readBySemicolonRules = !decl.important && parent !== undefined && (isAtRule(parent) || isRule(parent) || isInlineStyleAttribute(parent)) && !isLastDeclarationWithoutSemicolon(decl)
 	let text = between.slice(colonIndex + 1) + syntax.read(decl)
 
 	if (WHITESPACE_OR_NOTHING.test(text)) {
-		run = text
-		readers.add(`colonSpace`)
-		readers.add(`colonNewline`)
+		runs.head.add(`colonSpace`).add(`colonNewline`)
+
+		if (readBySemicolonRules) {
+			runs.semicolonRun = text
+			for (let participant of [`colonSpace`, `colonNewline`, ...FROM_THE_SEMICOLON] as Participant[]) runs.semicolon.add(participant)
+		}
+
+		return runs
 	}
-	else if (OPENS_WITH_BLOCK_COMMENT.test(text)) {
-		// A comment closes at the first `*/` behind its own opening, as the rule finds it
+
+	if (OPENS_WITH_BLOCK_COMMENT.test(text)) {
+		// A comment closes at the first `*/` behind its own opening, as the newline rule finds it; one that never closes is no shape the parser hands over, and the rule then reads the head run like its neighbour
 		let commentEnd = text.indexOf(`*/`, text.indexOf(`/*`) + 2)
 
-		if (commentEnd !== -1 && WHITESPACE_OR_NOTHING.test(text.slice(commentEnd + 2))) {
-			run = text.slice(commentEnd + 2)
-			readers.add(`colonNewline`)
+		if (commentEnd !== -1) {
+			let tail = text.slice(commentEnd + 2)
+
+			if (WHITESPACE_OR_NOTHING.test(tail) && readBySemicolonRules) {
+				runs.semicolonRun = tail
+				for (let participant of [`colonNewline`, ...FROM_THE_SEMICOLON] as Participant[]) runs.semicolon.add(participant)
+			}
+
+			return runs
 		}
 	}
 
-	if (readers.size > 0) for (let participant of FROM_THE_SEMICOLON) readers.add(participant)
+	runs.head.add(`colonSpace`).add(`colonNewline`)
 
-	return { run, readers }
+	return runs
 }
 
 /**
@@ -116,7 +133,7 @@ function accepts (participant: Participant, option: string, decl: Declaration): 
 /**
  * Asks whether the run a rule reads of this declaration is the run in front of its semicolon.
  *
- * A rule that writes into a shared run answers to the semicolon's side of it as much as to its own, and this is the question it asks before finishing the run for the neighbour — `sharedRunOf` above holds what counts as shared and for whom.
+ * A rule that writes into a shared run answers to the semicolon's side of it as much as to its own, and this is the question it asks before finishing the run for the neighbour — `sharedRunsOf` above holds what counts as shared and for whom, and the head run the two colon rules share between themselves does not answer it.
  * @param syntax - The syntax the asking rule is built over.
  * @param decl - The declaration.
  * @param ruleName - The name the asking rule is registered under.
@@ -125,7 +142,7 @@ function accepts (participant: Participant, option: string, decl: Declaration): 
 export function sharesRunWithSemicolon (syntax: Syntax, decl: Declaration, ruleName: string): boolean {
 	let asking = (Object.keys(PARTICIPANTS) as Participant[]).find((participant) => addNamespace(PARTICIPANTS[participant].name, syntax.namespace) === ruleName)
 
-	return asking !== undefined && sharedRunOf(syntax, decl).readers.has(asking)
+	return asking !== undefined && sharedRunsOf(syntax, decl).semicolon.has(asking)
 }
 
 /**
@@ -156,7 +173,10 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 
 	if (!asking) return true
 
-	let { run, readers } = sharedRunOf(syntax, decl)
+	let { head, semicolon, semicolonRun } = sharedRunsOf(syntax, decl)
+	// The semicolon's group holds the colon rules only where the head run reaches the semicolon, so wherever the asking rule stands in it, that group is the head's readers too
+	let readers = semicolon.has(asking) ? semicolon : head
+	let run = semicolonRun
 
 	if (!readers.has(asking)) return true
 
