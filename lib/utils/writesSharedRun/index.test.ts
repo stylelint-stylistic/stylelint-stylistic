@@ -145,6 +145,25 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { b:\n; top: 0;\n}`, { [COLON_SPACE]: `always`, [SEMICOLON_SPACE]: `never-single-line` }, COLON_SPACE)).toBe(true)
 	})
 
+	it(`the run at the head of a value carrying a flag, which the two colon rules share between themselves and the semicolon rules do not`, () => {
+		expect(ask(`a { b: !important ; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `always` }, COLON_NEWLINE)).toBe(false)
+		expect(ask(`a { b: !important ; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `always` }, COLON_SPACE)).toBe(true)
+		expect(ask(`a { b: !important ; }`, { [COLON_SPACE]: `always`, [COLON_NEWLINE]: `always` }, COLON_SPACE)).toBe(false)
+		expect(ask(`a { b: !important ; }`, { [COLON_SPACE]: `always`, [COLON_NEWLINE]: `always` }, COLON_NEWLINE)).toBe(true)
+	})
+
+	it(`the same head run on a value carrying a word, and a semicolon rule listed among the two, which reads no run of theirs`, () => {
+		expect(ask(`a { b:  c; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `always` }, COLON_NEWLINE)).toBe(false)
+		expect(ask(`a { b:  c; }`, { [COLON_NEWLINE]: `always`, [SEMICOLON_SPACE]: `never`, [COLON_SPACE]: `always` }, COLON_NEWLINE)).toBe(false)
+		expect(ask(`a { b:  c ; }`, { [COLON_SPACE]: `always`, [SEMICOLON_SPACE]: `never` }, COLON_SPACE)).toBe(true)
+		expect(ask(`a { b: // c\n; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `always` }, COLON_NEWLINE)).toBe(false)
+	})
+
+	it(`a block comment standing right on the colon, which parts the two colon rules' runs`, () => {
+		expect(ask(`a { b: /*c*/ x; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `never` }, COLON_SPACE)).toBe(true)
+		expect(ask(`a { b: /*c*/ x; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `never` }, COLON_NEWLINE)).toBe(true)
+	})
+
 	it(`the rules of the asking rule's own namespace, and not the core's`, () => {
 		let scss: Syntax = { ...css, namespace: `scss` }
 
