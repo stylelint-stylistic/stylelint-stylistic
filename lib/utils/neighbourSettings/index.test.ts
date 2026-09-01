@@ -18,13 +18,13 @@ describe(`neighbourSettings`, () => {
 	})
 
 	it(`each neighbour under the caller's key with its primary option, in the order the configuration lists them`, () => {
-		expect(read({ "@stylistic/declaration-block-semicolon-space-before": `always`, "@stylistic/declaration-block-semicolon-newline-before": `always` })).toEqual([[`space`, `always`], [`newline`, `always`]])
-		expect(read({ "@stylistic/declaration-block-semicolon-newline-before": `always`, "@stylistic/declaration-block-semicolon-space-before": `never` })).toEqual([[`newline`, `always`], [`space`, `never`]])
+		expect(read({ "@stylistic/declaration-block-semicolon-space-before": `always`, "@stylistic/declaration-block-semicolon-newline-before": `always` })).toEqual([[`space`, `always`, false], [`newline`, `always`, false]])
+		expect(read({ "@stylistic/declaration-block-semicolon-newline-before": `always`, "@stylistic/declaration-block-semicolon-space-before": `never` })).toEqual([[`newline`, `always`, false], [`space`, `never`, false]])
 	})
 
 	it(`the option out of the array a configuration lists a rule's options in`, () => {
-		expect(read({ "@stylistic/declaration-block-semicolon-space-before": [`never`] })).toEqual([[`space`, `never`]])
-		expect(read({ "@stylistic/declaration-block-semicolon-space-before": [`always`, {}] })).toEqual([[`space`, `always`]])
+		expect(read({ "@stylistic/declaration-block-semicolon-space-before": [`never`] })).toEqual([[`space`, `never`, false]])
+		expect(read({ "@stylistic/declaration-block-semicolon-space-before": [`always`, {}] })).toEqual([[`space`, `always`, false]])
 	})
 
 	it(`nothing for a rule listed with an option it refuses, or with no keyword at all`, () => {
@@ -33,15 +33,23 @@ describe(`neighbourSettings`, () => {
 		expect(read({ "@stylistic/declaration-block-semicolon-space-before": null })).toEqual([])
 	})
 
+	it(`whether the fix is turned off, read out of the secondary options the truthy way the report gate reads it`, () => {
+		expect(read({ "@stylistic/declaration-block-semicolon-space-before": [`never`, { disableFix: true }] })).toEqual([[`space`, `never`, true]])
+		expect(read({ "@stylistic/declaration-block-semicolon-space-before": [`never`, { disableFix: `yes` }] })).toEqual([[`space`, `never`, true]])
+		expect(read({ "@stylistic/declaration-block-semicolon-space-before": [`never`, { disableFix: false }] })).toEqual([[`space`, `never`, false]])
+		expect(read({ "@stylistic/declaration-block-semicolon-space-before": [`never`, { disableFix: 0 }] })).toEqual([[`space`, `never`, false]])
+		expect(read({ "@stylistic/declaration-block-semicolon-space-before": [`never`, { severity: `warning` }] })).toEqual([[`space`, `never`, false]])
+	})
+
 	it(`a table with a key left empty, as a table shared by callers with unlike neighbours leaves some`, () => {
-		expect(neighbourSettings<`space` | `newline`>(css, result({ "@stylistic/declaration-block-semicolon-space-before": `always` }), { space: RULES.space })).toEqual([[`space`, `always`]])
+		expect(neighbourSettings<`space` | `newline`>(css, result({ "@stylistic/declaration-block-semicolon-space-before": `always` }), { space: RULES.space })).toEqual([[`space`, `always`, false]])
 	})
 
 	it(`the names of the asking rule's own namespace, and not the core's`, () => {
 		let scss: Syntax = { ...css, namespace: `scss` }
 
 		expect(read({ "@stylistic/declaration-block-semicolon-space-before": `always` }, scss)).toEqual([])
-		expect(read({ "@stylistic/scss/declaration-block-semicolon-space-before": `always` }, scss)).toEqual([[`space`, `always`]])
+		expect(read({ "@stylistic/scss/declaration-block-semicolon-space-before": `always` }, scss)).toEqual([[`space`, `always`, false]])
 		expect(read({ "@stylistic/scss/declaration-block-semicolon-space-before": `always` })).toEqual([])
 	})
 
@@ -83,7 +91,7 @@ describe(`speaksOf`, () => {
  * @param syntax - The syntax the asking rule is built over.
  * @returns What `neighbourSettings` answers.
  */
-function read (rules: Record<string, unknown>, syntax: Syntax = css): [string, string][] {
+function read (rules: Record<string, unknown>, syntax: Syntax = css): [string, string, boolean][] {
 	return neighbourSettings(syntax, result(rules), RULES)
 }
 

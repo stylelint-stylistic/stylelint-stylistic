@@ -402,3 +402,23 @@ testRuleListedFirst({
 		},
 	],
 })
+
+testRuleListedFirst({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-block-semicolon-space-before": [`always`, { disableFix: true }] },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/485
+			description: `a neighbour whose fix is turned off and no live one speaking, whose ask the written semicolon still honours: the write is this rule's own text, not the turned-off fix`,
+			code: `a { b: c }`,
+			fixed: `a { b: c ; }`,
+			line: 1,
+			column: 8,
+			endLine: 1,
+			endColumn: 9,
+			message: messages.expected,
+		},
+	],
+})

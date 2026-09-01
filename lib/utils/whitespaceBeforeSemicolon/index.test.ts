@@ -73,6 +73,17 @@ describe(`whitespaceBeforeSemicolon`, () => {
 		expect(ask(MULTI_LINE, { [NEWLINE_BEFORE]: `always`, [SPACE_BEFORE]: `never-single-line` })).toBe(`\n`)
 	})
 
+	it(`the last-listed speaking rule whose fix is turned on, past one turned off behind it`, () => {
+		expect(ask(SINGLE_LINE, { [SPACE_BEFORE]: `always`, [NEWLINE_BEFORE]: [`always`, { disableFix: true }] })).toBe(` `)
+		expect(ask(SINGLE_LINE, { [NEWLINE_BEFORE]: [`always`, { disableFix: true }], [SPACE_BEFORE]: `always` })).toBe(` `)
+	})
+
+	it(`the ask of a turned-off rule where no live one speaks, written as this writer's own text`, () => {
+		expect(ask(SINGLE_LINE, { [SPACE_BEFORE]: [`always`, { disableFix: true }] })).toBe(` `)
+		expect(ask(SINGLE_LINE, { [NEWLINE_BEFORE]: [`always`, { disableFix: true }] })).toBe(`\n`)
+		expect(ask(SINGLE_LINE, { [SPACE_BEFORE]: [`always`, { disableFix: true }], [NEWLINE_BEFORE]: [`always`, { disableFix: true }] })).toBe(`\n`)
+	})
+
 	it(`the break the linebreaks rule asks for, wherever the configuration lists it`, () => {
 		expect(ask(SINGLE_LINE, { [NEWLINE_BEFORE]: `always`, "@stylistic/linebreaks": `windows` })).toBe(`\r\n`)
 		expect(ask(`a {\r\n\tb: c;\r\n\td: e\r\n}`, { [NEWLINE_BEFORE]: `always` })).toBe(`\r\n`)

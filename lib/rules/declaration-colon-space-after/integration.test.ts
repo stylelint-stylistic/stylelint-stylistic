@@ -277,3 +277,38 @@ testRule({
 		},
 	],
 })
+
+// A neighbour whose fix the configuration turned off reports the run and cannot rewrite it, so this rule writes past it instead of deferring (#485).
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-block-semicolon-space-before": [`never`, { disableFix: true }] },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/485
+			description: `a value that is nothing but a break, which the neighbour asks to take away and cannot: the space is written, and the neighbour's report stands over it as the configuration asked`,
+			code: `
+				a { color:
+				; }
+			`,
+			fixed: `a { color: ; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 11,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 11,
+					endLine: 1,
+					endColumn: 12,
+					message: declarationBlockSemicolonSpaceBeforeMessages.rejectedBefore(),
+				},
+			],
+		},
+	],
+})

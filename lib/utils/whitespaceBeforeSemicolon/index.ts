@@ -57,6 +57,8 @@ export function whitespaceBeforeSemicolon (syntax: Syntax, node: AtRule | Declar
 	let block = parent
 	let singleLine: boolean | undefined
 	let asked: Whitespace | undefined
+	let askedByTurnedOff: Whitespace | undefined
+	let aFixSpeaks = false
 
 	/**
 	 * Asks whether the block stands on one line, printing it once however many options turn on the answer.
@@ -68,12 +70,20 @@ export function whitespaceBeforeSemicolon (syntax: Syntax, node: AtRule | Declar
 		return singleLine
 	}
 
-	for (let [kind, option] of neighbourSettings(syntax, result, RULES_OF_WHITESPACE[node.type])) {
+	// The winner is the last-listed speaking rule whose fix is turned on, since that is the last write the file gets: a speaking rule whose fix the configuration turned off cannot rewrite what a live one leaves, so it wins only where no live one speaks — and there the whitespace it asks for is still written, the write being this writer's own text rather than the turned-off fix (#485)
+	for (let [kind, option, fixTurnedOff] of neighbourSettings(syntax, result, RULES_OF_WHITESPACE[node.type])) {
 		if (!speaksOf(option, isSingleLine)) continue
 
+		if (fixTurnedOff) {
+			askedByTurnedOff = option.startsWith(`always`) ? kind : undefined
+			continue
+		}
+
+		aFixSpeaks = true
 		asked = option.startsWith(`always`) ? kind : undefined
 	}
 
+	if (!aFixSpeaks) asked = askedByTurnedOff
 	if (asked === `newline`) return getLineBreak(syntax, node, result)
 
 	return asked === `space` ? ` ` : ``
