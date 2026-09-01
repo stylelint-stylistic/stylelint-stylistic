@@ -95,7 +95,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 									// Trim up to the break that already stands there, whichever character it is, and add one only where none does
 									let index = nodeToCheck.raws.before.search(LINE_BREAK)
 
-									nodeToCheck.raws.before = index >= 0 ? nodeToCheck.raws.before.slice(index) : getLineBreak(root, result) + nodeToCheck.raws.before
+									nodeToCheck.raws.before = index >= 0 ? nodeToCheck.raws.before.slice(index) : getLineBreak(syntax, root, result) + nodeToCheck.raws.before
 
 									return
 								}

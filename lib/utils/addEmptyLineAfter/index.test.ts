@@ -2,6 +2,8 @@ import { parse, type Rule } from "postcss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
+import { css as syntax } from "../../syntaxes/css/index.ts"
+
 import { addEmptyLineAfter } from "./index.ts"
 
 describe(`addEmptyLineAfter`, () => {
@@ -97,7 +99,7 @@ describe(`addEmptyLineAfter`, () => {
 function run (css: string, index: number = 0, rules: Record<string, unknown> = {}): string {
 	let root = parse(css)
 
-	addEmptyLineAfter(root.nodes[index] as Rule, { stylelint: { config: { rules } } } as unknown as PostcssResult)
+	addEmptyLineAfter(syntax, root.nodes[index] as Rule, { stylelint: { config: { rules } } } as unknown as PostcssResult)
 
 	return root.toString()
 }

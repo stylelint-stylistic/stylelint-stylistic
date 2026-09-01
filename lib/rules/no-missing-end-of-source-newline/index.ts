@@ -26,11 +26,12 @@ export let meta = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, which is `true`.
  * @param _secondaryOptions - The secondary options, of which this rule takes none.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true, _secondaryOptions: unknown): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: true, _secondaryOptions: unknown): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, { actual: primary })
 
@@ -67,7 +68,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true
 				let endsTheLine = TRAILING_LINE_BREAK.test(ended) && TRAILING_LINE_BREAK.test(endedInFile)
 
 				// The file is closed with the break a written one is spelled with: as `linebreaks` asks, or as the file spells its lines
-				root.raws.after = endsTheLine ? ended : after + getLineBreak(root, result)
+				root.raws.after = endsTheLine ? ended : after + getLineBreak(syntax, root, result)
 			},
 		})
 	}

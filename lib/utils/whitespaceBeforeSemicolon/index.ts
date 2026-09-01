@@ -88,7 +88,7 @@ export function whitespaceBeforeSemicolon (syntax: Syntax, decl: Declaration, re
 		asked = option.startsWith(`always`) ? kind : undefined
 	}
 
-	if (asked === `newline`) return getLineBreak(decl, result)
+	if (asked === `newline`) return getLineBreak(syntax, decl, result)
 
 	return asked === `space` ? ` ` : ``
 }

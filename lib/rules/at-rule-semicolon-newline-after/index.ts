@@ -73,7 +73,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						result,
 						ruleName,
 						fix () {
-							nodeToCheck.raws.before = getLineBreak(root, result) + nodeToCheck.raws.before
+							nodeToCheck.raws.before = getLineBreak(syntax, root, result) + nodeToCheck.raws.before
 						},
 					})
 				},

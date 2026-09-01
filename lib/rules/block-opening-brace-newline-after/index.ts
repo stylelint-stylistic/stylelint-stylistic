@@ -149,7 +149,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 									// Trim up to the break that already stands there, whichever character it is, and add one only where none does
 									let index = nodeToCheckRaws.before.search(LINE_BREAK)
 
-									nodeToCheckRaws.before = index >= 0 ? nodeToCheckRaws.before.slice(index) : getLineBreak(root, result) + nodeToCheckRaws.before
+									nodeToCheckRaws.before = index >= 0 ? nodeToCheckRaws.before.slice(index) : getLineBreak(syntax, root, result) + nodeToCheckRaws.before
 
 									backupCommentNextBefores.delete(nodeToCheck)
 

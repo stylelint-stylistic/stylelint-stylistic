@@ -85,7 +85,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let beforeValue = value.slice(0, valueIndex + 1)
 					let afterValue = value.slice(valueIndex + 1)
 
-					if (primary.startsWith(`always`)) afterValue = getLineBreak(root, result) + afterValue
+					if (primary.startsWith(`always`)) afterValue = getLineBreak(syntax, root, result) + afterValue
 					else if (primary.startsWith(`never-multi-line`)) afterValue = afterValue.replace(LEADING_WHITESPACE, ``)
 
 					syntax.write(decl, beforeValue + afterValue)

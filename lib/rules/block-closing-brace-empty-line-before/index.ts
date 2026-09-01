@@ -36,11 +36,12 @@ export let meta = {
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `always-multi-line` and `never`.
  * @param secondaryOptions - The secondary options: `except`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always-multi-line` | `never`, secondaryOptions: { except?: `after-closing-brace` | `after-closing-brace`[] }): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always-multi-line` | `never`, secondaryOptions: { except?: `after-closing-brace` | `after-closing-brace`[] }): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,
@@ -113,7 +114,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 						return
 					}
 
-					addEmptyLineAfter(statement, result)
+					addEmptyLineAfter(syntax, statement, result)
 				},
 			})
 		}

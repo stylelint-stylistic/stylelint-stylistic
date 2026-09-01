@@ -2,9 +2,11 @@ import type { Input, Node } from "postcss"
 import type { PostcssResult } from "stylelint"
 
 import { CAPTURED_LINE_BREAK } from "../../regexps.ts"
+import type { Syntax } from "../../syntaxes/index.ts"
+import { addNamespace } from "../addNamespace/index.ts"
 
-/** The setting of the one rule about the spelling of a break, under the name a configuration lists it by. */
-const LINEBREAKS_RULE = `@stylistic/linebreaks`
+/** The one rule about the spelling of a break, under the name its directory spells; a configuration lists it under the namespace of the family that reads the file. */
+const LINEBREAKS_RULE = `linebreaks`
 
 /** The break each of that rule's options asks for. */
 const BREAK_OF_OPTION = { unix: `\n`, windows: `\r\n` }
@@ -39,13 +41,14 @@ function lineBreakOfFile (node: Node): string | undefined {
  *
  * Three answers, in order: the one `linebreaks` asks for, where the configuration lists that rule, since a break another rule writes is a break `linebreaks` would otherwise have to respell — and Stylelint runs each rule once and in the order the configuration spells them, so written the other way it never would (#352); the one the file spells its lines with, where it spells any; and a line feed. Never the line ending of the machine, which `context.newline` falls back on: a stylesheet is written for the file it stands in and not for the machine it happens to be linted on.
  *
- * The setting is read out of `result.stylelint.config`, which holds every rule's normalised settings and is assigned before any rule runs, so the answer is the same wherever a break is written.
+ * The setting is read out of `result.stylelint.config`, which holds every rule's normalised settings and is assigned before any rule runs, so the answer is the same wherever a break is written. It is read under the name of the namespace the asking rule is registered under — `@stylistic/scss/linebreaks` for a rule of the scss family — since the configuration of a file lists the core's names and a namespace's alike, and the family that reads the file is the one the rule belongs to; read under the core's name alone, the setting was never found under a namespace, and the break fell back on the file's (#478).
+ * @param syntax - The syntax the asking rule is built over, whose namespace names the `linebreaks` rule.
  * @param node - A node of the file the break is written into.
  * @param result - The Stylelint result, which holds the configuration.
  * @returns The break to write.
  */
-export function getLineBreak (node: Node, result: PostcssResult): string {
-	let setting = result.stylelint?.config?.rules?.[LINEBREAKS_RULE]
+export function getLineBreak (syntax: Syntax, node: Node, result: PostcssResult): string {
+	let setting = result.stylelint?.config?.rules?.[addNamespace(LINEBREAKS_RULE, syntax.namespace)]
 	let option = Array.isArray(setting) ? setting[0] : setting
 
 	if (typeof option === `string` && option in BREAK_OF_OPTION) return BREAK_OF_OPTION[(option as keyof typeof BREAK_OF_OPTION)]

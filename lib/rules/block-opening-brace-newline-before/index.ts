@@ -101,8 +101,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								if (primary.startsWith(`always`)) {
 									let spaceIndex = statement.raws.between.search(TRAILING_SPACES_AND_TABS)
 
-									if (spaceIndex >= 0) statement.raws.between = statement.raws.between.slice(0, spaceIndex) + getLineBreak(root, result) + statement.raws.between.slice(spaceIndex)
-									else statement.raws.between += getLineBreak(root, result)
+									if (spaceIndex >= 0) statement.raws.between = statement.raws.between.slice(0, spaceIndex) + getLineBreak(syntax, root, result) + statement.raws.between.slice(spaceIndex)
+									else statement.raws.between += getLineBreak(syntax, root, result)
 								}
 								else if (primary.startsWith(`never`)) statement.raws.between = statement.raws.between.replace(TRAILING_WHITESPACE, ``)
 							},

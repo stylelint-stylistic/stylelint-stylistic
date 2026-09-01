@@ -106,7 +106,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let beforeSelector = fixedSelector.slice(0, index)
 					let afterSelector = fixedSelector.slice(index)
 
-					if (primary.startsWith(`always`)) afterSelector = getLineBreak(root, result) + afterSelector
+					if (primary.startsWith(`always`)) afterSelector = getLineBreak(syntax, root, result) + afterSelector
 					else if (primary.startsWith(`never-multi-line`)) afterSelector = afterSelector.replace(LEADING_WHITESPACE, ``)
 
 					fixedSelector = beforeSelector + afterSelector

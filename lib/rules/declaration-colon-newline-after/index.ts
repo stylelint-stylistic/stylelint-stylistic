@@ -99,7 +99,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 									let betweenAfter = between.slice(sliceIndex)
 
 									// Trim up to the break that already stands there, whichever character it is, and add one only where none does
-									decl.raws.between = OPENS_WITH_LINE_BREAK.test(betweenAfter) ? betweenBefore + betweenAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : betweenBefore + getLineBreak(root, result) + betweenAfter
+									decl.raws.between = OPENS_WITH_LINE_BREAK.test(betweenAfter) ? betweenBefore + betweenAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : betweenBefore + getLineBreak(syntax, root, result) + betweenAfter
 
 									return
 								}
@@ -110,7 +110,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								let valueAfter = syntax.read(decl)
 
 								if (OPENS_WITH_LINE_BREAK.test(valueAfter)) syntax.write(decl, valueAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``))
-								else decl.raws.between += getLineBreak(root, result)
+								else decl.raws.between += getLineBreak(syntax, root, result)
 							},
 						})
 					},

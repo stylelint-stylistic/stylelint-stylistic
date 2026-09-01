@@ -115,7 +115,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								let newlineAfter = firstWhitespaceIndex >= 0 ? raw.slice(firstWhitespaceIndex) : ``
 								let newlineIndex = newlineAfter.search(LINE_BREAK)
 
-								setBlockAfter(statement, newlineIndex >= 0 ? newlineBefore + newlineAfter.slice(newlineIndex) : newlineBefore + getLineBreak(root, result) + newlineAfter)
+								setBlockAfter(statement, newlineIndex >= 0 ? newlineBefore + newlineAfter.slice(newlineIndex) : newlineBefore + getLineBreak(syntax, root, result) + newlineAfter)
 							}
 							else if (primary === `never-multi-line`) setBlockAfter(statement, raw.replaceAll(EVERY_WHITESPACE, ``))
 						},

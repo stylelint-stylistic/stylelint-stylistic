@@ -80,7 +80,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let afterComma = params.slice(index + 1)
 
 					// Trim up to the break that already stands there, whichever character it is, and add one only where none does
-					if (primary.startsWith(`always`)) params = OPENS_WITH_LINE_BREAK.test(afterComma) ? beforeComma + afterComma.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : beforeComma + getLineBreak(root, result) + afterComma
+					if (primary.startsWith(`always`)) params = OPENS_WITH_LINE_BREAK.test(afterComma) ? beforeComma + afterComma.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : beforeComma + getLineBreak(syntax, root, result) + afterComma
 					else if (primary.startsWith(`never`)) params = beforeComma + afterComma.replace(LEADING_WHITESPACE, ``)
 				}
 

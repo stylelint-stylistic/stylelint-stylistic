@@ -86,7 +86,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					if (primary.startsWith(`always`)) {
 						let spaceIndex = beforeSelector.search(TRAILING_SPACES_AND_TABS)
 
-						beforeSelector = spaceIndex >= 0 ? beforeSelector.slice(0, spaceIndex) + getLineBreak(root, result) + beforeSelector.slice(spaceIndex) : beforeSelector + getLineBreak(root, result)
+						beforeSelector = spaceIndex >= 0 ? beforeSelector.slice(0, spaceIndex) + getLineBreak(syntax, root, result) + beforeSelector.slice(spaceIndex) : beforeSelector + getLineBreak(syntax, root, result)
 					}
 					else if (primary === `never-multi-line`) beforeSelector = beforeSelector.replace(TRAILING_WHITESPACE, ``)
 
