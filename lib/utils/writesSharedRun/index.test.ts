@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 
-import { writesSharedRun } from "./index.ts"
+import { sharesRunWithSemicolon, writesSharedRun } from "./index.ts"
 
 const COLON_SPACE = `@stylistic/declaration-colon-space-after`
 const COLON_NEWLINE = `@stylistic/declaration-colon-newline-after`
@@ -153,6 +153,42 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { b: ; }`, { "@stylistic/scss/declaration-colon-space-after": `always`, "@stylistic/scss/declaration-block-semicolon-space-before": `never` }, COLON_SPACE)).toBe(true)
 	})
 })
+
+describe(`sharesRunWithSemicolon`, () => {
+	it(`the run of a value that is nothing but whitespace, which both colon rules share with the semicolon`, () => {
+		expect(shares(`a { b: ; }`, COLON_SPACE)).toBe(true)
+		expect(shares(`a { b: ; }`, COLON_NEWLINE)).toBe(true)
+		expect(shares(`a { b:; }`, COLON_NEWLINE)).toBe(true)
+		expect(shares(`a { --b: ; }`, COLON_NEWLINE)).toBe(true)
+	})
+
+	it(`the run behind a comment on the colon's line, which the newline rule shares and the space rule does not`, () => {
+		expect(shares(`a { b: /*c*/ ; }`, COLON_NEWLINE)).toBe(true)
+		expect(shares(`a { b: /*c*/ ; }`, COLON_SPACE)).toBe(false)
+	})
+
+	it(`a declaration whose runs are two, or one a side passes over`, () => {
+		expect(shares(`a { b: c ; }`, COLON_NEWLINE)).toBe(false)
+		expect(shares(`a { b: !important ; }`, COLON_NEWLINE)).toBe(false)
+		expect(shares(`a { b: }`, COLON_NEWLINE)).toBe(false)
+	})
+
+	it(`a rule that is none of the four, and the names of the asking rule's own namespace`, () => {
+		expect(shares(`a { b: ; }`, `@stylistic/color-hex-case`)).toBe(false)
+		expect(shares(`a { b: ; }`, `@stylistic/scss/declaration-colon-newline-after`)).toBe(false)
+		expect(sharesRunWithSemicolon({ ...css, namespace: `scss` }, lastDeclarationOf(`a { b: ; }`), `@stylistic/scss/declaration-colon-newline-after`)).toBe(true)
+	})
+})
+
+/**
+ * Asks whether the named rule's run of the last declaration of a stylesheet's first rule is the semicolon's too.
+ * @param code - The stylesheet.
+ * @param ruleName - The name of the asking rule.
+ * @returns What `sharesRunWithSemicolon` answers.
+ */
+function shares (code: string, ruleName: string): boolean {
+	return sharesRunWithSemicolon(css, lastDeclarationOf(code), ruleName)
+}
 
 /**
  * Asks whether a rule writes the run of the last declaration of a stylesheet's first rule.

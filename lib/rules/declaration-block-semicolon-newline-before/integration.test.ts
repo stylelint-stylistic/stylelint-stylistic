@@ -1,3 +1,5 @@
+import { messages as colonNewlineAfterMessages } from "../declaration-colon-newline-after/index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 // Where a declaration's value is nothing but whitespace, the run this rule reads in front of the semicolon is the run the `declaration-colon-*-after` rules read behind the colon (#416). The library lists the rule a block names first and its extra rules behind it, so every block below has the neighbour run last and have the last word.
@@ -45,6 +47,37 @@ testRule({
 			endLine: 1,
 			endColumn: 12,
 			message: messages.rejectedBeforeMultiLine(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-colon-newline-after": `always` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/417
+			description: `the shared run written by this rule first, which the other order now spells the same way`,
+			code: `a { color:  /*c*/ ; }`,
+			fixed: `a { color:  /*c*/\n; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 18,
+					endLine: 1,
+					endColumn: 19,
+					message: messages.expectedBefore(),
+				},
+				{
+					line: 1,
+					column: 17,
+					endLine: 1,
+					endColumn: 18,
+					message: colonNewlineAfterMessages.expectedAfter(),
+				},
+			],
 		},
 	],
 })

@@ -132,12 +132,10 @@ testRule({
 
 	reject: [
 		{
-			description: `a neighbour asking for a break of its own, which the one this rule writes answers as well`,
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/417
+			description: `a neighbour asking for a break of its own, which the one this rule writes answers as well: the run is written down to the bare break the neighbour's fix spells, so both orders rest on one file`,
 			code: `a { color: ; }`,
-			fixed: `
-				a { color:
-				 ; }
-			`,
+			fixed: `a { color:\n; }`,
 			warnings: [
 				{
 					line: 1,
@@ -151,6 +149,69 @@ testRule({
 					column: 11,
 					endLine: 1,
 					endColumn: 12,
+					message: semicolonNewlineBeforeMessages.expectedBefore(),
+				},
+			],
+		},
+		{
+			description: `a comment on the colon's line, behind which the shared run and its tail stand`,
+			code: `a { color:  /*c*/ ; }`,
+			fixed: `a { color:  /*c*/\n; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 17,
+					endLine: 1,
+					endColumn: 18,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 18,
+					endLine: 1,
+					endColumn: 19,
+					message: semicolonNewlineBeforeMessages.expectedBefore(),
+				},
+			],
+		},
+		{
+			description: `a run spelled with a tab, which does not survive the break either`,
+			code: `a { color:\t; }`,
+			fixed: `a { color:\n; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 11,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 11,
+					endLine: 1,
+					endColumn: 12,
+					message: semicolonNewlineBeforeMessages.expectedBefore(),
+				},
+			],
+		},
+		{
+			description: `a custom property, whose run is written down to the break like any other`,
+			code: `a { --a: ; }`,
+			fixed: `a { --a:\n; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 8,
+					endLine: 1,
+					endColumn: 9,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 9,
+					endLine: 1,
+					endColumn: 10,
 					message: semicolonNewlineBeforeMessages.expectedBefore(),
 				},
 			],

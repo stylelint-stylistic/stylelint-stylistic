@@ -114,6 +114,21 @@ function accepts (participant: Participant, option: string, decl: Declaration): 
 }
 
 /**
+ * Asks whether the run a rule reads of this declaration is the run in front of its semicolon.
+ *
+ * A rule that writes into a shared run answers to the semicolon's side of it as much as to its own, and this is the question it asks before finishing the run for the neighbour — `sharedRunOf` above holds what counts as shared and for whom.
+ * @param syntax - The syntax the asking rule is built over.
+ * @param decl - The declaration.
+ * @param ruleName - The name the asking rule is registered under.
+ * @returns True where the asking rule is one of the four and its run is the semicolon's too.
+ */
+export function sharesRunWithSemicolon (syntax: Syntax, decl: Declaration, ruleName: string): boolean {
+	let asking = (Object.keys(PARTICIPANTS) as Participant[]).find((participant) => addNamespace(PARTICIPANTS[participant].name, syntax.namespace) === ruleName)
+
+	return asking !== undefined && sharedRunOf(syntax, decl).readers.has(asking)
+}
+
+/**
  * Counts the line breaks of a text.
  * @param text - The text.
  * @returns How many breaks it holds.

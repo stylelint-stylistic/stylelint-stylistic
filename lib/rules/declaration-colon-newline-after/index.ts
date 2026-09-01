@@ -1,6 +1,6 @@
 import stylelint from "stylelint"
 
-import { LEADING_WHITESPACE_WITHOUT_BREAK, OPENS_WITH_BLOCK_COMMENT, OPENS_WITH_LINE_BREAK } from "../../regexps.ts"
+import { LEADING_WHITESPACE_WITHOUT_BREAK, LINE_BREAK, OPENS_WITH_BLOCK_COMMENT, OPENS_WITH_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { declarationColonSource } from "../../utils/declarationColonSource/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
@@ -10,8 +10,9 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { moveDeclarationValueHeadIntoBetween } from "../../utils/moveDeclarationValueHeadIntoBetween/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { assertString } from "../../utils/validateTypes/index.ts"
+import { whitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
-import { writesSharedRun } from "../../utils/writesSharedRun/index.ts"
+import { sharesRunWithSemicolon, writesSharedRun } from "../../utils/writesSharedRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -64,6 +65,17 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let walkStart = declarationValueIndex(decl) - decl.raws.between.length
 			// Where nothing but whitespace stands behind the colon, or behind the comment on its line, down to the end of the value, the run this rule asks about is the one in front of the semicolon as well, and the rules asked about it settle between them which of them write it (#416)
 			let isFixable = writesSharedRun(syntax, decl, result, ruleName)
+			// And where that shared run is one `declaration-block-semicolon-newline-before` asks a break for, the fix below writes the run down to that bare break — the very text the neighbour's own fix spells — so both orders of the two rules rest on one file rather than the first-listed one deciding whether the whitespace in front of the semicolon survives (#417)
+			let finishesTheRun = isFixable && sharesRunWithSemicolon(syntax, decl, ruleName) && LINE_BREAK.test(whitespaceBeforeSemicolon(syntax, decl, result))
+
+			/** Takes the spaces and tabs off the end of the shared run the fix has just written its break into, wherever the declaration keeps them, so that the run is the bare break the neighbour asks for. */
+			function finishTheRun (): void {
+				if (!finishesTheRun) return
+
+				syntax.write(decl, syntax.read(decl).replace(TRAILING_SPACES_AND_TABS, ``))
+
+				if (syntax.read(decl) === `` && decl.raws.between) decl.raws.between = decl.raws.between.replace(TRAILING_SPACES_AND_TABS, ``)
+			}
 
 			for (let i = walkStart, l = declarationValueIndex(decl); i < l; i += 1) {
 				if (source[i] !== `:`) continue
@@ -105,6 +117,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 										// Trim up to the break that already stands there, whichever character it is, and add one only where none does
 										decl.raws.between = OPENS_WITH_LINE_BREAK.test(betweenAfter) ? betweenBefore + betweenAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : betweenBefore + getLineBreak(syntax, root, result) + betweenAfter
 
+										finishTheRun()
+
 										return
 									}
 
@@ -115,6 +129,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 									if (OPENS_WITH_LINE_BREAK.test(valueAfter)) syntax.write(decl, valueAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``))
 									else decl.raws.between += getLineBreak(syntax, root, result)
+
+									finishTheRun()
 								},
 							}),
 						})
