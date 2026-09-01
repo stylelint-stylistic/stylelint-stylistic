@@ -1,6 +1,6 @@
 import stylelint from "stylelint"
 
-import { LEADING_WHITESPACE_WITHOUT_BREAK, LINE_BREAK, OPENS_WITH_BLOCK_COMMENT, OPENS_WITH_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
+import { LEADING_WHITESPACE_WITHOUT_BREAK, LINE_BREAK, OPENS_WITH_BLOCK_COMMENT, OPENS_WITH_LINE_BREAK, TRAILING_WHITESPACE_WITHOUT_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { declarationColonSource } from "../../utils/declarationColonSource/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
@@ -68,13 +68,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// And where that shared run is one `declaration-block-semicolon-newline-before` asks a break for, the fix below writes the run down to that bare break — the very text the neighbour's own fix spells — so both orders of the two rules rest on one file rather than the first-listed one deciding whether the whitespace in front of the semicolon survives (#417)
 			let finishesTheRun = isFixable && sharesRunWithSemicolon(syntax, decl, ruleName) && LINE_BREAK.test(whitespaceBeforeSemicolon(syntax, decl, result))
 
-			/** Takes the spaces and tabs off the end of the shared run the fix has just written its break into, wherever the declaration keeps them, so that the run is the bare break the neighbour asks for. */
+			/** Takes the whitespace that is no part of a break off the end of the shared run the fix has just written its break into — a bare carriage return and a form feed with the spaces and tabs, since the neighbour's own fix replaces the whole run (#488) — wherever the declaration keeps it, so that the run is the bare break the neighbour asks for. */
 			function finishTheRun (): void {
 				if (!finishesTheRun) return
 
-				syntax.write(decl, syntax.read(decl).replace(TRAILING_SPACES_AND_TABS, ``))
+				syntax.write(decl, syntax.read(decl).replace(TRAILING_WHITESPACE_WITHOUT_BREAK, ``))
 
-				if (syntax.read(decl) === `` && decl.raws.between) decl.raws.between = decl.raws.between.replace(TRAILING_SPACES_AND_TABS, ``)
+				if (syntax.read(decl) === `` && decl.raws.between) decl.raws.between = decl.raws.between.replace(TRAILING_WHITESPACE_WITHOUT_BREAK, ``)
 			}
 
 			for (let i = walkStart, l = declarationValueIndex(decl); i < l; i += 1) {

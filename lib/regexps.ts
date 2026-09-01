@@ -265,6 +265,9 @@ export const TRAILING_WHITESPACE = /\s*$/u
 /** The whitespace a text ends in, where it ends in any: a search answers -1 on a text that does not. */
 export const TRAILING_WHITESPACE_RUN = /\s+$/u
 
+/** The whitespace a text ends in, down to its last line break, which is left standing whole — the carriage return of a Windows pair with it. A bare carriage return and a form feed are whitespace and no break, so they go with the rest; the trailing twin of {@link LEADING_WHITESPACE_WITHOUT_BREAK}. */
+export const TRAILING_WHITESPACE_WITHOUT_BREAK = /(?:(?!\r?\n)\s)+$/u
+
 /** A `url(` at the end of a text, with nothing in front of it that a longer name could reach into. */
 export const URL_CALL_AT_END = /(?:^|[^\w-])url\($/iu
 

@@ -197,6 +197,49 @@ testRule({
 			],
 		},
 		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/488
+			description: `a run spelled with a bare carriage return, which is whitespace and no break, and goes with the trim like a space`,
+			code: `a { color: \r; }`,
+			fixed: `a { color:\n; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 11,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 12,
+					endLine: 1,
+					endColumn: 13,
+					message: semicolonNewlineBeforeMessages.expectedBefore(),
+				},
+			],
+		},
+		{
+			description: `the same run spelled with a form feed`,
+			code: `a { color: \f; }`,
+			fixed: `a { color:\n; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 11,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 12,
+					endLine: 1,
+					endColumn: 13,
+					message: semicolonNewlineBeforeMessages.expectedBefore(),
+				},
+			],
+		},
+		{
 			description: `a custom property, whose run is written down to the break like any other`,
 			code: `a { --a: ; }`,
 			fixed: `a { --a:\n; }`,
