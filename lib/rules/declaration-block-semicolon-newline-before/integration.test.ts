@@ -1,4 +1,5 @@
 import { messages as colonNewlineAfterMessages } from "../declaration-colon-newline-after/index.ts"
+import { messages as colonSpaceAfterMessages } from "../declaration-colon-space-after/index.ts"
 
 import { messages, ruleName } from "./index.ts"
 
@@ -118,6 +119,63 @@ testRule({
 			column: 9,
 			endLine: 1,
 			endColumn: 10,
+			message: messages.expectedBefore(),
+		},
+	],
+})
+
+// The break this rule's fix puts onto the value's copy is laid out the way the parser lays it — the run in the raw, `decl.value` without it — so a colon rule reading the value's lineness later in the pass reads what the next parse would hand it (#487). Both blocks run this rule first: the order in which its break used to make the declaration read as multi-line for the rest of the pass.
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-colon-space-after": `always-single-line` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/487
+			description: `a single-line declaration missing its space, which the neighbour used to fall silent about once the written break polluted the value's copy: both fixes land in one run now`,
+			code: `a { color:red; }`,
+			fixed: `
+				a { color: red
+				; }
+			`,
+			warnings: [
+				{
+					line: 1,
+					column: 13,
+					endLine: 1,
+					endColumn: 14,
+					message: messages.expectedBefore(),
+				},
+				{
+					line: 1,
+					column: 11,
+					endLine: 1,
+					endColumn: 12,
+					message: colonSpaceAfterMessages.expectedAfterSingleLine(),
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-colon-newline-after": `always-multi-line` },
+
+	reject: [
+		{
+			description: `a single-line declaration whose written break used to wake the neighbour's multi-line option, which the next parse never would have: the neighbour stays silent now, and both orders rest on one file`,
+			code: `a { color: red; }`,
+			fixed: `
+				a { color: red
+				; }
+			`,
+			line: 1,
+			column: 14,
+			endLine: 1,
+			endColumn: 15,
 			message: messages.expectedBefore(),
 		},
 	],

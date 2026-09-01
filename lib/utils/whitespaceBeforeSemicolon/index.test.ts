@@ -117,14 +117,16 @@ describe(`whitespaceBeforeSemicolon`, () => {
 })
 
 describe(`writeWhitespaceBeforeSemicolon`, () => {
-	it(`onto the end of the value, over the whitespace it ends with`, () => {
+	it(`onto the end of the value, laid out the way the parser lays it: the run in the raw, the value without it`, () => {
 		let decl = lastDeclarationOf(`a { b: c }`)
 
 		writeWhitespaceBeforeSemicolon(css, decl, ` `)
-		expect(decl.value).toBe(`c `)
+		expect(decl.value).toBe(`c`)
+		expect(decl.raws.value).toEqual({ raw: `c `, value: `c` })
 
 		writeWhitespaceBeforeSemicolon(css, decl, `\n`)
-		expect(decl.value).toBe(`c\n`)
+		expect(decl.value).toBe(`c`)
+		expect(decl.raws.value).toEqual({ raw: `c\n`, value: `c` })
 	})
 
 	it(`into the raw of the flag, where the declaration carries one, spelled as the file spells it`, () => {

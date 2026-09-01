@@ -184,3 +184,47 @@ function collect (root: Root | Document): Rule {
 
 	return pick(list)
 }
+
+describe(`writePrintedText and the value's trailing run`, () => {
+	it(`a text ending in whitespace written to a declaration the parser left no raw beside, laid out as the parser would lay it`, () => {
+		let declaration = lastDeclarationOf(`a { b: red }`)
+
+		writePrintedText(declaration, `red\n`)
+		expect(declaration.value).toBe(`red`)
+		expect(declaration.raws.value).toEqual({ raw: `red\n`, value: `red` })
+		expect(declaration.toString()).toBe(`b: red\n`)
+	})
+
+	it(`a text that is nothing but whitespace, which is the very shape the parser writes for a wordless value`, () => {
+		let declaration = lastDeclarationOf(`a { b: red }`)
+
+		writePrintedText(declaration, `\n`)
+		expect(declaration.value).toBe(``)
+		expect(declaration.raws.value).toEqual({ raw: `\n`, value: `` })
+	})
+
+	it(`a text with no trailing run, which goes into the value whole and leaves no raw behind`, () => {
+		let declaration = lastDeclarationOf(`a { b: red }`)
+
+		writePrintedText(declaration, `blue`)
+		expect(declaration.value).toBe(`blue`)
+		expect(declaration.raws.value).toBeUndefined()
+	})
+
+	it(`a custom property, whose value is the printed text itself, the trailing run included`, () => {
+		let declaration = lastDeclarationOf(`a { --b: x }`)
+
+		writePrintedText(declaration, ` x\n`)
+		expect(declaration.value).toBe(` x\n`)
+		expect(declaration.raws.value).toBeUndefined()
+	})
+})
+
+/**
+ * Parses a stylesheet and picks the last declaration of its first rule.
+ * @param code - The stylesheet.
+ * @returns The declaration.
+ */
+function lastDeclarationOf (code: string): Declaration {
+	return (parse(code).first as Rule).last as Declaration
+}
