@@ -1,5 +1,7 @@
 import type { AtRule, Declaration, Rule } from "postcss"
 
+import { TRAILING_WHITESPACE_RUN } from "../../regexps.ts"
+import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
 import { rewriteInlineComments } from "../../utils/rewriteInlineComments/index.ts"
 import { isDeclaration, isRule, type SyntaxRaw } from "../../utils/typeGuards/index.ts"
 
@@ -62,7 +64,12 @@ export function writePrintedText (node: AtRule | Declaration | Rule, text: strin
 		}
 	}
 	else if (isDeclaration(node)) {
-		node.value = text
+		// The parser keeps the trailing whitespace run of every value but a custom property's out of `decl.value`, filing the full text in `raws.value` beside the run-less copy — so a written text is laid out the same way, and a reader of the value's lineness within the pass reads what the next parse would hand it: the break `writeWhitespaceBeforeSemicolon` puts onto the value used to land in `decl.value` itself and read as a line of the declaration until the next parse took it back (#487). A custom property's value is the printed text itself, its trailing run included, to the parser as much as to this write
+		let value = isCustomProperty(node.prop) ? text : text.replace(TRAILING_WHITESPACE_RUN, ``)
+
+		if (value !== text) node.raws.value = { raw: text, value }
+
+		node.value = value
 	}
 	else if (isRule(node)) {
 		node.selector = text
