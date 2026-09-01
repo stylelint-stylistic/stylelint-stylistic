@@ -1,4 +1,4 @@
-import type { ChildNode, Container, Node } from "postcss"
+import type { AtRule, ChildNode, Container, Declaration, Node } from "postcss"
 import stylelint, { type PostcssResult } from "stylelint"
 
 import { TRAILING_WHITESPACE } from "../../regexps.ts"
@@ -161,15 +161,21 @@ function trailingSemicolonIndex (node: ChildNode): number | undefined {
 }
 
 /**
- * Takes every semicolon standing behind the node away, the one the flag speaks of and the ones the raws hold alike, and leaves the whitespace around each of them where it stands.
+ * Takes every semicolon standing behind the node away, the one the flag speaks of and the ones the raws hold alike, and takes the whitespace in front of the flag's own along with it.
  *
  * Taking one of them alone away would leave the block ending on a semicolon still, and that is what used to happen: the flag's own semicolon went, the raws kept theirs, and the next parse read the first of those as the flag's in its turn. So one run of `--fix` ended clean over a file the rule still had something to say about, and the work needed a second.
+ *
+ * The whitespace in front of the flag's own semicolon is the end of the node's value, of the raw of its flag or of a bodiless at-rule's `raws.between` — the three texts `writeWhitespaceBeforeSemicolon` writes into — and once the semicolon is gone nothing reads it back, so it goes with the semicolon it stood in front of (#479): the run a `declaration-block-semicolon-*-before` rule wrote there, or the author's own, used to outlive the semicolon whenever that rule was listed first, and the file went with the order. A semicolon parked in a raw behind the node is another matter: what stands in front of it is a comment's layout, and it stays as it is. And where the node's text ends with an inline comment, the whitespace opens with the line break that closes it, so nothing is trimmed there — the rules about that whitespace decline the same node for the same reason, and no order can put a run there for this fix to meet.
+ * @param syntax - The syntax the rule is built over.
  * @param node - The node closing the block.
+ * @param result - The Stylelint result, which holds the syntax the file was opened with.
  */
-function takeTheTrailingSemicolonsAway (node: ChildNode): void {
+function takeTheTrailingSemicolonsAway (syntax: Syntax, node: AtRule | Declaration, result: PostcssResult): void {
 	let { parent } = node
 
 	if (!parent) throw new Error(`The node must stand in a block`)
+
+	if (parent.raws.semicolon && !syntax.writesIntoInlineComment(node, result)) writeWhitespaceBeforeSemicolon(syntax, node, ``)
 
 	parent.raws.semicolon = false
 
@@ -245,7 +251,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		 * Checks the last node for trailing semicolon violations.
 		 * @param node - The node to check.
 		 */
-		function checkLastNode (node: ChildNode): void {
+		function checkLastNode (node: AtRule | Declaration): void {
 			let { parent } = node
 
 			if (!parent) throw new Error(`A parent node must be present`)
@@ -303,7 +309,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								}
 								else if (isDeclaration(node) && whitespace) writeWhitespaceBeforeSemicolon(syntax, node, whitespace)
 							}
-							else if (primary === `never`) takeTheTrailingSemicolonsAway(node)
+							else if (primary === `never`) takeTheTrailingSemicolonsAway(syntax, node, result)
 						},
 					}),
 				})

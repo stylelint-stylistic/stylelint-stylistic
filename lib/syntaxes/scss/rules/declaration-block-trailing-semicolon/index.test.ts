@@ -553,3 +553,23 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`never`],
+	customSyntax: `postcss-scss`,
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/479
+			description: `an inline comment ending the declaration, whose closing break the strip leaves where it stands, taking the semicolon alone`,
+			code: `a { b: c // x\n; }`,
+			fixed: `a { b: c // x\n }`,
+			line: 2,
+			column: 1,
+			endLine: 2,
+			endColumn: 2,
+			message: messages.rejected,
+		},
+	],
+})

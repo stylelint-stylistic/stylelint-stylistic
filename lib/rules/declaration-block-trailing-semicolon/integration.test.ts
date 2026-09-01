@@ -4,6 +4,8 @@ import { messages as spaceBeforeMessages, ruleName as spaceBeforeRuleName } from
 
 import { messages, ruleName } from "./index.ts"
 
+let testRuleListedFirst = createTestRule({ ruleName })
+
 // The semicolon this rule writes is formatted by neither rule about the whitespace in front of a block's semicolons where the configuration lists that rule ahead of this one (#354), and the one it writes behind an at-rule is one `at-rule-semicolon-space-before` has no fixer to space at all (#477). The library lists the rule a block names first and its extra rules behind it, so every block below names the neighbour and lists this rule as the extra one: for the declaration rules that is the order the fix has to answer for, since in the other one the neighbour respells whatever this rule wrote, and the at-rule blocks keep it for uniformity, their neighbour having nothing to respell in either order.
 let testRule = createTestRule({ ruleName, extraRules: { [ruleName]: `always` } })
 
@@ -305,6 +307,98 @@ testRule({
 			line: 1,
 			column: 12,
 			message: messages.expected,
+		},
+	],
+})
+
+// The whitespace in front of the semicolon `never` takes away goes with it (#479). The library lists the rule a block names first and its extra rules behind it, so the two blocks below run the neighbour first — the order in which the run that neighbour wrote used to outlive the semicolon — and the third runs this rule first, pinning that both orders rest on one file.
+testRule({
+	ruleName: spaceBeforeRuleName,
+	config: [`always`],
+	extraRules: { [ruleName]: `never` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/479
+			description: `the space the neighbour writes in front of the semicolon, which the strip takes along instead of leaving it in front of the brace`,
+			code: `a { aspect-ratio: 2; }`,
+			fixed: `a { aspect-ratio: 2 }`,
+			warnings: [
+				{
+					line: 1,
+					column: 19,
+					endLine: 1,
+					endColumn: 20,
+					message: spaceBeforeMessages.expectedBefore(),
+				},
+				{
+					line: 1,
+					column: 20,
+					endLine: 1,
+					endColumn: 21,
+					message: messages.rejected,
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName: newlineBeforeRuleName,
+	config: [`always`],
+	extraRules: { [ruleName]: `never` },
+
+	reject: [
+		{
+			description: `the break the newline neighbour writes there, which goes the same way`,
+			code: `a { aspect-ratio: 2; }`,
+			fixed: `a { aspect-ratio: 2 }`,
+			warnings: [
+				{
+					line: 1,
+					column: 19,
+					endLine: 1,
+					endColumn: 20,
+					message: newlineBeforeMessages.expectedBefore(),
+				},
+				{
+					line: 1,
+					column: 20,
+					endLine: 1,
+					endColumn: 21,
+					message: messages.rejected,
+				},
+			],
+		},
+	],
+})
+
+testRuleListedFirst({
+	ruleName,
+	config: [`never`],
+	extraRules: { "@stylistic/declaration-block-semicolon-space-before": `always` },
+
+	reject: [
+		{
+			description: `the same pair the other way round, resting on the same file: the semicolon goes first, and the run the neighbour asked for goes unwritten with it`,
+			code: `a { aspect-ratio: 2; }`,
+			fixed: `a { aspect-ratio: 2 }`,
+			warnings: [
+				{
+					line: 1,
+					column: 20,
+					endLine: 1,
+					endColumn: 21,
+					message: messages.rejected,
+				},
+				{
+					line: 1,
+					column: 19,
+					endLine: 1,
+					endColumn: 20,
+					message: spaceBeforeMessages.expectedBefore(),
+				},
+			],
 		},
 	],
 })

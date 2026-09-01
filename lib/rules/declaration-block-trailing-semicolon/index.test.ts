@@ -329,6 +329,56 @@ testRule({
 			message: messages.rejected,
 		},
 		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/479
+			description: `a space in front of the semicolon, which goes with it rather than doubling the one in front of the brace`,
+			code: `a { b: c ; }`,
+			fixed: `a { b: c }`,
+			line: 1,
+			column: 10,
+			message: messages.rejected,
+		},
+		{
+			description: `a break and an indent in front of the semicolon, which go with it rather than leaving an empty line`,
+			code: `
+				a {
+					b: c
+					;
+				}
+			`,
+			fixed: `
+				a {
+					b: c
+				}
+			`,
+			line: 3,
+			column: 2,
+			message: messages.rejected,
+		},
+		{
+			description: `a flag with a space in front of the semicolon, whose raw is where the run goes from`,
+			code: `a { b: c !important ; }`,
+			fixed: `a { b: c !important }`,
+			line: 1,
+			column: 21,
+			message: messages.rejected,
+		},
+		{
+			description: `a custom property whose value is nothing but the run, which goes whole`,
+			code: `a { --a: ; }`,
+			fixed: `a { --a: }`,
+			line: 1,
+			column: 10,
+			message: messages.rejected,
+		},
+		{
+			description: `a bodiless at-rule with a space in front of the semicolon, whose own raw is where the run goes from`,
+			code: `a { @foo bar ; }`,
+			fixed: `a { @foo bar }`,
+			line: 1,
+			column: 14,
+			message: messages.rejected,
+		},
+		{
 			description: `a block of two declarations, the last carrying a semicolon`,
 			code: `a { background: orange; color: pink; }`,
 			fixed: `a { background: orange; color: pink }`,
