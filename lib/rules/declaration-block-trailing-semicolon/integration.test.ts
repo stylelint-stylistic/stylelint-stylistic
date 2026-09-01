@@ -1,9 +1,10 @@
+import { ruleName as atRuleSpaceBeforeRuleName } from "../at-rule-semicolon-space-before/index.ts"
 import { messages as newlineBeforeMessages, ruleName as newlineBeforeRuleName } from "../declaration-block-semicolon-newline-before/index.ts"
 import { messages as spaceBeforeMessages, ruleName as spaceBeforeRuleName } from "../declaration-block-semicolon-space-before/index.ts"
 
 import { messages, ruleName } from "./index.ts"
 
-// The semicolon this rule writes is formatted by neither rule about the whitespace in front of a block's semicolons where the configuration lists that rule ahead of this one (#354). The library lists the rule a block names first and its extra rules behind it, so every block below names the neighbour and lists this rule as the extra one: that is the order the fix has to answer for, since in the other one the neighbour respells whatever this rule wrote.
+// The semicolon this rule writes is formatted by neither rule about the whitespace in front of a block's semicolons where the configuration lists that rule ahead of this one (#354), and the one it writes behind an at-rule is one `at-rule-semicolon-space-before` has no fixer to space at all (#477). The library lists the rule a block names first and its extra rules behind it, so every block below names the neighbour and lists this rule as the extra one: for the declaration rules that is the order the fix has to answer for, since in the other one the neighbour respells whatever this rule wrote, and the at-rule blocks keep it for uniformity, their neighbour having nothing to respell in either order.
 let testRule = createTestRule({ ruleName, extraRules: { [ruleName]: `always` } })
 
 testRule({
@@ -254,6 +255,55 @@ testRule({
 			`,
 			line: 3,
 			column: 5,
+			message: messages.expected,
+		},
+	],
+})
+
+testRule({
+	ruleName: atRuleSpaceBeforeRuleName,
+	config: [`always`],
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/477
+			description: `a bodiless at-rule closing the block, whose written semicolon gets the space that rule asks for and has no fixer to write`,
+			code: `a { @foo bar }`,
+			fixed: `a { @foo bar ; }`,
+			line: 1,
+			column: 12,
+			message: messages.expected,
+		},
+		{
+			description: `a block comment standing between the parameters and the brace, which the space and the semicolon are written behind`,
+			code: `a { @foo bar /* c */ }`,
+			fixed: `a { @foo bar /* c */ ; }`,
+			line: 1,
+			column: 20,
+			message: messages.expected,
+		},
+		{
+			description: `an at-rule standing behind a declaration, which closes the block in its place`,
+			code: `a { b: c; @foo bar }`,
+			fixed: `a { b: c; @foo bar ; }`,
+			line: 1,
+			column: 18,
+			message: messages.expected,
+		},
+	],
+})
+
+testRule({
+	ruleName: atRuleSpaceBeforeRuleName,
+	config: [`never`],
+
+	reject: [
+		{
+			description: `a bodiless at-rule closing the block tight against the brace, whose written semicolon is bare as that rule asks`,
+			code: `a { @foo bar}`,
+			fixed: `a { @foo bar;}`,
+			line: 1,
+			column: 12,
 			message: messages.expected,
 		},
 	],

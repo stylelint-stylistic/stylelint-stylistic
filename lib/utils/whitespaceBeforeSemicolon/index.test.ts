@@ -1,4 +1,4 @@
-import { type Declaration, parse, type Rule } from "postcss"
+import { type AtRule, type Declaration, parse, type Rule } from "postcss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
@@ -9,6 +9,7 @@ import { whitespaceBeforeSemicolon, writeWhitespaceBeforeSemicolon } from "./ind
 
 const NEWLINE_BEFORE = `@stylistic/declaration-block-semicolon-newline-before`
 const SPACE_BEFORE = `@stylistic/declaration-block-semicolon-space-before`
+const AT_RULE_SPACE_BEFORE = `@stylistic/at-rule-semicolon-space-before`
 
 /** A block on one line. */
 const SINGLE_LINE = `a { b: c; d: e }`
@@ -77,12 +78,30 @@ describe(`whitespaceBeforeSemicolon`, () => {
 		expect(ask(`a {\r\n\tb: c;\r\n\td: e\r\n}`, { [NEWLINE_BEFORE]: `always` })).toBe(`\r\n`)
 	})
 
+	it(`the space rule of at-rules behind a bodiless at-rule, and neither rule of declarations`, () => {
+		expect(askAtRule(`a { @foo bar }`, { [AT_RULE_SPACE_BEFORE]: `always` })).toBe(` `)
+		expect(askAtRule(`a { @foo bar }`, { [AT_RULE_SPACE_BEFORE]: [`always`] })).toBe(` `)
+		expect(askAtRule(`a { @foo bar }`, { [AT_RULE_SPACE_BEFORE]: `never` })).toBe(``)
+		expect(askAtRule(`a { @foo bar }`, { [AT_RULE_SPACE_BEFORE]: `always-single-line` })).toBe(``)
+		expect(askAtRule(`a { @foo bar }`, { [NEWLINE_BEFORE]: `always`, [SPACE_BEFORE]: `always` })).toBe(``)
+		expect(askAtRule(`a { @foo bar }`)).toBe(``)
+		expect(ask(SINGLE_LINE, { [AT_RULE_SPACE_BEFORE]: `always` })).toBe(``)
+	})
+
+	it(`nothing behind an at-rule the syntax does not read as standard CSS, which the space rule of at-rules passes over`, () => {
+		let refusing: Syntax = { ...css, isStandardAtRule: () => false }
+
+		expect(askAtRule(`a { @foo bar }`, { [AT_RULE_SPACE_BEFORE]: `always` }, refusing)).toBe(``)
+	})
+
 	it(`the rules of the asking rule's own namespace, and not the core's, which refuse the file the namespace reads`, () => {
 		let scss: Syntax = { ...css, namespace: `scss` }
 
 		expect(ask(SINGLE_LINE, { [SPACE_BEFORE]: `always` }, scss)).toBe(``)
 		expect(ask(SINGLE_LINE, { "@stylistic/scss/declaration-block-semicolon-space-before": `always` }, scss)).toBe(` `)
 		expect(ask(SINGLE_LINE, { "@stylistic/scss/declaration-block-semicolon-newline-before": `always` })).toBe(``)
+		expect(askAtRule(`a { @foo bar }`, { "@stylistic/scss/at-rule-semicolon-space-before": `always` }, scss)).toBe(` `)
+		expect(askAtRule(`a { @foo bar }`, { [AT_RULE_SPACE_BEFORE]: `always` }, scss)).toBe(``)
 	})
 })
 
@@ -108,6 +127,17 @@ describe(`writeWhitespaceBeforeSemicolon`, () => {
 		expect(exact.value).toBe(`c`)
 	})
 
+	it(`into the raw between a bodiless at-rule's parameters and its semicolon, over the whitespace it ends with`, () => {
+		let tight = lastAtRuleOf(`a { @foo bar; }`)
+		let spaced = lastAtRuleOf(`a { @foo bar\t; }`)
+
+		writeWhitespaceBeforeSemicolon(css, tight, ` `)
+		writeWhitespaceBeforeSemicolon(css, spaced, ` `)
+		expect(tight.raws.between).toBe(` `)
+		expect(spaced.raws.between).toBe(` `)
+		expect(tight.params).toBe(`bar`)
+	})
+
 	it(`over a value that is nothing but whitespace`, () => {
 		let decl = lastDeclarationOf(`a { --b: }`)
 
@@ -128,12 +158,32 @@ function ask (code: string, rules: Record<string, unknown> = {}, syntax: Syntax 
 }
 
 /**
+ * Reads the whitespace a fix would write in front of a semicolon behind the last at-rule of a stylesheet's first rule.
+ * @param code - The stylesheet.
+ * @param rules - The rules the configuration lists, in the order it lists them.
+ * @param syntax - The syntax the asking rule is built over.
+ * @returns The whitespace.
+ */
+function askAtRule (code: string, rules: Record<string, unknown> = {}, syntax: Syntax = css): string {
+	return whitespaceBeforeSemicolon(syntax, lastAtRuleOf(code), result(rules))
+}
+
+/**
  * Parses a stylesheet and picks the last declaration of its first rule.
  * @param code - The stylesheet.
  * @returns The declaration.
  */
 function lastDeclarationOf (code: string): Declaration {
 	return (parse(code).first as Rule).last as Declaration
+}
+
+/**
+ * Parses a stylesheet and picks the last at-rule of its first rule.
+ * @param code - The stylesheet.
+ * @returns The at-rule.
+ */
+function lastAtRuleOf (code: string): AtRule {
+	return (parse(code).first as Rule).last as AtRule
 }
 
 /**

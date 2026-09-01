@@ -272,16 +272,16 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (message) {
 				// The whitespace is handed over to the block's own final raw, which only the node closing the block stands in front of. Nothing else can stand there today — an unterminated bodiless at-rule swallows whatever follows it into `raws.between`, so it has no sibling to speak of — but that used to be guaranteed by the walk asking for `parent.last`, and the walk now looks past the comments instead
-				let isBodilessAtRule = isAtRule(node) && !node.next()
+				let bodilessAtRule = isAtRule(node) && !node.next() ? node : undefined
 				// The whitespace before the closing brace is parsed into the at-rule, not into the block
-				let between = isBodilessAtRule && typeof node.raws.between === `string` ? node.raws.between : ``
+				let between = typeof bodilessAtRule?.raws.between === `string` ? bodilessAtRule.raws.between : ``
 				let beforeWhitespace = between.replace(TRAILING_WHITESPACE, ``)
-				// The semicolon `always` writes behind a declaration is written finished, with whatever the two rules about the whitespace in front of a block's semicolons ask to stand there, wherever the configuration lists either: Stylelint runs each rule once and in the order the configuration spells them, so a bare semicolon written behind one of those rules is one it never sees, and the block ends up spelling its last semicolon unlike the others until the next run of `--fix` (#354)
-				let whitespace = message === messages.expected && isDeclaration(node) ? whitespaceBeforeSemicolon(syntax, node, result) : ``
-				// Where the semicolon lands is this rule's to say, and there are two places it lands. Behind an at-rule the fix rewrites the raws of, it lands on the trailing whitespace that fix hands over to the block, which is the write the guard reads when it is told nothing at all. Behind every other node it lands past the whole printed text: PostCSS writes a declaration as its property, its `between`, its value and the raw of its flag and only then the semicolon, and a bodiless at-rule as its name, its `afterName`, its parameters, its `between` and only then the semicolon. So nothing stands between the node and the write but the whitespace the fix itself puts there, and a line break — the node's own text's, or the fix's — closes the comment ahead of the semicolon instead of swallowing it, while a space does not
+				// The semicolon `always` writes is written finished, with whatever the rules about the whitespace in front of a semicolon ask to stand there, wherever the configuration lists one: Stylelint runs each rule once and in the order the configuration spells them, so a bare semicolon written behind one of those rules is one it never sees, and the block ends up spelling its last semicolon unlike the others until the next run of `--fix` (#354) — or, behind an at-rule, one `at-rule-semicolon-space-before` reports on every run after and has no fixer to put right (#477)
+				let whitespace = message === messages.expected && (isDeclaration(node) || isAtRule(node)) ? whitespaceBeforeSemicolon(syntax, node, result) : ``
+				// Where the semicolon lands is this rule's to say, and there are two places it lands. Behind an at-rule the fix rewrites the raws of, it lands on the trailing whitespace that fix hands over to the block, which is the write the guard reads when it is told nothing at all; the space the fix may put in front of it closes no comment, so the guard's answer is the same with it or without. Behind every other node it lands past the whole printed text: PostCSS writes a declaration as its property, its `between`, its value and the raw of its flag and only then the semicolon, and a bodiless at-rule as its name, its `afterName`, its parameters, its `between` and only then the semicolon. So nothing stands between the node and the write but the whitespace the fix itself puts there, and a line break — the node's own text's, or the fix's — closes the comment ahead of the semicolon instead of swallowing it, while a space does not
 				//
 				// The at-rule half of that second place cannot be reached under `always`: an at-rule keeps its sibling only where a semicolon of its own already stands between the two, which sets the flag this message is missing
-				let spelledBetween = isBodilessAtRule ? undefined : whitespace
+				let spelledBetween = bodilessAtRule ? undefined : whitespace
 				report({
 					message,
 					node,
@@ -294,10 +294,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 							if (primary === `always` && !hasSemicolon) {
 								parent.raws.semicolon = true
 
-								if (isBodilessAtRule) {
-									// Hand the trailing whitespace over to the block, so that the comment and the layout survive
-									node.raws.between = beforeWhitespace
+								if (bodilessAtRule) {
+									// Hand the trailing whitespace over to the block, so that the comment and the layout survive, and only then put the space in front of the semicolon, so that it stands between the parameters and the semicolon rather than behind the whitespace handed over
+									bodilessAtRule.raws.between = beforeWhitespace
 									parent.raws.after = between.slice(beforeWhitespace.length)
+
+									if (whitespace) writeWhitespaceBeforeSemicolon(syntax, bodilessAtRule, whitespace)
 								}
 								else if (isDeclaration(node) && whitespace) writeWhitespaceBeforeSemicolon(syntax, node, whitespace)
 							}
