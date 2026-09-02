@@ -55,6 +55,27 @@ testRule({
 			warnings: [
 				{
 					line: 2,
+					column: 11,
+					endLine: 2,
+					endColumn: 12,
+					message: declarationBlockSemicolonSpaceBeforeMessages.rejectedBefore(),
+				},
+				{
+					line: 6,
+					column: 1,
+					endLine: 6,
+					endColumn: 2,
+					message: declarationBlockSemicolonSpaceBeforeMessages.rejectedBefore(),
+				},
+				{
+					line: 9,
+					column: 17,
+					endLine: 9,
+					endColumn: 18,
+					message: declarationBlockSemicolonSpaceBeforeMessages.rejectedBefore(),
+				},
+				{
+					line: 2,
 					column: 8,
 					endLine: 2,
 					endColumn: 9,
@@ -94,27 +115,6 @@ testRule({
 					endLine: 9,
 					endColumn: 18,
 					message: declarationBlockSemicolonNewlineBeforeMessages.rejectedBeforeMultiLine(),
-				},
-				{
-					line: 2,
-					column: 11,
-					endLine: 2,
-					endColumn: 12,
-					message: declarationBlockSemicolonSpaceBeforeMessages.rejectedBefore(),
-				},
-				{
-					line: 6,
-					column: 1,
-					endLine: 6,
-					endColumn: 2,
-					message: declarationBlockSemicolonSpaceBeforeMessages.rejectedBefore(),
-				},
-				{
-					line: 9,
-					column: 17,
-					endLine: 9,
-					endColumn: 18,
-					message: declarationBlockSemicolonSpaceBeforeMessages.rejectedBefore(),
 				},
 			],
 		},
@@ -360,6 +360,27 @@ testRule({
 					message: declarationBlockSemicolonSpaceBeforeMessages.rejectedBefore(),
 				},
 			],
+		},
+	],
+})
+
+// A deferred rule writes the head run the two colon rules share only where the rule ahead accepts what the write leaves (#355): one that was content with the run as it stood has spoken by staying silent, and erasing its run would leave the file violating a rule that reported nothing.
+testRule({
+	ruleName,
+	config: [`always-single-line`],
+	extraRules: { "@stylistic/declaration-colon-newline-after": `always` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355
+			description: `a break behind the colon the neighbour is content with: the deferred single-line option reports the run and leaves it alone, and the file rests with that warning standing`,
+			code: `a { b:\nx; }`,
+			fixed: `a { b:\nx; }`,
+			line: 1,
+			column: 7,
+			endLine: 1,
+			endColumn: 8,
+			message: messages.expectedAfterSingleLine(),
 		},
 	],
 })

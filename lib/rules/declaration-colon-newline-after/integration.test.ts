@@ -378,3 +378,24 @@ testRule({
 		},
 	],
 })
+
+// A deferred rule writes the head run the two colon rules share only where the rule ahead accepts what the write leaves (#355): one that was content with the run as it stood has spoken by staying silent, and erasing its run would leave the file violating a rule that reported nothing.
+testRule({
+	ruleName,
+	config: [`always-multi-line`],
+	extraRules: { "@stylistic/declaration-colon-space-after": `always` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355
+			description: `a space behind the colon the neighbour is content with: the deferred multi-line option reports the run and leaves it alone, and the file rests with that warning standing`,
+			code: `a { b: x,\ny; }`,
+			fixed: `a { b: x,\ny; }`,
+			line: 1,
+			column: 6,
+			endLine: 1,
+			endColumn: 7,
+			message: messages.expectedAfterMultiLine(),
+		},
+	],
+})

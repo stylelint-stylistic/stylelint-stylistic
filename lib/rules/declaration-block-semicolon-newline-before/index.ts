@@ -2,6 +2,7 @@ import stylelint from "stylelint"
 
 import { SPACES_AND_TABS_ONLY, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import { betweenTailAfterColon } from "../../utils/betweenTailAfterColon/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -65,7 +66,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let isCustomPropertyWithOnlyHorizontalSpaces = isCustomProperty(decl.prop) && SPACES_AND_TABS_ONLY.test(value)
 
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/50
-			if (primary.startsWith(`never`) && value === ` `) return
+			// The single space may stand at the tail of `raws.between` rather than in the value until the file is read back: the fix of `declaration-colon-space-after` writes it there, and a check running behind that fix in the same pass — one deferred to the run's end above all (#355) — reads the declaration before the next parse
+			if (primary.startsWith(`never`) && betweenTailAfterColon(decl) + value === ` `) return
 
 			let declString = declarationString(syntax, decl)
 			let problemIndex = declString.length - 1

@@ -2,6 +2,7 @@ import type { PostcssResult } from "stylelint"
 
 import type { Syntax } from "../../syntaxes/index.ts"
 import { addNamespace } from "../addNamespace/index.ts"
+import { defersToRunEnd } from "../defersToRunEnd/index.ts"
 
 /** A neighbouring rule a writer reads the setting of: the name its directory spells, and the primary options it accepts, since a rule handed an option outside them refuses it and runs over nothing. */
 export type NeighbourRule = {
@@ -21,7 +22,7 @@ function primaryOf (setting: unknown): string | undefined {
 }
 
 /**
- * Reads the settings of some neighbouring rules out of the configuration, in the order the run makes them.
+ * Reads the settings of some neighbouring rules out of the configuration, in the order the run makes them: the configuration's for the rules that run at their turn, and the lineness-conditioned ones behind them all, since those wait for the run's writers (#355).
  *
  * Stylelint runs each rule once and in the order the configuration lists them: it sorts the rules of a run by its own registry, a plugin's rules stand nowhere in it, and the sort is stable, so the order of the keys is the order of the run. The settings are read out of `result.stylelint.config`, which holds every rule's normalised settings and is assigned before any rule runs, under the names of the namespace the asking rule is registered under: the configuration of a file lists the core's names and a namespace's alike, and the family that reads the file is the one the rule belongs to. A rule listed with an option outside the ones it accepts is passed over, since it refuses such an option and runs over nothing. Whether the fix of a neighbour is turned off travels with its option, since a neighbour that speaks and reports but cannot write is a different thing to a writer than one that will rewrite what it is not content with (#485).
  * @param syntax - The syntax the asking rule is built over, whose namespace names the neighbours.
@@ -46,7 +47,8 @@ export function neighbourSettings<Key extends string> (syntax: Syntax, result: P
 		if (option !== undefined && rule.options.includes(option)) found.push([key, option, fixDisabledBy(setting)])
 	}
 
-	return found
+	// A lineness-conditioned neighbour waits for the run's writers (#355), so the run makes its turn after every neighbour that does not, whatever the configuration's spelling order — the partition is stable, and each half keeps that order among itself
+	return [...found.filter(([, option]) => !defersToRunEnd(option)), ...found.filter(([, option]) => defersToRunEnd(option))]
 }
 
 /**
