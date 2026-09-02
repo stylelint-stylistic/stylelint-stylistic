@@ -118,6 +118,10 @@ Here are `stylelint-stylistic` rules, grouped by the _thing_ they apply to (j
 
 - [`aspect-ratio-notation`](../../lib/rules/aspect-ratio-notation/README.md): Specify the notation for the value of `aspect-ratio` (Autofixable).
 
+## Grid flexible track
+
+- [`grid-flexible-track-no-content-minimum`](../../lib/rules/grid-flexible-track-no-content-minimum/README.md): Disallow a content-sized minimum for a flexible grid track (Autofixable).
+
 ## Named grid areas
 - [`named-grid-areas-alignment`](../../lib/rules/named-grid-areas-alignment/README.md): Require cell tokens (and optionally ending quotes) within `grid-template-areas` to be aligned (Autofixable).
 

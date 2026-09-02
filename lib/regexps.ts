@@ -13,6 +13,9 @@ export const CAPTURED_LINE_BREAK = /(\r?\n)/u
 /** A hex colour standing anywhere in a text. */
 export const CONTAINS_HEX_COLOR = /#[\da-z]+/iu
 
+/** The keyword of a content-sized track minimum — `auto`, `min-content` or `max-content` — spelling the whole of a text, in whatever case it is written. A flexible track with such a minimum is what lets a long word push the track wider than its share (#28). */
+export const CONTENT_SIZED_KEYWORD = /^(?:auto|min-content|max-content)$/iu
+
 /** A Windows line break. Read by `max-empty-lines` to tell a pair from a bare line feed, which is a question about the spelling and is meant, and by `indentation`, to ask of the line feed a search has stopped at whether a carriage return in front of it belongs to the same break — a question about the pair itself, so the narrowness is the whole of what is wanted there. */
 export const CRLF = /\r\n/u
 
@@ -102,6 +105,15 @@ export const FRACTION_WITH_LEADING_ZEROS = /(?:\D|^)(0+)(\.\d+)/u
 
 /** A fraction ending in zeros, the digits that are kept captured apart from the zeros that are not. */
 export const FRACTION_WITH_TRAILING_ZEROS = /\.(\d{0,100}?)(0+)(?:\D|$)/u
+
+/** The name of a grid property whose value spells a track list on the row axis alone, `grid-template-rows` or `grid-auto-rows`, in whatever case it is written. */
+export const GRID_ROW_TRACK_PROPERTY = /^grid-(?:template|auto)-rows$/iu
+
+/** The name of a grid shorthand spelling the tracks of both axes, `grid` or `grid-template`, in whatever case it is written: what stands in front of its top-level solidus sizes the rows, and what stands behind it the columns. */
+export const GRID_SHORTHAND_PROPERTY = /^grid(?:-template)?$/iu
+
+/** The name of any of the six grid properties whose value spells a track list — the two `grid-template-*` and the two `grid-auto-*` longhands, and the `grid-template` and `grid` shorthands — in whatever case it is written. */
+export const GRID_TRACK_LIST_PROPERTY = /^grid(?:-template(?:-columns|-rows)?|-auto-(?:columns|rows))?$/iu
 
 /** A hex colour opening a text. */
 export const HEX_COLOR = /^#[\da-z]+/iu

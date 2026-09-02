@@ -28,6 +28,7 @@ const FIXTURES: [string, string][] = [
 	[`grid`, `a { grid-template-areas: "a a"\n\t"b b"; }\n`],
 	[`grid-empty-row`, `a { grid-template-areas: "a  a"\n\t""\n\t"b b"; }\n`],
 	[`aspect-ratio`, `a { aspect-ratio: 16 / 8 /*c*/ auto; }\n`],
+	[`grid-tracks`, `a { grid-template-columns: 1fr /*c*/ minmax(auto, 1fr) /*/ 2fr */ 300px; }\n`],
 	[`quotes`, `a[href='x'] { b: 'y'; }\n`],
 	[`two-bangs`, `a { b: 1px!important 2px!important; }\n`],
 	[`bang-run-elsewhere`, `a { b: /*c*/\t!important; c: /*d*/\t!default; d: x! !important; }\n`],

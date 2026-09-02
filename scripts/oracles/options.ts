@@ -38,6 +38,7 @@ const RULE_OPTIONS: Record<string, unknown[]> = {
 	"function-parentheses-newline-inside": [`always`, `always-multi-line`, `never-multi-line`],
 	"function-parentheses-space-inside": [`always`, `never`, `always-single-line`, `never-single-line`],
 	"function-whitespace-after": [`always`, `never`],
+	"grid-flexible-track-no-content-minimum": [true],
 	"indentation": [`tab`, 2],
 	"linebreaks": [`unix`, `windows`],
 	"max-empty-lines": [1, 2],

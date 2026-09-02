@@ -36,6 +36,7 @@ import { createRule as functionMaxEmptyLines } from "./function-max-empty-lines/
 import { createRule as functionParenthesesNewlineInside } from "./function-parentheses-newline-inside/index.ts"
 import { createRule as functionParenthesesSpaceInside } from "./function-parentheses-space-inside/index.ts"
 import { createRule as functionWhitespaceAfter } from "./function-whitespace-after/index.ts"
+import { createRule as gridFlexibleTrackNoContentMinimum } from "./grid-flexible-track-no-content-minimum/index.ts"
 import { createRule as indentation } from "./indentation/index.ts"
 import { createRule as linebreaks } from "./linebreaks/index.ts"
 import { createRule as maxEmptyLines } from "./max-empty-lines/index.ts"
@@ -117,6 +118,7 @@ let rules: { readonly [name: string]: (syntax: Syntax) => Rule } = {
 	"function-parentheses-newline-inside": functionParenthesesNewlineInside,
 	"function-parentheses-space-inside": functionParenthesesSpaceInside,
 	"function-whitespace-after": functionWhitespaceAfter,
+	"grid-flexible-track-no-content-minimum": gridFlexibleTrackNoContentMinimum,
 	indentation,
 	linebreaks,
 	"max-empty-lines": maxEmptyLines,
