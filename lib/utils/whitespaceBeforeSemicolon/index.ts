@@ -1,7 +1,7 @@
 import type { AtRule, Declaration } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { TRAILING_WHITESPACE } from "../../regexps.ts"
+import { TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blockString } from "../blockString/index.ts"
 import { getLineBreak } from "../getLineBreak/index.ts"
@@ -100,7 +100,7 @@ export function whitespaceBeforeSemicolon (syntax: Syntax, node: AtRule | Declar
  * @param whitespace - What is to stand in front of the semicolon.
  */
 export function writeWhitespaceBeforeSemicolon (syntax: Syntax, node: AtRule | Declaration, whitespace: string): void {
-	if (isAtRule(node)) node.raws.between = (node.raws.between ?? ``).replace(TRAILING_WHITESPACE, whitespace)
-	else if (node.important) node.raws.important = (node.raws.important || ` !important`).replace(TRAILING_WHITESPACE, whitespace)
-	else syntax.write(node, syntax.read(node).replace(TRAILING_WHITESPACE, whitespace))
+	if (isAtRule(node)) node.raws.between = (node.raws.between ?? ``).replace(TRAILING_CSS_WHITESPACE, whitespace)
+	else if (node.important) node.raws.important = (node.raws.important || ` !important`).replace(TRAILING_CSS_WHITESPACE, whitespace)
+	else syntax.write(node, syntax.read(node).replace(TRAILING_CSS_WHITESPACE, whitespace))
 }

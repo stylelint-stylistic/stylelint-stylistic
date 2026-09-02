@@ -211,6 +211,14 @@ describe(`writePrintedText and the value's trailing run`, () => {
 		expect(declaration.raws.value).toBeUndefined()
 	})
 
+	it(`a text ending in a vertical tab, which the tokenizer reads as a word, so no run is filed and the character stays in the value`, () => {
+		let declaration = lastDeclarationOf(`a { b: red }`)
+
+		writePrintedText(declaration, `red \v`)
+		expect(declaration.value).toBe(`red \v`)
+		expect(declaration.raws.value).toBeUndefined()
+	})
+
 	it(`a custom property, whose value is the printed text itself, the trailing run included`, () => {
 		let declaration = lastDeclarationOf(`a { --b: x }`)
 

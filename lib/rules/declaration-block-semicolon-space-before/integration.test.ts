@@ -107,3 +107,41 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`always`],
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494
+			description: `a value ending in a vertical tab, which the tokenizer reads as a word: the space is written behind it, and the character stays where the fix used to carry it off`,
+			code: `a { color: red\v; }`,
+			fixed: `a { color: red\v ; }`,
+			line: 1,
+			column: 15,
+			endLine: 1,
+			endColumn: 16,
+			message: messages.expectedBefore(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never`],
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494
+			description: `a custom property's value ending in a vertical tab in front of the space, a word to the tokenizer: only the space goes, and the character stays`,
+			code: `a { --x:\v ; }`,
+			fixed: `a { --x:\v; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.rejectedBefore(),
+		},
+	],
+})

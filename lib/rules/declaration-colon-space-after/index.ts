@@ -1,6 +1,6 @@
 import stylelint from "stylelint"
 
-import { LEADING_COLON_AND_WHITESPACE, LEADING_WHITESPACE } from "../../regexps.ts"
+import { LEADING_COLON_AND_WHITESPACE, LEADING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { declarationColonSpaceChecker } from "../../utils/declarationColonSpaceChecker/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
@@ -67,7 +67,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// Where `between` ends at the colon, whatever run stands behind it stands at the head of the value instead, and there is no writing over it in place
 				// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/109
 				// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/371
-				if (colonIndex === between.length - 1) moveDeclarationValueHeadIntoBetween(syntax, decl, (syntax.read(decl).match(LEADING_WHITESPACE) as RegExpMatchArray)[0].length)
+				if (colonIndex === between.length - 1) moveDeclarationValueHeadIntoBetween(syntax, decl, (syntax.read(decl).match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0].length)
 
 				let { raws } = decl
 

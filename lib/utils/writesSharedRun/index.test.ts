@@ -92,6 +92,12 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a {\n\tb:;\n}`, { [COLON_NEWLINE]: `always`, [SEMICOLON_NEWLINE]: `never-multi-line` }, COLON_NEWLINE)).toBe(false)
 	})
 
+	it(`a value holding a vertical tab or a no-break space, which the tokenizer reads as a word, so the run is the head group's and not the semicolon's`, () => {
+		expect(ask(`a { b:\v; }`, { [COLON_SPACE]: `always`, [SEMICOLON_SPACE]: `never` }, COLON_SPACE)).toBe(true)
+		expect(ask(`a { b:\u00A0; }`, { [COLON_SPACE]: `always`, [SEMICOLON_SPACE]: `never` }, COLON_SPACE)).toBe(true)
+		expect(ask(`a { b:\v; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `always` }, COLON_NEWLINE)).toBe(false)
+	})
+
 	it(`a declaration the colon rules do not read, which shares its run with nobody`, () => {
 		expect(ask(`a { $x: ; }`, { [SEMICOLON_SPACE]: `never`, [COLON_SPACE]: `always` }, SEMICOLON_SPACE)).toBe(true)
 		expect(ask(`a { b: ; }`, { [SEMICOLON_SPACE]: `never`, [COLON_SPACE]: `always` }, SEMICOLON_SPACE, { ...css, isStandardDeclaration: () => false })).toBe(true)

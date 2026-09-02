@@ -541,3 +541,22 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`always`],
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494
+			description: `a vertical tab opening the run behind the comma, a word to the tokenizer: the break is written in front of it, instead of the fix taking the run for already broken and carrying the character off`,
+			code: `@media a,\v\nb {}`,
+			fixed: `@media a,\n\v\nb {}`,
+			line: 1,
+			column: 9,
+			endLine: 1,
+			endColumn: 10,
+			message: messages.expectedAfter(),
+		},
+	],
+})

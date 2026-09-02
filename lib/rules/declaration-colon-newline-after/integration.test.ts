@@ -327,3 +327,54 @@ testRule({
 		},
 	],
 })
+
+// A vertical tab and a no-break space are words to the tokenizer, and the machinery of the shared run reads whitespace the tokenizer's way (#494): the fix writes its break in front of such a character, and the question of whether the run already opens on a break steps over the tokenizer's whitespace only, never over the character itself.
+testRule({
+	ruleName,
+	config: [`always`],
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494
+			description: `a value opening on a vertical tab in front of the line break, a word to the tokenizer: the break is written before it, instead of the fix taking the run for already broken and writing nothing`,
+			code: `a { color:\v\nred; }`,
+			fixed: `a { color:\n\v\nred; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expectedAfter(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-block-semicolon-newline-before": `always` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494
+			description: `a vertical tab in front of a block comment: the character is a word, so the run does not open on the comment, each rule writes its own break, and nothing is written twice`,
+			code: `a { color:\v/*c*/ ; }`,
+			fixed: `a { color:\n\v/*c*/\n; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 11,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 17,
+					endLine: 1,
+					endColumn: 18,
+					message: semicolonNewlineBeforeMessages.expectedBefore(),
+				},
+			],
+		},
+	],
+})

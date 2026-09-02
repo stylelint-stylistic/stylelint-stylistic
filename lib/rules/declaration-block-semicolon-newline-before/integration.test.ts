@@ -180,3 +180,34 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-colon-newline-after": `always` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494
+			description: `a value that is a vertical tab behind its run, a word to the tokenizer: both breaks are written around it in one run, and both orders rest on this file`,
+			code: `a { color: \v; }`,
+			fixed: `a { color:\n \v\n; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 12,
+					endLine: 1,
+					endColumn: 13,
+					message: messages.expectedBefore(),
+				},
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 11,
+					message: colonNewlineAfterMessages.expectedAfter(),
+				},
+			],
+		},
+	],
+})
