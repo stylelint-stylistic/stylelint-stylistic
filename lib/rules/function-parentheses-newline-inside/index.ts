@@ -1,13 +1,14 @@
+import type { Declaration } from "postcss"
 import valueParser, { type FunctionNode } from "postcss-value-parser"
-import stylelint, { type FixCallback } from "stylelint"
+import stylelint, { type FixCallback, type PostcssResult } from "stylelint"
 
-import { LEADING_CSS_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
+import { LEADING_CSS_WHITESPACE, LINE_BREAK, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { InlineCommentReading, Syntax } from "../../syntaxes/index.ts"
 import { addEdit, applyEditsFromEnd, type Edit, toIndexBeforeEdits } from "../../utils/applyEditsFromEnd/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { findInlineCommentSpanAt, findInlineCommentSpanHolding, findInlineCommentSpans, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
+import { type CommentSpan, findCommentSpanAt, findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
@@ -33,19 +34,21 @@ export let meta = {
 }
 
 /**
- * Finds the spans the inline comments of a value occupy once the fixes collected so far are written into it, counted in the value as the file spells it.
+ * Finds the spans the comments of a value occupy once the fixes collected so far are written into it, counted in the value as the file spells it.
  *
  * A comment opened by a double slash is closed by the first line break behind it, and the `always` options of this rule write line breaks. So a fix closes such a comment wherever the file left it running to the end of the value, and everything the comment used to hold behind that break is code of the value from then on — a function among it. Read against the spans the value had before that fix, such a function is passed over as a comment's text, and the problem it has waits for the next run (#288).
  *
- * The spans are placed back in the coordinates of the value the file spells, since that is what the nodes of the parse are counted in — and the parse itself survives every one of these fixes untouched, `postcss-value-parser` knowing nothing of a comment opened by a double slash and reading its text as ordinary nodes whether it is closed early or not.
+ * The spans are placed back in the coordinates of the value the file spells, since that is what the nodes of the parse are counted in — and the parse itself survives every one of these fixes untouched, `postcss-value-parser` knowing nothing of a comment opened by a double slash and reading its text as ordinary nodes whether it is closed early or not. The block comments come along, since the walk asks about every comment in one list: a break written into a value closes none of them, so they are found again where they were.
+ * @param syntax - The syntax the rule is built over, which says where the comments of a text stand.
+ * @param decl - The declaration the value belongs to.
  * @param declValue - The value the rule has read and parsed.
  * @param edits - The fixes collected so far, each one a span of that value.
- * @param spellsInlineComments - False where the syntax the value was spelled in writes no comment with a double slash.
+ * @param result - The Stylelint result, which holds the syntax the file was opened with.
  * @returns The spans, in the coordinates of the value the file spells.
  */
-function findInlineCommentSpansAfterEdits (declValue: string, edits: Edit[], spellsInlineComments: boolean): InlineCommentSpan[] {
-	return findInlineCommentSpans(applyEditsFromEnd(declValue, edits), spellsInlineComments)
-		.map(({ start, end }) => ({ start: toIndexBeforeEdits(start, edits), end: toIndexBeforeEdits(end, edits) }))
+function findCommentSpansAfterEdits (syntax: Syntax, decl: Declaration, declValue: string, edits: Edit[], result: PostcssResult): CommentSpan[] {
+	return syntax.commentSpans(applyEditsFromEnd(declValue, edits), decl, result)
+		.map(({ start, end, isInline }) => ({ start: toIndexBeforeEdits(start, edits), end: toIndexBeforeEdits(end, edits), isInline }))
 }
 
 /**
@@ -62,16 +65,16 @@ function findInlineCommentSpansAfterEdits (declValue: string, edits: Edit[], spe
  * The whole node is turned away rather than the closing half of it, warning and all: the parentheses the options are about are not where the parser puts them, and nothing read out of a value the parser has misread this way is worth reporting. A closed call standing inside such a function is reached by the walk as ever, and read and fixed where it stands. A bracket the file really leaves open never gets here — PostCSS throws on one of those before any rule sees the declaration — so a comment is the only thing the second question turns away.
  * @param syntax - The syntax the rule is built over.
  * @param valueNode - The function the walk has reached.
- * @param inlineComments - The spans the inline comments of the value occupy in it.
+ * @param comments - The spans the comments of the value occupy in it, both kinds.
  * @returns True where the rule may read the function's parentheses and write between them.
  */
-function isFunctionParsedAsWritten (syntax: Syntax, valueNode: FunctionNode, inlineComments: InlineCommentSpan[]): boolean {
+function isFunctionParsedAsWritten (syntax: Syntax, valueNode: FunctionNode, comments: CommentSpan[]): boolean {
 	if (!syntax.isStandardFunction(valueNode)) return false
 
 	if (valueNode.unclosed) return false
 
 	// The parenthesis the node ends on, asked after `unclosed` because a node marked so ends on no parenthesis of its own while the index still lands on a character: `f(1px // /*` and ` c`, a break and `2px)` ends on a parenthesis standing outside every comment, and `f("abc)` ends one character past the text altogether
-	return !findInlineCommentSpanAt(valueNode.sourceEndIndex - 1, inlineComments)
+	return !findCommentSpanAt(valueNode.sourceEndIndex - 1, comments)
 }
 
 /**
@@ -110,6 +113,28 @@ function mergeRanges (lists: [number, number][][]): [number, number][] {
 	}
 
 	return merged
+}
+
+/**
+ * Asks whether a stretch of whitespace opens on the break that closes an inline comment, which no fix may take away.
+ * @param stretch - The stretch, as the walk measured it.
+ * @param comments - The spans the comments of the value occupy in it, both kinds.
+ * @returns True where the stretch begins where an inline comment ends.
+ */
+function closesAnInlineComment (stretch: [number, number], comments: CommentSpan[]): boolean {
+	let [start] = stretch
+
+	return comments.some(({ end, isInline }) => isInline && end === start)
+}
+
+/**
+ * Asks whether a fix reaches every stretch a walk measured, so that what the option asks for and what the fix would write are one and the same.
+ * @param measured - The stretches the walk measured.
+ * @param emptied - The stretches the fix empties.
+ * @returns True where every measured stretch lies inside one the fix empties.
+ */
+function reachesEveryStretch (measured: [number, number][], emptied: [number, number][]): boolean {
+	return measured.every(([start, end]) => emptied.some(([from, to]) => from <= start && to >= end))
 }
 
 /**
@@ -161,53 +186,6 @@ function getAfterSpan (valueNode: FunctionNode): {
 }
 
 /**
- * Where the `never` fix would empty the whitespace behind a function's opening parenthesis.
- *
- * It empties what the function keeps in front of its first node and then every whitespace node behind that, stepping over the comments among them and stopping at anything else — the first division sign an inline comment is spelled with among that anything, since the value parser knows of no such comment and hands out two of them and a word where one stands.
- * @param valueNode - The function whose opening parenthesis is being fixed.
- * @param openingIndex - Where the text behind that parenthesis begins.
- * @returns The stretches, in ascending order and none of them overlapping.
- */
-function getFixEmptiedBefore (valueNode: FunctionNode, openingIndex: number): [number, number][] {
-	let emptied: [number, number][] = [[openingIndex, openingIndex + valueNode.before.length]]
-
-	for (let node of valueNode.nodes) {
-		if (node.type === `comment`) continue
-
-		if (node.type !== `space`) break
-
-		emptied.push([node.sourceIndex, node.sourceEndIndex])
-	}
-
-	return emptied
-}
-
-/**
- * Where the `never` fix would empty the whitespace in front of a function's closing parenthesis.
- *
- * It empties every whitespace node standing behind the last significant one, walking back over the comments among them exactly as {@link getFixEmptiedBefore} walks out over them, and then what the function keeps in front of the parenthesis itself.
- * @param valueNode - The function whose closing parenthesis is being fixed.
- * @returns The stretches, in ascending order and none of them overlapping.
- */
-function getFixEmptiedAfter (valueNode: FunctionNode): [number, number][] {
-	let emptied: [number, number][] = []
-
-	for (let node of [...valueNode.nodes].toReversed()) {
-		if (node.type === `comment`) continue
-
-		if (node.type !== `space`) break
-
-		emptied.unshift([node.sourceIndex, node.sourceEndIndex])
-	}
-
-	let { start, end } = getAfterSpan(valueNode)
-
-	emptied.push([start, end])
-
-	return emptied
-}
-
-/**
  * Says which of the two `never` fixes of one function may be written.
  *
  * The two are written in one pass over one value, and each of them is guarded by the question whether it would carry a character of the function into an inline comment: the opening one asks about the first significant thing the function holds, the closing one about the parenthesis itself. A function holding nothing but comments and whitespace has no significant node at all, so the first question is about that same parenthesis, and both fixes empty whitespace standing in front of it.
@@ -220,29 +198,26 @@ function getFixEmptiedAfter (valueNode: FunctionNode): [number, number][] {
 function getNeverFixability (syntax: Syntax, read: {
 	declValue: string,
 	valueNode: FunctionNode,
-	openingIndex: number,
 	checkBefore: string,
 	checkAfter: string,
 	firstIndex: number,
-	measured: [number, number][],
+	measuredBefore: [number, number][],
+	measuredAfter: [number, number][],
+	comments: CommentSpan[],
 	reading: InlineCommentReading,
 }): {
 	isOpeningFixable: boolean,
 	isClosingFixable: boolean,
 } {
-	let { declValue, valueNode, openingIndex, checkBefore, checkAfter, firstIndex, measured, reading } = read
+	let { declValue, valueNode, checkBefore, checkAfter, firstIndex, measuredBefore, measuredAfter, comments, reading } = read
 
 	let firstCharacterIndex = findFirstCharacterIndex(declValue, firstIndex)
 	let { end: closingParenthesisIndex } = getAfterSpan(valueNode)
-	let emptiedBefore = checkBefore === `` ? [] : getFixEmptiedBefore(valueNode, openingIndex)
-	let emptiedAfter = checkAfter === `` ? [] : getFixEmptiedAfter(valueNode)
-	// The fix reaches less far than the walk that measured the whitespace behind the opening parenthesis: that one steps over the nodes an inline comment is spelled with, and the fix stops at the first of them. What it does not reach stays, the option stays violated, and Stylelint calls the problem solved and hands the next run the same one (#285). So the fix is written only where it empties every stretch that was measured. The safety question is then put over what the fixer empties rather than over what was measured, the first being the honest set to ask about.
-	//
-	// Asking it over either answers the same, and by a shorter road than it used to be given here: with the question above answered yes, the two are not two lists at all. Both walks push the whitespace nodes of the function, stepping over the block comments among them, and the fix stops at the node the parser files an inline comment's first slash under — so a stretch the walk measures past that node is one the fix does not reach, and the question is never asked where there is one. Everything in front of that node is walked alike by both.
-	//
-	// The reason given before was that the two differ only by whitespace standing inside a comment's span, and that no such whitespace can hold the break closing that comment, the span ending at that break. The second half is not true of every span the rule reads: a span the scan of this value cuts does end in front of a break, but one found again over what the fixes collected so far would leave behind is mapped back, and an end standing inside text a fix wrote maps to the index that text was written at (#288). `bar(foo(// c))` under `postcss-less` and `always` hands the walk a span ending on a closing parenthesis. Nothing here rests on that reading any longer, and a walk widened to reach past an inline comment would want the argument above rather than that one.
-	let isOpeningFixable = checkBefore !== `` && measured.every(([start, end]) => emptiedBefore.some(([from, to]) => from <= start && to >= end)) && !movesIntoComment(syntax, declValue, firstCharacterIndex, emptiedBefore, reading)
-	let isClosingFixable = checkAfter !== `` && !movesIntoComment(syntax, declValue, closingParenthesisIndex, emptiedAfter, reading)
+	// Each `never` fix empties the very stretches its walk measured, so that what the option asks for and what the fix reaches are one list read twice — all but a stretch standing behind an inline comment, which opens on the break that closes the comment and which no fix may take away. Where a walk measured such a stretch the fix does not reach it, the option cannot be satisfied by what the fix would write, and nothing is written: what the fix did not reach would stay, the option would stay violated, and Stylelint would call the problem solved and hand the next run the same one (#285). Each side used to be two walks, and the fix's stopped at the first node it could not name: the first slash an inline comment is spelled with, which is the shape above, and the word and the div the parser files the closing star and slash of a comment opening `/*/` under, the whitespace behind them hung on the div rather than filed as a node of its own — so with the spans widened to both kinds the fix would not have reached the whitespace the walk measured behind such a comment, and would have refused to write wherever a block comment's text stood beside the argument, while the base, asking about the inline spans alone, measured nothing there and emptied the space inside the comment (#378). The safety question is put over the list the fix empties, which is the honest set to ask about.
+	let emptiedBefore = checkBefore === `` ? [] : measuredBefore.filter((stretch) => !closesAnInlineComment(stretch, comments))
+	let emptiedAfter = checkAfter === `` ? [] : measuredAfter.filter((stretch) => !closesAnInlineComment(stretch, comments))
+	let isOpeningFixable = checkBefore !== `` && reachesEveryStretch(measuredBefore, emptiedBefore) && !movesIntoComment(syntax, declValue, firstCharacterIndex, emptiedBefore, reading)
+	let isClosingFixable = checkAfter !== `` && reachesEveryStretch(measuredAfter, emptiedAfter) && !movesIntoComment(syntax, declValue, closingParenthesisIndex, emptiedAfter, reading)
 
 	if (isOpeningFixable && isClosingFixable) {
 		let emptied = mergeRanges([emptiedBefore, emptiedAfter])
@@ -282,8 +257,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let declValue = syntax.read(decl)
 			// A double slash spells a comment only where the syntax says one, and a file of plain CSS spells none: the pair in `myurl(//a)` is code there, and taking it for a comment would silence everything standing behind it on the line
 			let reading = syntax.inlineComments(decl, result)
-			// A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind: what such a comment holds comes back as ordinary nodes
-			let inlineComments = findInlineCommentSpans(declValue, reading.spells)
+			// Every comment the value holds, both kinds. A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind, so what such a comment holds comes back as ordinary nodes; a block comment reaches the walk as a node of its own — except one opening `/*/`, which the parser closes on the star it opened with, handing the rest of its text back the same way (#378)
+			let comments = syntax.commentSpans(declValue, decl, result)
 			// A break this rule writes closes such a comment where the file left one open, so the spans above describe a value the functions behind that write no longer stand in. They are found again before the next function is read, and only there: a value nothing has been written into holds the comments it was scanned for, and a run without `--fix` writes nothing at all.
 			let areSpansStale = false
 			let parsedValue = valueParser(declValue)
@@ -295,40 +270,40 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (valueNode.type !== `function`) return
 
 				if (areSpansStale) {
-					inlineComments = findInlineCommentSpansAfterEdits(declValue, edits, reading.spells)
+					comments = findCommentSpansAfterEdits(syntax, decl, declValue, edits, result)
 					areSpansStale = false
 				}
 
-				// A call standing in the text of an inline comment is no call of the value, and its parentheses are none of this rule's: leave it alone. A call nested inside it is still walked and asked the same question, since one opened inside such a comment reaches past the break that closes it and gathers code the file spells.
-				if (findInlineCommentSpanHolding(valueNode, inlineComments)) return
+				// A call standing in the text of a comment is no call of the value, and its parentheses are none of this rule's: leave it alone. A call nested inside it is still walked and asked the same question, since one opened inside such a comment reaches past the break or the delimiter that closes it and gathers code the file spells.
+				if (findCommentSpanHolding(valueNode, comments)) return
 
-				if (!isFunctionParsedAsWritten(syntax, valueNode, inlineComments)) return
+				if (!isFunctionParsedAsWritten(syntax, valueNode, comments)) return
 
 				let functionString = valueParser.stringify(valueNode)
 				let isMultiLine = !isSingleLineString(functionString)
 
 				// What the walk reads of the function ... Both sides of it are read before either is reported on: under `never-multi-line` the two fixes are weighed against one another, so neither can be handed to a warning before the other has been weighed.
 				let openingIndex = valueNode.sourceIndex + valueNode.value.length + 1
-				let { before: checkBefore, firstIndex, measured } = getCheckBefore(valueNode, openingIndex, declValue, inlineComments)
+				let { before: checkBefore, firstIndex, measured: measuredBefore } = getCheckBefore(valueNode, openingIndex, declValue, comments)
 				let closingIndex = valueNode.sourceIndex + functionString.length - 2
-				let checkAfter = getCheckAfter(valueNode)
+				let { after: checkAfter, measured: measuredAfter } = getCheckAfter(valueNode, declValue, comments)
 				let { isOpeningFixable, isClosingFixable } = isMultiLine && primary === `never-multi-line`
-					? getNeverFixability(syntax, { declValue, valueNode, openingIndex, checkBefore, checkAfter, firstIndex, measured, reading })
+					? getNeverFixability(syntax, { declValue, valueNode, checkBefore, checkAfter, firstIndex, measuredBefore, measuredAfter, comments, reading })
 					: { isOpeningFixable: false, isClosingFixable: false }
 
 				// Check opening ...
 				if (primary === `always` && !LINE_BREAK.test(checkBefore)) {
-					fix = fixWith(() => fixBeforeForAlways(valueNode, openingIndex, getLineBreak(syntax, root, result)))
+					fix = fixWith(() => fixBeforeForAlways(measuredBefore, declValue, getLineBreak(syntax, root, result)))
 					complain(messages.expectedOpening, openingIndex)
 				}
 
 				if (isMultiLine && primary === `always-multi-line` && !LINE_BREAK.test(checkBefore)) {
-					fix = fixWith(() => fixBeforeForAlways(valueNode, openingIndex, getLineBreak(syntax, root, result)))
+					fix = fixWith(() => fixBeforeForAlways(measuredBefore, declValue, getLineBreak(syntax, root, result)))
 					complain(messages.expectedOpeningMultiLine, openingIndex)
 				}
 
 				if (isMultiLine && primary === `never-multi-line` && checkBefore !== ``) {
-					fix = isOpeningFixable ? fixWith(() => fixBeforeForNever(valueNode, openingIndex)) : undefined
+					fix = isOpeningFixable ? fixWith(() => fixBeforeForNever(measuredBefore)) : undefined
 					complain(messages.rejectedOpeningMultiLine, openingIndex)
 				}
 
@@ -344,7 +319,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				}
 
 				if (isMultiLine && primary === `never-multi-line` && checkAfter !== ``) {
-					fix = isClosingFixable ? fixWith(() => fixAfterForNever(valueNode)) : undefined
+					fix = isClosingFixable ? fixWith(() => fixAfterForNever(measuredAfter)) : undefined
 					complain(messages.rejectedClosingMultiLine, closingIndex)
 				}
 			})
@@ -399,10 +374,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
  * @param valueNode - The function node to check.
  * @param openingIndex - Where the text behind the function's opening parenthesis begins.
  * @param declValue - The value the node was parsed from, which its positions count in.
- * @param inlineComments - The spans the inline comments of the value occupy in it.
+ * @param comments - The spans the comments of the value occupy in it, both kinds.
  * @returns The whitespace, the index the first significant thing behind it begins at — the node the parser hands back where one stands, the code a node of a comment's text reaches past that comment's end with where the parser filed one under such a node, and the function's own closing parenthesis where it holds neither — and the stretches the whitespace was gathered from.
  */
-function getCheckBefore (valueNode: FunctionNode, openingIndex: number, declValue: string, inlineComments: InlineCommentSpan[]): {
+function getCheckBefore (valueNode: FunctionNode, openingIndex: number, declValue: string, comments: CommentSpan[]): {
 	before: string,
 	firstIndex: number,
 	measured: [number, number][],
@@ -414,10 +389,10 @@ function getCheckBefore (valueNode: FunctionNode, openingIndex: number, declValu
 	for (let node of valueNode.nodes) {
 		if (node.type === `comment`) continue
 
-		let span = findInlineCommentSpanHolding(node, inlineComments)
+		let span = findCommentSpanHolding(node, comments)
 
 		if (span) {
-			// The value parser hangs the whitespace behind a node on that node rather than emitting a node of its own for it, so the break closing the comment reaches past the comment's end whenever the last thing it spells is a division sign, a colon or a comma. It is whitespace of the value like any other, and the walk would drop it with the node it hangs on. A node the comment opened inside of, rather than one carrying whitespace behind it, goes on past that end with code: a call the parser closed a line below, a string it closed there, or a word. A word reaches that far two ways — as the whole of what an `url()` hands back, wherever a parenthesis or a quotation mark left unbalanced has the scan reading no address there, and as the word a backslash at the end of a comment's text carries across the break. Only the whitespace at the front of the overrun is the value's, and counting the code along with it is #303. A block comment the parser opened inside such a text is stepped over by its kind three lines above and never reaches here at all.
+			// The value parser hangs the whitespace behind a node on that node rather than emitting a node of its own for it, so the break closing the comment reaches past the comment's end whenever the last thing it spells is a division sign, a colon or a comma. It is whitespace of the value like any other, and the walk would drop it with the node it hangs on. A node the comment opened inside of, rather than one carrying whitespace behind it, goes on past that end with code: a call the parser closed a line below, a string it closed there, or a word. A word reaches that far two ways — as the whole of what an `url()` hands back, wherever a parenthesis or a quotation mark left unbalanced has the scan reading no address there, and as the word a backslash at the end of a comment's text carries across the break. Only the whitespace at the front of the overrun is the value's, and counting the code along with it is #303. A block comment the parser opened inside such a text is stepped over by its kind three lines above and never reaches here at all — and so is the node the parser makes of a block comment of the value, whose span the scan lays over the whole of the comment; what the parser reads as nodes behind a comment opening `/*/` is held by that span and passed over here like the text of an inline one, its overrun measured the same way.
 			//
 			// A run is read rather than the one break the comment is closed by, since the indentation of the line below stands behind that break and is whitespace of the value as much as it is. Reading a run also asks nothing of where the span came from, and there are two places: the scan of this value cuts a span that ends in front of a break, or at the end of the value where the comment runs to it and nothing can reach past it at all, while a span found again over what the fixes collected so far would leave behind is mapped back, and an end standing inside text a fix wrote maps to the index that text was written at.
 			if (node.sourceEndIndex > span.end) {
@@ -452,67 +427,83 @@ function getCheckBefore (valueNode: FunctionNode, openingIndex: number, declValu
 }
 
 /**
- * Gets the whitespace after the last non-comment, non-space node in a function.
+ * Reads the whitespace in front of a function's closing parenthesis: what the function keeps in front of the parenthesis itself, and every whitespace node standing behind the last significant one, the block comments among them stepped over. As {@link getCheckBefore} walks out from the opening parenthesis, this walks back from the closing one, and reads a node standing in the text of a block comment the same way: it is text of that comment whatever the parser made of it, and the whitespace it reaches past the comment's end with is whitespace of the value — the parser hangs the whitespace behind a division sign on the sign, and the closing slash of a comment opening `/*\/` is such a sign to it (#378). Where code stands in that overrun the code is the last significant thing, and the walk ends on it.
+ *
+ * An inline comment ends the walk, which comes back from the parenthesis and goes no further than the comment's end, as it always has: the break behind such a comment is the one that closes it, which no fix may take away, so the whitespace the option can be asked about is what stands between the comment and the parenthesis, and a fix that empties it puts the parenthesis on the line of whatever block comment stands there. The opening side reads on past such a comment and refuses its fix instead; the two are asymmetric, and this side keeps the reading its cases were written for.
+ *
+ * Where each stretch of the whitespace stands is answered alongside it, since the `never` fix empties those very stretches and the guard in front of it asks whether the fix reaches every one of them.
  * @param valueNode - The function node to check.
- * @returns The whitespace after the last significant node.
+ * @param declValue - The value the node was parsed from, which its positions count in.
+ * @param comments - The spans the comments of the value occupy in it, both kinds.
+ * @returns The whitespace, and the stretches it was gathered from, in the order they stand in the value, the one in front of the parenthesis last.
  */
-function getCheckAfter (valueNode: FunctionNode): string {
-	let after = ``
+function getCheckAfter (valueNode: FunctionNode, declValue: string, comments: CommentSpan[]): {
+	after: string,
+	measured: [number, number][],
+} {
+	let after = valueNode.after
+	let { start, end } = getAfterSpan(valueNode)
+	let measured: [number, number][] = [[start, end]]
 
 	for (let node of [...valueNode.nodes].toReversed()) {
 		if (node.type === `comment`) continue
 
+		let span = findCommentSpanHolding(node, comments)
+
+		if (span) {
+			if (span.isInline) break
+
+			if (node.sourceEndIndex > span.end) {
+				let overrun = declValue.slice(span.end, node.sourceEndIndex)
+				// The run may be empty, so the pattern matches every text
+				let whitespace = (overrun.match(TRAILING_CSS_WHITESPACE) as RegExpMatchArray)[0]
+
+				after = whitespace + after
+				measured.unshift([node.sourceEndIndex - whitespace.length, node.sourceEndIndex])
+
+				if (whitespace.length !== overrun.length) break
+			}
+
+			continue
+		}
+
 		if (node.type === `space`) {
 			after = node.value + after
+			measured.unshift([node.sourceIndex, node.sourceEndIndex])
+
 			continue
 		}
 
 		break
 	}
 
-	after += valueNode.after
-
-	return after
+	return { after, measured }
 }
 
 /**
- * Names the spans the whitespace before the first node is written into for the 'always' expectation.
+ * Names the span the break the `always` options ask for is written into, in front of the whitespace that stands closest to the first significant node, so that a comment written between the parenthesis and that node keeps its line. Nothing else of the value is named: what stood in the whitespace is written back behind the break.
  *
- * The break goes in front of the whitespace that stands closest to the first significant node, so a comment written between the parenthesis and that node keeps its line. Nothing else of the value is named: what stood in the whitespace is written back behind the break.
- * @param valueNode - The function node to fix.
- * @param openingIndex - Where the text behind that function's opening parenthesis begins.
+ * The stretch is the last the walk measured, which is that whitespace: the run behind the parenthesis where the function keeps nothing else in front of its first node, a whitespace node the walk passed, or the whitespace a node the parser filed a comment's text under reaches past the comment's end with — the parser hangs the whitespace behind a division sign on the sign, and the closing slash of a comment opening `/*\/` is such a sign to it, so a walk by whitespace nodes found nothing there, or found the whitespace node the parser had filed inside the comment's text, and wrote the break at the parenthesis behind which the comment stood or behind the comment's first three characters (#378). The stretch behind an inline comment opens on the break that closes it, and a break is what the options writing here ask for, so the last stretch is never that one.
+ * @param measured - The stretches the walk measured the whitespace behind the opening parenthesis over, in the order it met them.
+ * @param declValue - The value the stretches are counted in.
  * @param newline - The newline character to use.
- * @returns The edits the fix writes, each one a span of the value the file spells.
+ * @returns The edit the fix writes, a span of the value the file spells.
  */
-function fixBeforeForAlways (valueNode: FunctionNode, openingIndex: number, newline: string): Edit[] {
-	let target
+function fixBeforeForAlways (measured: [number, number][], declValue: string, newline: string): Edit[] {
+	let [start, end] = measured.at(-1) as [number, number]
 
-	for (let node of valueNode.nodes) {
-		if (node.type === `comment`) continue
-
-		if (node.type === `space`) {
-			target = node
-			continue
-		}
-
-		break
-	}
-
-	if (target) return [{ start: target.sourceIndex, end: target.sourceIndex + target.value.length, text: newline + target.value }]
-
-	return [{ start: openingIndex, end: openingIndex + valueNode.before.length, text: newline + valueNode.before }]
+	return [{ start, end, text: newline + declValue.slice(start, end) }]
 }
 
 /**
  * Names the spans the whitespace before the first node is emptied at for the 'never' expectation.
  *
  * They are the very stretches the guard weighed, so that what the option asks for and what the fix reaches are one list read twice rather than two walks written apart.
- * @param valueNode - The function node to fix.
- * @param openingIndex - Where the text behind that function's opening parenthesis begins.
+ * @param measured - The stretches the walk measured the whitespace behind the opening parenthesis over.
  * @returns The edits the fix writes, each one a span of the value the file spells.
  */
-function fixBeforeForNever (valueNode: FunctionNode, openingIndex: number): Edit[] {
-	return getFixEmptiedBefore(valueNode, openingIndex).map(([start, end]) => ({ start, end, text: `` }))
+function fixBeforeForNever (measured: [number, number][]): Edit[] {
+	return measured.map(([start, end]) => ({ start, end, text: `` }))
 }
 
 /**
@@ -531,11 +522,11 @@ function fixAfterForAlways (valueNode: FunctionNode, newline: string): Edit[] {
  * Names the spans the whitespace after the last node is emptied at for the 'never' expectation.
  *
  * They are the very stretches the guard weighed, so that what the option asks for and what the fix reaches are one list read twice rather than two walks written apart.
- * @param valueNode - The function node to fix.
+ * @param measured - The stretches the walk measured the whitespace in front of the closing parenthesis over.
  * @returns The edits the fix writes, each one a span of the value the file spells.
  */
-function fixAfterForNever (valueNode: FunctionNode): Edit[] {
-	return getFixEmptiedAfter(valueNode).map(([start, end]) => ({ start, end, text: `` }))
+function fixAfterForNever (measured: [number, number][]): Edit[] {
+	return measured.map(([start, end]) => ({ start, end, text: `` }))
 }
 
 export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })

@@ -297,7 +297,7 @@ testRule({
 			],
 		},
 		{
-			description: `a block comment left open runs to the end of the value rather than back to its start`,
+			description: `a slash and a star inside a bare address, which are two characters of the address to every tokenizer and to Less, so that the string behind the address is read`,
 			code: `a { background: url(a/* unclosed // b) "z"; }`,
 			fixed: `a { background: url(a/* unclosed // b) 'z'; }`,
 			line: 1,
@@ -329,11 +329,12 @@ testRule({
 			message: messages.expected(`single`),
 		},
 		{
-			description: `a parenthesis inside a block comment closes no URL either`,
-			code: `a { background: url(a /* ) */ //b.png) "c"; }`,
-			fixed: `a { background: url(a /* ) */ //b.png) 'c'; }`,
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `a parenthesis inside a block comment standing behind a bare address, which closes nothing; the comment used to stand inside the address, in a file Less refuses, and a bare address holds no comment to every tokenizer now`,
+			code: `a { background: url(a) /* ) */ "c"; }`,
+			fixed: `a { background: url(a) /* ) */ 'c'; }`,
 			line: 1,
-			column: 40,
+			column: 32,
 			message: messages.expected(`single`),
 		},
 		{

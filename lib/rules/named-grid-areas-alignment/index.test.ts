@@ -558,6 +558,17 @@ testRule({
 			endColumn: 40,
 			message: messages.expected(),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `a row standing inside a comment opening with a solidus, a star and a solidus, which the value parser hands back as a string and which is no row of the grid`,
+			code: `a { grid-template-areas: "c   c" /*/ "a  a" */ "b b"; }`,
+			fixed: `a { grid-template-areas: "c c" /*/ "a  a" */ "b b"; }`,
+			line: 1,
+			column: 26,
+			endLine: 1,
+			endColumn: 53,
+			message: messages.expected(),
+		},
 	],
 })
 

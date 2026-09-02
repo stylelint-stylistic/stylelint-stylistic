@@ -678,6 +678,39 @@ testRule({
 			endColumn: 11,
 			message: messages.expected(`PX`, `px`),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `a dimension standing beside a comment opening with a solidus, a star and a solidus, whose text spells a dimension of its own that the value parser hands back as a word`,
+			code: `a { b: 1PX /*/ 2PX */ 3; }`,
+			fixed: `a { b: 1px /*/ 2PX */ 3; }`,
+			line: 1,
+			column: 9,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `dimensions behind a bare address holding a slash and a star, which every tokenizer reads as two characters of the address, so that the comment standing between the two dimensions is the only comment of the value`,
+			code: `a { background: url(http://x.y/*.png) 1PX /* fallback */ 3PX; }`,
+			fixed: `a { background: url(http://x.y/*.png) 1px /* fallback */ 3px; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 40,
+					endLine: 1,
+					endColumn: 42,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 59,
+					endLine: 1,
+					endColumn: 61,
+					message: messages.expected(`PX`, `px`),
+				},
+			],
+		},
 	],
 })
 

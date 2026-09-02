@@ -4,7 +4,7 @@ import stylelint from "stylelint"
 
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { findInlineCommentSpanHolding } from "../../utils/findInlineCommentSpans/index.ts"
+import { findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { assertString, isNumber } from "../../utils/validateTypes/index.ts"
@@ -63,15 +63,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let stringValue = syntax.read(decl)
 
-			// A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind: what such a comment holds comes back as ordinary words and calls
-			let inlineComments = syntax.inlineCommentSpans(stringValue, decl, result)
+			// Every comment the value holds, both kinds. A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind, so what such a comment holds comes back as ordinary words and calls; a block comment reaches the walk as a node of its own — except one opening `/*/`, which the parser closes on the star it opened with, handing the rest of its text back the same way (#378)
+			let comments = syntax.commentSpans(stringValue, decl, result)
 
 			let splittedValue: Array<[string, string]> = []
 			let sourceIndexStart = 0
 
 			valueParser(stringValue).walk((node) => {
-				// A call whose name opens in the text of an inline comment is a call of that text however far the parser reached to close it, so the empty lines it holds are neither counted nor collapsed. What it holds is still walked, and every node of it asked the same question, since such a call reaches past the break that closes the comment and gathers the code standing below it.
-				if (findInlineCommentSpanHolding(node, inlineComments)) return
+				// A call whose name opens in the text of a comment is a call of that text however far the parser reached to close it, so the empty lines it holds are neither counted nor collapsed. What it holds is still walked, and every node of it asked the same question, since such a call reaches past the break or the delimiter that closes the comment and gathers the code standing behind it.
+				if (findCommentSpanHolding(node, comments)) return
 
 				// ignore non functions or sass lists
 				if (node.type !== `function` || node.value.length === 0) return

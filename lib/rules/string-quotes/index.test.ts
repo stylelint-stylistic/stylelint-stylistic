@@ -335,6 +335,41 @@ testRule({
 			column: 9,
 			message: messages.expected(`double`),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `a string standing beside a comment opening with a solidus, a star and a solidus, whose text spells a string of its own that the value parser hands back as one`,
+			code: `a { b: 'a' /*/ 'x' */ 3; }`,
+			fixed: `a { b: "a" /*/ 'x' */ 3; }`,
+			line: 1,
+			column: 8,
+			message: messages.expected(`double`),
+		},
+		{
+			description: `the same comment between the parameters of an at-rule`,
+			code: `@import 'a' /*/ 'x' */ 'b';`,
+			fixed: `@import "a" /*/ 'x' */ "b";`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.expected(`double`),
+				},
+				{
+					line: 1,
+					column: 24,
+					message: messages.expected(`double`),
+				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `such a comment standing beside a quoted address inside its parentheses, which is a comment to every tokenizer`,
+			code: `a { b: url("a" /*/ 'x' */) 'y'; }`,
+			fixed: `a { b: url("a" /*/ 'x' */) "y"; }`,
+			line: 1,
+			column: 28,
+			message: messages.expected(`double`),
+		},
 	],
 })
 

@@ -9,7 +9,7 @@ import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { findInlineCommentSpanHolding } from "../../utils/findInlineCommentSpans/index.ts"
+import { findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
 import { findInterpolationSpanTouching } from "../../utils/findInterpolationSpans/index.ts"
 import { getDimension } from "../../utils/getDimension/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -68,10 +68,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let edits: Edit[] = []
 			let hasFixed = false
 
-			// Every comment of the value, both kinds: one of the two readings below wants the inline ones and the other wants them all. The inline ones are taken out of this list rather than asked of `findInlineCommentSpans`, since that helper is this very scan with the filter below already applied, and asking it as well would read one text twice over for one answer
+			// Every comment of the value, both kinds, and both readings below want them all. A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind, so what such a comment holds comes back as ordinary words and calls; a block comment reaches the walk as a node of its own — except one opening `/*/`, which the parser closes on the star it opened with, handing the rest of its text back the same way (#378)
 			let comments = syntax.commentSpans(checkedValue, node, result)
-			// A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind: what such a comment holds comes back as ordinary words and calls
-			let inlineComments = comments.filter(({ isInline }) => isInline)
 			// An interpolation is written in a language of its own, and the compiler expanding it settles what the text beside it means, so nothing a value spells next to one is a dimension this rule can read. The interpolations are found in the value once, and every node of the walk is measured against them. They are sought in a copy with every comment blanked out, since a brace written in a comment closes no interpolation and the code standing behind such a brace is code the file spells
 			let interpolations = syntax.interpolationSpans(blankComments(checkedValue, comments), node, result)
 
@@ -118,8 +116,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A call opening an address holds a URL and no arguments of its own, so it is passed over whole. The name is read rather than matched against four characters, so that `u\rl(`, `\75 rl(` and `URL(` are the token `url(` is here as they are to the scan that finds the comments — and to Sass, and to `lightningcss`.
 				if (opensAnAddress(valueNode, at, siblings)) return false
 
-				// A node standing in the text of an inline comment is no node of the value: leave it alone. What it holds is still walked, and every node of that asked the same question, since a call opened inside such a comment reaches past the break that closes it and the code it gathers there is code the file spells. An address is passed over first, since the scan that finds the comments steps over one only where it reads it as code: an `url()` opened in a comment's text is a node of that comment holding an address that reaches past the break, and what stands there is nothing this rule may read.
-				if (findInlineCommentSpanHolding(valueNode, inlineComments)) return
+				// A node standing in the text of a comment is no node of the value: leave it alone. What it holds is still walked, and every node of that asked the same question, since a call opened inside such a comment reaches past the break or the delimiter that closes it and the code it gathers there is code the file spells. An address is passed over first, since the scan that finds the comments steps over one only where it reads it as code: an `url()` opened in a comment's text is a node of that comment holding an address that reaches past the comment's end, and what stands there is nothing this rule may read.
+				if (findCommentSpanHolding(valueNode, comments)) return
 
 				// A node carrying any text of an interpolation is passed over whichever side of it the node opens on, since a value parser breaks an interpolation holding whitespace into words and hands no one of them the whole of it: `isStandardSyntaxValue` is asked about a word at a time and answers that `10px#{$a` holds no interpolation at all. What such a node holds is still walked, as the text of an inline comment is, and every node of it asked the same
 				if (findInterpolationSpanTouching(valueNode, interpolations)) return

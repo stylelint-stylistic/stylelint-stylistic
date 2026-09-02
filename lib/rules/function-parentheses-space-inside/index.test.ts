@@ -396,6 +396,11 @@ testRule({
 
 	accept: [
 		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `a call the value parser closed on a parenthesis standing inside a comment opening with a solidus, a star and a solidus, which is no parenthesis the file writes, so the call is left alone as one closed inside an end-of-line comment is`,
+			code: `a { b: f(1 /*/ ) */ ); }`,
+		},
+		{
 			description: `ignore function without parameters`,
 			code: `a { filter: grayscale(); }`,
 		},
@@ -621,6 +626,24 @@ testRule({
 				{
 					line: 1,
 					column: 20,
+					message: messages.rejectedClosing,
+				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `a call standing beside a comment opening with a solidus, a star and a solidus, whose text spells a call of its own that the value parser hands back as a call`,
+			code: `a { b: g( 1 ) /*/ f( 1 ) */ 3; }`,
+			fixed: `a { b: g(1) /*/ f( 1 ) */ 3; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 12,
 					message: messages.rejectedClosing,
 				},
 			],

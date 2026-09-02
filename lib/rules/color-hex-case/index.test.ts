@@ -86,6 +86,15 @@ testRule({
 			column: 28,
 			message: messages.expected(`#12345AA`, `#12345aa`),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `a colour standing beside a comment opening with a solidus, a star and a solidus, whose text spells a colour of its own that the value parser hands back as a word`,
+			code: `a { b: #ABC /*/ #FFF */ 3; }`,
+			fixed: `a { b: #abc /*/ #FFF */ 3; }`,
+			line: 1,
+			column: 8,
+			message: messages.expected(`#ABC`, `#abc`),
+		},
 	],
 })
 

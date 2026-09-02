@@ -1,3 +1,5 @@
+import type { Node } from "postcss-value-parser"
+
 import { IDENTIFIER_CODE_POINT } from "../../regexps.ts"
 import { namesAnAddress } from "../namesAnAddress/index.ts"
 import { readIdentifierCharacter } from "../readIdentifierCharacter/index.ts"
@@ -35,7 +37,9 @@ function skipUrlName (text: string, openIndex: number): number {
 }
 
 /**
- * Skips a `url()` token, whose address carries its double slashes as ordinary characters whether it is quoted or bare. The name has to stand on its own — `image-url(`, `image-\75 rl(` and `@{prefix}url(` all end in a name spelling `url` while being ordinary calls, whose arguments may hold a comment — and the parentheses are counted rather than searched for, since an interpolated address brings its own. A parenthesis that is escaped, quoted or commented out is none, and a token left open is taken for no token at all, so that a comment standing behind it is still seen.
+ * Skips a `url()` token, whose address carries its double slashes as ordinary characters whether it is quoted or bare. The name has to stand on its own — `image-url(`, `image-\75 rl(` and `@{prefix}url(` all end in a name spelling `url` while being ordinary calls, whose arguments may hold a comment — and the parentheses are counted rather than searched for, since an interpolated address brings its own. A parenthesis that is escaped or quoted is none, and a token left open is taken for no token at all, so that a comment standing behind it is still seen.
+ *
+ * What a `/*` inside the parentheses opens turns on what follows the opening one, and the tokenizers of PostCSS, `postcss-scss` and `postcss-less` are asked (#378). A bare address — one opening on anything but a quotation mark or whitespace — holds no comment at all: all three read `url(a/* x)` as one token closed on its parenthesis, and Less itself compiles `url(a/* x) 1PX /* c *\/ 3PX` with the address intact and the second comment a comment. The scan used to skip such a `/*` to the next `*\/` of the text, or to its end, and where that lay past the parenthesis the token was left open, the address was read again as a call, and a comment standing nowhere in the file ran from that `/*` and took the code between for its text. Beside a quoted address a comment is a comment to all three, so one found there is kept and handed out with the token — a double slash beside a quoted address stays code, which it is to PostCSS and to `postcss-less`, the file being no Less at all. Where whitespace parts the parenthesis from the address the tokenizers disagree: PostCSS reads a comment there and lets it carry the parenthesis, `postcss-scss` reads one bracket token closed on the first parenthesis whatever a comment says, and Less keeps the comment as text of the address. The scan reads no comment there and lets the first parenthesis close the token, since that is the one reading under which such a text reaches a rule at all — a comment reaching past the parenthesis leaves PostCSS's parenthesis unclosed, and PostCSS refuses the file. Which reading is the right one where the comment closes inside the parentheses is #427's question; none of the three hands the scan a span for it, as none did before.
  *
  * Whether a name stands in front of this one is a question the scan answers as it goes rather than by looking back a character, since an escape spells a character of a name with several and the last of those tells nothing: the `\61 ` opening `\61 \75 rl(` closes on a space and the `\\` opening `\\\75 rl(` on a backslash, while both spell a name and both leave an ordinary call — `aurl(` and `\url(` — which is what `lightningcss` reads there.
  *
@@ -43,15 +47,19 @@ function skipUrlName (text: string, openIndex: number): number {
  * @param text - The string being scanned.
  * @param openIndex - The index the token would start at.
  * @param behindIdentifier - True where the character run in front of the index is one this scan reads as part of a name: a code point {@link IDENTIFIER_CODE_POINT} names, a closing brace, or an escape spelling anything at all. The code points are the ones the grammar names and not the ASCII ones alone, so `éurl(http://x)` and `日本url(http://x)` are the ordinary calls `lightningcss` reads there rather than addresses.
+ * @param spans - The spans found so far, which the comments beside a quoted address are added to once the token is known to close.
  * @returns The index behind the closing parenthesis, or the given one if no `url()` starts and ends there.
  */
-function skipUrl (text: string, openIndex: number, behindIdentifier: boolean): number {
+function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, spans: CommentSpan[]): number {
 	if (behindIdentifier) return openIndex
 
 	let behindName = skipUrlName(text, openIndex)
 
 	if (behindName === openIndex) return openIndex
 
+	let opening = text.charAt(behindName)
+	let isQuoted = opening === `"` || opening === `'`
+	let found: CommentSpan[] = []
 	let depth = 1
 	let index = behindName
 
@@ -64,10 +72,12 @@ function skipUrl (text: string, openIndex: number, behindIdentifier: boolean): n
 		else if (character === `"` || character === `'`) {
 			index = skipString(text, index)
 		}
-		else if (character === `/` && text[index + 1] === `*`) {
+		else if (isQuoted && character === `/` && text[index + 1] === `*`) {
 			let closeIndex = text.indexOf(`*/`, index + 2)
+			let end = closeIndex === -1 ? text.length : closeIndex + 2
 
-			index = closeIndex === -1 ? text.length : closeIndex + 2
+			found.push({ start: index, end, isInline: false })
+			index = end
 		}
 		else {
 			if (character === `(`) depth += 1
@@ -77,7 +87,11 @@ function skipUrl (text: string, openIndex: number, behindIdentifier: boolean): n
 		}
 	}
 
-	return depth > 0 ? openIndex : index
+	if (depth > 0) return openIndex
+
+	spans.push(...found)
+
+	return index
 }
 
 /**
@@ -124,7 +138,7 @@ export function findCommentSpans (text: string, spellsInlineComments: boolean = 
 			// A backslash spells the character behind it into an ordinary one everywhere code stands, and not only inside the `url()` and the quoted string whose own loops already step over one. `a\//b` opens no comment — Less compiles it to `a\/ / b`, and Sass hands it back as it came — and neither does `a\"b`, whose quotation mark used to open a string that ran to the end of the text and took every comment behind it with it. Inside the text of a comment no syntax reads an escape, and none is read here either: a block comment is skipped to its closing delimiter and an inline one to its break, so the loop never reaches a backslash standing in either.
 			//
 			// An escape spells a letter of a name as readily as it takes the meaning from a delimiter, so an address is looked for from the backslash rather than from behind it: `\75 rl(http://x)` and `\url(http://x)` are the token that `url(http://x)` is. Where no address is spelled there the escape is stepped over whole, so that the first backslash of `\\//` escapes the second rather than the slash, and so that the next question about a name is put behind the whole of this escape rather than in the middle of it.
-			let behindUrl = skipUrl(text, index, behindIdentifier)
+			let behindUrl = skipUrl(text, index, behindIdentifier, spans)
 
 			if (behindUrl === index) {
 				let escaped = readIdentifierCharacter(text, index)
@@ -142,7 +156,7 @@ export function findCommentSpans (text: string, spellsInlineComments: boolean = 
 			behindIdentifier = false
 		}
 		else if (character === `u` || character === `U`) {
-			let behindUrl = skipUrl(text, index, behindIdentifier)
+			let behindUrl = skipUrl(text, index, behindIdentifier, spans)
 
 			if (behindUrl === index) {
 				index += 1
@@ -177,4 +191,46 @@ export function findCommentSpans (text: string, spellsInlineComments: boolean = 
 	}
 
 	return spans
+}
+
+/**
+ * Finds the span of the comment holding a position of a text, where one holds it.
+ *
+ * The position is one of the text the spans were found in, whatever a caller reads there — the opening of a node, which {@link findCommentSpanHolding} asks about, or a character the parser put a meaning on, such as the parenthesis a call was closed on.
+ * @param index - The position, counted in the text the spans were found in.
+ * @param spans - The spans {@link findCommentSpans} found in that text.
+ * @returns The span holding the position, or nothing where no comment does.
+ */
+export function findCommentSpanAt (index: number, spans: CommentSpan[]): CommentSpan | undefined {
+	return spans.find(({ start, end }) => index >= start && index < end)
+}
+
+/**
+ * Finds the span of the comment holding a node of a value parse, where one holds it.
+ *
+ * `postcss-value-parser` has a node for a block comment and none for a comment opened by a double slash, so the text of an inline one reaches a rule as ordinary words, functions and divs, and a rule walking that parse works on the text of the comment as it works on the value, reporting about it and writing into it, unless it asks this (#271). A block comment reaches the rule as a node of its own — but only where the parser closes it where CSS does. CSS closes a comment on the first `*\/` behind its opening, and the parser looks for that delimiter from the opening slash itself, letting the star of the opening serve as the star of the closing: a comment opening `/*\/` closes three characters in to the parser, and everything the file wrote behind that slash comes back as words, strings and calls of the value. So the question is put to every comment the file spells, block and inline alike, the way #275 put it for the commas: a span the scan lays over a block comment is exactly the text CSS reads as that comment, and no node of the value can open inside one (#378).
+ *
+ * The question is put to the position the node opens at, and says nothing about where the node ends. A node opening inside a comment is a node of that comment's text however far it reaches: a call opened there and closed on the line below, or behind the delimiter that closes a block comment, is handed back whole, and what the parser made of it is a reading of a comment rather than anything the file spells. A node opening outside one is a node of the value however far it reaches, and a call is the one that reaches far — whether the parser closed it on a parenthesis standing inside a comment is a second question, put to that parenthesis through {@link findCommentSpanAt} and answered the same way (#320).
+ *
+ * A caller therefore refuses the node and goes on walking what it holds, asking the same of each: a node standing behind the comment is code the file spells, wherever the parser filed it. The node the parser makes of a block comment opens on the comment's own first character, and is answered "inside" like everything else the span holds — which is the answer every caller gives such a node anyway.
+ * @param valueNode - The node the walk has reached.
+ * @param spans - The spans {@link findCommentSpans} found in the text the node was parsed from, which the node's positions count in.
+ * @returns The span holding the node, or nothing where the node is one of the value.
+ */
+export function findCommentSpanHolding (valueNode: Node, spans: CommentSpan[]): CommentSpan | undefined {
+	return findCommentSpanAt(valueNode.sourceIndex, spans)
+}
+
+/**
+ * Finds the span of a comment whose text a node of a value parse carries any of, where one does.
+ *
+ * This is the question a caller writing a node back has to put, and it is not the one {@link findCommentSpanHolding} answers. That one says what a node *is* — a node of the comment's text or a node of the value — and is put to the position the node opens at alone. A node opening outside a comment and reaching past its opening is a node of the value all the same, and yet the text it carries holds the comment, so writing it back by any means other than the file's own characters rewrites that comment.
+ *
+ * A call is the node that reaches: `postcss-value-parser` closes one on a parenthesis wherever it finds one, the text of a comment included, so `f( // c` and a closing parenthesis on the line below is one call carrying a whole comment inside it. A string reaches the same way, pairing the quotation mark it opens on with the next one the text holds, wherever that one stands.
+ * @param valueNode - The node about to be written back, of which only its span is read.
+ * @param spans - The spans {@link findCommentSpans} found in the text the node was parsed from, which the node's positions count in.
+ * @returns The span the node overlaps, or nothing where the node carries no comment's text.
+ */
+export function findCommentSpanTouching (valueNode: Pick<Node, `sourceIndex` | `sourceEndIndex`>, spans: CommentSpan[]): CommentSpan | undefined {
+	return spans.find(({ start, end }) => valueNode.sourceIndex < end && valueNode.sourceEndIndex > start)
 }

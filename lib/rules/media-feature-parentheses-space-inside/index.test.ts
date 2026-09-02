@@ -318,6 +318,24 @@ testRule({
 				},
 			],
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `a feature standing beside a comment opening with a solidus, a star and a solidus, whose text spells a feature of its own that the value parser hands back as one`,
+			code: `@media ( a: 1 ) /*/ ( b: 2 ) */ and (c: 3) { a { b: c; } }`,
+			fixed: `@media (a: 1) /*/ ( b: 2 ) */ and (c: 3) { a { b: c; } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 14,
+					message: messages.rejectedClosing,
+				},
+			],
+		},
 	],
 })
 

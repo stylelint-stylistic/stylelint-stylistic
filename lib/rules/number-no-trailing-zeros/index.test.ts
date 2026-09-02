@@ -241,5 +241,14 @@ testRule({
 			column: 24,
 			message: messages.rejected,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `a fraction standing beside a comment opening with a solidus, a star and a solidus, whose text spells a fraction of its own that the value parser hands back as a word`,
+			code: `a { b: 1.50px /*/ 1.50px */ 3; }`,
+			fixed: `a { b: 1.5px /*/ 1.50px */ 3; }`,
+			line: 1,
+			column: 11,
+			message: messages.rejected,
+		},
 	],
 })

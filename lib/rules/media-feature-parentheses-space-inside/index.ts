@@ -6,7 +6,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { addEdit, applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { findInlineCommentSpanHolding, findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
+import { findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
@@ -80,8 +80,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let indexBoost = atRuleParamIndex(atRule)
 			// A double slash spells a comment only where the syntax says one, and a file of plain CSS spells none: the pair in `myurl(//a)` is code there, and taking it for a comment would silence every feature standing behind it on the line
 			let reading = syntax.inlineComments(atRule, result)
-			// A double slash opens a comment that runs to the end of its line, and `postcss-value-parser` knows nothing of the kind: a parenthesis standing in the text of one opens a media feature as far as that parser is concerned, and the fix then writes inside the comment
-			let inlineComments = findInlineCommentSpans(params, reading.spells)
+			// Every comment the parameters hold, both kinds. A double slash opens a comment that runs to the end of its line, and `postcss-value-parser` knows nothing of the kind: a parenthesis standing in the text of one opens a media feature as far as that parser is concerned, and the fix then writes inside the comment. A block comment opening `/*/` is closed by the parser on the star it opened with, and a parenthesis behind that star opens a feature the same way (#378)
+			let comments = syntax.commentSpans(params, atRule, result)
 
 			let problems: Array<{
 				message: string,
@@ -96,7 +96,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			valueParser(params).walk((node) => {
 				// The parentheses of a comment are the comment's own. Everything they hold is still walked, since a comment left open by one of them takes the rest of the query into itself as far as the parser is concerned, features and all.
-				if (findInlineCommentSpanHolding(node, inlineComments)) return
+				if (findCommentSpanHolding(node, comments)) return
 
 				if (node.type === `function`) {
 					let len = valueParser.stringify(node).length

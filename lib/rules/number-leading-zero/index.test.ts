@@ -207,6 +207,15 @@ testRule({
 				},
 			],
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `a fraction standing beside a comment opening with a solidus, a star and a solidus, whose text spells a fraction of its own that the value parser hands back as a word`,
+			code: `a { b: .5 /*/ .5 */ 3; }`,
+			fixed: `a { b: 0.5 /*/ .5 */ 3; }`,
+			line: 1,
+			column: 8,
+			message: messages.expected,
+		},
 	],
 })
 
@@ -391,6 +400,15 @@ testRule({
 			fixed: `@media (min-width: .5px /* c */) { a { b: c; } }`,
 			line: 1,
 			column: 20,
+			message: messages.rejected,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `a fraction standing beside a comment opening with a solidus, a star and a solidus, whose text spells a fraction of its own that the value parser hands back as a word`,
+			code: `a { b: 0.5 /*/ 0.5 */ 3; }`,
+			fixed: `a { b: .5 /*/ 0.5 */ 3; }`,
+			line: 1,
+			column: 8,
 			message: messages.rejected,
 		},
 	],

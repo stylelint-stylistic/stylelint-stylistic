@@ -6,7 +6,7 @@ import type { InlineCommentReading, Syntax } from "../../syntaxes/index.ts"
 import { applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { findInlineCommentSpanAt, findInlineCommentSpanHolding, findInlineCommentSpans, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
+import { type CommentSpan, findCommentSpanAt, findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -48,16 +48,16 @@ const ARGUMENT_STAND_IN = `x`
  * The whole node is turned away rather than the closing half of it, warning and all: the parentheses the options are about are not where the parser puts them, and nothing read out of a value the parser has misread this way is worth reporting. A closed call standing inside such a function is reached by the walk as ever, and read and fixed where it stands. A bracket the file really leaves open never gets here — PostCSS throws on one of those before any rule sees the declaration — so a comment is the only thing the second question turns away.
  * @param syntax - The syntax the rule is built over.
  * @param valueNode - The function the walk has reached.
- * @param inlineComments - The spans the inline comments of the value occupy in it.
+ * @param comments - The spans the comments of the value occupy in it, both kinds.
  * @returns True where the rule may read the function's parentheses and write between them.
  */
-function isFunctionParsedAsWritten (syntax: Syntax, valueNode: FunctionNode, inlineComments: InlineCommentSpan[]): boolean {
+function isFunctionParsedAsWritten (syntax: Syntax, valueNode: FunctionNode, comments: CommentSpan[]): boolean {
 	if (!syntax.isStandardFunction(valueNode)) return false
 
 	if (valueNode.unclosed) return false
 
 	// The parenthesis the node ends on, asked after `unclosed` because a node marked so ends on no parenthesis of its own while the index still lands on a character: `f(1px // /*` and ` c`, a break and `2px)` ends on a parenthesis standing outside every comment, and `f("abc)` ends one character past the text altogether
-	return !findInlineCommentSpanAt(valueNode.sourceEndIndex - 1, inlineComments)
+	return !findCommentSpanAt(valueNode.sourceEndIndex - 1, comments)
 }
 
 /**
@@ -157,8 +157,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let declValue = syntax.read(decl)
 			// A double slash spells a comment only where the syntax says one, and a file of plain CSS spells none: the pair in `myurl(//a)` is code there, and taking it for a comment would silence everything standing behind it on the line
 			let reading = syntax.inlineComments(decl, result)
-			// A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind: what such a comment holds comes back as ordinary words and calls
-			let inlineComments = findInlineCommentSpans(declValue, reading.spells)
+			// Every comment the value holds, both kinds. A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind, so what such a comment holds comes back as ordinary words and calls; a block comment reaches the walk as a node of its own — except one opening `/*/`, which the parser closes on the star it opened with, handing the rest of its text back the same way (#378)
+			let comments = syntax.commentSpans(declValue, decl, result)
 			let parsedValue = valueParser(declValue)
 
 			parsedValue.walk((valueNode) => {
@@ -167,10 +167,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// The node narrowed to a call, under a name the closures below can read it by: a narrowing made in this callback is not carried into a function created inside it
 				let functionNode = valueNode
 
-				// A call standing in the text of an inline comment is no call of the value, and its parentheses are none of this rule's: leave it alone. A call nested inside it is still walked and asked the same question, since one opened inside such a comment reaches past the break that closes it and gathers code the file spells.
-				if (findInlineCommentSpanHolding(valueNode, inlineComments)) return
+				// A call standing in the text of a comment is no call of the value, and its parentheses are none of this rule's: leave it alone. A call nested inside it is still walked and asked the same question, since one opened inside such a comment reaches past the break or the delimiter that closes it and gathers code the file spells.
+				if (findCommentSpanHolding(valueNode, comments)) return
 
-				if (!isFunctionParsedAsWritten(syntax, valueNode, inlineComments)) return
+				if (!isFunctionParsedAsWritten(syntax, valueNode, comments)) return
 
 				// Ignore function without parameters
 				if (valueNode.nodes.length === 0) return

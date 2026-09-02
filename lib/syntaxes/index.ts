@@ -6,7 +6,6 @@ import type { PostcssResult } from "stylelint"
 import type { InlineComment } from "../preprocessor/findSelectorInlineComments/index.ts"
 import type { InlineCommentReading } from "../preprocessor/readsInlineComments/index.ts"
 import type { CommentSpan } from "../utils/findCommentSpans/index.ts"
-import type { InlineCommentSpan } from "../utils/findInlineCommentSpans/index.ts"
 import type { InterpolationSpan } from "../utils/findInterpolationSpans/index.ts"
 
 import { less } from "./less/index.ts"
@@ -140,15 +139,6 @@ export type Syntax = {
 	commentSpans (text: string, node: Node, result: PostcssResult): CommentSpan[],
 
 	/**
-	 * Finds the spans the inline comments alone occupy in a text of the node's stylesheet, where the node's syntax reads them there.
-	 * @param text - The text, as the rule reads it.
-	 * @param node - The node the text belongs to.
-	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
-	 * @returns The spans, in the text's own coordinates.
-	 */
-	inlineCommentSpans (text: string, node: Node, result: PostcssResult): InlineCommentSpan[],
-
-	/**
 	 * Asks whether a text ends inside an inline comment, under the reading given.
 	 * @param text - The text.
 	 * @param reading - What the syntax makes of a double slash.
@@ -184,15 +174,15 @@ export type Syntax = {
 	searchCopy (text: string, node: Node, result: PostcssResult): { searchString: string, commentSpans: CommentSpan[] },
 
 	/**
-	 * Finds the spans the inline comments occupy in the text a node prints — a declaration's value or an at-rule's params, as `read` hands it over.
+	 * Finds the spans every comment occupies in the text a node prints — a declaration's value or an at-rule's params, as `read` hands it over — the block comments and the inline ones alike.
 	 *
-	 * Where the syntax keeps a pair of copies and the pair is still in step, the spans are read off the pair, exactly as the parser saw them; where the pair has gone out of step, the text is scanned as one carrying no pair at all; and where the syntax spells no inline comment in that text, there are none.
+	 * Where the syntax keeps a pair of copies and the pair is still in step, the inline comments are read off the pair, exactly as the parser saw them; where the pair has gone out of step, the text is scanned as one carrying no pair at all; and where the syntax spells no inline comment in that text, there are none of that kind. The block comments are found by the scan in every case, since the two copies spell them alike.
 	 * @param node - The declaration or at-rule.
 	 * @param text - The text the node prints, as `read` hands it over.
 	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
 	 * @returns The spans, in the text's own coordinates.
 	 */
-	printedInlineComments (node: AtRule | Declaration, text: string, result: PostcssResult): InlineCommentSpan[],
+	printedComments (node: AtRule | Declaration, text: string, result: PostcssResult): CommentSpan[],
 
 	/**
 	 * Opens a rule's selector for a rule that parses it.

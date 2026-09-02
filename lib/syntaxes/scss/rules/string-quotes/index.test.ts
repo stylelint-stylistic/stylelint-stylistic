@@ -279,6 +279,34 @@ testRule({
 			column: 3,
 			message: messages.expected(`double`),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `a string standing beside a comment opening with a solidus, a star and a solidus, in a value that also carries an end-of-line comment, so that the syntax keeps a pair of copies and the block comment is found beside the pair's reading`,
+			code: `
+				a {
+					b: 'a' // 'y'
+						/*/ 'x' */ 'c';
+				}
+			`,
+			fixed: `
+				a {
+					b: "a" // 'y'
+						/*/ 'x' */ "c";
+				}
+			`,
+			warnings: [
+				{
+					line: 2,
+					column: 5,
+					message: messages.expected(`double`),
+				},
+				{
+					line: 3,
+					column: 14,
+					message: messages.expected(`double`),
+				},
+			],
+		},
 	],
 })
 

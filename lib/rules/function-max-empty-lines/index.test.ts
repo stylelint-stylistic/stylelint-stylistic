@@ -343,21 +343,13 @@ testRule({
 			],
 		},
 		{
-			description: `such a comment closing on the star it opened with, so that the call its text names is a call of the value`,
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `such a comment holding the opening of a call, which is text of the comment CSS reads and no call of the value, however far the parser reached to close it`,
 			code: `a { b: f(1 /*/g(*/\n\n\n2); }`,
 			fixed: `a { b: f(1 /*/g(*/\n2); }`,
-			warnings: [
-				{
-					line: 1,
-					column: 7,
-					message: messages.expected(0),
-				},
-				{
-					line: 1,
-					column: 14,
-					message: messages.expected(0),
-				},
-			],
+			line: 1,
+			column: 7,
+			message: messages.expected(0),
 		},
 		{
 			description: `such a comment standing outside every call, where the fix has nothing to do with it`,
@@ -365,6 +357,15 @@ testRule({
 			fixed: `a { b: /*/x*/ f(1\n2); }`,
 			line: 1,
 			column: 14,
+			message: messages.expected(0),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `a call standing beside a comment opening with a solidus, a star and a solidus, whose text spells a call of its own holding empty lines, which the value parser hands back as a call`,
+			code: `a { b: f(1,\n\n\n2) /*/ g(\n\n\n2) */ 3; }`,
+			fixed: `a { b: f(1,\n2) /*/ g(\n\n\n2) */ 3; }`,
+			line: 1,
+			column: 7,
 			message: messages.expected(0),
 		},
 	],

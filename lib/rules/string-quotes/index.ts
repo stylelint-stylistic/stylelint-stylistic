@@ -194,8 +194,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Get out quickly if there are no erroneous quotes
 			if (!value.includes(erroneousQuote)) return
 
-			// Where the comments of the text stand is the syntax's to say: off the pair of copies it keeps while the pair is in step, off a scan of the text otherwise
-			let inlineCommentSpans = syntax.printedInlineComments(node, value, result)
+			// Where the comments of the text stand is the syntax's to say: off the pair of copies it keeps while the pair is in step, off a scan of the text otherwise. Every comment is asked for, since the value parser closes one opening `/*/` on the star it opened with and hands the rest of its text back as nodes of the value, a string it pairs there among them (#378)
+			let commentSpans = syntax.printedComments(node, value, result)
 
 			if (isAtRule(node) && node.name === `charset`) {
 				let hasValidQuotes = node.params.startsWith(`"`) && node.params.endsWith(`"`)
@@ -204,7 +204,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (hasValidQuotes || correctQuote === `'`) return
 			}
 
-			valueParser(blankComments(value, inlineCommentSpans)).walk((valueNode) => {
+			valueParser(blankComments(value, commentSpans)).walk((valueNode) => {
 				if (valueNode.type === `string` && valueNode.quote === erroneousQuote) {
 					let needsEscape = valueNode.value.includes(correctQuote)
 

@@ -11,8 +11,8 @@ import { restoreSelectorInlineComments } from "../../preprocessor/restoreSelecto
 import { searchCopy } from "../../preprocessor/searchCopy/index.ts"
 import { toSelectorSourceIndex } from "../../preprocessor/toSelectorSourceIndex/index.ts"
 import { writesIntoInlineComment } from "../../preprocessor/writesIntoInlineComment/index.ts"
-import { findCommentSpans } from "../../utils/findCommentSpans/index.ts"
-import { findInlineCommentSpans, type InlineCommentSpan } from "../../utils/findInlineCommentSpans/index.ts"
+import { blankComments } from "../../utils/blankComments/index.ts"
+import { type CommentSpan, findCommentSpans } from "../../utils/findCommentSpans/index.ts"
 import { findInterpolationSpans } from "../../utils/findInterpolationSpans/index.ts"
 import { isStandardSyntaxCombinator } from "../../utils/isStandardSyntaxCombinator/index.ts"
 import { isStandardSyntaxDeclaration } from "../../utils/isStandardSyntaxDeclaration/index.ts"
@@ -54,21 +54,23 @@ export let css: Syntax = {
 	write: writePrintedText,
 	inlineComments: inlineCommentReading,
 	commentSpans: (text, node, result) => findCommentSpans(text, readsInlineComments(node, result)),
-	inlineCommentSpans: (text, node, result) => findInlineCommentSpans(text, readsInlineComments(node, result)),
 	endsWithInlineComment,
 	movesEndIntoInlineComment,
 	writesIntoInlineComment,
 	searchCopy,
-	printedInlineComments (node: AtRule | Declaration, text: string, result: PostcssResult): InlineCommentSpan[] {
+	printedComments (node: AtRule | Declaration, text: string, result: PostcssResult): CommentSpan[] {
 		let raws = rawsOf(node)
-
+		let pair = raws && typeof raws.scss === `string` ? { rewritten: raws.raw, spelled: raws.scss } : undefined
 		// The comments the syntax rewrote in the raw are the comments it found, and the two copies say between them where each of them runs — while both still measure the same text; a pair out of step leaves the text to be scanned as one carrying no pair at all
-		if (raws && typeof raws.scss === `string`) return findRewrittenCommentSpans(raws.raw, raws.scss) ?? (text.includes(`//`) ? findInlineCommentSpans(text) : [])
+		let inline = pair ? findRewrittenCommentSpans(pair.rewritten, pair.spelled)?.map(({ start, end }) => ({ start, end, isInline: true })) : null
 
-		if (!text.includes(`//`)) return []
+		// The block comments the two copies spell alike, and the scan finds them in the copy the inline ones are blanked out of: a double slash left standing there is code, part of an address most often, and a `/*` inside an inline comment's text opens nothing once that text is spaces
+		if (inline) return [...inline, ...findCommentSpans(blankComments(text, inline), false)].toSorted((one, other) => one.start - other.start)
 
-		// A double slash of plain CSS is code — part of an address, most often — and so is one of a syntax that marks its comments in a copy of its own
-		return syntaxKeepsInlineComments(nodeSyntax(node, result)) ? findInlineCommentSpans(text) : []
+		// A double slash of plain CSS is code — part of an address, most often — and so is one of a syntax that marks its comments in a copy of its own, unless the pair it marked them in has gone out of step and the text is read for what it spells. The syntax is asked only where the text holds a pair of slashes to ask about
+		let spellsInlineComments = text.includes(`//`) && (pair !== undefined || syntaxKeepsInlineComments(nodeSyntax(node, result)))
+
+		return findCommentSpans(text, spellsInlineComments)
 	},
 	requiresTrailingSemicolon: () => false,
 	// No rule of plain CSS carries a parameter list, and no at-rule of it is a variable: both marks are `postcss-less`'s, and the less namespace reads them

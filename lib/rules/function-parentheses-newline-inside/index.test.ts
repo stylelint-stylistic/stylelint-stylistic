@@ -8,6 +8,11 @@ testRule({
 
 	accept: [
 		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `a call the value parser closed on a parenthesis standing inside a comment opening with a solidus, a star and a solidus, which is no parenthesis the file writes, so the call is left alone as one closed inside an end-of-line comment is`,
+			code: `a { b: f(1 /*/ ) */\n); }`,
+		},
+		{
 			description: `parentheses spelled inside a string, which open no call`,
 			code: `a::before { content: "(a) ( a)"; }`,
 		},
@@ -265,6 +270,42 @@ testRule({
 				{
 					line: 2,
 					column: 1,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `a call standing beside a comment opening with a solidus, a star and a solidus, whose text spells a call of its own that the value parser hands back as a call`,
+			code: `a { b: g(1,\n2) /*/ f(1,\n2) */ 3; }`,
+			fixed: `a { b: g(\n1,\n2\n) /*/ f(1,\n2) */ 3; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 2,
+					column: 1,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `such a comment standing first inside the call, whose break goes behind the comment CSS reads and not behind the star the value parser closed it on`,
+			code: `a { b: f(/*/ c */ 2); }`,
+			fixed: `a { b: f(/*/ c */\n 2\n); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 20,
 					message: messages.expectedClosing,
 				},
 			],
@@ -715,6 +756,33 @@ testRule({
 					message: messages.rejectedClosingMultiLine,
 				},
 			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `such a comment standing first inside the call, whose whitespace is emptied around the comment CSS reads and not around the star the value parser closed it on`,
+			code: `a { b: f(\n/*/ c */ 2\n); }`,
+			fixed: `a { b: f(/*/ c */2); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					message: messages.rejectedOpeningMultiLine,
+				},
+				{
+					line: 3,
+					column: 1,
+					message: messages.rejectedClosingMultiLine,
+				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			description: `such a comment standing last inside the call, over which the whitespace in front of the closing parenthesis is read as over any other block comment`,
+			code: `a { b: f(f(1,\n2) /*/ c */); }`,
+			fixed: `a { b: f(f(1,\n2)/*/ c */); }`,
+			line: 2,
+			column: 12,
+			message: messages.rejectedClosingMultiLine,
 		},
 	],
 })
