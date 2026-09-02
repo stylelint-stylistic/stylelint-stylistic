@@ -1,7 +1,7 @@
 import type { Declaration } from "postcss"
 import stylelint from "stylelint"
 
-import { TRAILING_WHITESPACE } from "../../regexps.ts"
+import { TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { declarationColonSpaceChecker } from "../../utils/declarationColonSpaceChecker/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
@@ -75,13 +75,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let fromColon = decl.raws.between.slice(beforeColon.length)
 
 				if (primary === `always`) {
-					decl.raws.between = beforeColon.replace(TRAILING_WHITESPACE, ` `) + fromColon
+					decl.raws.between = beforeColon.replace(TRAILING_CSS_WHITESPACE, ` `) + fromColon
 
 					return true
 				}
 
 				if (primary === `never`) {
-					decl.raws.between = beforeColon.replace(TRAILING_WHITESPACE, ``) + fromColon
+					decl.raws.between = beforeColon.replace(TRAILING_CSS_WHITESPACE, ``) + fromColon
 
 					return true
 				}

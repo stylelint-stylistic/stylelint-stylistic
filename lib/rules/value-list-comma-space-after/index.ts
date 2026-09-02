@@ -1,7 +1,7 @@
 import type { Declaration } from "postcss"
 import stylelint from "stylelint"
 
-import { LEADING_WHITESPACE } from "../../regexps.ts"
+import { LEADING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -75,8 +75,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let beforeValue = value.slice(0, valueIndex + 1)
 					let afterValue = value.slice(valueIndex + 1)
 
-					if (primary.startsWith(`always`)) afterValue = afterValue.replace(LEADING_WHITESPACE, ` `)
-					else if (primary.startsWith(`never`)) afterValue = afterValue.replace(LEADING_WHITESPACE, ``)
+					if (primary.startsWith(`always`)) afterValue = afterValue.replace(LEADING_CSS_WHITESPACE, ` `)
+					else if (primary.startsWith(`never`)) afterValue = afterValue.replace(LEADING_CSS_WHITESPACE, ``)
 
 					syntax.write(decl, beforeValue + afterValue)
 				}

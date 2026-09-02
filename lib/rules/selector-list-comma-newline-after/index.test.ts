@@ -450,3 +450,34 @@ testRule({
 		},
 	],
 })
+
+// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off with the run.
+testRule({
+	ruleName,
+	config: [`never-multi-line`],
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			description: `a vertical tab behind a comma's run in a multi-line list: each run is trimmed to the tokenizer's, and the character stays`,
+			code: `a, \vb,\nc {}`,
+			fixed: `a,\vb,c {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 2,
+					endLine: 1,
+					endColumn: 3,
+					message: messages.rejectedAfterMultiLine(),
+				},
+				{
+					line: 1,
+					column: 6,
+					endLine: 1,
+					endColumn: 7,
+					message: messages.rejectedAfterMultiLine(),
+				},
+			],
+		},
+	],
+})

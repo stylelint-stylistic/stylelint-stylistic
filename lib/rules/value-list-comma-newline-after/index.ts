@@ -1,7 +1,7 @@
 import type { Declaration } from "postcss"
 import stylelint from "stylelint"
 
-import { LEADING_WHITESPACE, SPACES_THEN_BLOCK_COMMENT, SPACES_THEN_INLINE_COMMENT } from "../../regexps.ts"
+import { LEADING_CSS_WHITESPACE, SPACES_THEN_BLOCK_COMMENT, SPACES_THEN_INLINE_COMMENT } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -86,7 +86,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let afterValue = value.slice(valueIndex + 1)
 
 					if (primary.startsWith(`always`)) afterValue = getLineBreak(syntax, root, result) + afterValue
-					else if (primary.startsWith(`never-multi-line`)) afterValue = afterValue.replace(LEADING_WHITESPACE, ``)
+					else if (primary.startsWith(`never-multi-line`)) afterValue = afterValue.replace(LEADING_CSS_WHITESPACE, ``)
 
 					syntax.write(decl, beforeValue + afterValue)
 				}

@@ -1,7 +1,7 @@
 import type { Rule } from "postcss"
 import stylelint from "stylelint"
 
-import { TRAILING_SPACES_AND_TABS, TRAILING_WHITESPACE } from "../../regexps.ts"
+import { TRAILING_CSS_WHITESPACE, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
@@ -88,7 +88,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 						beforeSelector = spaceIndex >= 0 ? beforeSelector.slice(0, spaceIndex) + getLineBreak(syntax, root, result) + beforeSelector.slice(spaceIndex) : beforeSelector + getLineBreak(syntax, root, result)
 					}
-					else if (primary === `never-multi-line`) beforeSelector = beforeSelector.replace(TRAILING_WHITESPACE, ``)
+					else if (primary === `never-multi-line`) beforeSelector = beforeSelector.replace(TRAILING_CSS_WHITESPACE, ``)
 
 					selector = beforeSelector + afterSelector
 				}

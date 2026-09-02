@@ -350,3 +350,42 @@ testRule({
 		},
 	],
 })
+
+// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off with the run.
+testRule({
+	ruleName,
+	config: [`always`],
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			description: `a vertical tab in front of the range operator, a word to the tokenizer: the space is written beside the character, which stays`,
+			code: `@media (a\v>= 10px) {}`,
+			fixed: `@media (a\v >= 10px) {}`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expectedBefore(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never`],
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			description: `a vertical tab at the run before the range operator: only the tokenizer's run goes, and the character stays`,
+			code: `@media (a\v >= 10px) {}`,
+			fixed: `@media (a\v>= 10px) {}`,
+			line: 1,
+			column: 11,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.rejectedBefore(),
+		},
+	],
+})

@@ -1,7 +1,7 @@
 import type { Declaration } from "postcss"
 import stylelint from "stylelint"
 
-import { TRAILING_WHITESPACE } from "../../regexps.ts"
+import { TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -78,7 +78,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					if (valueIndex === 0) {
 						let between = decl.raws.between || `:`
 
-						decl.raws.between = primary.startsWith(`always`) ? between.replace(TRAILING_WHITESPACE, ` `) : between.replace(TRAILING_WHITESPACE, ``)
+						decl.raws.between = primary.startsWith(`always`) ? between.replace(TRAILING_CSS_WHITESPACE, ` `) : between.replace(TRAILING_CSS_WHITESPACE, ``)
 
 						continue
 					}
@@ -87,8 +87,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let beforeValue = value.slice(0, valueIndex)
 					let afterValue = value.slice(valueIndex)
 
-					if (primary.startsWith(`always`)) beforeValue = beforeValue.replace(TRAILING_WHITESPACE, ` `)
-					else if (primary.startsWith(`never`)) beforeValue = beforeValue.replace(TRAILING_WHITESPACE, ``)
+					if (primary.startsWith(`always`)) beforeValue = beforeValue.replace(TRAILING_CSS_WHITESPACE, ` `)
+					else if (primary.startsWith(`never`)) beforeValue = beforeValue.replace(TRAILING_CSS_WHITESPACE, ``)
 
 					syntax.write(decl, beforeValue + afterValue)
 				}

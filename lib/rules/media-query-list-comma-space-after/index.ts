@@ -1,7 +1,7 @@
 import type { AtRule } from "postcss"
 import stylelint from "stylelint"
 
-import { LEADING_WHITESPACE } from "../../regexps.ts"
+import { LEADING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -76,8 +76,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let beforeComma = params.slice(0, index + 1)
 					let afterComma = params.slice(index + 1)
 
-					if (primary.startsWith(`always`)) params = beforeComma + afterComma.replace(LEADING_WHITESPACE, ` `)
-					else if (primary.startsWith(`never`)) params = beforeComma + afterComma.replace(LEADING_WHITESPACE, ``)
+					if (primary.startsWith(`always`)) params = beforeComma + afterComma.replace(LEADING_CSS_WHITESPACE, ` `)
+					else if (primary.startsWith(`never`)) params = beforeComma + afterComma.replace(LEADING_CSS_WHITESPACE, ``)
 				}
 
 				syntax.write(atRule, params)
