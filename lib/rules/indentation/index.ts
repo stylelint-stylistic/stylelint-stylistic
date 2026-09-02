@@ -98,7 +98,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			}
 
 			let nodeLevel = indentationLevel(node)
-			let hostLevel = Math.ceil(syntax.embedding(node).indent.length / indentChar.length)
+			let { hostLevel, embeddedLevel } = embeddingLevel(syntax, node, indentChar)
 
 			// Cut out any * and _ hacks from `before`
 			let before = (node.raws.before || ``).replace(TRAILING_STAR_OR_UNDERSCORE, ``)
@@ -107,18 +107,21 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!parent) throw new Error(`A parent node must be present`)
 
-			let expectedOpeningBraceIndentation = indentChar.repeat(nodeLevel)
-
 			// Only inspect the spaces before the node if this is the first node in root or there is a line break in the `before` string. (If there is no line break before a node, there is no "indentation" to check.)
 			let isFirstChild = parent.type === `root` && parent.first === node
 			// The whitespace is cut into lines, so that one reading answers both questions asked of it: more than one line means a break stands in it, and the last of them is what the node is indented by. Anything in front of that break is not indentation for this node — it is some other kind of separation, checked by some separate rule. The last line holds whatever the tokenizer read as whitespace short of a break — a form feed or a bare carriage return as much as a space — and the two writers below read the same run, so that what is reported here is what they write over (#452)
 			let beforeLines = before.split(EVERY_LINE_BREAK)
 			let indentationBefore = beforeLines.at(-1)
 
+			// A first node with no line break in front of it stands on the line of whatever opened the stylesheet — the backtick of a styled template, the start of a plain file — and hangs from nothing of the embedding: not the host line's own indentation, nor the level a template broken over lines holds its content at. Its indentation is measured from the backtick and is asked to be empty, the way a plain file's first line is; a template standing on an indented host line used to be asked for that line's tabs, and the fix wrote them into the template (#453). The break is the stylesheet's, as everywhere in this rule: a bare carriage return ends a line of a JavaScript host and none of the stylesheet, so a node behind one stands on the backtick's line here, and the fix that writes over the carriage return leaves it there
+			let opensTheStylesheetsLine = isFirstChild && beforeLines.length === 1
+			let expectedOpeningBraceLevel = opensTheStylesheetsLine ? nodeLevel - embeddedLevel : nodeLevel
+			let expectedOpeningBraceIndentation = indentChar.repeat(expectedOpeningBraceLevel)
+
 			if ((beforeLines.length > 1 || (isFirstChild && (!getDocument(parent) || (parent.raws.codeBefore && TRAILING_LINE_BREAK.test(parent.raws.codeBefore))))) && indentationBefore !== expectedOpeningBraceIndentation) {
 				report({
 					message: messages.expected,
-					messageArgs: [legibleExpectation(nodeLevel - hostLevel)],
+					messageArgs: [legibleExpectation(expectedOpeningBraceLevel - (opensTheStylesheetsLine ? 0 : hostLevel))],
 					node,
 					result,
 					ruleName,
@@ -171,13 +174,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		function indentationLevel (node: Node, level: number = 0): number {
 			if (!node.parent) throw new Error(`A parent node must be present`)
 
-			let calculatedLevel = level
-
-			let { indent: hostIndent, multiline } = syntax.embedding(node)
-
-			if (multiline) calculatedLevel += 1
-
-			calculatedLevel += Math.ceil(hostIndent.length / indentChar.length)
+			let calculatedLevel = level + embeddingLevel(syntax, node, indentChar).embeddedLevel
 
 			if (isRoot(node.parent)) return calculatedLevel + getRootBaseIndentLevel(node.parent, baseIndentLevel, primary)
 
@@ -405,6 +402,20 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			}
 		}
 	}
+}
+
+/**
+ * The levels a node's embedding in a host adds to it: the indentation of the host line the stylesheet's expression opens on, and one more where a template is broken over lines, since its content then stands a level deeper than that line.
+ * @param syntax - The syntax the rule is built over, which reads the embedding.
+ * @param node - The node.
+ * @param indentChar - The indentation of one level.
+ * @returns The host line's level, and that level with the template's own added to it.
+ */
+function embeddingLevel (syntax: Syntax, node: Node, indentChar: string): { hostLevel: number, embeddedLevel: number } {
+	let { indent, multiline } = syntax.embedding(node)
+	let hostLevel = Math.ceil(indent.length / indentChar.length)
+
+	return { hostLevel, embeddedLevel: hostLevel + (multiline ? 1 : 0) }
 }
 
 /** One line of a text to re-indent: the whitespace it opens with, the whitespace the option asks for, and the position of the break in front of it. */

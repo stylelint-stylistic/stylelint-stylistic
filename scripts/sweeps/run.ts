@@ -18,7 +18,10 @@ import { diff, render } from "../harness/diff.ts"
 import { lintDirect, loadRules, type Registry, type RuleSetting } from "../harness/lint.ts"
 
 /** The syntax each name is read under, plain CSS under none. */
-const SYNTAXES: Record<string, string | undefined> = { css: undefined, scss: `postcss-scss`, less: `postcss-less` }
+const SYNTAXES: Record<string, string | undefined> = { css: undefined, scss: `postcss-scss`, less: `postcss-less`, styled: `postcss-styled-syntax` }
+
+/** The syntaxes a sweep is read under where it names none: the stylesheet syntaxes, since a styled template is a JavaScript file around a stylesheet and a corpus written for one is no corpus for the other. */
+const DEFAULT_SYNTAXES = [`css`, `scss`, `less`]
 
 /** What a sweep module exports. */
 export type Sweep = {
@@ -57,7 +60,7 @@ async function measureOne (options: Omit<Parameters<typeof lintDirect>[0], `fix`
 async function measure (sweep: Sweep, registry: Registry): Promise<Record<string, object>> {
 	let rows: Record<string, object> = {}
 
-	for (let syntaxName of sweep.syntaxes ?? Object.keys(SYNTAXES)) {
+	for (let syntaxName of sweep.syntaxes ?? DEFAULT_SYNTAXES) {
 		for (let config of sweep.configs) {
 			let rules: RuleSetting[] = [[`${syntaxName === `css` ? `` : `${syntaxName}/`}${config.rule}`, config.primary, config.secondary]]
 
