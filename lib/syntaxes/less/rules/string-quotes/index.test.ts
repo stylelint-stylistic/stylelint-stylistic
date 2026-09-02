@@ -155,6 +155,11 @@ testRule({
 				}
 			`,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504
+			description: `a quotation mark inside a bare address in front of an end-of-line comment holding another, where the address closes on its parenthesis to every tokenizer and the mark inside it opens no string, so that the comment is a comment and the mark it holds is its text — a file Less itself refuses`,
+			code: `a { background: url(a/a,')//x "z"; }`,
+		},
 	],
 
 	reject: [
@@ -270,14 +275,6 @@ testRule({
 					message: messages.expected(`single`),
 				},
 			],
-		},
-		{
-			description: `a quotation mark left open inside an address closes the URL nowhere, and a URL left open is taken for none`,
-			code: `a { background: url(a/a,')//x "z"; }`,
-			fixed: `a { background: url(a/a,')//x 'z'; }`,
-			line: 1,
-			column: 31,
-			message: messages.expected(`single`),
 		},
 		{
 			description: `a parenthesis inside a quoted address closes the URL no more than a bare one does`,

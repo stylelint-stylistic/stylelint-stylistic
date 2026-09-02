@@ -91,5 +91,26 @@ testRule({
 			endColumn: 8,
 			message: messages.expected(),
 		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504
+		{
+			description: `a quotation mark standing inside such a comment, which the value parser pairs with the opening mark of the row on the line below, so that the rows behind the comment are cut at the wrong places`,
+			code: `
+				a {
+					grid-template-areas: "c   c" // "
+						"a  a" "b b";
+				}
+			`,
+			fixed: `
+				a {
+					grid-template-areas: "c c" // "
+						"a a" "b b";
+				}
+			`,
+			line: 2,
+			column: 23,
+			endLine: 3,
+			endColumn: 15,
+			message: messages.expected(),
+		},
 	],
 })

@@ -569,6 +569,37 @@ testRule({
 			endColumn: 53,
 			message: messages.expected(),
 		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504
+		{
+			description: `a quotation mark standing inside such a comment, which the value parser pairs with the opening mark of the row behind it, so that the rows behind the comment are cut at the wrong places`,
+			code: `a { grid-template-areas: "c   c" /*/ " */ "a  a" "b b"; }`,
+			fixed: `a { grid-template-areas: "c c" /*/ " */ "a a" "b b"; }`,
+			line: 1,
+			column: 26,
+			endLine: 1,
+			endColumn: 55,
+			message: messages.expected(),
+		},
+		{
+			description: `an apostrophe standing inside such a comment, which the value parser opens a string on that no mark of the value closes, so that every row behind the comment is its text to the parser`,
+			code: `a { grid-template-areas: "c   c" /*/ ' */ "a  a" "b b"; }`,
+			fixed: `a { grid-template-areas: "c c" /*/ ' */ "a a" "b b"; }`,
+			line: 1,
+			column: 26,
+			endLine: 1,
+			endColumn: 55,
+			message: messages.expected(),
+		},
+		{
+			description: `a quotation mark inside a bare address in front of the rows, which is a character of the address to every tokenizer, so that the marks behind the address pair as the file pairs them and a slash and a star inside one of the rows open no comment`,
+			code: `a { grid-template-areas: url(a"b)c"/*" "d  d"; }`,
+			fixed: `a { grid-template-areas: url(a"b)c"/*" "d d"; }`,
+			line: 1,
+			column: 26,
+			endLine: 1,
+			endColumn: 46,
+			message: messages.expected(),
+		},
 	],
 })
 

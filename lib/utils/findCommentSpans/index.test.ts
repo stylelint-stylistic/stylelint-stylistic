@@ -55,6 +55,17 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`url(a/*)b*/) // c`)).toEqual([{ start: 13, end: 17, isInline: true }])
 	})
 
+	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504
+	it(`a quotation mark inside a bare address, which is a character of the address to every tokenizer and opens no string, so that the marks behind the address pair as the file pairs them`, () => {
+		expect(findCommentSpans(`url(a"b)c" /* " */ "d"`)).toEqual([])
+		expect(findCommentSpans(`url(a'b)c' // '\n'd'`)).toEqual([])
+		expect(findCommentSpans(`url(a"b)c) /* x */ 2PX`)).toEqual([{ start: 11, end: 18, isInline: false }])
+	})
+
+	it(`a quotation mark inside an address whitespace parts from its parenthesis, which is a string's to PostCSS and to postcss-less, and a file postcss-scss refuses`, () => {
+		expect(findCommentSpans(`url( "a)b" ) /* c */`)).toEqual([{ start: 13, end: 20, isInline: false }])
+	})
+
 	it(`a block comment beside a quoted address inside the parentheses, which is a comment to every tokenizer`, () => {
 		expect(findCommentSpans(`url("a" /*/ 'x' */) 'y'`)).toEqual([{ start: 8, end: 18, isInline: false }])
 		expect(findCommentSpans(`url("a" /* c */ x) /* d */`)).toEqual([{ start: 8, end: 15, isInline: false }, { start: 19, end: 26, isInline: false }])

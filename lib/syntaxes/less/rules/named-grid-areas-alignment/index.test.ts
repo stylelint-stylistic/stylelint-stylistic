@@ -34,17 +34,6 @@ testRule({
 			`,
 		},
 		{
-			description: `an apostrophe written in one such comment and another in the next, whose quotation marks the value parser pairs into a string of neither`,
-			code: `
-				a {
-					grid-template-areas: // it's here
-						'a  a'
-						// don't
-						'b b';
-				}
-			`,
-		},
-		{
 			description: `a row standing behind a form feed inside an end-of-line comment, which is whitespace and closes no comment, so the row is the comment's text`,
 			code: `a { grid-template-areas: "a a" // x\f"b   b"\n"c c"; }`,
 		},
@@ -60,6 +49,31 @@ testRule({
 	],
 
 	reject: [
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504
+		{
+			description: `an apostrophe written in one end-of-line comment and another in the next, whose quotation marks the value parser pairs into a string of neither, so that the row standing between the two comments is that string's text to the parser`,
+			code: `
+				a {
+					grid-template-areas: // it's here
+						'a  a'
+						// don't
+						'b b';
+				}
+			`,
+			fixed: `
+				a {
+					grid-template-areas: // it's here
+						'a a'
+						// don't
+						'b b';
+				}
+			`,
+			line: 2,
+			column: 23,
+			endLine: 5,
+			endColumn: 8,
+			message: messages.expected(),
+		},
 		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/322
 		{
 			description: `a row standing in the text of an end-of-line comment that opens the value, where the rows behind it are not aligned`,

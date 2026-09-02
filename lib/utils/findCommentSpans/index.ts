@@ -1,6 +1,6 @@
 import type { Node } from "postcss-value-parser"
 
-import { IDENTIFIER_CODE_POINT } from "../../regexps.ts"
+import { IDENTIFIER_CODE_POINT, WHITESPACE_ONLY } from "../../regexps.ts"
 import { namesAnAddress } from "../namesAnAddress/index.ts"
 import { readIdentifierCharacter } from "../readIdentifierCharacter/index.ts"
 
@@ -37,9 +37,11 @@ function skipUrlName (text: string, openIndex: number): number {
 }
 
 /**
- * Skips a `url()` token, whose address carries its double slashes as ordinary characters whether it is quoted or bare. The name has to stand on its own — `image-url(`, `image-\75 rl(` and `@{prefix}url(` all end in a name spelling `url` while being ordinary calls, whose arguments may hold a comment — and the parentheses are counted rather than searched for, since an interpolated address brings its own. A parenthesis that is escaped or quoted is none, and a token left open is taken for no token at all, so that a comment standing behind it is still seen.
+ * Skips a `url()` token, whose address carries its double slashes as ordinary characters whether it is quoted or bare. The name has to stand on its own — `image-url(`, `image-\75 rl(` and `@{prefix}url(` all end in a name spelling `url` while being ordinary calls, whose arguments may hold a comment — and the parentheses are counted rather than searched for, since an interpolated address brings its own. A parenthesis that is escaped is none, and neither is one standing between the quotation marks of a quoted address or of a string whitespace parts from the opening parenthesis; inside a bare address every parenthesis counts, quotation marks or not. A token left open is taken for no token at all, so that a comment standing behind it is still seen.
  *
  * What a `/*` inside the parentheses opens turns on what follows the opening one, and the tokenizers of PostCSS, `postcss-scss` and `postcss-less` are asked (#378). A bare address — one opening on anything but a quotation mark or whitespace — holds no comment at all: all three read `url(a/* x)` as one token closed on its parenthesis, and Less itself compiles `url(a/* x) 1PX /* c *\/ 3PX` with the address intact and the second comment a comment. The scan used to skip such a `/*` to the next `*\/` of the text, or to its end, and where that lay past the parenthesis the token was left open, the address was read again as a call, and a comment standing nowhere in the file ran from that `/*` and took the code between for its text. Beside a quoted address a comment is a comment to all three, so one found there is kept and handed out with the token — a double slash beside a quoted address stays code, which it is to PostCSS and to `postcss-less`, the file being no Less at all. Where whitespace parts the parenthesis from the address the tokenizers disagree: PostCSS reads a comment there and lets it carry the parenthesis, `postcss-scss` reads one bracket token closed on the first parenthesis whatever a comment says, and Less keeps the comment as text of the address. The scan reads no comment there and lets the first parenthesis close the token, since that is the one reading under which such a text reaches a rule at all — a comment reaching past the parenthesis leaves PostCSS's parenthesis unclosed, and PostCSS refuses the file. Which reading is the right one where the comment closes inside the parentheses is #427's question; none of the three hands the scan a span for it, as none did before.
+ *
+ * A quotation mark inside a bare address is a character of the address, and the first closing parenthesis closes the token whatever the mark did — the first behind no backslash to PostCSS and `postcss-less`, the first wherever it stands to `postcss-scss`, which reads no escape there: PostCSS, `postcss-scss` and `postcss-less` all read `url(a"b)c" /* " *\/ "d"` as the token `url(a"b)`, the word `c` and the string `" /* "`, and no comment at all. The scan used to skip such a mark to the next one as a string, take the parenthesis inside for the string's, and, where no parenthesis was left behind it, give the token up and read the mark again as a string of the value — one mark late, so that the slash and the star standing inside the string `" /* "` opened a comment to it that no tokenizer reads (#504). A mark inside a quoted address or one whitespace parts from its parenthesis is still a string's, as it is to PostCSS and to `postcss-less`, which read `url( "a)b" )` down to the string's own closing mark and the parenthesis behind it.
  *
  * Whether a name stands in front of this one is a question the scan answers as it goes rather than by looking back a character, since an escape spells a character of a name with several and the last of those tells nothing: the `\61 ` opening `\61 \75 rl(` closes on a space and the `\\` opening `\\\75 rl(` on a backslash, while both spell a name and both leave an ordinary call — `aurl(` and `\url(` — which is what `lightningcss` reads there.
  *
@@ -59,6 +61,7 @@ function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, sp
 
 	let opening = text.charAt(behindName)
 	let isQuoted = opening === `"` || opening === `'`
+	let isBare = !isQuoted && !WHITESPACE_ONLY.test(opening)
 	let found: CommentSpan[] = []
 	let depth = 1
 	let index = behindName
@@ -69,7 +72,7 @@ function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, sp
 		if (character === `\\`) {
 			index += 2
 		}
-		else if (character === `"` || character === `'`) {
+		else if (!isBare && (character === `"` || character === `'`)) {
 			index = skipString(text, index)
 		}
 		else if (isQuoted && character === `/` && text[index + 1] === `*`) {

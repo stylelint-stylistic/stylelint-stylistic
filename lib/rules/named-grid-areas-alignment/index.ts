@@ -3,9 +3,9 @@ import stylelint from "stylelint"
 
 import { EVERY_LINE_BREAK_RUN, EVERY_WHITESPACE_RUN, LAST_LINE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { type CommentSpan, findCommentSpanTouching } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isBoolean, isNumber } from "../../utils/validateTypes/index.ts"
@@ -24,15 +24,14 @@ export let meta = {
 }
 
 /**
- * Asks whether a node of a parsed value is a row of the grid, which is a string the file spells rather than one carrying any of the text of a comment. A double slash opens a comment that runs to the end of its line, and `postcss-value-parser` has a node for a block comment and none of the kind, so what such a comment holds comes back as ordinary strings, words and calls; a block comment opening `/*\/` comes back the same way, since the parser closes it on the star it opened with (#378).
+ * Asks whether a node of a parsed value is a row of the grid, which is a string standing outside every comment of the value.
  *
- * The question is put to the whole of the node rather than to the position it opens at, because this rule only ever writes: a string reaching into a comment's text is written back by writing that text, and it is no string the file spells either way. A quotation mark inside a comment is what parts the two readings — the scan that finds the comments steps over the comment and the value parser does not, so an apostrophe written there pairs with the next quotation mark of the value and hands the walk a string neither the file nor the comment holds.
+ * The parse the node comes from is made over a copy of the value with every comment blanked out, so the question is the node's type and nothing more. `postcss-value-parser` has a node for a block comment and none for a comment opened by a double slash, and it closes a block comment opening `/*\/` on the star it opened with (#378), so a quotation mark written in the text of either opens a string to it that runs to the next quotation mark of the value — and from there on every opening quotation mark of the file is a closing one to the parser and the other way round. Passing such a string over as no row, the way this rule did before #504, left the nodes behind it cut at the wrong places all the same: the closing mark of one row and the opening mark of the next came back as a string of their own, touching no comment, and the last mark of the value as a string never closed, and both were written back as rows. In the blanked copy a comment is spaces, a quotation mark inside one opens nothing, and every string the parser hands back is one the file spells: the scan that finds the comments and the parser read a string the same way, from a quotation mark to the next unescaped one of its kind or to the end of the text, so no string of the copy can reach into a comment either.
  * @param node - The node of the parsed value.
- * @param comments - The spans the comments of the value occupy in it, both kinds.
  * @returns True where the node is a row of the grid.
  */
-function isGridRow (node: Node, comments: CommentSpan[]): node is StringNode {
-	return node.type === `string` && !findCommentSpanTouching(node, comments)
+function isGridRow (node: Node): node is StringNode {
+	return node.type === `string`
 }
 
 /**
@@ -73,11 +72,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		root.walkDecls(`grid-template-areas`, (declaration) => {
 			let declarationValue = syntax.read(declaration)
-			let parsedValue = valueParser(declarationValue)
-			let isMultilineDeclaration = declarationValue.includes(`\n`)
 			let comments = syntax.commentSpans(declarationValue, declaration, result)
+			// The copy is as long as the value and spells it character for character outside the comments, so every position of the parse counts in the value itself, and the fix below slices the value at those positions.
+			let parsedValue = valueParser(blankComments(declarationValue, comments))
+			let isMultilineDeclaration = declarationValue.includes(`\n`)
 
-			let gridRows = parsedValue.nodes.filter((node) => isGridRow(node, comments))
+			let gridRows = parsedValue.nodes.filter(isGridRow)
 
 			// Every row of the grid keeps an entry in each of the lists built below, the ones holding no cell among them, because the fix walks the nodes of the parse and hands each row the entry standing at the head of `formatted`. Dropping a row from the lists while leaving its node in the walk parts the two: every row behind the dropped one is then written one place earlier than it stands, and the last of them is handed nothing at all, which reaches the value as the word `undefined` in quotes. A row with no cells is aligned to nothing, so its entry is the empty text — which is also what trimming its whitespace comes to.
 
@@ -155,8 +155,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				fix () {
 					let acc = []
 					for (let node of parsedValue.nodes) {
-						if (isGridRow(node, comments)) acc.push(`${node.quote}${formatted.shift()}${node.quote}`)
-						// A row is the only thing this rule writes, so every other node of the value goes back as the file spells it, character for character. Printing such a node instead writes it as the parser understood it rather than as the file has it, and for a call that is two harms at once: a `function` node holds its name in `value` and its arguments in `nodes`, so `var(--x)` comes back as `var`, and it holds the whitespace written inside its parentheses in `before` and `after`, which the printing puts outside them, so `f( 1 , 2 )` comes back as a space, an `f` and another space. A comment fares no better — the parser closes one opened as `/*/` on the star of its own opening, so printing it back around its text writes `/**/` where the file spells three characters, and what the file wrote inside that comment is left standing behind it as code. Slicing the source asks nothing of the node's type, and joining the slices over the nodes of a parse hands the parsed text back byte for byte, which `valueParser.stringify` does not. It is also what keeps the text of an end-of-line comment, which reaches this walk as ordinary nodes: a call the parser closed inside one, or a string it paired across the quotation mark written there, is written by writing that text.
+						if (isGridRow(node)) acc.push(`${node.quote}${formatted.shift()}${node.quote}`)
+						// A row is the only thing this rule writes, so every other node of the value goes back as the file spells it, character for character. Printing such a node instead writes it as the parser understood it rather than as the file has it, and for a call that is two harms at once: a `function` node holds its name in `value` and its arguments in `nodes`, so `var(--x)` comes back as `var`, and it holds the whitespace written inside its parentheses in `before` and `after`, which the printing puts outside them, so `f( 1 , 2 )` comes back as a space, an `f` and another space. A comment fares no better — the parser closes one opened as `/*/` on the star of its own opening, so printing it back around its text writes `/**/` where the file spells three characters, and what the file wrote inside that comment is left standing behind it as code. Slicing the source asks nothing of the node's type, and joining the slices over the nodes of a parse hands the parsed text back byte for byte, which `valueParser.stringify` does not. It is also what puts every comment back: the parse was made over a copy with the comments blanked, so where the file spells one the walk meets whitespace, and slicing the value there hands the comment back.
 						else acc.push(declarationValue.slice(node.sourceIndex, node.sourceEndIndex))
 					}
 					let formattedValue = acc.join(``)
