@@ -676,6 +676,7 @@ function replaceIndentation (input: string, searchString: string, replaceString:
 	return stringStart + replaceString + stringEnd
 }
 
-export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
+// The rule reads every line the writers of a run touch, so its check takes the last turn of the run (#353)
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule, defersToRunEnd: true })
 
 export let { ruleName, messages } = createRule(css)

@@ -45,18 +45,18 @@ a { b: @x; // c
 })
 
 describe(`a styled template under the core's rules`, () => {
-	it(`is refused with one warning naming the styled namespace, however many rules are configured`, async () => {
+	it(`is refused with one warning naming the styled namespace, however many rules are configured — attributed to the first rule that takes its turn, which \`indentation\` no longer is, its check taking the run's last turn (#353)`, async () => {
 		let warnings = await lintStyled({ "@stylistic/indentation": [2], "@stylistic/color-hex-case": `lower` })
 
-		expect(warnings).toEqual([{ rule: `@stylistic/indentation`, text: `The "@stylistic/indentation" rule does not read a stylesheet parsed with this syntax; the "@stylistic/styled/" rules do (@stylistic/indentation)` }])
+		expect(warnings).toEqual([{ rule: `@stylistic/color-hex-case`, text: `The "@stylistic/color-hex-case" rule does not read a stylesheet parsed with this syntax; the "@stylistic/styled/" rules do (@stylistic/color-hex-case)` }])
 	})
 
-	it(`is read by the same rules under the namespace the warning names`, async () => {
+	it(`is read by the same rules under the namespace the warning names, \`indentation\`'s warning arriving last with its turn (#353)`, async () => {
 		let warnings = await lintStyled({ "@stylistic/styled/indentation": [2], "@stylistic/styled/color-hex-case": `lower` })
 
 		expect(warnings).toEqual([
-			{ rule: `@stylistic/styled/indentation`, text: `Expected indentation of 2 spaces (@stylistic/styled/indentation)` },
 			{ rule: `@stylistic/styled/color-hex-case`, text: `Expected "#FFF" to be "#fff" (@stylistic/styled/color-hex-case)` },
+			{ rule: `@stylistic/styled/indentation`, text: `Expected indentation of 2 spaces (@stylistic/styled/indentation)` },
 		])
 	})
 })

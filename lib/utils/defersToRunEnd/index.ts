@@ -4,8 +4,25 @@ import type { PostcssResult } from "stylelint"
 /** The primaries that condition a rule on a text standing on one line or over several. A rule configured with one reads a lineness another rule of the same run may be about to change, which is what the deferral below exists for (#355). */
 const LINENESS_PRIMARY = /-(?:single|multi)-line$/u
 
-/** The checks put off until the run's writers have written, by the root they were called with. A document's roots are each walked by every rule in turn, so each root's checks live and are flushed on their own. */
-let deferred: WeakMap<Document | Root, (() => void)[]> = new WeakMap()
+/** The checks put off until the run's writers have written, by the root they were called with, in two tiers: the lineness-conditioned checks, and behind them the checks that read every line the writers touch. A document's roots are each walked by every rule in turn, so each root's checks live and are flushed on their own. */
+let deferred: WeakMap<Document | Root, { lineness: (() => void)[], reading: (() => void)[] }> = new WeakMap()
+
+/**
+ * Reads the queues of one root, making them where the root has none yet.
+ * @param root - The root.
+ * @returns Its two tiers.
+ */
+function queuesOf (root: Document | Root): { lineness: (() => void)[], reading: (() => void)[] } {
+	let queues = deferred.get(root)
+
+	if (queues) return queues
+
+	let made = { lineness: [], reading: [] }
+
+	deferred.set(root, made)
+
+	return made
+}
 
 /** Every rule name the plugin has built, filled as `defineRule`'s factories run. A configuration may spell a name the plugin never built — a typo Stylelint answers with an unknown-rule warning and never calls — and such a name must not be waited for. */
 let registered: Set<string> = new Set()
@@ -62,27 +79,29 @@ export function lastConfiguredPluginRule (result: PostcssResult): string | undef
  * @param run - The check, closed over everything its rule was called with.
  */
 export function deferCheck (root: Document | Root, run: () => void): void {
-	let queue = deferred.get(root)
-
-	if (queue) {
-		queue.push(run)
-
-		return
-	}
-
-	deferred.set(root, [run])
+	queuesOf(root).lineness.push(run)
 }
 
 /**
- * Runs the checks put off for this root, in the order the configuration lists their rules.
+ * Puts one check off until everything else of the run has written into this root — the lineness-conditioned checks included, since those write breaks of their own (#353).
+ * @param root - The root the check was called with, whose flush the check waits for.
+ * @param run - The check, closed over everything its rule was called with.
+ */
+export function deferFinalCheck (root: Document | Root, run: () => void): void {
+	queuesOf(root).reading.push(run)
+}
+
+/**
+ * Runs the checks put off for this root: the lineness-conditioned tier first, then the tier that reads every line, each in the order the configuration lists its rules.
  * @param root - The root whose checks are due.
  */
 export function flushDeferredChecks (root: Document | Root): void {
-	let queue = deferred.get(root)
+	let queues = deferred.get(root)
 
-	if (!queue) return
+	if (!queues) return
 
 	deferred.delete(root)
 
-	for (let run of queue) run()
+	for (let run of queues.lineness) run()
+	for (let run of queues.reading) run()
 }

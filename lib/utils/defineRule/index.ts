@@ -3,7 +3,7 @@ import stylelint, { type PostcssResult, type Rule, type RuleMessages, type RuleM
 
 import { namespaces, type Syntax } from "../../syntaxes/index.ts"
 import { addNamespace } from "../addNamespace/index.ts"
-import { deferCheck, defersToRunEnd, flushDeferredChecks, lastConfiguredPluginRule, registerPluginRule } from "../defersToRunEnd/index.ts"
+import { deferCheck, deferFinalCheck, defersToRunEnd, flushDeferredChecks, lastConfiguredPluginRule, registerPluginRule } from "../defersToRunEnd/index.ts"
 import type { RuleCheck } from "../ruleCheck/index.ts"
 
 let { utils: { report, ruleMessages } } = stylelint
@@ -15,12 +15,13 @@ export type RuleScope<M extends RuleMessages> = {
 	syntax: Syntax,
 }
 
-/** What a rule module defines once, whichever namespaces the rule is then registered under. */
+/** What a rule module defines once, whichever namespaces the rule is then registered under. `defersToRunEnd` marks a rule that reads every line the writers of a run touch — `indentation` — whose check then takes the last turn of the run, behind even the lineness-deferred ones (#353). */
 export type RuleDefinition<P, S, M extends RuleMessages> = {
 	shortName: string,
 	meta: RuleMeta,
 	messages: M,
 	rule: (scope: RuleScope<M>, primary: P, secondaryOptions: S) => RuleCheck,
+	defersToRunEnd?: true,
 }
 
 /**
@@ -41,7 +42,7 @@ let refused: WeakSet<Root> = new WeakSet()
  * @returns The factory, whose result is what Stylelint's `createPlugin` takes.
  */
 export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefinition<P, S, M>): (syntax: Syntax) => Rule<P, S, M> {
-	let { shortName, meta, messages, rule } = definition
+	let { shortName, meta, messages, rule, defersToRunEnd: readsEveryLine } = definition
 
 	return (syntax) => {
 		let ruleName = addNamespace(shortName, syntax.namespace)
@@ -87,8 +88,9 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 			return (root, result) => {
 				let last = lastConfiguredPluginRule(result)
 
-				// A lineness-conditioned check waits for the run's writers, and only where a flush is sure to come — a run whose configuration the plugin cannot read runs the check where it stands (#355)
-				if (defersToRunEnd(primary) && last !== undefined) deferCheck(root, () => guarded(root, result))
+				// A lineness-conditioned check waits for the run's writers (#355), and one that reads every line waits for everything, the lineness-deferred writes included (#353) — either only where a flush is sure to come: a run whose configuration the plugin cannot read runs the check where it stands
+				if (readsEveryLine && last !== undefined) deferFinalCheck(root, () => guarded(root, result))
+				else if (defersToRunEnd(primary) && last !== undefined) deferCheck(root, () => guarded(root, result))
 				else guarded(root, result)
 
 				if (ruleName === last) flushDeferredChecks(root)
