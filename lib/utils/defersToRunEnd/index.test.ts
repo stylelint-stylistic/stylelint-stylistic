@@ -2,7 +2,7 @@ import { parse } from "postcss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
-import { deferCheck, defersToRunEnd, flushDeferredChecks, lastConfiguredPluginRule, registerPluginRule } from "./index.ts"
+import { deferCheck, deferFinalCheck, defersToRunEnd, flushDeferredChecks, lastConfiguredPluginRule, registerPluginRule } from "./index.ts"
 
 /**
  * Builds the slice of a Stylelint result the util reads: the normalised rule settings of a configuration.
@@ -69,6 +69,16 @@ describe(`deferCheck and flushDeferredChecks`, () => {
 		expect(ran).toStrictEqual([`first`, `second`])
 		flushDeferredChecks(root)
 		expect(ran).toStrictEqual([`first`, `second`])
+	})
+
+	it(`the reading tier runs behind the lineness tier, whatever order the checks were put off in`, () => {
+		let root = parse(`a {}`)
+		let ran: string[] = []
+
+		deferFinalCheck(root, () => ran.push(`reads-everything`))
+		deferCheck(root, () => ran.push(`lineness`))
+		flushDeferredChecks(root)
+		expect(ran).toStrictEqual([`lineness`, `reads-everything`])
 	})
 
 	it(`two roots live apart: each root's checks wait for its own flush`, () => {
