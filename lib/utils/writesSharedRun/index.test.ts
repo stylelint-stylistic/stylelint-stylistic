@@ -103,14 +103,14 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { b: ; }`, { [SEMICOLON_SPACE]: `never`, [COLON_SPACE]: `always` }, SEMICOLON_SPACE, { ...css, isStandardDeclaration: () => false })).toBe(true)
 	})
 
-	it(`a block the asking rule's break puts over several lines, which wakes the neighbour's multi-line option`, () => {
+	it(`a block the asking rule's break puts over several lines, which wakes the neighbour's multi-line option — a neighbour behind the asker in either spelling, since a lineness-conditioned check waits for the run's writers (#355)`, () => {
 		expect(ask(`a { b:; }`, { [COLON_NEWLINE]: `always`, [SEMICOLON_NEWLINE]: `never-multi-line` }, COLON_NEWLINE)).toBe(false)
-		expect(ask(`a { b:; }`, { [SEMICOLON_NEWLINE]: `never-multi-line`, [COLON_NEWLINE]: `always` }, COLON_NEWLINE)).toBe(true)
+		expect(ask(`a { b:; }`, { [SEMICOLON_NEWLINE]: `never-multi-line`, [COLON_NEWLINE]: `always` }, COLON_NEWLINE)).toBe(false)
 	})
 
-	it(`the rule listed last, which writes whatever its own write does to the block, since nothing behind it can rewrite`, () => {
-		expect(ask(`a { b:\n; }`, { [COLON_NEWLINE]: `always`, [SEMICOLON_NEWLINE]: `never-multi-line` }, SEMICOLON_NEWLINE)).toBe(true)
-		expect(ask(`a {\n\tb:\n;\n}`, { [COLON_NEWLINE]: `always`, [SEMICOLON_NEWLINE]: `never-multi-line` }, SEMICOLON_NEWLINE)).toBe(true)
+	it(`the rule taking the last turn, which still does not write over a rule ahead that was content with the run as it stood — that one has spoken by staying silent, and a write it would not accept leaves the file violating a rule that reported nothing (#355)`, () => {
+		expect(ask(`a { b:\n; }`, { [COLON_NEWLINE]: `always`, [SEMICOLON_NEWLINE]: `never-multi-line` }, SEMICOLON_NEWLINE)).toBe(false)
+		expect(ask(`a {\n\tb:\n;\n}`, { [COLON_NEWLINE]: `always`, [SEMICOLON_NEWLINE]: `never-multi-line` }, SEMICOLON_NEWLINE)).toBe(false)
 	})
 
 	it(`three rules, where a rule ahead of two contradicting ones writes only what both accept`, () => {
@@ -121,12 +121,12 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a {\n\tb:;\n}`, { [COLON_SPACE]: `always`, [SEMICOLON_NEWLINE]: `never-multi-line`, [SEMICOLON_SPACE]: `never` }, COLON_SPACE)).toBe(false)
 	})
 
-	it(`four rules, where each is asked about every rule behind it and not about one of them`, () => {
+	it(`four rules, where each is asked about every rule behind it — and a lineness-conditioned one about a rule ahead that was content with the run as it stood, whose silence a write must not turn into a violation (#355)`, () => {
 		let rules = { [SEMICOLON_SPACE]: `never-single-line`, [COLON_NEWLINE]: `always`, [COLON_SPACE]: `always-single-line`, [SEMICOLON_NEWLINE]: `always-multi-line` }
 
 		expect(ask(`a { b: ; }`, rules, SEMICOLON_SPACE)).toBe(false)
 		expect(ask(`a { b: ; }`, rules, COLON_NEWLINE)).toBe(false)
-		expect(ask(`a { b:; }`, rules, COLON_SPACE)).toBe(true)
+		expect(ask(`a { b:; }`, rules, COLON_SPACE)).toBe(false)
 	})
 
 	it(`a single-line option the break of the rule behind silences, whose write costs the file nothing`, () => {

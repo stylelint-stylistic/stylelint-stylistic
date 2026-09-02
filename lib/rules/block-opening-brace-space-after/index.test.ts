@@ -1,3 +1,5 @@
+import { messages as closingNewlineBeforeMessages } from "../block-closing-brace-newline-before/index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -600,6 +602,38 @@ testRule({
 			line: 2,
 			column: 6,
 			message: messages.expectedAfter(),
+		},
+	],
+})
+
+// A lineness-conditioned check waits for the run's writers (#355): both orders of this pair rest on one and the same file now, where they used to leave two different self-consistent ones.
+testRule({
+	ruleName,
+	config: [`always-multi-line`],
+	extraRules: { "@stylistic/block-closing-brace-newline-before": `always` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355
+			description: `a block the neighbour's break puts over lines within the same run: the option speaks of the finished block and writes its space, and the file is the one the other order always left`,
+			code: `@media screen{\na{b:c;d:e}\n}\n`,
+			fixed: `@media screen{ a{ b:c;d:e\n}\n}\n`,
+			warnings: [
+				{
+					line: 2,
+					column: 9,
+					endLine: 2,
+					endColumn: 10,
+					message: closingNewlineBeforeMessages.expectedBefore,
+				},
+				{
+					line: 1,
+					column: 15,
+					endLine: 1,
+					endColumn: 16,
+					message: messages.expectedAfterMultiLine(),
+				},
+			],
 		},
 	],
 })

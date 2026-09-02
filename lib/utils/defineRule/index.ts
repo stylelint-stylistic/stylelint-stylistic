@@ -1,8 +1,9 @@
 import type { Root } from "postcss"
-import stylelint, { type Rule, type RuleMessages, type RuleMeta } from "stylelint"
+import stylelint, { type PostcssResult, type Rule, type RuleMessages, type RuleMeta } from "stylelint"
 
 import { namespaces, type Syntax } from "../../syntaxes/index.ts"
 import { addNamespace } from "../addNamespace/index.ts"
+import { deferCheck, defersToRunEnd, flushDeferredChecks, lastConfiguredPluginRule, registerPluginRule } from "../defersToRunEnd/index.ts"
 import type { RuleCheck } from "../ruleCheck/index.ts"
 
 let { utils: { report, ruleMessages } } = stylelint
@@ -44,6 +45,9 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 
 	return (syntax) => {
 		let ruleName = addNamespace(shortName, syntax.namespace)
+
+		registerPluginRule(ruleName)
+
 		let scopedMessages = ruleMessages(ruleName, messages) as M
 		let { refusal } = ruleMessages(ruleName, {
 			refusal: (names: string) => (names ? `The "${ruleName}" rule does not read a stylesheet parsed with this syntax; the ${names} rules do` : `The "${ruleName}" rule does not read a stylesheet parsed with this syntax`),
@@ -58,8 +62,17 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 		function scoped (primary: P, secondaryOptions: S): RuleCheck {
 			let check = rule({ ruleName, messages: scopedMessages, syntax }, primary, secondaryOptions)
 
-			return (root, result) => {
-				if (syntax.accepts(root, result)) return check(root, result)
+			/**
+			 * The whole of what the rule does at a turn, the syntax's refusal included, so a deferred rule refuses and reports exactly as an undeferred one would have.
+			 * @param root - The root of the stylesheet.
+			 * @param result - The result to report into.
+			 */
+			function guarded (root: Root, result: PostcssResult): void {
+				if (syntax.accepts(root, result)) {
+					check(root, result)
+
+					return
+				}
 
 				if (refused.has(root)) return
 
@@ -69,6 +82,16 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 				let takers = namespaces.filter((namespace) => namespace.accepts(root, result)).map((namespace) => `"@stylistic/${namespace.namespace}/"`).join(` and `)
 
 				report({ message: refusal, messageArgs: [takers], node: root, index: 0, endIndex: 0, result, ruleName })
+			}
+
+			return (root, result) => {
+				let last = lastConfiguredPluginRule(result)
+
+				// A lineness-conditioned check waits for the run's writers, and only where a flush is sure to come — a run whose configuration the plugin cannot read runs the check where it stands (#355)
+				if (defersToRunEnd(primary) && last !== undefined) deferCheck(root, () => guarded(root, result))
+				else guarded(root, result)
+
+				if (ruleName === last) flushDeferredChecks(root)
 			}
 		}
 

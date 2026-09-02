@@ -1,4 +1,5 @@
 import { messages as colonNewlineAfterMessages } from "../declaration-colon-newline-after/index.ts"
+import { messages as colonSpaceAfterMessages } from "../declaration-colon-space-after/index.ts"
 
 import { messages, ruleName } from "./index.ts"
 
@@ -82,26 +83,26 @@ testRule({
 
 	reject: [
 		{
-			description: `a single-line option the neighbour's break silences, so that this rule's fix costs the file nothing and is written ahead of the break`,
+			description: `a single-line option asked at the run's end, of the block the neighbour's break has finished (#355): the unfixed file draws both warnings, and under \`--fix\` the option is silenced by the break the neighbour wrote, so the run before the semicolon stays as it stands`,
 			code: `a { color: ; }`,
 			fixed: `
 				a { color:
-				; }
+				 ; }
 			`,
 			warnings: [
-				{
-					line: 1,
-					column: 11,
-					endLine: 1,
-					endColumn: 12,
-					message: messages.rejectedBeforeSingleLine(),
-				},
 				{
 					line: 1,
 					column: 10,
 					endLine: 1,
 					endColumn: 11,
 					message: colonNewlineAfterMessages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 11,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.rejectedBeforeSingleLine(),
 				},
 			],
 		},
@@ -142,6 +143,26 @@ testRule({
 			endLine: 1,
 			endColumn: 11,
 			message: messages.rejectedBefore(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never-single-line`],
+	extraRules: { "@stylistic/declaration-colon-space-after": `always` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355
+			description: `an empty custom property the neighbour finishes as \`--x: ;\` in the same run: the space stands on the tail of the raw between until the file is read back, the exception of #50 reads it there, and the deferred check stays silent about the finished form`,
+			code: `a { --bar:; x: y; }`,
+			fixed: `a { --bar: ; x: y; }`,
+			line: 1,
+			column: 11,
+			endLine: 1,
+			endColumn: 12,
+			message: colonSpaceAfterMessages.expectedAfter(),
 		},
 	],
 })

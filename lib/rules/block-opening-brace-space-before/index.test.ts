@@ -1,3 +1,5 @@
+import { messages as semicolonNewlineAfterMessages } from "../declaration-block-semicolon-newline-after/index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -733,6 +735,69 @@ testRule({
 			line: 1,
 			column: 16,
 			message: messages.rejectedBeforeMultiLine(),
+		},
+	],
+})
+
+// A lineness-conditioned check waits for the run's writers (#355): the question whether the block is multi-line is asked of the text every writer has finished, so the order the configuration lists the two rules in decides neither the file nor whether this rule speaks.
+testRule({
+	ruleName,
+	config: [`always-multi-line`],
+	extraRules: { "@stylistic/declaration-block-semicolon-newline-after": `always` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355
+			description: `a block the neighbour's break puts over lines within the same run: the option speaks of the finished block and writes its space, where it used to stay silent about a block that was about to stop being single-line`,
+			code: `@media screen{\na{b:c;d:e}\n}\n`,
+			fixed: `@media screen {\na {b:c;\nd:e}\n}\n`,
+			warnings: [
+				{
+					line: 2,
+					column: 7,
+					endLine: 2,
+					endColumn: 8,
+					message: semicolonNewlineAfterMessages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 13,
+					endLine: 1,
+					endColumn: 14,
+					message: messages.expectedBeforeMultiLine(),
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always-multi-line`, { disableFix: true }],
+	extraRules: { "@stylistic/declaration-block-semicolon-newline-after": `always` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355
+			description: `the same pair with this rule's fix turned off: the deferred check still reads the finished block, reports it, and writes nothing`,
+			code: `@media screen{\na{b:c;d:e}\n}\n`,
+			fixed: `@media screen{\na{b:c;\nd:e}\n}\n`,
+			warnings: [
+				{
+					line: 2,
+					column: 7,
+					endLine: 2,
+					endColumn: 8,
+					message: semicolonNewlineAfterMessages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 13,
+					endLine: 1,
+					endColumn: 14,
+					message: messages.expectedBeforeMultiLine(),
+				},
+			],
 		},
 	],
 })

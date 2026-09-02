@@ -123,14 +123,14 @@ testRule({
 			`,
 			warnings: [
 				{
-					line: 2,
-					column: 5,
-					message: newlineBeforeMessages.expectedBeforeMultiLine(),
-				},
-				{
 					line: 3,
 					column: 5,
 					message: messages.expected,
+				},
+				{
+					line: 2,
+					column: 5,
+					message: newlineBeforeMessages.expectedBeforeMultiLine(),
 				},
 			],
 		},
@@ -231,13 +231,13 @@ testRule({
 			warnings: [
 				{
 					line: 1,
-					column: 8,
-					message: spaceBeforeMessages.expectedBeforeSingleLine(),
+					column: 14,
+					message: messages.expected,
 				},
 				{
 					line: 1,
-					column: 14,
-					message: messages.expected,
+					column: 8,
+					message: spaceBeforeMessages.expectedBeforeSingleLine(),
 				},
 			],
 		},

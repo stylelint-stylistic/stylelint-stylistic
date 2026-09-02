@@ -2,10 +2,12 @@ import type { Declaration } from "postcss"
 import styleSearch from "style-search"
 import type { PostcssResult } from "stylelint"
 
-import { EVERY_LINE_BREAK, OPENS_WITH_BLOCK_COMMENT, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
+import { EVERY_LINE_BREAK, LEADING_CSS_WHITESPACE, OPENS_WITH_BLOCK_COMMENT, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { addNamespace } from "../addNamespace/index.ts"
+import { betweenTailAfterColon } from "../betweenTailAfterColon/index.ts"
 import { blockString } from "../blockString/index.ts"
+import { defersToRunEnd } from "../defersToRunEnd/index.ts"
 import { isCustomProperty } from "../isCustomProperty/index.ts"
 import { isInlineStyleAttribute } from "../isInlineStyleAttribute/index.ts"
 import { isLastDeclarationWithoutSemicolon } from "../isLastDeclarationWithoutSemicolon/index.ts"
@@ -159,14 +161,14 @@ function breaksOf (text: string): number {
  *
  * Where a declaration's value is nothing but whitespace, the run behind the colon is the run in front of the semicolon, and one character cannot answer to two options. Stylelint runs each rule once and in the order the configuration lists them, and the colon rules write into `raws.between` while the semicolon rules read the value, so a pair asked for two different things used to take the run in turns: on one run of `--fix` the semicolon rule took it away, on the next the colon rule put it back where the semicolon rule could not see it, and the file never came to rest (#416).
  *
- * What a rule writes is what the file is left with only where no rule listed behind it writes otherwise, since those run after it and rewrite what they are not content with. So a rule writes the run only where every rule listed behind it that speaks of the declaration and has its fix to write with either shares with it a spelling of the run both are content with, or writes what silences it — one whose fix the configuration turned off rewrites nothing and gates nothing, reporting whatever the run comes to; otherwise it reports the run and leaves it alone, so the file rests on what the rules behind it write and the warning of the rule the configuration contradicted stands. The rules ahead of it need no asking: every option is content with one spelling of the run, save the `never` options that leave a single space alone and are content with two, so wherever two acceptances meet there is a spelling both are content with, and the file comes to rest on it within a run of the fixer after the last write — the rule writing last either writes that spelling or is content with it once the rule ahead has written it back. The settings are read through `neighbourSettings`, under the names of the asking rule's namespace and in the order the run makes them.
+ * What a rule writes is what the file is left with only where no rule listed behind it writes otherwise, since those run after it and rewrite what they are not content with. So a rule writes the run only where every rule listed behind it that speaks of the declaration and has its fix to write with either shares with it a spelling of the run both are content with, or writes what silences it — one whose fix the configuration turned off rewrites nothing and gates nothing, reporting whatever the run comes to; otherwise it reports the run and leaves it alone, so the file rests on what the rules behind it write and the warning of the rule the configuration contradicted stands. The rules ahead of a rule taking its turn where the configuration lists it need no asking: a rule ahead that was discontent has written its spelling or warned, and the asking rule either writes a spelling both are content with or is rewritten the run after. A rule whose check waits for the run's end (#355) runs after every rule ahead of it as well, and those have had their say already — so it also writes only where each of them accepts what the write leaves, freed by one that has warned already, whose warning stands over whatever the write makes, and by one the write itself silences; a turned-off fix exempts nothing there, since a rule that was silently content stays silently violated. The settings are read through `neighbourSettings`, under the names of the asking rule's namespace and in the order the run makes them.
  *
  * Whether a `-single-line` or `-multi-line` option speaks of the declaration is decided the way each rule decides it — over the declaration's own value for the colon rules, over the block for the semicolon rules — and as either text will stand when the option reads it. The rules behind are asked about the text as the asking rule's write leaves it within the pass, since that is what they run over: a break written anywhere into a block on one line is what wakes `never-multi-line` up, while the value of a custom property gains a break only from a semicolon rule, which writes into the value itself — one a colon rule writes stands in `raws.between` until the file is parsed again, so the other colon rule still reads the value as it was and acts on it. And the asking rule is asked about the text as a rule behind it leaves it for the run after, when the file has been parsed again and a break stands in the value whichever rule wrote it: where that write is what silences it — a break written into the block a `-single-line` option speaks of, or into the value of a custom property one reads — what it writes costs the file nothing, and it writes as it always did.
  * @param syntax - The syntax the asking rule is built over.
  * @param decl - The declaration.
  * @param result - The Stylelint result, which holds the configuration.
  * @param ruleName - The name the asking rule is registered under.
- * @returns True where the asking rule writes the run: it reads no shared run of this declaration, or every rule behind it is content with a spelling it is content with too, or silences it.
+ * @returns True where the asking rule writes the run: it reads no shared run of this declaration, or every rule behind it is content with a spelling it is content with too or silences it — and, where its check waits for the run's end, every rule ahead accepts what the write leaves, has warned already, or is silenced by it.
  */
 export function writesSharedRun (syntax: Syntax, decl: Declaration, result: PostcssResult, ruleName: string): boolean {
 	let asking = (Object.keys(PARTICIPANTS) as Participant[]).find((participant) => addNamespace(PARTICIPANTS[participant].name, syntax.namespace) === ruleName)
@@ -232,7 +234,7 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 	let accepted = accepts(participant, option, decl)
 	let asksFromTheSemicolon = FROM_THE_SEMICOLON.includes(participant)
 
-	return settings.slice(position + 1).every(([behind, behindOption, behindFixTurnedOff]) => {
+	let restsBehind = settings.slice(position + 1).every(([behind, behindOption, behindFixTurnedOff]) => {
 		// A rule whose fix the configuration turned off speaks of the run and reports it, but cannot write: it will not rewrite what the asking rule leaves, and its warning stands over a violation whichever way the run is spelled, so it gates nothing — deferring to it left the run unwritten with two warnings where the configuration asked for a report and one write (#485)
 		if (behindFixTurnedOff || !readers.has(behind) || !speaksAfter(behind, behindOption, writes, asksFromTheSemicolon)) return true
 
@@ -240,4 +242,23 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 
 		return accepted.some((candidate) => behindAccepts.includes(candidate)) || !speaksAfter(participant, option, writtenBy(behind, behindOption), true)
 	})
+
+	// The spelling the run stands in when the asking rule takes its turn, for asking whether a rule ahead has already reported it. The run is the one the asking rule's group reads: the trailing run in front of the semicolon for the semicolon's group, and for the head group the whitespace behind the colon — what the parser trimmed onto `raws.between`, what a fix ahead wrote onto its tail, and the run a custom property's value opens with, together
+	let standingRun = readers === semicolon ? run : betweenTailAfterColon(decl) + (syntax.read(decl).match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0]
+	let standing: Run = standingRun === `` ? `none` : (breaksOf(standingRun) > 0 ? `newline` : `space`)
+
+	// A lineness-conditioned asker runs after every rule ahead of it as well (#355), and those have had their say already: a write one of them would not accept leaves the file violating a rule that reported nothing, and the next run rewriting — the swing of #416 across runs. So a rule ahead gates the write unless it accepts what the write leaves, judged over the file as it rests — reparsed, a break in the value whoever wrote it. Two things free it: a rule ahead that has warned already — it spoke of the run as it stands and did not accept it, so its warning stands over whatever the write makes and nothing is silent — and one the write itself silences. A turned-off fix exempts nothing here, unlike behind: a rule behind still speaks after the write and reports what it sees, while a rule ahead judged the run before the write and stands silent over what the write made of it
+	let restsAhead = !defersToRunEnd(option) || settings.slice(0, position).every(([ahead, aheadOption]) => {
+		if (!readers.has(ahead)) return true
+
+		let aheadAccepts = accepts(ahead, aheadOption, decl)
+
+		if (speaksAfter(ahead, aheadOption, standing, true) && !aheadAccepts.includes(standing)) return true
+
+		if (!speaksAfter(ahead, aheadOption, writes, true)) return true
+
+		return aheadAccepts.includes(writes)
+	})
+
+	return restsBehind && restsAhead
 }
