@@ -277,6 +277,25 @@ testRule({
 			column: 2,
 			message: messages.expected(`2 tabs`),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/375
+			description: `an inline comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace rather than into a node of its own`,
+			code: `
+				a {
+					@extend .b
+					// c
+				}
+			`,
+			fixed: `
+				a {
+					@extend .b
+						// c
+				}
+			`,
+			line: 3,
+			column: 2,
+			message: messages.expected(`2 tabs`),
+		},
 	],
 })
 

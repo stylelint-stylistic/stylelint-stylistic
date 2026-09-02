@@ -22,6 +22,7 @@ const FIXTURES: [string, string][] = [
 	[`selector-comment`, `a /* c */ > b { color: pink; }\n`],
 	[`atrule-bodiless`, `@import "a";\n@charset "utf-8";\n`],
 	[`atrule-closes-block`, `a {\n\t@extend .b\n}\n`],
+	[`atrule-swallows-comment`, `a {\n\t@extend .b\n\t/* c */\n}\n`],
 	[`grid`, `a { grid-template-areas: "a a"\n\t"b b"; }\n`],
 	[`grid-empty-row`, `a { grid-template-areas: "a  a"\n\t""\n\t"b b"; }\n`],
 	[`aspect-ratio`, `a { aspect-ratio: 16 / 8 /*c*/ auto; }\n`],
@@ -47,6 +48,7 @@ const INLINE_FIXTURES: [string, string][] = [
 	[`inline-after-brace`, `a {// c\n\tcolor: pink;\n}\n`],
 	[`inline-after-semicolon`, `a {\n\tcolor: pink;// c\n\ttop: 0;\n}\n`],
 	[`inline-swallows-func`, `a { t: foo(1px // c) calc(1px\n); }\n`],
+	[`inline-swallowed`, `a {\n\t@extend .b\n\t// c\n}\n`],
 ]
 
 export { FIXTURES, INLINE_FIXTURES }

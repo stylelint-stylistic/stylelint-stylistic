@@ -49,7 +49,7 @@ async function measureOne (options: Omit<Parameters<typeof lintDirect>[0], `fix`
 }
 
 /**
- * Lints every text of the corpus under every configuration and syntax, with one registry.
+ * Lints every text of the corpus under every configuration and syntax, with one registry. A row is keyed by the syntax, the rule, its primary and, where the configuration carries any, its secondary options, so that two configurations of one primary keep rows of their own.
  * @param sweep - The sweep module.
  * @param registry - The rules of one side.
  * @returns Every row by its key.
@@ -64,7 +64,7 @@ async function measure (sweep: Sweep, registry: Registry): Promise<Record<string
 			for (let [key, code] of sweep.corpus) {
 				// The rows are measured in turn so that a run stays as light on the machine as the one it replaces
 				// eslint-disable-next-line no-await-in-loop
-				rows[`${syntaxName}|${config.rule}|${JSON.stringify(config.primary)}|${key}`] = await measureOne({ code, rules, registry, syntax: SYNTAXES[syntaxName] })
+				rows[`${syntaxName}|${config.rule}|${JSON.stringify(config.primary)}${config.secondary ? `|${JSON.stringify(config.secondary)}` : ``}|${key}`] = await measureOne({ code, rules, registry, syntax: SYNTAXES[syntaxName] })
 			}
 		}
 	}

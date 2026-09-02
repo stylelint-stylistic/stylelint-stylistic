@@ -194,6 +194,16 @@ testRule({
 			column: 2,
 			message: messages.expected(`2 spaces`),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/375
+			description: `a comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace, both lines written with tabs`,
+			code: `a {\n\t@extend .b\n\t/* c */\n}`,
+			fixed: `a {\n  @extend .b\n    /* c */\n}`,
+			warnings: [
+				{ line: 2, column: 2, message: messages.expected(`2 spaces`) },
+				{ line: 3, column: 2, message: messages.expected(`4 spaces`) },
+			],
+		},
 	],
 })
 
@@ -719,6 +729,75 @@ testRule({
 					column: 2,
 					message: messages.expected(`0 tabs`),
 				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/375
+			description: `a comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace rather than into a node of its own`,
+			code: `
+				a {
+					@extend .b
+					/* c */
+				}
+			`,
+			fixed: `
+				a {
+					@extend .b
+						/* c */
+				}
+			`,
+			line: 3,
+			column: 2,
+			message: messages.expected(`2 tabs`),
+		},
+		{
+			description: `two such comments, each of them a line the at-rule swallowed`,
+			code: `
+				a {
+					@extend .b
+					/* c */
+					/* d */
+				}
+			`,
+			fixed: `
+				a {
+					@extend .b
+						/* c */
+						/* d */
+				}
+			`,
+			warnings: [
+				{ line: 3, column: 2, message: messages.expected(`2 tabs`) },
+				{ line: 4, column: 2, message: messages.expected(`2 tabs`) },
+			],
+		},
+		{
+			description: `the same block written with carriage-return line breaks`,
+			code: `a {\r\n\t@extend .b\r\n\t/* c */\r\n}`,
+			fixed: `a {\r\n\t@extend .b\r\n\t\t/* c */\r\n}`,
+			line: 3,
+			column: 2,
+			message: messages.expected(`2 tabs`),
+		},
+		{
+			description: `a swallowed comment behind params spanning two lines, so that one fix lands in the params and the other in the whitespace behind them`,
+			code: `
+				a {
+					@include m(
+					1px)
+					/* c */
+				}
+			`,
+			fixed: `
+				a {
+					@include m(
+						1px)
+						/* c */
+				}
+			`,
+			warnings: [
+				{ line: 3, column: 2, message: messages.expected(`2 tabs`) },
+				{ line: 4, column: 2, message: messages.expected(`2 tabs`) },
 			],
 		},
 	],

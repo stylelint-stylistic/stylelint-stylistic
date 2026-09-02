@@ -4,6 +4,7 @@ import stylelint from "stylelint"
 
 import { CRLF, EVERY_LINE_BREAK, EVERY_LINE_BREAK_AND_INDENT, EVERY_LINE_INDENT, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, FIRST_LINE, INDENT_AT_END, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, SPACES_AND_TABS_BEFORE_CONTENT, TRAILING_LINE_BREAK, TRAILING_STAR_OR_UNDERSCORE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import type { Syntax } from "../../syntaxes/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -233,6 +234,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// @nest and SCSS's @at-root rules should be treated like regular rules, not expected to have their params (selectors) indented
 			let paramLevel = optionsMatches(secondaryOptions, `except`, `param`) || atRule.name === `nest` || atRule.name === `at-root` ? ruleLevel : ruleLevel + 1
 
+			// The text runs from the name through `raws.between`, so the lines an at-rule swallowed are measured with its params: one carrying neither a block nor a semicolon closes on the brace of its block, and a comment written between its params and that brace stands in that raw rather than in a node of its own. The trim takes the whitespace closing the raw off the end — and with it, where the block's own `raws.after` is empty, the line the closing brace stands on
 			checkMultilineBit(`@${atRule.name}${atRule.raws.afterName || ``}${syntax.read(atRule)}${atRule.raws.between || ``}`.trim(), paramLevel, atRule, ruleLevel)
 		}
 
@@ -252,11 +254,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let { searchString } = syntax.searchCopy(source, node, result)
 
 			// Data for current node fixing
-			let fixPositions: Array<{
-				expectedIndentation: string,
-				currentIndentation: string,
-				startIndex: number,
-			}> = []
+			let fixPositions: FixPosition[] = []
 
 			// Every break the search finds is handed over, and the ones standing inside parentheses are turned away in the callback below, so that the arguments of a function, and the non-standard things written in parentheses beside them — a Sass map among them — may be indented however their author likes.
 			// Only a bracket opened at the end of a line raises the lines standing behind it, so a bracket opening a line unwinds one only while such a one is open. One opened in the middle of a line raised nothing, and unwinding it took the count a step past the outermost level of the text being measured — at the root, to an indentation of minus one tab, which is no level and nothing a file can be written with. These are counts rather than a stack: a closing bracket is not matched to the one it closes, so where a bracket opened in the middle of a line closes while another opened at a line's end is still open, the count spends the wrong one. The two kinds are counted apart, since a brace closes on the line it lowers and a parenthesis on the line after it.
@@ -403,41 +401,55 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					}
 				}
 
-				if (isAtRule(node)) {
-					let atRuleName = node.name
-					let atRuleAfterName = node.raws.afterName
-					let atRuleParams = syntax.read(node)
-
-					if (!isString(atRuleAfterName)) throw new TypeError(`The \`afterName\` property must be a string`)
-
-					// 1 — it's a @ length
-					let paramsStartIndex = 1 + atRuleName.length + atRuleAfterName.length
-
-					// The positions come in reverse order, so a fix never moves one still to be applied, and the text each of them edits is the one the previous fixes have left behind
-					for (let fixPosition of fixPositions) {
-						if (fixPosition.startIndex < paramsStartIndex) {
-							atRuleAfterName = replaceIndentation(
-								atRuleAfterName,
-								fixPosition.currentIndentation,
-								fixPosition.expectedIndentation,
-								fixPosition.startIndex - atRuleName.length - 1,
-							)
-
-							node.raws.afterName = atRuleAfterName
-						}
-						else {
-							atRuleParams = replaceIndentation(
-								atRuleParams,
-								fixPosition.currentIndentation,
-								fixPosition.expectedIndentation,
-								fixPosition.startIndex - paramsStartIndex,
-							)
-
-							syntax.write(node, atRuleParams)
-						}
-					}
-				}
+				if (isAtRule(node)) writeAtRuleIndentation(node, fixPositions, syntax)
 			}
+		}
+	}
+}
+
+/** One line of a text to re-indent: the whitespace it opens with, the whitespace the option asks for, and the position of the break in front of it. */
+type FixPosition = {
+	expectedIndentation: string,
+	currentIndentation: string,
+	startIndex: number,
+}
+
+/**
+ * Writes the indentation of the lines of an at-rule's text, each into the raw it stands in.
+ *
+ * The text measured runs from the name through `raws.afterName`, the params and `raws.between`, so a position is written into whichever of the three it falls in, by the boundaries of the copies as the file spells them. A line standing in `raws.between` is a line the at-rule swallowed: one with neither a block nor a semicolon of its own closes on the brace of its block, and the parser files every comment written between its params and that brace into this raw. Its positions used to be written into the params, at their end — onto the at-rule's own line, several lines above the one reported — and the file grew a level on every run (#375).
+ * @param atRule - The at-rule.
+ * @param fixPositions - The positions, in reverse order, so that a write never moves one still to be applied and the text each edits is the one the previous writes left behind.
+ * @param syntax - The syntax the rule is built over, which reads and writes the copy of the params the file spells.
+ */
+function writeAtRuleIndentation (atRule: AtRule, fixPositions: FixPosition[], syntax: Syntax): void {
+	let atRuleAfterName = atRule.raws.afterName
+	let atRuleParams = syntax.read(atRule)
+	let atRuleBetween = atRule.raws.between
+
+	if (!isString(atRuleAfterName)) throw new TypeError(`The \`afterName\` property must be a string`)
+
+	// 1 — it's a @ length
+	let paramsStartIndex = 1 + atRule.name.length + atRuleAfterName.length
+
+	// The params as the file spells them; every position behind this boundary is written before any in front of it, so no write of the loop moves it under a position still measured against it
+	let paramsEndIndex = paramsStartIndex + atRuleParams.length
+
+	for (let fixPosition of fixPositions) {
+		if (fixPosition.startIndex < paramsStartIndex) {
+			atRuleAfterName = replaceIndentation(atRuleAfterName, fixPosition.currentIndentation, fixPosition.expectedIndentation, fixPosition.startIndex - atRule.name.length - 1)
+			atRule.raws.afterName = atRuleAfterName
+		}
+		else if (fixPosition.startIndex < paramsEndIndex) {
+			atRuleParams = replaceIndentation(atRuleParams, fixPosition.currentIndentation, fixPosition.expectedIndentation, fixPosition.startIndex - paramsStartIndex)
+			syntax.write(atRule, atRuleParams)
+		}
+		else {
+			// A position lands here only behind a break the raw holds, so the raw is a string wherever this branch is reached
+			if (!isString(atRuleBetween)) throw new TypeError(`The \`between\` property must be a string`)
+
+			atRuleBetween = replaceIndentation(atRuleBetween, fixPosition.currentIndentation, fixPosition.expectedIndentation, fixPosition.startIndex - paramsEndIndex)
+			atRule.raws.between = atRuleBetween
 		}
 	}
 }
