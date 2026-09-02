@@ -67,7 +67,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/50
 			// The single space may stand at the tail of `raws.between` rather than in the value until the file is read back: the fix of `declaration-colon-space-after` writes it there, and a check running behind that fix in the same pass — one deferred to the run's end above all (#355) — reads the declaration before the next parse
-			if (primary.startsWith(`never`) && betweenTailAfterColon(decl) + value === ` `) return
+			if (primary.startsWith(`never`) && betweenTailAfterColon(syntax, decl, result) + value === ` `) return
 
 			let declString = declarationString(syntax, decl)
 			let problemIndex = declString.length - 1

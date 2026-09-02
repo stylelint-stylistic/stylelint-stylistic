@@ -74,6 +74,11 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { b: /*c*/ ; }`, { [SEMICOLON_SPACE]: `never`, [COLON_SPACE]: `always` }, SEMICOLON_SPACE)).toBe(true)
 	})
 
+	it(`a comment holding a colon of its own in front of the colon, which is no colon of the declaration, so the run behind the real one is every rule's`, () => {
+		expect(ask(`a { b /*x:y*/: ; }`, { [COLON_NEWLINE]: `always`, [SEMICOLON_SPACE]: `always` }, COLON_NEWLINE)).toBe(false)
+		expect(ask(`a { b /*x:y*/: ; }`, { [COLON_NEWLINE]: `always`, [SEMICOLON_SPACE]: `always` }, SEMICOLON_SPACE)).toBe(true)
+	})
+
 	it(`a value holding two comments, or a word behind the comment, whose run behind the first comment is nobody else's`, () => {
 		expect(ask(`a { b: /*c*/ /*d*/ ; }`, { [COLON_NEWLINE]: `always`, [SEMICOLON_SPACE]: `never` }, COLON_NEWLINE)).toBe(true)
 		expect(ask(`a { b: /*c*/ d ; }`, { [COLON_NEWLINE]: `always`, [SEMICOLON_SPACE]: `never` }, COLON_NEWLINE)).toBe(true)
@@ -207,7 +212,7 @@ describe(`sharesRunWithSemicolon`, () => {
 	it(`a rule that is none of the four, and the names of the asking rule's own namespace`, () => {
 		expect(shares(`a { b: ; }`, `@stylistic/color-hex-case`)).toBe(false)
 		expect(shares(`a { b: ; }`, `@stylistic/scss/declaration-colon-newline-after`)).toBe(false)
-		expect(sharesRunWithSemicolon({ ...css, namespace: `scss` }, lastDeclarationOf(`a { b: ; }`), `@stylistic/scss/declaration-colon-newline-after`)).toBe(true)
+		expect(sharesRunWithSemicolon({ ...css, namespace: `scss` }, lastDeclarationOf(`a { b: ; }`), result({}), `@stylistic/scss/declaration-colon-newline-after`)).toBe(true)
 	})
 })
 
@@ -218,7 +223,7 @@ describe(`sharesRunWithSemicolon`, () => {
  * @returns What `sharesRunWithSemicolon` answers.
  */
 function shares (code: string, ruleName: string): boolean {
-	return sharesRunWithSemicolon(css, lastDeclarationOf(code), ruleName)
+	return sharesRunWithSemicolon(css, lastDeclarationOf(code), result({}), ruleName)
 }
 
 /**

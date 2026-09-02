@@ -1,7 +1,7 @@
 import type { Declaration } from "postcss"
 import stylelint from "stylelint"
 
-import { TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
+import { EVERY_BACKSLASH_IN_FRONT_OF_A_SLASH, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { declarationColonSpaceChecker } from "../../utils/declarationColonSpaceChecker/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
@@ -65,8 +65,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
-			// The colon stands right after this part, so an inline comment ending it would swallow the colon
-			isFixable: (decl, index) => !syntax.endsWithInlineComment(beforeColonString(decl, index), syntax.inlineComments(decl, result)),
+			// The colon stands right after this part, so an inline comment ending it would swallow the colon. The guard reads the text with every backslash in front of a slash blanked, since a backslash escapes no slash to the parser: `\//` opens a comment the guard would otherwise read as code, and the fix would take the break closing it away.
+			isFixable: (decl, index) => !syntax.endsWithInlineComment(beforeColonString(decl, index).replace(EVERY_BACKSLASH_IN_FRONT_OF_A_SLASH, ` `), syntax.inlineComments(decl, result)),
 			fix: (decl, index) => {
 				let beforeColon = beforeColonString(decl, index)
 

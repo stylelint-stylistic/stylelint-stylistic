@@ -130,6 +130,16 @@ export type Syntax = {
 	inlineComments (node: Node, result: PostcssResult): InlineCommentReading,
 
 	/**
+	 * Finds the first character of a text that the node's parser reads as a colon token, a colon it read as text — inside a comment, a string, a parenthesised group, an at-word or an escape — being none of a declaration's. What stands in front of the text is read with it, since a tokenizer carries state across the two.
+	 * @param before - What the node carries in front of the text, read but not answered for; the property, as the parser hands it back rather than as the file spells it.
+	 * @param text - The text, as the file spells it.
+	 * @param node - The node the text belongs to.
+	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
+	 * @returns The index of that colon in the text, or `-1` where the text holds none.
+	 */
+	colonTokenIndex (before: string, text: string, node: Node, result: PostcssResult): number,
+
+	/**
 	 * Finds the spans every comment occupies in a text of the node's stylesheet — the block comments, and the inline ones where the node's syntax reads them there.
 	 * @param text - The text, as the rule reads it.
 	 * @param node - The node the text belongs to.

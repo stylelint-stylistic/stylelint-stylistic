@@ -62,6 +62,15 @@ testRule({
 			description: `a data URI behind whitespace wide enough to have carried the walk past the URI's own colon`,
 			code: `a { background  :\n        url(data:x); }`,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/499
+			description: `a comment holding a colon of its own on the line behind the colon, whose break is where it is asked for`,
+			code: `a { b:\n/*x:y*/ red; }`,
+		},
+		{
+			description: `two comments holding a colon apiece in front of the colon, with the break behind it`,
+			code: `a { b /*x:y*/ /*z:w*/:\n red; }`,
+		},
 	],
 
 	reject: [
@@ -221,6 +230,63 @@ testRule({
 			column: 14,
 			message: messages.expectedAfter(),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/388
+			description: `a comment holding a colon of its own in front of the declaration's, with two spaces behind that one`,
+			code: `a { b/*x:y*/:  x; }`,
+			fixed: `a { b/*x:y*/:\n  x; }`,
+			line: 1,
+			column: 13,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `the same comment on the colon's own line, which the break is asked behind`,
+			code: `a { b: /*x:y*/ red; }`,
+			fixed: `a { b: /*x:y*/\n red; }`,
+			line: 1,
+			column: 14,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `the same comment abutting the colon of a custom property`,
+			code: `a { --b:/*x:y*/ red; }`,
+			fixed: `a { --b:/*x:y*/\n red; }`,
+			line: 1,
+			column: 15,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a string holding a colon of its own in front of the colon`,
+			code: `a { b "x:":pink; }`,
+			fixed: `a { b "x:":\npink; }`,
+			line: 1,
+			column: 11,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a parenthesised group standing in front of the colon, which the tokenizer takes whole, so the colon inside it opens no declaration`,
+			code: `a { b (x:y):pink; }`,
+			fixed: `a { b (x:y):\npink; }`,
+			line: 1,
+			column: 12,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a group holding a slash behind a property named after the address call, which the tokenizer takes whole whatever stands inside it`,
+			code: `a { url (x/y:z):pink; }`,
+			fixed: `a { url (x/y:z):\npink; }`,
+			line: 1,
+			column: 16,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a comment whose text ends in a backslash in front of the colon, which closes on the first delimiter behind its opening as it does to PostCSS`,
+			code: `a { b/*x\\*/: red; }`,
+			fixed: `a { b/*x\\*/:\n red; }`,
+			line: 1,
+			column: 12,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
@@ -283,6 +349,10 @@ testRule({
 		{
 			description: `the same value with the break standing behind the comment, which is where this option asks for it`,
 			code: `a { color:  /*c*/\n/*d*/\t!important; }`,
+		},
+		{
+			description: `a comment holding a colon of its own on the line behind the colon of a multi-line declaration`,
+			code: `a { b:\n/*x:y*/ red\n blue; }`,
 		},
 	],
 

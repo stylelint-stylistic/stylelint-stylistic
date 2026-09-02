@@ -38,6 +38,14 @@ testRule({
 			column: 11,
 			message: messages.expectedBefore(),
 		},
+		{
+			description: `an inline comment behind a backslash in front of the colon, which the parser opens all the same, since a backslash escapes no slash to it`,
+			code: `a { b \\//x:y\n: pink; }`,
+			fixed: `a { b \\//x:y\n: pink; }`,
+			line: 1,
+			column: 7,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 testRule({
@@ -71,6 +79,14 @@ testRule({
 			fixed: `a { color // keep me\r\n: pink; }`,
 			line: 1,
 			column: 11,
+			message: messages.rejectedBefore(),
+		},
+		{
+			description: `an inline comment behind a backslash in front of the colon, which the parser opens all the same, since a backslash escapes no slash to it`,
+			code: `a { b \\//x:y\n: pink; }`,
+			fixed: `a { b \\//x:y\n: pink; }`,
+			line: 1,
+			column: 7,
 			message: messages.rejectedBefore(),
 		},
 	],

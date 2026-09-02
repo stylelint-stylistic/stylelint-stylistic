@@ -140,6 +140,14 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
+			description: `a comment whose text ends in a backslash, which closes on the first delimiter behind its opening as it does to PostCSS`,
+			code: `a { b/*x\\*/:pink; }`,
+			fixed: `a { b/*x\\*/ :pink; }`,
+			line: 1,
+			column: 7,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `a comment holding a colon, which opens no declaration`,
 			code: `a { color/* a:b */:pink; }`,
 			fixed: `a { color/* a:b */ :pink; }`,

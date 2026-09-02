@@ -1,5 +1,4 @@
 import type { Declaration } from "postcss"
-import styleSearch from "style-search"
 import type { PostcssResult } from "stylelint"
 
 import { EVERY_LINE_BREAK, LEADING_CSS_WHITESPACE, OPENS_WITH_BLOCK_COMMENT, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
@@ -7,6 +6,7 @@ import type { Syntax } from "../../syntaxes/index.ts"
 import { addNamespace } from "../addNamespace/index.ts"
 import { betweenTailAfterColon } from "../betweenTailAfterColon/index.ts"
 import { blockString } from "../blockString/index.ts"
+import { colonIndexInBetween } from "../colonIndexInBetween/index.ts"
 import { defersToRunEnd } from "../defersToRunEnd/index.ts"
 import { isCustomProperty } from "../isCustomProperty/index.ts"
 import { isInlineStyleAttribute } from "../isInlineStyleAttribute/index.ts"
@@ -63,20 +63,16 @@ type SharedRuns = {
  * The run in front of the semicolon is the two `declaration-block-semicolon-*-before` rules', and the colon rules join them only where their own run reaches it: where the text behind the colon down to the end of the printed value is nothing but whitespace, the one run is every one of the four's; where it is a block comment with nothing but whitespace behind, that tail is the newline rule's and the semicolon rules'. A flag parts the runs whatever the value holds, since the semicolon's run is then the end of the flag's raw; and a declaration the semicolon rules pass over — the last of its block where the file writes no semicolon behind it, or one standing outside a block and an inline style attribute — keeps its semicolon run to itself, whatever the value holds.
  * @param syntax - The syntax the rule is built over.
  * @param decl - The declaration.
+ * @param result - The Stylelint result, which holds the syntax the file was opened with.
  * @returns The two runs with their readers.
  */
-function sharedRunsOf (syntax: Syntax, decl: Declaration): SharedRuns {
+function sharedRunsOf (syntax: Syntax, decl: Declaration, result: PostcssResult): SharedRuns {
 	let runs: SharedRuns = { head: new Set(), semicolon: new Set(), semicolonRun: `` }
 
 	if (!syntax.isStandardDeclaration(decl)) return runs
 
 	let between = decl.raws.between ?? ``
-	let colonIndex = -1
-
-	// The declaration's own colon is the first one standing outside a comment, as `declarationColonSpaceChecker` finds it
-	styleSearch({ source: between, target: `:`, once: true }, ({ startIndex }) => {
-		colonIndex = startIndex
-	})
+	let colonIndex = colonIndexInBetween(syntax, decl, result)
 
 	if (colonIndex === -1) return runs
 
@@ -138,13 +134,14 @@ function accepts (participant: Participant, option: string, decl: Declaration): 
  * A rule that writes into a shared run answers to the semicolon's side of it as much as to its own, and this is the question it asks before finishing the run for the neighbour — `sharedRunsOf` above holds what counts as shared and for whom, and the head run the two colon rules share between themselves does not answer it.
  * @param syntax - The syntax the asking rule is built over.
  * @param decl - The declaration.
+ * @param result - The Stylelint result, which holds the syntax the file was opened with.
  * @param ruleName - The name the asking rule is registered under.
  * @returns True where the asking rule is one of the four and its run is the semicolon's too.
  */
-export function sharesRunWithSemicolon (syntax: Syntax, decl: Declaration, ruleName: string): boolean {
+export function sharesRunWithSemicolon (syntax: Syntax, decl: Declaration, result: PostcssResult, ruleName: string): boolean {
 	let asking = (Object.keys(PARTICIPANTS) as Participant[]).find((participant) => addNamespace(PARTICIPANTS[participant].name, syntax.namespace) === ruleName)
 
-	return asking !== undefined && sharedRunsOf(syntax, decl).semicolon.has(asking)
+	return asking !== undefined && sharedRunsOf(syntax, decl, result).semicolon.has(asking)
 }
 
 /**
@@ -175,7 +172,7 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 
 	if (!asking) return true
 
-	let { head, semicolon, semicolonRun } = sharedRunsOf(syntax, decl)
+	let { head, semicolon, semicolonRun } = sharedRunsOf(syntax, decl, result)
 	// The semicolon's group holds the colon rules only where the head run reaches the semicolon, so wherever the asking rule stands in it, that group is the head's readers too
 	let readers = semicolon.has(asking) ? semicolon : head
 	let run = semicolonRun
@@ -244,7 +241,7 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 	})
 
 	// The spelling the run stands in when the asking rule takes its turn, for asking whether a rule ahead has already reported it. The run is the one the asking rule's group reads: the trailing run in front of the semicolon for the semicolon's group, and for the head group the whitespace behind the colon — what the parser trimmed onto `raws.between`, what a fix ahead wrote onto its tail, and the run a custom property's value opens with, together
-	let standingRun = readers === semicolon ? run : betweenTailAfterColon(decl) + (syntax.read(decl).match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0]
+	let standingRun = readers === semicolon ? run : betweenTailAfterColon(syntax, decl, result) + (syntax.read(decl).match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0]
 	let standing: Run = standingRun === `` ? `none` : (breaksOf(standingRun) > 0 ? `newline` : `space`)
 
 	// A lineness-conditioned asker runs after every rule ahead of it as well (#355), and those have had their say already: a write one of them would not accept leaves the file violating a rule that reported nothing, and the next run rewriting — the swing of #416 across runs. So a rule ahead gates the write unless it accepts what the write leaves, judged over the file as it rests — reparsed, a break in the value whoever wrote it. Two things free it: a rule ahead that has warned already — it spoke of the run as it stands and did not accept it, so its warning stands over whatever the write makes and nothing is silent — and one the write itself silences. A turned-off fix exempts nothing here, unlike behind: a rule behind still speaks after the write and reports what it sees, while a rule ahead judged the run before the write and stands silent over what the write made of it

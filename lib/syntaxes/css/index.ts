@@ -1,6 +1,7 @@
 import type { AtRule, Declaration, Root, Rule as PostcssRule } from "postcss"
 import type { PostcssResult } from "stylelint"
 
+import { colonTokenIndex } from "../../preprocessor/colonTokenIndex/index.ts"
 import { endsWithInlineComment } from "../../preprocessor/endsWithInlineComment/index.ts"
 import { findRewrittenCommentSpans } from "../../preprocessor/findRewrittenCommentSpans/index.ts"
 import { findSelectorInlineComments, type InlineComment } from "../../preprocessor/findSelectorInlineComments/index.ts"
@@ -53,6 +54,7 @@ export let css: Syntax = {
 	read: printedText,
 	write: writePrintedText,
 	inlineComments: inlineCommentReading,
+	colonTokenIndex: (before, text, node, result) => colonTokenIndex(before, text, nodeSyntax(node, result), node.source?.input.file),
 	commentSpans: (text, node, result) => findCommentSpans(text, readsInlineComments(node, result)),
 	endsWithInlineComment,
 	movesEndIntoInlineComment,

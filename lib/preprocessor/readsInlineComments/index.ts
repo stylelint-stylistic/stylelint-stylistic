@@ -105,6 +105,17 @@ export function syntaxSpellsInlineComments (syntax?: unknown): boolean {
 }
 
 /**
+ * Asks whether the tokenizer a syntax parses with is the one that reads an inline comment itself, which is `postcss-scss`'s and no other's: it spells such a comment, rewrites it away in the copy a rule reads, and takes it in the tokenizer rather than in the parser. A syntax that said nothing about the probe is answered no, since a tokenizer is picked here rather than a guard chosen — reading a construct the file's own parser never saw is worse than missing one it did.
+ * @param syntax - The syntax the stylesheet was parsed with.
+ * @returns True where that syntax's own tokenizer reads an inline comment.
+ */
+export function syntaxTokenizesInlineComments (syntax?: unknown): boolean {
+	let reading = probeSyntax(syntax)
+
+	return reading.answered && reading.spells && !reading.keeps
+}
+
+/**
  * Asks whether a double slash left standing in a value is a comment. Two answers are needed and neither suffices alone: a syntax without inline comments spells no comment that way, and one that rewrites them into block comments as it parses leaves nothing behind in the value for a scan to find — it says where they were in a copy of its own instead, and whatever double slash survives in the value is part of an address.
  * @param syntax - The syntax the stylesheet was parsed with.
  * @returns True if a double slash in a value of this syntax opens a comment.

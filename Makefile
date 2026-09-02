@@ -60,7 +60,11 @@ breaks-check: ## ↩️  Check that every line spelling a line break in lib/ is 
 	./scripts/check-break-readings.ts
 .PHONY: breaks-check
 
-verify: check lint test prose-check breaks-check build ## ✅ Run every check the CI runs
+packages-check: build ## 📦 Check that the built plugin needs none of the syntax packages a project may not have
+	./scripts/check-optional-packages.ts
+.PHONY: packages-check
+
+verify: check lint test prose-check breaks-check build packages-check ## ✅ Run every check the CI runs
 .PHONY: verify
 
 release: verify build ## 🚀 Release a new version

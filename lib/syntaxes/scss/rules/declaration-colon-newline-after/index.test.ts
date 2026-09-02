@@ -20,5 +20,30 @@ testRule({
 			column: 10,
 			message: messages.expectedAfter(),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/388
+			description: `an inline comment holding a colon of its own on the colon's line, whose text a break written at that colon would close early`,
+			code: `a { color: //x:y\n red; }`,
+			fixed: `a { color:\n //x:y\n red; }`,
+			line: 1,
+			column: 10,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a double slash welded to the word in front of the colon, which opens no comment for this syntax's tokenizer, so the colon behind it is the declaration's`,
+			code: `a { b $//:  red; }`,
+			fixed: `a { b $//:\n  red; }`,
+			line: 1,
+			column: 10,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `an inline comment holding a colon in front of the declaration's, which stands on the next line with a space behind it`,
+			code: `a { b //x:y\n: red; }`,
+			fixed: `a { b //x:y\n:\n red; }`,
+			line: 2,
+			column: 1,
+			message: messages.expectedAfter(),
+		},
 	],
 })

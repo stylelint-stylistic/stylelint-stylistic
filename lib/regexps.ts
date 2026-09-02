@@ -22,6 +22,9 @@ export const CRLF_RUN = /(?:\r\n)+/u
 /** Two line breaks with nothing but horizontal whitespace between them, each in either of the two spellings PostCSS reads a break in. A Windows pair is one break and never two, since the carriage return is read only as the front of a pair. */
 export const EMPTY_LINE = /\r?\n[\t ]*\r?\n/u
 
+/** Every backslash standing right in front of a slash, which escapes nothing to PostCSS's tokenizer: an escape there is stepped over only where the character behind the backslash is neither a slash nor whitespace, so `\/*` opens a comment to it. */
+export const EVERY_BACKSLASH_IN_FRONT_OF_A_SLASH = /\\(?=\/)/gu
+
 /** Every opening and closing pair of a block comment. */
 export const EVERY_COMMENT_DELIMITER = /(\*\/|\/\*)/gu
 
