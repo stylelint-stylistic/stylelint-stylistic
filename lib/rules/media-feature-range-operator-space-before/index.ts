@@ -1,6 +1,6 @@
 import stylelint from "stylelint"
 
-import { MEDIA_AT_RULE, TRAILING_WHITESPACE } from "../../regexps.ts"
+import { MEDIA_AT_RULE, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -76,8 +76,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let beforeOperator = params.slice(0, index)
 					let afterOperator = params.slice(index)
 
-					if (primary === `always`) params = beforeOperator.replace(TRAILING_WHITESPACE, ` `) + afterOperator
-					else if (primary === `never`) params = beforeOperator.replace(TRAILING_WHITESPACE, ``) + afterOperator
+					if (primary === `always`) params = beforeOperator.replace(TRAILING_CSS_WHITESPACE, ` `) + afterOperator
+					else if (primary === `never`) params = beforeOperator.replace(TRAILING_CSS_WHITESPACE, ``) + afterOperator
 				}
 
 				syntax.write(atRule, params)

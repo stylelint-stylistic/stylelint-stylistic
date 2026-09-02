@@ -1,7 +1,7 @@
 import styleSearch from "style-search"
 import stylelint from "stylelint"
 
-import { LEADING_WHITESPACE, WHITESPACE_THEN_BLOCK_COMMENT, WHITESPACE_THEN_INLINE_COMMENT } from "../../regexps.ts"
+import { LEADING_CSS_WHITESPACE, WHITESPACE_THEN_BLOCK_COMMENT, WHITESPACE_THEN_INLINE_COMMENT } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
@@ -107,7 +107,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let afterSelector = fixedSelector.slice(index)
 
 					if (primary.startsWith(`always`)) afterSelector = getLineBreak(syntax, root, result) + afterSelector
-					else if (primary.startsWith(`never-multi-line`)) afterSelector = afterSelector.replace(LEADING_WHITESPACE, ``)
+					else if (primary.startsWith(`never-multi-line`)) afterSelector = afterSelector.replace(LEADING_CSS_WHITESPACE, ``)
 
 					fixedSelector = beforeSelector + afterSelector
 				}

@@ -1,6 +1,6 @@
 import stylelint from "stylelint"
 
-import { LEADING_WHITESPACE } from "../../regexps.ts"
+import { LEADING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { declarationBangSpaceChecker } from "../../utils/declarationBangSpaceChecker/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -51,7 +51,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			fix: (target) => {
 				let start = target.index + 1
 				// Where the whitespace run behind the bang ends, which is where the print picks up again: a bang the declaration ends on has no run behind it, and the write is an insertion
-				let end = target.text.length - target.text.slice(start).replace(LEADING_WHITESPACE, ``).length
+				let end = target.text.length - target.text.slice(start).replace(LEADING_CSS_WHITESPACE, ``).length
 
 				if (primary === `always`) return [{ start, end, text: ` ` }]
 

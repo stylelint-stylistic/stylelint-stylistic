@@ -139,6 +139,9 @@ export const LEADING_COLON_AND_WHITESPACE = /^:[ \t\n\r\f]*/u
 /** The whitespace a text opens with, read as PostCSS's tokenizer reads whitespace — a space, a tab, a line feed, a carriage return or a form feed; a vertical tab and a no-break space are words to it and open no run (#494). The tokenizer-true narrowing of {@link LEADING_WHITESPACE}, for the fixes that rewrite a run the parser made. */
 export const LEADING_CSS_WHITESPACE = /^[ \t\n\r\f]*/u
 
+/** The word a text opens with, read to the first character PostCSS's tokenizer calls whitespace — the complement of {@link LEADING_CSS_WHITESPACE}, for cutting a run `postcss-value-parser` read wider than the tokenizer does into the runs and the words the file really spells (#496). */
+export const LEADING_CSS_WORD = /^[^ \t\n\r\f]*/u
+
 /** The hexadecimal escape a text opens with, the whitespace closing it included: a backslash, up to six hexadecimal digits, and the one whitespace character that ends the digits whether they would run on or not, a Windows pair counting as the one break it is. */
 export const LEADING_HEX_ESCAPE = /^\\[\da-f]{1,6}(?:\r\n|[ \t\n\r\f])?/iu
 

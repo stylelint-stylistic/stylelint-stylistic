@@ -1,7 +1,7 @@
 import type { AtRule } from "postcss"
 import stylelint from "stylelint"
 
-import { TRAILING_WHITESPACE } from "../../regexps.ts"
+import { TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -74,8 +74,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let beforeColon = params.slice(0, index)
 					let afterColon = params.slice(index)
 
-					if (primary === `always`) params = beforeColon.replace(TRAILING_WHITESPACE, ` `) + afterColon
-					else if (primary === `never`) params = beforeColon.replace(TRAILING_WHITESPACE, ``) + afterColon
+					if (primary === `always`) params = beforeColon.replace(TRAILING_CSS_WHITESPACE, ` `) + afterColon
+					else if (primary === `never`) params = beforeColon.replace(TRAILING_CSS_WHITESPACE, ``) + afterColon
 				}
 
 				syntax.write(atRule, params)

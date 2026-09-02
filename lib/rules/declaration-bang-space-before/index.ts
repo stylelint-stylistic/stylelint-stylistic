@@ -1,6 +1,6 @@
 import stylelint from "stylelint"
 
-import { TRAILING_WHITESPACE } from "../../regexps.ts"
+import { TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { declarationBangSpaceChecker } from "../../utils/declarationBangSpaceChecker/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
@@ -53,7 +53,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			isFixable: (decl, index) => !syntax.endsWithInlineComment(declarationString(syntax, decl).slice(0, index), syntax.inlineComments(decl, result)),
 			fix: (target) => {
 				// The whitespace run in front of the bang is what either option writes over, and it is a run of the declaration as the file prints it rather than of the one text the bang stands in: where the bang opens that print, the run is empty and the write is an insertion
-				let start = target.text.slice(0, target.index).replace(TRAILING_WHITESPACE, ``).length
+				let start = target.text.slice(0, target.index).replace(TRAILING_CSS_WHITESPACE, ``).length
 
 				if (primary === `always`) return [{ start, end: target.index, text: ` ` }]
 

@@ -718,3 +718,64 @@ testRule({
 		},
 	],
 })
+
+// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off with the run.
+testRule({
+	ruleName,
+	config: [`never-multi-line`],
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			description: `a vertical tab in the run behind the opening parenthesis: only the tokenizer's run goes, and the character stays`,
+			code: `a { b: f( \vx,\ny); }`,
+			fixed: `a { b: f(\vx,\ny); }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.rejectedOpeningMultiLine,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			description: `a vertical tab in the run before the closing parenthesis: only the tokenizer's run goes, and the character stays`,
+			code: `a { b: f(x,\ny\v ); }`,
+			fixed: `a { b: f(x,\ny\v); }`,
+			line: 2,
+			column: 3,
+			endLine: 2,
+			endColumn: 4,
+			message: messages.rejectedClosingMultiLine,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always-multi-line`],
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			description: `a break standing behind a vertical tab, a word to the tokenizer: no break opens the runs beside the parentheses, so both are written, and the character stays`,
+			code: `a { b: f(\v\nx,\ny); }`,
+			fixed: `a { b: f(\n\v\nx,\ny\n); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 11,
+					message: messages.expectedOpeningMultiLine,
+				},
+				{
+					line: 3,
+					column: 1,
+					endLine: 3,
+					endColumn: 2,
+					message: messages.expectedClosingMultiLine,
+				},
+			],
+		},
+	],
+})

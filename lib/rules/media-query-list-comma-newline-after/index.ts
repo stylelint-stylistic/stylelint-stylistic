@@ -1,7 +1,7 @@
 import type { AtRule } from "postcss"
 import stylelint from "stylelint"
 
-import { LEADING_WHITESPACE, LEADING_WHITESPACE_WITHOUT_BREAK, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE } from "../../regexps.ts"
+import { LEADING_CSS_WHITESPACE, LEADING_WHITESPACE_WITHOUT_BREAK, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -81,7 +81,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 					// Trim up to the break that already stands there, whichever character it is, and add one only where none does
 					if (primary.startsWith(`always`)) params = OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(afterComma) ? beforeComma + afterComma.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : beforeComma + getLineBreak(syntax, root, result) + afterComma
-					else if (primary.startsWith(`never`)) params = beforeComma + afterComma.replace(LEADING_WHITESPACE, ``)
+					else if (primary.startsWith(`never`)) params = beforeComma + afterComma.replace(LEADING_CSS_WHITESPACE, ``)
 				}
 
 				syntax.write(atRule, params)

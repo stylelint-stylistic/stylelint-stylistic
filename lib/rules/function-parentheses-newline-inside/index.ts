@@ -1,7 +1,7 @@
 import valueParser, { type FunctionNode } from "postcss-value-parser"
 import stylelint, { type FixCallback } from "stylelint"
 
-import { LEADING_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
+import { LEADING_CSS_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { InlineCommentReading, Syntax } from "../../syntaxes/index.ts"
 import { addEdit, applyEditsFromEnd, type Edit, toIndexBeforeEdits } from "../../utils/applyEditsFromEnd/index.ts"
@@ -12,6 +12,7 @@ import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { splitSpaceNodesAtWords } from "../../utils/splitSpaceNodesAtWords/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -140,7 +141,7 @@ function movesIntoComment (syntax: Syntax, declValue: string, characterIndex: nu
  */
 function findFirstCharacterIndex (declValue: string, firstIndex: number): number {
 	// The run may be empty, so the pattern matches every text
-	return firstIndex + (declValue.slice(firstIndex).match(LEADING_WHITESPACE) as RegExpMatchArray)[0].length
+	return firstIndex + (declValue.slice(firstIndex).match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0].length
 }
 
 /**
@@ -287,6 +288,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let areSpansStale = false
 			let parsedValue = valueParser(declValue)
 
+			// The value parser calls a vertical tab whitespace where the tokenizer calls it a word, and every walk below reads runs by the parser's nodes
+			splitSpaceNodesAtWords(parsedValue.nodes)
+
 			parsedValue.walk((valueNode) => {
 				if (valueNode.type !== `function`) return
 
@@ -419,7 +423,7 @@ function getCheckBefore (valueNode: FunctionNode, openingIndex: number, declValu
 			if (node.sourceEndIndex > span.end) {
 				let overrun = declValue.slice(span.end, node.sourceEndIndex)
 				// The run may be empty, so the pattern matches every text
-				let whitespace = (overrun.match(LEADING_WHITESPACE) as RegExpMatchArray)[0]
+				let whitespace = (overrun.match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0]
 
 				before += whitespace
 				measured.push([span.end, span.end + whitespace.length])
