@@ -1,6 +1,6 @@
 import valueParser, { type Node } from "postcss-value-parser"
 
-import { EVERY_INTERPOLATION_CHARACTER } from "../../regexps.ts"
+import { INTERPOLATION_CHARACTER } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 
 /**
@@ -63,8 +63,10 @@ export function getDimension (syntax: Syntax, node?: Partial<Node>): {
 		positions.splice(start, length)
 	}
 
-	// Remove non standard stuff, from the end of the copy to its beginning, so that a cut leaves the positions of the runs ahead of it where they were
-	for (let { 0: run, index } of [...value.matchAll(EVERY_INTERPOLATION_CHARACTER)].toReversed()) take(index, run.length)
+	// A word reaches this reading holding no interpolation, since `isStandardValue` above turns away one that holds a whole one and the caller passes over one that carries any text of one broken across words (#298). So a character an interpolation is spelled with is a character of the word, and no unit is spelled with any of them: the dimension ends where the first one stands, and everything from there on is taken off the copy. Taking the characters alone out, as this reading used to, glued the two sides together and read `pxfff` as the unit of `10px#fff` (#426)
+	let interpolationCharacter = value.search(INTERPOLATION_CHARACTER)
+
+	if (interpolationCharacter !== -1) take(interpolationCharacter, value.length - interpolationCharacter)
 
 	// ignore hack units
 	for (let hack of [`\\0`, `\\9`]) {

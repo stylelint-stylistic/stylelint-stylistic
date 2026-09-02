@@ -711,6 +711,39 @@ testRule({
 				},
 			],
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/426
+			description: `an upper-case unit with a hash welded to it, which opens no interpolation and is no part of the unit`,
+			code: `a { b: 10PX#FFF; }`,
+			fixed: `a { b: 10px#FFF; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/426
+			description: `the same hash welded to the first of two multiplied dimensions, each of them carrying an upper-case unit`,
+			code: `a { b: 1PX#FFF*2REM; }`,
+			fixed: `a { b: 1px#FFF*2rem; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					endLine: 1,
+					endColumn: 11,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 17,
+					endLine: 1,
+					endColumn: 20,
+					message: messages.expected(`REM`, `rem`),
+				},
+			],
+		},
 	],
 })
 
@@ -856,6 +889,11 @@ testRule({
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/297
 			description: `the lower-case letter of an exponent in a part of a multiplication, which is a number and no unit of it`,
 			code: `a { b: 10PX*2e5; }`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/426
+			description: `a lower-case hash welded to an upper-case unit, whose letters are no unit and belong to another rule`,
+			code: `a { b: 10PX#fff; }`,
 		},
 	],
 
@@ -1107,6 +1145,39 @@ testRule({
 			endLine: 1,
 			endColumn: 12,
 			message: messages.expected(`px`, `PX`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/426
+			description: `a lower-case unit with a hash welded to it, which opens no interpolation and is no part of the unit`,
+			code: `a { b: 10px#fff; }`,
+			fixed: `a { b: 10PX#fff; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`px`, `PX`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/426
+			description: `the same hash welded to the first of two multiplied dimensions, each of them carrying a lower-case unit`,
+			code: `a { b: 1px#fff*2rem; }`,
+			fixed: `a { b: 1PX#fff*2REM; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					endLine: 1,
+					endColumn: 11,
+					message: messages.expected(`px`, `PX`),
+				},
+				{
+					line: 1,
+					column: 17,
+					endLine: 1,
+					endColumn: 20,
+					message: messages.expected(`rem`, `REM`),
+				},
+			],
 		},
 	],
 })

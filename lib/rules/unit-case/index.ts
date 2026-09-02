@@ -2,7 +2,7 @@ import type { AtRule, Declaration } from "postcss"
 import valueParser, { type Node } from "postcss-value-parser"
 import stylelint, { type RuleMessage } from "stylelint"
 
-import { MEDIA_AT_RULE } from "../../regexps.ts"
+import { INTERPOLATION_CHARACTER, MEDIA_AT_RULE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
@@ -85,7 +85,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				let { number, unit: tail, positions } = dimension
 
-				let unit = withoutBangFlag(tail)
+				let unit = dimensionText(tail)
 
 				if (!unit) return null
 
@@ -155,14 +155,24 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// So a word no part of which was named is written by nothing. The write below is applied as soon as any one fix of this text is called, whichever word that fix was reported over, and what such a word holds outside its units is no unit of anything — the `A` of `1px*A`, the exponent of `10px*2E5` — so a neighbour's fix must not recase it.
 				else if (!holdsMiscasedPart) return
 
-				let dimension = withoutBangFlag(value)
-				// A dimension is a word, and the text a word node stands in is its own value: the span is as long as the value the parser read, which the flag riding behind the unit is written back into unchanged
+				// A dimension is a word, and the text a word node stands in is its own value: the span is as long as the value the parser read. Each part of it is recased down to where its dimension ends, and what stands behind that — a bang flag, a hash the file welds to the unit — is written back unchanged: the parts are read one at a time, so they are written one at a time, or a hash standing in the first part would leave the unit of the second named and never written
 				edits.push({
 					start: valueNode.sourceIndex,
 					end: valueNode.sourceIndex + value.length,
-					text: (primary === `lower` ? dimension.toLowerCase() : dimension.toUpperCase()) + value.slice(dimension.length),
+					text: value.split(`*`).map((part) => recaseDimension(part)).join(`*`),
 				})
 			})
+
+			/**
+			 * Recases the dimension a part of a word spells, and leaves what stands behind it as the file spells it.
+			 * @param part - A word, or one part of a word holding a multiplication.
+			 * @returns The part with its dimension in the case the option asks for.
+			 */
+			function recaseDimension (part: string): string {
+				let dimension = dimensionText(part)
+
+				return (primary === `lower` ? dimension.toLowerCase() : dimension.toUpperCase()) + part.slice(dimension.length)
+			}
 
 			/** Says that a fix was called, so that the write below knows it was asked for. */
 			function markFixed (): void {
@@ -202,16 +212,19 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 }
 
 /**
- * Takes the bang flag off the end of a text, where it carries one.
+ * Takes what stands behind a dimension off the end of a text, where it carries anything.
  *
- * PostCSS moves only the last `!important` of a declaration out of the value, so every flag written in front of it stays where it was, and `postcss-value-parser` reads `1px!important` as one word; Sass writes `!default` and `!global` in the same place. No unit is spelled with a bang, so a unit ends where a flag begins, and the keyword behind it is nothing this rule is about.
+ * PostCSS moves only the last `!important` of a declaration out of the value, so every flag written in front of it stays where it was, and `postcss-value-parser` reads `1px!important` as one word; Sass writes `!default` and `!global` in the same place. No unit is spelled with a bang, so a unit ends where a flag begins, and the keyword behind it is nothing this rule is about. Nor is a unit spelled with any character an interpolation is — `10px#fff` is a dimension and a hash to the tokenizer — so a unit ends where one of those begins too, and this is where `getDimension` ends the copy it reads (#426): the text this rule writes is cut where the text it read was.
  * @param text - A unit read out of a value word, or the word itself.
- * @returns What stands in front of the first bang, or the whole text where it holds none.
+ * @returns What stands in front of the first bang or interpolation character, or the whole text where it holds neither.
  */
-function withoutBangFlag (text: string): string {
+function dimensionText (text: string): string {
+	let end = text.search(INTERPOLATION_CHARACTER)
 	let bang = text.indexOf(`!`)
 
-	return bang === -1 ? text : text.slice(0, bang)
+	if (bang !== -1 && (end === -1 || bang < end)) end = bang
+
+	return end === -1 ? text : text.slice(0, end)
 }
 
 export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })

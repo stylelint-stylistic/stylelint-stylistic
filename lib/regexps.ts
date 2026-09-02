@@ -43,9 +43,6 @@ export const EVERY_IMPORT_ADDRESS = /@import\s+(['"].*['"])/gui
 /** Every interpolation a preprocessor writes, placed rather than tallied: the three spellings {@link SCSS_INTERPOLATION}, {@link LESS_INTERPOLATION} and {@link PSV_INTERPOLATION} read one at a time. Each alternative reads what its own name reads, the line break the Sass one crosses and the two others do not included, and the run handed back opens at the character in front of the delimiter where the spelling carries one. Narrow of the four an interpolation is spelled in: the `{…}` of {@link TPL_INTERPOLATION} is not among them, since in a value a pair of bare braces is far likelier to be a pair of characters than an interpolation — the braces of a string, of a comment, or of the block a custom property is allowed to carry — and reading such a pair as one would carry off the code standing between them. */
 export const EVERY_INTERPOLATION = /#\{[\s\S]+?\}|@\{.+?\}|\$\(.+?\)/gu
 
-/** Every run of the characters an interpolation is spelled with, so that something harmless can be put in their place. */
-export const EVERY_INTERPOLATION_CHARACTER = /[#@{}]+/gu
-
 /** Every run of Unix line breaks, the run captured whole. Read by `max-empty-lines`, and narrow for the reason {@link CRLF} is. */
 // A line terminator of the JavaScript around a styled template, as `postcss-styled-syntax` counts the host file's lines: a Windows pair as one, then a line feed, a bare carriage return, or either separator of Unicode — and no form feed. This is a reading of the host, measured of that parser itself, and no stylesheet reading: PostCSS counts a line feed alone.
 export const EVERY_JS_LINE_TERMINATOR = /\r\n|[\n\r\u2028\u2029]/gu
@@ -120,6 +117,9 @@ export const IMPORT_AT_RULE = /^import$/iu
 
 /** The indentation of the last line of a text, where that line holds nothing else. A Windows pair opens that line the way its line feed alone does, the carriage return in front of it belonging to the break rather than to the indentation. */
 export const INDENT_AT_END = /(?:^|\n)([ \t]*)$/u
+
+/** One of the characters an interpolation is spelled with, standing anywhere at all. None of the four is a code point of an identifier, so a unit ends in front of whichever comes first: the tokenizer reads `10px#fff` as the dimension `10px` and the hash `#fff`, and `10px@a` as that dimension and an at-keyword. Where one stands inside an interpolation is the question of {@link EVERY_INTERPOLATION}, and it is asked of the value before a word is read. */
+export const INTERPOLATION_CHARACTER = /[#@{}]/u
 
 /** The last line of a text, the break in front of it aside — the carriage return of a Windows pair aside with it — and nothing at all where the text ends in a break. Read by `named-grid-areas-alignment`. */
 export const LAST_LINE = /[^\r\n]+$/u

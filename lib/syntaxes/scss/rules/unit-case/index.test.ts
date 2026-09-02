@@ -148,6 +148,17 @@ testRule({
 			endColumn: 11,
 			message: messages.expected(`PX`, `px`),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/426
+			description: `an upper-case unit with a hash welded to it, which opens no interpolation and is no part of the unit`,
+			code: `a { b: 10PX#FFF; }`,
+			fixed: `a { b: 10px#FFF; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
+		},
 	],
 })
 testRule({

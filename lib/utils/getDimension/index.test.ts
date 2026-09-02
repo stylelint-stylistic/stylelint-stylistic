@@ -67,6 +67,13 @@ it(`getDimension`, () => {
 	expect(getDimension(css, valueParser(`.0e1`).nodes[0]).unit).toBe(``)
 	expect(getDimension(css, valueParser(`+.0e1`).nodes[0]).unit).toBe(``)
 	expect(getDimension(css, valueParser(`-.0e1`).nodes[0]).unit).toBe(``)
+	// A character an interpolation is spelled with, standing outside any interpolation, ends the unit in front of it (#426)
+	expect(getDimension(css, valueParser(`10px#fff`).nodes[0]).unit).toBe(`px`)
+	expect(getDimension(css, valueParser(`10PX#FFF`).nodes[0]).unit).toBe(`PX`)
+	expect(getDimension(css, valueParser(`10px@a`).nodes[0]).unit).toBe(`px`)
+	// A pair of braces is an interpolation to `isStandardValue`, and such a word is turned away before it is read
+	expect(getDimension(css, valueParser(`10px{a}`).nodes[0]).unit).toBe(null)
+	expect(getDimension(css, valueParser(`1}px}`).nodes[0]).unit).toBe(``)
 
 	// testing Dimension.number
 	expect(getDimension(css, valueParser(`1.1s`).nodes[0]).number).toBe(`1.1`)
@@ -124,6 +131,8 @@ it(`getDimension`, () => {
 	expect(getDimension(css, valueParser(`.0e1`).nodes[0]).number).toBe(`.0e1`)
 	expect(getDimension(css, valueParser(`+.0e1`).nodes[0]).number).toBe(`+.0e1`)
 	expect(getDimension(css, valueParser(`-.0e1`).nodes[0]).number).toBe(`-.0e1`)
+	expect(getDimension(css, valueParser(`10px#fff`).nodes[0]).number).toBe(`10`)
+	expect(getDimension(css, valueParser(`1}px}`).nodes[0]).number).toBe(`1`)
 
 	// testing invalid inputs
 	expect(getDimension(css, valueParser(`#fff`).nodes[0]).unit).toBe(null)
@@ -187,11 +196,13 @@ it(`getDimension positions`, () => {
 	expect(getDimension(css, valueParser(`1PX\\9!important`).nodes[0]).positions).toEqual([0, 1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
 	expect(getDimension(css, valueParser(`10PX\\9*2rem`).nodes[0]).positions).toEqual([0, 1, 2, 3, 6, 7, 8, 9, 10])
 
-	// The brace a broken interpolation left behind is cut like every other character an interpolation is spelled with
+	// A character an interpolation is spelled with ends the dimension where it stands, and everything behind it is off the map (#426)
 	expect(getDimension(css, valueParser(`2px}`).nodes[0]).positions).toEqual([0, 1, 2])
+	expect(getDimension(css, valueParser(`10px#fff`).nodes[0]).positions).toEqual([0, 1, 2, 3])
+	expect(getDimension(css, valueParser(`10px#fff\\9`).nodes[0]).positions).toEqual([0, 1, 2, 3])
 
-	// Two such braces in one word: the second cut is made first, so that the first one still finds its run where the scan saw it
-	expect(getDimension(css, valueParser(`1}px}`).nodes[0]).positions).toEqual([0, 2, 3])
+	// Such a character standing right behind the number leaves a number with no unit, as the tokenizer reads it: `1`, a brace, and the identifier `px`
+	expect(getDimension(css, valueParser(`1}px}`).nodes[0]).positions).toEqual([0])
 
 	// Nothing was read, so there is nowhere to point
 	expect(getDimension(css).positions).toBe(null)
