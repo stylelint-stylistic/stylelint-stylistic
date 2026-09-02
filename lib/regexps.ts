@@ -133,8 +133,11 @@ export const LEADING_CLOSING_BRACE = /^[ \t]*\}/u
 /** A closing parenthesis opening a text, spaces and tabs aside. */
 export const LEADING_CLOSING_PARENTHESIS = /^[ \t]*\)/u
 
-/** A colon opening a text, with whatever whitespace follows it. */
-export const LEADING_COLON_AND_WHITESPACE = /^:\s*/u
+/** A colon opening a text, with whatever whitespace follows it — whitespace as the tokenizer reads it, since what stands past that set is a word of the value (#494). */
+export const LEADING_COLON_AND_WHITESPACE = /^:[ \t\n\r\f]*/u
+
+/** The whitespace a text opens with, read as PostCSS's tokenizer reads whitespace — a space, a tab, a line feed, a carriage return or a form feed; a vertical tab and a no-break space are words to it and open no run (#494). The tokenizer-true narrowing of {@link LEADING_WHITESPACE}, for the fixes that rewrite a run the parser made. */
+export const LEADING_CSS_WHITESPACE = /^[ \t\n\r\f]*/u
 
 /** The hexadecimal escape a text opens with, the whitespace closing it included: a backslash, up to six hexadecimal digits, and the one whitespace character that ends the digits whether they would run on or not, a Windows pair counting as the one break it is. */
 export const LEADING_HEX_ESCAPE = /^\\[\da-f]{1,6}(?:\r\n|[ \t\n\r\f])?/iu
@@ -172,8 +175,8 @@ export const LEADING_WHITESPACE_OR_BLOCK_COMMENT = /^(?:\s+|\/\*.*?\*\/)/su
 /** The whitespace a text opens with, where it opens with any. */
 export const LEADING_WHITESPACE_RUN = /^\s+/u
 
-/** The whitespace a text opens with, up to its first line break, which is left standing whole — the carriage return of a Windows pair with it. */
-export const LEADING_WHITESPACE_WITHOUT_BREAK = /^(?:(?!\r?\n)\s)*/u
+/** The whitespace a text opens with, up to its first line break, which is left standing whole — the carriage return of a Windows pair with it. A vertical tab and a no-break space are words to the tokenizer and no whitespace at all (#494). */
+export const LEADING_WHITESPACE_WITHOUT_BREAK = /^(?:[ \t\f]|\r(?!\n))*/u
 
 /** The `@{…}` Less interpolates a value with. */
 export const LESS_INTERPOLATION = /@\{.+?\}/u
@@ -199,14 +202,17 @@ export const OPENING_PARENTHESIS_AT_END = /\([ \t]*(?:\/\*(?:[^*]|\*(?!\/))*\*\/
 /** The head of a run of identifier code points where the run is no identifier of CSS: a digit opens it, or a hyphen and a digit, or a hyphen stands there alone. Everything else a run of those characters can be is an identifier, `--` and `--1` among them, since two hyphens open one whatever follows. */
 export const OPENS_NO_IDENTIFIER = /^-?\d|^-$/u
 
-/** A block comment opening a text, line breaks aside. */
-export const OPENS_WITH_BLOCK_COMMENT = /^[^\S\n]*\/\*/u
+/** A block comment opening a text, line breaks aside — with whitespace read the way PostCSS's tokenizer reads it, so a vertical tab or a no-break space in front of the comment is a word and the answer is no (#494). */
+export const OPENS_WITH_BLOCK_COMMENT = /^(?:[ \t\f]|\r(?!\n))*\/\*/u
 
 /** An inline comment opening a text, line breaks aside. */
 export const OPENS_WITH_INLINE_COMMENT = /^[^\S\n]*\/\//u
 
-/** A text whose first line holds nothing but whitespace. Read by `no-empty-first-line` as well, whose fix takes that first line away. */
+/** A text whose first line holds nothing but whitespace, read with `\s` on purpose: `no-empty-first-line`, its only reader, replaces by it greedily over every leading empty line, and a tokenizer-true spelling stops at the first break (#494). A fix asking whether a run opens on a break reads {@link OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE} instead. */
 export const OPENS_WITH_LINE_BREAK = /^\s*\n/u
+
+/** A line break opening a text once the tokenizer's non-break whitespace is stepped over — the question a fix asks before writing a break of its own. A vertical tab and a no-break space are words to the tokenizer and stop the run (#494), where {@link OPENS_WITH_LINE_BREAK} reads every `\s` character over and answers yes to a run no tokenizer-true trim can reach. */
+export const OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE = /^(?:[ \t\f]|\r(?!\n))*\r?\n/u
 
 /** A text opening on a quote, whitespace aside. */
 export const OPENS_WITH_QUOTE = /^\s*["']/u
@@ -244,6 +250,9 @@ export const SPACE_OR_TAB = /[ \t]/u
 /** The `{…}` a template literal or an HTML-like template interpolates a value with. */
 export const TPL_INTERPOLATION = /\{.+?\}/su
 
+/** The whitespace a text ends in, read as PostCSS's tokenizer reads whitespace — a space, a tab, a line feed, a carriage return or a form feed; a vertical tab and a no-break space are words to it and end no run (#494). The tokenizer-true narrowing of {@link TRAILING_WHITESPACE}, for the fixes that rewrite a run the parser made. */
+export const TRAILING_CSS_WHITESPACE = /[ \t\n\r\f]*$/u
+
 /** A hexadecimal escape at the end of a text, the one whitespace character closing it aside — which `postcss-value-parser` hands back as a divider of its own, cutting the name of a call in two. */
 export const TRAILING_HEX_ESCAPE = /\\[\da-f]{1,6}$/iu
 
@@ -265,8 +274,8 @@ export const TRAILING_WHITESPACE = /\s*$/u
 /** The whitespace a text ends in, where it ends in any: a search answers -1 on a text that does not. */
 export const TRAILING_WHITESPACE_RUN = /\s+$/u
 
-/** The whitespace a text ends in, down to its last line break, which is left standing whole — the carriage return of a Windows pair with it. A bare carriage return and a form feed are whitespace and no break, so they go with the rest; the trailing twin of {@link LEADING_WHITESPACE_WITHOUT_BREAK}. */
-export const TRAILING_WHITESPACE_WITHOUT_BREAK = /(?:(?!\r?\n)\s)+$/u
+/** The whitespace a text ends in, down to its last line break, which is left standing whole — the carriage return of a Windows pair with it. A bare carriage return and a form feed are whitespace and no break, so they go with the rest; a vertical tab and a no-break space are words to the tokenizer and no whitespace at all (#494); the trailing twin of {@link LEADING_WHITESPACE_WITHOUT_BREAK}. */
+export const TRAILING_WHITESPACE_WITHOUT_BREAK = /(?:[ \t\f]|\r(?!\n))+$/u
 
 /** A `url(` at the end of a text, with nothing in front of it that a longer name could reach into. */
 export const URL_CALL_AT_END = /(?:^|[^\w-])url\($/iu
@@ -274,11 +283,11 @@ export const URL_CALL_AT_END = /(?:^|[^\w-])url\($/iu
 /** A single character of whitespace. */
 export const WHITESPACE = /\s/u
 
-/** A text made of whitespace, and of at least one character of it. */
-export const WHITESPACE_ONLY = /^\s+$/u
+/** A text made of whitespace, and of at least one character of it — whitespace as the tokenizer reads it (#494). */
+export const WHITESPACE_ONLY = /^[ \t\n\r\f]+$/u
 
-/** A text made of whitespace or of nothing at all. */
-export const WHITESPACE_OR_NOTHING = /^\s*$/u
+/** A text made of whitespace or of nothing at all, whitespace being what PostCSS's tokenizer reads as some: a space, a tab, a line feed, a carriage return or a form feed. A vertical tab and a no-break space are words to it, so a text holding one is no whitespace at all (#494). */
+export const WHITESPACE_OR_NOTHING = /^[ \t\n\r\f]*$/u
 
 /** A block comment opening a text behind whitespace, of which there must be some. */
 export const WHITESPACE_THEN_BLOCK_COMMENT = /^\s+\/\*/u

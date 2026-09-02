@@ -312,3 +312,54 @@ testRule({
 		},
 	],
 })
+
+// A vertical tab and a no-break space are words to the tokenizer, and the machinery of the shared run reads whitespace the tokenizer's way (#494): the fix writes its space in front of such a character instead of taking it for the run and carrying it off.
+testRule({
+	ruleName,
+	config: [`always`],
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494
+			description: `a value that is a vertical tab, which the tokenizer reads as a word: the space is written in front of it, and the character stays`,
+			code: `a { color:\v; }`,
+			fixed: `a { color: \v; }`,
+			line: 1,
+			column: 11,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expectedAfter(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-block-semicolon-space-before": `never` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494
+			description: `a vertical tab behind the colon with a space of its own: the space this rule writes opens the value's word, the neighbour's \`never\` takes the run in front of the semicolon, and the character stands between them`,
+			code: `a { color:\v ; }`,
+			fixed: `a { color: \v; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 11,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 12,
+					endLine: 1,
+					endColumn: 13,
+					message: declarationBlockSemicolonSpaceBeforeMessages.rejectedBefore(),
+				},
+			],
+		},
+	],
+})

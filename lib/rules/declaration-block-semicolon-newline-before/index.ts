@@ -1,6 +1,6 @@
 import stylelint from "stylelint"
 
-import { SPACES_AND_TABS_ONLY, TRAILING_WHITESPACE } from "../../regexps.ts"
+import { SPACES_AND_TABS_ONLY, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
@@ -94,12 +94,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 								if (primary === `never-multi-line`) {
 									if (decl.raws.important) {
-										decl.raws.important = decl.raws.important.replace(TRAILING_WHITESPACE, ``)
+										decl.raws.important = decl.raws.important.replace(TRAILING_CSS_WHITESPACE, ``)
 									}
 									else {
 										let newValue = isCustomPropertyWithOnlyHorizontalSpaces
 											? ` `
-											: value.replace(TRAILING_WHITESPACE, ``)
+											: value.replace(TRAILING_CSS_WHITESPACE, ``)
 
 										syntax.write(decl, newValue)
 									}

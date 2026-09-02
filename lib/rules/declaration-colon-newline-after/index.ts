@@ -1,6 +1,6 @@
 import stylelint from "stylelint"
 
-import { LEADING_WHITESPACE_WITHOUT_BREAK, LINE_BREAK, OPENS_WITH_BLOCK_COMMENT, OPENS_WITH_LINE_BREAK, TRAILING_WHITESPACE_WITHOUT_BREAK } from "../../regexps.ts"
+import { LEADING_WHITESPACE_WITHOUT_BREAK, LINE_BREAK, OPENS_WITH_BLOCK_COMMENT, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE, TRAILING_WHITESPACE_WITHOUT_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { declarationColonSource } from "../../utils/declarationColonSource/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
@@ -115,7 +115,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 										let betweenAfter = between.slice(sliceIndex)
 
 										// Trim up to the break that already stands there, whichever character it is, and add one only where none does
-										decl.raws.between = OPENS_WITH_LINE_BREAK.test(betweenAfter) ? betweenBefore + betweenAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : betweenBefore + getLineBreak(syntax, root, result) + betweenAfter
+										decl.raws.between = OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(betweenAfter) ? betweenBefore + betweenAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : betweenBefore + getLineBreak(syntax, root, result) + betweenAfter
 
 										finishTheRun()
 
@@ -127,7 +127,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 									let valueAfter = syntax.read(decl)
 
-									if (OPENS_WITH_LINE_BREAK.test(valueAfter)) syntax.write(decl, valueAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``))
+									if (OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(valueAfter)) syntax.write(decl, valueAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``))
 									else decl.raws.between += getLineBreak(syntax, root, result)
 
 									finishTheRun()

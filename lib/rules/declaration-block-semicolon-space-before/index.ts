@@ -1,6 +1,6 @@
 import stylelint from "stylelint"
 
-import { TRAILING_WHITESPACE, WHITESPACE_ONLY } from "../../regexps.ts"
+import { TRAILING_CSS_WHITESPACE, WHITESPACE_ONLY } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
@@ -97,11 +97,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								}
 
 								if (primary.startsWith(`never`)) {
-									if (decl.raws.important) decl.raws.important = decl.raws.important.replace(TRAILING_WHITESPACE, ``)
+									if (decl.raws.important) decl.raws.important = decl.raws.important.replace(TRAILING_CSS_WHITESPACE, ``)
 									else {
 										let newValue = isCustomPropertyWithOnlySpaces
 											? ` `
-											: value.replace(TRAILING_WHITESPACE, ``)
+											: value.replace(TRAILING_CSS_WHITESPACE, ``)
 
 										syntax.write(decl, newValue)
 									}
