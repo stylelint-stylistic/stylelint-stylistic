@@ -744,6 +744,28 @@ testRule({
 				},
 			],
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/413
+			description: `an upper-case unit in the first part of a multiplication whose second part is a letter and no unit, which the fix leaves as it is`,
+			code: `a { b: 1PX*A; }`,
+			fixed: `a { b: 1px*A; }`,
+			line: 1,
+			column: 9,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/413
+			description: `an upper-case unit behind an exponent whose own capital is part of the number and stays as it is`,
+			code: `a { b: 1E5PX; }`,
+			fixed: `a { b: 1E5px; }`,
+			line: 1,
+			column: 11,
+			endLine: 1,
+			endColumn: 13,
+			message: messages.expected(`PX`, `px`),
+		},
 	],
 })
 
@@ -1178,6 +1200,28 @@ testRule({
 					message: messages.expected(`rem`, `REM`),
 				},
 			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/413
+			description: `a lower-case unit in the first part of a multiplication whose second part is a letter and no unit, which the fix leaves as it is`,
+			code: `a { b: 1px*a; }`,
+			fixed: `a { b: 1PX*a; }`,
+			line: 1,
+			column: 9,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expected(`px`, `PX`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/413
+			description: `a lower-case unit behind an exponent whose own letter is part of the number and stays as it is`,
+			code: `a { b: 1e5px; }`,
+			fixed: `a { b: 1e5PX; }`,
+			line: 1,
+			column: 11,
+			endLine: 1,
+			endColumn: 13,
+			message: messages.expected(`px`, `PX`),
 		},
 	],
 })

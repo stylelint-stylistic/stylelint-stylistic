@@ -171,6 +171,17 @@ testRule({
 			endColumn: 12,
 			message: messages.expected(`PX`, `px`),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/413
+			description: `a variable spelled in capitals multiplied by an upper-case unit, a word the whole of which is no dimension`,
+			code: `a { b: @VAR*10PX; }`,
+			fixed: `a { b: @VAR*10px; }`,
+			line: 1,
+			column: 15,
+			endLine: 1,
+			endColumn: 17,
+			message: messages.expected(`PX`, `px`),
+		},
 	],
 })
 testRule({
@@ -332,6 +343,17 @@ testRule({
 					message: messages.expected(`px`, `PX`),
 				},
 			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/425
+			description: `a variable multiplied by a lower-case unit, which used to be reported and never written`,
+			code: `a { b: @var*2rem; }`,
+			fixed: `a { b: @var*2REM; }`,
+			line: 1,
+			column: 14,
+			endLine: 1,
+			endColumn: 17,
+			message: messages.expected(`rem`, `REM`),
 		},
 	],
 })

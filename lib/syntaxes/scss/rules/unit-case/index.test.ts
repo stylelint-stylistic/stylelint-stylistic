@@ -159,6 +159,50 @@ testRule({
 			endColumn: 12,
 			message: messages.expected(`PX`, `px`),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/413
+			description: `an upper-case unit multiplied by a variable spelled in capitals, whose name the fix leaves as it is`,
+			code: `a { b: 10PX*$VAR; }`,
+			fixed: `a { b: 10px*$VAR; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/413
+			description: `a variable spelled in capitals multiplied by an upper-case unit, a word the whole of which is no dimension`,
+			code: `a { b: $VAR*10PX; }`,
+			fixed: `a { b: $VAR*10px; }`,
+			line: 1,
+			column: 15,
+			endLine: 1,
+			endColumn: 17,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/425
+			description: `a variable multiplied by an upper-case unit, which used to be reported and never written`,
+			code: `a { b: $var*2REM; }`,
+			fixed: `a { b: $var*2rem; }`,
+			line: 1,
+			column: 14,
+			endLine: 1,
+			endColumn: 17,
+			message: messages.expected(`REM`, `rem`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/425
+			description: `a variable read through a Sass module multiplied by an upper-case unit`,
+			code: `a { b: ns.$v*10PX; }`,
+			fixed: `a { b: ns.$v*10px; }`,
+			line: 1,
+			column: 16,
+			endLine: 1,
+			endColumn: 18,
+			message: messages.expected(`PX`, `px`),
+		},
 	],
 })
 testRule({
@@ -439,6 +483,17 @@ testRule({
 			endLine: 1,
 			endColumn: 8,
 			message: messages.expected(`px`, `PX`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/425
+			description: `a variable multiplied by a lower-case unit, which used to be reported and never written`,
+			code: `a { b: $var*2rem; }`,
+			fixed: `a { b: $var*2REM; }`,
+			line: 1,
+			column: 14,
+			endLine: 1,
+			endColumn: 17,
+			message: messages.expected(`rem`, `REM`),
 		},
 	],
 })

@@ -2,7 +2,7 @@ import type { AtRule, Declaration } from "postcss"
 import valueParser, { type Node } from "postcss-value-parser"
 import stylelint, { type RuleMessage } from "stylelint"
 
-import { INTERPOLATION_CHARACTER, MEDIA_AT_RULE } from "../../regexps.ts"
+import { MEDIA_AT_RULE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
@@ -29,12 +29,13 @@ export let meta = {
 	fixable: true,
 }
 
-/** What one miscased unit is reported as: where the warning stands, counted in the node, and what it says. */
+/** What one miscased unit is reported as: where the warning stands, counted in the node, what it says, and the write that answers it, counted in the text the walk reads. */
 type Problem = {
 	index: number,
 	endIndex: number,
 	message: RuleMessage,
 	messageArgs: string[],
+	edit: Edit,
 }
 
 /**
@@ -63,9 +64,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		 */
 		function check<T extends AtRule | Declaration> (node: T, checkedValue: string, getIndex: (node: T) => number): void {
 			let problems: Problem[] = []
-
-			// What the walk changed, and nothing else: the text is edited at the positions the changed words stand at rather than printed anew from the parsed tree, since `postcss-value-parser` does not always give back the text it was handed — a comment opening `/*/` comes back as `/**/` — and a fix made anywhere in such a text would rewrite a comment standing elsewhere in it
-			let edits: Edit[] = []
 			let hasFixed = false
 
 			// Every comment of the value, both kinds, and both readings below want them all. A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind, so what such a comment holds comes back as ordinary words and calls; a block comment reaches the walk as a node of its own — except one opening `/*/`, which the parser closes on the star it opened with, handing the rest of its text back the same way (#378)
@@ -76,7 +74,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			/**
 			 * Reads the dimension a value node holds and says where its unit is written in the case the option does not ask for.
 			 * @param valueNode - The value parser node to read.
-			 * @returns What to report about the unit, or `null` where the node carries no miscased one.
+			 * @returns What to report about the unit and what to write in its place, or `null` where the node carries no miscased one.
 			 */
 			function readMiscasedUnit (valueNode: Node): Problem | null {
 				let dimension = getDimension(syntax, valueNode)
@@ -85,7 +83,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				let { number, unit: tail, positions } = dimension
 
-				let unit = dimensionText(tail)
+				let unit = withoutBangFlag(tail)
 
 				if (!unit) return null
 
@@ -101,12 +99,19 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (unitStart === undefined || unitLast === undefined) return null
 
 				let unitEnd = unitLast + 1
+				// The write is the run the warning underlines, recased, and nothing else. The text is edited at that run rather than printed anew from the parsed tree, since `postcss-value-parser` does not always give back the text it was handed — a comment opening `/*/` comes back as `/**/` — and a fix printed from the tree would rewrite a comment standing elsewhere in the value. The run is taken from the file rather than from the copy the unit was read out of, so that a hack unit standing between its letters keeps its place and only the letters change case
+				let run = valueNode.value.slice(unitStart, unitEnd)
 
 				return {
 					index: index + valueNode.sourceIndex + unitStart,
 					endIndex: index + valueNode.sourceIndex + unitEnd,
 					message: messages.expected,
 					messageArgs: [unit, expectedUnit],
+					edit: {
+						start: valueNode.sourceIndex + unitStart,
+						end: valueNode.sourceIndex + unitEnd,
+						text: primary === `lower` ? run.toLowerCase() : run.toUpperCase(),
+					},
 				}
 			}
 
@@ -122,57 +127,22 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A node carrying any text of an interpolation is passed over whichever side of it the node opens on, since a value parser breaks an interpolation holding whitespace into words and hands no one of them the whole of it: `isStandardSyntaxValue` is asked about a word at a time and answers that `10px#{$a` holds no interpolation at all. What such a node holds is still walked, as the text of an inline comment is, and every node of it asked the same
 				if (findInterpolationSpanTouching(valueNode, interpolations)) return
 
-				let holdsMultiplication = value.includes(`*`)
-				let holdsMiscasedPart = false
+				// A word holding a multiplication is more than one dimension, and the whole of it is a dimension of no language: `valueParser.unit` answers any word opening with a number and calls everything standing behind that number a unit, so `10PX*2REM*3EM` reads as the unit `PX*2REM*3EM`. The word is read part by part, each through a node built for the part — every part stands where the word does plus what the parts in front of it take up, the star between each pair counted in. Two makings that were tried before this one describe no text of the part at all: `2*10PX` was underlined as an empty run standing past the end of the line, and `10px*2REM` as the closing brace of the block behind the value. A word without a star is one part, and the end position such a node is given is read by nothing — it is written because a node carrying one position of the file and one of nowhere is the shape this whole reading went wrong on. What is written is decided by the same reading: each named unit carries its own edit, so a part is written whether or not the word around it reads as a dimension — `$var*2REM` used to be named and never written, since the whole word was refused and one edit per word was all there was — and nothing outside a named unit is written at all, neither the `A` of `1PX*A` nor the name of the variable in `10PX*$VAR` (#413, #425)
+				let partIndex = 0
 
-				if (holdsMultiplication) {
-					// Every part of a multiplication stands where the word does plus what the parts in front of it take up, the star between each pair counted in. Positions of any other making describe no text of the part: `2*10PX` was underlined as an empty run standing past the end of the line, and `10px*2REM` as the closing brace of the block behind the value. Nothing reads the second position of such a node, and it is written because a node carrying one position of the file and one of nowhere is the shape this whole reading went wrong on
-					let partIndex = 0
+				for (let part of value.split(`*`)) {
+					let problem = readMiscasedUnit({
+						...valueNode,
+						sourceIndex: valueNode.sourceIndex + partIndex,
+						sourceEndIndex: valueNode.sourceIndex + partIndex + part.length,
+						value: part,
+					})
 
-					for (let part of value.split(`*`)) {
-						let partProblem = readMiscasedUnit({
-							...valueNode,
-							sourceIndex: valueNode.sourceIndex + partIndex,
-							sourceEndIndex: valueNode.sourceIndex + partIndex + part.length,
-							value: part,
-						})
+					if (problem) problems.push(problem)
 
-						if (partProblem) {
-							problems.push(partProblem)
-							holdsMiscasedPart = true
-						}
-
-						partIndex += part.length + 1
-					}
+					partIndex += part.length + 1
 				}
-
-				let wordProblem = readMiscasedUnit(valueNode)
-
-				if (!wordProblem) return
-
-				// A word holding a multiplication is more than one dimension, and the whole of it is a dimension of no language: `valueParser.unit` answers any word opening with a number and calls everything standing behind that number a unit, so `10PX*2REM*3EM` reads as the unit `PX*2REM*3EM`. What a reader is told about such a word is its parts, each named by the unit it holds, and the whole-word reading is what decides the write: one edit recases the word, and every unit standing in it with it.
-				if (!holdsMultiplication) problems.push(wordProblem)
-				// So a word no part of which was named is written by nothing. The write below is applied as soon as any one fix of this text is called, whichever word that fix was reported over, and what such a word holds outside its units is no unit of anything — the `A` of `1px*A`, the exponent of `10px*2E5` — so a neighbour's fix must not recase it.
-				else if (!holdsMiscasedPart) return
-
-				// A dimension is a word, and the text a word node stands in is its own value: the span is as long as the value the parser read. Each part of it is recased down to where its dimension ends, and what stands behind that — a bang flag, a hash the file welds to the unit — is written back unchanged: the parts are read one at a time, so they are written one at a time, or a hash standing in the first part would leave the unit of the second named and never written
-				edits.push({
-					start: valueNode.sourceIndex,
-					end: valueNode.sourceIndex + value.length,
-					text: value.split(`*`).map((part) => recaseDimension(part)).join(`*`),
-				})
 			})
-
-			/**
-			 * Recases the dimension a part of a word spells, and leaves what stands behind it as the file spells it.
-			 * @param part - A word, or one part of a word holding a multiplication.
-			 * @returns The part with its dimension in the case the option asks for.
-			 */
-			function recaseDimension (part: string): string {
-				let dimension = dimensionText(part)
-
-				return (primary === `lower` ? dimension.toLowerCase() : dimension.toUpperCase()) + part.slice(dimension.length)
-			}
 
 			/** Says that a fix was called, so that the write below knows it was asked for. */
 			function markFixed (): void {
@@ -193,9 +163,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					})
 				}
 
-				// Every fix of this rule writes every unit the walk changed, whichever problem it was reported for: a word carrying a multiplication is reported part by part, and no part of it names a write of its own. So the writing waits for the whole list of problems to be reported, and one fix among them called is what asks for it.
+				// Every fix of this rule writes every unit the walk named, whichever problem it was reported for: the text is written once, so the writing waits for the whole list of problems to be reported, and one fix among them called is what asks for it.
 				if (hasFixed) {
-					let fixedValue = applyEditsFromEnd(checkedValue, edits)
+					let fixedValue = applyEditsFromEnd(checkedValue, problems.map((problem) => problem.edit))
 
 					syntax.write(node, fixedValue)
 				}
@@ -212,19 +182,16 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 }
 
 /**
- * Takes what stands behind a dimension off the end of a text, where it carries anything.
+ * Takes the bang flag off the end of a unit, where it carries one.
  *
- * PostCSS moves only the last `!important` of a declaration out of the value, so every flag written in front of it stays where it was, and `postcss-value-parser` reads `1px!important` as one word; Sass writes `!default` and `!global` in the same place. No unit is spelled with a bang, so a unit ends where a flag begins, and the keyword behind it is nothing this rule is about. Nor is a unit spelled with any character an interpolation is — `10px#fff` is a dimension and a hash to the tokenizer — so a unit ends where one of those begins too, and this is where `getDimension` ends the copy it reads (#426): the text this rule writes is cut where the text it read was.
- * @param text - A unit read out of a value word, or the word itself.
- * @returns What stands in front of the first bang or interpolation character, or the whole text where it holds neither.
+ * PostCSS moves only the last `!important` of a declaration out of the value, so every flag written in front of it stays where it was, and `postcss-value-parser` reads `1px!important` as one word, unit and flag together; Sass writes `!default` and `!global` in the same place. No unit is spelled with a bang, so a unit ends where a flag begins, and the keyword behind it is nothing this rule is about. The characters an interpolation is spelled with are answered for by `getDimension`, which ends the copy it reads at the first of them (#426), so no unit reaching this can hold one.
+ * @param text - A unit read out of a value word.
+ * @returns What stands in front of the first bang, or the whole text where it holds none.
  */
-function dimensionText (text: string): string {
-	let end = text.search(INTERPOLATION_CHARACTER)
+function withoutBangFlag (text: string): string {
 	let bang = text.indexOf(`!`)
 
-	if (bang !== -1 && (end === -1 || bang < end)) end = bang
-
-	return end === -1 ? text : text.slice(0, end)
+	return bang === -1 ? text : text.slice(0, bang)
 }
 
 export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
