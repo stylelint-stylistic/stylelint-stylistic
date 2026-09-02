@@ -1,7 +1,7 @@
 import valueParser, { type Node, type StringNode } from "postcss-value-parser"
 import stylelint from "stylelint"
 
-import { EVERY_LINE_BREAK_RUN, EVERY_WHITESPACE_RUN, LAST_LINE } from "../../regexps.ts"
+import { EVERY_CSS_WHITESPACE_RUN, EVERY_LINE_BREAK_RUN, LAST_LINE, LEADING_CSS_WHITESPACE, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
@@ -83,8 +83,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// To compare with the formatted value to determine if there is an error
 			let originalRows = gridRows.map(({ value }) => value)
-			// The ones to operate with
-			let rows = gridRows.map(({ value }) => value.trim().replaceAll(EVERY_WHITESPACE_RUN, ` `))
+			// The ones to operate with. Whitespace is read the way the tokenizer reads it — a space, a tab, a line feed, a carriage return or a form feed — and the rule cuts a row on that whitespace alone (#401): `trim` and `\s` take every separator Unicode has, the no-break space among them, and read a cell named with one as no cell at all. The grammar of the property names a cell with a run of ident code points, which `IDENTIFIER_CODE_POINT` of `lib/regexps.ts` spells and a no-break space is none of, and reads any other run as a trash token that makes the declaration invalid — while `lightningcss` reads every code point outside ASCII as a character of a name and lays such a grid out. The rule judges no validity either way, and leaves whatever is no whitespace to the tokenizer as it stands.
+			let rows = gridRows.map(({ value }) => value.replace(LEADING_CSS_WHITESPACE, ``).replace(TRAILING_CSS_WHITESPACE, ``).replaceAll(EVERY_CSS_WHITESPACE_RUN, ` `))
 
 			let maxCellsCount = 0
 			let table = []
@@ -110,14 +110,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				maxRowLength = Math.max(maxRowLength, formattedRow.length)
 
-				return alignQuotes ? formattedRow : formattedRow.trimEnd()
+				// What the padding put behind the last cell is spaces, and a `trimEnd` would take a cell named with a no-break space along with them, now that the row is cut so that such a cell survives to this point.
+				return alignQuotes ? formattedRow : formattedRow.replace(TRAILING_CSS_WHITESPACE, ``)
 			})
 
 			if (alignQuotes && isMultilineDeclaration) {
 				formatted = formatted.map((row) => {
 					if (row.length === maxRowLength) return row
 
-					let cleanRowValue = row.trimEnd()
+					let cleanRowValue = row.replace(TRAILING_CSS_WHITESPACE, ``)
 
 					return `${cleanRowValue}${` `.repeat(maxRowLength - cleanRowValue.length)}`
 				})

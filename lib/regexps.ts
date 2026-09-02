@@ -28,6 +28,9 @@ export const EVERY_COMMENT_DELIMITER = /(\*\/|\/\*)/gu
 /** Every run of Windows line breaks, the run captured whole. Read by `max-empty-lines`, and narrow for the reason {@link CRLF} is. */
 export const EVERY_CRLF_RUN = /(\r\n)+/gu
 
+/** Every run of whitespace, however wide, read as PostCSS's tokenizer reads whitespace — a space, a tab, a line feed, a carriage return or a form feed; a no-break space, a vertical tab and every other separator Unicode has are words to it and part no run (#494, #401). The tokenizer-true narrowing of `\s+`, for a reading that cuts a text into the words the file really spells, such as the cells of a grid row. */
+export const EVERY_CSS_WHITESPACE_RUN = /[ \t\n\r\f]+/gu
+
 /** Every run of line breaks that leaves an empty line behind it, the first break of the run captured so that it can be written in the whole run's place and the file keep the spelling it is written in. A stray semicolon may stand between two breaks of the run, since the readers of this question measure the whitespace with those taken out and would otherwise ask for an empty line to go that nothing here could take. Reads a break the way {@link EMPTY_LINE} does, a Windows pair counting as one. */
 export const EVERY_EMPTY_LINE_RUN = /(\r?\n)(?:[\t ;]*\r?\n)+/gu
 
@@ -84,9 +87,6 @@ export const EVERY_URL_CONTENT = /url\(\s*(\S.*\S)\s*\)/gui
 
 /** Every character of whitespace, one at a time. */
 export const EVERY_WHITESPACE = /\s/gu
-
-/** Every run of whitespace, however wide. */
-export const EVERY_WHITESPACE_RUN = /\s+/gu
 
 /** The `__MSG_…__` a browser extension replaces at load time. */
 export const EXTENSION_MESSAGE = /__MSG_\S+__/u

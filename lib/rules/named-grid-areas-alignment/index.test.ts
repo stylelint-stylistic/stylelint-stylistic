@@ -2,6 +2,9 @@ import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
 
+// A no-break space, which is a word to the tokenizer, a character of a cell's name to lightningcss and whitespace to JavaScript.
+const N = `\u00A0`
+
 /** Default options */
 testRule({
 	ruleName,
@@ -107,6 +110,11 @@ testRule({
 					grid-template-areas: "a a" var(--x) "b b";
 				}
 			`,
+		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/401
+		{
+			description: `a row ending on a cell named with a no-break space alone, which is a cell of the row and no trailing whitespace`,
+			code: `a { grid-template-areas: "a ${N}" "bb b"; }`,
 		},
 	],
 
@@ -600,6 +608,47 @@ testRule({
 			endColumn: 46,
 			message: messages.expected(),
 		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/401
+		{
+			description: `a row whose cells are named with a no-break space, which is a word to the tokenizer and whitespace to JavaScript, over a row whose cells do not line up`,
+			code: `a { grid-template-areas: "${N} ${N}" "b  b"; }`,
+			fixed: `a { grid-template-areas: "${N} ${N}" "b b"; }`,
+			line: 1,
+			column: 26,
+			endLine: 1,
+			endColumn: 38,
+			message: messages.expected(),
+		},
+		{
+			description: `a cell named with a no-break space inside the name, which is one cell of the row and not two`,
+			code: `a { grid-template-areas: "a${N}b c" "d   e"; }`,
+			fixed: `a { grid-template-areas: "a${N}b c" "d e"; }`,
+			line: 1,
+			column: 26,
+			endLine: 1,
+			endColumn: 41,
+			message: messages.expected(),
+		},
+		{
+			description: `a cell named with a vertical tab inside the name, which is a word to the tokenizer and no whitespace of the row`,
+			code: `a { grid-template-areas: "a\vb c" "d   e"; }`,
+			fixed: `a { grid-template-areas: "a\vb c" "d e"; }`,
+			line: 1,
+			column: 26,
+			endLine: 1,
+			endColumn: 41,
+			message: messages.expected(),
+		},
+		{
+			description: `a tab and a form feed between the cells of a row, which are whitespace to the tokenizer and collapse to a space`,
+			code: `a { grid-template-areas: "a\tb\fc" "d   e"; }`,
+			fixed: `a { grid-template-areas: "a b c" "d e"; }`,
+			line: 1,
+			column: 26,
+			endLine: 1,
+			endColumn: 41,
+			message: messages.expected(),
+		},
 	],
 })
 
@@ -1091,6 +1140,29 @@ testRule({
 			line: 3,
 			column: 3,
 			endLine: 5,
+			endColumn: 10,
+			message: messages.expected(),
+		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/401
+		{
+			description: `a row ending on a cell named with a no-break space alone, padded out to the width of the row below rather than emptied`,
+			code: `
+				a {
+					grid-template-areas:
+						"a ${N}"
+						"bb  b";
+				}
+			`,
+			fixed: `
+				a {
+					grid-template-areas:
+						"a  ${N}"
+						"bb b";
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 4,
 			endColumn: 10,
 			message: messages.expected(),
 		},
