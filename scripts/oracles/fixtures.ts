@@ -13,6 +13,8 @@ const FIXTURES: [string, string][] = [
 	[`media-ops`, `@media ,a<>=b screen<screen { a { b: c; } }\n`],
 	[`media-feature`, `@media (min-width:100px) and (max-width:200px) { a { b: c; } }\n`],
 	[`cr-as-whitespace`, `a { color: pink;  \r}\n`],
+	[`cr-as-indent`, `a {\n\r\tcolor: pink;\n}\n`],
+	[`cr-first`, `\r\ta { color: pink; }\n`],
 	[`ff-as-whitespace`, `a { color: pink;  \f}\n`],
 	[`crlf`, `a {\r\n\tcolor: pink;\r\n}\r\n`],
 	[`trailing-comment-block`, `a { color: pink /* c */ }\n`],

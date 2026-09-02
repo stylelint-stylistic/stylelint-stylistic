@@ -96,6 +96,16 @@ testRule({
 			column: 2,
 			message: messages.expected(`2 tabs`),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/452
+			autoStripIndent: false,
+			description: `a stylesheet whose first node stands behind a bare carriage return and a tab, whitespace to the parser and no line`,
+			code: `\r\ta{}`,
+			fixed: `a{}`,
+			line: 1,
+			column: 3,
+			message: messages.expected(`0 tabs`),
+		},
 	],
 })
 testRule({

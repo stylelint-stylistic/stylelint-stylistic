@@ -2,7 +2,7 @@ import type { AtRule, Declaration, Document, Node, Root, Rule, Source } from "po
 import styleSearch from "style-search"
 import stylelint from "stylelint"
 
-import { CRLF, EVERY_LINE_BREAK, EVERY_LINE_BREAK_AND_INDENT, EVERY_LINE_INDENT, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, FIRST_LINE, INDENT_AT_END, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, SPACES_AND_TABS_BEFORE_CONTENT, TRAILING_LINE_BREAK, TRAILING_STAR_OR_UNDERSCORE } from "../../regexps.ts"
+import { CRLF, EVERY_LINE_BREAK, EVERY_LINE_BREAK_AND_INDENT, EVERY_LINE_INDENT, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, FIRST_LINE, INDENT_AT_END, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, TRAILING_LINE_BREAK, TRAILING_STAR_OR_UNDERSCORE, WHITESPACE_WITHOUT_BREAK_BEFORE_CONTENT } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
@@ -111,7 +111,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// Only inspect the spaces before the node if this is the first node in root or there is a line break in the `before` string. (If there is no line break before a node, there is no "indentation" to check.)
 			let isFirstChild = parent.type === `root` && parent.first === node
-			// The whitespace is cut into lines, so that one reading answers both questions asked of it: more than one line means a break stands in it, and the last of them is what the node is indented by. Anything in front of that break is not indentation for this node — it is some other kind of separation, checked by some separate rule
+			// The whitespace is cut into lines, so that one reading answers both questions asked of it: more than one line means a break stands in it, and the last of them is what the node is indented by. Anything in front of that break is not indentation for this node — it is some other kind of separation, checked by some separate rule. The last line holds whatever the tokenizer read as whitespace short of a break — a form feed or a bare carriage return as much as a space — and the two writers below read the same run, so that what is reported here is what they write over (#452)
 			let beforeLines = before.split(EVERY_LINE_BREAK)
 			let indentationBefore = beforeLines.at(-1)
 
@@ -125,7 +125,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					fix () {
 						if (!isString(node.raws.before)) return
 
-						node.raws.before = fixIndentation(isFirstChild ? node.raws.before.replace(SPACES_AND_TABS_BEFORE_CONTENT, expectedOpeningBraceIndentation) : node.raws.before, expectedOpeningBraceIndentation)
+						node.raws.before = fixIndentation(isFirstChild ? node.raws.before.replace(WHITESPACE_WITHOUT_BREAK_BEFORE_CONTENT, expectedOpeningBraceIndentation) : node.raws.before, expectedOpeningBraceIndentation)
 					},
 				})
 			}

@@ -58,8 +58,8 @@ export const EVERY_LINE_WITH_BREAK = /[^\n]*\n/gu
 /** Every line break of a text, one at a time: a line feed, with the carriage return of a Windows pair in front of it where there is one. A text split on it keeps neither character of a pair. */
 export const EVERY_LINE_BREAK = /\r?\n/gu
 
-/** Every line break with the indentation behind it, where content or the end of the text follows, the break captured so that a replacement can write it back and the file keep the spelling it is written in. A Windows pair is one break and is read as one, so that a replacement never lands between its two characters. Read by `indentation`, whose fix writes the indentation an option asks for behind every break of a text. */
-export const EVERY_LINE_BREAK_AND_INDENT = /(\r?\n)[ \t]*(?=\S|$)/gu
+/** Every line break with the indentation behind it, where content or the end of the text follows, the break captured so that a replacement can write it back and the file keep the spelling it is written in. A Windows pair is one break and is read as one, so that a replacement never lands between its two characters. The indentation is whatever the tokenizer reads as whitespace short of a break — a form feed and a bare carriage return among it, since a reader of the line hands both back as part of its indentation, and a fix that stopped at spaces and tabs wrote nothing over them (#452); the carriage return of the next line's Windows pair is left to that pair. Read by `indentation`, whose fix writes the indentation an option asks for behind every break of a text. */
+export const EVERY_LINE_BREAK_AND_INDENT = /(\r?\n)(?:[ \t\f]|\r(?!\n))*(?=\S|$)/gu
 
 /** Every run of line feeds and carriage returns, a Windows break counting as two of them, and the empty run wherever none stands. Read by `named-grid-areas-alignment`, which counts the lines a run of them spans. */
 export const EVERY_LINE_BREAK_RUN = /[\r\n]*/gu
@@ -232,9 +232,6 @@ export const RANGE_FEATURE_OPERATOR = /[<>=]/u
 /** A run of semicolons. */
 export const SEMICOLON_RUN = /;+/u
 
-/** The spaces and tabs a text opens with, where content or the end of the text follows them directly — so a text whose first line break comes before its content matches nothing at all. */
-export const SPACES_AND_TABS_BEFORE_CONTENT = /^[ \t]*(?=\S|$)/u
-
 /** A text made of spaces and tabs, and of at least one of them. */
 export const SPACES_AND_TABS_ONLY = /^[ \t]+$/u
 
@@ -297,3 +294,6 @@ export const WHITESPACE_THEN_BLOCK_COMMENT = /^\s+\/\*/u
 
 /** An inline comment opening a text behind whitespace, of which there must be some. */
 export const WHITESPACE_THEN_INLINE_COMMENT = /^\s+\/\//u
+
+/** The whitespace a text opens with, short of a line break, where content or the end of the text follows it directly — so a text whose first line break comes before its content matches nothing at all, and the run in front of that break is left to the rule that reads it. The run is read the tokenizer's way, a form feed and a bare carriage return among it, for the reason given at {@link EVERY_LINE_BREAK_AND_INDENT}. */
+export const WHITESPACE_WITHOUT_BREAK_BEFORE_CONTENT = /^(?:[ \t\f]|\r(?!\n))*(?=\S|$)/u

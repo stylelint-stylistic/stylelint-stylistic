@@ -296,6 +296,15 @@ testRule({
 			column: 2,
 			message: messages.expected(`2 tabs`),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/452
+			description: `a declaration whose indentation opens with a bare carriage return, whitespace to the parser and part of the run the fix writes over`,
+			code: `a {\n\r\t\tcolor: pink;\n}`,
+			fixed: `a {\n\tcolor: pink;\n}`,
+			line: 2,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
 	],
 })
 

@@ -29,6 +29,91 @@ testRule({
 			column: 1,
 			message: messages.expected(`1 tab`),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/452
+			description: `a declaration whose indentation opens with a bare carriage return, which is whitespace to the parser and part of the run the fix writes over`,
+			code: `a {\n\r\t\tcolor: pink;\n}`,
+			fixed: `a {\n\tcolor: pink;\n}`,
+			line: 2,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `the same declaration behind a form feed`,
+			code: `a {\n\f\tcolor: pink;\n}`,
+			fixed: `a {\n\tcolor: pink;\n}`,
+			line: 2,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `a closing brace whose indentation opens with a bare carriage return`,
+			code: `a {\n\tcolor: pink;\n\r\t}`,
+			fixed: `a {\n\tcolor: pink;\n}`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`0 tabs`),
+		},
+		{
+			description: `a property hack behind a bare carriage return, whose star the fix leaves where it stands`,
+			code: `a {\n\r\t*color: pink;\n}`,
+			fixed: `a {\n\t*color: pink;\n}`,
+			line: 2,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `an empty line holding a space in a rule broken with Windows line breaks, whose pairs the fix keeps whole and whose space it leaves to another rule`,
+			code: `a {\r\n \r\n\t\tcolor: pink;\r\n}`,
+			fixed: `a {\r\n \r\n\tcolor: pink;\r\n}`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: 2,
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/452
+			autoStripIndent: false,
+			description: `a stylesheet whose first node stands behind a bare carriage return and a tab, whitespace to the parser and no line`,
+			code: `\r\ta{}`,
+			fixed: `a{}`,
+			line: 1,
+			column: 3,
+			message: messages.expected(`0 spaces`),
+		},
+		{
+			autoStripIndent: false,
+			description: `the same node behind a form feed`,
+			code: `\f\ta{}`,
+			fixed: `a{}`,
+			line: 1,
+			column: 3,
+			message: messages.expected(`0 spaces`),
+		},
+		{
+			autoStripIndent: false,
+			description: `the same node behind a bare carriage return alone`,
+			code: `\ra{}`,
+			fixed: `a{}`,
+			line: 1,
+			column: 2,
+			message: messages.expected(`0 spaces`),
+		},
+		{
+			description: `a second rule whose indentation opens with a bare carriage return`,
+			code: `a{}\n\r\tb{}`,
+			fixed: `a{}\nb{}`,
+			line: 2,
+			column: 3,
+			message: messages.expected(`0 spaces`),
+		},
 	],
 })
 
