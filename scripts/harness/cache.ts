@@ -11,7 +11,7 @@ import { createHash } from "node:crypto"
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { homedir } from "node:os"
 import path from "node:path"
-import { env } from "node:process"
+import { env, pid } from "node:process"
 
 import { ROOT } from "./checkout.ts"
 
@@ -21,8 +21,8 @@ const CACHE_DIR = env.STYLISTIC_CACHE ?? path.join(homedir(), `.cache`, `styleli
 /** The mode a written result is left in: readable by everyone, writable by no one. */
 const READ_ONLY = 0o444
 
-/** The index the working tree is hashed through, so that the real one is never touched. */
-const SCRATCH_INDEX = path.join(ROOT, `tmp`, `harness-index`)
+/** The index the working tree is hashed through, so that the real one is never touched; it is named by the process, since two runs asking for the hash at once would otherwise write over each other's. */
+const SCRATCH_INDEX = path.join(ROOT, `tmp`, `harness-index-${pid}`)
 
 /**
  * Runs Git in the repository and hands back what it printed.
@@ -51,10 +51,15 @@ function treeOf (revision: string): string {
 
 		let indexEnv = { GIT_INDEX_FILE: SCRATCH_INDEX }
 
-		git([`read-tree`, `HEAD`], indexEnv)
-		git([`add`, `-A`, `--`, `.`], indexEnv)
-		worktreeTree = git([`write-tree`], indexEnv)
-		rmSync(SCRATCH_INDEX, { force: true })
+		try {
+			git([`read-tree`, `HEAD`], indexEnv)
+			git([`add`, `-A`, `--`, `.`], indexEnv)
+			worktreeTree = git([`write-tree`], indexEnv)
+		}
+		finally {
+			// A name of its own is a file of its own, and a throw between the three calls would leave it standing where the one name every run shared was written over by the next
+			rmSync(SCRATCH_INDEX, { force: true })
+		}
 	}
 
 	return worktreeTree

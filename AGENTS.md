@@ -16,7 +16,7 @@ make lint FILE=lib/rules/color-hex-case
 
 Two targets collect results rather than check them: `make oracles` and `make sweep FILE=…`. Both keep every result by what it depends on, under `~/.cache/stylelint-stylistic/`, and measure only the side no entry answers for, so a run is seconds and a rerun over an unchanged tree is nothing; run them freely, before a branch and after it, and read the diff they write.
 
-CI (`.github/workflows/test.yaml`) runs `pnpm ci` and then `make verify` — run `make verify` locally before pushing. The release workflow (`.github/workflows/release.yaml`) runs `pnpm ci` and then `make release` on pushes to `release` and `release-*`. The `pre-commit` hook lints the staged `.ts` files and runs, in one pass of `vitest related`, whatever test imports one of them — so a util is answered for by the rules that use it rather than by the directory it sits in.
+CI (`.github/workflows/test.yaml`) runs `pnpm ci` and then `make verify`, which the `pre-push` hook runs too, refusing a push that does not pass it and skipping the run where a green one over this very state of the tree is remembered, so proving the branch by hand a moment earlier costs nothing at the push. The release workflow (`.github/workflows/release.yaml`) runs `pnpm ci` and then `make release` on pushes to `release` and `release-*`. The `pre-commit` hook lints the staged `.ts` files and runs, in one pass of `vitest related`, whatever test imports one of them — so a util is answered for by the rules that use it rather than by the directory it sits in.
 
 ## Architecture
 

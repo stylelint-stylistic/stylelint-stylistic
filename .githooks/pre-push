@@ -1,0 +1,54 @@
+#!/bin/sh
+
+set -e
+
+root=$(git rev-parse --show-toplevel)
+
+cd "$root"
+
+export PATH="$root/node_modules/.bin:$PATH"
+
+# Git names every ref of the push on standard input, as `<local ref> <local sha> <remote ref> <remote sha>`, and calls the hook even where it has nothing to send at all — a push that answers `Everything up-to-date` arrives here with no line whatsoever, and a minute of checks for it would be a minute for nothing. A deletion arrives as `(delete)` and a local sha of zeros, and carries no state of the tree with it either.
+#
+# A tag is passed over only where every commit it reaches is on a remote already, which is what the release flow does and what makes the tag nothing new to check. A tag cut over commits no branch of the push carries is not: it sends those commits, and nothing would have checked them. The remote-tracking refs may be behind what the remote really holds, and that errs towards running the checks.
+refs_to_check=0
+
+while read -r local_ref local_sha remote_ref remote_sha
+do
+	case "$local_sha" in
+		*[!0]*) ;;
+		*) continue ;;
+	esac
+
+	case "$local_ref" in
+		refs/tags/*)
+			if [ -z "$(git rev-list -1 "$local_sha" --not --remotes)" ]
+			then continue
+			fi
+			;;
+	esac
+
+	refs_to_check=1
+done
+
+if [ "$refs_to_check" = 0 ]
+then exit 0
+fi
+
+# What answers for the push is the working tree, which is what `make verify` is about and where it is meant to run: the commits being pushed are on disk already, and there is nothing here to keep out of the way. Where the tree carries anything those commits do not, that is worth a word whichever way the hook goes — what came back green is then the tree rather than the branch CI will be asked about.
+if [ -n "$(git status --porcelain)" ]
+then printf '\n\t⚠️  The working tree carries what the commits being pushed do not, so what is answered for below is the tree rather than the branch.\n\n'
+fi
+
+# `make verify` answers about the tree and about nothing else, so a state of the tree it has already come back green over is not asked about twice: a run made by hand a moment before the push is the run this finds.
+if ./scripts/verified.ts check
+then exit 0
+fi
+
+if make verify
+then exit 0
+fi
+
+printf '\n\t❌ `make verify` did not pass, so the push is refused. Push all the same with `git push --no-verify` — spelled in full, since `-n` at a push is `--dry-run`.\n\n'
+
+exit 1

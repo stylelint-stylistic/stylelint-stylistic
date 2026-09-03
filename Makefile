@@ -64,7 +64,11 @@ packages-check: build ## 📦 Check that the built plugin needs none of the synt
 	./scripts/check-optional-packages.ts
 .PHONY: packages-check
 
-verify: check lint test prose-check breaks-check build packages-check ## ✅ Run every check the CI runs
+verify: ## ✅ Run every check the CI runs
+	@test -z "$(FILE)$(LINT_FLAGS)$(TEST_FLAGS)" || { printf "\t❌ $(ANSI_BOLD)verify runs every check over the whole tree, and takes no FILE, LINT_FLAGS or TEST_FLAGS$(ANSI_RESET)\n\n"; exit 2; }
+	tree=$$(./scripts/verified.ts tree)
+	$(MAKE) --no-print-directory check lint test prose-check breaks-check build packages-check
+	./scripts/verified.ts record $$tree
 .PHONY: verify
 
 release: verify build ## 🚀 Release a new version
