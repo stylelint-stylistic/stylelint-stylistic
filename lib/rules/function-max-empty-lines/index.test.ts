@@ -68,6 +68,23 @@ testRule({
 				value2)
 			`,
 		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/503
+		{
+			description: `the empty lines a block comment holds inside a call, which are text of the comment and no lines of the call`,
+			code: `a { b: f(1,\n/* g(\n\n\n2) */ 3); }`,
+		},
+		{
+			description: `the same call spelled with carriage returns`,
+			code: `a { b: f(1,\r\n/* g(\r\n\r\n\r\n2) */ 3); }`,
+		},
+		{
+			description: `the same comment opening with a solidus, a star and a solidus, which the scan reads to the delimiter that closes it`,
+			code: `a { b: f(1,\n/*/ g(\n\n\n2) */ 3); }`,
+		},
+		{
+			description: `a comment holding empty lines and nothing else, standing alone inside the call`,
+			code: `a { b: f(/* \n\n\n */ 1); }`,
+		},
 	],
 
 	reject: [
@@ -326,7 +343,7 @@ testRule({
 			message: messages.expected(0),
 		},
 		{
-			description: `such a comment inside a nested call, which the fix of the outer one writes over`,
+			description: `such a comment inside a nested call, whose empty lines the fix of the outer call collapses`,
 			code: `a { b: f(g(1 /*/x*/\n\n\n2)); }`,
 			fixed: `a { b: f(g(1 /*/x*/\n2)); }`,
 			warnings: [
@@ -344,7 +361,7 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
-			description: `such a comment holding the opening of a call, which is text of the comment CSS reads and no call of the value, however far the parser reached to close it`,
+			description: `such a comment holding the opening of a call, which is text of the comment CSS reads and no call of the value`,
 			code: `a { b: f(1 /*/g(*/\n\n\n2); }`,
 			fixed: `a { b: f(1 /*/g(*/\n2); }`,
 			line: 1,
@@ -361,9 +378,66 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
-			description: `a call standing beside a comment opening with a solidus, a star and a solidus, whose text spells a call of its own holding empty lines, which the value parser hands back as a call`,
+			description: `a call standing beside a comment opening with a solidus, a star and a solidus, whose text spells a call of its own holding empty lines, none of them the call's the file writes`,
 			code: `a { b: f(1,\n\n\n2) /*/ g(\n\n\n2) */ 3; }`,
 			fixed: `a { b: f(1,\n2) /*/ g(\n\n\n2) */ 3; }`,
+			line: 1,
+			column: 7,
+			message: messages.expected(0),
+		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/503
+		{
+			description: `empty lines of the call standing beside a comment holding empty lines of its own, of which only the call's are collapsed`,
+			code: `a { b: f(1,\n\n\n/* \n\n\n */ 2); }`,
+			fixed: `a { b: f(1,\n/* \n\n\n */ 2); }`,
+			line: 1,
+			column: 7,
+			message: messages.expected(0),
+		},
+		{
+			description: `the same call spelled with carriage returns`,
+			code: `a { b: f(1,\r\n\r\n\r\n/* \r\n\r\n\r\n */ 2); }`,
+			fixed: `a { b: f(1,\r\n/* \r\n\r\n\r\n */ 2); }`,
+			line: 1,
+			column: 7,
+			message: messages.expected(0),
+		},
+		{
+			description: `such a comment standing between two runs of the call's own, both of which are collapsed`,
+			code: `a { b: f(1\n\n\n/* \n\n\n */\n\n\n2); }`,
+			fixed: `a { b: f(1\n/* \n\n\n */\n2); }`,
+			line: 1,
+			column: 7,
+			message: messages.expected(0),
+		},
+		{
+			description: `a comment holding the parenthesis that would close the call, which closes nothing standing there`,
+			code: `a { b: f(1 /*/ ) */\n\n\n2); }`,
+			fixed: `a { b: f(1 /*/ ) */\n2); }`,
+			line: 1,
+			column: 7,
+			message: messages.expected(0),
+		},
+		{
+			description: `a comment holding that parenthesis and empty lines of its own behind it, of which only the call's are collapsed`,
+			code: `a { b: f(1 /*/ )\n\n\n */\n\n\n2); }`,
+			fixed: `a { b: f(1 /*/ )\n\n\n */\n2); }`,
+			line: 1,
+			column: 7,
+			message: messages.expected(0),
+		},
+		{
+			description: `a quotation mark inside a comment, which opens no string over the call standing behind it`,
+			code: `a { b: f(1) /*/ " */ "x" f(1,\n\n\n2); }`,
+			fixed: `a { b: f(1) /*/ " */ "x" f(1,\n2); }`,
+			line: 1,
+			column: 25,
+			message: messages.expected(0),
+		},
+		{
+			description: `a run of empty lines spelled with a carriage return at each end and none in the middle, which is collapsed by one pass reading what the other wrote`,
+			code: `a { b: f(1\r\n\n\n\r\n2); }`,
+			fixed: `a { b: f(1\r\n2); }`,
 			line: 1,
 			column: 7,
 			message: messages.expected(0),
@@ -416,9 +490,23 @@ testRule({
 			description: `the same call spelled with carriage returns`,
 			code: `a { transform: translate(\r\n1\r\n,\r\n1\r\n\r\n); }`,
 		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/503
+		{
+			description: `two empty lines a comment holds inside a call, which is one more than the option allows anywhere else`,
+			code: `a { b: f(1,\n/* \n\n\n */ 2); }`,
+		},
 	],
 
 	reject: [
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/503
+		{
+			description: `three empty lines of the call standing beside a comment holding three of its own, of which only the call's are collapsed`,
+			code: `a { b: f(1,\n\n\n\n/* \n\n\n\n */ 2); }`,
+			fixed: `a { b: f(1,\n\n/* \n\n\n\n */ 2); }`,
+			line: 1,
+			column: 7,
+			message: messages.expected(1),
+		},
 		{
 			description: `two empty lines behind the opening parenthesis`,
 			code: `a { transform: translate(\n\n\n1\n,\n1\n); }`,

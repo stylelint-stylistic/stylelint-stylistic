@@ -3,8 +3,8 @@ import valueParser from "postcss-value-parser"
 import stylelint from "stylelint"
 
 import { css } from "../../syntaxes/css/index.ts"
+import { blankComments } from "../../utils/blankComments/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { assertString, isNumber } from "../../utils/validateTypes/index.ts"
@@ -31,6 +31,33 @@ function placeIndexOnValueStart (decl: Declaration): number {
 	assertString(decl.raws.between)
 
 	return decl.prop.length + decl.raws.between.length - 1
+}
+
+/**
+ * Replaces every run of line breaks a pattern finds, in a text and in the copy of it the runs are looked for in.
+ *
+ * The copy is the text with every comment blanked, so no run of it is ever one a comment holds: {@link blankComments} writes a space over every character of a comment, the line breaks of its text among them. Every run found therefore stands outside every comment, where the copy spells the text character for character, so the same slice is cut at the same position out of both, and the two are as long as each other again for the pass that follows.
+ * @param blanked - The copy of the text with every comment blanked.
+ * @param text - The text as the file spells it.
+ * @param pattern - What a run of line breaks the option forbids is spelled with.
+ * @param replacement - The run of line breaks it allows, written in place of each one found.
+ * @returns The copy and the text, each with every run replaced.
+ */
+function replaceRuns (blanked: string, text: string, pattern: RegExp, replacement: string): [string, string] {
+	let blankedPieces = []
+	let pieces = []
+	let index = 0
+
+	for (let run of blanked.matchAll(new RegExp(pattern, `gmu`))) {
+		blankedPieces.push(blanked.slice(index, run.index), replacement)
+		pieces.push(text.slice(index, run.index), replacement)
+		index = run.index + run[0].length
+	}
+
+	blankedPieces.push(blanked.slice(index))
+	pieces.push(text.slice(index))
+
+	return [blankedPieces.join(``), pieces.join(``)]
 }
 
 /**
@@ -66,20 +93,21 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Every comment the value holds, both kinds. A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind, so what such a comment holds comes back as ordinary words and calls; a block comment reaches the walk as a node of its own — except one opening `/*/`, which the parser closes on the star it opened with, handing the rest of its text back the same way (#378)
 			let comments = syntax.commentSpans(stringValue, decl, result)
 
+			// The value is walked in a copy of itself with every comment blanked, so that a comment is whitespace to the parser whatever it is spelled with and whatever it holds. The empty lines of its text are then no lines of the call it stands in — they are counted against no call and collapsed by no fix (#503) — and the parentheses the parser pairs are the ones the file writes as code: a parenthesis a comment holds closes nothing, and neither does a name written there open a call. The copy is as long as the value and spells it character for character outside the comments, so every position of the parse counts in the value itself, which is what the checks below slice at those positions.
+			let blankedValue = blankComments(stringValue, comments)
+
 			let splittedValue: Array<[string, string]> = []
 			let sourceIndexStart = 0
 
-			valueParser(stringValue).walk((node) => {
-				// A call whose name opens in the text of a comment is a call of that text however far the parser reached to close it, so the empty lines it holds are neither counted nor collapsed. What it holds is still walked, and every node of it asked the same question, since such a call reaches past the break or the delimiter that closes the comment and gathers the code standing behind it.
-				if (findCommentSpanHolding(node, comments)) return
-
+			valueParser(blankedValue).walk((node) => {
 				// ignore non functions or sass lists
 				if (node.type !== `function` || node.value.length === 0) return
 
-				// The call is taken from the value rather than printed anew, since printing does not always give back the text it was handed: a comment opening `/*/` closes on the star it opened with, so the parser reads it three characters wide and prints it back as four, and every call holding one inherits that character. The parser marks where each node ends, and the text between its two marks is the node as the file spells it, for every node type.
+				// The call is taken from the value rather than printed anew, since the node comes from the copy and printing it would write that copy — a run of spaces wherever the file spells a comment. The parser marks where each node opens and where it ends, and the copy is as long as the value and spells it character for character outside the comments, so the text of the value between those two marks is the node as the file spells it, comments and all.
 				let nodeString = stringValue.slice(node.sourceIndex, node.sourceEndIndex)
+				let blankedNodeString = blankedValue.slice(node.sourceIndex, node.sourceEndIndex)
 
-				if (!violatedLFNewLinesRegex.test(nodeString) && !violatedCRLFNewLinesRegex.test(nodeString)) return
+				if (!violatedLFNewLinesRegex.test(blankedNodeString) && !violatedCRLFNewLinesRegex.test(blankedNodeString)) return
 
 				let problemIndex = placeIndexOnValueStart(decl) + node.sourceIndex
 				let isFixed = false
@@ -93,9 +121,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					result,
 					ruleName,
 					fix () {
-						let newNodeString = nodeString
-							.replaceAll(new RegExp(violatedLFNewLinesRegex, `gmu`), allowedLFNewLinesString)
-							.replaceAll(new RegExp(violatedCRLFNewLinesRegex, `gmu`), allowedCRLFNewLinesString)
+						// The two passes run one after the other, as they did when the whole of the call was rewritten at once: what the first writes is what the second reads. So the copy is carried through the first pass beside the text, and it is the copy the second looks for its runs in.
+						let [blankedWithoutLFRuns, withoutLFRuns] = replaceRuns(blankedNodeString, nodeString, violatedLFNewLinesRegex, allowedLFNewLinesString)
+						let [, newNodeString] = replaceRuns(blankedWithoutLFRuns, withoutLFRuns, violatedCRLFNewLinesRegex, allowedCRLFNewLinesString)
 
 						splittedValue.push([
 							stringValue.slice(sourceIndexStart, node.sourceIndex),
