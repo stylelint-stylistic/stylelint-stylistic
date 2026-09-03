@@ -1,3 +1,6 @@
+import { messages as closingSpaceBeforeMessages } from "../block-closing-brace-space-before/index.ts"
+import { messages as openingSpaceAfterMessages } from "../block-opening-brace-space-after/index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -798,6 +801,97 @@ testRule({
 			line: 1,
 			column: 29,
 			message: messages.rejectedBeforeMultiLine(),
+		},
+	],
+})
+
+// Two checks both put off for their lineness options run in the plugin's own order rather than the configuration's (#502): this rule's subject is a line break, so it speaks first whichever of the two the configuration lists first, and both orders rest on one and the same file. The two cases are the other spelling of the pairs pinned in the test files of the neighbours.
+testRule({
+	ruleName,
+	config: [`always-single-line`],
+	extraRules: { "@stylistic/block-closing-brace-space-before": `always-single-line` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/502
+			description: `an outer block this rule's break puts over lines, the neighbour listed behind it: the file as it stands draws a warning from each rule about each brace, and under the fix the break goes in first, so no space stands in front of the outer closing brace`,
+			code: `@media(min-width:100px){a{b:c}}\n`,
+			fixed: `@media(min-width:100px){a\n{b:c }}\n`,
+			warnings: [
+				{
+					line: 1,
+					column: 25,
+					endLine: 1,
+					endColumn: 26,
+					message: messages.expectedBeforeSingleLine(),
+				},
+				{
+					line: 1,
+					column: 23,
+					endLine: 1,
+					endColumn: 24,
+					message: messages.expectedBeforeSingleLine(),
+				},
+				{
+					line: 1,
+					column: 29,
+					endLine: 1,
+					endColumn: 30,
+					message: closingSpaceBeforeMessages.expectedBeforeSingleLine(),
+				},
+				{
+					line: 1,
+					column: 30,
+					endLine: 1,
+					endColumn: 31,
+					message: closingSpaceBeforeMessages.expectedBeforeSingleLine(),
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always-single-line`],
+	extraRules: { "@stylistic/block-opening-brace-space-after": `always-single-line` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/502
+			description: `an outer block this rule's break puts over lines, the other neighbour listed behind it: the same again, and no space stands behind the outer opening brace`,
+			code: `@media(min-width:100px){a{b:c}}\n`,
+			fixed: `@media(min-width:100px){a\n{ b:c}}\n`,
+			warnings: [
+				{
+					line: 1,
+					column: 25,
+					endLine: 1,
+					endColumn: 26,
+					message: messages.expectedBeforeSingleLine(),
+				},
+				{
+					line: 1,
+					column: 23,
+					endLine: 1,
+					endColumn: 24,
+					message: messages.expectedBeforeSingleLine(),
+				},
+				{
+					line: 1,
+					column: 27,
+					endLine: 1,
+					endColumn: 28,
+					message: openingSpaceAfterMessages.expectedAfterSingleLine(),
+				},
+				{
+					line: 1,
+					column: 25,
+					endLine: 1,
+					endColumn: 26,
+					message: openingSpaceAfterMessages.expectedAfterSingleLine(),
+				},
+			],
 		},
 	],
 })

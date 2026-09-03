@@ -56,6 +56,29 @@ describe(`neighbourSettings`, () => {
 	it(`nothing where the result carries no configuration`, () => {
 		expect(neighbourSettings(css, {} as PostcssResult, RULES)).toEqual([])
 	})
+
+	it(`the lineness-conditioned neighbours behind the rest, and among themselves in the plugin's own order rather than the configuration's`, () => {
+		let neighbours = {
+			plain: { name: `declaration-block-semicolon-space-before`, options: [`always`] },
+			space: { name: `declaration-colon-space-after`, options: [`always-single-line`] },
+			newline: { name: `declaration-block-semicolon-newline-before`, options: [`always-multi-line`] },
+			semicolonAfter: { name: `declaration-block-semicolon-space-after`, options: [`never-single-line`] },
+		}
+		let expected = [[`plain`, `always`, false], [`space`, `always-single-line`, false], [`newline`, `always-multi-line`, false], [`semicolonAfter`, `never-single-line`, false]]
+
+		expect(neighbourSettings(css, result({
+			"@stylistic/declaration-block-semicolon-space-after": `never-single-line`,
+			"@stylistic/declaration-block-semicolon-newline-before": `always-multi-line`,
+			"@stylistic/declaration-colon-space-after": `always-single-line`,
+			"@stylistic/declaration-block-semicolon-space-before": `always`,
+		}), neighbours)).toEqual(expected)
+		expect(neighbourSettings(css, result({
+			"@stylistic/declaration-colon-space-after": `always-single-line`,
+			"@stylistic/declaration-block-semicolon-space-before": `always`,
+			"@stylistic/declaration-block-semicolon-space-after": `never-single-line`,
+			"@stylistic/declaration-block-semicolon-newline-before": `always-multi-line`,
+		}), neighbours)).toEqual(expected)
+	})
 })
 
 describe(`speaksOf`, () => {

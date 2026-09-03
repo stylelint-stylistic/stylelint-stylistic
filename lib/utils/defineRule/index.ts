@@ -3,7 +3,7 @@ import stylelint, { type PostcssResult, type Rule, type RuleMessages, type RuleM
 
 import { namespaces, type Syntax } from "../../syntaxes/index.ts"
 import { addNamespace } from "../addNamespace/index.ts"
-import { deferCheck, deferFinalCheck, defersToRunEnd, flushDeferredChecks, lastConfiguredPluginRule, registerPluginRule } from "../defersToRunEnd/index.ts"
+import { deferCheck, deferFinalCheck, defersToRunEnd, flushDeferredChecks, lastConfiguredPluginRule, linenessRank, registerPluginRule } from "../defersToRunEnd/index.ts"
 import type { RuleCheck } from "../ruleCheck/index.ts"
 
 let { utils: { report, ruleMessages } } = stylelint
@@ -62,6 +62,7 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 		 */
 		function scoped (primary: P, secondaryOptions: S): RuleCheck {
 			let check = rule({ ruleName, messages: scopedMessages, syntax }, primary, secondaryOptions)
+			let rank = linenessRank(shortName, syntax.namespace, typeof primary === `string` ? primary : ``)
 
 			/**
 			 * The whole of what the rule does at a turn, the syntax's refusal included, so a deferred rule refuses and reports exactly as an undeferred one would have.
@@ -88,9 +89,9 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 			return (root, result) => {
 				let last = lastConfiguredPluginRule(result)
 
-				// A lineness-conditioned check waits for the run's writers (#355), and one that reads every line waits for everything, the lineness-deferred writes included (#353) — either only where a flush is sure to come: a run whose configuration the plugin cannot read runs the check where it stands
-				if (readsEveryLine && last !== undefined) deferFinalCheck(root, () => guarded(root, result))
-				else if (defersToRunEnd(primary) && last !== undefined) deferCheck(root, () => guarded(root, result))
+				// A lineness-conditioned check waits for the run's writers (#355), and one that reads every line waits for everything, the lineness-deferred writes included (#353) — either only where a flush is sure to come: a run whose configuration the plugin cannot read runs the check where it stands. The place a deferred check takes among the others is the plugin's to decide rather than the configuration's (#502)
+				if (readsEveryLine && last !== undefined) deferFinalCheck(root, rank, () => guarded(root, result))
+				else if (defersToRunEnd(primary) && last !== undefined) deferCheck(root, rank, () => guarded(root, result))
 				else guarded(root, result)
 
 				if (ruleName === last) flushDeferredChecks(root)

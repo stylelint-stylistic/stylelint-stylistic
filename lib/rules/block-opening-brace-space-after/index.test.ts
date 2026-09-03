@@ -1,4 +1,5 @@
 import { messages as closingNewlineBeforeMessages } from "../block-closing-brace-newline-before/index.ts"
+import { messages as openingNewlineBeforeMessages } from "../block-opening-brace-newline-before/index.ts"
 
 import { messages, ruleName } from "./index.ts"
 
@@ -632,6 +633,52 @@ testRule({
 					endLine: 1,
 					endColumn: 16,
 					message: messages.expectedAfterMultiLine(),
+				},
+			],
+		},
+	],
+})
+
+// Two checks both put off for their lineness options run in the plugin's own order rather than the configuration's (#502): the neighbour's subject is a line break, so it speaks first whichever of the two the configuration lists first, and both orders rest on one and the same file.
+testRule({
+	ruleName,
+	config: [`always-single-line`],
+	extraRules: { "@stylistic/block-opening-brace-newline-before": `always-single-line` },
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/502
+			description: `an outer block the neighbour's break puts over lines, the neighbour listed behind this rule: the file as it stands is single-line and draws a warning from each rule about each brace, and under the fix the neighbour goes first all the same, so the space behind the outer opening brace is written no more`,
+			code: `@media(min-width:100px){a{b:c}}\n`,
+			fixed: `@media(min-width:100px){a\n{ b:c}}\n`,
+			warnings: [
+				{
+					line: 1,
+					column: 25,
+					endLine: 1,
+					endColumn: 26,
+					message: openingNewlineBeforeMessages.expectedBeforeSingleLine(),
+				},
+				{
+					line: 1,
+					column: 23,
+					endLine: 1,
+					endColumn: 24,
+					message: openingNewlineBeforeMessages.expectedBeforeSingleLine(),
+				},
+				{
+					line: 1,
+					column: 27,
+					endLine: 1,
+					endColumn: 28,
+					message: messages.expectedAfterSingleLine(),
+				},
+				{
+					line: 1,
+					column: 25,
+					endLine: 1,
+					endColumn: 26,
+					message: messages.expectedAfterSingleLine(),
 				},
 			],
 		},

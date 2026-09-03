@@ -2,7 +2,7 @@ import type { PostcssResult } from "stylelint"
 
 import type { Syntax } from "../../syntaxes/index.ts"
 import { addNamespace } from "../addNamespace/index.ts"
-import { defersToRunEnd } from "../defersToRunEnd/index.ts"
+import { compareRanks, defersToRunEnd, linenessRank } from "../defersToRunEnd/index.ts"
 
 /** A neighbouring rule a writer reads the setting of: the name its directory spells, and the primary options it accepts, since a rule handed an option outside them refuses it and runs over nothing. */
 export type NeighbourRule = {
@@ -22,7 +22,7 @@ function primaryOf (setting: unknown): string | undefined {
 }
 
 /**
- * Reads the settings of some neighbouring rules out of the configuration, in the order the run makes them: the configuration's for the rules that run at their turn, and the lineness-conditioned ones behind them all, since those wait for the run's writers (#355).
+ * Reads the settings of some neighbouring rules out of the configuration, in the order the run makes them: the configuration's for the rules that run at their turn, and behind them the lineness-conditioned ones, which wait for the run's writers (#355) and stand among themselves in the plugin's own order (#502).
  *
  * Stylelint runs each rule once and in the order the configuration lists them: it sorts the rules of a run by its own registry, a plugin's rules stand nowhere in it, and the sort is stable, so the order of the keys is the order of the run. The settings are read out of `result.stylelint.config`, which holds every rule's normalised settings and is assigned before any rule runs, under the names of the namespace the asking rule is registered under: the configuration of a file lists the core's names and a namespace's alike, and the family that reads the file is the one the rule belongs to. A rule listed with an option outside the ones it accepts is passed over, since it refuses such an option and runs over nothing. Whether the fix of a neighbour is turned off travels with its option, since a neighbour that speaks and reports but cannot write is a different thing to a writer than one that will rewrite what it is not content with (#485).
  * @param syntax - The syntax the asking rule is built over, whose namespace names the neighbours.
@@ -33,7 +33,7 @@ function primaryOf (setting: unknown): string | undefined {
 export function neighbourSettings<Key extends string> (syntax: Syntax, result: PostcssResult, rules: Partial<Record<Key, NeighbourRule>>): [Key, string, boolean][] {
 	let settings: Record<string, unknown> = result.stylelint?.config?.rules ?? {}
 	let neighbours = Object.entries(rules) as [Key, NeighbourRule][]
-	let found: [Key, string, boolean][] = []
+	let found: { setting: [Key, string, boolean], rank: string }[] = []
 
 	for (let name of Object.keys(settings)) {
 		let neighbour = neighbours.find(([, rule]) => name === addNamespace(rule.name, syntax.namespace))
@@ -44,11 +44,16 @@ export function neighbourSettings<Key extends string> (syntax: Syntax, result: P
 		let setting = settings[name]
 		let option = primaryOf(setting)
 
-		if (option !== undefined && rule.options.includes(option)) found.push([key, option, fixDisabledBy(setting)])
+		if (option === undefined || !rule.options.includes(option)) continue
+
+		found.push({ setting: [key, option, fixDisabledBy(setting)], rank: linenessRank(rule.name, syntax.namespace, option) })
 	}
 
-	// A lineness-conditioned neighbour waits for the run's writers (#355), so the run makes its turn after every neighbour that does not, whatever the configuration's spelling order — the partition is stable, and each half keeps that order among itself
-	return [...found.filter(([, option]) => !defersToRunEnd(option)), ...found.filter(([, option]) => defersToRunEnd(option))]
+	// A lineness-conditioned neighbour waits for the run's writers (#355), so the run makes its turn after every neighbour that does not, whatever the configuration's spelling order; and behind that line the deferred ones stand in the plugin's own order rather than the configuration's (#502), which this reading has to repeat, or a rule asking which neighbours run behind it would be asking about a run other than the one being made
+	let undeferred = found.filter(({ setting: [, option] }) => !defersToRunEnd(option))
+	let deferred = found.filter(({ setting: [, option] }) => defersToRunEnd(option)).toSorted((one, other) => compareRanks(one.rank, other.rank))
+
+	return [...undeferred, ...deferred].map(({ setting }) => setting)
 }
 
 /**
