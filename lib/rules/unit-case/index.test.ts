@@ -852,6 +852,17 @@ testRule({
 			endColumn: 17,
 			message: messages.expected(`PX\\#FFF`, `px\\#fff`),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			description: `an upper-case unit in front of a comment holding one quotation mark, and the same unit inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no dimension`,
+			code: `a { b: 2PX /*/ " */ "2PX"; }`,
+			fixed: `a { b: 2px /*/ " */ "2PX"; }`,
+			line: 1,
+			column: 9,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expected(`PX`, `px`),
+		},
 	],
 })
 

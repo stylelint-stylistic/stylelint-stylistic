@@ -333,6 +333,17 @@ testRule({
 			description: `the same call with a space behind its opening parenthesis and a line break in front of its closing one`,
 			code: `a { t: foo(1px // c) calc( 2px\n ); }`,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/303
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			description: `a quotation mark in the text of the comment and another one a line below it: the first opens no string any more, so the second opens one that runs to the end of the value and takes the parenthesis the file closes the call on, and a call the parser marks unclosed is one this rule reads nothing of`,
+			code: `
+				a {
+					t: foo(// c"
+						1px");
+				}
+			`,
+		},
 	],
 
 	reject: [
@@ -383,25 +394,6 @@ testRule({
 				a {
 					t: foo(// c(
 						1px));
-				}
-			`,
-			line: 2,
-			column: 9,
-			message: messages.rejectedOpeningMultiLine,
-		},
-		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/303
-			description: `a quotation mark in the same place, opening a string the parser closes a line below, which is another node able to reach past the break`,
-			code: `
-				a {
-					t: foo(// c"
-						1px");
-				}
-			`,
-			fixed: `
-				a {
-					t: foo(// c"
-						1px");
 				}
 			`,
 			line: 2,

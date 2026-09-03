@@ -7,6 +7,7 @@ import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
 import { findCommentSpans } from "../findCommentSpans/index.ts"
 import { hideFalseInlineComments } from "../hideFalseInlineComments/index.ts"
+import { hideQuotesInComments } from "../hideQuotesInComments/index.ts"
 import { opensAnAddress } from "../opensAnAddress/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
 import { isValueFunction } from "../typeGuards/index.ts"
@@ -47,7 +48,8 @@ export function functionCommaSpaceChecker (opts: {
 
 		// What a fix changed, and nothing else: the value is edited at the positions the fixes name rather than printed anew from the parsed tree, since `postcss-value-parser` does not always give back the text it was handed — a comment opening `/*/` comes back as `/**/` — and a fix made anywhere in such a value would rewrite a comment standing elsewhere in it
 		let edits: Edit[] = []
-		let parsedValue = valueParser(declValue)
+		// The value is parsed in a copy of itself with every quotation mark its comments leave open masked, so that the parser pairs the marks the value spells the way the file pairs them (#508)
+		let parsedValue = valueParser(hideQuotesInComments(declValue, valueCommentSpans))
 
 		parsedValue.walk((valueNode, at, siblings) => {
 			if (!isValueFunction(valueNode)) return

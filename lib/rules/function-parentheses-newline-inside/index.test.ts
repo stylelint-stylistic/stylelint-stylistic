@@ -526,6 +526,24 @@ testRule({
 			column: 26,
 			message: messages.expectedOpeningMultiLine,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			description: `a call in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no call`,
+			code: `a { b: f(1,\n2) /*/ " */ "f(1,\n2)"; }`,
+			fixed: `a { b: f(\n1,\n2\n) /*/ " */ "f(1,\n2)"; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					message: messages.expectedOpeningMultiLine,
+				},
+				{
+					line: 2,
+					column: 1,
+					message: messages.expectedClosingMultiLine,
+				},
+			],
+		},
 	],
 })
 

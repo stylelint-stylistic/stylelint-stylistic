@@ -8,6 +8,7 @@ import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -94,7 +95,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// A feature holding no node at all encloses one span and not two — everything the parser finds between such parentheses it hands back as `before`, leaving `after` empty — so under `always` both halves of the option write at one index, and `applyEditsFromEnd` takes no two edits opening at one index. `addEdit` folds them into the one edit that place means. Both halves put the same single space there, so the text is the same either way and no case can fail without the fold; what it buys is that the list handed over is one the name may be handed.
 			let edits: Edit[] = []
 
-			valueParser(params).walk((node) => {
+			// The value is parsed in a copy of itself with every quotation mark its comments leave open masked, so that the parser pairs the marks the value spells the way the file pairs them (#508)
+			valueParser(hideQuotesInComments(params, comments)).walk((node) => {
 				// The parentheses of a comment are the comment's own. Everything they hold is still walked, since a comment left open by one of them takes the rest of the query into itself as far as the parser is concerned, features and all.
 				if (findCommentSpanHolding(node, comments)) return
 

@@ -201,10 +201,10 @@ export function findCommentSpans (text: string, spellsInlineComments: boolean = 
  *
  * The position is one of the text the spans were found in, whatever a caller reads there — the opening of a node, which {@link findCommentSpanHolding} asks about, or a character the parser put a meaning on, such as the parenthesis a call was closed on.
  * @param index - The position, counted in the text the spans were found in.
- * @param spans - The spans {@link findCommentSpans} found in that text.
+ * @param spans - The spans found in that text, from either scan: only where each one begins and ends is read, so a span carrying nothing else answers as well.
  * @returns The span holding the position, or nothing where no comment does.
  */
-export function findCommentSpanAt (index: number, spans: CommentSpan[]): CommentSpan | undefined {
+export function findCommentSpanAt<Span extends Pick<CommentSpan, `start` | `end`>> (index: number, spans: Span[]): Span | undefined {
 	return spans.find(({ start, end }) => index >= start && index < end)
 }
 

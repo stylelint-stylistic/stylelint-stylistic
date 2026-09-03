@@ -95,6 +95,15 @@ testRule({
 			column: 8,
 			message: messages.expected(`#ABC`, `#abc`),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			description: `a colour in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no colour`,
+			code: `a { b: #FFF /*/ " */ "#FFF"; }`,
+			fixed: `a { b: #fff /*/ " */ "#FFF"; }`,
+			line: 1,
+			column: 8,
+			message: messages.expected(`#FFF`, `#fff`),
+		},
 	],
 })
 

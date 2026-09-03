@@ -220,6 +220,15 @@ testRule({
 			column: 14,
 			message: messages.expectedBefore(),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			description: `a comma in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and the comma its text holds is no comma of the arguments`,
+			code: `a { b: f(1,2) /*/ " */ "f(1,2)"; }`,
+			fixed: `a { b: f(1\n,2) /*/ " */ "f(1,2)"; }`,
+			line: 1,
+			column: 11,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 

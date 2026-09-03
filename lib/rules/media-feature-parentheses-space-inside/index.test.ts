@@ -127,6 +127,24 @@ testRule({
 			column: 22,
 			message: messages.expectedOpening,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			description: `a comment holding a parenthesis between two quotation marks it closes around them: the string those marks open reaches past nothing, so the mask leaves them where they stand and the parenthesis stays the comment's`,
+			code: `@media ( b: 2 /*/ "(" */ ) and (c: d) { a { c: d; } }`,
+			fixed: `@media ( b: 2 /*/ "(" */ ) and ( c: d ) { a { c: d; } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 33,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 36,
+					message: messages.expectedClosing,
+				},
+			],
+		},
 	],
 })
 
@@ -332,6 +350,43 @@ testRule({
 				{
 					line: 1,
 					column: 14,
+					message: messages.rejectedClosing,
+				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			description: `a feature in front of a comment holding one quotation mark, and a feature of the same spelling inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no feature`,
+			code: `@media ( b: 2 ) /*/ " */ and (c: "( b: 2 )") { a { c: d; } }`,
+			fixed: `@media (b: 2) /*/ " */ and (c: "( b: 2 )") { a { c: d; } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 14,
+					message: messages.rejectedClosing,
+				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/347
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			description: `a comment leaving a quotation mark open in front of a parenthesis it also holds: taking the mark away hands the parser that parenthesis, which closes the feature inside the comment, and this rule asks nothing about where the parenthesis it writes at stands`,
+			code: `@media ( b: 2 /*/ " ) */ ) and (c: d) { a { b: c; } }`,
+			fixed: `@media (b: 2 /*/ ") */ ) and (c: d) { a { b: c; } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 21,
 					message: messages.rejectedClosing,
 				},
 			],

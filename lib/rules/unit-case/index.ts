@@ -13,6 +13,7 @@ import { findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
 import { findInterpolationSpanTouching } from "../../utils/findInterpolationSpans/index.ts"
 import { getDimension } from "../../utils/getDimension/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { spelledRuns } from "../../utils/spelledRuns/index.ts"
@@ -112,7 +113,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				}
 			}
 
-			valueParser(checkedValue).walk((valueNode, at, siblings) => {
+			// The value is parsed in a copy of itself with every quotation mark its comments leave open masked, so that the parser pairs the marks the value spells the way the file pairs them (#508)
+			valueParser(hideQuotesInComments(checkedValue, comments)).walk((valueNode, at, siblings) => {
 				let value = valueNode.value
 
 				// A call opening an address holds a URL and no arguments of its own, so it is passed over whole. The name is read rather than matched against four characters, so that `u\rl(`, `\75 rl(` and `URL(` are the token `url(` is here as they are to the scan that finds the comments — and to Sass, and to `lightningcss`.

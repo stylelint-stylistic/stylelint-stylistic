@@ -193,6 +193,42 @@ testRule({
 				},
 			],
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			description: `a comment holding a parenthesis between two quotation marks it closes around them: the string those marks open reaches past nothing, so the mask leaves them where they stand and the parenthesis stays the comment's`,
+			code: `a { b: g(1 /*/ "(" */ 2); }`,
+			fixed: `a { b: g( 1 /*/ "(" */ 2 ); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 24,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			description: `a call holding a comment with one quotation mark and a string behind it: the string the mark of the comment used to open took the parenthesis the file closes the call on, and the rule read nothing of a call the parser never closed`,
+			code: `a { b: g(1 /*/ " */ "1"); }`,
+			fixed: `a { b: g( 1 /*/ " */ "1" ); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 24,
+					message: messages.expectedClosing,
+				},
+			],
+		},
 	],
 })
 
@@ -635,6 +671,24 @@ testRule({
 			description: `a call standing beside a comment opening with a solidus, a star and a solidus, whose text spells a call of its own that the value parser hands back as a call`,
 			code: `a { b: g( 1 ) /*/ f( 1 ) */ 3; }`,
 			fixed: `a { b: g(1) /*/ f( 1 ) */ 3; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 12,
+					message: messages.rejectedClosing,
+				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			description: `a call in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no call`,
+			code: `a { b: f( 1 ) /*/ " */ "f( 1 )"; }`,
+			fixed: `a { b: f(1) /*/ " */ "f( 1 )"; }`,
 			warnings: [
 				{
 					line: 1,

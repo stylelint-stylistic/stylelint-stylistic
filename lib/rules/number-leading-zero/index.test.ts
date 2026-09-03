@@ -216,6 +216,15 @@ testRule({
 			column: 8,
 			message: messages.expected,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			description: `a fraction in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no number`,
+			code: `a { b: .5 /*/ " */ ".5"; }`,
+			fixed: `a { b: 0.5 /*/ " */ ".5"; }`,
+			line: 1,
+			column: 8,
+			message: messages.expected,
+		},
 	],
 })
 

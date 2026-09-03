@@ -250,5 +250,14 @@ testRule({
 			column: 11,
 			message: messages.rejected,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			description: `a number with a trailing zero in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no number`,
+			code: `a { b: 1.50px /*/ " */ "1.50px"; }`,
+			fixed: `a { b: 1.5px /*/ " */ "1.50px"; }`,
+			line: 1,
+			column: 11,
+			message: messages.rejected,
+		},
 	],
 })

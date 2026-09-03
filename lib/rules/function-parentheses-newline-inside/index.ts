@@ -11,6 +11,7 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { type CommentSpan, findCommentSpanAt, findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { splitSpaceNodesAtWords } from "../../utils/splitSpaceNodesAtWords/index.ts"
@@ -261,7 +262,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let comments = syntax.commentSpans(declValue, decl, result)
 			// A break this rule writes closes such a comment where the file left one open, so the spans above describe a value the functions behind that write no longer stand in. They are found again before the next function is read, and only there: a value nothing has been written into holds the comments it was scanned for, and a run without `--fix` writes nothing at all.
 			let areSpansStale = false
-			let parsedValue = valueParser(declValue)
+			// The value is parsed in a copy of itself with every quotation mark its comments leave open masked, so that the parser pairs the marks the value spells the way the file pairs them (#508)
+			let parsedValue = valueParser(hideQuotesInComments(declValue, comments))
 
 			// The value parser calls a vertical tab whitespace where the tokenizer calls it a word, and every walk below reads runs by the parser's nodes
 			splitSpaceNodesAtWords(parsedValue.nodes)
