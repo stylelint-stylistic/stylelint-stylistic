@@ -10,7 +10,7 @@
  * The controls are the same text with no comment around it, where the rule reads code and nothing else, and the comment holding nothing a rule or a parser could act on.
  */
 
-import { multiply } from "../harness/matrix.ts"
+import { keysOf, multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
@@ -49,15 +49,6 @@ const PLACES: Record<string, (comment: string, run: string) => string> = {
 	callRunBothSides: (comment, run) => `a { b: f(1,${run}${comment}${run}2); }\n`,
 	nested: (comment) => `a { b: f(g(1, ${comment} 2)); }\n`,
 	outside: (comment, run) => `a { b: ${comment} f(1,${run}2); }\n`,
-}
-
-/**
- * Names the keys of a record as an axis whose values are the keys themselves, for a template to look the record up by.
- * @param record - The record.
- * @returns The keys, each under itself.
- */
-function keysOf (record: Record<string, unknown>): Record<string, string> {
-	return Object.fromEntries(Object.keys(record).map((key) => [key, key]))
 }
 
 const name: Sweep[`name`] = `empty-lines-in-comment`

@@ -6,7 +6,7 @@
  * The controls are the same mark in a block comment the parser closes where CSS does, `/* … *\/`, and no comment at all: a branch that moves either has done something other than it meant to. The `slash-star-slash` sweep holds the same texts behind a comment holding an even number of marks, which pairs them back before the string; this one holds one.
  */
 
-import { multiply } from "../harness/matrix.ts"
+import { keysOf, multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
@@ -49,15 +49,6 @@ const PLACES: Record<string, (text: string, comment: string, mark: string) => st
 }
 
 const name: Sweep[`name`] = `quote-in-comment`
-
-/**
- * Names the keys of a record as an axis whose values are the keys themselves, for a template to look the record up by.
- * @param record - The record.
- * @returns The keys, each under itself.
- */
-function keysOf (record: Record<string, unknown>): Record<string, string> {
-	return Object.fromEntries(Object.keys(record).map((key) => [key, key]))
-}
 
 const corpus: Sweep[`corpus`] = multiply({ place: keysOf(PLACES), spelling: keysOf(SPELLINGS), mark: MARKS, text: TEXTS }, ({ place, spelling, mark, text }) => {
 	let wrap = PLACES[place ?? ``]

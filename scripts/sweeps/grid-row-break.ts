@@ -8,7 +8,7 @@
  * The layout is the third, and it asks about the one break the rule has never counted: the one standing in front of the value rather than in it. A grid is written with its rows under the property far more often than beside it, and the break that puts them there is `raws.between`'s, which is no part of the value the rule reads — so the indented layout must move wherever the inline one does, and by the same texts. The break the rows of such a grid are separated by is a break of the value, and it is the `betweenRows` place.
  */
 
-import { multiply } from "../harness/matrix.ts"
+import { keysOf, multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
@@ -48,15 +48,6 @@ const LAYOUTS: Record<string, (value: string) => string> = {
 }
 
 const name: Sweep[`name`] = `grid-row-break`
-
-/**
- * Names the keys of a record as an axis whose values are the keys themselves, for a template to look the record up by.
- * @param record - The record.
- * @returns The keys, each under itself.
- */
-function keysOf (record: Record<string, unknown>): Record<string, string> {
-	return Object.fromEntries(Object.keys(record).map((key) => [key, key]))
-}
 
 const corpus: Sweep[`corpus`] = multiply({ layout: keysOf(LAYOUTS), place: keysOf(PLACES), spelling: SPELLINGS }, ({ layout, place, spelling }) => {
 	let lay = LAYOUTS[layout ?? ``]

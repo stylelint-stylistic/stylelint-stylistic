@@ -23,6 +23,15 @@ function multiply (axes: Record<string, Record<string, string>>, template: (valu
 }
 
 /**
+ * Names the keys of a record as an axis whose values are the keys themselves, for a template to look the record up by.
+ * @param record - Whatever the axis is spelled out in, most often the places or the layouts a corpus is built over; only its keys are read.
+ * @returns The keys, each under itself.
+ */
+function keysOf (record: Record<string, unknown>): Record<string, string> {
+	return Object.fromEntries(Object.keys(record).map((key) => [key, key]))
+}
+
+/**
  * Places every value of a corpus in every environment, so that a shape is asked about wherever it can stand.
  * @param values - The values, keyed.
  * @param environments - Each environment under its name, taking a value and giving the stylesheet it stands in.
@@ -32,4 +41,4 @@ function place (values: [string, string][], environments: Record<string, (value:
 	return Object.entries(environments).flatMap(([name, wrap]) => values.map(([key, value]) => [`${name}|${key}`, wrap(value)] as [string, string]))
 }
 
-export { multiply, place }
+export { keysOf, multiply, place }

@@ -4,7 +4,7 @@
  * Written for #401. `named-grid-areas-alignment` cut a row into cells with `trim` and `\s`, which take every separator Unicode has, where the tokenizer reads a space, a tab, a line feed, a carriage return and a form feed and nothing else, and `lightningcss` reads every code point outside ASCII as a character of a cell's name, the grammar reading any run that is no ident code point as a trash token: a cell named with a no-break space was no cell to the rule, and a name holding one was two names. The corpus puts each character in every place a row has for it, so that a row says what the rule made of the character there; the space is the control, and the tab and the form feed are the characters that must collapse like it.
  */
 
-import { multiply } from "../harness/matrix.ts"
+import { keysOf, multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
@@ -38,15 +38,6 @@ const LAYOUTS: Record<string, (rows: [string, string]) => string> = {
 }
 
 const name: Sweep[`name`] = `grid-row-whitespace`
-
-/**
- * Names the keys of a record as an axis whose values are the keys themselves, for a template to look the record up by.
- * @param record - The record.
- * @returns The keys, each under itself.
- */
-function keysOf (record: Record<string, unknown>): Record<string, string> {
-	return Object.fromEntries(Object.keys(record).map((key) => [key, key]))
-}
 
 const corpus: Sweep[`corpus`] = multiply({ layout: keysOf(LAYOUTS), place: keysOf(PLACES), character: CHARACTERS }, ({ layout, place, character }) => {
 	let lay = LAYOUTS[layout ?? ``]
