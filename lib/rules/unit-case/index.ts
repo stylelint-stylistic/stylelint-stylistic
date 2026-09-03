@@ -15,6 +15,7 @@ import { getDimension } from "../../utils/getDimension/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { spelledRuns } from "../../utils/spelledRuns/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -81,18 +82,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (!dimension.number || !dimension.unit) return null
 
-				let { number, unit: tail, positions } = dimension
-
-				let unit = withoutBangFlag(tail)
-
-				if (!unit) return null
+				let { number, unit, positions } = dimension
 
 				let expectedUnit = primary === `lower` ? unit.toLowerCase() : unit.toUpperCase()
 
 				if (unit === expectedUnit) return null
 
 				let index = getIndex(node)
-				// The warning opens where the unit's first character stands and closes one character past its last, so it covers the run that reading was taken from and nothing besides. `getDimension` reads its unit out of a copy with the interpolation and the hack units taken out, and `positions` is the only way from a length counted in that copy to a place in the text the file spells: a bang flag riding behind the unit, a `\9` written after it and the brace an interpolation was broken on all stay outside a run measured this way.
+				// The warning opens where the unit's first character stands and closes one character past its last, so it covers the run that reading was taken from and nothing besides. `getDimension` reads its unit out of a copy with the hack units taken out, and `positions` is the only way from a length counted in that copy to a place in the text the file spells: a `\9` written between the letters of a unit keeps its place, and everything the unit ends in front of — a bang flag, a brace, a hash, the name of a variable — stays outside a run measured this way.
 				let unitStart = positions[number.length]
 				let unitLast = positions[number.length + unit.length - 1]
 
@@ -127,20 +124,20 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A node carrying any text of an interpolation is passed over whichever side of it the node opens on, since a value parser breaks an interpolation holding whitespace into words and hands no one of them the whole of it: `isStandardSyntaxValue` is asked about a word at a time and answers that `10px#{$a` holds no interpolation at all. What such a node holds is still walked, as the text of an inline comment is, and every node of it asked the same
 				if (findInterpolationSpanTouching(valueNode, interpolations)) return
 
-				// A word holding a multiplication is more than one dimension, and the whole of it is a dimension of no language: `valueParser.unit` answers any word opening with a number and calls everything standing behind that number a unit, so `10PX*2REM*3EM` reads as the unit `PX*2REM*3EM`. The word is read part by part, each through a node built for the part — every part stands where the word does plus what the parts in front of it take up, the star between each pair counted in. Two makings that were tried before this one describe no text of the part at all: `2*10PX` was underlined as an empty run standing past the end of the line, and `10px*2REM` as the closing brace of the block behind the value. A word without a star is one part, and the end position such a node is given is read by nothing — it is written because a node carrying one position of the file and one of nowhere is the shape this whole reading went wrong on. What is written is decided by the same reading: each named unit carries its own edit, so a part is written whether or not the word around it reads as a dimension — `$var*2REM` used to be named and never written, since the whole word was refused and one edit per word was all there was — and nothing outside a named unit is written at all, neither the `A` of `1PX*A` nor the name of the variable in `10PX*$VAR` (#413, #425)
-				let partIndex = 0
+				// A word holding a multiplication is more than one dimension, and no reading of the whole of it finds the second: the word is read part by part, each through a node built for the part — every part stands where the word does plus what the parts in front of it take up, the star between each pair counted in. Two makings that were tried before this one describe no text of the part at all: `2*10PX` was underlined as an empty run standing past the end of the line, and `10px*2REM` as the closing brace of the block behind the value. A word without a star is one part, and the end position such a node is given is read by nothing — it is written because a node carrying one position of the file and one of nowhere is the shape this whole reading went wrong on. Only a star the file spells parts two dimensions: an escaped one is a character of the unit it stands in, and `10PX\*2REM` is the one dimension the tokenizer, Sass and `lightningcss` all read it as, unit `PX\*2REM` (#414). What is written is decided by the same reading: each named unit carries its own edit, so a part is written whether or not the word around it reads as a dimension — `$var*2REM` used to be named and never written, since the whole word was refused and one edit per word was all there was — and nothing outside a named unit is written at all, neither the `A` of `1PX*A` nor the name of the variable in `10PX*$VAR` (#413, #425)
+				let partStart = 0
 
-				for (let part of value.split(`*`)) {
+				for (let partEnd of [...spelledRuns(value).filter((run) => run.text === `*`).map((run) => run.index), value.length]) {
 					let problem = readMiscasedUnit({
 						...valueNode,
-						sourceIndex: valueNode.sourceIndex + partIndex,
-						sourceEndIndex: valueNode.sourceIndex + partIndex + part.length,
-						value: part,
+						sourceIndex: valueNode.sourceIndex + partStart,
+						sourceEndIndex: valueNode.sourceIndex + partEnd,
+						value: value.slice(partStart, partEnd),
 					})
 
 					if (problem) problems.push(problem)
 
-					partIndex += part.length + 1
+					partStart = partEnd + 1
 				}
 			})
 
@@ -179,19 +176,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		})
 		root.walkDecls((decl) => check(decl, syntax.read(decl), declarationValueIndex))
 	}
-}
-
-/**
- * Takes the bang flag off the end of a unit, where it carries one.
- *
- * PostCSS moves only the last `!important` of a declaration out of the value, so every flag written in front of it stays where it was, and `postcss-value-parser` reads `1px!important` as one word, unit and flag together; Sass writes `!default` and `!global` in the same place. No unit is spelled with a bang, so a unit ends where a flag begins, and the keyword behind it is nothing this rule is about. The characters an interpolation is spelled with are answered for by `getDimension`, which ends the copy it reads at the first of them (#426), so no unit reaching this can hold one.
- * @param text - A unit read out of a value word.
- * @returns What stands in front of the first bang, or the whole text where it holds none.
- */
-function withoutBangFlag (text: string): string {
-	let bang = text.indexOf(`!`)
-
-	return bang === -1 ? text : text.slice(0, bang)
 }
 
 export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })

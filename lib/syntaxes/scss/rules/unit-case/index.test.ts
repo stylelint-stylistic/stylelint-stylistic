@@ -203,6 +203,17 @@ testRule({
 			endColumn: 18,
 			message: messages.expected(`PX`, `px`),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/414
+			description: `an upper-case unit with the name of a Sass variable welded behind it, which is no part of the unit and stays as it was written`,
+			code: `a { b: 10PX$VAR; }`,
+			fixed: `a { b: 10px$VAR; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
+		},
 	],
 })
 testRule({
@@ -494,6 +505,17 @@ testRule({
 			endLine: 1,
 			endColumn: 17,
 			message: messages.expected(`rem`, `REM`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/414
+			description: `a lower-case unit welded by an escaped star to a second one, which Sass leaves whole where it multiplies the unescaped twin`,
+			code: `a { b: 10px\\*2rem; }`,
+			fixed: `a { b: 10PX\\*2REM; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 18,
+			message: messages.expected(`px\\*2rem`, `PX\\*2REM`),
 		},
 	],
 })

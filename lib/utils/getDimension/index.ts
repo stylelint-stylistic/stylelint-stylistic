@@ -1,7 +1,8 @@
 import valueParser, { type Node } from "postcss-value-parser"
 
-import { INTERPOLATION_CHARACTER } from "../../regexps.ts"
+import { IDENTIFIER_CODE_POINT } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
+import { spelledRuns } from "../spelledRuns/index.ts"
 
 /**
  * Gets the dimension (number and unit) from a value node, and says where the text it was read out of stands in the node.
@@ -63,16 +64,11 @@ export function getDimension (syntax: Syntax, node?: Partial<Node>): {
 		positions.splice(start, length)
 	}
 
-	// A word reaches this reading holding no interpolation, since `isStandardValue` above turns away one that holds a whole one and the caller passes over one that carries any text of one broken across words (#298). So a character an interpolation is spelled with is a character of the word, and no unit is spelled with any of them: the dimension ends where the first one stands, and everything from there on is taken off the copy. Taking the characters alone out, as this reading used to, glued the two sides together and read `pxfff` as the unit of `10px#fff` (#426)
-	let interpolationCharacter = value.search(INTERPOLATION_CHARACTER)
-
-	if (interpolationCharacter !== -1) take(interpolationCharacter, value.length - interpolationCharacter)
-
-	// ignore hack units
+	// The `\0` and `\9` a stylesheet ends a value with to hide it from one browser or another are no part of the unit, and are taken off the copy wherever they stand. Only an escape the file spells is one: `10PX\\0` is a unit ending in an escaped backslash and a digit, as the tokenizer reads it, and taking two characters out of the middle of it would leave every escape behind that point read from the wrong side (#414)
 	for (let hack of [`\\0`, `\\9`]) {
-		let hackIndex = value.indexOf(hack)
+		let hackRun = spelledRuns(value).find((run) => run.text === hack)
 
-		if (hackIndex !== -1) take(hackIndex, hack.length)
+		if (hackRun) take(hackRun.index, hack.length)
 	}
 
 	let parsedUnit = valueParser.unit(value)
@@ -85,8 +81,12 @@ export function getDimension (syntax: Syntax, node?: Partial<Node>): {
 		}
 	}
 
+	// `valueParser.unit` calls everything written behind the number a unit, and a unit is an identifier: it ends at the first character that is no code point of one, an escape aside. That is the reading every tokenizer takes — `10px#fff` is the dimension `10px` and the hash `#fff` (#426), `10PX$VAR` the dimension `10PX` and the name `VAR` behind a delimiter, `1px!important` the dimension and the flag — and it is the reading an escape needs, since a character escaped into a name is a character of the unit and ends nothing: `10px\#fff` is one dimension with the unit `px\#fff`, as is `10PX\*2REM` with the unit `PX\*2REM` (#414). What stands behind the unit is left in the copy and off the unit, so the caller measures the run it underlines through `positions` and writes into nothing else
+	let unitEnd = spelledRuns(parsedUnit.unit).find((run) => !run.escape && !IDENTIFIER_CODE_POINT.test(run.text))?.index
+
 	return {
 		...parsedUnit,
+		unit: unitEnd === undefined ? parsedUnit.unit : parsedUnit.unit.slice(0, unitEnd),
 		positions,
 	}
 }

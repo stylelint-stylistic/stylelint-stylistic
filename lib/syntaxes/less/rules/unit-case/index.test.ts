@@ -182,6 +182,18 @@ testRule({
 			endColumn: 17,
 			message: messages.expected(`PX`, `px`),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/414
+			// Less multiplies the unescaped twin and does not multiply this one, parting it instead into the dimension and an escaped value it prints as it stands: `a { b: 10PX \\*2REM; }`. The unit read here is the whole of `PX\\*2REM`, which is plain CSS's reading and the one this namespace inherits; the text the fix leaves is the text the base left, and what Less carries through to the stylesheet it writes is [#527](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527).
+			description: `an upper-case unit welded by an escaped star to a second one, which Less does not multiply`,
+			code: `a { b: 10PX\\*2REM; }`,
+			fixed: `a { b: 10px\\*2rem; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 18,
+			message: messages.expected(`PX\\*2REM`, `px\\*2rem`),
+		},
 	],
 })
 testRule({
@@ -354,6 +366,18 @@ testRule({
 			endLine: 1,
 			endColumn: 17,
 			message: messages.expected(`rem`, `REM`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/414
+			// The hash opens no interpolation and is a code point of the unit to the tokenizer, to Sass and to `lightningcss`; Less parts the word here too, and what it makes of the recased half is [#527](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527).
+			description: `a lower-case unit with an escaped hash welded to it`,
+			code: `a { b: 10px\\#fff; }`,
+			fixed: `a { b: 10PX\\#FFF; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 17,
+			message: messages.expected(`px\\#fff`, `PX\\#FFF`),
 		},
 	],
 })

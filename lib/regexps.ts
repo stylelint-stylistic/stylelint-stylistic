@@ -19,6 +19,9 @@ export const CRLF = /\r\n/u
 /** A run of Windows line breaks. Read by `max-empty-lines`, and narrow for the reason {@link CRLF} is. */
 export const CRLF_RUN = /(?:\r\n)+/u
 
+/** A line break as the grammar counts one where it asks whether a backslash opens an escape: the line feed, and the carriage return and the form feed a stylesheet is preprocessed into line feeds from. A backslash written in front of any of the three opens no escape and is a delimiter of its own, so `10PX\` and a break is the dimension `10PX` with a delimiter behind it, while `10PX\` closing the text is one dimension whose unit ends in that backslash. */
+export const CSS_LINE_BREAK = /[\n\r\f]/u
+
 /** Two line breaks with nothing but horizontal whitespace between them, each in either of the two spellings PostCSS reads a break in. A Windows pair is one break and never two, since the carriage return is read only as the front of a pair. */
 export const EMPTY_LINE = /\r?\n[\t ]*\r?\n/u
 
@@ -121,9 +124,6 @@ export const IMPORT_AT_RULE = /^import$/iu
 /** The indentation of the last line of a text, where that line holds nothing else. A Windows pair opens that line the way its line feed alone does, the carriage return in front of it belonging to the break rather than to the indentation. */
 export const INDENT_AT_END = /(?:^|\n)([ \t]*)$/u
 
-/** One of the characters an interpolation is spelled with, standing anywhere at all. None of the four is a code point of an identifier, so a unit ends in front of whichever comes first: the tokenizer reads `10px#fff` as the dimension `10px` and the hash `#fff`, and `10px@a` as that dimension and an at-keyword. Where one stands inside an interpolation is the question of {@link EVERY_INTERPOLATION}, and it is asked of the value before a word is read. */
-export const INTERPOLATION_CHARACTER = /[#@{}]/u
-
 /** The last line of a text, the break in front of it aside — the carriage return of a Windows pair aside with it — and nothing at all where the text ends in a break. Read by `named-grid-areas-alignment`. */
 export const LAST_LINE = /[^\r\n]+$/u
 
@@ -187,7 +187,7 @@ export const LEADING_WHITESPACE_WITHOUT_BREAK = /^(?:[ \t\f]|\r(?!\n))*/u
 /** The `@{…}` Less interpolates a value with. */
 export const LESS_INTERPOLATION = /@\{.+?\}/u
 
-/** A line break, as PostCSS reads one: a line feed, with or without the carriage return of a Windows pair in front of it. A bare carriage return and a form feed are whitespace to PostCSS's tokenizer and no line to its line counter, so a rule reading a line in either would report a position the file does not have, and every reading of a break in this file follows PostCSS rather than the grammar of CSS, which folds all four into one. */
+/** A line break, as PostCSS reads one: a line feed, with or without the carriage return of a Windows pair in front of it. A bare carriage return and a form feed are whitespace to PostCSS's tokenizer and no line to its line counter, so a rule reading a line in either would report a position the file does not have, and every reading of a break that answers a question about a line of a stylesheet follows PostCSS rather than the grammar of CSS, which folds all four into one. Where the question is the grammar's own — whether a backslash opens an escape — the answer is the grammar's, and stands under {@link CSS_LINE_BREAK}. */
 export const LINE_BREAK = /\r?\n/u
 
 /** The name of a `@media`, in whatever case it is written. */
