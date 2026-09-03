@@ -37,8 +37,8 @@ export function declarationColonSpaceChecker (opts: {
 		// A declaration the parser did not build has no text between its property and its value for either rule to read: PostCSS prints a colon and a space in place of the raw it lacks, and `declarationValueIndex` counts a colon alone, so the two disagree by the very character these rules are about. No syntax this plugin reads through leaves that raw empty; a declaration another plugin's fix built and put in the tree does.
 		if (!decl.raws.between) return
 
-		// The declaration down to the end of its value, as the file prints it: whatever the shape of that value, the run standing behind the colon is in this text wherever the declaration keeps it.
-		let source = declarationColonSource(opts.syntax, decl)
+		// The declaration down to the end of its value, as the file prints it, and behind that whatever run ran on past the declaration: whatever the shape of the value, the run standing behind the colon is in this text wherever the file keeps it.
+		let source = declarationColonSource(opts.syntax, decl, opts.result)
 
 		// The declaration's own colon is the one PostCSS filed in `raws.between`, that raw holding everything the file spells between the property and the value, so the search is over that raw and no further.
 		// A colon standing anywhere else opens no declaration: the value may spell one, a data URI's, and the property may spell one of its own, an escaped `\:`, and reading either as the declaration's sends the check and the fix to a character they are not about.

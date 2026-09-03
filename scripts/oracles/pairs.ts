@@ -35,6 +35,7 @@ const CORPUS: [string, string][] = [
 	[`trailing-run`, `a { color: pink; }\n\n   `],
 	[`wordless-value`, `a { color:  /*c*/ ; }\n`],
 	[`whitespace-value`, `a { color: ; }\n`],
+	[`no-value-tail`, `a { color: }\n`],
 ]
 
 /** How many runs of the fixer a pair is given to bring a fixture to rest before the run is called one that never ends. */

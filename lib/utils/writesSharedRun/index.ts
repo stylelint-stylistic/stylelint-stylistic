@@ -13,6 +13,7 @@ import { isInlineStyleAttribute } from "../isInlineStyleAttribute/index.ts"
 import { isLastDeclarationWithoutSemicolon } from "../isLastDeclarationWithoutSemicolon/index.ts"
 import { isSingleLineString } from "../isSingleLineString/index.ts"
 import { type NeighbourRule, neighbourSettings, speaksOf } from "../neighbourSettings/index.ts"
+import { runPastDeclaration } from "../runPastDeclaration/index.ts"
 import { isAtRule, isRule } from "../typeGuards/index.ts"
 
 /** The rules a shared run is asked about: two reading it from the colon, two from the semicolon. */
@@ -240,8 +241,8 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 		return accepted.some((candidate) => behindAccepts.includes(candidate)) || !speaksAfter(participant, option, writtenBy(behind, behindOption), true)
 	})
 
-	// The spelling the run stands in when the asking rule takes its turn, for asking whether a rule ahead has already reported it. The run is the one the asking rule's group reads: the trailing run in front of the semicolon for the semicolon's group, and for the head group the whitespace behind the colon — what the parser trimmed onto `raws.between`, what a fix ahead wrote onto its tail, and the run a custom property's value opens with, together
-	let standingRun = readers === semicolon ? run : betweenTailAfterColon(syntax, decl, result) + (syntax.read(decl).match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0]
+	// The spelling the run stands in when the asking rule takes its turn, for asking whether a rule ahead has already reported it. The run is the one the asking rule's group reads: the trailing run in front of the semicolon for the semicolon's group, and for the head group the whitespace behind the colon — what the parser trimmed onto `raws.between`, what a fix ahead wrote onto its tail, the run a custom property's value opens with, and the run that ran on past the declaration into the raw of what stands next (#387), together
+	let standingRun = readers === semicolon ? run : betweenTailAfterColon(syntax, decl, result) + (syntax.read(decl).match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0] + (runPastDeclaration(syntax, decl, result) ?? ``)
 	let standing: Run = standingRun === `` ? `none` : (breaksOf(standingRun) > 0 ? `newline` : `space`)
 
 	// A lineness-conditioned asker runs after every rule ahead of it as well (#355), and those have had their say already: a write one of them would not accept leaves the file violating a rule that reported nothing, and the next run rewriting — the swing of #416 across runs. So a rule ahead gates the write unless it accepts what the write leaves, judged over the file as it rests — reparsed, a break in the value whoever wrote it. Two things free it: a rule ahead that has warned already — it spoke of the run as it stands and did not accept it, so its warning stands over whatever the write makes and nothing is silent — and one the write itself silences. A turned-off fix exempts nothing here, unlike behind: a rule behind still speaks after the write and reports what it sees, while a rule ahead judged the run before the write and stands silent over what the write made of it

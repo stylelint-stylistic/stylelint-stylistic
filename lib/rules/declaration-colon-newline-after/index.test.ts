@@ -71,6 +71,16 @@ testRule({
 			description: `two comments holding a colon apiece in front of the colon, with the break behind it`,
 			code: `a { b /*x:y*/ /*z:w*/:\n red; }`,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `a declaration printing nothing behind its colon, whose run the block's own raw holds and opens on a break`,
+			code: `a { color:\n }`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `the same declaration with a comment written behind it, whose run that comment's raw holds`,
+			code: `a { color:\n /*comment*/ }`,
+		},
 	],
 
 	reject: [
@@ -285,6 +295,42 @@ testRule({
 			fixed: `a { b/*x\\*/:\n red; }`,
 			line: 1,
 			column: 12,
+			message: messages.expectedAfter(),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `a declaration printing nothing behind its colon, whose space the block's own raw holds`,
+			code: `a { color: }`,
+			fixed: `a { color:\n }`,
+			line: 1,
+			column: 10,
+			message: messages.expectedAfter(),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `the same declaration with a comment written behind it, whose two spaces that comment's raw holds`,
+			code: `a { color:  /*comment*/ }`,
+			fixed: `a { color:\n  /*comment*/ }`,
+			line: 1,
+			column: 10,
+			message: messages.expectedAfter(),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `a space in front of the break of such a run, which is what the fix trims rather than writing a second break in front of`,
+			code: `a { color: \n}`,
+			fixed: `a { color:\n}`,
+			line: 1,
+			column: 10,
+			message: messages.expectedAfter(),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `the same trailing space where a comment written behind the declaration holds the run`,
+			code: `a { color: \n /*comment*/ }`,
+			fixed: `a { color:\n /*comment*/ }`,
+			line: 1,
+			column: 10,
 			message: messages.expectedAfter(),
 		},
 	],

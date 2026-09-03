@@ -10,6 +10,14 @@ testRule({
 	config: [`always`],
 	customSyntax: `postcss-scss`,
 
+	accept: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `a nested property whose last declaration prints nothing behind its colon, the single space standing in the raw of the block the parser hangs on the outer declaration`,
+			code: `a { font: 2px/3px { family: } }`,
+		},
+	],
+
 	reject: [
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/371
@@ -18,6 +26,24 @@ testRule({
 			fixed: `a { color: // c\n!important; }`,
 			line: 1,
 			column: 11,
+			message: messages.expectedAfter(),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `the same nested property with two spaces there instead`,
+			code: `a { font: 2px/3px { family:  } }`,
+			fixed: `a { font: 2px/3px { family: } }`,
+			line: 1,
+			column: 28,
+			message: messages.expectedAfter(),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `the same run held by the raw of an inline comment written behind that declaration`,
+			code: `a { font: 2px/3px { family:  // c\n} }`,
+			fixed: `a { font: 2px/3px { family: // c\n} }`,
+			line: 1,
+			column: 28,
 			message: messages.expectedAfter(),
 		},
 	],

@@ -1,10 +1,14 @@
 import postcss, { type Declaration, type Parser, type Rule } from "postcss"
 import less from "postcss-less"
+import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
 import { css as syntax } from "../../syntaxes/css/index.ts"
 
 import { declarationColonSource } from "./index.ts"
+
+/** The least of a Stylelint result, which names no syntax, so that the declaration is read as plain CSS. */
+const RESULT = {} as unknown as PostcssResult
 
 /**
  * Reads the first declaration of a stylesheet and builds the text a rule reads behind its colon.
@@ -15,7 +19,7 @@ import { declarationColonSource } from "./index.ts"
 function source (parser: { parse: Parser }, css: string): string {
 	let rule = parser.parse(css).first as Rule
 
-	return declarationColonSource(syntax, rule.first as Declaration)
+	return declarationColonSource(syntax, rule.first as Declaration, RESULT)
 }
 
 describe(`declarationColonSource`, () => {
@@ -45,5 +49,15 @@ describe(`declarationColonSource`, () => {
 
 	it(`a comment standing in front of the colon, which is printed as it stands`, () => {
 		expect(source(postcss, `a { color/*c*/:  pink; }`)).toBe(`color/*c*/:  pinkxxx`)
+	})
+
+	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+	it(`a declaration printing nothing behind its colon, whose run the block's own raw holds`, () => {
+		expect(source(postcss, `a { color:  }`)).toBe(`color:  xxx`)
+	})
+
+	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+	it(`the same declaration with a comment written behind it, whose run that comment's raw holds`, () => {
+		expect(source(postcss, `a { color:  /*c*/ }`)).toBe(`color:  xxx`)
 	})
 })

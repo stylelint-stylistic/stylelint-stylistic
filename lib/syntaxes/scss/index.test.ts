@@ -1,5 +1,6 @@
 import type { Declaration, Rule } from "postcss"
 import postcssScss, { parse as parseScss } from "postcss-scss"
+import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
 import { declarationColonSource } from "../../utils/declarationColonSource/index.ts"
@@ -7,6 +8,9 @@ import { declarationString } from "../../utils/declarationString/index.ts"
 import { moveDeclarationValueHeadIntoBetween } from "../../utils/moveDeclarationValueHeadIntoBetween/index.ts"
 
 import { scss } from "./index.ts"
+
+/** The least of a Stylelint result, which names no syntax; the declarations below all print a value, so no reader here goes past that. */
+const RESULT = {} as unknown as PostcssResult
 
 /**
  * Reads the first declaration of a stylesheet written in SCSS.
@@ -21,7 +25,7 @@ function firstDecl (code: string): Declaration {
 
 describe(`the shared utils over the adapter's pair`, () => {
 	it(`declarationColonSource reads the value spelled as the file spells it`, () => {
-		expect(declarationColonSource(scss, firstDecl(`a { color:  //c\n!important; }`))).toBe(`color:  //c\nxxx`)
+		expect(declarationColonSource(scss, firstDecl(`a { color:  //c\n!important; }`), RESULT)).toBe(`color:  //c\nxxx`)
 	})
 
 	it(`declarationString prints the spelled copy with the bang behind it`, () => {

@@ -90,6 +90,16 @@ testRule({
 			description: `a property spelling a colon of its own, escaped, with the single space behind the declaration's colon`,
 			code: `a { b\\:c: pink; }`,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `a declaration printing nothing behind its colon, whose single space the block's own raw holds`,
+			code: `a { color: }`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `the same declaration with a comment written behind it, whose single space that comment's raw holds`,
+			code: `a { color: /*comment*/ }`,
+		},
 	],
 
 	reject: [
@@ -354,6 +364,44 @@ testRule({
 			column: 11,
 			message: messages.expectedAfter(),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `a declaration printing nothing behind its colon, whose two spaces the block's own raw holds`,
+			code: `a { color:  }`,
+			fixed: `a { color: }`,
+			line: 1,
+			column: 11,
+			message: messages.expectedAfter(),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `the same declaration with a comment written behind it, whose two spaces that comment's raw holds`,
+			code: `a { color:  /*comment*/ }`,
+			fixed: `a { color: /*comment*/ }`,
+			line: 1,
+			column: 11,
+			message: messages.expectedAfter(),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `the same declaration whose run is the break the closing brace stands behind, over which the single space is written`,
+			code: `
+				@media all {
+					a {
+						color:
+					}
+				}
+			`,
+			fixed: `
+				@media all {
+					a {
+						color: }
+				}
+			`,
+			line: 3,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
@@ -365,6 +413,16 @@ testRule({
 		{
 			description: `a custom property with no value at all`,
 			code: `a { --a:; color:red; }`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `a declaration printing nothing behind its colon, which the closing brace abuts`,
+			code: `a { color:}`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `the same declaration which a comment abuts instead`,
+			code: `a { color:/*comment*/ }`,
 		},
 		{
 			description: `a value abutting the colon`,
@@ -565,6 +623,24 @@ testRule({
 			column: 11,
 			message: messages.rejectedAfter(),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `a declaration printing nothing behind its colon, whose space the block's own raw holds`,
+			code: `a { color: }`,
+			fixed: `a { color:}`,
+			line: 1,
+			column: 11,
+			message: messages.rejectedAfter(),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `the same declaration with a comment written behind it, whose two spaces that comment's raw holds`,
+			code: `a { color:  /*comment*/ }`,
+			fixed: `a { color:/*comment*/ }`,
+			line: 1,
+			column: 11,
+			message: messages.rejectedAfter(),
+		},
 	],
 })
 
@@ -576,6 +652,11 @@ testRule({
 		{
 			description: `a custom property whose value is a single space, with a declaration behind it`,
 			code: `a { --a: ; color: red; }`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `a declaration printing nothing behind its colon, whose single space the block's own raw holds`,
+			code: `a { color: }`,
 		},
 		{
 			description: `the same custom property alone in its block`,
@@ -773,6 +854,69 @@ testRule({
 			line: 1,
 			column: 11,
 			message: messages.expectedAfterSingleLine(),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `a declaration printing nothing behind its colon, whose two spaces the block's own raw holds`,
+			code: `a { color:  }`,
+			fixed: `a { color: }`,
+			line: 1,
+			column: 11,
+			message: messages.expectedAfterSingleLine(),
+		},
+	],
+})
+
+// The root of an inline `style` attribute is a container like any other for the run behind a colon: it closes on the attribute's own quotation mark rather than on a brace, and the run standing past a declaration that prints nothing behind its colon goes into its `raws.after` all the same (#387).
+testRule({
+	ruleName,
+	config: [`always`],
+	customSyntax: `postcss-html`,
+
+	accept: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `an attribute whose one declaration prints nothing behind its colon, the single space standing in the root's own raw`,
+			code: `<p style="color: "></p>`,
+		},
+	],
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `the same attribute with two spaces there instead`,
+			code: `<p style="color:  "></p>`,
+			fixed: `<p style="color: "></p>`,
+			line: 1,
+			column: 17,
+			message: messages.expectedAfter(),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `the same run held by the raw of a comment written behind that declaration`,
+			code: `<p style="color:  /*comment*/"></p>`,
+			fixed: `<p style="color: /*comment*/"></p>`,
+			line: 1,
+			column: 17,
+			message: messages.expectedAfter(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never`],
+	customSyntax: `postcss-html`,
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `the same attribute, whose run this option takes away`,
+			code: `<p style="color: "></p>`,
+			fixed: `<p style="color:"></p>`,
+			line: 1,
+			column: 17,
+			message: messages.rejectedAfter(),
 		},
 	],
 })

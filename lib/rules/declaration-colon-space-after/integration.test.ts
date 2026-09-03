@@ -382,5 +382,27 @@ testRule({
 			endColumn: 8,
 			message: messages.expectedAfterSingleLine(),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `the same break where the declaration prints nothing behind its colon, so that the run the neighbour is content with is the one the block's own raw holds`,
+			code: `a { b:\n}`,
+			fixed: `a { b:\n}`,
+			line: 1,
+			column: 7,
+			endLine: 1,
+			endColumn: 8,
+			message: messages.expectedAfterSingleLine(),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			description: `the same run held by the raw of a comment written behind the declaration`,
+			code: `a { b:\n/*c*/ }`,
+			fixed: `a { b:\n/*c*/ }`,
+			line: 1,
+			column: 7,
+			endLine: 1,
+			endColumn: 8,
+			message: messages.expectedAfterSingleLine(),
+		},
 	],
 })

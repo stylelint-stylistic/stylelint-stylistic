@@ -8,6 +8,7 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { moveDeclarationValueHeadIntoBetween } from "../../utils/moveDeclarationValueHeadIntoBetween/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runPastDeclaration, writeRunPastDeclaration } from "../../utils/runPastDeclaration/index.ts"
 import { assertString } from "../../utils/validateTypes/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesSharedRun } from "../../utils/writesSharedRun/index.ts"
@@ -56,13 +57,22 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Where the value is nothing but the run behind the colon, that run is the one in front of the semicolon as well, and the rules asked about it settle between them which of them write it (#416)
 			isFixable: (decl) => writesSharedRun(syntax, decl, result, ruleName),
 			fix: (decl, index) => {
+				let space = primary === `never` ? `` : ` `
+
+				// Where the declaration prints nothing behind its colon at all, the run is in the raw of whatever the file wrote next, and the option is about that raw: a space written into `between` here would stand beside the run rather than over it, and the declaration would grow by one on every run of `--fix`
+				// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+				if (runPastDeclaration(syntax, decl, result) !== undefined) {
+					writeRunPastDeclaration(decl, space)
+
+					return true
+				}
+
 				let between = decl.raws.between
 
 				assertString(between)
 
 				// Where the colon stands inside `between`, rather than how far its end is from there: the move that may follow writes onto the end of `between`, and only a count from the start of it survives that
 				let colonIndex = between.length + index - declarationValueIndex(decl)
-				let space = primary === `never` ? `` : ` `
 
 				// Where `between` ends at the colon, whatever run stands behind it stands at the head of the value instead, and there is no writing over it in place
 				// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/109

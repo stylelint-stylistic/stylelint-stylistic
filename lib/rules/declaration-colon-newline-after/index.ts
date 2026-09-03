@@ -10,6 +10,7 @@ import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { moveDeclarationValueHeadIntoBetween } from "../../utils/moveDeclarationValueHeadIntoBetween/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runPastDeclaration, writeRunPastDeclaration } from "../../utils/runPastDeclaration/index.ts"
 import { assertString } from "../../utils/validateTypes/index.ts"
 import { whitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
@@ -56,8 +57,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// A declaration the parser did not build has no text between its property and its value for either rule to read: PostCSS prints a colon and a space in place of the raw it lacks, and `declarationValueIndex` counts a colon alone, so the two disagree by the very character these rules are about. No syntax this plugin reads through leaves that raw empty; a declaration another plugin's fix built and put in the tree does.
 			if (!decl.raws.between) return
 
-			// The declaration down to the end of its value, as the file prints it: whatever the shape of that value, the run standing behind the colon is in this text wherever the declaration keeps it.
-			let source = declarationColonSource(syntax, decl)
+			// The declaration down to the end of its value, as the file prints it, and behind that whatever run ran on past the declaration: whatever the shape of the value, the run standing behind the colon is in this text wherever the file keeps it.
+			let source = declarationColonSource(syntax, decl, result)
 
 			// The declaration's own colon is the one PostCSS filed in `raws.between`, that raw holding everything the file spells between the property and the value, and inside that raw it is the first one the parser read as a colon rather than as text, as every reader of the raw finds it.
 			// A colon standing anywhere else opens no declaration: the value may spell one, a data URI's, the property may spell one of its own, an escaped `\:`, and a comment the raw holds may spell one in its text, and reading any of them as the declaration's sends the check and the fix to a character they are not about — into the text of the comment, where a break written under `postcss-scss` closes an inline comment early and leaves the file unparsable.
@@ -105,6 +106,17 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						ruleName,
 						...(isFixable && {
 							fix (): void {
+								// Where the declaration prints nothing behind its colon at all, the run is in the raw of whatever the file wrote next, and the break goes there: one written into `between` here would stand in front of the run rather than open it, and the declaration would gain a break on every run of `--fix`
+								// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+								let runPast = runPastDeclaration(syntax, decl, result)
+
+								if (runPast !== undefined) {
+									// Trim up to the break that already stands there, whichever character it is, and add one only where none does — the same pair the branch below writes with
+									writeRunPastDeclaration(decl, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(runPast) ? runPast.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : getLineBreak(syntax, root, result) + runPast)
+
+									return
+								}
+
 								let between = decl.raws.between
 
 								assertString(between)
