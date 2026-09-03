@@ -1,7 +1,7 @@
 import valueParser, { type Node, type StringNode } from "postcss-value-parser"
 import stylelint from "stylelint"
 
-import { EVERY_CSS_WHITESPACE_RUN, EVERY_LINE_BREAK_RUN, LAST_LINE, LEADING_CSS_WHITESPACE, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
+import { EVERY_CSS_WHITESPACE_RUN, EVERY_LINE_BREAK_RUN, LAST_LINE, LEADING_CSS_WHITESPACE, LINE_BREAK, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
@@ -75,7 +75,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let comments = syntax.commentSpans(declarationValue, declaration, result)
 			// The copy is as long as the value and spells it character for character outside the comments, so every position of the parse counts in the value itself, and the fix below slices the value at those positions.
 			let parsedValue = valueParser(blankComments(declarationValue, comments))
-			let isMultilineDeclaration = declarationValue.includes(`\n`)
+			// The question is asked of the text the fix will leave rather than of the text it was handed. Every fix this rule makes to a row collapses the whitespace inside it, line breaks included, so a break standing inside a row is a character the fix is about to write over, while every node that is no row goes back byte for byte, wherever it stands and whatever the parse made of it: the whitespace in front of the first row, between two of them or behind the last, a comment, a call, a word carrying an escaped break. Asking it of the whole value made the first run pad the cells of a value it was itself taking the last break out of, and the next run, reading a declaration that no longer spanned lines, took the padding away again (#402). Whether the padding is right for a row spelled across two lines is not a second question: once the fix has run, the row stands on one line. The slice is taken from the value itself and not from the copy the parse was made over, since `blankComments` writes a space over every character of a comment, the line breaks of its text among them — and a comment spanning two lines is a break the fix leaves standing.
+			let isMultilineDeclaration = parsedValue.nodes.some((node) => !isGridRow(node) && LINE_BREAK.test(declarationValue.slice(node.sourceIndex, node.sourceEndIndex)))
 
 			let gridRows = parsedValue.nodes.filter(isGridRow)
 

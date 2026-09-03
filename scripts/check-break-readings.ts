@@ -86,7 +86,6 @@ const DEBT: Record<string, string[]> = {
 		`let nextNewlineIndex = rootString.indexOf(\`\\n\`, match.endIndex)`,
 		`if (rootString[nextNewlineIndex - 1] === \`\\r\`) nextNewlineIndex -= 1`,
 	],
-	"lib/rules/named-grid-areas-alignment/index.ts": [`let isMultilineDeclaration = declarationValue.includes(\`\\n\`)`],
 	"lib/rules/no-eol-whitespace/index.ts": [
 		`const LINE_BREAK_CHARACTERS = [\`\\n\`]`,
 		`if (string.charAt(eolWhitespaceIndex) === \`\\r\`) eolWhitespaceIndex -= 1`,
