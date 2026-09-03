@@ -5,6 +5,9 @@ let testRule = createTestRule({ ruleName })
 // A no-break space, which is a word to the tokenizer, a character of a cell's name to lightningcss and whitespace to JavaScript.
 const N = `\u00A0`
 
+// A mathematical bold small a, U+1D41A, which is one character of a cell's name outside the Basic Multilingual Plane and two UTF-16 code units to JavaScript.
+const B = `\u{1D41A}`
+
 /** Default options */
 testRule({
 	ruleName,
@@ -115,6 +118,17 @@ testRule({
 		{
 			description: `a row ending on a cell named with a no-break space alone, which is a cell of the row and no trailing whitespace`,
 			code: `a { grid-template-areas: "a ${N}" "bb b"; }`,
+		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/520
+		{
+			description: `a cell named with a character outside the Basic Multilingual Plane, in a grid whose columns line up as the file is read`,
+			code: `
+				a {
+					grid-template-areas:
+						"${B}   bb"
+						"ccc d";
+				}
+			`,
 		},
 	],
 
@@ -740,6 +754,51 @@ testRule({
 			endColumn: 40,
 			message: messages.expected(),
 		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/520
+		{
+			description: `a cell named with a character outside the Basic Multilingual Plane, whose column is padded out by the characters the row is written with rather than by the code units it is stored in`,
+			code: `
+				a {
+					grid-template-areas:
+						"${B} bb"
+						"ccc  d";
+				}
+			`,
+			fixed: `
+				a {
+					grid-template-areas:
+						"${B}   bb"
+						"ccc d";
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 4,
+			endColumn: 11,
+			message: messages.expected(),
+		},
+		{
+			description: `a column whose two cells are of one width, one of them named with two characters outside the Basic Multilingual Plane, which the code units would have made the wider`,
+			code: `
+				a {
+					grid-template-areas:
+						"${B} xx yy"
+						"ccc ${B}${B} y";
+				}
+			`,
+			fixed: `
+				a {
+					grid-template-areas:
+						"${B}   xx yy"
+						"ccc ${B}${B} y";
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 4,
+			endColumn: 15,
+			message: messages.expected(),
+		},
 	],
 })
 
@@ -1092,6 +1151,27 @@ testRule({
 				}
 			`,
 		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/520
+		{
+			description: `the widest row of a grid holding a cell named with two characters outside the Basic Multilingual Plane, so that the width every other row is padded out to is measured in those characters`,
+			code: `
+				a {
+					grid-template-areas:
+						"${B}${B} ccc"
+						"b  d  ";
+				}
+			`,
+		},
+		{
+			description: `a row of one cell named with two such characters, padded out to the width of the row above it by the characters it is written with and not by the code units it is stored in`,
+			code: `
+				a {
+					grid-template-areas:
+						"aaaa b"
+						"${B}${B}bb  ";
+				}
+			`,
+		},
 	],
 
 	reject: [
@@ -1276,6 +1356,29 @@ testRule({
 			column: 26,
 			endLine: 2,
 			endColumn: 10,
+			message: messages.expected(),
+		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/520
+		{
+			description: `a row holding a cell named with a character outside the Basic Multilingual Plane, padded out to the width of the row below counted in the characters it is written with`,
+			code: `
+				a {
+					grid-template-areas:
+						"${B} bb"
+						"ccc d ee";
+				}
+			`,
+			fixed: `
+				a {
+					grid-template-areas:
+						"${B}   bb   "
+						"ccc d  ee";
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 4,
+			endColumn: 13,
 			message: messages.expected(),
 		},
 	],

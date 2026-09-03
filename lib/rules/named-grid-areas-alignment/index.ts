@@ -35,6 +35,29 @@ function isGridRow (node: Node): node is StringNode {
 }
 
 /**
+ * Counts the characters of a text the way the reader of the file sees them, one per code point.
+ *
+ * `String.prototype.length` counts the UTF-16 code units JavaScript stores the text in, and a character outside the Basic Multilingual Plane is stored as a surrogate pair: two units standing on one column. Measuring a cell that way made a column as wide as the code units of its widest cell rather than as the characters of it, and `padEnd` writes into every cell but that widest one, so the padding fell as readily on a row holding no such character as on the row holding it, and the value came back from the fix misaligned with no warning left to say so (#520). Every code point from U+10000 up is an ident code point to the grammar, which `IDENTIFIER_CODE_POINT` of `lib/regexps.ts` spells as the surrogate range, so a cell may be named with one, and `lightningcss` lays out the grid below and keeps the name. The iterator of a string steps by code point, so a surrogate pair is counted once. A grapheme cluster spelled with several code points, and a character an editor draws two columns wide, are measured by neither reading and are questions of their own.
+ * @param text - The text to measure.
+ * @returns The number of characters the text is written with.
+ */
+function countCharacters (text: string): number {
+	return [...text].length
+}
+
+/**
+ * Pads a text with spaces up to a width counted in the characters {@link countCharacters} counts.
+ *
+ * `padEnd` measures both the text and the target in code units, so it cannot be handed a width counted otherwise. Neither caller can ask for a width the text already passes — a column is as wide as its widest cell, and a row as wide as the widest row — so the clamp is the tolerance `padEnd` carried rather than a case either of them reaches.
+ * @param text - The text to pad.
+ * @param width - The width to pad it to, in characters.
+ * @returns The text, padded where it is narrower than the width and as it stands where it is not.
+ */
+function padToWidth (text: string, width: number): string {
+	return text + ` `.repeat(Math.max(0, width - countCharacters(text)))
+}
+
+/**
  * Requires cell tokens (and optionally ending quotes) within `grid-template-areas` to be aligned.
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
@@ -96,20 +119,20 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				table.push(row.split(` `))
 			}
 
-			let maxLengths = []
+			let maxCellWidths = []
 			for (let index = 0; index < maxCellsCount; index += 1) {
-				let parts = table.map((row) => row[index]?.length ?? 0)
+				let parts = table.map((row) => countCharacters(row[index] ?? ``))
 
-				maxLengths.push(Math.max(0, ...parts))
+				maxCellWidths.push(Math.max(0, ...parts))
 			}
 
-			let maxRowLength = 0
+			let maxRowWidth = 0
 			let formatted = table.map((row) => {
 				let formattedRow = row
-					.map((cell, index) => isMultilineDeclaration ? cell.padEnd(maxLengths[index] ?? 0, ` `) : cell)
+					.map((cell, index) => isMultilineDeclaration ? padToWidth(cell, maxCellWidths[index] ?? 0) : cell)
 					.join(referenceGap)
 
-				maxRowLength = Math.max(maxRowLength, formattedRow.length)
+				maxRowWidth = Math.max(maxRowWidth, countCharacters(formattedRow))
 
 				// What the padding put behind the last cell is spaces, and a `trimEnd` would take a cell named with a no-break space along with them, now that the row is cut so that such a cell survives to this point.
 				return alignQuotes ? formattedRow : formattedRow.replace(TRAILING_CSS_WHITESPACE, ``)
@@ -117,11 +140,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (alignQuotes && isMultilineDeclaration) {
 				formatted = formatted.map((row) => {
-					if (row.length === maxRowLength) return row
+					if (countCharacters(row) === maxRowWidth) return row
 
 					let cleanRowValue = row.replace(TRAILING_CSS_WHITESPACE, ``)
 
-					return `${cleanRowValue}${` `.repeat(maxRowLength - cleanRowValue.length)}`
+					return padToWidth(cleanRowValue, maxRowWidth)
 				})
 			}
 

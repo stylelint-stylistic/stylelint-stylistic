@@ -18,6 +18,8 @@ A declaration spans lines when a line break stands in its value outside ever
 
 A row holding no cell token at all is aligned to nothing: the whitespace inside it is taken away and the row is written back with nothing between its quotation marks, keeping the place the author gave it. Under `alignQuotes` in a declaration spanning lines it is padded to the width of the others instead, so that its closing quote lines up with theirs.
 
+A cell is measured in the characters it is written with rather than in the code units JavaScript stores them in, so a character outside the Basic Multilingual Plane counts once, as the one column it stands on. What is counted is code points and not what an editor draws: a grapheme cluster spelled with several of them counts as several, and a character drawn two columns wide counts as one.
+
 ## Options
 
 ### `true`
