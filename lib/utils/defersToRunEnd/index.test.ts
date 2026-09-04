@@ -186,7 +186,7 @@ describe(`linenessRank`, () => {
 })
 
 describe(`LINENESS_RULES`, () => {
-	// The plugin itself is asked which rules take a primary conditioned on lineness, so that a rule gaining or losing one is caught here rather than left to fall to the table's default. The question is put to the linter rather than to the runner of the oracles — a file name is what asks for it — since `validateOptions` hands back `true` wherever `result.stylelint.config.validate` is unset, which the runner's configuration leaves out, so no rule refuses an option there
+	// The plugin itself is asked which rules take a primary conditioned on lineness, so that a rule gaining or losing one is caught here rather than left to fall to the table's default. A rule refusing its option is what the answer is read off, and the runner of the oracles answers that as the linter does, since its configuration carries the `validate` flag `validateOptions` opens by reading
 	let plugin = new URL(`../../index.ts`, import.meta.url).pathname
 	let linenessPrimaries = [`always-single-line`, `never-single-line`, `always-multi-line`, `never-multi-line`]
 
@@ -196,7 +196,7 @@ describe(`LINENESS_RULES`, () => {
 		for (let shortName of Object.keys(registry)) {
 			for (let primary of linenessPrimaries) {
 				// eslint-disable-next-line no-await-in-loop
-				let { results } = await stylelint.lint({ code: `a { color: pink; }\n`, codeFilename: `probe.css`, config: { plugins: [plugin], rules: { [`@stylistic/${shortName}`]: primary } } })
+				let { results } = await stylelint.lint({ code: `a { color: pink; }\n`, config: { plugins: [plugin], rules: { [`@stylistic/${shortName}`]: primary } } })
 
 				if (results[0]?.invalidOptionWarnings.length === 0) {
 					taking.push(shortName)

@@ -40,7 +40,7 @@ async function measureOne (options: Omit<Parameters<typeof lintDirect>[0], `fix`
 	let checked = await lintDirect({ ...options, stripNamespaces: true })
 
 	if (checked.unparsable) return { unparsable: true }
-	if (!checked.usable) return { usable: false }
+	if (checked.invalidOptions.length > 0) return { usable: false }
 
 	let fixed = await lintDirect({ ...options, fix: true, stripNamespaces: true })
 

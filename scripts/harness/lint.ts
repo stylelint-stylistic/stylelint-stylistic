@@ -1,7 +1,7 @@
 /**
  * Lints one text under one or more rules of this plugin the way Stylelint would, without Stylelint.
  *
- * A call of `stylelint.lint` over a snippet costs about 0.8 ms on this machine, and 0.7 of them are the linter around the rule — a linter created for the call, a configuration searched for and augmented, an ignore file looked up, reference roots loaded, disable comments walked. The parse and the rule cost 0.05 ms together. An oracle or a sweep makes hundreds of thousands of such calls over snippets that carry no configuration comment and no ignore file, so the runner here does what `lintPostcssResult.mjs` does for one rule and nothing of the rest: it parses, hangs the `stylelint` object `report()` reads on the result, calls the rule, and hands back what the rule said and what it wrote. `verify-lint.ts` is the proof that the two agree, run over every run the oracles make.
+ * A call of `stylelint.lint` over a snippet costs about 0.8 ms on this machine, and 0.7 of them are the linter around the rule — a linter created for the call, a configuration searched for and augmented, an ignore file looked up, reference roots loaded, disable comments walked. The parse and the rule cost 0.05 ms together. An oracle or a sweep makes hundreds of thousands of such calls over snippets that carry no configuration comment and no ignore file, so the runner here does what `lintPostcssResult.mjs` does for one rule and nothing of the rest: it parses, hangs the `stylelint` object `report()` and `validateOptions` read on the result, calls the rule, and hands back what the rule said and what it wrote. `verify-lint.ts` is the proof that the two agree, run over every run the oracles make.
  *
  * What is not reproduced, since no corpus of this repository carries it: disable comments and their ranges, `ignoreDisables`, `quiet`, `computeEditInfo`, the lexer and the reference roots. A rule reaching for one of them would show up in the verification as a disagreement rather than as a wrong answer.
  */
@@ -49,13 +49,13 @@ export type Registry = Record<string, Rule>
 /** What `lib/rules/index.ts` exports: a factory per rule, or — in a checkout from before the factories — the rule itself. */
 type Exported = Rule | ((syntax: RuleSyntax) => Rule)
 
-/** What the rules said and wrote, or why the text could not be read. */
+/** What the rules said and wrote, or why the text could not be read. `invalidOptions` holds what the rules objected to about their options, in the words `validateOptions` wrote them in, so that a run standing on an option no rule takes is told apart from one over which the rules had nothing to say — and told which option of which rule was refused. */
 export type Answer = {
 	unparsable: true,
 	detail: string,
 } | {
 	unparsable: false,
-	usable: boolean,
+	invalidOptions: string[],
 	warnings: Warning[],
 	code: string,
 }
@@ -150,8 +150,8 @@ function settingsOf (rules: Record<string, unknown>): RuleSetting[] {
  * @param options.registry - The rule registry to take the rules from, as `loadRules` returns it.
  * @param [options.syntax] - The syntax to read the text with; plain CSS where none is given.
  * @param [options.fix] - Whether the rules are let write.
- * @param [options.stripNamespaces] - Whether the namespace segment is read out of every warning's name and text, which is how the oracles compare a row measured under `@stylistic/less/<rule>` with one measured under `@stylistic/<rule>`; the tests compare texts as they stand, and leave this off.
- * @returns What the rules said and wrote, or why the text could not be read at all. A run is `usable` where no rule objected to its options, as `isUsable` of the oracles has it.
+ * @param [options.stripNamespaces] - Whether the namespace segment is read out of every warning's name and text, which is how the oracles compare a row measured under `@stylistic/less/<rule>` with one measured under `@stylistic/<rule>`; the tests compare texts as they stand, and leave this off. An objection to an option keeps its full name whatever this says, since Stylelint keeps it there. `verify-lint.ts` compares such a text with the flag off; the case beside this module is what pins the name under the flag.
+ * @returns What the rules said and wrote, or why the text could not be read at all. A run whose `invalidOptions` stand empty is one no rule objected to, which is what `isUsable` of the oracles asks.
  */
 async function lintDirect ({ code, rules, registry, syntax, fix = false, stripNamespaces = false }: {
 	code: string,
@@ -177,11 +177,13 @@ async function lintDirect ({ code, rules, registry, syntax, fix = false, stripNa
 		return { unparsable: true, detail: reason ?? message }
 	}
 
+	// `validate` is what `stylelint.utils.validateOptions` opens by reading, and a configuration without it makes that util hand back `true` for every option of every rule: no rule would refuse an option it does not take, and every `if (!validOptions) return` would be dead. The linter's own default is `true`, so the runner carries it too
 	let config: {
 		fix: boolean,
 		rules: Record<string, [unknown, object | undefined]>,
+		validate: boolean,
 		customSyntax?: string,
-	} = { fix, rules: {}, ...(typeof syntax === `string` && { customSyntax: syntax }) }
+	} = { fix, rules: {}, validate: true, ...(typeof syntax === `string` && { customSyntax: syntax }) }
 
 	let ruleSeverities: Record<string, RuleSeverity> = {}
 
@@ -225,7 +227,7 @@ async function lintDirect ({ code, rules, registry, syntax, fix = false, stripNa
 	}
 
 	let warnings: Warning[] = []
-	let usable = true
+	let invalidOptions: string[] = []
 
 	// What `report` hangs on a warning beyond what PostCSS declares: the kind of warning where it is not a rule's, and the rule where it is
 	for (let warning of (result.warnings() as (PostcssWarning & {
@@ -233,7 +235,7 @@ async function lintDirect ({ code, rules, registry, syntax, fix = false, stripNa
 		rule?: string,
 	})[])) {
 		if (warning.stylelintType === `invalidOption`) {
-			usable = false
+			invalidOptions.push(warning.text)
 			continue
 		}
 
@@ -244,7 +246,7 @@ async function lintDirect ({ code, rules, registry, syntax, fix = false, stripNa
 			: { rule: warning.rule, text: warning.text, line: warning.line, column: warning.column, endLine: warning.endLine, endColumn: warning.endColumn })
 	}
 
-	return { unparsable: false, usable, warnings, code: result.root.toString(parser.stringify) }
+	return { unparsable: false, invalidOptions, warnings, code: result.root.toString(parser.stringify) }
 }
 
 /** The registries already loaded, by the plugin path a configuration names. */
@@ -284,7 +286,7 @@ async function lint ({ code, config, fix = false }: {
 	if (answer.unparsable) return { results: [{ warnings: [{ rule: `CssSyntaxError`, text: `${answer.detail} (CssSyntaxError)`, severity: SEVERITY }], invalidOptionWarnings: [] }], code: undefined }
 
 	return {
-		results: [{ warnings: answer.warnings, invalidOptionWarnings: answer.usable ? [] : [{ text: `invalid option` }] }],
+		results: [{ warnings: answer.warnings, invalidOptionWarnings: answer.invalidOptions.map((text) => ({ text })) }],
 		code: fix ? answer.code : undefined,
 	}
 }

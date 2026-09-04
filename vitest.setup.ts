@@ -53,7 +53,7 @@ async function lint (options: LinterOptions): Promise<LinterResult> {
 		: answer.warnings.map((warning: object) => ({ ...warning, severity: `error` }))
 	let code = answer.unparsable ? options.code : answer.code
 
-	return { results: [{ warnings, parseErrors: [], invalidOptionWarnings: answer.unparsable || answer.usable ? [] : [{ text: `invalid option` }], _postcssResult: { root: { toString: () => code }, opts: {} } }] } as unknown as LinterResult
+	return { results: [{ warnings, parseErrors: [], invalidOptionWarnings: answer.unparsable ? [] : answer.invalidOptions.map((text) => ({ text })), _postcssResult: { root: { toString: () => code }, opts: {} } }] } as unknown as LinterResult
 }
 
 // The library and this file import one and the same `stylelint`, loaded by Node rather than by Vitest, and its default export is an object whose `lint` can be replaced in place
