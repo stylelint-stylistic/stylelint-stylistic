@@ -6,7 +6,7 @@ import type { Syntax } from "../../syntaxes/index.ts"
 import { betweenTailAfterColon } from "../betweenTailAfterColon/index.ts"
 import { colonIndexInBetween } from "../colonIndexInBetween/index.ts"
 import { isInlineStyleAttribute } from "../isInlineStyleAttribute/index.ts"
-import { isLastDeclarationWithoutSemicolon } from "../isLastDeclarationWithoutSemicolon/index.ts"
+import { isLastNodeWithoutSemicolon } from "../isLastNodeWithoutSemicolon/index.ts"
 import { isRoot } from "../typeGuards/index.ts"
 
 /**
@@ -38,7 +38,7 @@ function runOf (syntax: Syntax, decl: Declaration, result: PostcssResult): {
 
 	if (colonIndexInBetween(syntax, decl, result) === -1 || betweenTailAfterColon(syntax, decl, result) !== ``) return undefined
 
-	if (!isLastDeclarationWithoutSemicolon(decl)) return undefined
+	if (!isLastNodeWithoutSemicolon(decl)) return undefined
 
 	let next = decl.next()
 	let run = next ? next.raws.before : parent.raws.after

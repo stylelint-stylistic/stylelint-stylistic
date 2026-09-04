@@ -5,7 +5,7 @@ import { blockString } from "../../utils/blockString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isInlineStyleAttribute } from "../../utils/isInlineStyleAttribute/index.ts"
-import { isLastDeclarationWithoutSemicolon } from "../../utils/isLastDeclarationWithoutSemicolon/index.ts"
+import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { rawNodeString } from "../../utils/rawNodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -54,7 +54,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 
 			if (!isAtRule(parentRule) && !isRule(parentRule) && !isInlineStyleAttribute(parentRule)) return
 
-			if (isLastDeclarationWithoutSemicolon(decl)) return
+			if (isLastNodeWithoutSemicolon(decl)) return
 
 			let nextDecl = decl.next()
 

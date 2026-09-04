@@ -8,7 +8,7 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isInlineStyleAttribute } from "../../utils/isInlineStyleAttribute/index.ts"
-import { isLastDeclarationWithoutSemicolon } from "../../utils/isLastDeclarationWithoutSemicolon/index.ts"
+import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
 import { nextNonCommentNode } from "../../utils/nextNonCommentNode/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { rawNodeString } from "../../utils/rawNodeString/index.ts"
@@ -59,7 +59,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!isAtRule(parentRule) && !isRule(parentRule) && !isInlineStyleAttribute(parentRule)) return
 
-			if (isLastDeclarationWithoutSemicolon(decl)) return
+			if (isLastNodeWithoutSemicolon(decl)) return
 
 			let nextNode = decl.next()
 

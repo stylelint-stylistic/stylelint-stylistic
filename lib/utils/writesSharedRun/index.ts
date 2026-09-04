@@ -10,7 +10,7 @@ import { colonIndexInBetween } from "../colonIndexInBetween/index.ts"
 import { defersToRunEnd } from "../defersToRunEnd/index.ts"
 import { isCustomProperty } from "../isCustomProperty/index.ts"
 import { isInlineStyleAttribute } from "../isInlineStyleAttribute/index.ts"
-import { isLastDeclarationWithoutSemicolon } from "../isLastDeclarationWithoutSemicolon/index.ts"
+import { isLastNodeWithoutSemicolon } from "../isLastNodeWithoutSemicolon/index.ts"
 import { isSingleLineString } from "../isSingleLineString/index.ts"
 import { type NeighbourRule, neighbourSettings, speaksOf } from "../neighbourSettings/index.ts"
 import { runPastDeclaration } from "../runPastDeclaration/index.ts"
@@ -78,7 +78,7 @@ function sharedRunsOf (syntax: Syntax, decl: Declaration, result: PostcssResult)
 	if (colonIndex === -1) return runs
 
 	let { parent } = decl
-	let readBySemicolonRules = !decl.important && parent !== undefined && (isAtRule(parent) || isRule(parent) || isInlineStyleAttribute(parent)) && !isLastDeclarationWithoutSemicolon(decl)
+	let readBySemicolonRules = !decl.important && parent !== undefined && (isAtRule(parent) || isRule(parent) || isInlineStyleAttribute(parent)) && !isLastNodeWithoutSemicolon(decl)
 	let text = between.slice(colonIndex + 1) + syntax.read(decl)
 
 	if (WHITESPACE_OR_NOTHING.test(text)) {

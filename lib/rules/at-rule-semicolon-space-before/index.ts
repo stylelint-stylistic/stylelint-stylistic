@@ -4,6 +4,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
+import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
 import { rawNodeString } from "../../utils/rawNodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
@@ -45,6 +46,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (hasBlock(atRule)) return
 
 			if (!syntax.isStandardAtRule(atRule)) return
+
+			// The check asks about the position one character past the end of the at-rule, as though a semicolon always stood there, and that is right only where the file spells one: PostCSS prints a bodiless at-rule as its name, its `afterName`, its parameters, its `raws.between` and only then the semicolon, so that raw is exactly the whitespace in front of it. Where the file spells none, the at-rule runs to the brace closing its container or to the end of the file, and the position the check asks about is somebody else's — the whitespace in front of the brace, which the parser files into the same raw, or nothing at all, the run at the top level going to the root instead (#395)
+			if (isLastNodeWithoutSemicolon(atRule)) return
 
 			let atRuleString = rawNodeString(atRule, result)
 			let problemIndex = atRuleString.length - 1
