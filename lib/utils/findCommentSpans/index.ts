@@ -1,6 +1,6 @@
 import type { Node } from "postcss-value-parser"
 
-import { IDENTIFIER_CODE_POINT, WHITESPACE_ONLY } from "../../regexps.ts"
+import { IDENTIFIER_CODE_POINT, LEADING_CSS_WHITESPACE, LINE_BREAK, TRAILING_CSS_WHITESPACE, TRAILING_HEX_ESCAPE, WHITESPACE_ONLY } from "../../regexps.ts"
 import { namesAnAddress } from "../namesAnAddress/index.ts"
 import { readIdentifierCharacter } from "../readIdentifierCharacter/index.ts"
 
@@ -39,7 +39,7 @@ function skipUrlName (text: string, openIndex: number): number {
 /**
  * Skips a `url()` token, whose address carries its double slashes as ordinary characters whether it is quoted or bare. The name has to stand on its own — `image-url(`, `image-\75 rl(` and `@{prefix}url(` all end in a name spelling `url` while being ordinary calls, whose arguments may hold a comment — and the parentheses are counted rather than searched for, since an interpolated address brings its own. A parenthesis that is escaped is none, and neither is one standing between the quotation marks of a quoted address or of a string whitespace parts from the opening parenthesis; inside a bare address every parenthesis counts, quotation marks or not. A token left open is taken for no token at all, so that a comment standing behind it is still seen.
  *
- * What a `/*` inside the parentheses opens turns on what follows the opening one, and the tokenizers of PostCSS, `postcss-scss` and `postcss-less` are asked (#378). A bare address — one opening on anything but a quotation mark or whitespace — holds no comment at all: all three read `url(a/* x)` as one token closed on its parenthesis, and Less itself compiles `url(a/* x) 1PX /* c *\/ 3PX` with the address intact and the second comment a comment. The scan used to skip such a `/*` to the next `*\/` of the text, or to its end, and where that lay past the parenthesis the token was left open, the address was read again as a call, and a comment standing nowhere in the file ran from that `/*` and took the code between for its text. Beside a quoted address a comment is a comment to all three, so one found there is kept and handed out with the token — a double slash beside a quoted address stays code, which it is to PostCSS and to `postcss-less`, the file being no Less at all. Where whitespace parts the parenthesis from the address the tokenizers disagree: PostCSS reads a comment there and lets it carry the parenthesis, `postcss-scss` reads one bracket token closed on the first parenthesis whatever a comment says, and Less keeps the comment as text of the address. The scan reads no comment there and lets the first parenthesis close the token, since that is the one reading under which such a text reaches a rule at all — a comment reaching past the parenthesis leaves PostCSS's parenthesis unclosed, and PostCSS refuses the file. Which reading is the right one where the comment closes inside the parentheses is #427's question; none of the three hands the scan a span for it, as none did before.
+ * What a `/*` inside the parentheses opens turns on what follows the opening one, and the tokenizers of PostCSS, `postcss-scss` and `postcss-less` are asked (#378). A bare address — one opening on anything but a quotation mark or whitespace — holds no comment at all: all three read `url(a/* x)` as one token closed on its parenthesis, and Less itself compiles `url(a/* x) 1PX /* c *\/ 3PX` with the address intact and the second comment a comment. The scan used to skip such a `/*` to the next `*\/` of the text, or to its end, and where that lay past the parenthesis the token was left open, the address was read again as a call, and a comment standing nowhere in the file ran from that `/*` and took the code between for its text. Beside a quoted address a comment is a comment to all three, so one found there is kept and handed out with the token — a double slash beside a quoted address stays code, which it is to PostCSS and to `postcss-less`, the file being no Less at all. Where whitespace parts the parenthesis from the address the tokenizers disagree: PostCSS reads a comment there and lets it carry the parenthesis, `postcss-scss` reads one bracket token closed on the first parenthesis whatever a comment says, and Less keeps the comment as text of the address. The scan reads no comment there and lets the first parenthesis close the token, since that is the one reading under which such a text reaches a rule at all — a comment reaching past the parenthesis leaves PostCSS's parenthesis unclosed, and PostCSS refuses the file. Which reading is the right one where the comment closes inside the parentheses is [#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557)'s question; none of the three hands the scan a span for it, as none did before.
  *
  * A quotation mark inside a bare address is a character of the address, and the first closing parenthesis closes the token whatever the mark did — the first behind no backslash to PostCSS and `postcss-less`, the first wherever it stands to `postcss-scss`, which reads no escape there: PostCSS, `postcss-scss` and `postcss-less` all read `url(a"b)c" /* " *\/ "d"` as the token `url(a"b)`, the word `c` and the string `" /* "`, and no comment at all. The scan used to skip such a mark to the next one as a string, take the parenthesis inside for the string's, and, where no parenthesis was left behind it, give the token up and read the mark again as a string of the value — one mark late, so that the slash and the star standing inside the string `" /* "` opened a comment to it that no tokenizer reads (#504). A mark inside a quoted address or one whitespace parts from its parenthesis is still a string's, as it is to PostCSS and to `postcss-less`, which read `url( "a)b" )` down to the string's own closing mark and the parenthesis behind it.
  *
@@ -50,9 +50,10 @@ function skipUrlName (text: string, openIndex: number): number {
  * @param openIndex - The index the token would start at.
  * @param behindIdentifier - True where the character run in front of the index is one this scan reads as part of a name: a code point {@link IDENTIFIER_CODE_POINT} names, a closing brace, or an escape spelling anything at all. The code points are the ones the grammar names and not the ASCII ones alone, so `éurl(http://x)` and `日本url(http://x)` are the ordinary calls `lightningcss` reads there rather than addresses.
  * @param spans - The spans found so far, which the comments beside a quoted address are added to once the token is known to close.
+ * @param addresses - The addresses found so far, which this one is added to once the token is known to close.
  * @returns The index behind the closing parenthesis, or the given one if no `url()` starts and ends there.
  */
-function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, spans: CommentSpan[]): number {
+function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, spans: CommentSpan[], addresses: AddressSpan[]): number {
 	if (behindIdentifier) return openIndex
 
 	let behindName = skipUrlName(text, openIndex)
@@ -93,6 +94,7 @@ function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, sp
 	if (depth > 0) return openIndex
 
 	spans.push(...found)
+	pushAddress(text, behindName, index - 1, addresses)
 
 	return index
 }
@@ -112,6 +114,70 @@ function skipString (text: string, openIndex: number): number {
 	return index + 1
 }
 
+/**
+ * Measures the run of whitespace a text ends in, less the characters of it an escape standing in front of that run spells.
+ *
+ * CSS spells an escape two ways, and both can end in whitespace the escape owns rather than the text behind it: a backslash closes on the character in front of it wherever that character is no hexadecimal digit, so `a\\ ` is the two characters `a` and a space, and a backslash with up to six hexadecimal digits is closed by one whitespace character of its own, so `a\\41 ` is an `a` and an `A`. How far either reaches is {@link readIdentifierCharacter}'s to say, that being the one reading of an escape the plugin holds — a carriage return and a line feed closing a hexadecimal escape together, and a backslash spelling nothing where a break stands behind it.
+ *
+ * What it is asked about is where the escape opens, and that is the one thing the reader cannot find for itself: {@link TRAILING_HEX_ESCAPE} says where a hexadecimal one begins, a backslash on the end of the text says where the other does, and the backslashes in front of either say whether it opens anything at all, since one that is itself escaped opens neither. So they are counted rather than looked at.
+ * @param text - The text whose end is measured.
+ * @returns The length of the run, in characters.
+ */
+function trailingWhitespaceLength (text: string): number {
+	let run = text.match(TRAILING_CSS_WHITESPACE)?.[0].length ?? 0
+
+	if (run === 0) return 0
+
+	let runStart = text.length - run
+	let head = text.slice(0, runStart)
+	let escape = head.match(TRAILING_HEX_ESCAPE)?.[0] ?? (head.endsWith(`\\`) ? `\\` : undefined)
+
+	if (escape === undefined) return run
+
+	let openIndex = runStart - escape.length
+	let backslashes = 0
+
+	while (head[openIndex - backslashes] === `\\`) backslashes += 1
+
+	if (backslashes % 2 === 0) return run
+
+	return run - (readIdentifierCharacter(text, openIndex).end - runStart)
+}
+
+/**
+ * Records the address a `url()` was found to hold, where it holds one.
+ *
+ * The address is the text of the call that cannot be written over two lines, and which of the two things the parentheses can hold that is turns on what opens them. A quotation mark opens the `url()` function, whose arguments are code like any other call's: only the string is the address, and whatever a file writes behind it — a second argument, a comment, the `format(…)` of an `@font-face` — is the author's to break where they like. Anything else opens a `url()` token, whose text is the address entire, spaces and comment delimiters and all, since a token is closed by its parenthesis and by nothing standing inside it.
+ *
+ * The whitespace at the edges is left off, and it is the tokenizer's whitespace — a space, a tab, a line feed, a carriage return or a form feed — so a no-break space at either edge is a character of the address, as it is to every engine that reads one (#494). One whitespace character an escape spells is none of that run: a backslash standing behind no backslash closes on the character in front of it, whatever that character is, and the escape is as much the address as any letter of it.
+ *
+ * A run reaching past the end of a line is no address at all, however the parentheses came to hold it. What a text spells there is an unbalanced parenthesis — `url(a(b.png)` counts one parenthesis too many and closes on whatever `)` the file writes next, lines below — and calling that an address takes every line between off the count of a rule that reads these spans. No engine would read one anyway: a `url()` token holds no whitespace whatever, so a break inside its parentheses is a bad-url token to the grammar rather than an address written over two lines, and the string a `url()` function's address is written with is closed by CSS at the break like every other string.
+ *
+ * The break is the one PostCSS reads a line in, since the question is about a line of a stylesheet and not about the grammar: a form feed is whitespace to PostCSS's tokenizer and no line to its line counter, so an address written across one stands on one line and comes off it whole.
+ *
+ * Empty parentheses hold no address and are recorded as none.
+ * @param text - The string being scanned.
+ * @param openIndex - The index behind the opening parenthesis.
+ * @param closeIndex - The index of the closing parenthesis.
+ * @param addresses - The addresses found so far, which this one is added to.
+ */
+function pushAddress (text: string, openIndex: number, closeIndex: number, addresses: AddressSpan[]): void {
+	let held = text.slice(openIndex, closeIndex)
+	let start = openIndex + (held.match(LEADING_CSS_WHITESPACE)?.[0].length ?? 0)
+	let opening = text.charAt(start)
+	let end = opening === `"` || opening === `'`
+		? skipString(text, start)
+		: closeIndex - trailingWhitespaceLength(held)
+
+	if (start < end && !LINE_BREAK.test(text.slice(start, end))) addresses.push({ start, end })
+}
+
+/** The span the address of a `url()` occupies in a text, in the coordinates of that text. */
+export type AddressSpan = {
+	start: number,
+	end: number,
+}
+
 /** The span a comment occupies in a text, in the coordinates of that text, and which of the two kinds it is. */
 export type CommentSpan = {
 	start: number,
@@ -120,15 +186,18 @@ export type CommentSpan = {
 }
 
 /**
- * Finds the spans the comments of a text occupy in it, block comments and inline ones alike. A double slash belonging to an address opens no comment, whether the address is quoted or bare inside `url()`, and neither does a slash an escape spells wherever it stands; a block comment runs to its `*\/` and an inline one to the end of its line.
+ * Walks a text once and finds the two things in it that are each other's exception: the comments it holds, and the addresses its `url()` calls carry. Neither can be found without the other — the double slashes of a protocol open no comment, and a `url(` written inside a comment opens no address — so one walk answers both questions, and {@link findCommentSpans} and {@link findAddressSpans} are the two ways of putting them (#427).
+ *
+ * A double slash belonging to an address opens no comment, whether the address is quoted or bare inside `url()`, and neither does a slash an escape spells wherever it stands; a block comment runs to its `*\/` and an inline one to the end of its line.
  *
  * The span of a block comment holds its delimiters, since the two of them are as much the comment as its text is. The span of an inline comment ends where the break that closes it begins, the break itself staying outside: a caller taking the comment out of the text keeps the line it stood on. A syntax that spells no comment with a double slash — plain CSS is one — has none to find, and the caller says so. The pair is then two characters of code like any other, and the second of them opens a block comment where a `*` follows it: `//*c*\/` holds one comment in such a file and none of the other kind, which is the reading that keeps `1px //*c,d*\/,2px` in one piece.
  * @param text - The text to scan.
  * @param spellsInlineComments - False where the syntax that spelled the text writes no comment with a double slash, which {@link readsInlineComments} answers for a node.
- * @returns The spans, in the coordinates of the scanned text.
+ * @returns The spans of both, in the coordinates of the scanned text.
  */
-export function findCommentSpans (text: string, spellsInlineComments: boolean = true): CommentSpan[] {
+function scan (text: string, spellsInlineComments: boolean): { comments: CommentSpan[], addresses: AddressSpan[] } {
 	let spans: CommentSpan[] = []
+	let addresses: AddressSpan[] = []
 	let index = 0
 	// Whether what the loop has just stepped over is spelled the way a name is, which is what `skipUrl` needs to know about the run in front of the address it is offered. It opens false, an address opening the text having no name in front of itself.
 	let behindIdentifier = false
@@ -141,7 +210,7 @@ export function findCommentSpans (text: string, spellsInlineComments: boolean = 
 			// A backslash spells the character behind it into an ordinary one everywhere code stands, and not only inside the `url()` and the quoted string whose own loops already step over one. `a\//b` opens no comment — Less compiles it to `a\/ / b`, and Sass hands it back as it came — and neither does `a\"b`, whose quotation mark used to open a string that ran to the end of the text and took every comment behind it with it. Inside the text of a comment no syntax reads an escape, and none is read here either: a block comment is skipped to its closing delimiter and an inline one to its break, so the loop never reaches a backslash standing in either.
 			//
 			// An escape spells a letter of a name as readily as it takes the meaning from a delimiter, so an address is looked for from the backslash rather than from behind it: `\75 rl(http://x)` and `\url(http://x)` are the token that `url(http://x)` is. Where no address is spelled there the escape is stepped over whole, so that the first backslash of `\\//` escapes the second rather than the slash, and so that the next question about a name is put behind the whole of this escape rather than in the middle of it.
-			let behindUrl = skipUrl(text, index, behindIdentifier, spans)
+			let behindUrl = skipUrl(text, index, behindIdentifier, spans, addresses)
 
 			if (behindUrl === index) {
 				let escaped = readIdentifierCharacter(text, index)
@@ -159,7 +228,7 @@ export function findCommentSpans (text: string, spellsInlineComments: boolean = 
 			behindIdentifier = false
 		}
 		else if (character === `u` || character === `U`) {
-			let behindUrl = skipUrl(text, index, behindIdentifier, spans)
+			let behindUrl = skipUrl(text, index, behindIdentifier, spans, addresses)
 
 			if (behindUrl === index) {
 				index += 1
@@ -193,7 +262,29 @@ export function findCommentSpans (text: string, spellsInlineComments: boolean = 
 		}
 	}
 
-	return spans
+	return { comments: spans, addresses }
+}
+
+/**
+ * Finds the spans the comments of a text occupy in it, block comments and inline ones alike. What the walk behind it reads is written out at {@link scan}.
+ * @param text - The text to scan.
+ * @param spellsInlineComments - False where the syntax that spelled the text writes no comment with a double slash, which {@link readsInlineComments} answers for a node.
+ * @returns The spans, in the coordinates of the scanned text.
+ */
+export function findCommentSpans (text: string, spellsInlineComments: boolean = true): CommentSpan[] {
+	return scan(text, spellsInlineComments).comments
+}
+
+/**
+ * Finds the spans the addresses of a text's `url()` calls occupy in it, which {@link pushAddress} says how much of each call is.
+ *
+ * The same walk finds them that finds the comments, and for the same reason it has to: a `url(` written inside a comment or inside a quoted string opens no address, a name standing in front of one — `image-url(`, `éurl(`, `@{prefix}url(` — leaves an ordinary call whose arguments are code rather than an address, and the three letters of the name may each be spelled with an escape (#344). A pattern put to the text answers all four wrong, which is what the one `max-line-length` looked for an address with did until #427.
+ * @param text - The text to scan.
+ * @param spellsInlineComments - False where the syntax that spelled the text writes no comment with a double slash, which {@link readsInlineComments} answers for a node.
+ * @returns The spans, in the coordinates of the scanned text, in the order the addresses stand in it.
+ */
+export function findAddressSpans (text: string, spellsInlineComments: boolean = true): AddressSpan[] {
+	return scan(text, spellsInlineComments).addresses
 }
 
 /**

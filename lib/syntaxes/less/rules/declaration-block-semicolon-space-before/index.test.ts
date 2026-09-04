@@ -12,6 +12,15 @@ testRule({
 
 	reject: [
 		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/398
+			description: `a call named with a code point of an identifier that lies outside ASCII, whose double slashes open a comment the semicolon cannot join`,
+			code: `a { b: éurl(http://a/b.png) 1px; c: 2px }`,
+			fixed: `a { b: éurl(http://a/b.png) 1px; c: 2px }`,
+			line: 1,
+			column: 31,
+			message: messages.expectedBefore(),
+		},
+		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/117
 			description: `inline comment before the semicolon: the semicolon cannot join the comment's line, so the code is left alone and the warning stands`,
 			code: `

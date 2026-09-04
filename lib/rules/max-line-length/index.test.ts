@@ -653,11 +653,11 @@ testRule({
 			`,
 		},
 		{
-			description: `the tab inside the url() argument is excluded at the width it takes there: 16 + 4 = 20`,
+			description: `the tab inside the address is excluded at the width it takes there: 16 + 4 = 20`,
 			code: `a { cursor: url("${TEST_URL}"); }`,
 		},
 		{
-			description: `a tab after the url() argument is measured where it stands, not where it would stand with the argument cut out: 14 + 2 + 1 + 1 = 18`,
+			description: `a tab after the address is measured where it stands, not where it would stand with the address cut out: 14 + 2 + 1 + 1 = 18`,
 			code: `a { mask: url("x");\t}`,
 		},
 		{
@@ -686,7 +686,7 @@ testRule({
 			message: messages.expected(20),
 		},
 		{
-			description: `the leading tab counts as four while the url() argument is still excluded: 4 + 16 + 2 = 22`,
+			description: `the leading tab counts as four while the address is still excluded: 4 + 16 + 2 = 22`,
 			code: `
 				a {
 					background: url("${TEST_URL}");
@@ -830,18 +830,18 @@ testRule({
 
 	accept: [
 		{
-			description: `both the import string and the url() argument come off the line: 52 - 17 - 16 = 19`,
+			description: `both the import string and the address come off the line: 52 - 17 - 16 = 19`,
 			code: `@import "aaaaaaaaaaaaaaa";a{b:url(bbbbbbbbbbbbbbbb)}`,
 		},
 		{
-			description: `the import string holding a url() argument comes off whole: 36 - 16 = 20`,
+			description: `the import string holding an address comes off whole: 36 - 16 = 20`,
 			code: `@import "aaaaa" url("bb") screen, a;`,
 		},
 	],
 
 	reject: [
 		{
-			description: `the url() argument is not taken off the line after the one it stands on`,
+			description: `the address is not taken off the line after the one it stands on`,
 			code: `
 				@import "a.css" screen; a { background: url(bb) }
 				a { color: pink; }
@@ -855,11 +855,115 @@ testRule({
 			],
 		},
 		{
-			description: `the url() argument standing inside the import string is not taken off twice: 37 - 16 = 21`,
+			description: `the address standing inside the import string is not taken off twice: 37 - 16 = 21`,
 			code: `@import "aaaaa" url("bb") screen, ab;`,
 			line: 1,
 			column: 37,
 			message: messages.expected(20),
+		},
+	],
+})
+
+// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427
+// What comes off a line is the address of every `url()` the file spells, found by the walk that finds the comments of a text. The pattern that used to look for one asked nothing about the name in front of the parenthesis, ran to the last parenthesis of the line, read the three letters of the name as characters rather than as a name, and would not take an address of a single character off at all.
+testRule({
+	ruleName,
+	config: [30],
+
+	reject: [
+		{
+			description: `an address and a call of its own behind it, of which only the address comes off the line`,
+			code: `a { background: url(a.png) no-repeat, linear-gradient(red, blue); }`,
+			line: 1,
+			column: 67,
+			message: messages.expected(30),
+		},
+		{
+			description: `an import whose address is wrapped in a url call, with a media query behind it`,
+			code: `@import url(a.css) screen and (orientation:landscape);`,
+			line: 1,
+			column: 54,
+			message: messages.expected(30),
+		},
+		{
+			description: `a call whose name merely ends in the three letters of an address, whose arguments stay on the line`,
+			code: `a { background: image-url(aaaaaaaaaaaa); }`,
+			line: 1,
+			column: 42,
+			message: messages.expected(30),
+		},
+		{
+			description: `an address written inside a block comment, which opens no call at all`,
+			code: `/* a { background: url("http://x/y.png") } */`,
+			line: 1,
+			column: 45,
+			message: messages.expected(30),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [24],
+
+	accept: [
+		{
+			description: `an address of a single character, which comes off the line like any other`,
+			code: `bbbbbbbbbbbbbbbb: url(a);`,
+		},
+		{
+			description: `an address whose name is spelled with an escape`,
+			code: `a { background: u\\rl(http://x) }`,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [20],
+
+	reject: [
+		{
+			description: `a rule whose selector wraps an address in parentheses of its own, which the address does not reach into`,
+			code: `.m(url(a,b)) { c: 2px; }`,
+			line: 1,
+			column: 24,
+			message: messages.expected(20),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [60],
+
+	accept: [
+		{
+			description: `an address written across a form feed, which is whitespace to the tokenizer and no line of its own, so the whole of it still comes off`,
+			code: `a { background: url(qqqqqqqqqqqq\fqqqqqqqqqqqq.png) qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq }`,
+		},
+	],
+
+	reject: [
+		{
+			description: `a stray parenthesis inside a bare address, whose parentheses close on a line below and which is therefore no address at all`,
+			code: `a { background: url(a(b.png) qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq }\n.c { d: e) }`,
+			line: 1,
+			column: 65,
+			message: messages.expected(60),
+		},
+	],
+})
+
+// The reading of a double slash is the file's own syntax's, not the rule's namespace's: what `max-line-length` counts is the text the file spells, where such a comment stands as it was written rather than in the copy a syntax may have rewritten it out of.
+testRule({
+	ruleName,
+	config: [22],
+
+	accept: [
+		{
+			description: `an address behind a double slash in a file whose syntax spells no comment with one, where the address comes off the line like any other`,
+			code: `a { b: 1px //url(bbbbbbbbbbbbbbbbbbbb.png)\n}`,
 		},
 	],
 })

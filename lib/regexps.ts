@@ -88,9 +88,6 @@ export const EVERY_SPACE = / /gu
 /** Every tab of a text. */
 export const EVERY_TAB = /\t/gu
 
-/** What every `url()` of a text holds, captured without the whitespace at its edges. */
-export const EVERY_URL_CONTENT = /url\(\s*(\S.*\S)\s*\)/gui
-
 /** Every character of whitespace, one at a time. */
 export const EVERY_WHITESPACE = /\s/gu
 
@@ -279,9 +276,6 @@ export const TRAILING_WHITESPACE_RUN = /\s+$/u
 
 /** The whitespace a text ends in, down to its last line break, which is left standing whole — the carriage return of a Windows pair with it. A bare carriage return and a form feed are whitespace and no break, so they go with the rest; a vertical tab and a no-break space are words to the tokenizer and no whitespace at all (#494); the trailing twin of {@link LEADING_WHITESPACE_WITHOUT_BREAK}. */
 export const TRAILING_WHITESPACE_WITHOUT_BREAK = /(?:[ \t\f]|\r(?!\n))+$/u
-
-/** A `url(` at the end of a text, with nothing in front of it that a longer name could reach into. */
-export const URL_CALL_AT_END = /(?:^|[^\w-])url\($/iu
 
 /** A single character of whitespace. */
 export const WHITESPACE = /\s/u

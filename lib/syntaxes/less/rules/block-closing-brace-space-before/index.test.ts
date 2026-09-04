@@ -187,6 +187,47 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/398
+			description: `a call named with an ASCII word in front of the three letters of an address, whose double slashes open a comment the brace has nowhere to go past`,
+			code: `a { b: aurl(http://a/b.png) 1px; }`,
+			fixed: `a { b: aurl(http://a/b.png) 1px; }`,
+			line: 1,
+			column: 33,
+			message: messages.rejectedBefore(),
+		},
+		{
+			description: `the same call named with a code point of an identifier that lies outside ASCII`,
+			code: `a { b: éurl(http://a/b.png) 1px; }`,
+			fixed: `a { b: éurl(http://a/b.png) 1px; }`,
+			line: 1,
+			column: 33,
+			message: messages.rejectedBefore(),
+		},
+		{
+			description: `the same call named with an interpolation, whose closing brace stands where a run of a name stands`,
+			code: `a { b: @{p}url(http://a/b.png) 1px; }`,
+			fixed: `a { b: @{p}url(http://a/b.png) 1px; }`,
+			line: 1,
+			column: 36,
+			message: messages.rejectedBefore(),
+		},
+		{
+			description: `the same call named with a hexadecimal escape, whose closing whitespace is no character of its own`,
+			code: `a { b: \\75 url(http://a/b.png) 1px; }`,
+			fixed: `a { b: \\75 url(http://a/b.png) 1px; }`,
+			line: 1,
+			column: 36,
+			message: messages.rejectedBefore(),
+		},
+		{
+			description: `an address whose name is spelled with an escape, which holds no comment and takes the brace`,
+			code: `a { b: u\\rl(http://a/b.png) 1px; }`,
+			fixed: `a { b: u\\rl(http://a/b.png) 1px;}`,
+			line: 1,
+			column: 33,
+			message: messages.rejectedBefore(),
+		},
+		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/333
 			description: `a form feed inside an inline comment, which is whitespace and no line break, so the brace stands in the comment's text and the block is left alone`,
 			code: `a { b: 1px // c\f\t2px; }`,

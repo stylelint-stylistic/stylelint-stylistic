@@ -1,7 +1,7 @@
 import valueParser, { type Node } from "postcss-value-parser"
 import { describe, expect, it } from "vitest"
 
-import { findCommentSpanAt, findCommentSpanHolding, findCommentSpans, findCommentSpanTouching } from "./index.ts"
+import { findAddressSpans, findCommentSpanAt, findCommentSpanHolding, findCommentSpans, findCommentSpanTouching } from "./index.ts"
 
 describe(`findCommentSpans`, () => {
 	it(`no comment`, () => {
@@ -201,6 +201,94 @@ describe(`findCommentSpans`, () => {
 
 	it(`a block comment of such a syntax is found as it always was`, () => {
 		expect(findCommentSpans(`1px /* c */ 2px`, false)).toEqual([{ start: 4, end: 11, isInline: false }])
+	})
+})
+
+// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427
+// The other answer of the walk that finds the comments, which no caller could ask for until this one: the same reading of what a `url()` is, put to the addresses it steps over instead of to the comments it steps around.
+describe(`findAddressSpans`, () => {
+	it(`a text holding no call at all`, () => {
+		expect(findAddressSpans(`1px 2px`)).toEqual([])
+	})
+
+	it(`a bare address`, () => {
+		expect(findAddressSpans(`url(a.png)`)).toEqual([{ start: 4, end: 9 }])
+	})
+
+	it(`an address the whitespace at its edges is left off`, () => {
+		expect(findAddressSpans(`url( a.png )`)).toEqual([{ start: 5, end: 10 }])
+		expect(findAddressSpans(`url(\n\t"a.png"\n)`)).toEqual([{ start: 6, end: 13 }])
+	})
+
+	it(`parentheses holding nothing but whitespace, which hold no address`, () => {
+		expect(findAddressSpans(`url()`)).toEqual([])
+		expect(findAddressSpans(`url(   )`)).toEqual([])
+	})
+
+	it(`a call whose name merely ends in the three letters of an address`, () => {
+		expect(findAddressSpans(`image-url(a.png)`)).toEqual([])
+	})
+
+	it(`a call whose name ends in a character no ASCII word holds`, () => {
+		expect(findAddressSpans(`éurl(a.png)`)).toEqual([])
+		expect(findAddressSpans(`@{p}url(a.png)`)).toEqual([])
+	})
+
+	it(`an address whose name is spelled with an escape`, () => {
+		expect(findAddressSpans(`u\\rl(a.png)`)).toEqual([{ start: 5, end: 10 }])
+		expect(findAddressSpans(`\\75 rl(a.png)`)).toEqual([{ start: 7, end: 12 }])
+	})
+
+	it(`an address written inside a comment or a string, which opens none`, () => {
+		expect(findAddressSpans(`/* url(a.png) */`)).toEqual([])
+		expect(findAddressSpans(`"url(a.png)"`)).toEqual([])
+		expect(findAddressSpans(`// url(a.png)`)).toEqual([])
+	})
+
+	it(`the same double slash in a syntax that spells no comment with one, where the address behind it is an address`, () => {
+		expect(findAddressSpans(`// url(a.png)`, false)).toEqual([{ start: 7, end: 12 }])
+	})
+
+	it(`two addresses on one line, and a call behind an address that is none`, () => {
+		expect(findAddressSpans(`url(a.png) url(b.png)`)).toEqual([{ start: 4, end: 9 }, { start: 15, end: 20 }])
+		expect(findAddressSpans(`url(a.png) f(1, 2)`)).toEqual([{ start: 4, end: 9 }])
+	})
+
+	it(`the arguments of the url function, of which only the string is an address`, () => {
+		expect(findAddressSpans(`url("a" /* c */)`)).toEqual([{ start: 4, end: 7 }])
+		expect(findAddressSpans(`url( "x", format("woff2"), a )`)).toEqual([{ start: 5, end: 8 }])
+	})
+
+	it(`the same arguments where the address is written with the other quotation mark`, () => {
+		expect(findAddressSpans(`url('a.png', format('x'))`)).toEqual([{ start: 4, end: 11 }])
+		expect(findAddressSpans(`url( 'a.png' , 1 )`)).toEqual([{ start: 5, end: 12 }])
+	})
+
+	it(`whitespace an escape at the end of an address spells, which is a character of the address and no run behind it`, () => {
+		expect(findAddressSpans(`url(a\\ )`)).toEqual([{ start: 4, end: 7 }])
+		expect(findAddressSpans(`url(aa\\41 )`)).toEqual([{ start: 4, end: 10 }])
+	})
+
+	it(`the same whitespace behind an escape of the backslash itself, which spells nothing and closes on none of it`, () => {
+		expect(findAddressSpans(`url(a\\\\ )`)).toEqual([{ start: 4, end: 7 }])
+		expect(findAddressSpans(`url(aa\\\\41 )`)).toEqual([{ start: 4, end: 10 }])
+	})
+
+	// Which whitespace a backslash spells is the one reading of an escape the plugin holds and no reading of this module's: it refuses the line feed and the Windows pair alone, so the form feed of the third line is a character the escape spells here, where CSS reads a newline in it and Sass answers `Expected escape sequence` (#566).
+	it(`a line break behind an escape, which a hexadecimal one closes on and a backslash spells nothing in front of`, () => {
+		expect(findAddressSpans(`url(a\\\n)`)).toEqual([{ start: 4, end: 6 }])
+		expect(findAddressSpans(`url(a\\41\r\n)`)).toEqual([])
+		expect(findAddressSpans(`url(a\\\f)`)).toEqual([{ start: 4, end: 7 }])
+	})
+
+	it(`a run reaching past the end of a line, which no address is`, () => {
+		expect(findAddressSpans(`url(a(b.png) c d)`)).toEqual([{ start: 4, end: 16 }])
+		expect(findAddressSpans(`url(a(b.png) c\nd)`)).toEqual([])
+		expect(findAddressSpans(`url(a\fb)`)).toEqual([{ start: 4, end: 7 }])
+	})
+
+	it(`a quotation mark inside a bare address, which opens no argument of anything`, () => {
+		expect(findAddressSpans(`url(a"b c)`)).toEqual([{ start: 4, end: 9 }])
 	})
 })
 
