@@ -42,17 +42,23 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let shouldHaveCR = primary === `windows`
 
 		/**
-		 * Rewrites the line breaks of the texts a node holds: its selector, its value, its at-rule parameters, the text of a comment, and every raw the node writes the whitespace of the file into save one. The one left standing is `raws.ownSemicolon`, the whitespace in front of a stray semicolon behind a nested block, and it is #372.
+		 * Rewrites the line breaks of the texts a node holds: its selector, its value, its at-rule parameters, the text of a comment, and every raw the node writes the whitespace of the file into.
 		 *
 		 * A selector and a value alike are read and written through their pair rather than as a bare property, since PostCSS keeps the comments of one in `raws.selector.raw` and `raws.value.raw`, `postcss-scss` keeps the copy it prints in `raws.selector.scss` and `raws.value.scss`, and writing the property throws both away. The breaks a comment itself holds are rewritten along with the rest: a break inside a comment is a break of the file like any other. The text of a comment standing as a node of its own is written the same way, and reaches the file for a block comment under every syntax. For an end-of-line comment under `postcss-scss` it reaches nothing, that syntax keeping a `raws.text` beside the text and printing the raw; nothing is lost by it, since that syntax ends such a comment on a carriage return as readily as on a line feed and no break can stand in its text at all.
 		 *
 		 * A set of at-rule parameters is read and written through its own pair for the same reason, and for every at-rule rather than for the Less at-variable alone: the variable is the one at-rule that carries a third copy of its text, and the `write` of the less namespace's syntax keeps that one in step as well.
 		 *
-		 * The raws are written bare, since none of the four the walk reads past `raws.before` and `raws.after` is kept in a second copy by any syntax. Each is written only where the node holds it: `raws.afterName` belongs to an at-rule and `raws.important` to a declaration, and either is as often absent as not; `raws.left` and `raws.right` belong to a comment; `raws.between` is held by the three nodes that have two halves to part, and stands empty where the file writes nothing between them. Two of the four hold a character of code beside the whitespace — the colon of a declaration, and of a Less at-variable the colon lands in `raws.afterName` — which the respelling passes over untouched, reading breaks and nothing else. That was #283.
+		 * The raws are written bare, since none of the five the walk reads past `raws.before` and `raws.after` is kept in a second copy by any syntax. Each is written only where the node holds it: `raws.afterName` belongs to an at-rule and `raws.important` to a declaration, and either is as often absent as not; `raws.left` and `raws.right` belong to a comment; `raws.between` is held by the three nodes that have two halves to part, and stands empty where the file writes nothing between them; `raws.ownSemicolon` belongs to a rule, and only to one a stray semicolon stands behind. Three of the five hold a character of code beside the whitespace — the colon of a declaration, the colon `postcss-less` files in `raws.afterName` for a Less at-variable, and the semicolon of `raws.ownSemicolon` — which the respelling passes over untouched, reading breaks and nothing else. The first four were #283, the last #372.
+		 *
+		 * `raws.ownSemicolon` is written in the branch that reads a rule because a rule is the only node the parser hands it to: `freeSemicolon` gives it to the node in front of a stray semicolon and only where that node is a rule, so any other node in the same place — an at-rule, a declaration, a comment — leaves the semicolon in the `raws.after` of the parent, which the walk reads already. A rule is handed it once, a second stray semicolon behind the same block going to that same `raws.after`. `postcss-scss`, `postcss-less` and `postcss-styled-syntax` read the shape as PostCSS does, and PostCSS prints the raw for a rule and for nothing else.
 		 */
 		function fix (): void {
 			root.walk((node) => {
-				if (isRule(node)) syntax.write(node, fixData(syntax.read(node)))
+				if (isRule(node)) {
+					syntax.write(node, fixData(syntax.read(node)))
+
+					if (node.raws.ownSemicolon) node.raws.ownSemicolon = fixData(node.raws.ownSemicolon)
+				}
 
 				if (isAtRule(node)) {
 					syntax.write(node, fixData(syntax.read(node)))

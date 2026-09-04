@@ -382,6 +382,24 @@ testRule({
 			column: 10,
 			message: messages.expected(`unix`),
 		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/372
+		{
+			description: `a carriage-return line break in front of a stray semicolon standing behind a nested block, which is the only break of the stylesheet`,
+			code: `a { b { c: d }\r\n; }`,
+			fixed: `a { b { c: d }\n; }`,
+			line: 1,
+			column: 15,
+			message: messages.expected(`unix`),
+		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/372
+		{
+			description: `the same break in front of a stray semicolon standing behind a rule of the top level, which the parser files in the very same raw`,
+			code: `a { b: c }\r\n;`,
+			fixed: `a { b: c }\n;`,
+			line: 1,
+			column: 11,
+			message: messages.expected(`unix`),
+		},
 	],
 })
 
@@ -749,6 +767,24 @@ testRule({
 			fixed: `a /* c */\r\n{ b: c; }`,
 			line: 1,
 			column: 10,
+			message: messages.expected(`windows`),
+		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/372
+		{
+			description: `a bare line feed in front of a stray semicolon standing behind a nested block, which is the only break of the stylesheet`,
+			code: `a { b { c: d }\n; }`,
+			fixed: `a { b { c: d }\r\n; }`,
+			line: 1,
+			column: 15,
+			message: messages.expected(`windows`),
+		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/372
+		{
+			description: `the same break in front of a stray semicolon standing behind a rule of the top level, which the parser files in the very same raw`,
+			code: `a { b: c }\n;`,
+			fixed: `a { b: c }\r\n;`,
+			line: 1,
+			column: 11,
 			message: messages.expected(`windows`),
 		},
 	],
