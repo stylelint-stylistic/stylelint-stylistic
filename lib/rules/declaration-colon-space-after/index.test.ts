@@ -2,6 +2,9 @@ import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
 
+// A space no editor trims from the end of a line.
+const S = ` `
+
 testRule({
 	ruleName,
 	config: [`always`],
@@ -99,6 +102,27 @@ testRule({
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
 			description: `the same declaration with a comment written behind it, whose single space that comment's raw holds`,
 			code: `a { color: /*comment*/ }`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			description: `a declaration standing last at the top level of a stylesheet, whose run behind the colon is the tail of the file`,
+			code: `color:${S}`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			description: `the same declaration whose tail is two spaces, a run this option collapses anywhere else`,
+			code: `color:${S}${S}`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			autoStripIndent: false,
+			description: `the same declaration whose tail is the break the file ends on`,
+			code: `color:\n`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			description: `the same declaration with no tail at all, the file ending at the colon`,
+			code: `color:`,
 		},
 	],
 
@@ -402,6 +426,15 @@ testRule({
 			column: 9,
 			message: messages.expectedAfter(),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			description: `a declaration standing at the top level of a stylesheet with a comment written behind it, whose two spaces that comment's raw holds`,
+			code: `color:${S}${S}/*comment*/`,
+			fixed: `color:${S}/*comment*/`,
+			line: 1,
+			column: 7,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
@@ -423,6 +456,17 @@ testRule({
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
 			description: `the same declaration which a comment abuts instead`,
 			code: `a { color:/*comment*/ }`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			description: `a declaration standing last at the top level of a stylesheet, whose space is the tail of the file`,
+			code: `color:${S}`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			autoStripIndent: false,
+			description: `the same declaration whose tail is the break the file ends on`,
+			code: `color:\n`,
 		},
 		{
 			description: `a value abutting the colon`,
@@ -641,6 +685,15 @@ testRule({
 			column: 11,
 			message: messages.rejectedAfter(),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			description: `a declaration standing at the top level of a stylesheet with a comment written behind it, whose space that comment's raw holds`,
+			code: `color:${S}/*comment*/`,
+			fixed: `color:/*comment*/`,
+			line: 1,
+			column: 7,
+			message: messages.rejectedAfter(),
+		},
 	],
 })
 
@@ -657,6 +710,11 @@ testRule({
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
 			description: `a declaration printing nothing behind its colon, whose single space the block's own raw holds`,
 			code: `a { color: }`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			description: `a declaration standing last at the top level of a stylesheet, whose two spaces are the tail of the file`,
+			code: `color:${S}${S}`,
 		},
 		{
 			description: `the same custom property alone in its block`,
@@ -864,10 +922,19 @@ testRule({
 			column: 11,
 			message: messages.expectedAfterSingleLine(),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			description: `a declaration standing at the top level of a stylesheet with a comment written behind it, whose two spaces that comment's raw holds`,
+			code: `color:${S}${S}/*comment*/`,
+			fixed: `color:${S}/*comment*/`,
+			line: 1,
+			column: 7,
+			message: messages.expectedAfterSingleLine(),
+		},
 	],
 })
 
-// The root of an inline `style` attribute is a container like any other for the run behind a colon: it closes on the attribute's own quotation mark rather than on a brace, and the run standing past a declaration that prints nothing behind its colon goes into its `raws.after` all the same (#387).
+// The two roots an HTML page holds are answered opposite ways. The root of an inline `style` attribute is a container like any other for the run behind a colon: it closes on the attribute's own quotation mark rather than on a brace, and the run standing past a declaration that prints nothing behind its colon goes into its `raws.after` all the same (#387). The root a `<style>` element holds is a stylesheet, which ends in that raw as a file does, and the run there is no rule's to write from the colon (#537).
 testRule({
 	ruleName,
 	config: [`always`],
@@ -878,6 +945,16 @@ testRule({
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
 			description: `an attribute whose one declaration prints nothing behind its colon, the single space standing in the root's own raw`,
 			code: `<p style="color: "></p>`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			description: `a style element whose one declaration prints nothing behind its colon, the two spaces standing where that element's own stylesheet ends`,
+			code: `<style>\ncolor:${S}${S}\n</style>`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			description: `the same element written on one line, whose two spaces this syntax keeps outside the stylesheet altogether and gives back when the page is printed, so that the raw the run would be written into is empty`,
+			code: `<style>color:  </style>`,
 		},
 	],
 
@@ -898,6 +975,15 @@ testRule({
 			fixed: `<p style="color: /*comment*/"></p>`,
 			line: 1,
 			column: 17,
+			message: messages.expectedAfter(),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			description: `a style element with a comment written behind its declaration, whose raw bounds the run where the element's own does not`,
+			code: `<style>color:  /*comment*/</style>`,
+			fixed: `<style>color: /*comment*/</style>`,
+			line: 1,
+			column: 14,
 			message: messages.expectedAfter(),
 		},
 	],

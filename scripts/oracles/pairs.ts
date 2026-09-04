@@ -21,7 +21,7 @@ import { lint as lintDirectly } from "../harness/lint.ts"
 import { RULE_OPTIONS } from "./options.ts"
 import { isUsable, PLUGIN } from "./runs.ts"
 
-/** Shapes short enough to read and dirty enough that many rules have something to say about each. They are read as CSS alone: a pair races over the shape of the text rather than over the syntax it is written in, and reading each shape three times over would treble a run that is already the square of what the fixture wakes. The last two end on something other than a line break, which is what makes the fix of `no-missing-end-of-source-newline` reachable at all: every other shape here has closed its last line already, so that rule wrote nothing in any run this oracle made, and a class of [#356](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/356) went unseen. `free-semicolon` is what puts a row of that class on the board; `trailing-run` puts none on either checkout — under a maximum of one or two `max-empty-lines` rewrote nothing there before this fix, so the pair was never made at all, and under a maximum of zero, where it did rewrite, the two orders already agreed — and stands guard over a fix rather than reporting one. */
+/** Shapes short enough to read and dirty enough that many rules have something to say about each. They are read as CSS alone: a pair races over the shape of the text rather than over the syntax it is written in, and reading each shape three times over would treble a run that is already the square of what the fixture wakes. `free-semicolon`, `trailing-run` and `root-no-value` end on something other than a line break, which is what makes the fix of `no-missing-end-of-source-newline` reachable at all: every other shape here has closed its last line already, so that rule wrote nothing in any run this oracle made, and a class of [#356](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/356) went unseen. `free-semicolon` is what puts a row of that class on the board; `trailing-run` puts none on either checkout — under a maximum of one or two `max-empty-lines` rewrote nothing there before this fix, so the pair was never made at all, and under a maximum of zero, where it did rewrite, the two orders already agreed — and stands guard over a fix rather than reporting one. `root-no-value` is a declaration standing at the top level of a stylesheet, where the whitespace behind the colon and the tail of the file are one and the same text: it is what puts the twelve rows [#537](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537) took off the board there in the first place. */
 const CORPUS: [string, string][] = [
 	[`tight-block`, `a{color:red}\n`],
 	[`multi-decl`, `a {\n\tcolor: red; top: 0;\n}\n`],
@@ -36,6 +36,7 @@ const CORPUS: [string, string][] = [
 	[`wordless-value`, `a { color:  /*c*/ ; }\n`],
 	[`whitespace-value`, `a { color: ; }\n`],
 	[`no-value-tail`, `a { color: }\n`],
+	[`root-no-value`, `color: `],
 ]
 
 /** How many runs of the fixer a pair is given to bring a fixture to rest before the run is called one that never ends. */

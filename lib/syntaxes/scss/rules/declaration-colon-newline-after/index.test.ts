@@ -5,6 +5,9 @@ let { ruleName, messages } = createRule(scss)
 
 let testRule = createTestRule({ ruleName })
 
+// A space no editor trims from the end of a line.
+const S = ` `
+
 testRule({
 	ruleName,
 	config: [`always`],
@@ -43,6 +46,15 @@ testRule({
 			fixed: `a { b //x:y\n:\n red; }`,
 			line: 2,
 			column: 1,
+			message: messages.expectedAfter(),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			description: `a declaration standing at the top level of a stylesheet with an inline comment written behind it, a node of this syntax alone, whose space that comment's raw holds`,
+			code: `color:${S}// c`,
+			fixed: `color:\n${S}// c`,
+			line: 1,
+			column: 6,
 			message: messages.expectedAfter(),
 		},
 	],

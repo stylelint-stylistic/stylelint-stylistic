@@ -24,6 +24,7 @@ export function declarationColonSpaceChecker (opts: {
 	root: Root,
 	locationChecker: LocationChecker,
 	fix?: ((decl: Declaration, index: number) => void),
+	isChecked?: ((decl: Declaration) => boolean),
 	isFixable?: ((decl: Declaration, index: number) => boolean),
 	result: PostcssResult,
 	syntax: Syntax,
@@ -36,6 +37,9 @@ export function declarationColonSpaceChecker (opts: {
 
 		// A declaration the parser did not build has no text between its property and its value for either rule to read: PostCSS prints a colon and a space in place of the raw it lacks, and `declarationValueIndex` counts a colon alone, so the two disagree by the very character these rules are about. No syntax this plugin reads through leaves that raw empty; a declaration another plugin's fix built and put in the tree does.
 		if (!decl.raws.between) return
+
+		// A rule may have nothing to say about a declaration at all, whatever its option: the text one of the two rules reads is no text of this declaration's, and the other reads it as it always did.
+		if (opts.isChecked && !opts.isChecked(decl)) return
 
 		// The declaration down to the end of its value, as the file prints it, and behind that whatever run ran on past the declaration: whatever the shape of the value, the run standing behind the colon is in this text wherever the file keeps it.
 		let source = declarationColonSource(opts.syntax, decl, opts.result)

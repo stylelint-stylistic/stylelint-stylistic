@@ -8,7 +8,7 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { moveDeclarationValueHeadIntoBetween } from "../../utils/moveDeclarationValueHeadIntoBetween/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { runPastDeclaration, writeRunPastDeclaration } from "../../utils/runPastDeclaration/index.ts"
+import { runPastDeclaration, runPastDeclarationEndsTheStylesheet, writeRunPastDeclaration } from "../../utils/runPastDeclaration/index.ts"
 import { assertString } from "../../utils/validateTypes/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesSharedRun } from "../../utils/writesSharedRun/index.ts"
@@ -54,6 +54,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.after,
 			checkedRuleName: ruleName,
+			// The run behind the colon of a declaration standing last at the top level of a stylesheet stands in the raw that stylesheet ends on, which is no option of this rule's to write: a stylesheet closing its last line ends that raw on a break, and no spelling this rule asks for keeps one (#537)
+			isChecked: (decl) => !runPastDeclarationEndsTheStylesheet(syntax, decl, result),
 			// Where the value is nothing but the run behind the colon, that run is the one in front of the semicolon as well, and the rules asked about it settle between them which of them write it (#416)
 			isFixable: (decl) => writesSharedRun(syntax, decl, result, ruleName),
 			fix: (decl, index) => {

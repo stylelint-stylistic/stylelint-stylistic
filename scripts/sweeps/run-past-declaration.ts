@@ -3,6 +3,8 @@
  *
  * Written for #387. Both `declaration-colon-*-after` rules read the declaration down to the end of its value, and such a run has left it: it stands in the raw of the node written behind the declaration, and in the block's own `raws.after` where the declaration closes the block. So the corpus puts the run in every raw it can reach, spelled with every character the tokenizer reads as whitespace and two it does not, with and without a node in front of the declaration, and in every container that can hold it — a rule, a rule nested in an at-rule, an at-rule holding the declaration itself, and the declaration `postcss-scss` builds for a nested property of Sass. The root of an inline `style` attribute is the one container left unswept: it is reached only through `postcss-html`, and the runner reads a corpus as CSS, SCSS and Less. The custom property, the `!important` flag and the semicolon tail are the controls: each of the three keeps the run inside the declaration, where every reader already found it. The two `block-closing-brace-*-before` rules read the same run wherever it is the block's own, and `declaration-block-trailing-semicolon` is what moves the boundary, so all three are swept beside the two rules the issue is about.
  *
+ * The top level of a stylesheet is the third place such a run can stand, and the two placements reading it are what [#537](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537) added: `root` writes the body as it is, so that the run reaches the end of the file, and `rootBreak` closes the file on a break behind it. Those are two raws rather than one — the `raws.after` of a stylesheet's root is the tail of the file, and the `raws.before` of a comment written behind the declaration is bounded like any other — and `no-missing-end-of-source-newline` is swept beside the rules about the colon because that tail is the raw it writes its break into.
+ *
  * Every character a reader cannot tell from a space is written as an escape rather than as itself — the space and the two spaces are what they are, and everything else is spelled out: a vertical tab or a no-break space written literally reads as a space on the page, which is how the first spelling of this corpus measured the space twice over and the no-break space not at all.
  */
 
@@ -59,9 +61,11 @@ const corpus: Sweep[`corpus`] = place(multiply({ head: HEADS, property: PROPERTI
 	nested: (body) => `@media all {\n\ta { ${body}}\n}\n`,
 	atRule: (body) => `@font-face { ${body}}\n`,
 	sassProperty: (body) => `a { font: 2px/3px { ${body}} }\n`,
+	root: (body) => body,
+	rootBreak: (body) => `${body}\n`,
 })
 
-/** The two rules the issue is about, the two reading the same run from the closing brace, and the one that writes and removes the semicolon the boundary turns on. */
+/** The two rules the issue is about, the two reading the same run from the closing brace, the one that writes and removes the semicolon the boundary turns on, and the one whose break the tail of a file is. */
 const configs: Sweep[`configs`] = [
 	{ rule: `declaration-colon-space-after`, primary: `always` },
 	{ rule: `declaration-colon-space-after`, primary: `never` },
@@ -74,6 +78,7 @@ const configs: Sweep[`configs`] = [
 	{ rule: `block-closing-brace-newline-before`, primary: `never-multi-line` },
 	{ rule: `declaration-block-trailing-semicolon`, primary: `always` },
 	{ rule: `declaration-block-trailing-semicolon`, primary: `never` },
+	{ rule: `no-missing-end-of-source-newline`, primary: true },
 ]
 
 export { configs, corpus, name }

@@ -2,6 +2,9 @@ import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
 
+// A space no editor trims from the end of a line.
+const S = ` `
+
 testRule({
 	ruleName,
 	config: [`always`],
@@ -80,6 +83,22 @@ testRule({
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
 			description: `the same declaration with a comment written behind it, whose run that comment's raw holds`,
 			code: `a { color:\n /*comment*/ }`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			description: `a declaration standing last at the top level of a stylesheet, whose run behind the colon is the tail of the file`,
+			code: `color:${S}`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			autoStripIndent: false,
+			description: `the same declaration whose tail is the break the file ends on`,
+			code: `color:\n`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			description: `the same declaration with no tail at all, the file ending at the colon`,
+			code: `color:`,
 		},
 	],
 
@@ -331,6 +350,15 @@ testRule({
 			fixed: `a { color:\n /*comment*/ }`,
 			line: 1,
 			column: 10,
+			message: messages.expectedAfter(),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			description: `a declaration standing at the top level of a stylesheet with a comment written behind it, whose space that comment's raw holds`,
+			code: `color:${S}/*comment*/`,
+			fixed: `color:\n${S}/*comment*/`,
+			line: 1,
+			column: 6,
 			message: messages.expectedAfter(),
 		},
 	],

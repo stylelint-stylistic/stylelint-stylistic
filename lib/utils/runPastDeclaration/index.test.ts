@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 
 import { css } from "../../syntaxes/css/index.ts"
 
-import { runPastDeclaration, writeRunPastDeclaration } from "./index.ts"
+import { runPastDeclaration, runPastDeclarationEndsTheStylesheet, writeRunPastDeclaration } from "./index.ts"
 
 /** The least of a Stylelint result, which names no syntax, so that the stylesheet is read as plain CSS. */
 const RESULT = {} as unknown as PostcssResult
@@ -40,6 +40,16 @@ function run (code: string, index?: number): string | undefined {
 	return runPastDeclaration(css, declarationOf(code, index), RESULT)
 }
 
+/**
+ * Asks whether the run standing past one declaration of a stylesheet is that stylesheet's own tail.
+ * @param code - The stylesheet.
+ * @param [index] - Which declaration of it to ask about, the first by default.
+ * @returns True where there is such a run and the raw holding it ends the stylesheet.
+ */
+function endsTheStylesheet (code: string, index?: number): boolean {
+	return runPastDeclarationEndsTheStylesheet(css, declarationOf(code, index), RESULT)
+}
+
 describe(`runPastDeclaration`, () => {
 	it(`the two raws the run reaches: the block's own, and that of a comment written behind the declaration`, () => {
 		expect(run(`a { b:  }`)).toBe(`  `)
@@ -61,6 +71,12 @@ describe(`runPastDeclaration`, () => {
 
 	it(`a declaration standing at the top level of a stylesheet, whose root's raw is the tail of the file`, () => {
 		expect(run(`b:  `)).toBeUndefined()
+		expect(run(`b:`)).toBeUndefined()
+	})
+
+	it(`the same declaration with a comment written behind it, which bounds the run as any other node does`, () => {
+		expect(run(`b:  /*c*/`)).toBe(`  `)
+		expect(run(`b:  /*c*/\n`)).toBe(`  `)
 	})
 
 	it(`a nested property of Sass, whose block the parser hangs on a declaration`, () => {
@@ -86,6 +102,26 @@ describe(`runPastDeclaration`, () => {
 
 		block.raws.after = ` /*c*/ `
 		expect(runPastDeclaration(css, decl, RESULT)).toBeUndefined()
+	})
+})
+
+describe(`runPastDeclarationEndsTheStylesheet`, () => {
+	it(`a declaration standing last at the top level of a stylesheet, whose run is the tail of the file`, () => {
+		expect(endsTheStylesheet(`b:  `)).toBe(true)
+		expect(endsTheStylesheet(`b:`)).toBe(true)
+		expect(endsTheStylesheet(`a { c: red }\nb:  `, 1)).toBe(true)
+	})
+
+	it(`a declaration with a node written behind it, whose run that node bounds`, () => {
+		expect(endsTheStylesheet(`b:  /*c*/`)).toBe(false)
+		expect(endsTheStylesheet(`a { b:  }`)).toBe(false)
+	})
+
+	it(`a declaration with no run past it at all, whatever holds the whitespace behind its colon`, () => {
+		expect(endsTheStylesheet(`b: red`)).toBe(false)
+		expect(endsTheStylesheet(`b:  ;`)).toBe(false)
+		expect(endsTheStylesheet(`b:  !important`)).toBe(false)
+		expect(endsTheStylesheet(`--b:  `)).toBe(false)
 	})
 })
 

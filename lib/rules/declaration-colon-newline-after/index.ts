@@ -10,7 +10,7 @@ import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { moveDeclarationValueHeadIntoBetween } from "../../utils/moveDeclarationValueHeadIntoBetween/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { runPastDeclaration, writeRunPastDeclaration } from "../../utils/runPastDeclaration/index.ts"
+import { runPastDeclaration, runPastDeclarationEndsTheStylesheet, writeRunPastDeclaration } from "../../utils/runPastDeclaration/index.ts"
 import { assertString } from "../../utils/validateTypes/index.ts"
 import { whitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
@@ -56,6 +56,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// A declaration the parser did not build has no text between its property and its value for either rule to read: PostCSS prints a colon and a space in place of the raw it lacks, and `declarationValueIndex` counts a colon alone, so the two disagree by the very character these rules are about. No syntax this plugin reads through leaves that raw empty; a declaration another plugin's fix built and put in the tree does.
 			if (!decl.raws.between) return
+
+			// The run behind the colon of a declaration standing last at the top level of a stylesheet stands in the raw that stylesheet ends on, which this rule reads no more than its neighbour does: the two are asked one text, and the break this one writes goes in front of whatever run stands there, which at a stylesheet's end leaves its last line a run of whitespace (#537)
+			if (runPastDeclarationEndsTheStylesheet(syntax, decl, result)) return
 
 			// The declaration down to the end of its value, as the file prints it, and behind that whatever run ran on past the declaration: whatever the shape of the value, the run standing behind the colon is in this text wherever the file keeps it.
 			let source = declarationColonSource(syntax, decl, result)
