@@ -5,9 +5,8 @@ import { WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { betweenTailAfterColon } from "../betweenTailAfterColon/index.ts"
 import { colonIndexInBetween } from "../colonIndexInBetween/index.ts"
-import { isInlineStyleAttribute } from "../isInlineStyleAttribute/index.ts"
+import { declarationEndsTheStylesheet } from "../declarationEndsTheStylesheet/index.ts"
 import { isLastNodeWithoutSemicolon } from "../isLastNodeWithoutSemicolon/index.ts"
-import { isRoot } from "../typeGuards/index.ts"
 
 /**
  * Finds the whitespace standing behind a declaration's colon where the file leaves it past the declaration's own text, and says whether the raw holding it is the tail of the stylesheet itself.
@@ -45,7 +44,7 @@ function runOf (syntax: Syntax, decl: Declaration, result: PostcssResult): {
 
 	if (typeof run !== `string` || !WHITESPACE_OR_NOTHING.test(run)) return undefined
 
-	return { run, endsTheStylesheet: !next && isRoot(parent) && !isInlineStyleAttribute(parent) }
+	return { run, endsTheStylesheet: declarationEndsTheStylesheet(decl) }
 }
 
 /**

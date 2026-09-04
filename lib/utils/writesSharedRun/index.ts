@@ -13,6 +13,7 @@ import { isInlineStyleAttribute } from "../isInlineStyleAttribute/index.ts"
 import { isLastNodeWithoutSemicolon } from "../isLastNodeWithoutSemicolon/index.ts"
 import { isSingleLineString } from "../isSingleLineString/index.ts"
 import { type NeighbourRule, neighbourSettings, speaksOf } from "../neighbourSettings/index.ts"
+import { runInDeclarationEndsTheStylesheet } from "../runInDeclarationEndsTheStylesheet/index.ts"
 import { runPastDeclaration } from "../runPastDeclaration/index.ts"
 import { isAtRule, isRule } from "../typeGuards/index.ts"
 
@@ -49,7 +50,7 @@ const PARTICIPANTS: Record<Participant, NeighbourRule & { writes: Run }> = {
 /** The two rules reading the run from the semicolon, which every shared run is read by. */
 const FROM_THE_SEMICOLON: Participant[] = [`semicolonSpace`, `semicolonNewline`]
 
-/** The runs of one declaration that more than one rule reads, each with the rules reading it: the run at the head of the text behind the colon, and the run in front of the semicolon. A set stands empty where no two rules share that run. */
+/** The two runs of one declaration that two rules may have to settle between them, each with the rules that must: the run at the head of the text behind the colon, and the run in front of the semicolon. A rule the set does not name writes that run as it pleases — whether the run is that rule's alone or no run of its at all — so a set of fewer than two names settles nothing, and either kind of set is written as it comes out rather than made to say which of the two it is. */
 type SharedRuns = {
 	head: Set<Participant>,
 	semicolon: Set<Participant>,
@@ -59,7 +60,7 @@ type SharedRuns = {
 /**
  * Finds the runs of a declaration that more than one rule is asked about, and the rules reading each.
  *
- * The run at the head of the text behind the colon is read by both `declaration-colon-space-after` and `declaration-colon-newline-after` on every standard declaration — a word, a flag or an inline comment further along parts them from the semicolon's run, never from each other's — save one shape: behind a block comment standing right on the colon, the newline rule asks about the run behind that comment instead, and the head run is the space rule's alone.
+ * The run at the head of the text behind the colon is read by both `declaration-colon-space-after` and `declaration-colon-newline-after` on every standard declaration — a word, a flag or an inline comment further along parts them from the semicolon's run, never from each other's — save two shapes, one for each rule. Behind a block comment standing right on the colon, the newline rule asks about the run behind that comment instead, and the head run is the space rule's alone. Where that run is the text the stylesheet ends on, the space rule passes the declaration over — no spelling of its options keeps the break a closed last line ends on — and the head run is the newline rule's alone (#546).
  *
  * The run in front of the semicolon is the two `declaration-block-semicolon-*-before` rules', and the colon rules join them only where their own run reaches it: where the text behind the colon down to the end of the printed value is nothing but whitespace, the one run is every one of the four's; where it is a block comment with nothing but whitespace behind, that tail is the newline rule's and the semicolon rules'. A flag parts the runs whatever the value holds, since the semicolon's run is then the end of the flag's raw; and a declaration the semicolon rules pass over — the last of its block where the file writes no semicolon behind it, or one standing outside a block and an inline style attribute — keeps its semicolon run to itself, whatever the value holds.
  * @param syntax - The syntax the rule is built over.
@@ -82,7 +83,10 @@ function sharedRunsOf (syntax: Syntax, decl: Declaration, result: PostcssResult)
 	let text = between.slice(colonIndex + 1) + syntax.read(decl)
 
 	if (WHITESPACE_OR_NOTHING.test(text)) {
-		runs.head.add(`colonSpace`).add(`colonNewline`)
+		// Where the run the declaration prints behind its colon is the text the stylesheet ends on, `declaration-colon-space-after` passes the declaration over and reads nothing of it, so its neighbour has that run to itself (#546) — left in the set, it would gate the write of a neighbour configured `always` under each of its own three options and leave a warning no run of `--fix` can clear. The question is asked here and nowhere else below: it is this very text that the reading is about, so a text holding anything but whitespace answers it no. The run that has left the declaration altogether at such a place is read by neither of the two (#537), and there is nothing to say about it anywhere here: no rule reading the head run asks about a declaration both of them pass over.
+		if (!runInDeclarationEndsTheStylesheet(syntax, decl, result)) runs.head.add(`colonSpace`)
+
+		runs.head.add(`colonNewline`)
 
 		if (readBySemicolonRules) {
 			runs.semicolonRun = text

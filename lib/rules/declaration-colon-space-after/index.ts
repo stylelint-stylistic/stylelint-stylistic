@@ -8,6 +8,7 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { moveDeclarationValueHeadIntoBetween } from "../../utils/moveDeclarationValueHeadIntoBetween/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runInDeclarationEndsTheStylesheet } from "../../utils/runInDeclarationEndsTheStylesheet/index.ts"
 import { runPastDeclaration, runPastDeclarationEndsTheStylesheet, writeRunPastDeclaration } from "../../utils/runPastDeclaration/index.ts"
 import { assertString } from "../../utils/validateTypes/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
@@ -54,8 +55,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.after,
 			checkedRuleName: ruleName,
-			// The run behind the colon of a declaration standing last at the top level of a stylesheet stands in the raw that stylesheet ends on, which is no option of this rule's to write: a stylesheet closing its last line ends that raw on a break, and no spelling this rule asks for keeps one (#537)
-			isChecked: (decl) => !runPastDeclarationEndsTheStylesheet(syntax, decl, result),
+			// The run behind the colon of a declaration standing last at the top level of a stylesheet is the text that stylesheet ends on, which is no option of this rule's to write: a stylesheet closing its last line ends on a break, and no spelling this rule asks for keeps one. The run stands in the stylesheet's own trailing raw where the declaration prints nothing behind its colon (#537), and in the declaration's own text where it prints a run of whitespace there — a custom property's value above all (#546)
+			isChecked: (decl) => !runPastDeclarationEndsTheStylesheet(syntax, decl, result) && !runInDeclarationEndsTheStylesheet(syntax, decl, result),
 			// Where the value is nothing but the run behind the colon, that run is the one in front of the semicolon as well, and the rules asked about it settle between them which of them write it (#416)
 			isFixable: (decl) => writesSharedRun(syntax, decl, result, ruleName),
 			fix: (decl, index) => {

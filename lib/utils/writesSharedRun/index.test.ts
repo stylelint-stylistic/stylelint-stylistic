@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest"
 
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
+import { isDeclaration } from "../typeGuards/index.ts"
 
 import { sharesRunWithSemicolon, writesSharedRun } from "./index.ts"
 
@@ -65,6 +66,11 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { b: ; }`, { [COLON_NEWLINE]: `always`, [SEMICOLON_SPACE]: `always` }, SEMICOLON_SPACE)).toBe(true)
 		expect(ask(`a { b: ; }`, { [SEMICOLON_NEWLINE]: `always`, [COLON_SPACE]: `always` }, SEMICOLON_NEWLINE)).toBe(false)
 		expect(ask(`a { b: ; }`, { [SEMICOLON_NEWLINE]: `always`, [COLON_SPACE]: `always` }, COLON_SPACE)).toBe(true)
+	})
+
+	it(`the run a declaration the stylesheet ends on prints behind its colon, which the newline rule of the colon reads and the space rule does not`, () => {
+		expect(ask(`--b: \n`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `never` }, COLON_NEWLINE)).toBe(true)
+		expect(ask(`a { --b: }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `never` }, COLON_NEWLINE)).toBe(false)
 	})
 
 	it(`the run behind a comment on the colon's line, which the newline rule of the colon reads and the space rule does not`, () => {
@@ -239,12 +245,14 @@ function ask (code: string, rules: Record<string, unknown>, ruleName: string, sy
 }
 
 /**
- * Parses a stylesheet and picks the last declaration of its first rule.
+ * Parses a stylesheet and picks the last declaration of its first node — that node itself where the stylesheet holds a declaration at its top level.
  * @param code - The stylesheet.
  * @returns The declaration.
  */
 function lastDeclarationOf (code: string): Declaration {
-	return (parse(code).first as Rule).last as Declaration
+	let first = parse(code).first as Rule | Declaration
+
+	return isDeclaration(first) ? first : first.last as Declaration
 }
 
 /**

@@ -124,6 +124,23 @@ testRule({
 			description: `the same declaration with no tail at all, the file ending at the colon`,
 			code: `color:`,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/546
+			description: `a custom property standing last at the top level of a stylesheet, whose two spaces are the tail of the file and the value's own text`,
+			code: `--a:${S}${S}`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/546
+			autoStripIndent: false,
+			description: `the same custom property whose value is a space and the break the file ends on`,
+			code: `--a:${S}\n`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/546
+			autoStripIndent: false,
+			description: `the same custom property whose value is that break alone`,
+			code: `--a:\n`,
+		},
 	],
 
 	reject: [
@@ -435,6 +452,25 @@ testRule({
 			column: 7,
 			message: messages.expectedAfter(),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/546
+			description: `a custom property whose break the closing brace of its block bounds rather than the end of the file`,
+			code: `a {--a:${S}\n}`,
+			fixed: `a {--a: }`,
+			line: 1,
+			column: 8,
+			message: messages.expectedAfter(),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/546
+			autoStripIndent: false,
+			description: `a custom property standing last at the top level of a stylesheet with a flag behind it, out of whose raw the file writes the break it ends on`,
+			code: `--a:${S}${S}!important\n`,
+			fixed: `--a: !important\n`,
+			line: 1,
+			column: 5,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
@@ -467,6 +503,17 @@ testRule({
 			autoStripIndent: false,
 			description: `the same declaration whose tail is the break the file ends on`,
 			code: `color:\n`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/546
+			description: `a custom property standing last at the top level of a stylesheet, whose single space is the tail of the file and the value's own text`,
+			code: `--a:${S}`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/546
+			autoStripIndent: false,
+			description: `the same custom property whose value is a space and the break the file ends on`,
+			code: `--a:${S}\n`,
 		},
 		{
 			description: `a value abutting the colon`,
@@ -694,6 +741,16 @@ testRule({
 			column: 7,
 			message: messages.rejectedAfter(),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/546
+			autoStripIndent: false,
+			description: `a custom property standing last at the top level of a stylesheet with a flag behind it, out of whose raw the file writes the break it ends on`,
+			code: `--a:${S}!important\n`,
+			fixed: `--a:!important\n`,
+			line: 1,
+			column: 5,
+			message: messages.rejectedAfter(),
+		},
 	],
 })
 
@@ -719,6 +776,11 @@ testRule({
 		{
 			description: `the same custom property alone in its block`,
 			code: `a { --a: ; }`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/546
+			description: `a custom property standing last at the top level of a stylesheet, whose two spaces are the tail of the file and the value's own text`,
+			code: `--a:${S}${S}`,
 		},
 		{
 			description: `a space behind the colon of a single-line declaration`,
@@ -955,6 +1017,16 @@ testRule({
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
 			description: `the same element written on one line, whose two spaces this syntax keeps outside the stylesheet altogether and gives back when the page is printed, so that the raw the run would be written into is empty`,
 			code: `<style>color:  </style>`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/546
+			description: `a style element whose one declaration is a custom property, the break its stylesheet ends on standing in that declaration's own value`,
+			code: `<style>\n--a:${S}\n</style>`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/546
+			description: `the same custom property in an element written on one line, whose two spaces this syntax keeps outside the stylesheet as it does a plain property's`,
+			code: `<style>--a:  </style>`,
 		},
 	],
 
