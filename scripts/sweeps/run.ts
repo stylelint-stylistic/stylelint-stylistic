@@ -12,7 +12,7 @@ import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { argv, exit, stderr, stdout } from "node:process"
 
-import { digestOf, hashAt, keyOf, read, readDigest, write } from "../harness/cache.ts"
+import { digestOf, hashAt, hashSourcesAt, keyOf, read, readDigest, write } from "../harness/cache.ts"
 import { defaultBase, libAt, ROOT, type Side } from "../harness/checkout.ts"
 import { diff, render } from "../harness/diff.ts"
 import { lintDirect, loadRules, type Registry, type RuleSetting } from "../harness/lint.ts"
@@ -101,8 +101,8 @@ let sides: Record<Side, string> = { base, head: `worktree` }
 async function measureSide (side: Side): Promise<Result> {
 	let revision = sides[side]
 
-	// A side is measured once by what it depends on — the rules, the sweep and the runner — and read back on every later run; the two are taken in turn, base first
-	let inputs = { sweep: hashAt(`worktree`, path.relative(ROOT, sweepFile)), lib: hashAt(revision, `lib`), harness: hashAt(`worktree`, `scripts/harness`), lock: hashAt(`worktree`, `pnpm-lock.yaml`) }
+	// A side is measured once by what it depends on — the rules, the sweep and the runner — and read back on every later run; the two are taken in turn, base first. Not by all of it, mind: neither this file, where every row is in fact measured, nor `scripts/oracles`, whose corpus one sweep reads, stands among the inputs, which is #553
+	let inputs = { sweep: hashAt(`worktree`, path.relative(ROOT, sweepFile)), lib: hashAt(revision, `lib`), harness: hashSourcesAt(`worktree`, `scripts/harness`), lock: hashAt(`worktree`, `pnpm-lock.yaml`) }
 	let key = keyOf(inputs)
 	let digest = readDigest(`sweeps`, sweep.name, key)
 

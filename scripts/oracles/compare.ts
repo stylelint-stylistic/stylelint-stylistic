@@ -11,7 +11,7 @@ import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { argv, env, stdout } from "node:process"
 
-import { hashAt, keyOf, read, write } from "../harness/cache.ts"
+import { hashAt, hashSourcesAt, keyOf, read, write } from "../harness/cache.ts"
 import { defaultBase, libAt, ROOT, type Side } from "../harness/checkout.ts"
 import { diff, render } from "../harness/diff.ts"
 
@@ -25,10 +25,10 @@ const IDENTITY = [`kind`, `rule`, `primary`, `syntaxName`, `name`, `spelling`, `
  * Names the inputs a result of one oracle over one side depends on.
  * @param oracle - The oracle.
  * @param revision - The side, as `hashAt` reads it.
- * @returns The inputs, each as the hash Git keeps for it; the scripts and the corpus are always the working tree's.
+ * @returns The inputs, each as a hash: the one Git keeps for `lib/` and for the lock file, and the one `hashSourcesAt` takes of a directory of scripts, which passes over the tests and the documents standing there — and of the two directories here, `scripts/oracles` holds a document and no test. The scripts and the corpus are always the working tree's.
  */
 function inputsOf (oracle: string, revision: string): Record<string, string> {
-	return { oracle, lib: hashAt(revision, `lib`), oracles: hashAt(`worktree`, `scripts/oracles`), harness: hashAt(`worktree`, `scripts/harness`), lock: hashAt(`worktree`, `pnpm-lock.yaml`) }
+	return { oracle, lib: hashAt(revision, `lib`), oracles: hashSourcesAt(`worktree`, `scripts/oracles`), harness: hashSourcesAt(`worktree`, `scripts/harness`), lock: hashAt(`worktree`, `pnpm-lock.yaml`) }
 }
 
 /**

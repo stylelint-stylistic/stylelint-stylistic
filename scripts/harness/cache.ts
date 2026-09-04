@@ -1,7 +1,7 @@
 /**
  * Keeps the result of a run by what it depends on, so that no state of the tree is measured twice.
  *
- * A result depends on the rules that were run — the `lib/` tree — on the scripts and the corpus that ran them, and on the versions of the packages under both; the key is a hash of the hashes Git already keeps of those, and nothing else. So a commit amended for its message or its date keeps its key, a rebase onto a `main` that touched no file of `lib/` keeps it too, and two branches that measure the same base share one entry rather than one apiece. A file of the store is written once and made read-only: a result is deterministic, and a second answer to the same question is a finding rather than an update.
+ * A result depends on the rules that were run — the `lib/` tree — on the scripts and the corpus that ran them, and on the versions of the packages under both; the key is a hash of the hashes Git keeps of those. A directory of scripts stands there as the hash of its sources rather than the one Git keeps of its tree, since a test or a document standing beside a script is not one of the things a result depends on, and rewording either would otherwise send every run that key belongs to — all six oracles, or a sweep — to measure both sides afresh. What a key ought to carry and what it carries are two things, mind: a sweep's carries neither `scripts/sweeps/run.ts`, where every row of it is measured, nor `scripts/oracles`, whose corpus one sweep reads, which is #553. So a commit amended for its message or its date keeps its key, a rebase onto a `main` that touched no file of `lib/` keeps it too, and two branches that measure the same base share one entry rather than one apiece. A file of the store is written once and made read-only: a result is deterministic, and a second answer to the same question is a finding rather than an update.
  *
  * The store lives outside every working tree, under `~/.cache/stylelint-stylistic/`, so that it survives a worktree and is shared between them all; `STYLISTIC_CACHE` names another place.
  */
@@ -73,6 +73,34 @@ function treeOf (revision: string): string {
  */
 function hashAt (revision: string, inside: string): string {
 	return git([`rev-parse`, `${treeOf(revision)}:${inside}`])
+}
+
+/** The files standing beside the sources of a directory of scripts, by name: a test of a script and a document about it. Neither is imported by a run, and nothing either can say changes what a run answers, so rewording one moves no result and must move no key. */
+const NOT_A_DEPENDENCY = /\.(?:test\.ts|md)$/u
+
+/**
+ * Hashes a listing of Git entries, leaving out the ones a result does not depend on.
+ * @param entries - The records `git ls-tree -r -z` printed, each a mode, a type, a hash and a path; the empty one the terminator of that format leaves behind is dropped.
+ * @returns The hash of what is left, which is the same whether a file a result does not depend on stands there, stands there rewritten, or does not stand there at all.
+ */
+function hashListing (entries: string[]): string {
+	let sources = entries.filter((entry) => entry !== `` && !NOT_A_DEPENDENCY.test(entry))
+
+	// The records are joined by the character they were parted on, which no path and no hash can hold, so one listing is never spelled the same as another — a path may hold a line break, and joining by that would let a file whose name carries one stand for two files
+	return createHash(`sha256`).update(sources.join(`\0`)).digest(`hex`)
+}
+
+/**
+ * Hashes the sources of a directory inside a revision.
+ *
+ * The hash Git keeps of a tree moves for every file under it, so a directory taken through `hashAt` carries into the key what it holds beside its sources. The blobs are listed and hashed one by one instead, and `hashListing` says which of them a result stands on.
+ * @param revision - Anything `treeOf` reads.
+ * @param inside - The path of the directory inside it.
+ * @returns The hash of its sources.
+ */
+function hashSourcesAt (revision: string, inside: string): string {
+	// `-r` so that a file in a subdirectory is listed as itself rather than arriving inside the hash of that subdirectory's tree, and `-z` rather than the default, under which a path holding a tab or a quotation mark is printed quoted and escaped and the name a file is left out by would be spelled differently from the name it has
+	return hashListing(git([`ls-tree`, `-r`, `-z`, `${treeOf(revision)}:${inside}`]).split(`\0`))
 }
 
 /**
@@ -179,4 +207,4 @@ function write (kind: string, name: string, key: string, rows: Record<string, un
 	chmodSync(digestFileOf(kind, name, key), READ_ONLY)
 }
 
-export { CACHE_DIR, digestOf, fileOf, hashAt, keyOf, read, readDigest, treeOf, write }
+export { CACHE_DIR, digestOf, fileOf, hashAt, hashListing, hashSourcesAt, keyOf, read, readDigest, treeOf, write }
