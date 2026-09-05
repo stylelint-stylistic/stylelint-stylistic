@@ -9,11 +9,11 @@ import { hashAt, hashSourcesAt } from "../harness/cache.ts"
 /**
  * Names the inputs a result of one oracle over one side depends on.
  * @param oracle - The oracle.
- * @param revision - The side, as `hashAt` reads it.
- * @returns The five inputs, in the order they stand in the key, which is part of it: the oracle's name, the hash Git keeps of the `lib/` tree, the hashes `hashSourcesAt` takes of the sources of `scripts/oracles` and of `scripts/harness` — which pass over the tests both directories hold and the document `scripts/oracles` holds beside its sources — and the hash of the lock file. Only `lib/` is taken at the side; the scripts and the corpus are always the working tree's, so that the two sides are asked the same question.
+ * @param revision - The side, as `treeOf` reads it.
+ * @returns The five inputs, in the order they stand in the key, which is part of it: the oracle's name, the hashes `hashSourcesAt` takes of the sources of `lib/`, of `scripts/oracles` and of `scripts/harness` — which pass over the tests all three directories hold and the documents standing beside those sources — and the hash of the lock file. Only `lib/` is taken at the side; the scripts and the corpus are always the working tree's, so that the two sides are asked the same question. The tree of `lib/` is no input of the key and stands in the meta instead, under the `lib` this name gives up; `measuredTreeOf` says why.
  */
 function inputsOf (oracle: string, revision: string): Record<string, string> {
-	return { oracle, lib: hashAt(revision, `lib`), oracles: hashSourcesAt(`worktree`, `scripts/oracles`), harness: hashSourcesAt(`worktree`, `scripts/harness`), lock: hashAt(`worktree`, `pnpm-lock.yaml`) }
+	return { oracle, libSources: hashSourcesAt(revision, `lib`), oracles: hashSourcesAt(`worktree`, `scripts/oracles`), harness: hashSourcesAt(`worktree`, `scripts/harness`), lock: hashAt(`worktree`, `pnpm-lock.yaml`) }
 }
 
 export { inputsOf }

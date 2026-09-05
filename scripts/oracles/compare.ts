@@ -11,7 +11,7 @@ import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { argv, env, stdout } from "node:process"
 
-import { keyOf, read, write } from "../harness/cache.ts"
+import { keyOf, measuredTreeOf, read, write } from "../harness/cache.ts"
 import { defaultBase, libAt, ROOT, type Side } from "../harness/checkout.ts"
 import { diff, render } from "../harness/diff.ts"
 
@@ -119,7 +119,7 @@ for (let item of plan) {
 
 	stdout.write(`\t🔮 ${item.oracle} over ${item.side} (${item.revision}) — ${((performance.now() - started) / 1000).toFixed(1)} s, ${rows.length} rows\n`)
 
-	write(`oracles`, item.oracle, item.key, rows, { ...item.inputs, revision: item.revision, root: ROOT })
+	write(`oracles`, item.oracle, item.key, rows, { ...item.inputs, ...measuredTreeOf(item.revision), revision: item.revision, root: ROOT })
 	results[item.side][item.oracle] = rows
 
 	for (let twin of answered.get(item.key) ?? []) results[twin.side][twin.oracle] = rows

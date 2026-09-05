@@ -1,9 +1,9 @@
 /**
  * Keeps the result of a run by what it depends on, so that no state of the tree is measured twice.
  *
- * A result depends on the rules that were run — the `lib/` tree — on the scripts and the corpus that ran them, and on the versions of the packages under both; the key is a hash of the hashes Git keeps of those. A directory of scripts stands there as the hash of its sources rather than the one Git keeps of its tree, since a test or a document standing beside a script is not one of the things a result depends on, and rewording either would otherwise send every run that key belongs to — all six oracles, or a sweep — to measure both sides afresh. So a commit amended for its message or its date keeps its key, a rebase onto a `main` that touched no file of `lib/` keeps it too, and two branches that measure the same base share one entry rather than one apiece. A file of the store is written once and made read-only: a result is deterministic, and a second answer to the same question is a finding rather than an update.
+ * A result depends on the rules that were run, on the scripts and the corpus that ran them, and on the versions of the packages under both; the key is a hash of the hashes Git keeps of those. Every directory in it — `lib/` as much as a directory of scripts — stands there as the hash of its sources rather than the one Git keeps of its tree, since a test or a document standing beside a source is not one of the things a result depends on, and rewording either would otherwise send every run that key belongs to — all six oracles, or a sweep — to measure both sides afresh. So a commit amended for its message or its date keeps its key, a commit that rewrote a case of a rule keeps it, a rebase onto a `main` that moved no source keeps it too, and two branches that measure the same base share one entry rather than one apiece. A file of the store is written once and made read-only: a result is deterministic, and a second answer to the same question is a finding rather than an update.
  *
- * A result is kept as three files under its key, and it is its meta: the meta is written last, so a key with no meta beside it is a result the store never finished keeping or never finished taking out, and nothing here answers for one. The collector takes such a key out whole, along with every result whose `lib/` tree the caller no longer keeps.
+ * A result is kept as three files under its key, and it is its meta: the meta is written last, so a key with no meta beside it is a result the store never finished keeping or never finished taking out, and nothing here answers for one. The collector takes such a key out whole, along with every result measured over a `lib/` the caller no longer keeps — which is asked of the tree, and so of the meta rather than of the key: `measuredTreeOf` is what puts it there.
  *
  * The store lives outside every working tree, under `~/.cache/stylelint-stylistic/`, so that it survives a worktree and is shared between them all; `STYLISTIC_CACHE` names another place.
  */
@@ -96,7 +96,7 @@ function hashAt (revision: string, inside: string): string {
 	return git([`rev-parse`, `${treeOf(revision)}:${inside}`])
 }
 
-/** The files standing beside the sources of a directory of scripts, by name: a test of a script and a document about it. Neither is imported by a run, and nothing either can say changes what a run answers, so rewording one moves no result and must move no key. */
+/** The files standing beside the sources of a directory the key hashes, by name: a test and a document. Neither is imported by a run — not a test of a script, not a test of a rule, not the README of either — and nothing either can say changes what a run answers, so rewording one moves no result and must move no key. */
 const NOT_A_DEPENDENCY = /\.(?:test\.ts|md)$/u
 
 /**
@@ -122,6 +122,19 @@ function hashListing (entries: string[]): string {
 function hashSourcesAt (revision: string, inside: string): string {
 	// `-r` so that a file in a subdirectory is listed as itself rather than arriving inside the hash of that subdirectory's tree, and `-z` rather than the default, under which a path holding a tab or a quotation mark is printed quoted and escaped and the name a file is left out by would be spelled differently from the name it has
 	return hashListing(git([`ls-tree`, `-r`, `-z`, `${treeOf(revision)}:${inside}`]).split(`\0`))
+}
+
+/**
+ * Names the tree of `lib/` a result was measured over, which is what the collector reaches it by.
+ *
+ * It stands in the meta and never in the key. The key carries the sources of `lib/`, under a name of their own, so that a commit moving only a test or a README under it is answered out of the store; the collector holds the trees of every commit a branch, a remote or a tag reaches, and a hash of the sources is nothing it can ask about. So the tree keeps the name it has always stood at, `lib`, and the collector is not touched at all — a checkout on either side of this change collects a store the other has been writing into and takes nothing of it out, which matters because the store is shared between every worktree and every branch.
+ *
+ * One key answers for every tree whose sources are spelled the same, while the meta names the one tree its run measured. So the collector takes out a result whose own tree has gone unreachable although another tree the key would have answered for is still reached — the rebase that reworded a case and nothing else, met from the far side. The result is measured again, which is the cost the run would have paid before the key carried the sources at all.
+ * @param revision - The side, as `treeOf` reads it.
+ * @returns The one name the collector reads, at the hash Git keeps of the tree.
+ */
+function measuredTreeOf (revision: string): Record<string, string> {
+	return { lib: hashAt(revision, `lib`) }
 }
 
 /**
@@ -313,4 +326,4 @@ function storeAt (store: string): {
 
 let { read, readDigest, write, collect } = storeAt(CACHE_DIR)
 
-export { CACHE_DIR, collect, digestOf, filesOf, hashAt, hashListing, hashSourcesAt, keyOf, read, readDigest, storeAt, treeOf, write }
+export { CACHE_DIR, collect, digestOf, filesOf, hashAt, hashListing, hashSourcesAt, keyOf, measuredTreeOf, read, readDigest, storeAt, treeOf, write }

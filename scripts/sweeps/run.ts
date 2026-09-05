@@ -12,7 +12,7 @@ import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { argv, exit, stderr, stdout } from "node:process"
 
-import { digestOf, keyOf, read, readDigest, write } from "../harness/cache.ts"
+import { digestOf, keyOf, measuredTreeOf, read, readDigest, write } from "../harness/cache.ts"
 import { defaultBase, libAt, ROOT, type Side } from "../harness/checkout.ts"
 import { diff, render } from "../harness/diff.ts"
 import { lintDirect, loadRules, type Registry, type RuleSetting } from "../harness/lint.ts"
@@ -161,7 +161,7 @@ async function measureSide (side: Side): Promise<Result> {
 	let rows = await measure(sweep, await loadRules(libAt(revision)))
 
 	digest = digestOf(rows)
-	write(`sweeps`, sweep.name, key, rows, { ...inputs, revision, root: ROOT }, digest)
+	write(`sweeps`, sweep.name, key, rows, { ...inputs, ...measuredTreeOf(revision), revision, root: ROOT }, digest)
 	return { digest, rows: (): Record<string, object> => rows }
 }
 

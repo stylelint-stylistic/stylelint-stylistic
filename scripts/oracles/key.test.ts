@@ -49,6 +49,25 @@ function fabricatedSide (): string {
 	return treeOfEntries([`040000 tree ${treeOfEntries([`${blob}\tindex.ts`])}\tlib`, `${blob}\tpnpm-lock.yaml`, `040000 tree ${scripts}\tscripts`])
 }
 
+/**
+ * Fabricates two sides whose `lib/` trees hold one source apiece, spelled the same, and part in the test standing beside it.
+ * @returns The hash of each tree, in no order that matters.
+ */
+function sidesPartingInATest (): [string, string] {
+	let source = `100644 blob ${git([`hash-object`, `--stdin`], `the rule`)}\tindex.ts`
+
+	/**
+	 * Builds the side whose test holds the text.
+	 * @param test - What the test standing beside the source holds.
+	 * @returns The hash of the tree the `lib/` of that side stands in.
+	 */
+	function sideWhoseTestHolds (test: string): string {
+		return treeOfEntries([`040000 tree ${treeOfEntries([source, `100644 blob ${git([`hash-object`, `--stdin`], test)}\tindex.test.ts`])}\tlib`])
+	}
+
+	return [sideWhoseTestHolds(`one case`), sideWhoseTestHolds(`the same case, reworded`)]
+}
+
 beforeAll(() => {
 	mkdirSync(path.join(ROOT, `tmp`), { recursive: true })
 	objects = mkdtempSync(path.join(ROOT, `tmp`, `oracle-key-objects-`))
@@ -79,12 +98,26 @@ describe(`what an oracle result is kept under`, () => {
 		expect(inputsOf(`converge`, `HEAD`).harness).toBe(hashSourcesAt(`worktree`, `scripts/harness`))
 	})
 
+	it(`names the sources of the rules, so that a test of a rule standing beside them moves no key`, () => {
+		let [one, another] = sidesPartingInATest()
+
+		expect(hashAt(one, `lib`)).not.toBe(hashAt(another, `lib`))
+		expect(inputsOf(`converge`, one).libSources).toBe(hashSourcesAt(one, `lib`))
+		expect(keyOf(inputsOf(`converge`, one))).toBe(keyOf(inputsOf(`converge`, another)))
+	})
+
+	it(`carries no hash of the \`lib/\` tree, which the collector reaches a result by and the meta names instead`, () => {
+		let side = sidesPartingInATest()[0]
+
+		expect(Object.values(inputsOf(`converge`, side))).not.toContain(hashAt(side, `lib`))
+	})
+
 	it(`takes every input but the rules from the working tree, so that the two sides are asked one question`, () => {
 		let side = fabricatedSide()
 		let inputs = inputsOf(`converge`, side)
 
-		expect(inputs.lib).toBe(hashAt(side, `lib`))
-		expect(inputs.lib).not.toBe(hashAt(`worktree`, `lib`))
+		expect(inputs.libSources).toBe(hashSourcesAt(side, `lib`))
+		expect(inputs.libSources).not.toBe(hashSourcesAt(`worktree`, `lib`))
 		expect(inputs.oracles).toBe(hashSourcesAt(`worktree`, `scripts/oracles`))
 		expect(inputs.harness).toBe(hashSourcesAt(`worktree`, `scripts/harness`))
 		expect(inputs.lock).toBe(hashAt(`worktree`, `pnpm-lock.yaml`))

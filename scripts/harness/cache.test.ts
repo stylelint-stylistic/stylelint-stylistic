@@ -5,7 +5,7 @@ import { env } from "node:process"
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
-import { filesOf, hashListing, hashSourcesAt, keyOf, storeAt } from "./cache.ts"
+import { filesOf, hashListing, hashSourcesAt, keyOf, measuredTreeOf, storeAt } from "./cache.ts"
 import { ROOT } from "./checkout.ts"
 
 /**
@@ -38,7 +38,7 @@ function treeOfEntries (entries: string[]): string {
 }
 
 /**
- * Builds a tree holding a directory named `harness` and a second one beside it, so that two states of a directory of scripts can be put to `hashSourcesAt` without either standing on disk.
+ * Builds a tree holding a directory named `harness` and a second one beside it, so that two states of a directory the key hashes the sources of can be put to `hashSourcesAt` without either standing on disk.
  * @param files - The path of every file under `harness`, and the text it holds; a path may name a directory of its own.
  * @param outside - The text of the one file standing under the other directory, which is no part of what is asked about.
  * @returns The hash of the tree the two directories stand in.
@@ -121,7 +121,7 @@ afterAll(() => {
 })
 
 // #544: the key carried the hash Git keeps of the whole `scripts/harness` tree, where the runner's test stands since #540, so a reworded case description there sent every oracle and every sweep to measure both sides afresh
-describe(`the hash of a directory of scripts`, () => {
+describe(`the hash of the sources of a directory`, () => {
 	it(`is the same where a test standing there is rewritten, and where the document beside them is`, () => {
 		expect(hashOf({ ...FILES, "lint.test.ts": `rewritten`, "deep/matrix.test.ts": `rewritten` })).toBe(baseline)
 		expect(hashOf({ ...FILES, "README.md": `rewritten` })).toBe(baseline)
@@ -175,6 +175,39 @@ describe(`the listing a hash of sources is taken from`, () => {
 		// A path may hold a tab and a line break alike, so a name can be spelled as a record standing right behind this one and as a record on the next line
 		expect(hashListing([recordFor(`lint.ts${second}`)])).not.toBe(two)
 		expect(hashListing([recordFor(`lint.ts\n${second}`)])).not.toBe(two)
+	})
+})
+
+// #555: the key carried the hash Git keeps of the whole `lib/` tree, where 297 tests and 82 documents stand beside the 204 sources, so a reworded case description sent every oracle and every sweep to measure that side afresh — and the tree could not simply be dropped, since it is the collector that reads it
+describe(`the tree a result was measured over`, () => {
+	/**
+	 * Fabricates a side holding a `lib/` of one source, since the database this file writes into holds no revision of this repository.
+	 * @returns The hash of the tree of the side, and the hash of the `lib/` tree inside it.
+	 */
+	function sideHoldingALib (): { side: string, lib: string } {
+		let lib = treeOfEntries([`100644 blob ${blobOf(`the rule`)}\tindex.ts`])
+
+		return { side: treeOfEntries([`040000 tree ${lib}\tlib`]), lib }
+	}
+
+	it(`is the hash Git keeps of the side's \`lib/\` tree, which no input of the key is`, () => {
+		let { side, lib } = sideHoldingALib()
+
+		expect(measuredTreeOf(side)).toEqual({ lib })
+	})
+
+	it(`stands under the name the collector has always read, so that a store written on either side of #555 is collected whole by either`, () => {
+		// `gc.ts` cannot be imported by a case — it lists the trees every ref reaches and collects as it loads — so it is read as text instead, the way the last case of the block below holds the files it takes out. The name is asked of the writer rather than spelled here, so that moving the field turns this red rather than the store empty
+		let script = readFileSync(path.join(ROOT, `scripts`, `harness`, `gc.ts`), `utf8`)
+
+		for (let name of Object.keys(measuredTreeOf(sideHoldingALib().side))) expect(script).toMatch(new RegExp(`\\bmeta\\.${name}\\b`, `u`))
+	})
+
+	it(`is written into the meta by both writers of a result, since a result the collector cannot reach is taken out at the next collection`, () => {
+		// Neither writer can be imported by a case either — each reads `argv` and measures as it loads — so both are read as text as well
+		let writers: [string, string][] = [[`oracles`, `compare.ts`], [`sweeps`, `run.ts`]]
+
+		for (let [directory, file] of writers) expect(readFileSync(path.join(ROOT, `scripts`, directory, file), `utf8`)).toMatch(/\bmeasuredTreeOf\(/u)
 	})
 })
 

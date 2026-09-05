@@ -12,11 +12,11 @@ import { ROOT } from "../harness/checkout.ts"
 /**
  * Names the inputs a result of one sweep over one side depends on.
  * @param sweepFile - The absolute path of the sweep module.
- * @param revision - The side, as `hashAt` reads it.
- * @returns The six inputs, in the order they stand in the key, which is part of it: the hashes Git keeps of the sweep module and of the runner that measures every row of it, the one it keeps of the `lib/` tree, the hashes `hashSourcesAt` takes of the sources of `scripts/oracles`, whose corpus and option list a sweep may import, and of `scripts/harness`, and the hash of the lock file. Only `lib/` is taken at the side; the scripts and the corpus are always the working tree's, so that the two sides are asked the same question.
+ * @param revision - The side, as `treeOf` reads it.
+ * @returns The six inputs, in the order they stand in the key, which is part of it: the hashes Git keeps of the sweep module and of the runner that measures every row of it, the hashes `hashSourcesAt` takes of the sources of `lib/`, of `scripts/oracles`, whose corpus and option list a sweep may import, and of `scripts/harness`, and the hash of the lock file. Only `lib/` is taken at the side; the scripts and the corpus are always the working tree's, so that the two sides are asked the same question. The tree of `lib/` is no input of the key and stands in the meta instead, under the `lib` this name gives up; `measuredTreeOf` says why.
  */
 function inputsOf (sweepFile: string, revision: string): Record<string, string> {
-	return { sweep: hashAt(`worktree`, path.relative(ROOT, sweepFile)), runner: hashAt(`worktree`, `scripts/sweeps/run.ts`), lib: hashAt(revision, `lib`), oracles: hashSourcesAt(`worktree`, `scripts/oracles`), harness: hashSourcesAt(`worktree`, `scripts/harness`), lock: hashAt(`worktree`, `pnpm-lock.yaml`) }
+	return { sweep: hashAt(`worktree`, path.relative(ROOT, sweepFile)), runner: hashAt(`worktree`, `scripts/sweeps/run.ts`), libSources: hashSourcesAt(revision, `lib`), oracles: hashSourcesAt(`worktree`, `scripts/oracles`), harness: hashSourcesAt(`worktree`, `scripts/harness`), lock: hashAt(`worktree`, `pnpm-lock.yaml`) }
 }
 
 export { inputsOf }
