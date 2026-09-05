@@ -27,6 +27,7 @@ const FIXTURES: [string, string][] = [
 	[`atrule-swallows-comment`, `a {\n\t@extend .b\n\t/* c */\n}\n`],
 	[`grid`, `a { grid-template-areas: "a a"\n\t"b b"; }\n`],
 	[`grid-empty-row`, `a { grid-template-areas: "a  a"\n\t""\n\t"b b"; }\n`],
+	[`grid-shorthand`, `a { grid-template: [top] "a  a" 1fr\n\t"b b" auto\n\t/ 1fr 1fr; }\n`],
 	[`aspect-ratio`, `a { aspect-ratio: 16 / 8 /*c*/ auto; }\n`],
 	[`quotes`, `a[href='x'] { b: 'y'; }\n`],
 	[`two-bangs`, `a { b: 1px!important 2px!important; }\n`],

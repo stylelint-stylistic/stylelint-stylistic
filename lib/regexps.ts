@@ -34,6 +34,9 @@ export const EVERY_COMMENT_DELIMITER = /(\*\/|\/\*)/gu
 /** Every run of Windows line breaks, the run captured whole. Read by `max-empty-lines`, and narrow for the reason {@link CRLF} is. */
 export const EVERY_CRLF_RUN = /(\r\n)+/gu
 
+/** The properties whose value spells the rows of a grid as strings: the longhand, and the two shorthands that put a row's size and its line names beside each string and the columns behind a solidus. Spelled in lower case, as `named-grid-areas-alignment` has always read its property. */
+export const GRID_AREAS_PROPERTY = /^(?:grid-template-areas|grid-template|grid)$/u
+
 /** Every run of whitespace, however wide, read as PostCSS's tokenizer reads whitespace — a space, a tab, a line feed, a carriage return or a form feed; a no-break space, a vertical tab and every other separator Unicode has are words to it and part no run (#494, #401). The tokenizer-true narrowing of `\s+`, for a reading that cuts a text into the words the file really spells, such as the cells of a grid row. */
 export const EVERY_CSS_WHITESPACE_RUN = /[ \t\n\r\f]+/gu
 

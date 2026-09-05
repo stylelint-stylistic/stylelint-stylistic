@@ -153,7 +153,7 @@ testRule({
 			column: 3,
 			endLine: 4,
 			endColumn: 12,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `columns that do not line up, with cells, spaces, quotes and comments of every width`,
@@ -181,7 +181,7 @@ testRule({
 			column: 3,
 			endLine: 7,
 			endColumn: 15,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `uneven spacing between cells written on one line`,
@@ -199,7 +199,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 43,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `even spacing but aligned quotes, written on one line`,
@@ -217,7 +217,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 44,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `columns that do not line up, one row short of a cell`,
@@ -241,7 +241,7 @@ testRule({
 			column: 3,
 			endLine: 5,
 			endColumn: 12,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a row followed by an end-of-line comment`,
@@ -267,7 +267,7 @@ testRule({
 			column: 3,
 			endLine: 5,
 			endColumn: 13,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/322
 		{
@@ -288,7 +288,7 @@ testRule({
 			column: 23,
 			endLine: 3,
 			endColumn: 8,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a row spelled inside a block comment, which the parser has a node of its own for`,
@@ -306,7 +306,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 49,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/367
 		{
@@ -325,7 +325,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 44,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a call carrying an argument, standing between the rows`,
@@ -343,7 +343,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 40,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a call whose parentheses hold whitespace of their own`,
@@ -361,7 +361,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 46,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a call holding another call`,
@@ -379,7 +379,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 49,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a call holding a string, which is a row of no grid and keeps the spacing the file gives it`,
@@ -397,7 +397,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 45,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a call holding a block comment`,
@@ -415,7 +415,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 47,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a call with nothing between its parentheses`,
@@ -433,7 +433,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 39,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a keyword standing between the rows, which is spelled the same whether it is printed or taken from the file`,
@@ -451,7 +451,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 40,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a comma standing between the rows with a space on each side, which the parser files inside the divider rather than beside it`,
@@ -469,7 +469,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 37,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/368
 		{
@@ -488,7 +488,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 38,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same row standing between the two others`,
@@ -506,7 +506,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 38,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same row standing behind them`,
@@ -524,7 +524,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 38,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a row holding nothing but whitespace, which the fix leaves with nothing between its quotation marks`,
@@ -542,7 +542,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 41,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same row with nothing else in the value at all`,
@@ -560,7 +560,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 28,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a comment standing between a row holding no cell and a row whose cells do not line up`,
@@ -578,7 +578,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 40,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
@@ -589,7 +589,7 @@ testRule({
 			column: 26,
 			endLine: 1,
 			endColumn: 53,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504
 		{
@@ -600,7 +600,7 @@ testRule({
 			column: 26,
 			endLine: 1,
 			endColumn: 55,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `an apostrophe standing inside such a comment, which the value parser opens a string on that no mark of the value closes, so that every row behind the comment is its text to the parser`,
@@ -610,7 +610,7 @@ testRule({
 			column: 26,
 			endLine: 1,
 			endColumn: 55,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a quotation mark inside a bare address in front of the rows, which is a character of the address to every tokenizer, so that the marks behind the address pair as the file pairs them and a slash and a star inside one of the rows open no comment`,
@@ -620,7 +620,7 @@ testRule({
 			column: 26,
 			endLine: 1,
 			endColumn: 46,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/401
 		{
@@ -631,7 +631,7 @@ testRule({
 			column: 26,
 			endLine: 1,
 			endColumn: 38,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a cell named with a no-break space inside the name, which is one cell of the row and not two`,
@@ -641,7 +641,7 @@ testRule({
 			column: 26,
 			endLine: 1,
 			endColumn: 41,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a cell named with a vertical tab inside the name, which is a word to the tokenizer and no whitespace of the row`,
@@ -651,7 +651,7 @@ testRule({
 			column: 26,
 			endLine: 1,
 			endColumn: 41,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a tab and a form feed between the cells of a row, which are whitespace to the tokenizer and collapse to a space`,
@@ -661,7 +661,7 @@ testRule({
 			column: 26,
 			endLine: 1,
 			endColumn: 41,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/402
 		{
@@ -672,7 +672,7 @@ testRule({
 			column: 26,
 			endLine: 2,
 			endColumn: 13,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a line break inside the wider of two rows, whose narrower neighbour is therefore left as it stands`,
@@ -682,7 +682,7 @@ testRule({
 			column: 26,
 			endLine: 2,
 			endColumn: 11,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a line break inside a row and another between the rows, which is a break the fix leaves standing, so the cells are padded`,
@@ -692,7 +692,7 @@ testRule({
 			column: 26,
 			endLine: 3,
 			endColumn: 8,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same with the second break inside a comment, which the fix hands back character for character`,
@@ -702,7 +702,7 @@ testRule({
 			column: 26,
 			endLine: 3,
 			endColumn: 11,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same with the second break inside a call, which the fix hands back the same way`,
@@ -712,7 +712,7 @@ testRule({
 			column: 26,
 			endLine: 3,
 			endColumn: 10,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same with the other break inside a call standing in front of the first row`,
@@ -722,7 +722,7 @@ testRule({
 			column: 26,
 			endLine: 3,
 			endColumn: 11,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same with the other break escaped inside a word, which the parser hands back whole and the fix writes nowhere near`,
@@ -732,7 +732,7 @@ testRule({
 			column: 26,
 			endLine: 3,
 			endColumn: 11,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same with the other break behind the last row`,
@@ -742,7 +742,7 @@ testRule({
 			column: 26,
 			endLine: 3,
 			endColumn: 1,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a bare carriage return between the rows, which is whitespace to the tokenizer and no line to PostCSS, so the value stands on one line`,
@@ -752,7 +752,7 @@ testRule({
 			column: 26,
 			endLine: 1,
 			endColumn: 40,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/520
 		{
@@ -775,7 +775,7 @@ testRule({
 			column: 3,
 			endLine: 4,
 			endColumn: 11,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a column whose two cells are of one width, one of them named with two characters outside the Basic Multilingual Plane, which the code units would have made the wider`,
@@ -797,7 +797,7 @@ testRule({
 			column: 3,
 			endLine: 4,
 			endColumn: 15,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 	],
 })
@@ -815,7 +815,7 @@ testRule({
 			column: 26,
 			endLine: 1,
 			endColumn: 34,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same on one line, with extra line breaks and mixed tabs and spaces`,
@@ -832,7 +832,7 @@ testRule({
 			column: 9,
 			endLine: 6,
 			endColumn: 17,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `rows opening on the line of the property`,
@@ -847,7 +847,7 @@ testRule({
 			column: 23,
 			endLine: 4,
 			endColumn: 37,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same rows with no alignment at all`,
@@ -862,7 +862,7 @@ testRule({
 			column: 23,
 			endLine: 4,
 			endColumn: 24,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `rows opening on the line below the property`,
@@ -878,7 +878,7 @@ testRule({
 			column: 3,
 			endLine: 5,
 			endColumn: 17,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same rows with extra line breaks, comments and mixed tabs and spaces`,
@@ -896,7 +896,7 @@ testRule({
 			column: 5,
 			endLine: 7,
 			endColumn: 22,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a declaration inside a media query`,
@@ -914,7 +914,7 @@ testRule({
 			column: 4,
 			endLine: 6,
 			endColumn: 18,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same declaration indented one level deeper`,
@@ -934,7 +934,7 @@ testRule({
 			column: 7,
 			endLine: 7,
 			endColumn: 21,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 	],
 })
@@ -995,7 +995,7 @@ testRule({
 			column: 26,
 			endLine: 1,
 			endColumn: 32,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same spacing in rows written on one line`,
@@ -1005,7 +1005,7 @@ testRule({
 			column: 26,
 			endLine: 1,
 			endColumn: 45,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `columns that do not line up under the wider gap`,
@@ -1027,7 +1027,7 @@ testRule({
 			column: 3,
 			endLine: 4,
 			endColumn: 12,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same, with cells, spaces, quotes and comments of every width`,
@@ -1051,7 +1051,7 @@ testRule({
 			column: 3,
 			endLine: 6,
 			endColumn: 15,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same, one row short of a cell`,
@@ -1075,7 +1075,7 @@ testRule({
 			column: 2,
 			endLine: 5,
 			endColumn: 11,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/368
 		{
@@ -1100,7 +1100,7 @@ testRule({
 			column: 3,
 			endLine: 5,
 			endColumn: 10,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 	],
 })
@@ -1195,7 +1195,7 @@ testRule({
 			column: 3,
 			endLine: 4,
 			endColumn: 15,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same, with cells, spaces, quotes and comments of every width`,
@@ -1221,7 +1221,7 @@ testRule({
 			column: 3,
 			endLine: 6,
 			endColumn: 16,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same, one row short of a cell`,
@@ -1245,7 +1245,7 @@ testRule({
 			column: 3,
 			endLine: 5,
 			endColumn: 12,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `padding in front of a closing quote on one line, which the fix strips rather than keeping the quotes aligned`,
@@ -1263,7 +1263,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 44,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/368
 		{
@@ -1288,7 +1288,7 @@ testRule({
 			column: 3,
 			endLine: 5,
 			endColumn: 10,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same row where the others already line up, which is reported for its own quote alone`,
@@ -1312,7 +1312,7 @@ testRule({
 			column: 3,
 			endLine: 5,
 			endColumn: 10,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/401
 		{
@@ -1335,7 +1335,7 @@ testRule({
 			column: 3,
 			endLine: 4,
 			endColumn: 10,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/402
 		{
@@ -1346,7 +1346,7 @@ testRule({
 			column: 26,
 			endLine: 2,
 			endColumn: 13,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a row holding nothing but a line break, which is emptied rather than padded out to the width of the row beside it`,
@@ -1356,7 +1356,7 @@ testRule({
 			column: 26,
 			endLine: 2,
 			endColumn: 10,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/520
 		{
@@ -1379,7 +1379,7 @@ testRule({
 			column: 3,
 			endLine: 4,
 			endColumn: 13,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 	],
 })
@@ -1442,7 +1442,7 @@ testRule({
 			column: 3,
 			endLine: 4,
 			endColumn: 12,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same, with cells, spaces, quotes and comments of every width`,
@@ -1468,7 +1468,7 @@ testRule({
 			column: 3,
 			endLine: 6,
 			endColumn: 16,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `the same, one row short of a cell`,
@@ -1492,7 +1492,7 @@ testRule({
 			column: 3,
 			endLine: 5,
 			endColumn: 13,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `uneven spacing between cells written on one line`,
@@ -1510,7 +1510,7 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 52,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `quotes lined up on one line, which the fix strips back to the gap the option asks for`,
@@ -1528,7 +1528,239 @@ testRule({
 			column: 23,
 			endLine: 2,
 			endColumn: 51,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
+		},
+	],
+})
+
+// The rows of the `grid-template` and `grid` shorthands are read as the longhand's are (#45): every string at the top level of the value is a row, and a row's size, its line names, the solidus and the columns behind it are no rows and go back as the file spells them.
+testRule({
+	ruleName,
+	config: [true],
+
+	accept: [
+		{
+			description: `a shorthand on one line, its cells spaced by one`,
+			code: `a { grid-template: "a a" 1fr "b b" auto / 1fr 1fr; }`,
+		},
+		{
+			description: `a shorthand spanning lines, its cells aligned and its sizes standing where the author put them`,
+			code: `
+				a {
+					grid-template:
+						"a   a   a   a" auto
+						"bb  bb  bb  bb" minmax(0, 1fr)
+						"ccc ccc ccc ccc" fit-content(0)
+						/ 1fr minmax(0, 1fr) 100px 100px;
+				}
+			`,
+		},
+		{
+			description: `a shorthand with line names on either side of its rows, some rows carrying none`,
+			code: `
+				a {
+					grid-template:
+						[header-left] "head head" minmax(30px, 1fr) [header-right]
+						"nav  main" 1fr [main-right]
+						[footer] "nav  foot" 30px
+						/ 120px 1fr;
+				}
+			`,
+		},
+		{
+			description: `the \`grid\` shorthand spelled with rows`,
+			code: `
+				a {
+					grid:
+						"a  a" 1fr
+						"bb b" auto
+						/ auto-flow 1fr;
+				}
+			`,
+		},
+		{
+			description: `the \`grid\` shorthand spelled without rows, which holds nothing to align`,
+			code: `a { grid: auto-flow / 1fr 1fr; }`,
+		},
+		{
+			description: `a shorthand whose rows hold a row of another grid inside a call, which is no row of this one`,
+			code: `a { grid-template: "a a" repeat(2, "b  b") / 1fr; }`,
+		},
+		{
+			description: `the solidus and the columns on the line of the last row, which this rule does not move`,
+			code: `
+				a {
+					grid-template:
+						"a  a" 1fr
+						"bb b" auto / 1fr 1fr;
+				}
+			`,
+		},
+	],
+
+	reject: [
+		{
+			description: `a shorthand on one line with two spaces between the cells of a row`,
+			code: `a { grid-template: "a  a" 1fr "b b" auto / 1fr 1fr; }`,
+			fixed: `a { grid-template: "a a" 1fr "b b" auto / 1fr 1fr; }`,
+			line: 1,
+			column: 20,
+			endLine: 1,
+			endColumn: 51,
+			message: messages.expected(`grid-template`),
+		},
+		{
+			description: `a shorthand spanning lines whose cells are not aligned: the rows are padded, and every size, name and column stays where it stands`,
+			code: `
+				a {
+					grid-template:
+						"a a a a" auto
+						"bb bb bb bb" minmax(0, 1fr)
+						"ccc ccc ccc ccc" fit-content(0)
+						/ 1fr minmax(0, 1fr) 100px 100px;
+				}
+			`,
+			fixed: `
+				a {
+					grid-template:
+						"a   a   a   a" auto
+						"bb  bb  bb  bb" minmax(0, 1fr)
+						"ccc ccc ccc ccc" fit-content(0)
+						/ 1fr minmax(0, 1fr) 100px 100px;
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 6,
+			endColumn: 35,
+			message: messages.expected(`grid-template`),
+		},
+		{
+			description: `a shorthand with line names, whose rows alone are aligned`,
+			code: `
+				a {
+					grid-template:
+						[header-left] "head head" minmax(30px, 1fr) [header-right]
+						"nav main" 1fr [main-right]
+						[footer] "nav foot" 30px
+						/ 120px 1fr;
+				}
+			`,
+			fixed: `
+				a {
+					grid-template:
+						[header-left] "head head" minmax(30px, 1fr) [header-right]
+						"nav  main" 1fr [main-right]
+						[footer] "nav  foot" 30px
+						/ 120px 1fr;
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 6,
+			endColumn: 14,
+			message: messages.expected(`grid-template`),
+		},
+		{
+			description: `the \`grid\` shorthand whose cells are not aligned`,
+			code: `
+				a {
+					grid:
+						"a a" 1fr
+						"bb b" auto
+						/ auto-flow 1fr;
+				}
+			`,
+			fixed: `
+				a {
+					grid:
+						"a  a" 1fr
+						"bb b" auto
+						/ auto-flow 1fr;
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 5,
+			endColumn: 18,
+			message: messages.expected(`grid`),
+		},
+		{
+			description: `a row of a shorthand broken across two lines, which the fix brings onto one, the size behind it moving with its closing quotation mark`,
+			code: `
+				a {
+					grid-template:
+						"a
+						 a" 1fr
+						"bb bb" auto
+						/ 1fr 1fr;
+				}
+			`,
+			fixed: `
+				a {
+					grid-template:
+						"a  a" 1fr
+						"bb bb" auto
+						/ 1fr 1fr;
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 6,
+			endColumn: 12,
+			message: messages.expected(`grid-template`),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [true, { alignQuotes: true }],
+
+	reject: [
+		{
+			description: `a shorthand spanning lines under aligned quotation marks, which puts the sizes behind the rows into a column of their own`,
+			code: `
+				a {
+					grid-template:
+						"a a a a" auto
+						"bb bb bb bb" minmax(0, 1fr)
+						"ccc ccc ccc ccc" fit-content(0)
+						/ 1fr minmax(0, 1fr) 100px 100px;
+				}
+			`,
+			fixed: `
+				a {
+					grid-template:
+						"a   a   a   a  " auto
+						"bb  bb  bb  bb " minmax(0, 1fr)
+						"ccc ccc ccc ccc" fit-content(0)
+						/ 1fr minmax(0, 1fr) 100px 100px;
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 6,
+			endColumn: 35,
+			message: messages.expected(`grid-template`),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [true, { gap: 2 }],
+
+	reject: [
+		{
+			description: `a shorthand on one line whose cells are spaced by one where the option asks for two`,
+			code: `a { grid: "a a" 1fr / 1fr; }`,
+			fixed: `a { grid: "a  a" 1fr / 1fr; }`,
+			line: 1,
+			column: 11,
+			endLine: 1,
+			endColumn: 26,
+			message: messages.expected(`grid`),
 		},
 	],
 })
