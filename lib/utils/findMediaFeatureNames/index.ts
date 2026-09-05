@@ -1,5 +1,5 @@
-import { isSimpleBlockNode, isTokenNode, parseCommaSeparatedListOfComponentValues } from "@csstools/css-parser-algorithms"
-import { type CSSToken, isToken, stringify, type TokenIdent, tokenize, TokenType } from "@csstools/css-tokenizer"
+import { type ComponentValue, isFunctionNode, isSimpleBlockNode, isTokenNode, parseCommaSeparatedListOfComponentValues, type SimpleBlockNode } from "@csstools/css-parser-algorithms"
+import { type CSSToken, isToken, mirrorVariant, stringify, type TokenIdent, tokenize, TokenType } from "@csstools/css-tokenizer"
 import { type GeneralEnclosed, isGeneralEnclosed, isMediaFeature, isMediaQueryInvalid, type MediaQuery, parseFromTokens } from "@csstools/media-query-list-parser"
 
 import { RANGE_FEATURE_OPERATOR } from "../../regexps.ts"
@@ -7,6 +7,9 @@ import { RANGE_FEATURE_OPERATOR } from "../../regexps.ts"
 export type MediaQueryList = Array<MediaQuery>
 
 export type MediaQuerySerializer = { stringify: () => string }
+
+/** What closes a call, which the tokenizer has no mirror for: a call's opening token carries its name. */
+const CLOSE_PAREN: CSSToken = [TokenType.CloseParen, `)`, -1, -1, undefined]
 
 /**
  * Extracts top-level token nodes from a GeneralEnclosed node.
@@ -47,6 +50,31 @@ function topLevelTokenNodes (node: GeneralEnclosed): Array<CSSToken> {
 }
 
 /**
+ * Closes what a block left open, so that the media parser reads it as CSS does: a block the end of the parameters cut short is the block it would have been, closed there. Where the parameters end inside the block itself, the parser hands it back with the end-of-file token as its end, and `tokens()` leaves that token out; where they end inside a call or a block nested in it, that inner node takes the end-of-file token, the outer block ends in nothing at all, and `tokens()` puts that nothing in as such, which the media parser throws on (#399). The nodes left open form one chain, each the last thing in the one around it, so the closers are gathered from the outside in and written from the inside out.
+ * @param block - The parenthesised block the media parser is handed.
+ * @returns The block's tokens, with a closing token behind them for every node left open.
+ */
+function closedTokens (block: SimpleBlockNode): Array<CSSToken> {
+	let closers: Array<CSSToken> = []
+	let node: ComponentValue | undefined = block
+
+	while (node && (isSimpleBlockNode(node) || isFunctionNode(node))) {
+		let closer = isFunctionNode(node) ? CLOSE_PAREN : mirrorVariant(node.startToken)
+		// Typed as a token, and undefined on a block whose inner node took the end-of-file token
+		let end: CSSToken | undefined = node.endToken
+
+		if (!closer || end?.[0] === closer[0]) break
+
+		closers.unshift(closer)
+		node = node.value.at(-1)
+	}
+
+	if (closers.length === 0) return block.tokens()
+
+	return [...block.tokens().filter((token) => isToken(token)), ...closers]
+}
+
+/**
  * Searches a CSS string for Media Feature names and invokes a callback for each found name. Found tokens are mutable and modifications made to them will be reflected in the output. This function supports some non-standard syntaxes like SCSS variables and interpolation.
  * @param mediaQueryParams - The media query parameters to search.
  * @param callback - The callback to invoke for each found media feature name.
@@ -61,9 +89,7 @@ export function findMediaFeatureNames (mediaQueryParams: string, callback: (medi
 			!isSimpleBlockNode(componentValue) || componentValue.startToken[0] !== TokenType.OpenParen
 		) return []
 
-		let blockTokens = componentValue.tokens()
-
-		let mediaQueryList = parseFromTokens(blockTokens, {
+		let mediaQueryList = parseFromTokens(closedTokens(componentValue), {
 			preserveInvalidMediaQueries: true,
 		})
 

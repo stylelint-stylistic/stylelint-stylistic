@@ -71,6 +71,16 @@ testRule({
 			description: `an upper-case custom media query, left alone for the same reason`,
 			code: `@media (--VIEWPORT-MEDIUM) { }`,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/399
+			description: `a set of parameters ending inside a call the block never closes, which PostCSS reads to the end of the file`,
+			code: `@media (a( {}`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/399
+			description: `a set of parameters ending inside a block nested in the one the parameters open`,
+			code: `@media ((a {}`,
+		},
 	],
 
 	reject: [
@@ -246,6 +256,17 @@ testRule({
 			endLine: 1,
 			endColumn: 34,
 			message: messages.expected(`@MONOCHROME`, `@monochrome`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/399
+			description: `an upper-case feature name in front of a call left open inside the block the parameters end in, which used to end the lint in a TypeError`,
+			code: `@media (A: 1px) and (b( {}`,
+			fixed: `@media (a: 1px) and (b( {}`,
+			line: 1,
+			column: 9,
+			endLine: 1,
+			endColumn: 10,
+			message: messages.expected(`A`, `a`),
 		},
 	],
 })

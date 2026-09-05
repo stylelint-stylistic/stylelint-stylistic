@@ -87,6 +87,11 @@ testRule({
 			description: `an interpolation standing for the whole params`,
 			code: `@media #{$feature-name} { }`,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/399
+			description: `a lower-case feature name whose value the parser cuts at a double slash, leaving the parameters inside an unclosed call`,
+			code: `@media (min-width: aurl(http://a/b.png)) { a { b: 1px; } }`,
+		},
 	],
 
 	reject: [
@@ -121,6 +126,17 @@ testRule({
 			line: 1,
 			column: 9,
 			message: messages.expected(`MIN-WIDTH`, `min-width`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/399
+			description: `an upper-case feature name whose value the parser cuts at a double slash, which used to end the lint in a TypeError`,
+			code: `@media (min-WIDTH: aurl(http://a/b.png)) { a { b: 1px; } }`,
+			fixed: `@media (min-width: aurl(http://a/b.png)) { a { b: 1px; } }`,
+			line: 1,
+			column: 9,
+			endLine: 1,
+			endColumn: 18,
+			message: messages.expected(`min-WIDTH`, `min-width`),
 		},
 	],
 })
