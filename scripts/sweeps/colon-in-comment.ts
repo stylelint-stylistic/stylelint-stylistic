@@ -68,7 +68,7 @@ const corpus: Sweep[`corpus`] = multiply({
 /** Every reader of `raws.between`, under every primary option `scripts/oracles/options.ts` lists for it. */
 const configs: Sweep[`configs`] = ([
 	[`declaration-colon-newline-after`, [`always`, `always-multi-line`]],
-	[`declaration-colon-space-after`, [`always`, `never`, `always-single-line`, `never-single-line`]],
+	[`declaration-colon-space-after`, [`always`, `never`, `always-single-line`]],
 	[`declaration-colon-space-before`, [`always`, `never`]],
 	[`declaration-block-semicolon-newline-before`, [`always`, `always-multi-line`, `never-multi-line`]],
 	[`declaration-block-semicolon-space-before`, [`always`, `never`]],
