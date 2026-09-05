@@ -4,7 +4,7 @@ This file provides guidance to coding agents when working with code in this 
 
 ## Commands
 
-Every task goes through the [`Makefile`](Makefile), which is the list of tasks: read it, or run `make help` for every target with its description and its flags. Nothing is repeated here, so no list can fall behind the one that runs. It puts `node_modules/.bin` on `PATH`. The only npm scripts are `help`, which calls `make help`, and `prepare`, which the package manager runs after an install: it points Git at [.githooks](.githooks) where there is a repository to point at, and builds `dist/`, since `exports` names the built entry and a package installed straight from Git has to build it too.
+Every task goes through the [`Makefile`](Makefile), which is the list of tasks: read it, or run `make help` for every target with its description and its flags. Nothing is repeated here, so no list can fall behind the one that runs. It puts `node_modules/.bin` on `PATH`. The only npm scripts are `help`, which calls `make help`, and `prepare`, which is [scripts/prepare.ts](scripts/prepare.ts) and which the package manager runs after every install — in a clone and in a project that took the plugin straight from Git alike. It points Git at [.githooks](.githooks) and links `.claude/skills` where there is a repository and a `.claude/` to do either in, and it builds `dist/` in both, since `exports` names the built entry and nothing publishes it to whoever took the sources. The build itself is [scripts/build.ts](scripts/build.ts), which `make build` runs too, so there is one of it.
 
 The one thing the file cannot say for itself is that a flag is passed as a variable rather than as an option:
 
@@ -123,7 +123,7 @@ A pull request body is never the commit message reused. It opens with one par
 
 ## Skills
 
-Five procedures are written out in full under [.agents/skills](.agents/skills), each as a `SKILL.md` its agent loads when it applies, so that what is needed once a session does not sit in every session's context. `.claude/skills` is a symlink to that directory, which is how the CLI finds them, and every worktree reaches the same copy through its own `.claude` link. The longer references this file links out to sit beside them in [.agents/docs](.agents/docs).
+Five procedures are written out in full under [.agents/skills](.agents/skills), each as a `SKILL.md` its agent loads when it applies, so that what is needed once a session does not sit in every session's context. The CLI reads skills from `.claude/skills` alone, and that directory is each checkout's own — excluded from Git per clone — so the repository carries them here and `prepare` links `.claude/skills` at this directory on every install where a `.claude/` is there to link in. The link is relative, so a worktree whose `.claude` points at the main checkout's reaches the same copy. The longer references this file links out to sit beside them in [.agents/docs](.agents/docs).
 
 - **base-comparison** — measuring a branch against the commit it stands on. Read it **before** any run that compares two versions of `lib/`. The one move it forbids keeps eating uncommitted work, three times in a single session at its worst: reverting a tracked path with `git checkout <rev> -- lib` restores the committed state and takes everything else with it, and `git status` is clean afterwards.
 - **sweeps-and-oracles** — building a corpus that can see the change, and reading what the boards report without over-reading it. Every clean run in this repository has at some point been a corpus talking about itself.

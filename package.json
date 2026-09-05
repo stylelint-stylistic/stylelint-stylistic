@@ -40,7 +40,7 @@
 	},
 	"scripts": {
 		"help": "make help",
-		"prepare": "git config --local core.hooksPath .githooks || true; make build"
+		"prepare": "node scripts/prepare.ts"
 	},
 	"devDependencies": {
 		"@firefoxic/beautypography": "^0.1.0",
