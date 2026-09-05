@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --experimental-strip-types --disable-warning=ExperimentalWarning
+#!/usr/bin/env node
 
 /**
  * Checks that the built plugin needs none of the syntax packages a project may not have.
