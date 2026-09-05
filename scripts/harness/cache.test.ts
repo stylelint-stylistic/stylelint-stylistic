@@ -1,11 +1,11 @@
 import { execFileSync } from "node:child_process"
-import { mkdirSync, mkdtempSync, rmSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { env } from "node:process"
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
-import { hashListing, hashSourcesAt } from "./cache.ts"
+import { filesOf, hashListing, hashSourcesAt, keyOf, storeAt } from "./cache.ts"
 import { ROOT } from "./checkout.ts"
 
 /**
@@ -175,5 +175,140 @@ describe(`the listing a hash of sources is taken from`, () => {
 		// A path may hold a tab and a line break alike, so a name can be spelled as a record standing right behind this one and as a record on the next line
 		expect(hashListing([recordFor(`lint.ts${second}`)])).not.toBe(two)
 		expect(hashListing([recordFor(`lint.ts\n${second}`)])).not.toBe(two)
+	})
+})
+
+/** The directory of one oracle's results in a store of a case's own, and the key of the one result a case keeps there. */
+const NAME = `converge`
+
+/** The kind that directory stands under. */
+const KIND = `oracles`
+
+/**
+ * Opens a store of a case's own under `tmp/`, holding nothing.
+ * @returns The store, and the directory `NAME`'s results stand in.
+ */
+function emptyStore (): { store: ReturnType<typeof storeAt>, directory: string } {
+	let root = mkdtempSync(path.join(ROOT, `tmp`, `cache-store-`))
+
+	return { store: storeAt(root), directory: path.join(root, KIND, NAME) }
+}
+
+/**
+ * Puts a file under the directory of `NAME`'s results by name, standing for what a run or the collector before #554 left behind.
+ * @param directory - The directory.
+ * @param file - The name.
+ */
+function leave (directory: string, file: string): void {
+	mkdirSync(directory, { recursive: true })
+	writeFileSync(path.join(directory, file), `{}`)
+}
+
+// #554: the collector took out the rows and the meta of a result and left its digest standing, so the store filled with digests of results it no longer held — 666 of them under `oracles/` — and a sweep meeting one found the digest, went for the rows and died
+describe(`the collector of the store`, () => {
+	let stores: string[] = []
+
+	afterAll(() => {
+		for (let store of stores) rmSync(store, { recursive: true, force: true })
+	})
+
+	/**
+	 * Opens a store the block will take down.
+	 * @returns The store and the directory of `NAME`'s results.
+	 */
+	function open (): ReturnType<typeof emptyStore> {
+		let opened = emptyStore()
+
+		stores.push(path.dirname(path.dirname(opened.directory)))
+
+		return opened
+	}
+
+	it(`leaves nothing of a result it takes out`, () => {
+		let { store, directory } = open()
+		let key = keyOf({ lib: `a` })
+
+		store.write(KIND, NAME, key, [{ rule: `x` }], { lib: `a` })
+		expect(readdirSync(directory).toSorted()).toEqual(Object.values(filesOf(key)).toSorted())
+
+		expect(store.collect(() => false)).toEqual({ removed: 1, kept: 0, stray: 0 })
+		expect(readdirSync(directory)).toEqual([])
+		expect(store.readDigest(KIND, NAME, key)).toBeUndefined()
+	})
+
+	it(`keeps a result whole where the caller keeps it, asked with the meta the result was written with`, () => {
+		let { store, directory } = open()
+		let key = keyOf({ lib: `b` })
+		let asked: unknown[] = []
+
+		store.write(KIND, NAME, key, { one: 1 }, { lib: `b`, revision: `HEAD` })
+
+		expect(store.collect((meta) => {
+			asked.push(meta)
+
+			return meta.lib === `b`
+		})).toEqual({ removed: 0, kept: 1, stray: 0 })
+		expect(asked).toEqual([expect.objectContaining({ lib: `b`, revision: `HEAD` })])
+		expect(readdirSync(directory).toSorted()).toEqual(Object.values(filesOf(key)).toSorted())
+		expect(store.read(KIND, NAME, key)).toEqual({ one: 1 })
+		expect(store.readDigest(KIND, NAME, key)).toEqual({ one: expect.any(String) })
+	})
+
+	it(`takes out a digest standing under a key with no meta, as a file of no result rather than as a result`, () => {
+		let { store, directory } = open()
+		let key = keyOf({ lib: `c` })
+
+		leave(directory, filesOf(key).digest)
+
+		expect(store.collect(() => true)).toEqual({ removed: 0, kept: 0, stray: 1 })
+		expect(readdirSync(directory)).toEqual([])
+		expect(store.readDigest(KIND, NAME, key)).toBeUndefined()
+	})
+
+	it(`takes out the rows and the digest a run died between writing and writing the meta of`, () => {
+		let { store, directory } = open()
+		let key = keyOf({ lib: `d` })
+
+		leave(directory, filesOf(key).rows)
+		leave(directory, filesOf(key).digest)
+
+		expect(store.collect(() => true)).toEqual({ removed: 0, kept: 0, stray: 2 })
+		expect(readdirSync(directory)).toEqual([])
+	})
+
+	it(`leaves a file no key names where it stands, beside the result it takes out`, () => {
+		let { store, directory } = open()
+		let key = keyOf({ lib: `e` })
+
+		store.write(KIND, NAME, key, [], { lib: `e` })
+		leave(directory, `notes.md`)
+		leave(directory, `${key.slice(0, -1)}.json`)
+
+		expect(store.collect(() => false)).toEqual({ removed: 1, kept: 0, stray: 0 })
+		expect(readdirSync(directory).toSorted()).toEqual([`${key.slice(0, -1)}.json`, `notes.md`])
+	})
+
+	it(`walks the directories of results alone, so that whatever stands under \`verified/\` stays, spelled like a record of \`make verify\` or like a part of a result`, () => {
+		let { store, directory } = open()
+		let trees = path.join(path.dirname(path.dirname(directory)), `verified`, `trees`)
+		// A record is named by a tree, which is longer than a key, so the record alone would stand whether the collector walks that directory or not; the second file is named as a digest is, and only a collector that never looks there leaves it
+		let stamp = path.join(trees, `${`0`.repeat(40)}.json`)
+		let digest = path.join(trees, filesOf(keyOf({ lib: `f` })).digest)
+
+		mkdirSync(trees, { recursive: true })
+		writeFileSync(stamp, `{}\n`)
+		writeFileSync(digest, `{}`)
+
+		expect(store.collect(() => false)).toEqual({ removed: 0, kept: 0, stray: 0 })
+		expect(existsSync(stamp)).toBe(true)
+		expect(existsSync(digest)).toBe(true)
+	})
+
+	it(`is all \`gc.ts\` takes out through, since that script names no file of a result itself`, () => {
+		// The script cannot be imported by a case — it lists the trees every ref reaches and collects as it loads — so it is read as text instead, the way the fifth case of `scripts/sweeps/key.test.ts` holds the runner
+		let script = readFileSync(path.join(ROOT, `scripts`, `harness`, `gc.ts`), `utf8`)
+
+		expect(script).toMatch(/\bcollect\(/u)
+		expect(script).not.toMatch(/\.json|rmSync/u)
 	})
 })

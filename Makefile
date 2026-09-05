@@ -52,7 +52,7 @@ harness-check: ## 🧫 Check that the direct runner agrees with Stylelint over e
 	./scripts/harness/verify-lint.ts
 .PHONY: harness-check
 
-cache-gc: ## 🗑️  Take out of the result store what no ref reaches any more
+cache-gc: ## 🗑️  Take out of the result store what no ref reaches any more, and every file left of a result it no longer holds
 	./scripts/harness/gc.ts
 .PHONY: cache-gc
 

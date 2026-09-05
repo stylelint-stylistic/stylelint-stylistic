@@ -64,8 +64,4 @@ And when a change removes a cut, a guard or a filter, **list what stood d
 
 `~/.cache/stylelint-stylistic/sweeps/<name>/` keeps `<key>.json` (the rows), `<key>.digest.json` and `<key>.meta.json` per measured tree — **one entry per tree the branch ever measured**, so "any non-base entry" is not the head. Select the base by `meta.lib === git rev-parse <base>:lib` and the head by `meta.lib === git rev-parse HEAD:lib`, and print both hashes. While a branch is uncommitted the working tree is ahead of HEAD and the lookup finds nothing: take the newest entry whose `meta.revision` is `worktree`, then rerun after the commit to confirm. Editing so much as a comment in the sweep module changes `meta.sweep` and re-measures both sides from scratch — the rows should come back identical, which is worth asserting.
 
-A key can end up with a digest and no rows, and `make sweep` then throws `The store holds the digest of <name> and not its rows`. That is cache state, not a defect of the branch:
-
-```bash
-cd ~/.cache/stylelint-stylistic/sweeps && for d in */; do (cd "$d" && for f in *.digest.json; do k="${f%.digest.json}"; [ -f "$k.json" ] || rm -f "$f" "$k.meta.json"; done); done
-```
+A key can end up with a digest and no rows — a run that died between writing the two, or a result the collector took out before #554, which left the digest standing — and `make sweep` then throws `The store holds the digest of <name> and not its rows`. That is cache state, not a defect of the branch: `make cache-gc` takes out every file standing under a key with no meta beside it, and the rerun measures the side afresh.
