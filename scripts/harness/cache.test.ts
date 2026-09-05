@@ -77,7 +77,7 @@ const FILES = { "lint.ts": `a`, "lint.test.ts": `b`, "README.md": `c`, "deep/mat
 const QUOTED_TEST = `a"b.test.ts`
 
 /**
- * Hashes the sources of a directory holding the files, as `compare.ts` and `run.ts` hash the ones on disk.
+ * Hashes the sources of a directory holding the files, as the `key.ts` of the oracles and the one of the sweeps hash the ones on disk.
  * @param files - The path of every file under it, and the text it holds.
  * @param outside - The text of the file standing outside it.
  * @returns The hash of its sources.
