@@ -6,11 +6,15 @@ import { ASPECT_RATIO_PROPERTY, NUMBER_WITHOUT_SIGN_OR_EXPONENT } from "../../re
 import { css } from "../../syntaxes/css/index.ts"
 import { applyEditsFromEnd } from "../../utils/applyEditsFromEnd/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
+import { declarationString } from "../../utils/declarationString/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
+import type { NeighbourRule } from "../../utils/neighbourSettings/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isBoolean } from "../../utils/validateTypes/index.ts"
+import { type Whitespace, whitespaceAsked } from "../../utils/whitespaceAsked/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -25,10 +29,26 @@ export let meta = {
 	fixable: true,
 }
 
+/** The options the two rules about the whitespace beside a solidus in a value take. */
+const SLASH_SPACE_OPTIONS = [`always`, `never`, `always-single-line`, `never-single-line`]
+
+/** The rule about the run in front of such a solidus, by the whitespace its `always` options write. */
+const RULES_BEFORE_THE_SOLIDUS: Partial<Record<Whitespace, NeighbourRule>> = {
+	space: { name: `value-slash-space-before`, options: SLASH_SPACE_OPTIONS },
+}
+
+/** The rule about the run behind it. */
+const RULES_AFTER_THE_SOLIDUS: Partial<Record<Whitespace, NeighbourRule>> = {
+	space: { name: `value-slash-space-after`, options: SLASH_SPACE_OPTIONS },
+}
+
+/** What the fix writes on either side of a solidus where no rule speaks of the run: a single space, which is what the fix wrote before it read anybody. */
+const SOLIDUS_WHITESPACE_FALLBACK = ` `
+
 /**
  * Specifies the notation for the value of `aspect-ratio`.
  *
- * The rule reads one value along two axes that do not depend on each other: the primary option decides how many numbers are written, and `smallestIntegers` decides what those numbers are. Both are settled before anything is written, and the whole value is written once, so neither axis can be applied by halves and no order in the configuration can change the outcome.
+ * The rule reads one value along two axes that do not depend on each other: the primary option decides how many numbers are written, and `smallestIntegers` decides what those numbers are. Both are settled before anything is written, and the whole value is written once, so neither axis can be applied by halves and no order in the configuration can change the outcome. The solidus the fix adds is spelled the way `value-slash-space-before` and `value-slash-space-after` ask wherever the configuration lists them, and with a space on either side where it lists neither (#550): Stylelint runs each rule once and in the order the configuration lists them, so a solidus written bare behind a `never` of either rule would be one that rule sees only on the run after.
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
@@ -63,7 +83,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		if (primary === `as-written` && !smallestIntegers) return
 
 		root.walkDecls(ASPECT_RATIO_PROPERTY, (decl) => {
-			check(decl, syntax.read(decl), declarationValueIndex(decl), (fixed) => syntax.write(decl, fixed))
+			check(decl, syntax.read(decl), declarationValueIndex(decl), (fixed) => syntax.write(decl, fixed), () => isSingleLineString(declarationString(syntax, decl)))
 		})
 
 		/**
@@ -74,8 +94,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		 * @param text - The text to check.
 		 * @param textIndex - The offset from the start of the node to the first character of that text.
 		 * @param write - Writes the fixed text back to the node.
+		 * @param isSingleLine - Whether the text the rules about the whitespace beside a solidus count the lines of stands on one line, asked only where one of them is configured with an option that turns on it.
 		 */
-		function check (node: Node, text: string, textIndex: number, write: (fixed: string) => void): void {
+		function check (node: Node, text: string, textIndex: number, write: (fixed: string) => void, isSingleLine: () => boolean): void {
 			let comments = syntax.commentSpans(text, node, result)
 			// The value parser has a node for a block comment and none for a comment opened by a double slash, whose text comes back as ordinary words and divs. Blanking every comment out answers both at once: the copy spells the text character for character everywhere else, so every position below counts in the text itself, and what the parse holds is code the file spells and nothing else.
 			let ratio = findRatio(valueParser(blankComments(text, comments)).nodes)
@@ -91,7 +112,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (writesHeight && height && height.value !== expectedHeight) edits.push({ start: height.sourceIndex, end: height.sourceEndIndex, text: expectedHeight })
 
-			if (writesHeight && !height) edits.push({ start: width.sourceEndIndex, end: width.sourceEndIndex, text: ` / ${expectedHeight}` })
+			// The whitespace on either side of the solidus is what the rule about that run asks for, the later-listed one where two speak, and the fallback where none does; each side is a run of its own with a rule of its own
+			if (writesHeight && !height) {
+				let before = whitespaceAsked(syntax, node, result, RULES_BEFORE_THE_SOLIDUS, isSingleLine, SOLIDUS_WHITESPACE_FALLBACK)
+				let after = whitespaceAsked(syntax, node, result, RULES_AFTER_THE_SOLIDUS, isSingleLine, SOLIDUS_WHITESPACE_FALLBACK)
+
+				edits.push({ start: width.sourceEndIndex, end: width.sourceEndIndex, text: `${before}/${after}${expectedHeight}` })
+			}
 
 			// The run taken out reaches from the end of the first number to the end of the second, so the solidus goes with it however it is spaced
 			if (!writesHeight && height) edits.push({ start: width.sourceEndIndex, end: height.sourceEndIndex, text: `` })
