@@ -38,6 +38,11 @@ testRule({
 			code: `a {\n background: url("${TEST_URL}");\n}`,
 		},
 		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566
+			description: `a long bare address behind a backslash and a form feed, which the grammar reads a newline in, so that the backslash names nothing and the address comes off the line`,
+			code: `a {\n b: \\\furl(somethingsomethingsomething/something.png);\n}`,
+		},
+		{
 			description: `a long address in an import and another in a url call`,
 			code: `@import '${TEST_URL}';\na {\n background: url("${TEST_URL}");\n}`,
 		},

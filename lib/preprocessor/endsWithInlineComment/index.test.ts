@@ -155,6 +155,15 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`b: \\75 rl(http://a/b.png) 1px; `, LESS)).toBe(false)
 	})
 
+	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566
+	// A backslash in front of any of the four newlines the grammar reads spells nothing and is a delimiter of its own, so the name behind it stands on its own and names the address it spells. The form feed and the bare carriage return of the last two lines used to be read as characters the escape spells, which made an ordinary call of each and a comment of its protocol's double slashes.
+	it(`an address behind a backslash and a newline of any of the four spellings, which the backslash names nothing in front of`, () => {
+		expect(endsWithInlineComment(`b: \\\nurl(http://a/b.png) 1px; `, LESS)).toBe(false)
+		expect(endsWithInlineComment(`b: \\\r\nurl(http://a/b.png) 1px; `, LESS)).toBe(false)
+		expect(endsWithInlineComment(`b: \\\furl(http://a/b.png) 1px; `, LESS)).toBe(false)
+		expect(endsWithInlineComment(`b: \\\rurl(http://a/b.png) 1px; `, LESS)).toBe(false)
+	})
+
 	it(`a text ending in an unclosed comment of the other kind is no inline comment either`, () => {
 		expect(endsWithInlineComment(`1px /* c`)).toBe(false)
 	})

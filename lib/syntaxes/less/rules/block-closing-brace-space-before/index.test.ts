@@ -228,6 +228,23 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566
+			description: `an address behind a backslash and a form feed, which the grammar reads a newline in, so that the backslash spells nothing and names nothing, and the address takes the brace`,
+			code: `a { b: \\\furl(http://a/b.png) 1px; }`,
+			fixed: `a { b: \\\furl(http://a/b.png) 1px;}`,
+			line: 1,
+			column: 34,
+			message: messages.rejectedBefore(),
+		},
+		{
+			description: `the same address behind a backslash and a bare carriage return`,
+			code: `a { b: \\\rurl(http://a/b.png) 1px; }`,
+			fixed: `a { b: \\\rurl(http://a/b.png) 1px;}`,
+			line: 1,
+			column: 34,
+			message: messages.rejectedBefore(),
+		},
+		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/333
 			description: `a form feed inside an inline comment, which is whitespace and no line break, so the brace stands in the comment's text and the block is left alone`,
 			code: `a { b: 1px // c\f\t2px; }`,

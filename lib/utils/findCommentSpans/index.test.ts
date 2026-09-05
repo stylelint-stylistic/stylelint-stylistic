@@ -274,11 +274,12 @@ describe(`findAddressSpans`, () => {
 		expect(findAddressSpans(`url(aa\\\\41 )`)).toEqual([{ start: 4, end: 10 }])
 	})
 
-	// Which whitespace a backslash spells is the one reading of an escape the plugin holds and no reading of this module's: it refuses the line feed and the Windows pair alone, so the form feed of the third line is a character the escape spells here, where CSS reads a newline in it and Sass answers `Expected escape sequence` (#566).
+	// Which whitespace a backslash spells is the one reading of an escape the plugin holds and no reading of this module's, and it is the grammar's: a backslash in front of any of the four newlines spells nothing, the form feed and the bare carriage return of the last two lines among them, which used to be read as characters the escape spells (#566).
 	it(`a line break behind an escape, which a hexadecimal one closes on and a backslash spells nothing in front of`, () => {
 		expect(findAddressSpans(`url(a\\\n)`)).toEqual([{ start: 4, end: 6 }])
 		expect(findAddressSpans(`url(a\\41\r\n)`)).toEqual([])
-		expect(findAddressSpans(`url(a\\\f)`)).toEqual([{ start: 4, end: 7 }])
+		expect(findAddressSpans(`url(a\\\f)`)).toEqual([{ start: 4, end: 6 }])
+		expect(findAddressSpans(`url(a\\\r)`)).toEqual([{ start: 4, end: 6 }])
 	})
 
 	it(`a run reaching past the end of a line, which no address is`, () => {

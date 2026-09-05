@@ -199,6 +199,15 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566
+			description: `the same feature behind a backslash and a form feed, which the grammar reads a newline in, so that the backslash names nothing and the word is the one joining a feature`,
+			code: `@media \\\fand(min-width:1px) { a { b: c; } }`,
+			fixed: `@media \\\fand(min-width: 1px) { a { b: c; } }`,
+			line: 1,
+			column: 23,
+			message: messages.expectedAfter(),
+		},
+		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/215
 			description: `a media feature standing behind a bare address, whose double slash opens no comment`,
 			code: `@media (min-width: url(http://x)) and (max-width:1px) { a { b: c; } }`,

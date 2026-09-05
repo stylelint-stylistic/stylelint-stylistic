@@ -135,6 +135,12 @@ describe(`findFunctionArgumentSpans`, () => {
 		expect(findFunctionArgumentSpans(`\\\n(1)`)).toEqual([])
 	})
 
+	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566
+	it(`the same backslash with a bare carriage return or a form feed behind it, which the grammar reads a newline in as well`, () => {
+		expect(findFunctionArgumentSpans(`\\\r(1)`)).toEqual([])
+		expect(findFunctionArgumentSpans(`\\\f(1)`)).toEqual([])
+	})
+
 	it(`a hexadecimal escape a Windows pair closes, which is the one break it spells`, () => {
 		expect(findFunctionArgumentSpans(`fo\\6f\r\n(1)`)).toEqual([{ start: 8, end: 9, name: `fo\\6f\r\n` }])
 	})

@@ -248,7 +248,7 @@ function scan (text: string, spellsInlineComments: boolean): { comments: Comment
 			behindIdentifier = false
 		}
 		else if (character === `/` && next === `/` && spellsInlineComments) {
-			// The comment runs to the break PostCSS reads a line in, a line feed with or without the carriage return of a Windows pair in front of it; a bare carriage return and a form feed are whitespace of the comment's text, as they are whitespace everywhere else
+			// The comment runs to the break PostCSS reads a line in, a line feed with or without the carriage return of a Windows pair in front of it; a bare carriage return and a form feed are whitespace of the comment's text, as they are to PostCSS wherever a line is asked about. What a backslash spells in front of one is the grammar's question and not a line's, and `readIdentifierCharacter` answers it the grammar's way (#566)
 			let end = findLineBreak(text, index)
 
 			spans.push({ start: index, end, isInline: true })
