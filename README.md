@@ -18,6 +18,9 @@ Add `@stylistic/stylelint-plugin` and `stylelint` itself to your project:
 npm add -D stylelint @stylistic/stylelint-plugin
 ```
 
+> [!IMPORTANT]
+> Install a published version. A dependency named by a Git reference — `github:stylelint-stylistic/stylelint-stylistic` or a URL of a branch — does **not** work. The package publishes a built `dist/`, which the repository does not carry and nothing builds for you, so such an install either stops at your package manager's gate for build scripts or leaves a package that fails to load with `ERR_MODULE_NOT_FOUND`. If you need a fix that has not shipped yet, say so on the issue rather than reaching for the branch: a fix here is normally published as a patch version within the day.
+
 Create the `.stylelintrc` config file (or open the existing one), add `@stylistic/stylelint-plugin` to the plugins array and the rules you need to the rules list. [All rules from `@stylistic/stylelint-plugin`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/docs/user-guide/rules.md) need to be namespaced with `@stylistic/`. That prefix is the whole difference — an unprefixed name in the rules list is a rule of Stylelint's own, a prefixed one is a rule of this plugin:
 
 ```json

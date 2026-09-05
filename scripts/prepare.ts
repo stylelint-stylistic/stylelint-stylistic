@@ -1,15 +1,17 @@
 #!/usr/bin/env node
 
 /**
- * Sets a working copy up: points Git at the hooks, hands the agent CLI the skills, and builds `dist/`.
+ * Sets a working copy up: points Git at the hooks and hands the agent CLI the skills.
  *
- * The package manager runs this after every install, and it runs in two quite different places: a clone of this repository, and a project that installed the plugin straight from Git — which is how a bug report reproduces against an unreleased fix. A tarball has neither a repository to point Git at nor a `.claude/` to link into, and each job therefore asks whether there is anything to do rather than assuming there is. Only the build is done in both, since `exports` names the built entry and nothing publishes it to a consumer who took the sources.
+ * Both jobs are a contributor's, and each asks whether there is anything to do rather than assuming there is — a copy unpacked from a tarball has no repository to point Git at, and a checkout of somebody who uses no such CLI has no `.claude/` to link into.
+ *
+ * **This does not build `dist/`, and a dependency named by a Git reference therefore does not work.** It used to build, so that a bug report could be reproduced against an unreleased fix, and that reason no longer holds: a fix here is published as a patch version within the day, and a report arrives as a demo pinned to a version rather than to a branch. What the build cost was paid by everyone else — every package manager now gates a Git dependency that carries a `prepare` script, each in its own way and none of them from the consumer's `package.json`. `make build` builds, `make release` builds before publishing, and [README.md](../README.md) says plainly that a Git reference does not install.
  */
 
 import { execFileSync } from "node:child_process"
 import { lstatSync, symlinkSync } from "node:fs"
 import path from "node:path"
-import { execPath, stdout } from "node:process"
+import { stdout } from "node:process"
 
 const ROOT = path.resolve(import.meta.dirname, `..`)
 
@@ -41,5 +43,3 @@ if (claude && !skills) {
 	symlinkSync(path.join(`..`, `.agents`, `skills`), path.join(ROOT, `.claude`, `skills`))
 	stdout.write(`\t🔗 .claude/skills reads the skills of .agents/skills\n`)
 }
-
-execFileSync(execPath, [path.join(ROOT, `scripts`, `build.ts`)], { cwd: ROOT, stdio: `inherit` })
