@@ -40,7 +40,7 @@
 	},
 	"scripts": {
 		"help": "make help",
-		"prepare": "node scripts/prepare.ts"
+		"prepare": "./scripts/prepare.sh"
 	},
 	"devDependencies": {
 		"@firefoxic/beautypography": "^0.1.0",
