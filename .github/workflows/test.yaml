@@ -19,6 +19,5 @@ jobs:
       - uses: pnpm/action-setup@v6
         with:
           cache: true
-          version: latest
       - run: pnpm ci
       - run: make verify

@@ -21,8 +21,6 @@ jobs:
         with:
           fetch-depth: 0
       - uses: pnpm/action-setup@v6
-        with:
-          version: latest
       - run: pnpm ci
       - run: make release
         env:
