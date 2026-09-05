@@ -7,6 +7,7 @@ import { isStandardSyntaxProperty } from "../../../utils/isStandardSyntaxPropert
 import { isRule } from "../../../utils/typeGuards/index.ts"
 import { withoutQuotedTextAndComments } from "../../../utils/withoutQuotedTextAndComments/index.ts"
 import { isLessDetachedRulesetCall } from "../isLessDetachedRulesetCall/index.ts"
+import { isLessVariableDeclaration } from "../isLessVariableDeclaration/index.ts"
 import { LESS_EXTEND, LESS_EXTEND_CALL, LESS_GUARD, LESS_PARAMETRIC_MIXIN, LESS_RESOLVED_MIXIN } from "../regexps.ts"
 
 /**
@@ -20,8 +21,8 @@ export function isStandardLessAtRule (atRule: AtRule | LessAtRule): boolean {
 	// Ignore Less mixins
 	if (`mixin` in atRule && atRule.mixin) return false
 
-	// Ignore Less variables and calls to detached rulesets `@detached-ruleset: { background: red; }; .top { @detached-ruleset(); }`
-	if ((`variable` in atRule && atRule.variable) || isLessDetachedRulesetCall(atRule)) return false
+	// Ignore Less variable declarations, whether the parser marked them or left the colon to the shape of the node, and calls to detached rulesets `@detached-ruleset: { background: red; }; .top { @detached-ruleset(); }`
+	if (isLessVariableDeclaration(atRule) || isLessDetachedRulesetCall(atRule)) return false
 
 	return true
 }

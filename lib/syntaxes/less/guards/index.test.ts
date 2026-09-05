@@ -52,6 +52,26 @@ describe(`isStandardLessAtRule`, () => {
 		expect(rules.length).toBe(1)
 		expect(isStandardLessAtRule(pick(rules, 0))).toBe(false)
 	})
+
+	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/394
+	it(`a variable declared with whitespace in front of its colon, which the parser leaves unmarked`, () => {
+		let spellings = [
+			`@v : pink; a { b: @v }`,
+			`@v\t: pink; a { b: @v }`,
+			`@v\n: pink; a { b: @v }`,
+			`@dr : { color: red; }; a { @dr(); }`,
+		]
+
+		for (let spelling of spellings) expect(isStandardLessAtRule(pick(lessAtRules(spelling), 0))).toBe(false)
+	})
+
+	it(`a variable declared with no whitespace on either side of its colon, which the parser reads into the name`, () => {
+		expect(isStandardLessAtRule(pick(lessAtRules(`@v:pink 1px; a { b: @v }`), 0))).toBe(false)
+	})
+
+	it(`a page rule whose selector opens on a colon, which is an at-rule to Less`, () => {
+		expect(isStandardLessAtRule(pick(lessAtRules(`@page :first { margin: 0 }`), 0))).toBe(true)
+	})
 })
 
 describe(`isStandardPreprocessorComment`, () => {

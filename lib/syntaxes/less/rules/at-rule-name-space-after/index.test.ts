@@ -23,6 +23,15 @@ testRule({
 			description: `a Less variable whose value stands on the next line`,
 			code: `@nice-blue:\n#5B83AD;`,
 		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/394
+		{
+			description: `a Less variable declared with a tab in front of its colon, which the parser leaves unmarked`,
+			code: `@nice-blue\t: #5B83AD;`,
+		},
+		{
+			description: `a Less variable declared with a line break in front of its colon`,
+			code: `@nice-blue\n: #5B83AD;`,
+		},
 		{
 			description: `an interpolated selector, whose at-sign opens no at-rule`,
 			code: `@variable: .bucket; .@{variable} { }`,
