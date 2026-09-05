@@ -50,5 +50,22 @@ testRule({
 			column: 2,
 			message: messages.expected(2),
 		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/481
+		{
+			description: `three blank lines in front of the closing brace behind an include written without a semicolon, which the parser files inside the include itself`,
+			code: `a {\n\t@include x\n\n\n\n}\n`,
+			fixed: `a {\n\t@include x\n\n\n}\n`,
+			line: 5,
+			column: 1,
+			message: messages.expected(2),
+		},
+		{
+			description: `three blank lines in front of the closing brace of a nested property`,
+			code: `a {\n\tfont: {\n\t\tfamily: x;\n\n\n\n\t}\n}\n`,
+			fixed: `a {\n\tfont: {\n\t\tfamily: x;\n\n\n\t}\n}\n`,
+			line: 6,
+			column: 1,
+			message: messages.expected(2),
+		},
 	],
 })

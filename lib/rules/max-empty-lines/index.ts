@@ -1,13 +1,16 @@
-import type { Document, Root } from "postcss"
+import type { ChildNode, Container, Document, Root } from "postcss"
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
 import { CRLF, CRLF_RUN, EVERY_CRLF_RUN, EVERY_LF_RUN, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { isNumber } from "../../utils/validateTypes/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -61,7 +64,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 		/**
 		 * Collapses every run of empty lines to the number the option allows.
 		 *
-		 * The walk reaches the whitespace each node keeps in front of itself, and the two runs a comment keeps around its text. The first node of the root and the text standing behind its last one are dealt with apart from the walk: neither is whitespace a node keeps, and the last of them counts an empty line one short, so a max of zero is read as one there.
+		 * The walk reaches the whitespace each node keeps in front of itself, the two runs a comment keeps around its text, and the run a block keeps in front of its closing brace, which is read and written in the raw `getBlockAfter` names — inside the node closing the block, where that node has swallowed it. The first node of the root and the text standing behind its last one are dealt with apart from the walk: neither is whitespace a node keeps, and the last of them counts an empty line one short, so a max of zero is read as one there.
 		 */
 		function fix (): void {
 			root.walk((node) => {
@@ -71,6 +74,12 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 				}
 
 				if (node.raws.before) node.raws.before = getChars(node.raws.before)
+
+				if (carriesABlock(node)) {
+					let blockAfter = getBlockAfter(node)
+
+					if (typeof blockAfter === `string`) setBlockAfter(node, getChars(blockAfter))
+				}
 			})
 
 			let { first } = root
@@ -164,6 +173,17 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 			}
 		}
 	}
+}
+
+/**
+ * Asks whether a node carries a block, and so a run in front of a closing brace of its own.
+ *
+ * The question is put to the node rather than to a list of types, so that the declaration `postcss-scss` hangs a Sass nested property on is answered like a rule and an at-rule: it is a container at run time, however the declaration is typed, and the run it keeps in front of its brace is read and written the same way.
+ * @param node - A node of the walk.
+ * @returns True where the node carries a block.
+ */
+function carriesABlock (node: ChildNode): node is ChildNode & Container {
+	return hasBlock(node)
 }
 
 /**

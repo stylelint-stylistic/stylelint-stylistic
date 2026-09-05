@@ -33,6 +33,15 @@ testRule({
 			column: 1,
 			message: messages.expected(0),
 		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/481
+		{
+			description: `a blank line in front of the closing brace of a rule`,
+			code: `a {\n\tb: c;\n\n}\n`,
+			fixed: `a {\n\tb: c;\n}\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(0),
+		},
 	],
 })
 
@@ -208,6 +217,55 @@ testRule({
 			column: 1,
 			message: messages.expected(1),
 		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/481
+		{
+			description: `two blank lines in front of the closing brace of a rule`,
+			code: `a {\n\tb: c;\n\n\n}\n`,
+			fixed: `a {\n\tb: c;\n\n}\n`,
+			line: 4,
+			column: 1,
+			message: messages.expected(1),
+		},
+		{
+			description: `the same blank lines written with carriage-return line breaks`,
+			code: `a {\r\n\tb: c;\r\n\r\n\r\n}\r\n`,
+			fixed: `a {\r\n\tb: c;\r\n\r\n}\r\n`,
+			line: 4,
+			column: 1,
+			message: messages.expected(1),
+		},
+		{
+			description: `two blank lines inside an empty block`,
+			code: `a {\n\n\n}\n`,
+			fixed: `a {\n\n}\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(1),
+		},
+		{
+			description: `two blank lines in front of the closing brace of an at-rule`,
+			code: `@media (x) {\n\ta {}\n\n\n}\n`,
+			fixed: `@media (x) {\n\ta {}\n\n}\n`,
+			line: 4,
+			column: 1,
+			message: messages.expected(1),
+		},
+		{
+			description: `two blank lines in front of the closing brace of a rule nested in an at-rule`,
+			code: `@media (x) {\n\ta {\n\t\tb: c;\n\n\n\t}\n}\n`,
+			fixed: `@media (x) {\n\ta {\n\t\tb: c;\n\n\t}\n}\n`,
+			line: 5,
+			column: 1,
+			message: messages.expected(1),
+		},
+		{
+			description: `two blank lines in front of a stray semicolon standing in front of the closing brace, which is no node of the block and stands in the same raw as the blank lines`,
+			code: `a {\n\tb: c;\n\n\n;\n}\n`,
+			fixed: `a {\n\tb: c;\n\n;\n}\n`,
+			line: 4,
+			column: 1,
+			message: messages.expected(1),
+		},
 	],
 })
 
@@ -330,6 +388,15 @@ a {}
 			column: 1,
 			message: messages.expected(1),
 		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/481
+		{
+			description: `two blank lines in front of the closing brace of a rule in an embedded stylesheet`,
+			code: `<style>\na {\n\tb: c;\n\n\n}\n</style>\n`,
+			fixed: `<style>\na {\n\tb: c;\n\n}\n</style>\n`,
+			line: 5,
+			column: 1,
+			message: messages.expected(1),
+		},
 	],
 })
 
@@ -422,6 +489,15 @@ testRule({
 			code: `/* horse\r\n\r\n\r\n\r\n */\r\na {}`,
 			fixed: `/* horse\r\n\r\n\r\n */\r\na {}`,
 			line: 4,
+			column: 1,
+			message: messages.expected(2),
+		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/481
+		{
+			description: `three blank lines in front of the closing brace of a rule`,
+			code: `a {\n\tb: c;\n\n\n\n}\n`,
+			fixed: `a {\n\tb: c;\n\n\n}\n`,
+			line: 5,
 			column: 1,
 			message: messages.expected(2),
 		},
