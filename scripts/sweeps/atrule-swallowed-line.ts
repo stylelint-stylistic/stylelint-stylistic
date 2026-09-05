@@ -4,17 +4,21 @@
  * Written for #375. `indentation` measured such a line with the at-rule's params and reported it at the right position, and its writer knew two raws, `afterName` and the params, so the fix for a position behind the params was written onto the end of the params — onto the at-rule's own line — and the file grew a level on every run.
  *
  * The controls are the same block with a semicolon behind the at-rule, and with a declaration in place of it: there the comment is a node of the block, measured off its own `raws.before`, and a branch that moves either row has done something other than it meant to.
+ *
+ * The same corpus measured #509, the other half of that raw: the rule read the run in front of the closing brace out of the block's own whitespace, which this shape leaves empty, so the brace's line went unmeasured. The `tail` axis is what sees it.
  */
 
 import { multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** The statement closing the block. The first three carry neither a block nor a semicolon and run to the brace; the last two are the controls. */
+/** The statement closing the block. The first five carry neither a block nor a semicolon and run to the brace — `postcss-less` reads the mixin call as an at-rule too, with its `.` in `raws.identifier`. `mixinCallImportant` is the one of the five that the parser files differently: `postcss-less` prints the flag behind `raws.between` rather than in front of it, so the run belongs to neither raw and no rule may write there ([#374](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/374)). The last two are the controls, where the run in front of the brace is the block's own `raws.after`. */
 const STATEMENTS: Record<string, string> = {
 	extend: `@extend .b`,
 	includeCall: `@include m(1px)`,
 	includeBrokenCall: `@include m(⏎1px)`,
+	mixinCall: `.m()`,
+	mixinCallImportant: `.m() !important`,
 	extendSemicolon: `@extend .b;`,
 	declaration: `color: pink;`,
 }

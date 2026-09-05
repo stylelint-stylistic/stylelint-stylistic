@@ -644,3 +644,49 @@ a {
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`tab`],
+	customSyntax: `postcss-less`,
+
+	accept: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/509
+			description: `the closing brace of a block whose last statement is a mixin call carrying no semicolon, standing at the level the block does`,
+			code: `
+				a {
+					.m()
+				}
+			`,
+		},
+		{
+			description: `the same call carrying a bang flag, whose whitespace the parser collects from both sides of that flag and the stringifier writes on one, so the run in front of the brace is the block's raw no more than the call's`,
+			code: `
+				a {
+					.m() !important
+						}
+			`,
+		},
+	],
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/509
+			description: `that closing brace indented a level in, the run in front of it standing in the mixin call's whitespace rather than in the block's own`,
+			code: `
+				a {
+					.m()
+						}
+			`,
+			fixed: `
+				a {
+					.m()
+				}
+			`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`0 tabs`),
+		},
+	],
+})

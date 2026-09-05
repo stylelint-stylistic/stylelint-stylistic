@@ -7,11 +7,13 @@ import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { isAtRule, isDeclaration, isRoot, isRule } from "../../utils/typeGuards/index.ts"
 import { assertString, isBoolean, isNumber, isString } from "../../utils/validateTypes/index.ts"
 
@@ -102,7 +104,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// Cut out any * and _ hacks from `before`
 			let before = (node.raws.before || ``).replace(TRAILING_STAR_OR_UNDERSCORE, ``)
-			let after = typeof node.raws.after === `string` ? node.raws.after : ``
 			let parent = node.parent
 
 			if (!parent) throw new Error(`A parent node must be present`)
@@ -133,10 +134,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				})
 			}
 
-			// Only blocks have the `after` string to check. Only inspect `after` strings that hold a line break; otherwise there's no indentation involved. And check `indentClosingBrace` to see if it should be indented an extra level.
+			// Only blocks have the run in front of a closing brace to check. Only inspect runs that hold a line break; otherwise there's no indentation involved. And check `indentClosingBrace` to see if it should be indented an extra level.
 			let closingBraceLevel = indentClosingBrace ? nodeLevel + 1 : nodeLevel
 			let expectedClosingBraceIndentation = indentChar.repeat(closingBraceLevel)
-			let afterLines = after.split(EVERY_LINE_BREAK)
+			// The run is read and written wherever the parser filed it rather than out of `raws.after`, which one shape of block leaves empty: an at-rule closing the block with neither a block nor a semicolon of its own runs to the brace, so everything standing between its params and that brace goes into its `raws.between`. There the brace's line was measured by nobody — the text `checkAtRuleParams` hands the search runs through that raw, but the trim takes the whitespace closing it off the end, and the brace's line with it (#509)
+			let blockAfter = isRule(node) || isAtRule(node) ? getBlockAfter(node) ?? `` : ``
+			let afterLines = blockAfter.split(EVERY_LINE_BREAK)
 
 			if ((isRule(node) || isAtRule(node)) && hasBlock(node) && afterLines.length > 1 && afterLines.at(-1) !== expectedClosingBraceIndentation) {
 				let problemIndex = nodeString(node, result).length - 1
@@ -150,7 +153,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					result,
 					ruleName,
 					fix () {
-						if (isString(node.raws.after)) node.raws.after = fixIndentation(node.raws.after, expectedClosingBraceIndentation)
+						setBlockAfter(node, fixIndentation(blockAfter, expectedClosingBraceIndentation))
 					},
 				})
 			}

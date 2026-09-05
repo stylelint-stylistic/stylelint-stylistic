@@ -465,6 +465,15 @@ testRule({
 				  }
 			`,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/509
+			description: `the closing brace of a block whose last at-rule carries neither a block nor a semicolon, indented with the block it closes`,
+			code: `
+				a {
+				  @extend .b
+				  }
+			`,
+		},
 	],
 
 	reject: [
@@ -507,6 +516,23 @@ testRule({
 			line: 4,
 			column: 4,
 			message: messages.expected(`4 spaces`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/509
+			description: `the closing brace of a block whose last at-rule carries neither a block nor a semicolon, standing at the block's own level where the option asks for one more`,
+			code: `
+				a {
+				  @extend .b
+				}
+			`,
+			fixed: `
+				a {
+				  @extend .b
+				  }
+			`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`2 spaces`),
 		},
 	],
 })
@@ -629,6 +655,24 @@ testRule({
 					a: (
 						b: 1
 					)) {}
+			`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/509
+			description: `the closing brace of a block whose last at-rule carries neither a block nor a semicolon, standing at the level the block does`,
+			code: `
+				a {
+					@extend .b
+				}
+			`,
+		},
+		{
+			description: `the same block with a comment the at-rule swallowed along with the run in front of the brace`,
+			code: `
+				a {
+					@extend .b
+						/* c */
+				}
 			`,
 		},
 	],
@@ -798,6 +842,88 @@ testRule({
 			warnings: [
 				{ line: 3, column: 2, message: messages.expected(`2 tabs`) },
 				{ line: 4, column: 2, message: messages.expected(`2 tabs`) },
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/509
+			description: `the closing brace of such a block indented a level in, the run in front of it standing in the at-rule's whitespace rather than in the block's own`,
+			code: `
+				a {
+					@extend .b
+						}
+			`,
+			fixed: `
+				a {
+					@extend .b
+				}
+			`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`0 tabs`),
+		},
+		{
+			description: `the same block with an empty line in front of the brace, which the fix leaves standing`,
+			code: `
+				a {
+					@extend .b
+
+						}
+			`,
+			fixed: `
+				a {
+					@extend .b
+
+				}
+			`,
+			line: 4,
+			column: 3,
+			message: messages.expected(`0 tabs`),
+		},
+		{
+			description: `the same block written with carriage-return line breaks`,
+			code: `a {\r\n\t@extend .b\r\n\t\t}`,
+			fixed: `a {\r\n\t@extend .b\r\n}`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`0 tabs`),
+		},
+		{
+			description: `such a block nested in a query, where the brace is asked for the level of the block it closes rather than for none`,
+			code: `
+				@media x {
+					a {
+						@extend .b
+							}
+				}
+			`,
+			fixed: `
+				@media x {
+					a {
+						@extend .b
+					}
+				}
+			`,
+			line: 4,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `a comment the at-rule swallowed and the brace behind it, each measured in the half of the raw that holds it`,
+			code: `
+				a {
+					@extend .b
+					/* c */
+						}
+			`,
+			fixed: `
+				a {
+					@extend .b
+						/* c */
+				}
+			`,
+			warnings: [
+				{ line: 4, column: 3, message: messages.expected(`0 tabs`) },
+				{ line: 3, column: 2, message: messages.expected(`2 tabs`) },
 			],
 		},
 	],

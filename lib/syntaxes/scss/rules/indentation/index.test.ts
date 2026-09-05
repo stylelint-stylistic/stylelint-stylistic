@@ -577,3 +577,60 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`tab`],
+	customSyntax: `postcss-scss`,
+
+	accept: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/509
+			description: `the closing brace of a block whose last statement is an include carrying neither a block nor a semicolon, standing at the level the block does`,
+			code: `
+				a {
+					@include m
+				}
+			`,
+		},
+	],
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/509
+			description: `that closing brace indented a level in, the run in front of it standing in the include's whitespace rather than in the block's own`,
+			code: `
+				a {
+					@include m
+						}
+			`,
+			fixed: `
+				a {
+					@include m
+				}
+			`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`0 tabs`),
+		},
+		{
+			description: `the same block whose include swallowed an inline comment as well, which Sass reads to the end of its line`,
+			code: `
+				a {
+					@include m
+					// c
+						}
+			`,
+			fixed: `
+				a {
+					@include m
+						// c
+				}
+			`,
+			warnings: [
+				{ line: 4, column: 3, message: messages.expected(`0 tabs`) },
+				{ line: 3, column: 2, message: messages.expected(`2 tabs`) },
+			],
+		},
+	],
+})
