@@ -1,6 +1,6 @@
 import { type ComponentValue, isFunctionNode, isSimpleBlockNode, isTokenNode, parseCommaSeparatedListOfComponentValues, type SimpleBlockNode } from "@csstools/css-parser-algorithms"
 import { type CSSToken, isToken, mirrorVariant, stringify, type TokenIdent, tokenize, TokenType } from "@csstools/css-tokenizer"
-import { type GeneralEnclosed, isGeneralEnclosed, isMediaFeature, isMediaQueryInvalid, type MediaQuery, parseFromTokens } from "@csstools/media-query-list-parser"
+import { type GeneralEnclosed, isGeneralEnclosed, isMediaFeature, isMediaFeatureBoolean, isMediaFeatureRangeValueNameValue, isMediaQueryInvalid, type MediaFeatureValue, type MediaQuery, parseFromTokens } from "@csstools/media-query-list-parser"
 
 import { RANGE_FEATURE_OPERATOR } from "../../regexps.ts"
 
@@ -75,16 +75,14 @@ function closedTokens (block: SimpleBlockNode): Array<CSSToken> {
 }
 
 /**
- * Searches a CSS string for Media Feature names and invokes a callback for each found name. Found tokens are mutable and modifications made to them will be reflected in the output. This function supports some non-standard syntaxes like SCSS variables and interpolation.
- * @param mediaQueryParams - The media query parameters to search.
- * @param callback - The callback to invoke for each found media feature name.
- * @returns An object with a stringify method to serialize the media query.
+ * Reads the media queries a set of parameters spells, one parenthesised block at a time, and keeps the ones the media query parser could read.
+ * @param tokens - The tokens of the parameters.
+ * @returns The queries the parser read.
  */
-export function findMediaFeatureNames (mediaQueryParams: string, callback: (mediaFeatureName: TokenIdent) => void): MediaQuerySerializer {
-	let tokens = tokenize({ css: mediaQueryParams })
+function validQueriesOf (tokens: Array<CSSToken>): Array<MediaQuery> {
 	let list = parseCommaSeparatedListOfComponentValues(tokens)
 
-	let mediaQueryConditions = list.flatMap((listItem) => listItem.flatMap((componentValue) => {
+	return list.flatMap((listItem) => listItem.flatMap((componentValue) => {
 		if (
 			!isSimpleBlockNode(componentValue) || componentValue.startToken[0] !== TokenType.OpenParen
 		) return []
@@ -95,8 +93,18 @@ export function findMediaFeatureNames (mediaQueryParams: string, callback: (medi
 
 		return mediaQueryList.filter((mediaQuery) => !isMediaQueryInvalid(mediaQuery))
 	}))
+}
 
-	for (let mediaQuery of mediaQueryConditions) {
+/**
+ * Searches a CSS string for Media Feature names and invokes a callback for each found name. Found tokens are mutable and modifications made to them will be reflected in the output. This function supports some non-standard syntaxes like SCSS variables and interpolation.
+ * @param mediaQueryParams - The media query parameters to search.
+ * @param callback - The callback to invoke for each found media feature name.
+ * @returns An object with a stringify method to serialize the media query.
+ */
+export function findMediaFeatureNames (mediaQueryParams: string, callback: (mediaFeatureName: TokenIdent) => void): MediaQuerySerializer {
+	let tokens = tokenize({ css: mediaQueryParams })
+
+	for (let mediaQuery of validQueriesOf(tokens)) {
 		mediaQuery.walk(({ node }) => {
 			if (isMediaFeature(node)) {
 				let token = node.getNameToken()
@@ -141,4 +149,57 @@ export function findMediaFeatureNames (mediaQueryParams: string, callback: (medi
 			return stringify(...tokens)
 		},
 	}
+}
+
+/** The span the value of a media feature occupies in the parameters, from its first token to its last that is neither whitespace nor a comment. */
+export type MediaFeatureValueSpan = {
+	start: number,
+	end: number,
+}
+
+/**
+ * Measures the span of one value of a feature.
+ * @param value - The value, as the media query parser hands it over, its whitespace on either side included.
+ * @returns The span, or nothing where the value holds no token but whitespace and comments.
+ */
+function spanOf (value: MediaFeatureValue): MediaFeatureValueSpan | undefined {
+	let tokens = value.tokens().filter((token) => token[0] !== TokenType.Whitespace && token[0] !== TokenType.Comment)
+	let first = tokens[0]
+	let last = tokens.at(-1)
+
+	if (!first || !last) return
+
+	return { start: first[2], end: last[3] + 1 }
+}
+
+/**
+ * Finds the spans the values of the named media features occupy in a set of parameters, in the plain form and in the three shapes of the range form alike — one value beside the name, or one on either side of it.
+ *
+ * The parameters are read the way {@link findMediaFeatureNames} reads them, block by block through the media query parser, so a feature the parser cannot read — one holding a variable of a preprocessor — has no value here, and neither has a feature written without one. The tokens of a value carry their positions in the parameters, and a value's span reaches from its first token to its last that is neither whitespace nor a comment: a comment inside the value is the caller's to read, and one at either edge is no part of the value.
+ * @param mediaQueryParams - The parameters, as the file spells them.
+ * @param names - The names of the features whose values are wanted, in lower case.
+ * @returns The spans, in the order the values stand in the parameters.
+ */
+export function findMediaFeatureValues (mediaQueryParams: string, names: Set<string>): MediaFeatureValueSpan[] {
+	let spans: MediaFeatureValueSpan[] = []
+
+	for (let mediaQuery of validQueriesOf(tokenize({ css: mediaQueryParams }))) {
+		mediaQuery.walk(({ node }) => {
+			if (!isMediaFeature(node)) return
+
+			let { feature } = node
+
+			if (isMediaFeatureBoolean(feature) || !names.has(feature.getName().toLowerCase())) return
+
+			let values = isMediaFeatureRangeValueNameValue(feature) ? [feature.valueOne, feature.valueTwo] : [feature.value]
+
+			for (let value of values) {
+				let span = spanOf(value)
+
+				if (span) spans.push(span)
+			}
+		})
+	}
+
+	return spans.toSorted((one, other) => one.start - other.start)
 }

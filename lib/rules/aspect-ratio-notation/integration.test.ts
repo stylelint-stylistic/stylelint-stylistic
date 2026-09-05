@@ -179,3 +179,80 @@ testRule({
 		},
 	],
 })
+
+// A solidus written into a media feature is the `media-feature-slash-space-*` rules' run (#551), and the `value-slash-space-*` rules speak of a declaration's value alone.
+testRule({
+	ruleName,
+	config: [`ratio`],
+	extraRules: {
+		"@stylistic/media-feature-slash-space-before": `never`,
+		"@stylistic/media-feature-slash-space-after": `never`,
+	},
+
+	reject: [
+		{
+			description: `a feature whose ratio is one number, its second number written behind a solidus spelled tight as both neighbours ask`,
+			code: `@media (aspect-ratio: 2) {}`,
+			fixed: `@media (aspect-ratio: 2/1) {}`,
+			line: 1,
+			column: 23,
+			endLine: 1,
+			endColumn: 24,
+			message: messages.expected(`2`, `2/1`),
+		},
+		{
+			description: `a number on either side of the name in the range form, both written tight`,
+			code: `@media (2 <= aspect-ratio <= 3) {}`,
+			fixed: `@media (2/1 <= aspect-ratio <= 3/1) {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 30,
+					endLine: 1,
+					endColumn: 31,
+					message: messages.expected(`3`, `3/1`),
+				},
+				{
+					line: 1,
+					column: 9,
+					endLine: 1,
+					endColumn: 10,
+					message: messages.expected(`2`, `2/1`),
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`ratio`],
+	extraRules: {
+		"@stylistic/value-slash-space-before": `never`,
+		"@stylistic/value-slash-space-after": `never`,
+	},
+
+	reject: [
+		{
+			description: `a feature and a declaration, of which the neighbours speak of the declaration alone: its solidus is written tight, the feature's with a space on either side`,
+			code: `@media (aspect-ratio: 2) { a { aspect-ratio: 2; } }`,
+			fixed: `@media (aspect-ratio: 2 / 1) { a { aspect-ratio: 2/1; } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 46,
+					endLine: 1,
+					endColumn: 47,
+					message: messages.expected(`2`, `2/1`),
+				},
+				{
+					line: 1,
+					column: 23,
+					endLine: 1,
+					endColumn: 24,
+					message: messages.expected(`2`, `2 / 1`),
+				},
+			],
+		},
+	],
+})

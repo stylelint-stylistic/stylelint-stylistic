@@ -470,3 +470,266 @@ testRuleConfigs({
 		},
 	],
 })
+
+// The `<ratio>` of a media feature is read under the same options as the property's value (#551), in the plain form and in the range form alike, the `device-aspect-ratio` feature and the `min-` and `max-` spellings of both included.
+testRule({
+	ruleName,
+	config: [`ratio`],
+
+	accept: [
+		{
+			description: `a feature whose ratio is written with both of its numbers`,
+			code: `@media (aspect-ratio: 16 / 9) {}`,
+		},
+		{
+			description: `a ratio in the range form, written with both of its numbers`,
+			code: `@media (16 / 9 <= aspect-ratio) {}`,
+		},
+		{
+			description: `a ratio behind the name in the range form`,
+			code: `@media (aspect-ratio >= 2 / 1) {}`,
+		},
+		{
+			description: `a feature whose value is no ratio`,
+			code: `@media (width: 2) {}`,
+		},
+		{
+			description: `a feature written without a value`,
+			code: `@media (aspect-ratio) {}`,
+		},
+		{
+			description: `a feature whose value the media parser cannot read, the variable of a plugin over plain CSS`,
+			code: `@media (aspect-ratio: $a) {}`,
+		},
+		{
+			description: `a feature whose value is a call, which spells no ratio the rule can read`,
+			code: `@media (aspect-ratio: calc(2)) {}`,
+		},
+		{
+			description: `an at-rule that is no media query, whose parameters the rule does not read`,
+			code: `@supports (aspect-ratio: 2) {}`,
+		},
+	],
+
+	reject: [
+		{
+			description: `a feature whose ratio is one number`,
+			code: `@media (aspect-ratio: 2) {}`,
+			fixed: `@media (aspect-ratio: 2 / 1) {}`,
+			line: 1,
+			column: 23,
+			endLine: 1,
+			endColumn: 24,
+			message: messages.expected(`2`, `2 / 1`),
+		},
+		{
+			description: `the same feature under an upper-case at-rule name and feature name`,
+			code: `@MEDIA (ASPECT-RATIO: 2) {}`,
+			fixed: `@MEDIA (ASPECT-RATIO: 2 / 1) {}`,
+			line: 1,
+			column: 23,
+			endLine: 1,
+			endColumn: 24,
+			message: messages.expected(`2`, `2 / 1`),
+		},
+		{
+			description: `one number in front of the name in the range form`,
+			code: `@media (2 <= aspect-ratio) {}`,
+			fixed: `@media (2 / 1 <= aspect-ratio) {}`,
+			line: 1,
+			column: 9,
+			endLine: 1,
+			endColumn: 10,
+			message: messages.expected(`2`, `2 / 1`),
+		},
+		{
+			description: `one number behind the name in the range form`,
+			code: `@media (aspect-ratio >= 2) {}`,
+			fixed: `@media (aspect-ratio >= 2 / 1) {}`,
+			line: 1,
+			column: 25,
+			endLine: 1,
+			endColumn: 26,
+			message: messages.expected(`2`, `2 / 1`),
+		},
+		{
+			description: `a number on either side of the name in the range form, each a ratio of its own`,
+			code: `@media (2 <= aspect-ratio <= 3) {}`,
+			fixed: `@media (2 / 1 <= aspect-ratio <= 3 / 1) {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 30,
+					endLine: 1,
+					endColumn: 31,
+					message: messages.expected(`3`, `3 / 1`),
+				},
+				{
+					line: 1,
+					column: 9,
+					endLine: 1,
+					endColumn: 10,
+					message: messages.expected(`2`, `2 / 1`),
+				},
+			],
+		},
+		{
+			description: `the prefixed spellings of the two features`,
+			code: `@media (min-aspect-ratio: 2) and (max-device-aspect-ratio: 3) {}`,
+			fixed: `@media (min-aspect-ratio: 2 / 1) and (max-device-aspect-ratio: 3 / 1) {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 60,
+					endLine: 1,
+					endColumn: 61,
+					message: messages.expected(`3`, `3 / 1`),
+				},
+				{
+					line: 1,
+					column: 27,
+					endLine: 1,
+					endColumn: 28,
+					message: messages.expected(`2`, `2 / 1`),
+				},
+			],
+		},
+		{
+			description: `a feature and a declaration inside its block, each written on its own`,
+			code: `@media (aspect-ratio: 2) { a { aspect-ratio: 2; } }`,
+			fixed: `@media (aspect-ratio: 2 / 1) { a { aspect-ratio: 2 / 1; } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 46,
+					endLine: 1,
+					endColumn: 47,
+					message: messages.expected(`2`, `2 / 1`),
+				},
+				{
+					line: 1,
+					column: 23,
+					endLine: 1,
+					endColumn: 24,
+					message: messages.expected(`2`, `2 / 1`),
+				},
+			],
+		},
+		{
+			description: `a comment in front of the value, which is no part of it`,
+			code: `@media (aspect-ratio: /*c*/ 2) {}`,
+			fixed: `@media (aspect-ratio: /*c*/ 2 / 1) {}`,
+			line: 1,
+			column: 29,
+			endLine: 1,
+			endColumn: 30,
+			message: messages.expected(`2`, `2 / 1`),
+		},
+		{
+			description: `a comment behind the value, which the second number is written in front of`,
+			code: `@media (aspect-ratio: 2 /*c*/) {}`,
+			fixed: `@media (aspect-ratio: 2 / 1 /*c*/) {}`,
+			line: 1,
+			column: 23,
+			endLine: 1,
+			endColumn: 24,
+			message: messages.expected(`2`, `2 / 1`),
+		},
+		{
+			description: `two queries of one list, each with a feature of its own`,
+			code: `@media screen and (aspect-ratio: 2), print and (aspect-ratio: 3) {}`,
+			fixed: `@media screen and (aspect-ratio: 2 / 1), print and (aspect-ratio: 3 / 1) {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 63,
+					endLine: 1,
+					endColumn: 64,
+					message: messages.expected(`3`, `3 / 1`),
+				},
+				{
+					line: 1,
+					column: 34,
+					endLine: 1,
+					endColumn: 35,
+					message: messages.expected(`2`, `2 / 1`),
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`number-where-possible`],
+
+	reject: [
+		{
+			description: `a feature whose second number is one`,
+			code: `@media (aspect-ratio: 2 / 1) {}`,
+			fixed: `@media (aspect-ratio: 2) {}`,
+			line: 1,
+			column: 23,
+			endLine: 1,
+			endColumn: 28,
+			message: messages.expected(`2 / 1`, `2`),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`as-written`, { smallestIntegers: true }],
+
+	reject: [
+		{
+			description: `a feature whose numbers share a divisor`,
+			code: `@media (aspect-ratio: 16 / 8) {}`,
+			fixed: `@media (aspect-ratio: 2 / 1) {}`,
+			line: 1,
+			column: 23,
+			endLine: 1,
+			endColumn: 29,
+			message: messages.expected(`16 / 8`, `2 / 1`),
+		},
+		{
+			description: `a fractional number in the range form, whose second number the arithmetic asks for`,
+			code: `@media (1.5 <= aspect-ratio) {}`,
+			fixed: `@media (3 / 2 <= aspect-ratio) {}`,
+			line: 1,
+			column: 9,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`1.5`, `3 / 2`),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`ratio`, { ignore: [`at-rules`] }],
+
+	accept: [
+		{
+			description: `a feature whose ratio is one number, which the option leaves alone`,
+			code: `@media (aspect-ratio: 2) {}`,
+		},
+		{
+			description: `the same in the range form`,
+			code: `@media (2 <= aspect-ratio) {}`,
+		},
+	],
+
+	reject: [
+		{
+			description: `a declaration, which the option says nothing about`,
+			code: `@media (aspect-ratio: 2) { a { aspect-ratio: 2; } }`,
+			fixed: `@media (aspect-ratio: 2) { a { aspect-ratio: 2 / 1; } }`,
+			line: 1,
+			column: 46,
+			endLine: 1,
+			endColumn: 47,
+			message: messages.expected(`2`, `2 / 1`),
+		},
+	],
+})
