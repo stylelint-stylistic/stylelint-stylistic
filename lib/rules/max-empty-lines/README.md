@@ -11,7 +11,7 @@ a {} /* ↑ */
  * These lines */
 ```
 
-Where the option allows an empty line at all, the one a file ends on is counted like any other, and a run of spaces or tabs written behind the last line break does not hide it: such a run is a line of its own, and emptying it is what `no-eol-whitespace` is for. So a file closed by two line breaks is measured the same whether or not spaces follow them. The `0` option counts no line at the end of the file to begin with, and a file closed by a single break is no problem to it.
+Where the option allows an empty line at all, the one a file ends on is counted like any other, and a run of spaces or tabs written behind the last line break does not hide it: such a run is a line of its own, and emptying it is what `no-eol-whitespace` is for. So a file closed by two line breaks is measured the same whether or not spaces follow them. The `0` option counts no line at the end of the file to begin with, and a file closed by a single break is no problem to it. A file holding nothing but whitespace is counted from its beginning alone: every line break of the run it opens with is an empty line, and the end of the file adds none, so a file of one line break is one empty line, which the `0` option takes away and every other option lets stand.
 
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 

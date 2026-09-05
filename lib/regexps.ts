@@ -151,6 +151,9 @@ export const LEADING_INDENT_AND_CONTENT = /^([ \t]*)\S/u
 /** A line break opening a text, with nothing whatever in front of it — the question a rule asks where a run of spaces before the break is exactly what it is about, and where {@link OPENS_WITH_LINE_BREAK} would therefore answer yes too often. */
 export const LEADING_LINE_BREAK = /^\r?\n/u
 
+/** The run of line breaks a text opens with, nothing standing between them or in front of them — the run `max-empty-lines` counts from the beginning of a file, one empty line a break, and writes as the whitespace in front of a first node where the file holds no node at all (#404). {@link LEADING_LINE_BREAK} reads the first of them alone. */
+export const LEADING_LINE_BREAK_RUN = /^(?:\r?\n)+/u
+
 /** A text opening on anything but whitespace. */
 export const LEADING_NON_WHITESPACE = /^\S/u
 

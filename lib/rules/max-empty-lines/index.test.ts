@@ -42,6 +42,56 @@ testRule({
 			column: 1,
 			message: messages.expected(0),
 		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/404
+		{
+			description: `a stylesheet holding a line break and a run of spaces, whose one empty line is the line it opens on and whose run ends a line of its own and is left where it stood`,
+			code: `\n   `,
+			fixed: `   `,
+			line: 1,
+			column: 1,
+			message: messages.expected(0),
+		},
+		{
+			description: `the same stylesheet written with a carriage-return line break`,
+			code: `\r\n   `,
+			fixed: `   `,
+			line: 1,
+			column: 1,
+			message: messages.expected(0),
+		},
+		{
+			description: `a stylesheet holding two line breaks and a run of spaces, which are two empty lines and are both taken away`,
+			code: `\n\n   `,
+			fixed: `   `,
+			warnings: [
+				{
+					line: 1,
+					column: 1,
+					message: messages.expected(0),
+				},
+				{
+					line: 2,
+					column: 1,
+					message: messages.expected(0),
+				},
+			],
+		},
+		{
+			description: `a stylesheet holding a line break, a run of spaces and a line break, whose last break closes a line of its own and is let stand as the end of any file is`,
+			code: `\n   \n`,
+			fixed: `   \n`,
+			line: 1,
+			column: 1,
+			message: messages.expected(0),
+		},
+		{
+			description: `a stylesheet holding a line break and a free semicolon, which is no node of the stylesheet and is left where it stood`,
+			code: `\n;`,
+			fixed: `;`,
+			line: 1,
+			column: 1,
+			message: messages.expected(0),
+		},
 	],
 })
 
@@ -101,6 +151,19 @@ testRule({
 		{
 			description: `the same blank lines written with carriage-return line breaks`,
 			code: `a {}\r\n\r\n/** horse */\r\n\r\nb {}`,
+		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/404
+		{
+			description: `a stylesheet holding nothing but a line break, which is one empty line and not one for its beginning and one for its end`,
+			code: `\n`,
+		},
+		{
+			description: `the same stylesheet written with a carriage-return line break`,
+			code: `\r\n`,
+		},
+		{
+			description: `the same stylesheet with a run of spaces written behind the break, which ends a line of its own and hides nothing`,
+			code: `\n   `,
 		},
 	],
 
@@ -262,6 +325,39 @@ testRule({
 			description: `two blank lines in front of a stray semicolon standing in front of the closing brace, which is no node of the block and stands in the same raw as the blank lines`,
 			code: `a {\n\tb: c;\n\n\n;\n}\n`,
 			fixed: `a {\n\tb: c;\n\n;\n}\n`,
+			line: 4,
+			column: 1,
+			message: messages.expected(1),
+		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/404
+		{
+			description: `a stylesheet holding nothing but two line breaks, which are two empty lines and not three, and of which one is taken away`,
+			code: `\n\n`,
+			fixed: `\n`,
+			line: 2,
+			column: 1,
+			message: messages.expected(1),
+		},
+		{
+			description: `the same stylesheet written with carriage-return line breaks`,
+			code: `\r\n\r\n`,
+			fixed: `\r\n`,
+			line: 2,
+			column: 1,
+			message: messages.expected(1),
+		},
+		{
+			description: `the same stylesheet with a run of spaces written behind the breaks, which ends a line of its own and hides nothing`,
+			code: `\n\n   `,
+			fixed: `\n   `,
+			line: 2,
+			column: 1,
+			message: messages.expected(1),
+		},
+		{
+			description: `a stylesheet holding a line break, a run of spaces and two line breaks, whose last run is not the one the file opened with and is counted as the end of any file is`,
+			code: `\n   \n\n`,
+			fixed: `\n   \n`,
 			line: 4,
 			column: 1,
 			message: messages.expected(1),
@@ -433,6 +529,11 @@ testRule({
 			description: `a rule closed by two blank lines and a run of spaces, which is exactly the option's count`,
 			code: `a {}\n\n   `,
 		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/404
+		{
+			description: `a stylesheet holding nothing but two line breaks, which are exactly the option's count`,
+			code: `\n\n`,
+		},
 	],
 
 	reject: [
@@ -498,6 +599,15 @@ testRule({
 			code: `a {\n\tb: c;\n\n\n\n}\n`,
 			fixed: `a {\n\tb: c;\n\n\n}\n`,
 			line: 5,
+			column: 1,
+			message: messages.expected(2),
+		},
+		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/404
+		{
+			description: `a stylesheet holding nothing but three line breaks, which are three empty lines and not four`,
+			code: `\n\n\n`,
+			fixed: `\n\n`,
+			line: 3,
 			column: 1,
 			message: messages.expected(2),
 		},

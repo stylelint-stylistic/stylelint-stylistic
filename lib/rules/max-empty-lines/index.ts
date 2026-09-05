@@ -2,7 +2,7 @@ import type { ChildNode, Container, Document, Root } from "postcss"
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { CRLF, CRLF_RUN, EVERY_CRLF_RUN, EVERY_LF_RUN, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
+import { CRLF, CRLF_RUN, EVERY_CRLF_RUN, EVERY_LF_RUN, LEADING_LINE_BREAK_RUN, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
@@ -36,9 +36,6 @@ export let meta = {
  * @returns The check, run over every stylesheet the rule is configured for.
  */
 function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: number, secondaryOptions: { ignore?: `comments` | `comments`[] }): RuleCheck {
-	let emptyLines = 0
-	let lastIndex = -1
-
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,
@@ -92,8 +89,8 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 				if (first && firstNodeRawsBefore) first.raws.before = getChars(firstNodeRawsBefore, true)
 
 				if (rootRawsAfter) {
-					// when max set 0, should be treated as 1 in this situation.
-					root.raws.after = replaceEmptyLines(primary === 0 ? 1 : primary, rootRawsAfter, true)
+					// Behind a last node the file ends on a break a max of zero tolerates, so zero is read as one there. A root holding no node keeps the whole of the file here, and the run of breaks it opens with is the one the check counts from the beginning of the file, one empty line a break: that run is written first, as the whitespace in front of a first node is — down to the option's count, and to nothing under a max of zero — and the tail formula then finds it at or under the count and leaves it, writing what stands behind it as the tail of any file. Written as a tail whole, such a file kept a break under every option, and the warning stood after every run of `--fix` (#404).
+					root.raws.after = replaceEmptyLines(primary === 0 ? 1 : primary, first ? rootRawsAfter : rootRawsAfter.replace(LEADING_LINE_BREAK_RUN, (run) => getChars(run, true)), true)
 				}
 			}
 			else if (rootRawsAfter) {
@@ -102,13 +99,13 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 			}
 		}
 
-		emptyLines = 0
-		lastIndex = -1
-
+		let emptyLines = 0
+		let lastIndex = -1
 		let rootString = root.toString()
 
 		// A file that ends on a line break is counted one empty line more than the breaks inside it, so where the file ends decides that count — and it is not the last character of the text. A run of spaces and tabs written behind the file's last break is a line of its own, and emptying it is `no-eol-whitespace`'s work; read as the last character, the end of the file would stand behind that run and hide the break in front of it. So `a {}` and two line feeds was reported for the empty line it ends on and the same file with three spaces written behind them was not, and which of the two a neighbouring fixer had left standing decided the answer. It is measured once here rather than at every match, where each would cost a slice of the tail.
 		let endOfFile = rootString.replace(TRAILING_SPACES_AND_TABS, ``).length
+		let opensTheFile = false
 
 		styleSearch(
 			{
@@ -135,6 +132,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 			if (!matchStartIndex || lastIndex === matchStartIndex) emptyLines += 1
 			else emptyLines = 0
 
+			opensTheFile = !matchStartIndex || (opensTheFile && lastIndex === matchStartIndex)
 			lastIndex = matchEndIndex
 
 			if (emptyLines > primary) problem = true
@@ -154,8 +152,8 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 				})
 			}
 
-			// Additional check for end of file
-			if (eof && primary) {
+			// Additional check for end of file. It counts nothing where the run the file ends on is the run it opened with — the first break of the text and every break standing right behind one — since the check for the beginning of the file has counted each of those an empty line already: a file holding nothing but such a run and the spaces behind it was counted once for its beginning and once more for its end, a line over what it has (#404).
+			if (eof && primary && !opensTheFile) {
 				emptyLines += 1
 
 				if (emptyLines > primary && isEofNode(result.root, node)) {
