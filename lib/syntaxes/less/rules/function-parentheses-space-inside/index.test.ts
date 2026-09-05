@@ -78,11 +78,12 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/114
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
 			description: `a \`/*/\` the value parser prints back one character longer than the file spells it: the parenthesis is still found where it stands`,
 			code: `a { transform: translate(1px /*/ d */ 2px // keep me\n); }`,
 			fixed: `a { transform: translate(1px /*/ d */ 2px // keep me\n); }`,
-			line: 2,
-			column: 1,
+			line: 1,
+			column: 53,
 			message: messages.rejectedClosing,
 		},
 		{

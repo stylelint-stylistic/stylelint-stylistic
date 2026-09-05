@@ -194,6 +194,7 @@ testRule({
 			],
 		},
 		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
 			description: `a comment holding a parenthesis between two quotation marks it closes around them: the string those marks open reaches past nothing, so the mask leaves them where they stand and the parenthesis stays the comment's`,
 			code: `a { b: g(1 /*/ "(" */ 2); }`,
@@ -206,12 +207,13 @@ testRule({
 				},
 				{
 					line: 1,
-					column: 24,
+					column: 23,
 					message: messages.expectedClosing,
 				},
 			],
 		},
 		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
 			description: `a call holding a comment with one quotation mark and a string behind it: the string the mark of the comment used to open took the parenthesis the file closes the call on, and the rule read nothing of a call the parser never closed`,
 			code: `a { b: g(1 /*/ " */ "1"); }`,
@@ -224,7 +226,7 @@ testRule({
 				},
 				{
 					line: 1,
-					column: 24,
+					column: 23,
 					message: messages.expectedClosing,
 				},
 			],
@@ -701,6 +703,15 @@ testRule({
 					message: messages.rejectedClosing,
 				},
 			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
+			description: `the whitespace in front of the closing parenthesis of a call holding a comment opening with a solidus, a star and a solidus, reported at the character in front of the parenthesis as it is for the twin holding a comment of that width the value parser gives back as it read it, rather than a column further on`,
+			code: `a { b: f(2 /*/ c */ ); }`,
+			fixed: `a { b: f(2 /*/ c */); }`,
+			line: 1,
+			column: 20,
+			message: messages.rejectedClosing,
 		},
 	],
 })

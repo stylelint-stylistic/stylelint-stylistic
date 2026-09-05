@@ -156,6 +156,7 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/113
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
 			description: `a \`/*/\` the value parser reads as a comment of its own and prints one character longer than the file spells it`,
 			code: `
 				a {
@@ -170,7 +171,7 @@ testRule({
 				}
 			`,
 			line: 3,
-			column: 18,
+			column: 17,
 			message: messages.rejectedClosingMultiLine,
 		},
 		{

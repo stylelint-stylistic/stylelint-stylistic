@@ -374,6 +374,7 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/347
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
 			description: `a comment leaving a quotation mark open in front of a parenthesis it also holds: taking the mark away hands the parser that parenthesis, which closes the feature inside the comment, and this rule asks nothing about where the parenthesis it writes at stands`,
 			code: `@media ( b: 2 /*/ " ) */ ) and (c: d) { a { b: c; } }`,
@@ -386,10 +387,19 @@ testRule({
 				},
 				{
 					line: 1,
-					column: 21,
+					column: 20,
 					message: messages.rejectedClosing,
 				},
 			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
+			description: `the whitespace in front of the closing parenthesis of a feature holding a comment opening with a solidus, a star and a solidus, reported at the character in front of the parenthesis as it is for the twin holding a comment of that width the value parser gives back as it read it, rather than a column further on`,
+			code: `@media (a: 1 /*/ c */ ) { a { b: c; } }`,
+			fixed: `@media (a: 1 /*/ c */) { a { b: c; } }`,
+			line: 1,
+			column: 22,
+			message: messages.rejectedClosing,
 		},
 	],
 })

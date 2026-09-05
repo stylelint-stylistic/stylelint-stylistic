@@ -173,8 +173,8 @@ function findFirstCharacterIndex (declValue: string, firstIndex: number): number
 /**
  * Names the span the whitespace in front of a function's closing parenthesis stands in.
  *
- * A function the parser has marked unclosed never gets here, so the parenthesis is the character the node ends on.
- * @param valueNode - The function being fixed.
+ * A function the parser has marked unclosed never gets here, so the parenthesis is the character the node ends on. The closing warning is counted from the span's end as well, one character in front of it, so that the warning and the fixes name one parenthesis.
+ * @param valueNode - The function being read.
  * @returns The span, counted in the value the file spells.
  */
 function getAfterSpan (valueNode: FunctionNode): {
@@ -287,7 +287,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// What the walk reads of the function ... Both sides of it are read before either is reported on: under `never-multi-line` the two fixes are weighed against one another, so neither can be handed to a warning before the other has been weighed.
 				let openingIndex = valueNode.sourceIndex + valueNode.value.length + 1
 				let { before: checkBefore, firstIndex, measured: measuredBefore } = getCheckBefore(valueNode, openingIndex, declValue, comments)
-				let closingIndex = valueNode.sourceIndex + functionString.length - 2
+				// The character in front of the parenthesis the closing fixes write at, counted where the parser marks the node's end in the file: the length of a printed copy of the node is no measure of it, since the stringifier gives a comment opening `/*/` back as `/**/`, a character wider than the file spells it, and an index counted from that length landed on the parenthesis itself (#506)
+				let closingIndex = getAfterSpan(valueNode).end - 1
 				let { after: checkAfter, measured: measuredAfter } = getCheckAfter(valueNode, declValue, comments)
 				let { isOpeningFixable, isClosingFixable } = isMultiLine && primary === `never-multi-line`
 					? getNeverFixability(syntax, { declValue, valueNode, checkBefore, checkAfter, firstIndex, measuredBefore, measuredAfter, comments, reading })

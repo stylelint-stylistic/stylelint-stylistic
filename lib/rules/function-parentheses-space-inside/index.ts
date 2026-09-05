@@ -118,15 +118,24 @@ function openingEdit (valueNode: FunctionNode, text: string): Edit {
 }
 
 /**
- * Names the span the whitespace in front of a function's closing parenthesis stands in, and what goes there.
+ * Names where a function's closing parenthesis stands in the value the file spells.
  *
- * A function the parser has marked unclosed never gets here, so the parenthesis is the character the node ends on.
+ * A function the parser has marked unclosed never gets here, so the parenthesis is the character the node ends on, and the parser marks that end in the file's own coordinates. The length of a printed copy of the node is no measure of it: the stringifier gives a comment opening `/*\/` back as `/**\/`, a character wider than the file spells it, and an index counted from that length landed a character past the one it was about (#506).
+ * @param valueNode - The function being read.
+ * @returns The index of the parenthesis.
+ */
+function closingParenthesisIndex (valueNode: FunctionNode): number {
+	return valueNode.sourceEndIndex - 1
+}
+
+/**
+ * Names the span the whitespace in front of a function's closing parenthesis stands in, and what goes there.
  * @param valueNode - The function being fixed.
  * @param text - The whitespace to put there.
  * @returns The edit that writes it.
  */
 function closingEdit (valueNode: FunctionNode, text: string): Edit {
-	let end = valueNode.sourceEndIndex - 1
+	let end = closingParenthesisIndex(valueNode)
 
 	return { start: end - valueNode.after.length, end, text }
 }
@@ -216,7 +225,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				}
 
 				// Check closing ...
-				let closingIndex = valueNode.sourceIndex + functionString.length - 2
+				// The character in front of the parenthesis, which is where the whitespace the closing half of an option is about ends
+				let closingIndex = closingParenthesisIndex(valueNode) - 1
 
 				/**
 				 * Asks whether the parenthesis can be moved at all.

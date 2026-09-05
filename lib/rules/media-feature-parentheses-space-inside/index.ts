@@ -42,18 +42,30 @@ function openingEdit (node: FunctionNode, text: string): Edit {
 }
 
 /**
- * Names the span the whitespace in front of a media feature's closing parenthesis stands in, and what goes there.
+ * Names where a media feature's closing parenthesis stands in the parameters the file spells, which is where the closing fix writes in front of and where the closing warning is reported one character in front of.
  *
- * A feature the file leaves unclosed carries no parenthesis to stand in front of: the parser hands out no whitespace of its own for one, and the stringifier prints what a fix puts there on the very end of the parameters. The span is named that end here, so that such a write stays where it has always been written — a query the parser has read this way is #131's, not this rule's.
+ * A feature the file leaves unclosed carries no parenthesis to stand in front of: the parser hands out no whitespace of its own for one, and the stringifier prints what a fix puts there on the very end of the parameters. That end is named here, so that such a write stays where it has always been written — a query the parser has read this way is #131's, not this rule's.
  *
  * The end is the length of the parameters rather than the position the node reports. An unclosed feature reaches the end of the parameters by definition, so the two say the same thing — except where an unclosed `url()` stands inside one, which the parser ends a character past the text it was handed: `valueParser("g(url( abc")` gives the outer node `[0, 11)` for ten characters. An index outside the text is one no edit may carry, whatever the write it names would come to.
+ *
+ * A closed feature ends on its parenthesis, and the parser marks that end in the file's own coordinates. The length of a printed copy of the node is no measure of it: the stringifier gives a comment opening `/*\/` back as `/**\/`, a character wider than the file spells it, and a warning whose index was counted from that length landed on the parenthesis itself rather than on the character in front of it (#506).
+ * @param node - The media feature being read.
+ * @param params - The parameters the node's positions are counted in.
+ * @returns The index of the parenthesis, or the end of the parameters where the feature has none.
+ */
+function closingParenthesisIndex (node: FunctionNode, params: string): number {
+	return node.unclosed ? params.length : node.sourceEndIndex - 1
+}
+
+/**
+ * Names the span the whitespace in front of a media feature's closing parenthesis stands in, and what goes there.
  * @param node - The media feature being fixed.
  * @param text - The whitespace to put there.
  * @param params - The parameters the node's positions are counted in.
  * @returns The edit that writes it.
  */
 function closingEdit (node: FunctionNode, text: string, params: string): Edit {
-	let end = node.unclosed ? params.length : node.sourceEndIndex - 1
+	let end = closingParenthesisIndex(node, params)
 
 	return { start: end - node.after.length, end, text }
 }
@@ -101,7 +113,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (findCommentSpanHolding(node, comments)) return
 
 				if (node.type === `function`) {
-					let len = valueParser.stringify(node).length
+					let closingIndex = closingParenthesisIndex(node, params) - 1
 
 					if (primary === `never`) {
 						if (SPACE_OR_TAB.test(node.before)) {
@@ -118,7 +130,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 							problems.push({
 								message: messages.rejectedClosing,
-								index: node.sourceIndex - 2 + len + indexBoost,
+								index: closingIndex + indexBoost,
 								...(isFixable && { fix: (): void => { addEdit(edits, closingEdit(node, ``, params)) } }),
 							})
 						}
@@ -135,7 +147,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						if (node.after === ``) {
 							problems.push({
 								message: messages.expectedClosing,
-								index: node.sourceIndex - 2 + len + indexBoost,
+								index: closingIndex + indexBoost,
 								fix () { addEdit(edits, closingEdit(node, ` `, params)) },
 							})
 						}

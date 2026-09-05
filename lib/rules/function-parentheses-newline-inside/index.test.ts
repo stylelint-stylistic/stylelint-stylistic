@@ -294,6 +294,7 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
 			description: `such a comment standing first inside the call, whose break goes behind the comment CSS reads and not behind the star the value parser closed it on`,
 			code: `a { b: f(/*/ c */ 2); }`,
 			fixed: `a { b: f(/*/ c */\n 2\n); }`,
@@ -305,10 +306,19 @@ testRule({
 				},
 				{
 					line: 1,
-					column: 20,
+					column: 19,
 					message: messages.expectedClosing,
 				},
 			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
+			description: `such a comment standing last inside the call, whose closing warning is reported at the character in front of the parenthesis as it is for the twin holding a comment of that width the value parser gives back as it read it, rather than on the parenthesis itself`,
+			code: `a { b: f(\n2 /*/ c */); }`,
+			fixed: `a { b: f(\n2 /*/ c */\n); }`,
+			line: 2,
+			column: 10,
+			message: messages.expectedClosing,
 		},
 	],
 })
@@ -777,6 +787,7 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
 			description: `such a comment standing first inside the call, whose whitespace is emptied around the comment CSS reads and not around the star the value parser closed it on`,
 			code: `a { b: f(\n/*/ c */ 2\n); }`,
 			fixed: `a { b: f(/*/ c */2); }`,
@@ -787,19 +798,20 @@ testRule({
 					message: messages.rejectedOpeningMultiLine,
 				},
 				{
-					line: 3,
-					column: 1,
+					line: 2,
+					column: 11,
 					message: messages.rejectedClosingMultiLine,
 				},
 			],
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
 			description: `such a comment standing last inside the call, over which the whitespace in front of the closing parenthesis is read as over any other block comment`,
 			code: `a { b: f(f(1,\n2) /*/ c */); }`,
 			fixed: `a { b: f(f(1,\n2)/*/ c */); }`,
 			line: 2,
-			column: 12,
+			column: 11,
 			message: messages.rejectedClosingMultiLine,
 		},
 	],
