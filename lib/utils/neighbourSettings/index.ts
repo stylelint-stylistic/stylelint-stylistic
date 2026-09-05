@@ -86,3 +86,30 @@ export function speaksOf (option: string, isSingleLine: () => boolean): boolean 
 
 	return false
 }
+
+/** A neighbouring rule whose primary is a keyword or `true`, read for its secondary options as much as for its primary. */
+export type NeighbourRuleSetting = {
+	name: string,
+	options: (string | true)[],
+}
+
+/**
+ * Reads the setting of one neighbouring rule out of the configuration, whole: its primary option, whether its fix is turned off, and its secondary options.
+ *
+ * `neighbourSettings` reads several neighbours in the order the run makes them and hands back their primaries alone, which is what a writer asking what to spell into a run wants. A rule asking whether a neighbour owns a run it would otherwise rewrite wants one neighbour and its secondary options, since the owning may be an option of the neighbour's rather than its primary — `no-multiple-whitespaces` asks `named-grid-areas-alignment` whether it lays a shorthand out as a table (#45). The neighbour is read under the namespace the asking rule is registered under, as `neighbourSettings` reads its own.
+ * @param syntax - The syntax the asking rule is built over, whose namespace names the neighbour.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @param rule - The neighbour, and the primaries it accepts.
+ * @returns The setting, or nothing where the configuration lists the neighbour with no primary it accepts, or not at all.
+ */
+export function neighbourSetting (syntax: Syntax, result: PostcssResult, rule: NeighbourRuleSetting): { option: string | true, fixDisabled: boolean, secondary: Record<string, unknown> } | undefined {
+	let settings: Record<string, unknown> = result.stylelint?.config?.rules ?? {}
+	let setting = settings[addNamespace(rule.name, syntax.namespace)]
+	let option: unknown = Array.isArray(setting) ? setting[0] : setting
+
+	if ((typeof option !== `string` && option !== true) || !rule.options.includes(option)) return
+
+	let secondary: unknown = Array.isArray(setting) ? setting[1] : undefined
+
+	return { option, fixDisabled: fixDisabledBy(setting), secondary: typeof secondary === `object` && secondary !== null ? secondary as Record<string, unknown> : {} }
+}

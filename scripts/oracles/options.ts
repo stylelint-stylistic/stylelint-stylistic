@@ -54,7 +54,7 @@ const RULE_OPTIONS: Record<string, unknown[]> = {
 	"media-query-list-comma-newline-before": [`always`, `always-multi-line`, `never-multi-line`],
 	"media-query-list-comma-space-after": [`always`, `never`, `always-single-line`, `never-single-line`],
 	"media-query-list-comma-space-before": [`always`, `never`, `always-single-line`, `never-single-line`],
-	"named-grid-areas-alignment": [true],
+	"named-grid-areas-alignment": [true, [true, { alignColumns: true }]],
 	"no-empty-first-line": [true],
 	"no-eol-whitespace": [true],
 	"no-extra-semicolons": [true],

@@ -6,7 +6,7 @@ import { css } from "../../lib/syntaxes/css/index.ts"
 import { namespaces } from "../../lib/syntaxes/index.ts"
 import { RULE_OPTIONS } from "../oracles/options.ts"
 
-import { buildRegistry, lint, lintDirect } from "./lint.ts"
+import { buildRegistry, lint, lintDirect, type RuleSetting } from "./lint.ts"
 
 /** The rules under the names a configuration spells them with, built the way `vitest.setup.ts` builds the registry the suite is linted through. */
 const REGISTRY = buildRegistry(rules, [css, ...namespaces])
@@ -75,8 +75,9 @@ describe(`the option list the oracles read`, () => {
 			for (let [rule, primaries] of Object.entries(RULE_OPTIONS)) {
 				for (let primary of primaries) {
 					let name = syntaxName === `css` ? rule : `${syntaxName}/${rule}`
+					// A primary the list spells as an array is a setting whole, the primary opening it and the secondary options closing it, as `runs.ts` hands it to a configuration
 					// eslint-disable-next-line no-await-in-loop
-					let answer = await lintDirect({ code: CODE, rules: [[name, primary]], registry: REGISTRY, syntax })
+					let answer = await lintDirect({ code: CODE, rules: [Array.isArray(primary) ? [name, ...primary] as RuleSetting : [name, primary]], registry: REGISTRY, syntax })
 
 					if (!answer.unparsable && answer.invalidOptions.length > 0) refused.push(`${name}: ${JSON.stringify(primary)}`)
 				}

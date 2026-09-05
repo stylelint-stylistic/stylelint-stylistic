@@ -11,6 +11,8 @@ Disallow multiple whitespaces.
 
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule.
 
+Where the configuration lists the [`named-grid-areas-alignment`](../named-grid-areas-alignment/README.md) rule with its `alignColumns` option, the runs between the tokens of a line of a `grid-template` or `grid` shorthand that holds a row are that rule's, which pads them into columns, and this rule leaves them alone — whichever order the two are listed in, and whether that rule's fix is on or not. Every other run of such a value, the one in front of the solidus among them, is read as before.
+
 ## Options
 
 ### `true`

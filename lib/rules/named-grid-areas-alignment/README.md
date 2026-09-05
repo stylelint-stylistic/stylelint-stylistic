@@ -28,7 +28,7 @@ div {
 }
 ```
 
-Whether the solidus opens a line of its own or closes the last row's is not this rule's to decide, and neither is the column the rows open on.
+Whether the solidus opens a line of its own or closes the last row's is not this rule's to decide, and neither is the column the rows open on. The `alignColumns` option below lays the sizes and the line names out as columns of their own.
 
 A declaration spans lines when a line break stands in its value outside every row. Everything of the value that is no row is handed back character for character, wherever it stands and whatever it is — the whitespace in front of the first row, between two of them or behind the last, a comment, a call, a word carrying an escaped break — so a break written in any of them is one the fix leaves. A break standing inside a row is not one of those: the fix collapses the whitespace of a row, that break with it, so the row comes back on one line.
 
@@ -143,3 +143,72 @@ div {
     'long-one long-one'
 }
 ```
+
+### `alignColumns: boolean`
+
+Whether the line names and the sizes beside the rows of a `grid-template` or `grid` shorthand are laid out as columns of a table (default is `false`).
+
+Every line of the value that holds one row is read as four columns — the line names in front of the row, the row, its size, and the line names behind it — and every column is as wide as the widest text standing in it. The padding is written between the tokens of a line and never in front of its first one: the first token of every line stands where the indentation puts it, so the indentation stays what the [`indentation`](../indentation/README.md) rule asks for, and a row that has no line name in front of it stands at the indentation while its size and its closing names still reach their columns. Two names of one line stand a single space apart. The solidus and the columns behind it, a comment and everything behind it on its line, and a line holding two rows or none are left as they stand, and so is a value that spans no line outside its rows — the longhand has nothing to lay out.
+
+
+Where the configuration lists this option, the [`no-multiple-whitespaces`](../no-multiple-whitespaces/README.md) rule leaves the runs between the tokens of such a line alone, whichever order the two rules are listed in and whether this rule's fix is on or not; a run standing anywhere else in the value, in front of the solidus for one, is that rule's as before. The padding lengthens a line, which [`max-line-length`](../max-line-length/README.md) may report.
+
+Under `alignQuotes` the padding of a short row stands inside its quotation marks, and the sizes line up behind the closing quotes; without it the padding stands behind the closing quote, and the sizes line up all the same.
+
+**Given rule configuration: `named-grid-areas-alignment: [true, { alignColumns: true }]`**
+
+The following patterns are considered problems:
+
+```css
+/* ❌ Line names, rows and sizes not laid out as columns */
+
+div {
+  grid-template:
+    [header-left] "head head" minmax(30px, 1fr) [header-right]
+    [] "nav main" 1fr [main-right]
+    [footer] "nav foot" 30px
+    / 120px 1fr;
+}
+```
+
+The following patterns are _not_ considered problems:
+
+```css
+/* ✅ Every column laid out */
+
+div {
+  grid-template:
+    [header-left] "head head" minmax(30px, 1fr) [header-right]
+    []            "nav  main" 1fr               [main-right]
+    [footer]      "nav  foot" 30px
+    / 120px 1fr;
+}
+```
+
+```css
+/* ✅ A row without a line name in front of it, standing at the indentation */
+
+div {
+  grid-template:
+    [header-left] "head head" 30px [header-right]
+    "nav  main"               1fr  [main-right]
+    / 120px 1fr;
+}
+```
+
+#### A row without a line name
+
+The rule never writes in front of the first token of a line, so a row that has no line name in front of it cannot be moved under the rows that have one: it stays at the indentation, and only its size and the names behind it reach their columns, as the last example above shows. To put such a row under the others, give it an empty list of line names, `[]`. The grammar of `<line-names>` is `'[' <custom-ident>* ']'`, a list of no names included; `lightningcss` 1.33 compiles `grid-template: [] "a a" 1fr / auto` with the brackets dropped, Sass hands them through, and the `[]` behind the names closing the row above merges with them, so the grid is the one it was:
+
+```css
+/* ✅ The same grid, its second row given an empty list of line names and laid out under the first */
+
+div {
+  grid-template:
+    [header-left] "head head" 30px [header-right]
+    []            "nav  main" 1fr  [main-right]
+    / 120px 1fr;
+}
+```
+
+The rule writes no `[]` itself: it writes whitespace and nothing else, and whether the column of the names is worth an empty list is the author's to decide. **Less does not read an empty list**: Less 4.9.1 refuses `[]` and `[ ]` alike as unrecognised input, so a stylesheet written in Less keeps such a row at the indentation, and the [`less` namespace](../../syntaxes/less/README.md) says so.

@@ -296,3 +296,36 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [true, { alignColumns: true }],
+	customSyntax: `postcss-less`,
+
+	reject: [
+		{
+			description: `a table whose first line ends in an end-of-line comment, which ends the line's tokens and keeps the run in front of it`,
+			code: `
+				a {
+					grid-template:
+						[a] "x x" 1fr // c
+						[bbb] "y y" 2fr
+						/ 1fr;
+				}
+			`,
+			fixed: `
+				a {
+					grid-template:
+						[a]   "x x" 1fr // c
+						[bbb] "y y" 2fr
+						/ 1fr;
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 5,
+			endColumn: 8,
+			message: messages.expected(`grid-template`),
+		},
+	],
+})

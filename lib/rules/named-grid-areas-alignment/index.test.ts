@@ -1764,3 +1764,339 @@ testRule({
 		},
 	],
 })
+
+// Under `alignColumns` the lines of a shorthand that hold a row are laid out as a table: the line names in front of the row, the row, its size and the names behind it stand in columns, the padding written between the tokens of a line and never in front of its first one (#45).
+testRule({
+	ruleName,
+	config: [true, { alignColumns: true }],
+
+	accept: [
+		{
+			description: `the issue's example with an empty list of names on the row that has none, every column laid out`,
+			code: `
+				a {
+					grid-template:
+						[header-left] "head head" minmax(30px, 1fr) [header-right]
+						[]            "nav  main" 1fr               [main-right]
+						[footer]      "nav  foot" 30px
+						/ 120px 1fr;
+				}
+			`,
+		},
+		{
+			description: `a row without a line name in front of it, standing at the indentation, its size and closing name in their columns`,
+			code: `
+				a {
+					grid-template:
+						[header-left] "head head" 30px [header-right]
+						"nav  main"               1fr  [main-right]
+						/ 120px 1fr;
+				}
+			`,
+		},
+		{
+			description: `the longhand, which has nothing beside its rows to lay out`,
+			code: `
+				a {
+					grid-template-areas:
+						"x  x"
+						"yy y";
+				}
+			`,
+		},
+		{
+			description: `a shorthand on one line, which spans no line outside its rows`,
+			code: `a { grid-template: [a] "x x" 1fr [bbb] "y y" 2fr / 1fr; }`,
+		},
+		{
+			description: `a shorthand of one row on one line with a doubled run behind its name, which is no table and no run of this rule's`,
+			code: `a { grid-template: [a]  "x x" 1fr / 1fr; }`,
+		},
+		{
+			description: `a line holding two rows, which is no line of the table`,
+			code: `
+				a {
+					grid-template:
+						[a] "x x" 1fr [b] "y y" 2fr
+						/ 1fr;
+				}
+			`,
+		},
+		{
+			description: `a wide run behind the solidus, which is no run of the table`,
+			code: `
+				a {
+					grid-template:
+						[a]   "x x" 1fr
+						[bbb] "y y" 2fr / 1fr  1fr;
+				}
+			`,
+		},
+		{
+			description: `the same table written with carriage-return line breaks`,
+			code: `a {\r\n\tgrid-template:\r\n\t\t[a]   "x x" 1fr\r\n\t\t[bbb] "y y" 2fr\r\n\t\t/ 1fr;\r\n}`,
+		},
+	],
+
+	reject: [
+		{
+			description: `the issue's example with an empty list of names on the row that has none, its columns not laid out`,
+			code: `
+				a {
+					grid-template:
+						[header-left] "head head" minmax(30px, 1fr) [header-right]
+						[] "nav main" 1fr [main-right]
+						[footer] "nav foot" 30px
+						/ 120px 1fr;
+				}
+			`,
+			fixed: `
+				a {
+					grid-template:
+						[header-left] "head head" minmax(30px, 1fr) [header-right]
+						[]            "nav  main" 1fr               [main-right]
+						[footer]      "nav  foot" 30px
+						/ 120px 1fr;
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 6,
+			endColumn: 14,
+			message: messages.expected(`grid-template`),
+		},
+		{
+			description: `a row without a line name in front of it: the row stays at the indentation, and its size and closing name are padded into their columns`,
+			code: `
+				a {
+					grid-template:
+						[header-left] "head head" 30px [header-right]
+						"nav main" 1fr [main-right]
+						/ 120px 1fr;
+				}
+			`,
+			fixed: `
+				a {
+					grid-template:
+						[header-left] "head head" 30px [header-right]
+						"nav  main"               1fr  [main-right]
+						/ 120px 1fr;
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 5,
+			endColumn: 14,
+			message: messages.expected(`grid-template`),
+		},
+		{
+			description: `a line without a size, whose closing name is padded past the column of the sizes`,
+			code: `
+				a {
+					grid-template:
+						[a] "x x" [b]
+						[ccc] "yy y" 1fr [d]
+						/ 1fr;
+				}
+			`,
+			fixed: `
+				a {
+					grid-template:
+						[a]   "x  x"     [b]
+						[ccc] "yy y" 1fr [d]
+						/ 1fr;
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 5,
+			endColumn: 8,
+			message: messages.expected(`grid-template`),
+		},
+		{
+			description: `a name spelled with a run inside its brackets, which comes out with a single space`,
+			code: `
+				a {
+					grid-template:
+						[a   b] "x x" 1fr
+						[c] "y y" 2fr
+						/ 1fr;
+				}
+			`,
+			fixed: `
+				a {
+					grid-template:
+						[a b] "x x" 1fr
+						[c]   "y y" 2fr
+						/ 1fr;
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 5,
+			endColumn: 8,
+			message: messages.expected(`grid-template`),
+		},
+		{
+			description: `a comment behind a size, which ends the line's tokens and keeps the run in front of it`,
+			code: `
+				a {
+					grid-template:
+						[a] "x x" 1fr /* c */
+						[bbb] "y y" 2fr
+						/ 1fr;
+				}
+			`,
+			fixed: `
+				a {
+					grid-template:
+						[a]   "x x" 1fr /* c */
+						[bbb] "y y" 2fr
+						/ 1fr;
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 5,
+			endColumn: 8,
+			message: messages.expected(`grid-template`),
+		},
+		{
+			description: `a row broken across two lines, which the fix brings onto one and lays out with the others`,
+			code: `
+				a {
+					grid-template:
+						[a] "x
+						 x" 1fr
+						[bbb] "y y" 2fr
+						/ 1fr;
+				}
+			`,
+			fixed: `
+				a {
+					grid-template:
+						[a]   "x x" 1fr
+						[bbb] "y y" 2fr
+						/ 1fr;
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 6,
+			endColumn: 8,
+			message: messages.expected(`grid-template`),
+		},
+		{
+			description: `the solidus closing the last row's line, the run behind it left as it stands`,
+			code: `
+				a {
+					grid-template:
+						[a] "x x" 1fr
+						[bbb] "y y" 2fr / 1fr  1fr;
+				}
+			`,
+			fixed: `
+				a {
+					grid-template:
+						[a]   "x x" 1fr
+						[bbb] "y y" 2fr / 1fr  1fr;
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 4,
+			endColumn: 29,
+			message: messages.expected(`grid-template`),
+		},
+		{
+			description: `rows of two widths, the short one padded behind its closing quote so that the sizes line up`,
+			code: `
+				a {
+					grid-template:
+						[a] "x x" 1fr
+						[bbb] "yy yy" 2fr
+						/ 1fr;
+				}
+			`,
+			fixed: `
+				a {
+					grid-template:
+						[a]   "x  x"  1fr
+						[bbb] "yy yy" 2fr
+						/ 1fr;
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 5,
+			endColumn: 8,
+			message: messages.expected(`grid-template`),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [true, { alignColumns: true, alignQuotes: true }],
+
+	reject: [
+		{
+			description: `rows of two widths, the short one padded inside its quotation marks, so that the quotes and the sizes line up both`,
+			code: `
+				a {
+					grid-template:
+						[a] "x x" 1fr
+						[bbb] "yy yy" 2fr
+						/ 1fr;
+				}
+			`,
+			fixed: `
+				a {
+					grid-template:
+						[a]   "x  x " 1fr
+						[bbb] "yy yy" 2fr
+						/ 1fr;
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 5,
+			endColumn: 8,
+			message: messages.expected(`grid-template`),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [true, { alignColumns: true, gap: 2 }],
+
+	reject: [
+		{
+			description: `the issue's example under a gap of two, which parts the columns as it parts the cells`,
+			code: `
+				a {
+					grid-template:
+						[header-left] "head head" minmax(30px, 1fr) [header-right]
+						[] "nav main" 1fr [main-right]
+						[footer] "nav foot" 30px
+						/ 120px 1fr;
+				}
+			`,
+			fixed: `
+				a {
+					grid-template:
+						[header-left]  "head  head"  minmax(30px, 1fr)  [header-right]
+						[]             "nav   main"  1fr                [main-right]
+						[footer]       "nav   foot"  30px
+						/ 120px 1fr;
+				}
+			`,
+			line: 3,
+			column: 3,
+			endLine: 6,
+			endColumn: 14,
+			message: messages.expected(`grid-template`),
+		},
+	],
+})

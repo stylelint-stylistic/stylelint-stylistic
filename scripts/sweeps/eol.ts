@@ -37,6 +37,7 @@ const corpus: Sweep[`corpus`] = [...FIXTURES, ...INLINE_FIXTURES].flatMap(([fixt
 	return rows
 })
 
-const configs: Sweep[`configs`] = Object.entries(RULE_OPTIONS).flatMap(([rule, primaries]) => primaries.map((primary) => ({ rule, primary })))
+// A primary the list spells as an array is a setting whole, the primary opening it and the secondary options closing it
+const configs: Sweep[`configs`] = Object.entries(RULE_OPTIONS).flatMap(([rule, primaries]) => primaries.map((primary) => (Array.isArray(primary) ? { rule, primary: primary[0] as unknown, secondary: primary[1] as object } : { rule, primary })))
 
 export { configs, corpus, name }

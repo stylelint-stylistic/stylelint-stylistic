@@ -1,10 +1,15 @@
+import valueParser from "postcss-value-parser"
 import stylelint from "stylelint"
 
+import { GRID_AREAS_PROPERTY } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { gridTableLines, type Span } from "../../utils/gridTableLines/index.ts"
 import { isWhitespace } from "../../utils/isWhitespace/index.ts"
+import { neighbourSetting } from "../../utils/neighbourSettings/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -19,6 +24,9 @@ export let meta = {
 	url: getRuleDocUrl(shortName),
 	fixable: true,
 }
+
+/** The rule that lays the rows of a grid shorthand out as a table, whose `alignColumns` option makes the runs between the tokens of such a row its own. */
+const GRID_ALIGNMENT: { name: string, options: (string | true)[] } = { name: `named-grid-areas-alignment`, options: [true] }
 
 /**
  * Checks if a character is a newline.
@@ -121,9 +129,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
+		// The runs between the tokens of a row of a grid shorthand are `named-grid-areas-alignment`'s where the configuration lists it with `alignColumns`: that rule pads them into columns, and a rule collapsing them would take the run in turns with it, on one run of `--fix` and the next (#45). The runs are its own whether its fix is live or not, since a table an author wrote by hand is one that rule reports and this one would otherwise take apart on every run, leaving a warning no run of `--fix` clears. What is read is the option, once per root, and the lines of a declaration only where the option asks
+		let laysTablesOut = neighbourSetting(syntax, result, GRID_ALIGNMENT)?.secondary.alignColumns === true
+
 		root.walkDecls((decl) => {
 			let value = syntax.read(decl)
 			let valueIndex = declarationValueIndex(decl)
+			let owned: Span[] = laysTablesOut && GRID_AREAS_PROPERTY.test(decl.prop)
+				? gridTableLines(value, valueParser(blankComments(value, syntax.commentSpans(value, decl, result))).nodes).flatMap(({ gaps }) => gaps)
+				: []
 			let inString = false
 			let stringChar = ``
 			let afterNewline = true
@@ -168,7 +182,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						i += 1
 					}
 
-					if (whitespaceCount > 1) errors.push({ start: whitespaceStart, count: whitespaceCount })
+					if (whitespaceCount > 1 && !owned.some(({ start, end }) => whitespaceStart >= start && whitespaceStart + whitespaceCount <= end)) errors.push({ start: whitespaceStart, count: whitespaceCount })
 					i -= 1
 				}
 				afterNewline = false

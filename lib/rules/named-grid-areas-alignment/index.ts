@@ -1,12 +1,13 @@
 import valueParser, { type Node, type StringNode } from "postcss-value-parser"
 import stylelint from "stylelint"
 
-import { EVERY_CSS_WHITESPACE_RUN, EVERY_LINE_BREAK_RUN, GRID_AREAS_PROPERTY, LAST_LINE, LEADING_CSS_WHITESPACE, LINE_BREAK, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
+import { EVERY_CSS_WHITESPACE_RUN, EVERY_LINE_BREAK_RUN, GRID_AREAS_PROPERTY, LAST_LINE, LEADING_CSS_WHITESPACE, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { type GridColumn, type GridTableLine, gridTableLines, spansLinesOutsideRows } from "../../utils/gridTableLines/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isBoolean, isNumber } from "../../utils/validateTypes/index.ts"
 
@@ -57,6 +58,57 @@ function padToWidth (text: string, width: number): string {
 	return text + ` `.repeat(Math.max(0, width - countCharacters(text)))
 }
 
+/** The columns of a table, in the order they stand on a line. */
+const COLUMNS: GridColumn[] = [`names`, `row`, `size`, `trailing`]
+
+/**
+ * Lays the lines of a grid shorthand out as a table, and says what to write over every run between two tokens of a line (#45).
+ *
+ * A column is as wide as the widest text standing in it, the tokens of one column on one line joined with a single space, and the columns stand at fixed offsets from the first token of each line: the names at nought, the row a gap behind the names where any line has one, the size a gap behind the rows, the closing names a gap behind the sizes where any line has one. A token is written at its column's offset, padded from what the line has written so far — never in front of a line's first token, which is the indent's side: a row without a name in front of it stands where the indent puts it, and its size and closing names still reach their columns. Two tokens of one column stand a single space apart, so a name spelled `[a   b]` comes out `[a b]`, which is what `no-multiple-whitespaces` would make of it too. The offsets grow with the widths, so what is padded is never less than a gap.
+ * @param lines - The lines of the table.
+ * @param textOf - The text a token is written as: the row as it comes out padded, every other token as the file spells it.
+ * @param gap - How many spaces part two columns.
+ * @returns The text to write over each run, by the index the run opens at in the value.
+ */
+function columnPadding (lines: GridTableLine[], textOf: (span: { start: number, end: number }, column: GridColumn) => string, gap: number): Map<number, string> {
+	let lineTexts = lines.map((line) => line.tokens.map(({ span, column }) => ({ column, text: textOf(span, column) })))
+	let widths: Record<GridColumn, number> = { names: 0, row: 0, size: 0, trailing: 0 }
+
+	for (let tokens of lineTexts) {
+		for (let column of COLUMNS) {
+			let text = tokens.filter((token) => token.column === column).map((token) => token.text).join(` `)
+
+			widths[column] = Math.max(widths[column], countCharacters(text))
+		}
+	}
+
+	let rowOffset = widths.names > 0 ? widths.names + gap : 0
+	let sizeOffset = rowOffset + widths.row + gap
+	let offsets: Record<GridColumn, number> = { names: 0, row: rowOffset, size: sizeOffset, trailing: sizeOffset + (widths.size > 0 ? widths.size + gap : 0) }
+
+	let writes: Map<number, string> = new Map()
+
+	for (let [at, line] of lines.entries()) {
+		let tokens = lineTexts[at] ?? []
+		let written = tokens[0]?.text ?? ``
+
+		for (let index = 1; index < tokens.length; index += 1) {
+			let previous = tokens[index - 1]
+			let token = tokens[index]
+			let run = line.gaps[index - 1]
+
+			if (!previous || !token || !run) throw new Error(`A line of the table holds a run between every two of its tokens`)
+
+			let padding = previous.column === token.column ? ` ` : ` `.repeat(offsets[token.column] - countCharacters(written))
+
+			writes.set(run.start, padding)
+			written += padding + token.text
+		}
+	}
+
+	return writes
+}
+
 /**
  * Requires cell tokens (and optionally ending quotes) within the rows of `grid-template-areas`, and of the `grid-template` and `grid` shorthands, to be aligned.
  *
@@ -66,12 +118,13 @@ function padToWidth (text: string, width: number): string {
  * @param scope.messages - The messages, each closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, which is `true`.
- * @param secondaryOptions - The secondary options: `gap` and `alignQuotes`.
+ * @param secondaryOptions - The secondary options: `gap`, `alignQuotes` and `alignColumns`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: true, secondaryOptions: {
 	gap?: number,
 	alignQuotes?: boolean,
+	alignColumns?: boolean,
 } = {}): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
@@ -83,6 +136,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				possible: {
 					gap: [isNumber, (value): boolean => Number(value) > 1],
 					alignQuotes: [isBoolean],
+					alignColumns: [isBoolean],
 				},
 				optional: true,
 			},
@@ -92,6 +146,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		let gap = secondaryOptions.gap ?? 1
 		let alignQuotes = secondaryOptions.alignQuotes ?? false
+		let alignColumns = secondaryOptions.alignColumns ?? false
 
 		let referenceGap = ` `.repeat(gap)
 
@@ -100,16 +155,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let comments = syntax.commentSpans(declarationValue, declaration, result)
 			// The copy is as long as the value and spells it character for character outside the comments, so every position of the parse counts in the value itself, and the fix below slices the value at those positions.
 			let parsedValue = valueParser(blankComments(declarationValue, comments))
-			// The question is asked of the text the fix will leave rather than of the text it was handed. Every fix this rule makes to a row collapses the whitespace inside it, line breaks included, so a break standing inside a row is a character the fix is about to write over, while every node that is no row goes back byte for byte, wherever it stands and whatever the parse made of it: the whitespace in front of the first row, between two of them or behind the last, a comment, a call, a word carrying an escaped break. Asking it of the whole value made the first run pad the cells of a value it was itself taking the last break out of, and the next run, reading a declaration that no longer spanned lines, took the padding away again (#402). Whether the padding is right for a row spelled across two lines is not a second question: once the fix has run, the row stands on one line. The slice is taken from the value itself and not from the copy the parse was made over, since `blankComments` writes a space over every character of a comment, the line breaks of its text among them — and a comment spanning two lines is a break the fix leaves standing.
-			let isMultilineDeclaration = parsedValue.nodes.some((node) => !isGridRow(node) && LINE_BREAK.test(declarationValue.slice(node.sourceIndex, node.sourceEndIndex)))
+			// The question is asked of the text the fix will leave rather than of the text it was handed: a break inside a row is one the fix writes over, and a break anywhere else is one it leaves, so asking it of the whole value made the first run pad the cells of a value it was itself taking the last break out of, and the next run took the padding away again (#402). Whether the padding is right for a row spelled across two lines is not a second question: once the fix has run, the row stands on one line.
+			let isMultilineDeclaration = spansLinesOutsideRows(declarationValue, parsedValue.nodes)
 
 			let gridRows = parsedValue.nodes.filter(isGridRow)
 
 			// Every row of the grid keeps an entry in each of the lists built below, the ones holding no cell among them, because the fix walks the nodes of the parse and hands each row the entry standing at the head of `formatted`. Dropping a row from the lists while leaving its node in the walk parts the two: every row behind the dropped one is then written one place earlier than it stands, and the last of them is handed nothing at all, which reaches the value as the word `undefined` in quotes. A row with no cells is aligned to nothing, so its entry is the empty text — which is also what trimming its whitespace comes to.
 
-			// To compare with the formatted value to determine if there is an error
-			let originalRows = gridRows.map(({ value }) => value)
-			// The ones to operate with. Whitespace is read the way the tokenizer reads it — a space, a tab, a line feed, a carriage return or a form feed — and the rule cuts a row on that whitespace alone (#401): `trim` and `\s` take every separator Unicode has, the no-break space among them, and read a cell named with one as no cell at all. The grammar of the property names a cell with a run of ident code points, which `IDENTIFIER_CODE_POINT` of `lib/regexps.ts` spells and a no-break space is none of, and reads any other run as a trash token that makes the declaration invalid — while `lightningcss` reads every code point outside ASCII as a character of a name and lays such a grid out. The rule judges no validity either way, and leaves whatever is no whitespace to the tokenizer as it stands.
+			// The rows to operate with. Whitespace is read the way the tokenizer reads it — a space, a tab, a line feed, a carriage return or a form feed — and the rule cuts a row on that whitespace alone (#401): `trim` and `\s` take every separator Unicode has, the no-break space among them, and read a cell named with one as no cell at all. The grammar of the property names a cell with a run of ident code points, which `IDENTIFIER_CODE_POINT` of `lib/regexps.ts` spells and a no-break space is none of, and reads any other run as a trash token that makes the declaration invalid — while `lightningcss` reads every code point outside ASCII as a character of a name and lays such a grid out. The rule judges no validity either way, and leaves whatever is no whitespace to the tokenizer as it stands.
 			let rows = gridRows.map(({ value }) => value.replace(LEADING_CSS_WHITESPACE, ``).replace(TRAILING_CSS_WHITESPACE, ``).replaceAll(EVERY_CSS_WHITESPACE_RUN, ` `))
 
 			let maxCellsCount = 0
@@ -150,9 +203,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				})
 			}
 
-			let isValid = originalRows.every((row, index) => row === formatted[index])
+			// The whole value as the fix would leave it, built before anything is reported, since the table's padding is a change to the value as much as a row's is. Every row is handed its entry by its place among the rows, every run between two tokens of a table line is written as the layout says, and every other node goes back as the file spells it, character for character: printing such a node would write it as the parser understood it rather than as the file has it — `var(--x)` as `var`, the whitespace of `f( 1 , 2 )` outside its parentheses, a comment opening `/*/` as `/**/` — while slicing the value at the positions of the parse hands the text back byte for byte, the comments the parse was made without among it.
+			let rowTexts: Map<number, string> = new Map(gridRows.map((node, index) => [node.sourceIndex, `${node.quote}${formatted[index] ?? ``}${node.quote}`]))
+			let padding = alignColumns ? columnPadding(gridTableLines(declarationValue, parsedValue.nodes), (span, column) => (column === `row` ? rowTexts.get(span.start) : undefined) ?? declarationValue.slice(span.start, span.end), gap) : new Map<number, string>()
+			let formattedValue = parsedValue.nodes.map((node) => rowTexts.get(node.sourceIndex) ?? padding.get(node.sourceIndex) ?? declarationValue.slice(node.sourceIndex, node.sourceEndIndex)).join(``)
 
-			if (isValid) return
+			if (formattedValue === declarationValue) return
 
 			let { between } = declaration.raws
 			let { source } = declaration
@@ -181,14 +237,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				result,
 				ruleName,
 				fix () {
-					let acc = []
-					for (let node of parsedValue.nodes) {
-						if (isGridRow(node)) acc.push(`${node.quote}${formatted.shift()}${node.quote}`)
-						// A row is the only thing this rule writes, so every other node of the value goes back as the file spells it, character for character. Printing such a node instead writes it as the parser understood it rather than as the file has it, and for a call that is two harms at once: a `function` node holds its name in `value` and its arguments in `nodes`, so `var(--x)` comes back as `var`, and it holds the whitespace written inside its parentheses in `before` and `after`, which the printing puts outside them, so `f( 1 , 2 )` comes back as a space, an `f` and another space. A comment fares no better — the parser closes one opened as `/*/` on the star of its own opening, so printing it back around its text writes `/**/` where the file spells three characters, and what the file wrote inside that comment is left standing behind it as code. Slicing the source asks nothing of the node's type, and joining the slices over the nodes of a parse hands the parsed text back byte for byte, which `valueParser.stringify` does not. It is also what puts every comment back: the parse was made over a copy with the comments blanked, so where the file spells one the walk meets whitespace, and slicing the value there hands the comment back.
-						else acc.push(declarationValue.slice(node.sourceIndex, node.sourceEndIndex))
-					}
-					let formattedValue = acc.join(``)
-
 					syntax.write(declaration, formattedValue)
 				},
 			})
