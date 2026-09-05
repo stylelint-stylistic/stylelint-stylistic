@@ -1,6 +1,6 @@
 # named-grid-areas-alignment
 
-Require cell tokens (and optionally ending quotes) within `grid-template-areas` to be aligned.
+Require cell tokens (and optionally ending quotes) within the rows of `grid-template-areas`, and of the `grid-template` and `grid` shorthands, to be aligned.
 
 ```css
 div {
@@ -13,6 +13,22 @@ div {
 ```
 
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+
+The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
+
+The rows of the `grid-template` and `grid` shorthands are read as the longhand's are: every string at the top level of the value is a row, and its cells are aligned with the cells of the other rows. A shorthand puts a row's size and its line names beside each string and the columns behind a solidus, and the rule reads none of that — everything that is no row goes back as the file spells it — so a size standing behind a row moves with the row's closing quote, which `alignQuotes` lines up, while a line name in front of a row, the solidus and the columns behind it keep the place and the whitespace the author gave them:
+
+```css
+div {
+  grid-template:
+    [header-left] "head head" minmax(30px, 1fr) [header-right]
+                  "nav  main" 1fr               [main-right]
+    [footer]      "nav  foot" 30px
+    / 120px 1fr;
+}
+```
+
+Whether the solidus opens a line of its own or closes the last row's is not this rule's to decide, and neither is the column the rows open on.
 
 A declaration spans lines when a line break stands in its value outside every row. Everything of the value that is no row is handed back character for character, wherever it stands and whatever it is — the whitespace in front of the first row, between two of them or behind the last, a comment, a call, a word carrying an escaped break — so a break written in any of them is one the fix leaves. A break standing inside a row is not one of those: the fix collapses the whitespace of a row, that break with it, so the row comes back on one line.
 

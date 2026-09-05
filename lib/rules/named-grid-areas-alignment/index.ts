@@ -1,7 +1,7 @@
 import valueParser, { type Node, type StringNode } from "postcss-value-parser"
 import stylelint from "stylelint"
 
-import { EVERY_CSS_WHITESPACE_RUN, EVERY_LINE_BREAK_RUN, LAST_LINE, LEADING_CSS_WHITESPACE, LINE_BREAK, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
+import { EVERY_CSS_WHITESPACE_RUN, EVERY_LINE_BREAK_RUN, GRID_AREAS_PROPERTY, LAST_LINE, LEADING_CSS_WHITESPACE, LINE_BREAK, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
@@ -15,7 +15,7 @@ let { utils: { report, validateOptions } } = stylelint
 let shortName = `named-grid-areas-alignment`
 
 const MESSAGES = defineMessages({
-	expected: () => `Expected \`grid-template-areas\` value to be aligned`,
+	expected: (property) => `Expected \`${property}\` value to be aligned`,
 })
 
 export let meta = {
@@ -58,7 +58,9 @@ function padToWidth (text: string, width: number): string {
 }
 
 /**
- * Requires cell tokens (and optionally ending quotes) within `grid-template-areas` to be aligned.
+ * Requires cell tokens (and optionally ending quotes) within the rows of `grid-template-areas`, and of the `grid-template` and `grid` shorthands, to be aligned.
+ *
+ * A shorthand puts a row's size and its line names beside each string and the columns behind a solidus, and the rule reads none of that: every string at the top level of the value is a row, and everything that is no row goes back as the file spells it (#45). So the cells of the rows are aligned with each other exactly as they are in the longhand, a size standing behind a row moves with the row's closing quotation mark — which `alignQuotes` lines up — and a line name in front of one, the solidus and the columns keep the place and the whitespace the author gave them.
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
@@ -93,7 +95,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		let referenceGap = ` `.repeat(gap)
 
-		root.walkDecls(`grid-template-areas`, (declaration) => {
+		root.walkDecls(GRID_AREAS_PROPERTY, (declaration) => {
 			let declarationValue = syntax.read(declaration)
 			let comments = syntax.commentSpans(declarationValue, declaration, result)
 			// The copy is as long as the value and spells it character for character outside the comments, so every position of the parse counts in the value itself, and the fix below slices the value at those positions.
@@ -166,6 +168,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			report({
 				message: messages.expected,
+				messageArgs: [declaration.prop],
 				node: declaration,
 				start: {
 					line: extraStartLines + source.start.line,

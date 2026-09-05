@@ -72,7 +72,7 @@ testRule({
 			column: 23,
 			endLine: 5,
 			endColumn: 8,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/322
 		{
@@ -95,7 +95,7 @@ testRule({
 			column: 23,
 			endLine: 4,
 			endColumn: 10,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `rows aligned to the width of a row standing in a comment between them, which is no row of the grid`,
@@ -117,7 +117,7 @@ testRule({
 			column: 23,
 			endLine: 4,
 			endColumn: 10,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a call standing in the text of such a comment, beside a row of the grid that is not aligned`,
@@ -139,7 +139,7 @@ testRule({
 			column: 23,
 			endLine: 4,
 			endColumn: 8,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a call the parser opened outside such a comment and closed on the line below it, carrying the whole comment inside itself`,
@@ -159,7 +159,7 @@ testRule({
 			column: 23,
 			endLine: 3,
 			endColumn: 10,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a row the parser filed inside such a call, which is a row of no grid and a row the next run would move again, in a value neither compiler reads`,
@@ -169,7 +169,7 @@ testRule({
 			column: 26,
 			endLine: 1,
 			endColumn: 50,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a block comment opened as a slash, a star and a slash standing between the rows, which the value parser closes on that third character`,
@@ -189,7 +189,7 @@ testRule({
 			column: 23,
 			endLine: 3,
 			endColumn: 19,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		{
 			description: `a cell holding a double slash, which opens no comment inside quotes`,
@@ -209,7 +209,7 @@ testRule({
 			column: 23,
 			endLine: 3,
 			endColumn: 10,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/368
 		{
@@ -232,7 +232,7 @@ testRule({
 			column: 23,
 			endLine: 4,
 			endColumn: 9,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
 		},
 	],
 })
@@ -263,7 +263,36 @@ testRule({
 			column: 23,
 			endLine: 3,
 			endColumn: 10,
-			message: messages.expected(),
+			message: messages.expected(`grid-template-areas`),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [true],
+	customSyntax: `postcss-less`,
+
+	reject: [
+		{
+			description: `a shorthand whose rows are followed by an end-of-line comment, which the syntax keeps in the value`,
+			code: `
+				a {
+					grid-template: "a  a" 1fr // "x   x"
+						"b b" auto / 1fr 1fr;
+				}
+			`,
+			fixed: `
+				a {
+					grid-template: "a a" 1fr // "x   x"
+						"b b" auto / 1fr 1fr;
+				}
+			`,
+			line: 2,
+			column: 17,
+			endLine: 3,
+			endColumn: 23,
+			message: messages.expected(`grid-template`),
 		},
 	],
 })
