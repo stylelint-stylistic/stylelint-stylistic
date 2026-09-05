@@ -56,6 +56,8 @@ export const LINENESS_RULES: Record<string, [text: Text, speaksOfABreak: boolean
 	"value-list-comma-newline-before": [`declaration`, true],
 	"value-list-comma-space-after": [`declaration`, false],
 	"value-list-comma-space-before": [`declaration`, false],
+	"value-slash-space-after": [`declaration`, false],
+	"value-slash-space-before": [`declaration`, false],
 }
 
 /**

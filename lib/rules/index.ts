@@ -46,6 +46,8 @@ import { createRule as mediaFeatureNameCase } from "./media-feature-name-case/in
 import { createRule as mediaFeatureParenthesesSpaceInside } from "./media-feature-parentheses-space-inside/index.ts"
 import { createRule as mediaFeatureRangeOperatorSpaceAfter } from "./media-feature-range-operator-space-after/index.ts"
 import { createRule as mediaFeatureRangeOperatorSpaceBefore } from "./media-feature-range-operator-space-before/index.ts"
+import { createRule as mediaFeatureSlashSpaceAfter } from "./media-feature-slash-space-after/index.ts"
+import { createRule as mediaFeatureSlashSpaceBefore } from "./media-feature-slash-space-before/index.ts"
 import { createRule as mediaQueryListCommaNewlineAfter } from "./media-query-list-comma-newline-after/index.ts"
 import { createRule as mediaQueryListCommaNewlineBefore } from "./media-query-list-comma-newline-before/index.ts"
 import { createRule as mediaQueryListCommaSpaceAfter } from "./media-query-list-comma-space-after/index.ts"
@@ -81,6 +83,8 @@ import { createRule as valueListCommaNewlineBefore } from "./value-list-comma-ne
 import { createRule as valueListCommaSpaceAfter } from "./value-list-comma-space-after/index.ts"
 import { createRule as valueListCommaSpaceBefore } from "./value-list-comma-space-before/index.ts"
 import { createRule as valueListMaxEmptyLines } from "./value-list-max-empty-lines/index.ts"
+import { createRule as valueSlashSpaceAfter } from "./value-slash-space-after/index.ts"
+import { createRule as valueSlashSpaceBefore } from "./value-slash-space-before/index.ts"
 
 let rules: { readonly [name: string]: (syntax: Syntax) => Rule } = {
 	"aspect-ratio-notation": aspectRatioNotation,
@@ -127,6 +131,8 @@ let rules: { readonly [name: string]: (syntax: Syntax) => Rule } = {
 	"media-feature-parentheses-space-inside": mediaFeatureParenthesesSpaceInside,
 	"media-feature-range-operator-space-after": mediaFeatureRangeOperatorSpaceAfter,
 	"media-feature-range-operator-space-before": mediaFeatureRangeOperatorSpaceBefore,
+	"media-feature-slash-space-after": mediaFeatureSlashSpaceAfter,
+	"media-feature-slash-space-before": mediaFeatureSlashSpaceBefore,
 	"media-query-list-comma-newline-after": mediaQueryListCommaNewlineAfter,
 	"media-query-list-comma-newline-before": mediaQueryListCommaNewlineBefore,
 	"media-query-list-comma-space-after": mediaQueryListCommaSpaceAfter,
@@ -162,6 +168,8 @@ let rules: { readonly [name: string]: (syntax: Syntax) => Rule } = {
 	"value-list-comma-space-after": valueListCommaSpaceAfter,
 	"value-list-comma-space-before": valueListCommaSpaceBefore,
 	"value-list-max-empty-lines": valueListMaxEmptyLines,
+	"value-slash-space-after": valueSlashSpaceAfter,
+	"value-slash-space-before": valueSlashSpaceBefore,
 }
 
 export default rules

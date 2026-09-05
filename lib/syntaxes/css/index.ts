@@ -79,6 +79,8 @@ export let css: Syntax = {
 	readsRuleParams: () => false,
 	readsAtRuleAsVariable: () => false,
 	spellsOwnArithmetic: readsInlineComments,
+	// Plain CSS divides inside a math function and nowhere else, and the arguments of one are passed over by the rules that read a separator, so no solidus reaching this question is an operator
+	readsSlashAsOperator: () => false,
 	// The spellings a preprocessor interpolates with, read over plain CSS too: `$(…)` is postcss-simple-vars' over a plain file, and a rule that read the text inside a `#{…}` as CSS would rewrite it (#298)
 	interpolationSpans: findInterpolationSpans,
 	selectorCopies (rule: PostcssRule): SelectorCopies {

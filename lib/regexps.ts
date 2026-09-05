@@ -280,6 +280,9 @@ export const TRAILING_WHITESPACE_RUN = /\s+$/u
 /** The whitespace a text ends in, down to its last line break, which is left standing whole — the carriage return of a Windows pair with it. A bare carriage return and a form feed are whitespace and no break, so they go with the rest; a vertical tab and a no-break space are words to the tokenizer and no whitespace at all (#494); the trailing twin of {@link LEADING_WHITESPACE_WITHOUT_BREAK}. */
 export const TRAILING_WHITESPACE_WITHOUT_BREAK = /(?:[ \t\f]|\r(?!\n))+$/u
 
+/** The vendor prefix a name opens with, the `-webkit-` of `-webkit-calc`, in whatever case it is written. */
+export const VENDOR_PREFIX = /^-[a-z]+-/iu
+
 /** A single character of whitespace. */
 export const WHITESPACE = /\s/u
 
