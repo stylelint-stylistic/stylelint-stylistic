@@ -196,12 +196,13 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/375
-			description: `a comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace, both lines written with tabs`,
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
+			description: `a comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace, both lines written with tabs — the comment a line of the block, asked for the level the at-rule stands at`,
 			code: `a {\n\t@extend .b\n\t/* c */\n}`,
-			fixed: `a {\n  @extend .b\n    /* c */\n}`,
+			fixed: `a {\n  @extend .b\n  /* c */\n}`,
 			warnings: [
 				{ line: 2, column: 2, message: messages.expected(`2 spaces`) },
-				{ line: 3, column: 2, message: messages.expected(`4 spaces`) },
+				{ line: 3, column: 2, message: messages.expected(`2 spaces`) },
 			],
 		},
 	],
@@ -235,6 +236,25 @@ testRule({
 	],
 
 	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
+			description: `a comment an at-rule with neither a block nor a semicolon swallowed, indented a level past the block it is a line of — the at-rule's own level, which this option leaves where a block's contents stand`,
+			code: `
+				a {
+					@extend .b
+						/* c */
+				}
+			`,
+			fixed: `
+				a {
+					@extend .b
+					/* c */
+				}
+			`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
 		{
 			description: `the rule inside such a block indented a level too deep`,
 			code: `
@@ -326,6 +346,25 @@ testRule({
 	],
 
 	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
+			description: `a comment an at-rule with neither a block nor a semicolon swallowed, indented a level past the block it is a line of — which the option, being about params, has no say over`,
+			code: `
+				a {
+				    @extend .b
+				        /* c */
+				}
+			`,
+			fixed: `
+				a {
+				    @extend .b
+				    /* c */
+				}
+			`,
+			line: 3,
+			column: 9,
+			message: messages.expected(`4 spaces`),
+		},
 		{
 			description: `the same parameters indented two spaces`,
 			code: `
@@ -420,6 +459,25 @@ testRule({
 	],
 
 	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
+			description: `a comment an at-rule with neither a block nor a semicolon swallowed, indented a level past the block it is a line of — no param, so measured whatever the option leaves alone`,
+			code: `
+				a {
+				  @extend .b
+				    /* c */
+				}
+			`,
+			fixed: `
+				a {
+				  @extend .b
+				  /* c */
+				}
+			`,
+			line: 3,
+			column: 5,
+			message: messages.expected(`2 spaces`),
+		},
 		{
 			description: `a media query indented at the root, whose parameters the option leaves alone`,
 			code: `  @media print {\n  a {\n    color: pink;\n  }\n}`,
@@ -667,11 +725,37 @@ testRule({
 			`,
 		},
 		{
-			description: `the same block with a comment the at-rule swallowed along with the run in front of the brace`,
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/375
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
+			description: `a comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace rather than into a node of its own, standing at the level of the block it is a line of`,
 			code: `
 				a {
 					@extend .b
-						/* c */
+					/* c */
+				}
+			`,
+		},
+		{
+			description: `two such comments, each of them a line the at-rule swallowed`,
+			code: `
+				a {
+					@extend .b
+					/* c */
+					/* d */
+				}
+			`,
+		},
+		{
+			description: `the same block written with carriage-return line breaks`,
+			code: `a {\r\n\t@extend .b\r\n\t/* c */\r\n}`,
+		},
+		{
+			description: `such a comment behind a mixin call whose arguments span two lines, the comment at the block's level and the arguments a level deeper`,
+			code: `
+				a {
+					@include m(
+						1px)
+					/* c */
 				}
 			`,
 		},
@@ -777,54 +861,133 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/375
-			description: `a comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace rather than into a node of its own`,
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
+			description: `a comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace rather than into a node of its own, indented a level past the block it is a line of`,
 			code: `
-				a {
-					@extend .b
-					/* c */
-				}
-			`,
-			fixed: `
 				a {
 					@extend .b
 						/* c */
 				}
 			`,
+			fixed: `
+				a {
+					@extend .b
+					/* c */
+				}
+			`,
 			line: 3,
-			column: 2,
-			message: messages.expected(`2 tabs`),
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `the same comment standing in the first column`,
+			code: `
+				a {
+					@extend .b
+				/* c */
+				}
+			`,
+			fixed: `
+				a {
+					@extend .b
+					/* c */
+				}
+			`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`1 tab`),
 		},
 		{
 			description: `two such comments, each of them a line the at-rule swallowed`,
 			code: `
 				a {
 					@extend .b
-					/* c */
-					/* d */
+						/* c */
+						/* d */
 				}
 			`,
 			fixed: `
 				a {
 					@extend .b
-						/* c */
-						/* d */
+					/* c */
+					/* d */
 				}
 			`,
 			warnings: [
-				{ line: 3, column: 2, message: messages.expected(`2 tabs`) },
-				{ line: 4, column: 2, message: messages.expected(`2 tabs`) },
+				{ line: 3, column: 3, message: messages.expected(`1 tab`) },
+				{ line: 4, column: 3, message: messages.expected(`1 tab`) },
 			],
 		},
 		{
 			description: `the same block written with carriage-return line breaks`,
-			code: `a {\r\n\t@extend .b\r\n\t/* c */\r\n}`,
-			fixed: `a {\r\n\t@extend .b\r\n\t\t/* c */\r\n}`,
+			code: `a {\r\n\t@extend .b\r\n\t\t/* c */\r\n}`,
+			fixed: `a {\r\n\t@extend .b\r\n\t/* c */\r\n}`,
 			line: 3,
-			column: 2,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `the same block with an empty line in front of the comment, which the fix leaves standing`,
+			code: `
+				a {
+					@extend .b
+
+						/* c */
+				}
+			`,
+			fixed: `
+				a {
+					@extend .b
+
+					/* c */
+				}
+			`,
+			line: 4,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `a comment on the at-rule's own line and the swallowed one below it, the first no line of anything and the second the block's`,
+			code: `
+				a {
+					@extend .b /* x */
+						/* c */
+				}
+			`,
+			fixed: `
+				a {
+					@extend .b /* x */
+					/* c */
+				}
+			`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `such a comment in a rule nested in a query, asked for the level of the block it stands in rather than for one deeper`,
+			code: `
+				@media x {
+					a {
+						@extend .b
+							/* c */
+					}
+				}
+			`,
+			fixed: `
+				@media x {
+					a {
+						@extend .b
+						/* c */
+					}
+				}
+			`,
+			line: 4,
+			column: 4,
 			message: messages.expected(`2 tabs`),
 		},
 		{
-			description: `a swallowed comment behind params spanning two lines, so that one fix lands in the params and the other in the whitespace behind them`,
+			description: `a swallowed comment behind params spanning two lines, so that the fix lands in the params and the comment keeps its line, which is the block's`,
 			code: `
 				a {
 					@include m(
@@ -836,13 +999,71 @@ testRule({
 				a {
 					@include m(
 						1px)
+					/* c */
+				}
+			`,
+			line: 3,
+			column: 2,
+			message: messages.expected(`2 tabs`),
+		},
+		{
+			description: `the same call with the comment a level too deep as well, so that one fix lands in the params and the other in the whitespace behind them, the params growing under the comment`,
+			code: `
+				a {
+					@include m(
+					1px)
 						/* c */
 				}
 			`,
+			fixed: `
+				a {
+					@include m(
+						1px)
+					/* c */
+				}
+			`,
 			warnings: [
+				{ line: 4, column: 3, message: messages.expected(`1 tab`) },
 				{ line: 3, column: 2, message: messages.expected(`2 tabs`) },
-				{ line: 4, column: 2, message: messages.expected(`2 tabs`) },
 			],
+		},
+		{
+			description: `a comment in front of the semicolon closing the at-rule, which stands inside the statement and is measured with its params`,
+			code: `
+				a {
+					@extend .b
+					/* c */;
+				}
+			`,
+			fixed: `
+				a {
+					@extend .b
+						/* c */;
+				}
+			`,
+			line: 3,
+			column: 2,
+			message: messages.expected(`2 tabs`),
+		},
+		{
+			description: `a comment in front of the brace opening the at-rule's block, which stands inside the statement's head and is measured with its params`,
+			code: `
+				a {
+					@media x
+					/* c */
+					{}
+				}
+			`,
+			fixed: `
+				a {
+					@media x
+						/* c */
+					{}
+				}
+			`,
+			line: 3,
+			column: 2,
+			message: messages.expected(`2 tabs`),
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/509
@@ -908,7 +1129,7 @@ testRule({
 			message: messages.expected(`1 tab`),
 		},
 		{
-			description: `a comment the at-rule swallowed and the brace behind it, each measured in the half of the raw that holds it`,
+			description: `a comment the at-rule swallowed and the brace behind it, each measured in the half of the raw that holds it: the comment at the block's level, the brace a level in`,
 			code: `
 				a {
 					@extend .b
@@ -918,13 +1139,12 @@ testRule({
 			fixed: `
 				a {
 					@extend .b
-						/* c */
+					/* c */
 				}
 			`,
-			warnings: [
-				{ line: 4, column: 3, message: messages.expected(`0 tabs`) },
-				{ line: 3, column: 2, message: messages.expected(`2 tabs`) },
-			],
+			line: 4,
+			column: 3,
+			message: messages.expected(`0 tabs`),
 		},
 	],
 })

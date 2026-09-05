@@ -257,6 +257,19 @@ testRule({
 	config: [`tab`],
 	customSyntax: `postcss-scss`,
 
+	accept: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
+			description: `an inline comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace rather than into a node of its own, standing at the level of the block it is a line of`,
+			code: `
+				a {
+					@extend .b
+					// c
+				}
+			`,
+		},
+	],
+
 	reject: [
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/236
@@ -279,22 +292,23 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/375
-			description: `an inline comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace rather than into a node of its own`,
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
+			description: `an inline comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace rather than into a node of its own, indented a level past the block it is a line of`,
 			code: `
-				a {
-					@extend .b
-					// c
-				}
-			`,
-			fixed: `
 				a {
 					@extend .b
 						// c
 				}
 			`,
+			fixed: `
+				a {
+					@extend .b
+					// c
+				}
+			`,
 			line: 3,
-			column: 2,
-			message: messages.expected(`2 tabs`),
+			column: 3,
+			message: messages.expected(`1 tab`),
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/452
@@ -614,7 +628,7 @@ testRule({
 			message: messages.expected(`0 tabs`),
 		},
 		{
-			description: `the same block whose include swallowed an inline comment as well, which Sass reads to the end of its line`,
+			description: `the same block whose include swallowed an inline comment as well, which Sass reads to the end of its line and which stands at the block's level, so the brace alone is reported`,
 			code: `
 				a {
 					@include m
@@ -624,13 +638,12 @@ testRule({
 			fixed: `
 				a {
 					@include m
-						// c
+					// c
 				}
 			`,
-			warnings: [
-				{ line: 4, column: 3, message: messages.expected(`0 tabs`) },
-				{ line: 3, column: 2, message: messages.expected(`2 tabs`) },
-			],
+			line: 4,
+			column: 3,
+			message: messages.expected(`0 tabs`),
 		},
 	],
 })

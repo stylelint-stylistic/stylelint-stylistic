@@ -43,6 +43,27 @@ a {
 
 	reject: [
 		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
+			description: `a comment an at-rule with neither a block nor a semicolon swallowed inside the style element, indented a level past the block it is a line of`,
+			code: `
+<style>
+a {
+\t@extend .b
+\t\t/* c */
+}
+</style>`,
+			fixed: `
+<style>
+a {
+\t@extend .b
+\t/* c */
+}
+</style>`,
+			line: 5,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+		{
 			description: `a declaration left level with its selector`,
 			code: `
 <style>

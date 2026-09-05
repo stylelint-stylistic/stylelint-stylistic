@@ -2,7 +2,7 @@ import type { AtRule, Declaration, Document, Node, Root, Rule, Source } from "po
 import styleSearch from "style-search"
 import stylelint from "stylelint"
 
-import { CRLF, EVERY_LINE_BREAK, EVERY_LINE_BREAK_AND_INDENT, EVERY_LINE_INDENT, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, FIRST_LINE, INDENT_AT_END, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, TRAILING_LINE_BREAK, TRAILING_STAR_OR_UNDERSCORE, WHITESPACE_WITHOUT_BREAK_BEFORE_CONTENT } from "../../regexps.ts"
+import { CRLF, EVERY_LINE_BREAK, EVERY_LINE_BREAK_AND_INDENT, EVERY_LINE_INDENT, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, FIRST_LINE, INDENT_AT_END, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, TRAILING_LINE_BREAK, TRAILING_STAR_OR_UNDERSCORE, TRAILING_WHITESPACE, WHITESPACE_WITHOUT_BREAK_BEFORE_CONTENT } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
@@ -10,6 +10,7 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
+import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -214,28 +215,33 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		 * @param ruleLevel - The indentation level of the rule.
 		 */
 		function checkSelector (ruleNode: Rule, ruleLevel: number): void {
-			let level = ruleLevel
-
-			// Less mixins have params, and they should be indented extra
-			if (syntax.readsRuleParams(ruleNode)) level += 1
-
-			// The lines are measured in the copy the file spells, since that is the text the positions of a warning are counted in and the text a fix is written to
-			checkMultilineBit(syntax.read(ruleNode), level, ruleNode, ruleLevel)
+			// Less mixins have params, and they should be indented extra. The lines are measured in the copy the file spells, since that is the text the positions of a warning are counted in and the text a fix is written to
+			checkMultilineBit(syntax.read(ruleNode), syntax.readsRuleParams(ruleNode) ? ruleLevel + 1 : ruleLevel, ruleNode, ruleLevel)
 		}
 
 		/**
-		 * Checks at-rule parameters for proper indentation.
+		 * Checks at-rule parameters for proper indentation, and the lines the at-rule swallowed for theirs.
 		 * @param atRule - The at-rule to check.
 		 * @param ruleLevel - The indentation level of the rule.
 		 */
 		function checkAtRuleParams (atRule: AtRule, ruleLevel: number): void {
-			if (optionsMatches(secondaryOptions, `ignore`, `param`)) return
+			let head = `@${atRule.name}${atRule.raws.afterName || ``}${syntax.read(atRule)}`
+
+			// An at-rule carrying neither a block nor a semicolon of its own runs to the brace closing its block, so PostCSS files everything standing between its params and that brace into `raws.between` — the whitespace, and any comment written there, which is no node of the block at all. Such a line is a line of the block rather than a continuation of the params: it stands behind the statement, not inside it, and is asked for the level the at-rule itself stands at, whatever `except` and `ignore` say about params. It used to be measured with the params, a level deeper than the block, and since the fix of #375 reaches the line it reports, `--fix` put the comment there (#510).
+			//
+			// Whether the block ends on this at-rule without a semicolon is asked of the tree as it stands rather than of where the run in front of the brace lies — so a semicolon another rule has just taken away in the same run makes the comment the block's at once, and one it has just put behind the comment makes it the statement's. A comment in front of a semicolon, `@extend .b⏎/* c */;`, and one in front of the block's brace, `@media x⏎/* c */⏎{`, stay inside the statement and keep being measured with its params.
+			//
+			// The whitespace the raw ends in is the run in front of the closing brace, which the block's own reading measures through `getBlockAfter` (#509); the two readers part the raw by the same pattern, so no line is measured twice and none is left out. Nothing is left to measure where the raw holds no comment, and the head is measured whole then, exactly as it is where the at-rule swallowed nothing
+			let swallowedLines = !hasBlock(atRule) && isLastNodeWithoutSemicolon(atRule) ? (atRule.raws.between || ``).replace(TRAILING_WHITESPACE, ``) : ``
 
 			// @nest and SCSS's @at-root rules should be treated like regular rules, not expected to have their params (selectors) indented
 			let paramLevel = optionsMatches(secondaryOptions, `except`, `param`) || atRule.name === `nest` || atRule.name === `at-root` ? ruleLevel : ruleLevel + 1
 
-			// The text runs from the name through `raws.between`, so the lines an at-rule swallowed are measured with its params: one carrying neither a block nor a semicolon closes on the brace of its block, and a comment written between its params and that brace stands in that raw rather than in a node of its own. The trim takes the whitespace closing the raw off the end — and with it, where the block's own `raws.after` is empty, the line the closing brace stands on
-			checkMultilineBit(`@${atRule.name}${atRule.raws.afterName || ``}${syntax.read(atRule)}${atRule.raws.between || ``}`.trim(), paramLevel, atRule, ruleLevel)
+			// The positions are counted from the at-rule's start, behind the head, which is the boundary `writeAtRuleIndentation` writes them into the raw by. The swallowed lines go first, since a check writes as it goes: the writer finds that boundary by the params as they stand, and a params line re-indented first would have moved it under positions still counted in the file, and put the whitespace of a swallowed line into the params
+			if (swallowedLines) checkMultilineBit(swallowedLines, ruleLevel, atRule, ruleLevel, head.length)
+
+			// Where the at-rule swallowed nothing, `raws.between` is the tail of its head — the run in front of the block's brace or of the semicolon, comments and all — and its lines are measured with the params. The trim takes the whitespace closing the raw off the end
+			if (!optionsMatches(secondaryOptions, `ignore`, `param`)) checkMultilineBit(`${head}${swallowedLines ? `` : atRule.raws.between || ``}`.trim(), paramLevel, atRule, ruleLevel)
 		}
 
 		/**
@@ -244,8 +250,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		 * @param newlineIndentLevel - The expected indentation level.
 		 * @param node - The node being checked.
 		 * @param nodeLevel - The indentation level of that node, which the level above is measured against.
+		 * @param offset - Where the text starts, counted from the start of the node: every position reported or handed to a writer is counted from there.
 		 */
-		function checkMultilineBit (source: string, newlineIndentLevel: number, node: Node, nodeLevel: number): void {
+		function checkMultilineBit (source: string, newlineIndentLevel: number, node: Node, nodeLevel: number, offset: number = 0): void {
 			if (!LINE_BREAK.test(source)) return
 
 			// The search is handed a copy with every comment blanked out of it rather than the text itself, since `style-search` reads the line break that closes an inline comment as part of that comment and never hands the position over — so every line standing behind such a comment went unmeasured, which is #236. The copy is as long as the text and spells it character for character everywhere else, so the positions of the search are the positions of the file, which is the text a warning is counted in and the text a fix is written to.
@@ -332,7 +339,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let expectedIndentation = indentChar.repeat(Math.max(expectedIndentLevel, 0))
 
 					if (afterNewlineSpace !== expectedIndentation) {
-						let problemIndex = match.startIndex + afterNewlineSpace.length + 1
+						let problemIndex = offset + match.startIndex + afterNewlineSpace.length + 1
 
 						report({
 							message: messages.expected,
@@ -348,7 +355,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								fixPositions.unshift({
 									expectedIndentation,
 									currentIndentation: afterNewlineSpace,
-									startIndex: match.startIndex,
+									startIndex: offset + match.startIndex,
 								})
 							},
 						})
@@ -431,7 +438,7 @@ type FixPosition = {
 /**
  * Writes the indentation of the lines of an at-rule's text, each into the raw it stands in.
  *
- * The text measured runs from the name through `raws.afterName`, the params and `raws.between`, so a position is written into whichever of the three it falls in, by the boundaries of the copies as the file spells them. A line standing in `raws.between` is a line the at-rule swallowed: one with neither a block nor a semicolon of its own closes on the brace of its block, and the parser files every comment written between its params and that brace into this raw. Its positions used to be written into the params, at their end — onto the at-rule's own line, several lines above the one reported — and the file grew a level on every run (#375).
+ * The positions are counted from the at-rule's start through `raws.afterName`, the params and `raws.between`, so each is written into whichever of the three it falls in, by the boundaries of the copies as the file spells them. A line standing in `raws.between` is a line the at-rule swallowed: one with neither a block nor a semicolon of its own closes on the brace of its block, and the parser files every comment written between its params and that brace into this raw. Such a line is measured as the block's rather than with the params (#510), and its positions used to be written into the params, at their end — onto the at-rule's own line, several lines above the one reported — so that the file grew a level on every run (#375).
  * @param atRule - The at-rule.
  * @param fixPositions - The positions, in reverse order, so that a write never moves one still to be applied and the text each edits is the one the previous writes left behind.
  * @param syntax - The syntax the rule is built over, which reads and writes the copy of the params the file spells.

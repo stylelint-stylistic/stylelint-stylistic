@@ -79,22 +79,23 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/375
-			description: `a comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace rather than into a node of its own`,
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
+			description: `a comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace rather than into a node of its own, indented a level past the block it is a line of`,
 			code: `
-				a {
-					@extend .b
-					/* c */
-				}
-			`,
-			fixed: `
 				a {
 					@extend .b
 						/* c */
 				}
 			`,
+			fixed: `
+				a {
+					@extend .b
+					/* c */
+				}
+			`,
 			line: 3,
-			column: 2,
-			message: messages.expected(`2 tabs`),
+			column: 3,
+			message: messages.expected(`1 tab`),
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/452
@@ -661,6 +662,16 @@ testRule({
 			`,
 		},
 		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
+			description: `a comment such a call swallowed, standing at the level of the block it is a line of`,
+			code: `
+				a {
+					.m()
+					/* c */
+				}
+			`,
+		},
+		{
 			description: `the same call carrying a bang flag, whose whitespace the parser collects from both sides of that flag and the stringifier writes on one, so the run in front of the brace is the block's raw no more than the call's`,
 			code: `
 				a {
@@ -671,6 +682,25 @@ testRule({
 	],
 
 	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
+			description: `a comment such a call swallowed, indented a level past the block it is a line of`,
+			code: `
+				a {
+					.m()
+						/* c */
+				}
+			`,
+			fixed: `
+				a {
+					.m()
+					/* c */
+				}
+			`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/509
 			description: `that closing brace indented a level in, the run in front of it standing in the mixin call's whitespace rather than in the block's own`,

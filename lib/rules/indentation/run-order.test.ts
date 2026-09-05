@@ -145,6 +145,28 @@ testRule({
 
 	reject: [
 		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
+			description: `a comment in front of the semicolon the neighbour takes away, the statement's while the semicolon stands and the block's once it is gone`,
+			code: `a {\n\t@extend .b\n\t/* c */;\n}\n`,
+			fixed: `a {\n\t@extend .b\n\t/* c */\n}\n`,
+			warnings: [
+				{
+					line: 3,
+					column: 9,
+					endLine: 3,
+					endColumn: 10,
+					message: trailingSemicolonMessages.rejected,
+				},
+				{
+					line: 3,
+					column: 2,
+					endLine: 3,
+					endColumn: 3,
+					message: messages.expected(`2 tabs`),
+				},
+			],
+		},
+		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/509
 			description: `the same brace where the neighbour takes the semicolon away instead, which leaves the run standing in the block's own raw`,
 			code: `a {\n\t@extend .b;\n\t\t}\n`,

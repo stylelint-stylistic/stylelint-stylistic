@@ -428,6 +428,29 @@ testRule({
 
 	reject: [
 		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
+			description: `a comment an at-rule with neither a block nor a semicolon swallowed inside a rule of the template, indented a level past the block it is a line of`,
+			code: `
+				const StyledDiv = styled.div\`
+					a {
+						@extend .b
+							/* c */
+					}
+				\`
+			`,
+			fixed: `
+				const StyledDiv = styled.div\`
+					a {
+						@extend .b
+						/* c */
+					}
+				\`
+			`,
+			line: 4,
+			column: 4,
+			message: messages.expected(`2 tabs`),
+		},
+		{
 			description: `a declaration indented with the wrong number of tabs`,
 			code: `
 				const StyledDiv = styled.div\`
