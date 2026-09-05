@@ -60,12 +60,12 @@
 	"devEngines": {
 		"runtime": {
 			"name": "node",
-			"version": ">=26.7",
+			"version": ">=26.8",
 			"onFail": "download"
 		},
 		"packageManager": {
 			"name": "pnpm",
-			"version": ">=11.20",
+			"version": ">=12.3",
 			"onFail": "download"
 		}
 	},
