@@ -164,6 +164,20 @@ testRule({
 			description: `an upper-case unit inside a word an escape opens`,
 			code: `a { b: \\*10PX; }`,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// CSS closes a hexadecimal escape with one whitespace character belonging to the escape rather than to the text, so this is one dimension token: `@csstools/css-tokenizer` reads its unit as `px`, a tab and `2PX`, and Sass, Less and `lightningcss` all print the line back exactly as it stands, none of them finding two values in it. The value parser hands the word back parted at that space, and the rule used to read `2PX` as a dimension of its own. The `\9` hack is taken out of the unit as ever, and the space it leaves behind ends what the rule names, so `2PX` stands behind the unit the way the name of a variable does.
+			description: `a lower-case unit whose hack unit's escape swallows the whitespace in front of a second run of digits and letters`,
+			code: `a { width: 10px\\9 2PX; }`,
+		},
+		{
+			description: `the same word with a Windows pair in place of the space, which closes the escape as the one break it is`,
+			code: `a { width: 10px\\9\r\n2PX; }`,
+		},
+		{
+			description: `a chain of three such words, each escape welding the next word onto the one in front of it, so that the whole is one dimension whose unit is the first`,
+			code: `a { width: 10px\\9 2px\\9 3PX; }`,
+		},
 	],
 
 	reject: [
@@ -511,7 +525,7 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/296
-			description: `an upper-case unit behind a multiplication, in a word the rule reads part by part`,
+			description: `an upper-case unit behind a multiplication, in a word the rule reads dimension by dimension`,
 			code: `a { b: 10px*2REM; }`,
 			fixed: `a { b: 10px*2rem; }`,
 			line: 1,
@@ -862,6 +876,236 @@ testRule({
 			endLine: 1,
 			endColumn: 11,
 			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// A percent sign is no code point of an identifier, so it ends the unit without parting the word the value parser hands over: `@csstools/css-tokenizer` reads the dimension `10PX`, a delimiter and the dimension `2REM`, and `lightningcss` recases the units of both, printing `10px%2rem`. The rule used to read the word as one dimension and reached the second by nothing.
+			description: `two upper-case units in one word, a percent sign between them`,
+			code: `a { width: 10PX%2REM; }`,
+			fixed: `a { width: 10px%2rem; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 16,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 18,
+					endLine: 1,
+					endColumn: 21,
+					message: messages.expected(`REM`, `rem`),
+				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// The period and the plus leave no delimiter at all: the tokenizer reads `10PX` and `.2REM` standing next to each other, and `lightningcss` prints `10px.2rem`.
+			description: `two upper-case units in one word, the second opening on the point of its fraction`,
+			code: `a { width: 10PX.2REM; }`,
+			fixed: `a { width: 10px.2rem; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 16,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 18,
+					endLine: 1,
+					endColumn: 21,
+					message: messages.expected(`REM`, `rem`),
+				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			description: `two upper-case units in one word, the second opening on the sign of its number`,
+			code: `a { width: 10PX+2REM; }`,
+			fixed: `a { width: 10px+2rem; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 16,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 18,
+					endLine: 1,
+					endColumn: 21,
+					message: messages.expected(`REM`, `rem`),
+				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// A backslash in front of a line break opens no escape, and the value parser keeps the break inside the word all the same: the tokenizer reads the dimension `10PX`, that delimiter, the break and the dimension `2REM`, and `lightningcss` recases the units of both. The rule used to end the unit at the delimiter and reach the second dimension by nothing.
+			description: `two upper-case units in one word, a backslash and a line break between them`,
+			code: `a { width: 10PX\\\n2REM; }`,
+			fixed: `a { width: 10px\\\n2rem; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 16,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 2,
+					column: 2,
+					endLine: 2,
+					endColumn: 5,
+					message: messages.expected(`REM`, `rem`),
+				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// The escape spells the letter `a`, and the whitespace closing it belongs to the escape, so the identifier goes on behind it: the tokenizer reads one dimension whose unit is `PaX`, and Sass and `lightningcss` both print `10PaX`. The value parser parts the word at that space, and the rule used to name `P\61` and leave the `X` as it stood.
+			description: `an upper-case unit whose letters a hexadecimal escape and the whitespace closing it stand between`,
+			code: `a { width: 10P\\61 X; }`,
+			fixed: `a { width: 10p\\61 x; }`,
+			line: 1,
+			column: 14,
+			endLine: 1,
+			endColumn: 20,
+			message: messages.expected(`P\\61 X`, `p\\61 x`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// The escape closes on one whitespace character, and the second parts the word: the tokenizer reads `10PX\9 `, whitespace and `2PX`, and `lightningcss` prints `10PX\9  2px`, recasing the second unit and leaving the first, which it does not know.
+			description: `an upper-case unit whose hack unit's escape swallows the first of two spaces in front of a second upper-case unit`,
+			code: `a { width: 10PX\\9  2PX; }`,
+			fixed: `a { width: 10px\\9  2px; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 16,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 21,
+					endLine: 1,
+					endColumn: 23,
+					message: messages.expected(`PX`, `px`),
+				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// An escaped backslash in front of a digit opens no hexadecimal escape, so the space behind the digit is the text's and parts two dimensions: the tokenizer reads `10PX\\9`, whose unit is `PX\9`, then whitespace and `2REM`, and `lightningcss` prints `10PX\\9 2rem`, leaving the unit it does not know.
+			description: `an upper-case unit closing on an escaped backslash and a digit, in front of a space and a second upper-case unit`,
+			code: `a { width: 10PX\\\\9 2REM; }`,
+			fixed: `a { width: 10px\\\\9 2rem; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 19,
+					message: messages.expected(`PX\\\\9`, `px\\\\9`),
+				},
+				{
+					line: 1,
+					column: 21,
+					endLine: 1,
+					endColumn: 24,
+					message: messages.expected(`REM`, `rem`),
+				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// A hexadecimal escape takes six digits at most, so the seventh is a letter of the unit and the space behind it is the text's: the tokenizer reads `10PX\0000611`, whose unit is `PXa1`, then whitespace and `2REM`; Sass prints `10PXa1 2REM` and `lightningcss` `10PXa1 2rem`.
+			description: `an upper-case unit closing on a hexadecimal escape of seven digits, in front of a space and a second upper-case unit`,
+			code: `a { width: 10PX\\0000611 2REM; }`,
+			fixed: `a { width: 10px\\0000611 2rem; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 24,
+					message: messages.expected(`PX\\0000611`, `px\\0000611`),
+				},
+				{
+					line: 1,
+					column: 26,
+					endLine: 1,
+					endColumn: 29,
+					message: messages.expected(`REM`, `rem`),
+				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// The escape closes on the space, so the dimension token is `10PX\61 ` with the space, and the unit named is what the file spells in front of it: the closing character is the escape's, and `\61` spells the letter `a` with or without it.
+			description: `an upper-case unit closing on a hexadecimal escape whose closing whitespace stands in front of the name of a variable, which the warning names without that whitespace`,
+			code: `a { width: 10PX\\61 $VAR; }`,
+			fixed: `a { width: 10px\\61 $VAR; }`,
+			line: 1,
+			column: 14,
+			endLine: 1,
+			endColumn: 19,
+			message: messages.expected(`PX\\61`, `px\\61`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// The space is the character the escape spells, not one it closes on, so it is a character of the unit and the warning names it: the tokenizer reads one dimension whose unit is `PX` and a space.
+			description: `an upper-case unit closing on an escaped space, which the warning names whole`,
+			code: `a { width: 10PX\\ ; }`,
+			fixed: `a { width: 10px\\ ; }`,
+			line: 1,
+			column: 14,
+			endLine: 1,
+			endColumn: 18,
+			message: messages.expected(`PX\\ `, `px\\ `),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// Every hack unit the word carries is taken out of it, the second as much as the first, so what stands behind the last of them is off the unit.
+			description: `an upper-case unit two hack units close, the escape of the second swallowing the whitespace in front of a second dimension`,
+			code: `a { width: 10PX\\9\\9 2REM; }`,
+			fixed: `a { width: 10px\\9\\9 2REM; }`,
+			line: 1,
+			column: 14,
+			endLine: 1,
+			endColumn: 16,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			description: `a list of three upper-case units whose second carries a hack unit, whose escape welds the third dimension onto it and leaves it behind the unit`,
+			code: `a { margin: 1PX 10PX\\9 2PX; }`,
+			fixed: `a { margin: 1px 10px\\9 2PX; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 16,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 19,
+					endLine: 1,
+					endColumn: 21,
+					message: messages.expected(`PX`, `px`),
+				},
+			],
 		},
 	],
 })
@@ -1234,25 +1478,15 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/234
-			description: `a lower-case unit in front of a bang flag that a hack unit follows`,
+			// The whitespace closing the escape belongs to it, so `important\9 2px` is one identifier to the tokenizer and the second `px` is a unit of nothing: Less prints the line back as it stands, and Sass refuses it. The rule used to read `2px` as a dimension of its own, the value parser having parted the word at that space (#526).
+			description: `a lower-case unit in front of a bang flag whose keyword a hack unit closes, its escape welding the second dimension into the keyword`,
 			code: `a { b: 1px!important\\9 2px!important; }`,
-			fixed: `a { b: 1PX!important\\9 2PX!important; }`,
-			warnings: [
-				{
-					line: 1,
-					column: 9,
-					endLine: 1,
-					endColumn: 11,
-					message: messages.expected(`px`, `PX`),
-				},
-				{
-					line: 1,
-					column: 25,
-					endLine: 1,
-					endColumn: 27,
-					message: messages.expected(`px`, `PX`),
-				},
-			],
+			fixed: `a { b: 1PX!important\\9 2px!important; }`,
+			line: 1,
+			column: 9,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expected(`px`, `PX`),
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/296
@@ -1388,6 +1622,62 @@ testRule({
 			endLine: 1,
 			endColumn: 23,
 			message: messages.expected(`px\\!important`, `PX\\!IMPORTANT`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// The other option over the word the `lower` block accepts: the one unit the word holds is `px`, so the warning names it and the fix recases it, and `2PX` behind the hack stays as it is under both options where each used to change a half of its own.
+			description: `a lower-case unit whose hack unit's escape swallows the whitespace in front of a second run of digits and letters, which stands behind the unit and stays as it is`,
+			code: `a { width: 10px\\9 2PX; }`,
+			fixed: `a { width: 10PX\\9 2PX; }`,
+			line: 1,
+			column: 14,
+			endLine: 1,
+			endColumn: 16,
+			message: messages.expected(`px`, `PX`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			description: `two lower-case units in one word, a percent sign between them`,
+			code: `a { width: 10px%2rem; }`,
+			fixed: `a { width: 10PX%2REM; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 16,
+					message: messages.expected(`px`, `PX`),
+				},
+				{
+					line: 1,
+					column: 18,
+					endLine: 1,
+					endColumn: 21,
+					message: messages.expected(`rem`, `REM`),
+				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			description: `two lower-case units in one word, a backslash and a line break between them`,
+			code: `a { width: 10px\\\n2rem; }`,
+			fixed: `a { width: 10PX\\\n2REM; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 16,
+					message: messages.expected(`px`, `PX`),
+				},
+				{
+					line: 2,
+					column: 2,
+					endLine: 2,
+					endColumn: 5,
+					message: messages.expected(`rem`, `REM`),
+				},
+			],
 		},
 	],
 })

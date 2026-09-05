@@ -34,6 +34,18 @@ testRule({
 			description: `an upper-case unit written inside an interpolation, where the language reading it is not the one this rule is about`,
 			code: `a { margin: calc(100% - #{$margin * 2PX}); }`,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// CSS closes a hexadecimal escape with one whitespace character belonging to the escape rather than to the text, so this is one dimension token, and Sass prints the line back exactly as it stands. The value parser hands the word back parted at that space, and the rule used to read `2PX` as a dimension of its own.
+			description: `a lower-case unit whose hack unit's escape swallows the whitespace in front of a second run of digits and letters`,
+			code: `a { b: 10px\\9 2PX; }`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// The whitespace the escape swallows welds the interpolation onto the dimension, and a node carrying any text of an interpolation is passed over whole: Sass compiles this to `a { b: 10PX\9  1; }` with `$a: 1` — the dimension as it stands, the escape's own closing space, and the value behind a space of its own, so the unit goes unnamed here where the rule used to name it — the price of the guard, which reads no dimension next to an interpolation.
+			description: `an upper-case unit whose hack unit's escape swallows the whitespace in front of an interpolation`,
+			code: `a { b: 10PX\\9 #{$a}; }`,
+		},
 	],
 
 	reject: [
@@ -214,6 +226,87 @@ testRule({
 			endColumn: 12,
 			message: messages.expected(`PX`, `px`),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// An escaped backslash in front of a digit opens no hexadecimal escape, so the space behind the digit is the text's and the interpolation is a word of its own: the unit is read, where a reading that took the last two characters for an escape would weld the interpolation onto the dimension and pass the whole of it over.
+			description: `an upper-case unit closing on an escaped backslash and a digit, in front of a space and an interpolation`,
+			code: `a { width: 10PX\\\\9 #{$a}; }`,
+			fixed: `a { width: 10px\\\\9 #{$a}; }`,
+			line: 1,
+			column: 14,
+			endLine: 1,
+			endColumn: 19,
+			message: messages.expected(`PX\\\\9`, `px\\\\9`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// The escape closes on one of the two spaces, and the second parts the word, so the interpolation stands apart from the dimension and the unit is read.
+			description: `an upper-case unit whose hack unit's escape swallows the first of two spaces in front of an interpolation`,
+			code: `a { width: 10PX\\9  #{$a}; }`,
+			fixed: `a { width: 10px\\9  #{$a}; }`,
+			line: 1,
+			column: 14,
+			endLine: 1,
+			endColumn: 16,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// The line break is the end of the comment before it is the closing character of the escape the comment's text ends in, and the value parser hands that text back as words like any other: Sass compiles this to `a { b: 1PX 2REM; }`, the second dimension a value of its own. A word standing in the text of a comment is welded onto nothing, so the dimension on the line below is read.
+			description: `an upper-case unit on the line below an inline comment whose text ends in a hack unit, whose escape would swallow the break that closes the comment`,
+			code: `a { b: 1PX // 10PX\\9\n2REM; }`,
+			fixed: `a { b: 1px // 10PX\\9\n2rem; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					endLine: 1,
+					endColumn: 11,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 2,
+					column: 2,
+					endLine: 2,
+					endColumn: 5,
+					message: messages.expected(`REM`, `rem`),
+				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// The dimension token is `10PX\*ns`, and the guard that turns a reading through a Sass module away is asked about that token rather than about the whole word, so the unit is named where the rule used to say nothing; Sass refuses both spellings of the word, the escaped and the multiplied, and `lightningcss` prints it as it stands.
+			description: `an upper-case unit an escaped star welds to a reading through a Sass module`,
+			code: `a { b: 10PX\\*ns.$V; }`,
+			fixed: `a { b: 10px\\*ns.$V; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 16,
+			message: messages.expected(`PX\\*ns`, `px\\*ns`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			description: `two upper-case units in one word, a percent sign between them, which is plain CSS's reading and the one this namespace inherits`,
+			code: `a { b: 10PX%2REM; }`,
+			fixed: `a { b: 10px%2rem; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 17,
+					message: messages.expected(`REM`, `rem`),
+				},
+			],
+		},
 	],
 })
 testRule({
@@ -283,7 +376,7 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/271
-			description: `a word of a multiplication standing in the text of an inline comment the value holds, which the rule reads part by part`,
+			description: `a word of a multiplication standing in the text of an inline comment the value holds, whose dimensions the rule would read one at a time`,
 			code: `
 				a { b: 1PX // 2px*3rem
 					; }

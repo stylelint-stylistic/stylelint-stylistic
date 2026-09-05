@@ -14,15 +14,6 @@ function textsOf (text: string): string[] {
 }
 
 /**
- * Where the stars the file spells stand, as the rule that parts a multiplication asks.
- * @param text - The text to read.
- * @returns Their indexes.
- */
-function starsOf (text: string): number[] {
-	return spelledRuns(text).filter((run) => run.text === `*`).map((run) => run.index)
-}
-
-/**
  * Where the identifier ends, as the dimension reading asks.
  * @param text - The text to read.
  * @returns The index, or `undefined` where the whole text is one.
@@ -36,7 +27,7 @@ it(`spelledRuns`, () => {
 	expect(spelledRuns(`px`)).toEqual([{ index: 0, text: `p`, escape: false }, { index: 1, text: `x`, escape: false }])
 	expect(textsOf(`10PX\\*2REM`)).toEqual([`1`, `0`, `P`, `X`, `\\*`, `2`, `R`, `E`, `M`])
 
-	// An escape is a backslash and the one character behind it, so a run of backslashes pairs off from the left
+	// An escape is a backslash and the one character behind it, so a run of backslashes pairs off from the left, and the parity of the run in front of a star decides which of the two it is
 	expect(textsOf(`\\\\*`)).toEqual([`\\\\`, `*`])
 	expect(textsOf(`\\\\\\*`)).toEqual([`\\\\`, `\\*`])
 	expect(textsOf(`\\\\\\\\*`)).toEqual([`\\\\`, `\\\\`, `*`])
@@ -54,21 +45,28 @@ it(`spelledRuns`, () => {
 	expect(spelledRuns(`px\\ `)[2]?.escape).toBe(true)
 })
 
-it(`spelledRuns over the stars a word spells`, () => {
-	expect(starsOf(`10PX2REM`)).toEqual([])
-	expect(starsOf(`10PX*2REM`)).toEqual([4])
-	expect(starsOf(`10PX*2REM*3EM`)).toEqual([4, 9])
-	expect(starsOf(`**`)).toEqual([0, 1])
+it(`spelledRuns over a hexadecimal escape`, () => {
+	// The escape reaches over its digits, up to six of them, and the one whitespace character closing them belongs to it
+	expect(textsOf(`10PX\\9*2REM`)).toEqual([`1`, `0`, `P`, `X`, `\\9`, `*`, `2`, `R`, `E`, `M`])
+	expect(textsOf(`10PX\\2a*2REM`)).toEqual([`1`, `0`, `P`, `X`, `\\2a`, `*`, `2`, `R`, `E`, `M`])
+	expect(textsOf(`10P\\61 X`)).toEqual([`1`, `0`, `P`, `\\61 `, `X`])
+	expect(textsOf(`px\\9\t2PX`)).toEqual([`p`, `x`, `\\9\t`, `2`, `P`, `X`])
+	expect(textsOf(`px\\9\n2PX`)).toEqual([`p`, `x`, `\\9\n`, `2`, `P`, `X`])
+	expect(textsOf(`px\\9\f2PX`)).toEqual([`p`, `x`, `\\9\f`, `2`, `P`, `X`])
+	expect(textsOf(`px\\000061 X`)).toEqual([`p`, `x`, `\\000061 `, `X`])
+	expect(spelledRuns(`px\\61 X`)[2]?.escape).toBe(true)
 
-	// The parity of the run in front of the star decides which of the two it is
-	expect(starsOf(`10PX\\*2REM`)).toEqual([])
-	expect(starsOf(`10PX\\\\*2REM`)).toEqual([6])
-	expect(starsOf(`10PX\\\\\\*2REM`)).toEqual([])
-	expect(starsOf(`10PX\\\\\\\\*2REM`)).toEqual([8])
+	// A Windows pair closes the escape as the one break it is
+	expect(textsOf(`px\\9\r\n2PX`)).toEqual([`p`, `x`, `\\9\r\n`, `2`, `P`, `X`])
 
-	// A hexadecimal escape reaches over its digits, and every one of them is a character no caller asks about
-	expect(starsOf(`10PX\\9*2REM`)).toEqual([6])
-	expect(starsOf(`10PX\\2a*2REM`)).toEqual([7])
+	// A seventh digit is a character of its own, and the whitespace behind it belongs to the text
+	expect(textsOf(`px\\0000611 X`)).toEqual([`p`, `x`, `\\000061`, `1`, ` `, `X`])
+
+	// The escape closes on one whitespace character, and a second is the text's
+	expect(textsOf(`px\\9  2PX`)).toEqual([`p`, `x`, `\\9 `, ` `, `2`, `P`, `X`])
+
+	// An escaped backslash in front of a digit opens no hexadecimal escape, so the digit and the whitespace are the text's
+	expect(textsOf(`px\\\\9 2PX`)).toEqual([`p`, `x`, `\\\\`, `9`, ` `, `2`, `P`, `X`])
 })
 
 it(`spelledRuns over the code points of an identifier`, () => {
@@ -87,4 +85,9 @@ it(`spelledRuns over the code points of an identifier`, () => {
 	expect(identifierEndOf(`px\\\n2rem`)).toBe(2)
 	expect(identifierEndOf(`px\\*$var`)).toBe(4)
 	expect(identifierEndOf(`px\\\\0#fff`)).toBe(5)
+
+	// The whitespace closing a hexadecimal escape is the escape's, so the identifier goes on behind it; a second whitespace character ends it
+	expect(identifierEndOf(`p\\61 x`)).toBe(undefined)
+	expect(identifierEndOf(`px\\9  2rem`)).toBe(5)
+	expect(identifierEndOf(`px\\0000611 2rem`)).toBe(10)
 })

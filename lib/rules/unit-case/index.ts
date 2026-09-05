@@ -1,3 +1,4 @@
+import { tokenize, TokenType } from "@csstools/css-tokenizer"
 import type { AtRule, Declaration } from "postcss"
 import valueParser, { type Node } from "postcss-value-parser"
 import stylelint, { type RuleMessage } from "stylelint"
@@ -16,7 +17,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { spelledRuns } from "../../utils/spelledRuns/index.ts"
+import { weldEscapedWords } from "../../utils/weldEscapedWords/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -114,7 +115,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			}
 
 			// The value is parsed in a copy of itself with every quotation mark its comments leave open masked, so that the parser pairs the marks the value spells the way the file pairs them (#508)
-			valueParser(hideQuotesInComments(checkedValue, comments)).walk((valueNode, at, siblings) => {
+			let parsed = valueParser(hideQuotesInComments(checkedValue, comments))
+
+			// The words the parser hands over are not the tokens the file spells, and they part from them both ways. The whitespace closing a hexadecimal escape belongs to the escape, and the parser breaks the value at it all the same, so `10px\9 2PX` — one dimension to the tokenizer, to Sass, to Less and to `lightningcss` — came back as two words and was read as two dimensions, `2PX` reported under `lower` and `px` under `upper`; the words are put back together before anything is read, the comments given along so that a word standing in the text of one, which the parser hands back as words like any other, is welded onto nothing (#526)
+			weldEscapedWords(parsed.nodes, comments)
+
+			parsed.walk((valueNode, at, siblings) => {
 				let value = valueNode.value
 
 				// A call opening an address holds a URL and no arguments of its own, so it is passed over whole. The name is read rather than matched against four characters, so that `u\rl(`, `\75 rl(` and `URL(` are the token `url(` is here as they are to the scan that finds the comments — and to Sass, and to `lightningcss`.
@@ -126,20 +132,20 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A node carrying any text of an interpolation is passed over whichever side of it the node opens on, since a value parser breaks an interpolation holding whitespace into words and hands no one of them the whole of it: `isStandardSyntaxValue` is asked about a word at a time and answers that `10px#{$a` holds no interpolation at all. What such a node holds is still walked, as the text of an inline comment is, and every node of it asked the same
 				if (findInterpolationSpanTouching(valueNode, interpolations)) return
 
-				// A word holding a multiplication is more than one dimension, and no reading of the whole of it finds the second: the word is read part by part, each through a node built for the part — every part stands where the word does plus what the parts in front of it take up, the star between each pair counted in. Two makings that were tried before this one describe no text of the part at all: `2*10PX` was underlined as an empty run standing past the end of the line, and `10px*2REM` as the closing brace of the block behind the value. A word without a star is one part, and the end position such a node is given is read by nothing — it is written because a node carrying one position of the file and one of nowhere is the shape this whole reading went wrong on. Only a star the file spells parts two dimensions: an escaped one is a character of the unit it stands in, and `10PX\*2REM` is the one dimension the tokenizer, Sass and `lightningcss` all read it as, unit `PX\*2REM` (#414). What is written is decided by the same reading: each named unit carries its own edit, so a part is written whether or not the word around it reads as a dimension — `$var*2REM` used to be named and never written, since the whole word was refused and one edit per word was all there was — and nothing outside a named unit is written at all, neither the `A` of `1PX*A` nor the name of the variable in `10PX*$VAR` (#413, #425)
-				let partStart = 0
+				if (valueNode.type !== `word`) return
 
-				for (let partEnd of [...spelledRuns(value).filter((run) => run.text === `*`).map((run) => run.index), value.length]) {
+				// The other way the words part from the tokens: the parser hands over as one word what the grammar reads as several, and a word is more than one dimension wherever a character that is no code point of an identifier ends a unit without parting the word — `10PX*2REM` is two dimensions and a star, `10PX%2REM` two and a delimiter, `10PX.2REM` and `10PX+2REM` two standing next to each other with nothing between, and `10PX\⏎2REM` two with a delimiter and whitespace between, every one of which `lightningcss` recases both units of. The word used to be cut at the stars it spells and each part read as one dimension, so the second of any other pair was reached by nothing (#526). The tokenizer the plugin already depends on reads the word into its tokens instead, and every dimension among them is read through a node built for it — standing where the word does plus what the tokens in front of it take up, which is the shape two makings that described no text of the part at all went wrong on: `2*10PX` was underlined as an empty run past the end of the line, and `10px*2REM` as the closing brace of the block behind the value. The escapes are the tokenizer's to read, so `10PX\*2REM` is the one dimension whose unit is `PX\*2REM` (#414) and `10PX\\*2REM` two again. What is written is decided by the same reading: each named unit carries its own edit, so a dimension is written whether or not the word around it reads as one — `$var*2REM` used to be named and never written, since the whole word was refused and one edit per word was all there was — and nothing outside a named unit is written at all, neither the `A` of `1PX*A` nor the name of the variable in `10PX*$VAR` (#413, #425)
+				for (let token of tokenize({ css: value })) {
+					if (token[0] !== TokenType.Dimension) continue
+
 					let problem = readMiscasedUnit({
 						...valueNode,
-						sourceIndex: valueNode.sourceIndex + partStart,
-						sourceEndIndex: valueNode.sourceIndex + partEnd,
-						value: value.slice(partStart, partEnd),
+						sourceIndex: valueNode.sourceIndex + token[2],
+						sourceEndIndex: valueNode.sourceIndex + token[3] + 1,
+						value: value.slice(token[2], token[3] + 1),
 					})
 
 					if (problem) problems.push(problem)
-
-					partStart = partEnd + 1
 				}
 			})
 

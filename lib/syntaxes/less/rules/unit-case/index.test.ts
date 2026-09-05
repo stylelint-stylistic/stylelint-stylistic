@@ -42,6 +42,12 @@ testRule({
 			description: `the same call with such a code point in front of a name whose first letter an escape spells`,
 			code: `a { b: \u00E9\\75 rl(http://a/b.png) 1PX; }`,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// CSS closes a hexadecimal escape with one whitespace character belonging to the escape rather than to the text, so this is one dimension token, and Less prints the line back exactly as it stands. The value parser hands the word back parted at that space, and the rule used to read `2PX` as a dimension of its own.
+			description: `a lower-case unit whose hack unit's escape swallows the whitespace in front of a second run of digits and letters`,
+			code: `a { b: 10px\\9 2PX; }`,
+		},
 	],
 
 	reject: [
@@ -194,6 +200,63 @@ testRule({
 			endColumn: 18,
 			message: messages.expected(`PX\\*2REM`, `px\\*2rem`),
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// The line break is the end of the comment before it is the closing character of the escape the comment's text ends in, and the value parser hands that text back as words like any other: Less compiles this to `a { b: 1PX 2REM; }`, the second dimension a value of its own. A word standing in the text of a comment is welded onto nothing, so the dimension on the line below is read.
+			description: `an upper-case unit on the line below an inline comment whose text ends in a hack unit, whose escape would swallow the break that closes the comment`,
+			code: `a { b: 1PX // 10PX\\9\n2REM; }`,
+			fixed: `a { b: 1px // 10PX\\9\n2rem; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					endLine: 1,
+					endColumn: 11,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 2,
+					column: 2,
+					endLine: 2,
+					endColumn: 5,
+					message: messages.expected(`REM`, `rem`),
+				},
+			],
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			// The dimension token is `10PX\*ns`, and the guard that turns a reading through a Sass module away is asked about that token rather than about the whole word, so the unit is named where the rule used to say nothing; Less refuses the line, and `lightningcss` prints it as it stands.
+			description: `an upper-case unit an escaped star welds to a reading through a Sass module`,
+			code: `a { b: 10PX\\*ns.$V; }`,
+			fixed: `a { b: 10px\\*ns.$V; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 16,
+			message: messages.expected(`PX\\*ns`, `px\\*ns`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
+			description: `two upper-case units in one word, a percent sign between them, which is plain CSS's reading and the one this namespace inherits`,
+			code: `a { b: 10PX%2REM; }`,
+			fixed: `a { b: 10px%2rem; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 17,
+					message: messages.expected(`REM`, `rem`),
+				},
+			],
+		},
 	],
 })
 testRule({
@@ -223,7 +286,7 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/271
-			description: `a word of a multiplication standing in the text of an inline comment the value holds, which the rule reads part by part`,
+			description: `a word of a multiplication standing in the text of an inline comment the value holds, whose dimensions the rule would read one at a time`,
 			code: `
 				a { b: 1PX // 2px*3rem
 					; }
