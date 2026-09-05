@@ -157,6 +157,18 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { --b: ; }`, { [COLON_SPACE]: `always-single-line`, [COLON_NEWLINE]: `always` }, COLON_SPACE)).toBe(true)
 	})
 
+	it(`a value holding a word and a break, inside a comment or between two words, which is over several lines as the file spells it, so the single-line option behind is silent and the break is written — on a custom property as on an ordinary one (#389)`, () => {
+		expect(ask(`a { --b: x /*c\n*/; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `always-single-line` }, COLON_NEWLINE)).toBe(true)
+		expect(ask(`a { b: x /*c\n*/; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `always-single-line` }, COLON_NEWLINE)).toBe(true)
+		expect(ask(`a { --b: x\n b; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `always-single-line` }, COLON_NEWLINE)).toBe(true)
+	})
+
+	it(`a value holding a comment beside the shared run, which is counted without that run — the run the write replaces — so a neighbour's multi-line option is silent about what the write leaves: the run in front of a custom property's semicolon, and the run at the head of a wordless value of either kind`, () => {
+		expect(ask(`a { --b: /*c*/\n; }`, { [SEMICOLON_SPACE]: `always`, [COLON_NEWLINE]: `always-multi-line` }, SEMICOLON_SPACE)).toBe(true)
+		expect(ask(`a { --b:\n/*c*/; }`, { [COLON_SPACE]: `always`, [COLON_NEWLINE]: `always-multi-line` }, COLON_SPACE)).toBe(true)
+		expect(ask(`a { b:\n/*c*/; }`, { [COLON_SPACE]: `always`, [COLON_NEWLINE]: `always-multi-line` }, COLON_SPACE)).toBe(true)
+	})
+
 	it(`a neighbour silent about the block as the asking rule leaves it`, () => {
 		expect(ask(`a { b:\n; }`, { [COLON_SPACE]: `always`, [SEMICOLON_SPACE]: `never-single-line` }, COLON_SPACE)).toBe(false)
 		expect(ask(`a { b:\n; top: 0;\n}`, { [COLON_SPACE]: `always`, [SEMICOLON_SPACE]: `never-single-line` }, COLON_SPACE)).toBe(true)

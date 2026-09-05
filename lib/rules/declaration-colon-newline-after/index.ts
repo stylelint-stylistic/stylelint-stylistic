@@ -4,6 +4,7 @@ import { LEADING_WHITESPACE_WITHOUT_BREAK, LINE_BREAK, OPENS_WITH_BLOCK_COMMENT,
 import { css } from "../../syntaxes/css/index.ts"
 import { colonIndexInBetween } from "../../utils/colonIndexInBetween/index.ts"
 import { declarationColonSource } from "../../utils/declarationColonSource/index.ts"
+import { declarationValueAsSpelled } from "../../utils/declarationValueAsSpelled/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
@@ -98,7 +99,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			checker.afterOneOnly({
 				source,
 				index: indexToCheck,
-				lineCheckStr: decl.value,
+				// Whether the declaration stands over several lines is asked of its value as the file spells it, comments and all: `decl.value` drops them, and a break spelled inside one or beside one is no line of that copy (#389)
+				lineCheckStr: declarationValueAsSpelled(syntax, decl, result),
 				err: (m) => {
 					report({
 						message: m,

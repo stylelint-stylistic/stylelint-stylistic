@@ -59,3 +59,23 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`always-multi-line`],
+	customSyntax: `postcss-scss`,
+
+	accept: [],
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/389
+			description: `a value broken by the inline comment in front of its word, whose break is the comment's own end, with two spaces behind the colon`,
+			code: `a { color:  // c\n x; }`,
+			fixed: `a { color:\n  // c\n x; }`,
+			line: 1,
+			column: 10,
+			message: messages.expectedAfterMultiLine(),
+		},
+	],
+})

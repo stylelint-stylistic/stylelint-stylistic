@@ -1,12 +1,13 @@
 import type { Declaration } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { EVERY_LINE_BREAK, LEADING_CSS_WHITESPACE, OPENS_WITH_BLOCK_COMMENT, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
+import { EVERY_LINE_BREAK, LEADING_CSS_WHITESPACE, OPENS_WITH_BLOCK_COMMENT, TRAILING_CSS_WHITESPACE, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { addNamespace } from "../addNamespace/index.ts"
 import { betweenTailAfterColon } from "../betweenTailAfterColon/index.ts"
 import { blockString } from "../blockString/index.ts"
 import { colonIndexInBetween } from "../colonIndexInBetween/index.ts"
+import { declarationValueAsSpelled } from "../declarationValueAsSpelled/index.ts"
 import { defersToRunEnd } from "../defersToRunEnd/index.ts"
 import { isCustomProperty } from "../isCustomProperty/index.ts"
 import { isInlineStyleAttribute } from "../isInlineStyleAttribute/index.ts"
@@ -210,7 +211,7 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 	/**
 	 * Asks whether a participant's option speaks of the declaration once a run has been written over the shared one.
 	 *
-	 * A semicolon rule counts the lines of the block, which a written break puts over several wherever it lands, and which otherwise stands on one line where it holds no break outside the run. A colon rule counts the lines of the declaration's own value: on a custom property that is the run itself, so it is over several lines where a break has reached it and on one otherwise — and a break a colon rule writes stands in `raws.between` until the file is parsed again, so it reaches the value within the pass only from a semicolon rule, and on the run after from either; on any other property the parser keeps the value's trailing whitespace out of it, so the run is no part of what is counted and the value stands as it stands.
+	 * A semicolon rule counts the lines of the block, which a written break puts over several wherever it lands, and which otherwise stands on one line where it holds no break outside the run. A colon rule counts the lines of the declaration's own value, as the file spells it (#389), with the shared run taken out of it first wherever the parser keeps that run in the value — since that run is the one about to be written over, and a value counted with it in would be over several lines by the very break the write replaces. The run in front of the semicolon is in the value on a custom property alone, the parser keeping every other property's trailing whitespace out of it; the run at the head is in the value where the value has no word — on a custom property whatever else it holds, and on an ordinary one where a comment stands behind the run, since a head run that is the trailing run as well is kept out with it. What is left is counted over what it holds, a break spelled inside a comment included, and where a break is what is written and the run is in the value, the value is over several lines once the break has reached it: a break a colon rule writes stands in `raws.between` until the file is parsed again, so it reaches the value within the pass only from a semicolon rule, and on the run after from either.
 	 * @param participant - The rule.
 	 * @param option - Its primary option.
 	 * @param written - The run written over the shared one.
@@ -227,7 +228,13 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 				return breaksOutsideTheRun === 0
 			}
 
-			return isCustomProperty(decl.prop) ? !(written === `newline` && breakReachesValue) : isSingleLineString(decl.value)
+			let value = declarationValueAsSpelled(syntax, decl, result)
+			let fromTheSemicolon = readers === semicolon
+			let counted = fromTheSemicolon ? (isCustomProperty(decl.prop) ? value.replace(TRAILING_CSS_WHITESPACE, ``) : value) : value.replace(LEADING_CSS_WHITESPACE, ``)
+			// The head run of a wordless value stands in the value, save where it is the value's trailing run as well and the parser keeps it out on an ordinary property; `decl.value` is whitespace-only where the value has no word, the comments being dropped from that copy
+			let runInValue = fromTheSemicolon ? isCustomProperty(decl.prop) : WHITESPACE_OR_NOTHING.test(decl.value) && (isCustomProperty(decl.prop) || counted !== ``)
+
+			return isSingleLineString(counted) && !(written === `newline` && breakReachesValue && runInValue)
 		})
 	}
 

@@ -428,6 +428,15 @@ testRule({
 			description: `a comment holding a colon of its own on the line behind the colon of a multi-line declaration`,
 			code: `a { b:\n/*x:y*/ red\n blue; }`,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/389
+			description: `a value broken between the comment in front of its word and the word, whose break stands behind the comment, where this option asks for it`,
+			code: `a { color:  /*c*/\nx; }`,
+		},
+		{
+			description: `a break behind the value, in front of the semicolon, which is no line of the declaration`,
+			code: `a { color: x\n; }`,
+		},
 	],
 
 	reject: [
@@ -445,6 +454,55 @@ testRule({
 			fixed: `a {\n  box-shadow:\n0 0 0 1px #5b9dd9\n    0 0 2px 1px rgba(30, 140, 190, 0.8);\n}`,
 			line: 2,
 			column: 13,
+			message: messages.expectedAfterMultiLine(),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/389
+			description: `a value broken between the comment in front of its word and the word, with a space between the comment and the break`,
+			code: `a { color:  /*c*/ \nx; }`,
+			fixed: `a { color:  /*c*/\nx; }`,
+			line: 1,
+			column: 17,
+			message: messages.expectedAfterMultiLine(),
+		},
+		{
+			description: `a value broken inside the comment in front of its word, with a space behind that comment`,
+			code: `a { color: /*c\n*/ x; }`,
+			fixed: `a { color: /*c\n*/\n x; }`,
+			line: 2,
+			column: 2,
+			message: messages.expectedAfterMultiLine(),
+		},
+		{
+			description: `a value broken inside a comment standing between two words, with a space behind the colon`,
+			code: `a { color: x /*c\n*/ y; }`,
+			fixed: `a { color:\n x /*c\n*/ y; }`,
+			line: 1,
+			column: 10,
+			message: messages.expectedAfterMultiLine(),
+		},
+		{
+			description: `a value broken inside the comment it ends on, with a space behind the colon`,
+			code: `a { color: x /*c\n*/; }`,
+			fixed: `a { color:\n x /*c\n*/; }`,
+			line: 1,
+			column: 10,
+			message: messages.expectedAfterMultiLine(),
+		},
+		{
+			description: `a value broken inside the comment its flag stands behind, with a space behind the colon`,
+			code: `a { color: x /*c\n*/ !important; }`,
+			fixed: `a { color:\n x /*c\n*/ !important; }`,
+			line: 1,
+			column: 10,
+			message: messages.expectedAfterMultiLine(),
+		},
+		{
+			description: `a value that is nothing but a comment broken inside, which the break is asked of rather than of the colon`,
+			code: `a { color: /*c\n*/; }`,
+			fixed: `a { color: /*c\n*/\n; }`,
+			line: 2,
+			column: 2,
 			message: messages.expectedAfterMultiLine(),
 		},
 	],

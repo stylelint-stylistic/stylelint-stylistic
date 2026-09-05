@@ -4,6 +4,7 @@ import stylelint, { type PostcssResult } from "stylelint"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { colonIndexInBetween } from "../colonIndexInBetween/index.ts"
 import { declarationColonSource } from "../declarationColonSource/index.ts"
+import { declarationValueAsSpelled } from "../declarationValueAsSpelled/index.ts"
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
 
 let { utils: { report } } = stylelint
@@ -63,7 +64,8 @@ export function declarationColonSpaceChecker (opts: {
 		opts.locationChecker({
 			source,
 			index: startIndex,
-			lineCheckStr: decl.value,
+			// Whether the declaration stands on one line is asked of its value as the file spells it, comments and all: `decl.value` drops them, and a break spelled inside one or beside one is no line of that copy (#389)
+			lineCheckStr: declarationValueAsSpelled(opts.syntax, decl, opts.result),
 			err: (message) => {
 				report({
 					message,

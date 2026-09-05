@@ -86,3 +86,19 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`always-single-line`],
+	customSyntax: `postcss-scss`,
+
+	accept: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/389
+			description: `two spaces behind the colon of a value broken by the inline comment in front of its word, whose break is the comment's own end, which this option passes over`,
+			code: `a { color:  // c\n x; }`,
+		},
+	],
+
+	reject: [],
+})

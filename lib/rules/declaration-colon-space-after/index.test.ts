@@ -827,6 +827,31 @@ testRule({
 			description: `an ordinary property whose value is nothing but a flag, with one space behind the colon`,
 			code: `a { color: !important; }`,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/389
+			description: `two spaces behind the colon of a value broken between the comment in front of its word and the word, which this option passes over`,
+			code: `a { color:  /*c*/\nx; }`,
+		},
+		{
+			description: `a value broken inside the comment in front of its word, with two spaces behind the colon`,
+			code: `a { color:  /*c\n*/ x; }`,
+		},
+		{
+			description: `a value broken inside a comment standing between two words, with two spaces behind the colon`,
+			code: `a { color:  x /*c\n*/ y; }`,
+		},
+		{
+			description: `a value broken inside the comment it ends on, with two spaces behind the colon`,
+			code: `a { color:  x /*c\n*/; }`,
+		},
+		{
+			description: `a value broken inside the comment its flag stands behind, with two spaces behind the colon`,
+			code: `a { color:  x /*c\n*/ !important; }`,
+		},
+		{
+			description: `a value that is nothing but a comment broken inside, with two spaces behind the colon`,
+			code: `a { color:  /*c\n*/; }`,
+		},
 	],
 
 	reject: [
@@ -836,6 +861,15 @@ testRule({
 			fixed: `a { --a: ; }`,
 			line: 1,
 			column: 9,
+			message: messages.expectedAfterSingleLine(),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/389
+			description: `a break behind the value, in front of the semicolon, which is no line of the declaration`,
+			code: `a { color:  x\n; }`,
+			fixed: `a { color: x\n; }`,
+			line: 1,
+			column: 11,
 			message: messages.expectedAfterSingleLine(),
 		},
 		{
