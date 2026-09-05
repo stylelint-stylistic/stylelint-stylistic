@@ -47,3 +47,33 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	customSyntax: `postcss-scss`,
+	config: [`ratio`],
+
+	accept: [
+		{
+			description: `a media feature whose value is a variable, which the media parser cannot read`,
+			code: `@media (aspect-ratio: $ratio) {}`,
+		},
+		{
+			description: `a media feature whose value holds an interpolation`,
+			code: `@media (aspect-ratio: #{$width} / 1) {}`,
+		},
+	],
+
+	reject: [
+		{
+			description: `a media feature whose ratio is one number, read as the core reads it`,
+			code: `@media (aspect-ratio: 2) {}`,
+			fixed: `@media (aspect-ratio: 2 / 1) {}`,
+			line: 1,
+			column: 23,
+			endLine: 1,
+			endColumn: 24,
+			message: messages.expected(`2`, `2 / 1`),
+		},
+	],
+})

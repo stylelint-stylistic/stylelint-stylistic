@@ -2,16 +2,20 @@ import type { Node } from "postcss"
 import valueParser, { type Node as ValueParserNode } from "postcss-value-parser"
 import stylelint from "stylelint"
 
-import { ASPECT_RATIO_PROPERTY, NUMBER_WITHOUT_SIGN_OR_EXPONENT } from "../../regexps.ts"
+import { RATIO_MEDIA_FEATURES } from "../../reference/mediaQueries.ts"
+import { ASPECT_RATIO_PROPERTY, MEDIA_AT_RULE, NUMBER_WITHOUT_SIGN_OR_EXPONENT } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { applyEditsFromEnd } from "../../utils/applyEditsFromEnd/index.ts"
+import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { findMediaFeatureValues } from "../../utils/findMediaFeatureNames/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import type { NeighbourRule } from "../../utils/neighbourSettings/index.ts"
+import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isBoolean } from "../../utils/validateTypes/index.ts"
 import { type Whitespace, whitespaceAsked } from "../../utils/whitespaceAsked/index.ts"
@@ -29,24 +33,44 @@ export let meta = {
 	fixable: true,
 }
 
-/** The options the two rules about the whitespace beside a solidus in a value take. */
-const SLASH_SPACE_OPTIONS = [`always`, `never`, `always-single-line`, `never-single-line`]
+/** The rules about the whitespace on either side of a solidus, each by the whitespace its `always` options write, and the text they count the lines of where an option turns on it. A declaration's value has one pair, a media feature another. */
+type SolidusNeighbours = {
+	before: Partial<Record<Whitespace, NeighbourRule>>,
+	after: Partial<Record<Whitespace, NeighbourRule>>,
+	isSingleLine: () => boolean,
+}
 
-/** The rule about the run in front of such a solidus, by the whitespace its `always` options write. */
+/** The options the two rules about the whitespace beside a solidus in a value take. */
+const VALUE_SLASH_SPACE_OPTIONS = [`always`, `never`, `always-single-line`, `never-single-line`]
+
+/** The options the two rules about the whitespace beside a solidus in a media feature take. */
+const MEDIA_SLASH_SPACE_OPTIONS = [`always`, `never`]
+
+/** The rule about the run in front of a solidus in a value, by the whitespace its `always` options write. */
 const RULES_BEFORE_THE_SOLIDUS: Partial<Record<Whitespace, NeighbourRule>> = {
-	space: { name: `value-slash-space-before`, options: SLASH_SPACE_OPTIONS },
+	space: { name: `value-slash-space-before`, options: VALUE_SLASH_SPACE_OPTIONS },
 }
 
 /** The rule about the run behind it. */
 const RULES_AFTER_THE_SOLIDUS: Partial<Record<Whitespace, NeighbourRule>> = {
-	space: { name: `value-slash-space-after`, options: SLASH_SPACE_OPTIONS },
+	space: { name: `value-slash-space-after`, options: VALUE_SLASH_SPACE_OPTIONS },
+}
+
+/** The rule about the run in front of a solidus in a media feature. */
+const MEDIA_RULES_BEFORE_THE_SOLIDUS: Partial<Record<Whitespace, NeighbourRule>> = {
+	space: { name: `media-feature-slash-space-before`, options: MEDIA_SLASH_SPACE_OPTIONS },
+}
+
+/** The rule about the run behind it. */
+const MEDIA_RULES_AFTER_THE_SOLIDUS: Partial<Record<Whitespace, NeighbourRule>> = {
+	space: { name: `media-feature-slash-space-after`, options: MEDIA_SLASH_SPACE_OPTIONS },
 }
 
 /** What the fix writes on either side of a solidus where no rule speaks of the run: a single space, which is what the fix wrote before it read anybody. */
 const SOLIDUS_WHITESPACE_FALLBACK = ` `
 
 /**
- * Specifies the notation for the value of `aspect-ratio`.
+ * Specifies the notation for the value of `aspect-ratio`, and for the `<ratio>` of a media feature.
  *
  * The rule reads one value along two axes that do not depend on each other: the primary option decides how many numbers are written, and `smallestIntegers` decides what those numbers are. Both are settled before anything is written, and the whole value is written once, so neither axis can be applied by halves and no order in the configuration can change the outcome. The solidus the fix adds is spelled the way `value-slash-space-before` and `value-slash-space-after` ask wherever the configuration lists them, and with a space on either side where it lists neither (#550): Stylelint runs each rule once and in the order the configuration lists them, so a solidus written bare behind a `never` of either rule would be one that rule sees only on the run after.
  * @param scope - What the namespace the rule is registered under hands it.
@@ -54,10 +78,10 @@ const SOLIDUS_WHITESPACE_FALLBACK = ` `
  * @param scope.messages - The messages, each closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option, one of `ratio`, `number-where-possible` and `as-written`.
- * @param secondaryOptions - The secondary options: `smallestIntegers`.
+ * @param secondaryOptions - The secondary options: `smallestIntegers`, and `ignore` with `at-rules`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `ratio` | `number-where-possible` | `as-written`, secondaryOptions: { smallestIntegers?: boolean } = {}): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `ratio` | `number-where-possible` | `as-written`, secondaryOptions: { smallestIntegers?: boolean, ignore?: string[] } = {}): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,
@@ -70,6 +94,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				actual: secondaryOptions,
 				possible: {
 					smallestIntegers: [isBoolean],
+					ignore: [`at-rules`],
 				},
 				optional: true,
 			},
@@ -83,20 +108,46 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		if (primary === `as-written` && !smallestIntegers) return
 
 		root.walkDecls(ASPECT_RATIO_PROPERTY, (decl) => {
-			check(decl, syntax.read(decl), declarationValueIndex(decl), (fixed) => syntax.write(decl, fixed), () => isSingleLineString(declarationString(syntax, decl)))
+			check(decl, syntax.read(decl), declarationValueIndex(decl), (fixed) => syntax.write(decl, fixed), {
+				before: RULES_BEFORE_THE_SOLIDUS,
+				after: RULES_AFTER_THE_SOLIDUS,
+				isSingleLine: () => isSingleLineString(declarationString(syntax, decl)),
+			})
 		})
+
+		if (!optionsMatches(secondaryOptions, `ignore`, `at-rules`)) {
+			root.walkAtRules(MEDIA_AT_RULE, (atRule) => {
+				if (!syntax.isStandardAtRule(atRule)) return
+
+				let params = syntax.read(atRule)
+				let neighbours: SolidusNeighbours = {
+					before: MEDIA_RULES_BEFORE_THE_SOLIDUS,
+					after: MEDIA_RULES_AFTER_THE_SOLIDUS,
+					isSingleLine: () => isSingleLineString(params),
+				}
+
+				// The range form puts two values of one feature in one set of parameters, and each is a text of its own. They are checked from the last forward, so that a write into one leaves the positions of those in front of it where they were counted; each write reads the parameters as the writes before it left them and replaces its own span, which stands in front of every span written already
+				for (let { start, end } of findMediaFeatureValues(params, RATIO_MEDIA_FEATURES).toReversed()) {
+					check(atRule, params.slice(start, end), atRuleParamIndex(atRule) + start, (fixed) => {
+						let current = syntax.read(atRule)
+
+						syntax.write(atRule, current.slice(0, start) + fixed + current.slice(end))
+					}, neighbours)
+				}
+			})
+		}
 
 		/**
 		 * Checks one text a `<ratio>` may be written in, and reports the ratio it holds where that ratio is written otherwise than the options ask.
 		 *
-		 * The node, its text, where that text begins and how it is written back are all handed over, rather than read off the node here, so that a text of another kind — the parameters of a media feature, which this rule does not yet read — is one more caller rather than a branch inside.
+		 * The node, its text, where that text begins and how it is written back are all handed over, rather than read off the node here, so that a declaration's value and the value of a media feature are two callers rather than a branch inside.
 		 * @param node - The node the text was read from, which a problem is reported against.
 		 * @param text - The text to check.
 		 * @param textIndex - The offset from the start of the node to the first character of that text.
 		 * @param write - Writes the fixed text back to the node.
-		 * @param isSingleLine - Whether the text the rules about the whitespace beside a solidus count the lines of stands on one line, asked only where one of them is configured with an option that turns on it.
+		 * @param neighbours - The rules about the whitespace on either side of a solidus written into this text, and the text they count the lines of.
 		 */
-		function check (node: Node, text: string, textIndex: number, write: (fixed: string) => void, isSingleLine: () => boolean): void {
+		function check (node: Node, text: string, textIndex: number, write: (fixed: string) => void, neighbours: SolidusNeighbours): void {
 			let comments = syntax.commentSpans(text, node, result)
 			// The value parser has a node for a block comment and none for a comment opened by a double slash, whose text comes back as ordinary words and divs. Blanking every comment out answers both at once: the copy spells the text character for character everywhere else, so every position below counts in the text itself, and what the parse holds is code the file spells and nothing else.
 			let ratio = findRatio(valueParser(blankComments(text, comments)).nodes)
@@ -114,8 +165,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// The whitespace on either side of the solidus is what the rule about that run asks for, the later-listed one where two speak, and the fallback where none does; each side is a run of its own with a rule of its own
 			if (writesHeight && !height) {
-				let before = whitespaceAsked(syntax, node, result, RULES_BEFORE_THE_SOLIDUS, isSingleLine, SOLIDUS_WHITESPACE_FALLBACK)
-				let after = whitespaceAsked(syntax, node, result, RULES_AFTER_THE_SOLIDUS, isSingleLine, SOLIDUS_WHITESPACE_FALLBACK)
+				let before = whitespaceAsked(syntax, node, result, neighbours.before, neighbours.isSingleLine, SOLIDUS_WHITESPACE_FALLBACK)
+				let after = whitespaceAsked(syntax, node, result, neighbours.after, neighbours.isSingleLine, SOLIDUS_WHITESPACE_FALLBACK)
 
 				edits.push({ start: width.sourceEndIndex, end: width.sourceEndIndex, text: `${before}/${after}${expectedHeight}` })
 			}
