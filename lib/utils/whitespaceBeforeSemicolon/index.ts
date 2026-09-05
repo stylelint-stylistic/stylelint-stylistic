@@ -4,10 +4,10 @@ import type { PostcssResult } from "stylelint"
 import { TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blockString } from "../blockString/index.ts"
-import { getLineBreak } from "../getLineBreak/index.ts"
 import { isSingleLineString } from "../isSingleLineString/index.ts"
-import { type NeighbourRule, neighbourSettings, speaksOf } from "../neighbourSettings/index.ts"
+import type { NeighbourRule } from "../neighbourSettings/index.ts"
 import { isAtRule } from "../typeGuards/index.ts"
+import { type Whitespace, whitespaceAsked } from "../whitespaceAsked/index.ts"
 
 /** The rules about the whitespace in front of a semicolon, by the kind of node the semicolon closes and by the whitespace each of them writes. A declaration block's semicolons have two, one for the break and one for the space; an at-rule's has the space alone. */
 const RULES_OF_WHITESPACE: Record<`decl` | `atrule`, Partial<Record<Whitespace, NeighbourRule>>> = {
@@ -29,15 +29,12 @@ const RULES_OF_WHITESPACE: Record<`decl` | `atrule`, Partial<Record<Whitespace, 
 	},
 }
 
-/** The whitespace one of those rules writes. */
-type Whitespace = `newline` | `space`
-
 /**
  * The whitespace a fix writes in front of a semicolon it puts behind a declaration or a bodiless at-rule, so that the semicolon is written the way the rules about that whitespace ask for rather than bare, for one of them to respell afterwards — or, where the rule has no fixer, to report on every run after and never to put right.
  *
  * Stylelint runs each rule once and in the order the configuration lists them, so a semicolon written behind `declaration-block-semicolon-newline-before` or `declaration-block-semicolon-space-before` is one those rules never see until the next run of `--fix` (#354), and one written behind `at-rule-semicolon-space-before` is one that rule reports on the run after and cannot fix at all (#477). Their settings are read through `neighbourSettings`, under the names of the namespace the asking rule is registered under and in the order the run makes them.
  *
- * Where two rules speak of the block, the one the configuration lists later wins — an `always` with its whitespace, a `never` with none: that is the rule that runs last, and over a semicolon the file spelled from the start it rewrites or strips what the other wrote, so the block ends up spelling its semicolons one way either way, a configuration contradicting itself included.
+ * Which of two rules speaking of the block wins is `whitespaceAsked`'s question, and it is answered there the same way for every run a fix writes: the later-listed one whose fix is turned on.
  *
  * Whether the block stands on one line is asked of it as it stands when the fix is written, which is what the rule itself would read on the run after, and a rule listed ahead may have broken the block already; a rule listed behind still may, and which of the two the `-single-line` and `-multi-line` options speak of is #355's question rather than this one's.
  * @param syntax - The syntax the asking rule is built over, whose namespace names the rules and which says whether an at-rule is one the rule about it reads.
@@ -56,9 +53,6 @@ export function whitespaceBeforeSemicolon (syntax: Syntax, node: AtRule | Declar
 	// Held under a name of its own, since the narrowing above does not reach into the function below
 	let block = parent
 	let singleLine: boolean | undefined
-	let asked: Whitespace | undefined
-	let askedByTurnedOff: Whitespace | undefined
-	let aFixSpeaks = false
 
 	/**
 	 * Asks whether the block stands on one line, printing it once however many options turn on the answer.
@@ -70,23 +64,7 @@ export function whitespaceBeforeSemicolon (syntax: Syntax, node: AtRule | Declar
 		return singleLine
 	}
 
-	// The winner is the last-listed speaking rule whose fix is turned on, since that is the last write the file gets: a speaking rule whose fix the configuration turned off cannot rewrite what a live one leaves, so it wins only where no live one speaks — and there the whitespace it asks for is still written, the write being this writer's own text rather than the turned-off fix (#485)
-	for (let [kind, option, fixTurnedOff] of neighbourSettings(syntax, result, RULES_OF_WHITESPACE[node.type])) {
-		if (!speaksOf(option, isSingleLine)) continue
-
-		if (fixTurnedOff) {
-			askedByTurnedOff = option.startsWith(`always`) ? kind : undefined
-			continue
-		}
-
-		aFixSpeaks = true
-		asked = option.startsWith(`always`) ? kind : undefined
-	}
-
-	if (!aFixSpeaks) asked = askedByTurnedOff
-	if (asked === `newline`) return getLineBreak(syntax, node, result)
-
-	return asked === `space` ? ` ` : ``
+	return whitespaceAsked(syntax, node, result, RULES_OF_WHITESPACE[node.type], isSingleLine)
 }
 
 /**
