@@ -30,6 +30,11 @@ Here are `stylelint-stylistic` rules, grouped by the _thing_ they apply to (j
 
 - [`unit-case`](../../lib/rules/unit-case/README.md): Specify lowercase or uppercase for units (Autofixable).
 
+## Value
+
+- [`value-slash-space-after`](../../lib/rules/value-slash-space-after/README.md): Require a single space or disallow whitespace after the solidus that separates the parts of a value (Autofixable).
+- [`value-slash-space-before`](../../lib/rules/value-slash-space-before/README.md): Require a single space or disallow whitespace before the solidus that separates the parts of a value (Autofixable).
+
 ## Value list
 
 - [`value-list-comma-newline-after`](../../lib/rules/value-list-comma-newline-after/README.md): Require a newline or disallow whitespace after the commas of value lists (Autofixable).
@@ -98,6 +103,8 @@ Here are `stylelint-stylistic` rules, grouped by the _thing_ they apply to (j
 - [`media-feature-parentheses-space-inside`](../../lib/rules/media-feature-parentheses-space-inside/README.md): Require a single space or disallow whitespace on the inside of the parentheses within media features (Autofixable).
 - [`media-feature-range-operator-space-after`](../../lib/rules/media-feature-range-operator-space-after/README.md): Require a single space or disallow whitespace after the range operator in media features (Autofixable).
 - [`media-feature-range-operator-space-before`](../../lib/rules/media-feature-range-operator-space-before/README.md): Require a single space or disallow whitespace before the range operator in media features (Autofixable).
+- [`media-feature-slash-space-after`](../../lib/rules/media-feature-slash-space-after/README.md): Require a single space or disallow whitespace after the solidus of a ratio in media features (Autofixable).
+- [`media-feature-slash-space-before`](../../lib/rules/media-feature-slash-space-before/README.md): Require a single space or disallow whitespace before the solidus of a ratio in media features (Autofixable).
 
 ## Media query list
 

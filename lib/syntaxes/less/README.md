@@ -22,7 +22,8 @@ Every rule of the core is here, with the same options and the same documen
 - the constructs `postcss-less` hands over — mixins and their calls, variables (`@foo: bar;`), detached rulesets, `:extend`, CSS guards (`when`), maps — are passed over the way the core passes over what is not standard CSS, rather than misread as code;
 - an inline comment (`//`) is a comment of the text a rule reads, and every fix keeps out of one;
 - `declaration-block-trailing-semicolon` under `never` leaves the one semicolon Less will not part with — behind an at-rule without a block — and reports it without writing a fix that would break the file; a mixin call and a call to a detached ruleset close their block like any node, and the semicolon behind either goes as a declaration's would;
-- `indentation` holds the parameter list of a mixin definition one level deeper, and `unit-case` walks the value of a variable the way it walks a declaration's.
+- `indentation` holds the parameter list of a mixin definition one level deeper, and `unit-case` walks the value of a variable the way it walks a declaration's;
+- the `value-slash-space-*` and `media-feature-slash-space-*` rules read a solidus outside parentheses as the separator it is to the core, `2/@a` included, since Less divides only inside parentheses under its default `math` mode, and a parenthesised group is passed over as the core passes one over; a variable's own value (`@a: 1/2`) is no declaration to them. Where taking the whitespace behind a solidus away would close it up against a comment, which spells a `//` comment with the solidus as its first character, the `never` options of the `*-after` rules report the problem and leave the text alone.
 
 This namespace is about the stylistic side of the CSS a Less file holds. The Less constructs themselves — variables, mixins, guards — have no stylistic rules here.
 

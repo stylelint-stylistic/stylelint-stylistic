@@ -6,6 +6,8 @@ import { inlineCommentReading } from "../../preprocessor/readsInlineComments/ind
 import { css } from "../css/index.ts"
 import type { Syntax } from "../index.ts"
 
+import { readsSlashAsOperator } from "./readsSlashAsOperator/index.ts"
+
 /** The syntax of the `scss` namespace: a stylesheet written in SCSS and parsed with `postcss-scss`. The namespace is a superset of the core — plain CSS is read exactly as the core reads it, an embedded plain block of a page included — so a project holding both configures these rules alone for the files that carry SCSS. What is the adapter's own is the gate and the guards over the constructs only Sass spells: a module reading, a placeholder, a nested property, `@content`, a comment the parser marked inline. The pair of copies the parser keeps of a text is read and written by the core's own adapter, which reads whichever copies a node carries. */
 export let scss: Syntax = {
 	...css,
@@ -26,4 +28,5 @@ export let scss: Syntax = {
 	isStandardValue: isStandardPreprocessorValue,
 	isStandardSelector: isStandardPreprocessorSelector,
 	isStandardComment: isStandardPreprocessorComment,
+	readsSlashAsOperator,
 }

@@ -1,6 +1,6 @@
 import type { AtRule, Comment, Declaration, Node, Root, Rule as PostcssRule } from "postcss"
 import type { Node as SelectorNode } from "postcss-selector-parser"
-import type { FunctionNode } from "postcss-value-parser"
+import type { FunctionNode, Node as ValueParserNode } from "postcss-value-parser"
 import type { PostcssResult } from "stylelint"
 
 import type { InlineComment } from "../preprocessor/findSelectorInlineComments/index.ts"
@@ -224,6 +224,16 @@ export type Syntax = {
 	 * @returns True where the syntax that spelled that node spells arithmetic of its own.
 	 */
 	spellsOwnArithmetic (node: Node, result: PostcssResult): boolean,
+
+	/**
+	 * Asks whether the syntax reads a solidus standing between two nodes of a value as an operator of its own arithmetic rather than as the separator CSS spells there — between the numbers of a ratio, the sizes of a font shorthand, the lines of a grid area, the colour and the alpha of a colour function.
+	 *
+	 * Plain CSS divides nowhere outside a math function, and a rule about a separator passes the arguments of those over on its own. Sass divides wherever either operand is one of its own — a variable, a call it evaluates — and keeps the solidus of two plain values, of a `var()` and of an `env()`: measured against dart-sass 1.104, `4/2` and `var(--x)/2` print as they stand while `4/$a` and `fn()/2` print a quotient. Less divides only inside parentheses under its default `math` mode, measured against Less 4.9.1, and a parenthesised group is a nameless call the rules pass over; under `math: always` it divides everywhere, and the whitespace beside the solidus changes nothing to it either way.
+	 * @param left - The node in front of the solidus, none where the solidus opens the text.
+	 * @param right - The node behind it, none where the solidus closes the text.
+	 * @returns True where the syntax divides there, so that the solidus is no separator to read.
+	 */
+	readsSlashAsOperator (left: ValueParserNode | undefined, right: ValueParserNode | undefined): boolean,
 
 	/**
 	 * Finds the spans the interpolations of a preprocessor occupy in a text — a stretch written in a language of its own, which no rule reads code beside.

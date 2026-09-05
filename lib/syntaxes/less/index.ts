@@ -25,6 +25,8 @@ export let less: Syntax = {
 	requiresTrailingSemicolon,
 	readsRuleParams: (rule: PostcssRule) => `params` in rule && Boolean(rule.params),
 	readsAtRuleAsVariable: (atRule: AtRule) => `variable` in atRule,
+	// Less divides only inside parentheses under its default `math` mode — measured against Less 4.9.1, `@a/2` prints `4/2` and `2/@a` prints `2/4` while `(4/2)` prints `2` — and a parenthesised group is a nameless call the rules pass over. Under `math: always` it divides everywhere, and whether whitespace stands beside the solidus changes nothing to it. So a solidus outside parentheses is the separator it is to the core
+	readsSlashAsOperator: () => false,
 	// The core writes every copy PostCSS and `postcss-scss` keep; a Less variable holds one more, the `value` its stringifier prints, and it is kept in step here
 	write (node: AtRule | Declaration | PostcssRule, text: string): void {
 		css.write(node, text)

@@ -48,6 +48,8 @@ const RULE_OPTIONS: Record<string, unknown[]> = {
 	"media-feature-parentheses-space-inside": [`always`, `never`],
 	"media-feature-range-operator-space-after": [`always`, `never`],
 	"media-feature-range-operator-space-before": [`always`, `never`],
+	"media-feature-slash-space-after": [`always`, `never`],
+	"media-feature-slash-space-before": [`always`, `never`],
 	"media-query-list-comma-newline-after": [`always`, `always-multi-line`, `never-multi-line`],
 	"media-query-list-comma-newline-before": [`always`, `always-multi-line`, `never-multi-line`],
 	"media-query-list-comma-space-after": [`always`, `never`, `always-single-line`, `never-single-line`],
@@ -83,6 +85,8 @@ const RULE_OPTIONS: Record<string, unknown[]> = {
 	"value-list-comma-space-after": [`always`, `never`, `always-single-line`, `never-single-line`],
 	"value-list-comma-space-before": [`always`, `never`, `always-single-line`, `never-single-line`],
 	"value-list-max-empty-lines": [0, 1],
+	"value-slash-space-after": [`always`, `never`, `always-single-line`, `never-single-line`],
+	"value-slash-space-before": [`always`, `never`, `always-single-line`, `never-single-line`],
 }
 
 export { RULE_OPTIONS }
