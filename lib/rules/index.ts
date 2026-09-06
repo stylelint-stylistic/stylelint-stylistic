@@ -88,7 +88,7 @@ import { createRule as valueSlashNewlineBefore } from "./value-slash-newline-bef
 import { createRule as valueSlashSpaceAfter } from "./value-slash-space-after/index.ts"
 import { createRule as valueSlashSpaceBefore } from "./value-slash-space-before/index.ts"
 
-let rules: { readonly [name: string]: (syntax: Syntax) => Rule } = {
+let rules = {
 	"aspect-ratio-notation": aspectRatioNotation,
 	"at-rule-name-case": atRuleNameCase,
 	"at-rule-name-newline-after": atRuleNameNewlineAfter,
@@ -174,6 +174,6 @@ let rules: { readonly [name: string]: (syntax: Syntax) => Rule } = {
 	"value-slash-newline-before": valueSlashNewlineBefore,
 	"value-slash-space-after": valueSlashSpaceAfter,
 	"value-slash-space-before": valueSlashSpaceBefore,
-}
+} satisfies { readonly [name: string]: (syntax: Syntax) => Rule }
 
 export default rules

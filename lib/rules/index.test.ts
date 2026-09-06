@@ -9,15 +9,15 @@ import { getRuleDocUrl } from "../utils/getRuleDocUrl/index.ts"
 
 import factories from "./index.ts"
 
-let ruleEntries = Object.entries(factories).map(([name, createRule]) => [name, createRule(css)] as const)
-let rules = Object.fromEntries(ruleEntries)
+let ruleEntries = Object.entries(factories).map(([name, createRule]) => [name, createRule, createRule(css)] as const)
+let rules = Object.fromEntries(ruleEntries.map(([name, , rule]) => [name, rule]))
 
 describe(`all rules`, () => {
 	it(`not empty`, () => {
 		expect(ruleEntries.length).toBeGreaterThan(0)
 	})
 
-	for (let [ruleName, rule] of ruleEntries) {
+	for (let [ruleName, createRule, rule] of ruleEntries) {
 		describe(`"${ruleName}"`, () => {
 			it(`is a function`, () => {
 				expect(typeof rule).toBe(`function`)
@@ -29,10 +29,10 @@ describe(`all rules`, () => {
 
 			for (let syntax of namespaces) {
 				it(`is registered under the "${syntax.namespace}" namespace with its name and messages closed by it`, () => {
-					let namespaced = factories[ruleName]?.(syntax)
+					let namespaced = createRule(syntax)
 
-					expect(namespaced?.ruleName).toBe(addNamespace(ruleName, syntax.namespace))
-					expect(Object.keys(namespaced?.messages ?? {})).toEqual(Object.keys(rule.messages))
+					expect(namespaced.ruleName).toBe(addNamespace(ruleName, syntax.namespace))
+					expect(Object.keys(namespaced.messages)).toEqual(Object.keys(rule.messages))
 				})
 			}
 
