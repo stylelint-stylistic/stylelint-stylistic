@@ -78,6 +78,36 @@ The rules above read plain CSS. A stylesheet written in SCSS (`postcss-scss`)
 
 What each namespace answers differently is written in its own README: [`scss`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/scss/README.md), [`less`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/less/README.md), [`styled`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/styled/README.md). Configure one family of names per file: a namespace reads plain CSS too, so listing the core and a namespace over the same files would run every rule twice.
 
+## Typed configuration
+
+A JavaScript configuration can name the rules through `defineStylistic`, by their short names and the syntax they are read under:
+
+```js
+import { defineStylistic } from "@stylistic/stylelint-plugin"
+
+export default {
+	plugins: ["@stylistic/stylelint-plugin"],
+	rules: {
+		"color-function-notation": "modern",
+		...defineStylistic({
+			rules: {
+				"color-hex-case": "lower",
+				"indentation": ["tab", { baseIndentLevel: 1 }],
+			},
+		}),
+	},
+	overrides: [
+		{
+			files: ["**/*.scss"],
+			customSyntax: "postcss-scss",
+			rules: defineStylistic({ syntax: "scss", rules: { "color-hex-case": "lower" } }),
+		},
+	],
+}
+```
+
+It returns the settings under the prefixed names, each as a pair of the primary and the secondary options, `{ "@stylistic/scss/color-hex-case": ["lower", {}] }`. The types are the rules' own: an editor completes the names and the options, and the compiler refuses a name the plugin has no rule for, an option the rule does not take, a key its secondary options do not spell, and a syntax the plugin has no namespace for. Without types, an unknown name or syntax stops the run with a configuration error. A JSON or YAML configuration goes on naming the rules itself.
+
 ## Need more?
 
 ESLint deprecates stylistic rules, too. But you can continue to use them thanks to [ESLint Stylistic](https://eslint.style).
