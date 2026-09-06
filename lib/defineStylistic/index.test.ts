@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs"
+import path from "node:path"
 
 import stylelint, { type Config } from "stylelint"
 import { describe, expect, expectTypeOf, it } from "vitest"
@@ -8,7 +9,7 @@ import factories from "../rules/index.ts"
 import { namespaces } from "../syntaxes/index.ts"
 import type { ConfigurationError } from "../utils/configurationError/index.ts"
 
-import { defineStylistic, type GlobalOptions, type Namespace, RULES_TAKING } from "./index.ts"
+import { defineStylistic, defineStylisticOverride, type GlobalOptions, type Namespace, RULES_TAKING } from "./index.ts"
 
 /** The exit code Stylelint reserves for a configuration error. */
 const EXIT_CODE_INVALID_CONFIG = 78
@@ -132,6 +133,26 @@ describe(`defineStylistic`, () => {
 		expect(defined.results[0]?.warnings).toEqual(byHand.results[0]?.warnings)
 	})
 
+	it(`returns the overrides entry whole, naming the package the syntax is parsed with`, () => {
+		let rules = { "color-hex-case": `lower` } as const
+
+		expect(defineStylisticOverride({ syntax: `scss`, files: [`**/*.scss`], rules })).toEqual({ files: [`**/*.scss`], customSyntax: `postcss-scss`, rules: { "@stylistic/scss/color-hex-case": [`lower`, {}] } })
+		expect(defineStylisticOverride({ syntax: `less`, files: `**/*.less`, rules })).toEqual({ files: `**/*.less`, customSyntax: `postcss-less`, rules: { "@stylistic/less/color-hex-case": [`lower`, {}] } })
+		expect(defineStylisticOverride({ syntax: `styled`, files: [`**/*.{js,jsx,ts,tsx}`], rules })).toEqual({ files: [`**/*.{js,jsx,ts,tsx}`], customSyntax: `postcss-styled-syntax`, rules: { "@stylistic/styled/color-hex-case": [`lower`, {}] } })
+		expect(defineStylisticOverride({ syntax: `css`, files: [`**/*.css`], rules })).toEqual({ files: [`**/*.css`], rules: { "@stylistic/color-hex-case": [`lower`, {}] } })
+		expect(defineStylisticOverride({ files: [`**/*.css`], rules }, { severity: `warning` })).toEqual({ files: [`**/*.css`], rules: { "@stylistic/color-hex-case": [`lower`, { severity: `warning` }] } })
+	})
+
+	it(`lints an SCSS file through the overrides entry as through one written by hand`, async () => {
+		let code = `a { color: #FFF; }`
+		let codeFilename = path.join(process.cwd(), `tmp`, `entry.scss`)
+		let byHand = await stylelint.lint({ code, codeFilename, config: { plugins: plugin, rules: {}, overrides: [{ files: [`**/*.scss`], customSyntax: `postcss-scss`, rules: { "@stylistic/scss/color-hex-case": `lower` } }] } })
+		let defined = await stylelint.lint({ code, codeFilename, config: { plugins: plugin, rules: {}, overrides: [defineStylisticOverride({ syntax: `scss`, files: [`**/*.scss`], rules: { "color-hex-case": `lower` } })] } })
+
+		expect(byHand.results[0]?.warnings).toHaveLength(1)
+		expect(defined.results[0]?.warnings).toEqual(byHand.results[0]?.warnings)
+	})
+
 	it(`lints an SCSS stylesheet through the namespace it names`, async () => {
 		let code = `a { color: #FFF; }`
 		let byHand = await stylelint.lint({ code, config: { plugins: plugin, customSyntax: `postcss-scss`, rules: { "@stylistic/scss/color-hex-case": `lower` } } })
@@ -209,6 +230,13 @@ describe(`the types of defineStylistic`, () => {
 		defineStylistic({ rules: {} }, { severity: `warn` })
 		// @ts-expect-error the rules take a string, a pattern or a list of them
 		defineStylistic({ rules: {} }, { ignoreFunctions: 1 })
+	})
+
+	it(`return an overrides entry Stylelint's Config takes, its customSyntax read off the syntax`, () => {
+		expectTypeOf(defineStylisticOverride({ syntax: `scss`, files: [`**/*.scss`], rules: { "color-hex-case": `lower` } })).toEqualTypeOf<{ files: `**/*.scss`[], customSyntax: `postcss-scss`, rules: { "@stylistic/scss/color-hex-case": [`lower`, Record<never, never>] } }>()
+		expectTypeOf(defineStylisticOverride({ files: `**/*.css`, rules: { "color-hex-case": `lower` } })).toEqualTypeOf<{ files: `**/*.css`, rules: { "@stylistic/color-hex-case": [`lower`, Record<never, never>] } }>()
+		expectTypeOf(defineStylisticOverride({ syntax: `styled`, files: [`**/*.tsx`], rules: { indentation: [`tab`] } }, { severity: `warning` })).toExtend<NonNullable<Config[`overrides`]>[number]>()
+		expectTypeOf(defineStylisticOverride({ syntax: `css`, files: [`**/*.css`], rules: { "unit-case": null } })).toExtend<NonNullable<Config[`overrides`]>[number]>()
 	})
 
 	it(`refuse a syntax the plugin has no namespace for`, () => {

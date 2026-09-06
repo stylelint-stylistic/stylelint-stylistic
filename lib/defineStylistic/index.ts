@@ -84,6 +84,17 @@ export type StylisticRules<S extends SyntaxName | undefined, R, G = Record<never
 	[K in keyof R & string as Prefixed<S, K>]: K extends RuleName ? Normalized<K, R[K], G> : never
 }
 
+/** The package a syntax is parsed with, the `customSyntax` of its `overrides` entry; none for the core. An exported type on one line, since the structural test of the syntaxes reads a package named elsewhere at the top of a module as loaded with it. */
+export type CustomSyntaxOf<S extends SyntaxName | undefined> = S extends `scss` ? `postcss-scss` : S extends `less` ? `postcss-less` : S extends `styled` ? `postcss-styled-syntax` : never
+
+/** The globs as `Config` takes them, a list written mutable again after the `const` inference. */
+type Files<F> = F extends readonly (infer Glob)[] ? Glob[] : F
+
+/** An `overrides` entry: the files, the package they are parsed with where the syntax has one, and the rules. */
+export type StylisticOverride<S extends SyntaxName | undefined, R, G, F> = [CustomSyntaxOf<S>] extends [never]
+	? { files: Files<F>, rules: StylisticRules<S, R, G> }
+	: { files: Files<F>, customSyntax: CustomSyntaxOf<S>, rules: StylisticRules<S, R, G> }
+
 /** The rules each shared key reaches, for the run; a test holds the list and `RuleTaking` in step. */
 const RULES_TAKING = {
 	ignoreFunctions: [
@@ -169,4 +180,34 @@ export function defineStylistic<const S extends SyntaxName | undefined = undefin
 	})
 
 	return Object.fromEntries(entries) as StylisticRules<S, R, G>
+}
+
+/**
+ * Names the package a syntax is parsed with. The names stand inside a function for the structural test of the syntaxes; nothing is loaded, Stylelint resolves the name from the project.
+ * @param namespace - The segment, or nothing for the core.
+ * @returns The package's name, or nothing for the core.
+ */
+function customSyntaxOf (namespace: string | undefined): string | undefined {
+	switch (namespace) {
+		case `scss`: return `postcss-scss`
+		case `less`: return `postcss-less`
+		case `styled`: return `postcss-styled-syntax`
+		default: return undefined
+	}
+}
+
+/**
+ * Names the rules for an `overrides` entry and returns the entry whole: the files, the `customSyntax` the syntax is parsed with, `postcss-scss`, `postcss-less` or `postcss-styled-syntax`, and the rules as `defineStylistic` names them ([#624](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/624)). The package stays a dependency of the project.
+ * @param options - The syntax, the files and the rules.
+ * @param options.syntax - `scss`, `less` or `styled`; `css`, or nothing, for the core.
+ * @param options.files - The globs the entry covers, one or a list.
+ * @param options.rules - The settings by short name, as `rules` takes them.
+ * @param [globals] - As `defineStylistic` takes them.
+ * @returns The entry, for `overrides`.
+ */
+export function defineStylisticOverride<const S extends SyntaxName | undefined = undefined, const R extends RulesInput = Record<never, never>, const G extends GlobalOptions = Record<never, never>, const F extends string | readonly string[] = string> (options: { syntax?: S, files: F, rules: R & Exact<NoInfer<R>> }, globals?: G & { [K in Exclude<keyof NoInfer<G>, keyof GlobalOptions>]: never }): StylisticOverride<S, R, G, F> {
+	let { files, ...named } = options
+	let customSyntax = customSyntaxOf(namespaceOf(options.syntax))
+
+	return { files, ...(customSyntax !== undefined && { customSyntax }), rules: defineStylistic(named, globals) } as StylisticOverride<S, R, G, F>
 }

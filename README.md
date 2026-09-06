@@ -83,7 +83,7 @@ What each namespace answers differently is written in its own README: [`scss`](
 A JavaScript configuration can name the rules through `defineStylistic`, by their short names and the syntax they are read under:
 
 ```js
-import { defineStylistic } from "@stylistic/stylelint-plugin"
+import { defineStylistic, defineStylisticOverride } from "@stylistic/stylelint-plugin"
 
 export default {
 	plugins: ["@stylistic/stylelint-plugin"],
@@ -98,11 +98,7 @@ export default {
 		}, { severity: "warning", ignoreFunctions: ["url"] }),
 	},
 	overrides: [
-		{
-			files: ["**/*.scss"],
-			customSyntax: "postcss-scss",
-			rules: defineStylistic({ syntax: "scss", rules: { "color-hex-case": "lower" } }),
-		},
+		defineStylisticOverride({ syntax: "scss", files: ["**/*.scss"], rules: { "color-hex-case": "lower" } }),
 	],
 }
 ```
@@ -110,6 +106,8 @@ export default {
 It returns the settings under the prefixed names, each as a pair of the primary and the secondary options, `{ "@stylistic/scss/color-hex-case": ["lower", {}] }`. The types are the rules' own: an editor completes the names and the options, and the compiler refuses a name the plugin has no rule for, an option the rule does not take, a key its secondary options do not spell, and a syntax the plugin has no namespace for. Without types, an unknown name or syntax stops the run with a configuration error. A JSON or YAML configuration goes on naming the rules itself.
 
 A second argument holds what several rules take alike, and is written into every rule that takes the key, the rule's own option winning: `ignoreFunctions` for the `function-comma-*` and `value-slash-*` rules, `ignoreProperties` for the `value-slash-*` rules, `severity` and `disableFix` for every rule. A `severity: "warning"` there makes this plugin's rules warnings while Stylelint's own stay errors, which `defaultSeverity` cannot.
+
+`defineStylisticOverride` takes `files` besides and returns the whole `overrides` entry: the files, the `customSyntax` the syntax is parsed with, `postcss-scss`, `postcss-less` or `postcss-styled-syntax`, which stay dependencies of your project, and the rules.
 
 ## Need more?
 
