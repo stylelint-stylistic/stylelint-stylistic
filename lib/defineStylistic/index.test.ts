@@ -1,11 +1,14 @@
+import { readFileSync } from "node:fs"
+
 import stylelint, { type Config } from "stylelint"
 import { describe, expect, expectTypeOf, it } from "vitest"
 
 import plugin from "../index.ts"
+import factories from "../rules/index.ts"
 import { namespaces } from "../syntaxes/index.ts"
 import type { ConfigurationError } from "../utils/configurationError/index.ts"
 
-import { defineStylistic, type Namespace } from "./index.ts"
+import { defineStylistic, type GlobalOptions, type Namespace, RULES_TAKING } from "./index.ts"
 
 /** The exit code Stylelint reserves for a configuration error. */
 const EXIT_CODE_INVALID_CONFIG = 78
@@ -87,6 +90,48 @@ describe(`defineStylistic`, () => {
 		expect(definedFix.code).toBe(`a { color: #fff; width: 10px }`)
 	})
 
+	it(`writes a global option into the secondary options of every rule that takes it, and of no other`, () => {
+		let rules = { "function-comma-space-after": `always`, "value-slash-space-after": [`always`], "color-hex-case": `lower`, "indentation": [`tab`, { baseIndentLevel: 1 }] } as const
+
+		expect(defineStylistic({ rules }, { ignoreFunctions: [`url`], ignoreProperties: `grid-area` })).toEqual({
+			"@stylistic/function-comma-space-after": [`always`, { ignoreFunctions: [`url`] }],
+			"@stylistic/value-slash-space-after": [`always`, { ignoreFunctions: [`url`], ignoreProperties: `grid-area` }],
+			"@stylistic/color-hex-case": [`lower`, {}],
+			"@stylistic/indentation": [`tab`, { baseIndentLevel: 1 }],
+		})
+	})
+
+	it(`writes a severity and a fix switch into every rule, and leaves a rule turned off alone`, () => {
+		expect(defineStylistic({ rules: { "color-hex-case": `lower`, "unit-case": null, "indentation": [`tab`, { baseIndentLevel: 1 }] } }, { severity: `warning`, disableFix: true })).toEqual({
+			"@stylistic/color-hex-case": [`lower`, { severity: `warning`, disableFix: true }],
+			"@stylistic/unit-case": null,
+			"@stylistic/indentation": [`tab`, { severity: `warning`, disableFix: true, baseIndentLevel: 1 }],
+		})
+	})
+
+	it(`lets a rule's own option win over the global one`, () => {
+		expect(defineStylistic({ rules: { "function-comma-space-after": [`always`, { ignoreFunctions: `calc`, severity: `error` }] } }, { ignoreFunctions: [`url`], severity: `warning` })).toEqual({
+			"@stylistic/function-comma-space-after": [`always`, { ignoreFunctions: `calc`, severity: `error` }],
+		})
+	})
+
+	it(`lists under each shared key every rule whose options spell it`, () => {
+		for (let [key, names] of Object.entries(RULES_TAKING)) {
+			let spelling = Object.keys(factories).filter((name) => readFileSync(new URL(`../rules/${name}/index.ts`, import.meta.url), `utf8`).includes(`${key}?:`))
+
+			expect(names.toSorted(), key).toEqual(spelling.toSorted())
+		}
+	})
+
+	it(`lints through a global severity as through one written into every rule by hand`, async () => {
+		let code = `a { color: #FFF; width: 10PX }`
+		let byHand = await stylelint.lint({ code, config: { plugins: plugin, rules: { "@stylistic/color-hex-case": [`lower`, { severity: `warning` }], "@stylistic/unit-case": [`lower`, { severity: `warning` }] } } })
+		let defined = await stylelint.lint({ code, config: { plugins: plugin, rules: defineStylistic({ rules: { "color-hex-case": `lower`, "unit-case": `lower` } }, { severity: `warning` }) } })
+
+		expect(byHand.results[0]?.warnings.map((warning) => warning.severity)).toEqual([`warning`, `warning`])
+		expect(defined.results[0]?.warnings).toEqual(byHand.results[0]?.warnings)
+	})
+
 	it(`lints an SCSS stylesheet through the namespace it names`, async () => {
 		let code = `a { color: #FFF; }`
 		let byHand = await stylelint.lint({ code, config: { plugins: plugin, customSyntax: `postcss-scss`, rules: { "@stylistic/scss/color-hex-case": `lower` } } })
@@ -101,7 +146,7 @@ describe(`the types of defineStylistic`, () => {
 	it(`spell every setting as a pair under the prefixed names, and null as given`, () => {
 		expectTypeOf(defineStylistic({ syntax: `scss`, rules: { "color-hex-case": `lower`, "indentation": [`tab`, { baseIndentLevel: 1 }] } })).toEqualTypeOf<{
 			"@stylistic/scss/color-hex-case": [`lower`, Record<never, never>],
-			"@stylistic/scss/indentation": [`tab`, { readonly baseIndentLevel: 1 }],
+			"@stylistic/scss/indentation": [`tab`, { baseIndentLevel: 1 }],
 		}>()
 		expectTypeOf(defineStylistic({ rules: { "unit-case": [`upper`] } })).toEqualTypeOf<{ "@stylistic/unit-case": [`upper`, Record<never, never>] }>()
 		expectTypeOf(defineStylistic({ syntax: `css`, rules: { "unit-case": null } })).toEqualTypeOf<{ "@stylistic/unit-case": null }>()
@@ -134,11 +179,36 @@ describe(`the types of defineStylistic`, () => {
 		defineStylistic({ rules: { "color-hex-case": [`lower`, { ignoreFunctions: [`url`] }] } })
 	})
 
-	it(`stand in the \`rules\` of a typed Stylelint configuration`, () => {
+	it(`write the global options a rule takes into its setting, and no other`, () => {
+		expectTypeOf(defineStylistic({ rules: { "function-comma-space-after": `always`, "color-hex-case": `lower`, "unit-case": null, "indentation": [`tab`, { baseIndentLevel: 1 }] } }, { ignoreFunctions: [`url`], severity: `warning` })).toExtend<{
+			"@stylistic/function-comma-space-after": [`always`, { ignoreFunctions: readonly [`url`], severity: `warning` }],
+			"@stylistic/color-hex-case": [`lower`, { severity: `warning` }],
+			"@stylistic/unit-case": null,
+			"@stylistic/indentation": [`tab`, { severity: `warning`, baseIndentLevel: 1 }],
+		}>()
+	})
+
+	it(`stand in the \`rules\` of a typed Stylelint configuration, with and without global options`, () => {
 		let hoisted = { "color-hex-case": `lower`, "indentation": [`tab`, { baseIndentLevel: 1 }] } as const
 
 		expectTypeOf(defineStylistic({ rules: hoisted })).toExtend<Config[`rules`]>()
 		expectTypeOf(defineStylistic({ syntax: `scss`, rules: { "unit-case": [`lower`], "max-line-length": [80, { ignore: `comments` }] } })).toExtend<Config[`rules`]>()
+		expectTypeOf(defineStylistic({ rules: hoisted }, { severity: `warning`, ignoreFunctions: [`url`] })).toExtend<Config[`rules`]>()
+	})
+
+	it(`name every rule a shared key reaches, in the list the run reads and in the type alike`, () => {
+		expectTypeOf<(typeof RULES_TAKING)[`ignoreFunctions`][number]>().toEqualTypeOf<`function-comma-newline-after` | `function-comma-newline-before` | `function-comma-space-after` | `function-comma-space-before` | `value-slash-newline-after` | `value-slash-newline-before` | `value-slash-space-after` | `value-slash-space-before`>()
+		expectTypeOf<(typeof RULES_TAKING)[`ignoreProperties`][number]>().toEqualTypeOf<`value-slash-newline-after` | `value-slash-newline-before` | `value-slash-space-after` | `value-slash-space-before`>()
+		expectTypeOf<GlobalOptions[`ignoreFunctions`]>().toEqualTypeOf<string | RegExp | (string | RegExp)[] | undefined>()
+	})
+
+	it(`refuse a global option no rule takes, and a value the rules do not take it as`, () => {
+		// @ts-expect-error no rule takes `ignore` alike
+		defineStylistic({ rules: {} }, { ignore: `comments` })
+		// @ts-expect-error a severity is `warning` or `error`
+		defineStylistic({ rules: {} }, { severity: `warn` })
+		// @ts-expect-error the rules take a string, a pattern or a list of them
+		defineStylistic({ rules: {} }, { ignoreFunctions: 1 })
 	})
 
 	it(`refuse a syntax the plugin has no namespace for`, () => {

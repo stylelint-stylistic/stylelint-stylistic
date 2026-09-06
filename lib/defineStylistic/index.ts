@@ -55,31 +55,85 @@ type Exact<R> = { [K in keyof R]: K extends RuleName ? ExactSetting<K, R[K]> : n
 /** The name an entry comes back under. */
 type Prefixed<S extends SyntaxName | undefined, K extends string> = S extends Namespace ? `@stylistic/${S}/${K}` : `@stylistic/${K}`
 
-/** The setting as `Config` spells it: `null`, or a mutable pair of the primary and the secondary options, an empty object where none were given. The `const` inference reads a tuple as read-only, which `rules` refuses. */
-type Normalized<Given> = Given extends null | undefined
+/** A key several rules take alike, set once for all of them. */
+type SharedKey = `ignoreFunctions` | `ignoreProperties`
+
+/** The rules whose secondary options spell the key. */
+type RuleTaking<K extends string> = { [N in RuleName]: K extends keyof SecondaryOf<Registry[N]> ? N : never }[RuleName]
+
+/** What the rules taking the key take it as. */
+type SharedOptionOf<K extends SharedKey> = { [N in RuleTaking<K>]: SecondaryOf<Registry[N]> extends infer O ? (K extends keyof O ? O[K] : never) : never }[RuleTaking<K>]
+
+/** What is set once for every rule taking it: the shared keys, a severity for this plugin's rules alone, which `defaultSeverity` cannot give, and whether they may write. */
+export type GlobalOptions = { [K in SharedKey]?: SharedOptionOf<K> } & Pick<CommonSecondary, `severity` | `disableFix`>
+
+/** The rule's own secondary options over the global ones it takes. */
+type Merged<K extends RuleName, Own, G> = { [Key in keyof Own | (keyof G & keyof SecondaryOfRule<K>)]: Key extends keyof Own ? Own[Key] : Key extends keyof G ? G[Key] : never }
+
+/** The setting as `Config` spells it: `null`, or a mutable pair of the primary and the secondary options, the global ones written in. The `const` inference reads a tuple as read-only, which `rules` refuses. */
+type Normalized<K extends RuleName, Given, G> = Given extends null | undefined
 	? Given
-	: Given extends readonly [infer P, infer S]
-		? [P, S]
+	: Given extends readonly [infer P, infer S extends object]
+		? [P, Merged<K, S, G>]
 		: Given extends readonly [infer P]
-			? [P, Record<never, never>]
-			: [Given, Record<never, never>]
+			? [P, Merged<K, Record<never, never>, G>]
+			: [Given, Merged<K, Record<never, never>, G>]
 
 /** The entries returned, under the names Stylelint reads. */
-export type StylisticRules<S extends SyntaxName | undefined, R> = {
-	[K in keyof R & string as Prefixed<S, K>]: Normalized<R[K]>
+export type StylisticRules<S extends SyntaxName | undefined, R, G = Record<never, never>> = {
+	[K in keyof R & string as Prefixed<S, K>]: K extends RuleName ? Normalized<K, R[K], G> : never
+}
+
+/** The rules each shared key reaches, for the run; a test holds the list and `RuleTaking` in step. */
+const RULES_TAKING = {
+	ignoreFunctions: [
+		`function-comma-newline-after`,
+		`function-comma-newline-before`,
+		`function-comma-space-after`,
+		`function-comma-space-before`,
+		`value-slash-newline-after`,
+		`value-slash-newline-before`,
+		`value-slash-space-after`,
+		`value-slash-space-before`,
+	],
+	ignoreProperties: [
+		`value-slash-newline-after`,
+		`value-slash-newline-before`,
+		`value-slash-space-after`,
+		`value-slash-space-before`,
+	],
+} as const satisfies { [K in SharedKey]: readonly RuleTaking<K>[] }
+
+export { RULES_TAKING }
+
+/**
+ * Asks whether a rule takes a global option.
+ * @param name - The rule's short name.
+ * @param key - The option's key.
+ * @returns True for `severity` and `disableFix`, and for a shared key the rule is listed under.
+ */
+function takes (name: string, key: string): boolean {
+	if (key === `severity` || key === `disableFix`) return true
+
+	let taking: readonly string[] | undefined = RULES_TAKING[key as SharedKey]
+
+	return taking !== undefined && taking.includes(name)
 }
 
 /**
- * Writes a setting as a pair of the primary and the secondary options.
+ * Writes a setting as a pair of the primary and the secondary options, the global ones the rule takes written in under its own.
+ * @param name - The rule's short name.
  * @param setting - The setting as given.
+ * @param globals - The global options.
  * @returns The pair; `null` as given.
  */
-function normalized (setting: unknown): unknown {
+function normalized (name: string, setting: unknown, globals: GlobalOptions): unknown {
 	if (setting === null || setting === undefined) return setting
 
-	let [primary, secondary = {}] = Array.isArray(setting) ? setting as [unknown, object?] : [setting]
+	let [primary, secondary] = Array.isArray(setting) ? setting as [unknown, object?] : [setting]
+	let taken = Object.entries(globals).filter(([key]) => takes(name, key))
 
-	return [primary, secondary]
+	return [primary, { ...Object.fromEntries(taken), ...secondary }]
 }
 
 /**
@@ -102,16 +156,17 @@ function namespaceOf (syntax: SyntaxName | undefined): string | undefined {
  * @param options - The syntax and the rules.
  * @param options.syntax - `scss`, `less` or `styled`; `css`, or nothing, for the core.
  * @param options.rules - The settings by short name, as `rules` takes them.
+ * @param [globals] - `ignoreFunctions`, `ignoreProperties`, `severity`, `disableFix`, each written into every rule taking the key, the rule's own option winning.
  * @returns The settings under the prefixed names, for `rules`.
  */
-export function defineStylistic<const S extends SyntaxName | undefined = undefined, const R extends RulesInput = Record<never, never>> (options: { syntax?: S, rules: R & Exact<NoInfer<R>> }): StylisticRules<S, R> {
+export function defineStylistic<const S extends SyntaxName | undefined = undefined, const R extends RulesInput = Record<never, never>, const G extends GlobalOptions = Record<never, never>> (options: { syntax?: S, rules: R & Exact<NoInfer<R>> }, globals?: G & { [K in Exclude<keyof NoInfer<G>, keyof GlobalOptions>]: never }): StylisticRules<S, R, G> {
 	let namespace = namespaceOf(options.syntax)
 
 	let entries = Object.entries(options.rules).map(([name, setting]) => {
 		if (!Object.hasOwn(rules, name)) throw configurationError(`"${name}" is not a rule of "@stylistic/stylelint-plugin": the rules are named by their short names, "color-hex-case" for "@stylistic/color-hex-case".`)
 
-		return [addNamespace(name, namespace), normalized(setting)]
+		return [addNamespace(name, namespace), normalized(name, setting, globals ?? {})]
 	})
 
-	return Object.fromEntries(entries) as StylisticRules<S, R>
+	return Object.fromEntries(entries) as StylisticRules<S, R, G>
 }

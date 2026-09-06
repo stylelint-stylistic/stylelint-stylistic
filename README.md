@@ -92,9 +92,10 @@ export default {
 		...defineStylistic({
 			rules: {
 				"color-hex-case": "lower",
+				"function-comma-space-after": "always",
 				"indentation": ["tab", { baseIndentLevel: 1 }],
 			},
-		}),
+		}, { severity: "warning", ignoreFunctions: ["url"] }),
 	},
 	overrides: [
 		{
@@ -107,6 +108,8 @@ export default {
 ```
 
 It returns the settings under the prefixed names, each as a pair of the primary and the secondary options, `{ "@stylistic/scss/color-hex-case": ["lower", {}] }`. The types are the rules' own: an editor completes the names and the options, and the compiler refuses a name the plugin has no rule for, an option the rule does not take, a key its secondary options do not spell, and a syntax the plugin has no namespace for. Without types, an unknown name or syntax stops the run with a configuration error. A JSON or YAML configuration goes on naming the rules itself.
+
+A second argument holds what several rules take alike, and is written into every rule that takes the key, the rule's own option winning: `ignoreFunctions` for the `function-comma-*` and `value-slash-*` rules, `ignoreProperties` for the `value-slash-*` rules, `severity` and `disableFix` for every rule. A `severity: "warning"` there makes this plugin's rules warnings while Stylelint's own stay errors, which `defaultSeverity` cannot.
 
 ## Need more?
 
