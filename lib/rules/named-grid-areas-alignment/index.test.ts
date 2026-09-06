@@ -23,6 +23,10 @@ testRule({
 			code: `a { GrId-TeMpLaTe-ArEaS: }`,
 		},
 		{
+			description: `rows aligned under the property name written in upper case`,
+			code: `a { GRID-TEMPLATE-AREAS: 'a a a' }`,
+		},
+		{
 			description: `a keyword for a value`,
 			code: `a { grid-template-areas: none; }`,
 		},
@@ -818,6 +822,28 @@ testRule({
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/614
+			description: `the same rows under the property name written in upper case, which names the same property and is read like it`,
+			code: `a { GRID-TEMPLATE-AREAS: 'a  a  a' }`,
+			fixed: `a { GRID-TEMPLATE-AREAS: 'a a a' }`,
+			line: 1,
+			column: 26,
+			endLine: 1,
+			endColumn: 34,
+			message: messages.expected(`GRID-TEMPLATE-AREAS`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/614
+			description: `the same rows under the property name written in mixed case`,
+			code: `a { GrId-TeMpLaTe-ArEaS: 'a  a  a' }`,
+			fixed: `a { GrId-TeMpLaTe-ArEaS: 'a a a' }`,
+			line: 1,
+			column: 26,
+			endLine: 1,
+			endColumn: 34,
+			message: messages.expected(`GrId-TeMpLaTe-ArEaS`),
+		},
+		{
 			description: `the same on one line, with extra line breaks and mixed tabs and spaces`,
 			code: `
 				a {
@@ -1608,6 +1634,28 @@ testRule({
 			endLine: 1,
 			endColumn: 51,
 			message: messages.expected(`grid-template`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/614
+			description: `the same shorthand under the property name written in upper case`,
+			code: `a { GRID-TEMPLATE: "a  a" 1fr "b b" auto / 1fr 1fr; }`,
+			fixed: `a { GRID-TEMPLATE: "a a" 1fr "b b" auto / 1fr 1fr; }`,
+			line: 1,
+			column: 20,
+			endLine: 1,
+			endColumn: 51,
+			message: messages.expected(`GRID-TEMPLATE`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/614
+			description: `the \`grid\` shorthand under its name written in upper case`,
+			code: `a { GRID: "a  a" 1fr / 1fr; }`,
+			fixed: `a { GRID: "a a" 1fr / 1fr; }`,
+			line: 1,
+			column: 11,
+			endLine: 1,
+			endColumn: 27,
+			message: messages.expected(`GRID`),
 		},
 		{
 			description: `a shorthand spanning lines whose cells are not aligned: the rows are padded, and every size, name and column stays where it stands`,

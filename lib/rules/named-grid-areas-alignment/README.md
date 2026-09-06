@@ -16,7 +16,7 @@ The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatical
 
 The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
 
-The rows of the `grid-template` and `grid` shorthands are read as the longhand's are: every string at the top level of the value is a row, and its cells are aligned with the cells of the other rows. A shorthand puts a row's size and its line names beside each string and the columns behind a solidus, and the rule reads none of that — everything that is no row goes back as the file spells it — so a size standing behind a row moves with the row's closing quote, which `alignQuotes` lines up, while a line name in front of a row, the solidus and the columns behind it keep the place and the whitespace the author gave them:
+The property is read in whatever case it is written, as CSS reads it. The rows of the `grid-template` and `grid` shorthands are read as the longhand's are: every string at the top level of the value is a row, and its cells are aligned with the cells of the other rows. A shorthand puts a row's size and its line names beside each string and the columns behind a solidus, and the rule reads none of that — everything that is no row goes back as the file spells it — so a size standing behind a row moves with the row's closing quote, which `alignQuotes` lines up, while a line name in front of a row, the solidus and the columns behind it keep the place and the whitespace the author gave them:
 
 ```css
 div {
