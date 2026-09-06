@@ -40,20 +40,25 @@ type SolidusNeighbours = {
 	isSingleLine: () => boolean,
 }
 
-/** The options the two rules about the whitespace beside a solidus in a value take. */
+/** The options the two rules about the space beside a solidus in a value take. */
 const VALUE_SLASH_SPACE_OPTIONS = [`always`, `never`, `always-single-line`, `never-single-line`]
+
+/** The options the two rules about the line break beside a solidus in a value take. */
+const VALUE_SLASH_NEWLINE_OPTIONS = [`always`, `always-multi-line`, `never-multi-line`]
 
 /** The options the two rules about the whitespace beside a solidus in a media feature take. */
 const MEDIA_SLASH_SPACE_OPTIONS = [`always`, `never`]
 
-/** The rule about the run in front of a solidus in a value, by the whitespace its `always` options write. */
+/** The rules about the run in front of a solidus in a value, each by the whitespace its `always` options write (#550, #622). */
 const RULES_BEFORE_THE_SOLIDUS: Partial<Record<Whitespace, NeighbourRule>> = {
 	space: { name: `value-slash-space-before`, options: VALUE_SLASH_SPACE_OPTIONS },
+	newline: { name: `value-slash-newline-before`, options: VALUE_SLASH_NEWLINE_OPTIONS },
 }
 
-/** The rule about the run behind it. */
+/** The rules about the run behind it. */
 const RULES_AFTER_THE_SOLIDUS: Partial<Record<Whitespace, NeighbourRule>> = {
 	space: { name: `value-slash-space-after`, options: VALUE_SLASH_SPACE_OPTIONS },
+	newline: { name: `value-slash-newline-after`, options: VALUE_SLASH_NEWLINE_OPTIONS },
 }
 
 /** The rule about the run in front of a solidus in a media feature. */

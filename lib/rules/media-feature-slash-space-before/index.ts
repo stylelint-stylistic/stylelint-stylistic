@@ -49,6 +49,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.before,
 			position: `before`,
 			expectation: primary,
+			whitespace: `space`,
 		})
 	}
 }

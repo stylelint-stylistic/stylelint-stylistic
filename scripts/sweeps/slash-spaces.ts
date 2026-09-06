@@ -71,10 +71,12 @@ const corpus: Sweep[`corpus`] = multiply({ place: keysOf(PLACES), operands: keys
 	return wrap(`${pair[0]}${sides[0]}/${sides[1]}${pair[1]}`)
 })
 
-/** The four rules under every primary option `scripts/oracles/options.ts` lists for them. */
+/** The four rules about a space and the two about a line break, under every primary option `scripts/oracles/options.ts` lists for them. */
 const configs: Sweep[`configs`] = ([
 	[`value-slash-space-before`, [`always`, `never`, `always-single-line`, `never-single-line`]],
 	[`value-slash-space-after`, [`always`, `never`, `always-single-line`, `never-single-line`]],
+	[`value-slash-newline-before`, [`always`, `always-multi-line`, `never-multi-line`]],
+	[`value-slash-newline-after`, [`always`, `always-multi-line`, `never-multi-line`]],
 	[`media-feature-slash-space-before`, [`always`, `never`]],
 	[`media-feature-slash-space-after`, [`always`, `never`]],
 ] as [string, unknown[]][]).flatMap(([rule, primaries]) => primaries.map((primary) => ({ rule, primary })))

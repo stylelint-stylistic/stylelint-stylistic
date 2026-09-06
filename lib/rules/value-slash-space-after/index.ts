@@ -65,6 +65,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.after,
 			position: `after`,
 			expectation: primary,
+			whitespace: `space`,
 			ignoreFunctions: secondaryOptions?.ignoreFunctions,
 			ignoreProperties: secondaryOptions?.ignoreProperties,
 		})

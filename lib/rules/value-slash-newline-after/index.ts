@@ -10,13 +10,12 @@ import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
-let shortName = `value-slash-space-before`
+let shortName = `value-slash-newline-after`
 
 const MESSAGES = defineMessages({
-	expectedBefore: () => `Expected single space before "/"`,
-	rejectedBefore: () => `Unexpected whitespace before "/"`,
-	expectedBeforeSingleLine: () => `Expected single space before "/" in a single-line declaration`,
-	rejectedBeforeSingleLine: () => `Unexpected whitespace before "/" in a single-line declaration`,
+	expectedAfter: () => `Expected newline after "/"`,
+	expectedAfterMultiLine: () => `Expected newline after "/" in a multi-line declaration`,
+	rejectedAfterMultiLine: () => `Unexpected whitespace after "/" in a multi-line declaration`,
 })
 
 export let meta = {
@@ -25,17 +24,17 @@ export let meta = {
 }
 
 /**
- * Requires a single space or disallows whitespace before the solidus that separates the parts of a value.
+ * Requires a newline or disallows whitespace after the solidus that separates the parts of a value.
  * @param scope - What the namespace the rule is registered under hands it.
  * @param scope.ruleName - The name a configuration refers to the rule by.
  * @param scope.messages - The messages, each closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always`, `never`, `always-single-line` and `never-single-line`.
+ * @param primary - The primary option, one of `always`, `always-multi-line` and `never-multi-line`.
  * @param secondaryOptions - The secondary options: `ignoreFunctions` and `ignoreProperties`.
  * @returns The check, run over every stylesheet the rule is configured for.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line`, secondaryOptions: { ignoreFunctions?: string | RegExp | (string | RegExp)[], ignoreProperties?: string | RegExp | (string | RegExp)[] }): RuleCheck {
-	let checker = whitespaceChecker(`space`, primary, messages)
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, secondaryOptions: { ignoreFunctions?: string | RegExp | (string | RegExp)[], ignoreProperties?: string | RegExp | (string | RegExp)[] }): RuleCheck {
+	let checker = whitespaceChecker(`newline`, primary, messages)
 
 	return (root, result) => {
 		let validOptions = validateOptions(
@@ -43,7 +42,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			ruleName,
 			{
 				actual: primary,
-				possible: [`always`, `never`, `always-single-line`, `never-single-line`],
+				possible: [`always`, `always-multi-line`, `never-multi-line`],
 			},
 			{
 				actual: secondaryOptions,
@@ -62,10 +61,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			result,
 			syntax,
 			checkedRuleName: ruleName,
-			locationChecker: checker.before,
-			position: `before`,
+			locationChecker: checker.afterOneOnly,
+			position: `after`,
 			expectation: primary,
-			whitespace: `space`,
+			whitespace: `newline`,
 			ignoreFunctions: secondaryOptions?.ignoreFunctions,
 			ignoreProperties: secondaryOptions?.ignoreProperties,
 		})

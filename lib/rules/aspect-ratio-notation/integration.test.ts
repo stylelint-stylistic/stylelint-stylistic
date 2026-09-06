@@ -256,3 +256,55 @@ testRule({
 		},
 	],
 })
+
+// The rules about a line break beside the solidus are read as the rules about a space are (#622): the later-listed live rule of either kind wins, and a break is spelled the way `getLineBreak` spells it.
+testRule({
+	ruleName,
+	config: [`ratio`],
+	extraRules: {
+		"@stylistic/value-slash-newline-before": `always`,
+		"@stylistic/value-slash-space-after": `never`,
+	},
+
+	reject: [
+		{
+			description: `a whole number written on its own, whose second number is written behind a solidus opening a line of its own, as the neighbour about the break asks, and closed up on the other side`,
+			code: `a { aspect-ratio: 2; }`,
+			fixed: `a { aspect-ratio: 2\n/1; }`,
+			line: 1,
+			column: 19,
+			endLine: 1,
+			endColumn: 20,
+			message: messages.expected(`2`, `2\n/1`),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`ratio`],
+	extraRules: { "@stylistic/value-slash-newline-after": `always-multi-line` },
+
+	reject: [
+		{
+			description: `a multi-line declaration, whose neighbour asks for a break behind the solidus`,
+			code: `a { aspect-ratio:\n\t2; }`,
+			fixed: `a { aspect-ratio:\n\t2 /\n1; }`,
+			line: 2,
+			column: 2,
+			endLine: 2,
+			endColumn: 3,
+			message: messages.expected(`2`, `2 /\n1`),
+		},
+		{
+			description: `a single-line declaration, which that neighbour does not speak of: the solidus is written with a space on either side`,
+			code: `a { aspect-ratio: 2; }`,
+			fixed: `a { aspect-ratio: 2 / 1; }`,
+			line: 1,
+			column: 19,
+			endLine: 1,
+			endColumn: 20,
+			message: messages.expected(`2`, `2 / 1`),
+		},
+	],
+})

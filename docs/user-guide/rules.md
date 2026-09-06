@@ -32,6 +32,8 @@ Here are `stylelint-stylistic` rules, grouped by the _thing_ they apply to (j
 
 ## Value
 
+- [`value-slash-newline-after`](../../lib/rules/value-slash-newline-after/README.md): Require a newline or disallow whitespace after the solidus that separates the parts of a value (Autofixable).
+- [`value-slash-newline-before`](../../lib/rules/value-slash-newline-before/README.md): Require a newline or disallow whitespace before the solidus that separates the parts of a value (Autofixable).
 - [`value-slash-space-after`](../../lib/rules/value-slash-space-after/README.md): Require a single space or disallow whitespace after the solidus that separates the parts of a value (Autofixable).
 - [`value-slash-space-before`](../../lib/rules/value-slash-space-before/README.md): Require a single space or disallow whitespace before the solidus that separates the parts of a value (Autofixable).
 

@@ -85,6 +85,8 @@ const RULE_OPTIONS: Record<string, unknown[]> = {
 	"value-list-comma-space-after": [`always`, `never`, `always-single-line`, `never-single-line`],
 	"value-list-comma-space-before": [`always`, `never`, `always-single-line`, `never-single-line`],
 	"value-list-max-empty-lines": [0, 1],
+	"value-slash-newline-after": [`always`, `always-multi-line`, `never-multi-line`],
+	"value-slash-newline-before": [`always`, `always-multi-line`, `never-multi-line`],
 	"value-slash-space-after": [`always`, `never`, `always-single-line`, `never-single-line`],
 	"value-slash-space-before": [`always`, `never`, `always-single-line`, `never-single-line`],
 }

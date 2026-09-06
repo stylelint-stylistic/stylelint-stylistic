@@ -83,6 +83,8 @@ import { createRule as valueListCommaNewlineBefore } from "./value-list-comma-ne
 import { createRule as valueListCommaSpaceAfter } from "./value-list-comma-space-after/index.ts"
 import { createRule as valueListCommaSpaceBefore } from "./value-list-comma-space-before/index.ts"
 import { createRule as valueListMaxEmptyLines } from "./value-list-max-empty-lines/index.ts"
+import { createRule as valueSlashNewlineAfter } from "./value-slash-newline-after/index.ts"
+import { createRule as valueSlashNewlineBefore } from "./value-slash-newline-before/index.ts"
 import { createRule as valueSlashSpaceAfter } from "./value-slash-space-after/index.ts"
 import { createRule as valueSlashSpaceBefore } from "./value-slash-space-before/index.ts"
 
@@ -168,6 +170,8 @@ let rules: { readonly [name: string]: (syntax: Syntax) => Rule } = {
 	"value-list-comma-space-after": valueListCommaSpaceAfter,
 	"value-list-comma-space-before": valueListCommaSpaceBefore,
 	"value-list-max-empty-lines": valueListMaxEmptyLines,
+	"value-slash-newline-after": valueSlashNewlineAfter,
+	"value-slash-newline-before": valueSlashNewlineBefore,
 	"value-slash-space-after": valueSlashSpaceAfter,
 	"value-slash-space-before": valueSlashSpaceBefore,
 }
