@@ -1,4 +1,5 @@
 import { messages as semicolonNewlineBeforeMessages } from "../declaration-block-semicolon-newline-before/index.ts"
+import { messages as trailingSemicolonMessages } from "../declaration-block-trailing-semicolon/index.ts"
 import { messages as colonSpaceAfterMessages } from "../declaration-colon-space-after/index.ts"
 
 import { messages, ruleName } from "./index.ts"
@@ -396,6 +397,40 @@ testRule({
 			endLine: 1,
 			endColumn: 7,
 			message: messages.expectedAfterMultiLine(),
+		},
+	],
+})
+
+// The run behind the colon of a declaration closing a block with no semicolon behind it stands in the block's own raw, and `declaration-block-trailing-semicolon: always` puts the semicolon between the colon and that run, so the run is the block's once that rule has taken its turn; this rule reads it that way whichever order the configuration lists the two in (#536).
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-block-trailing-semicolon": `always` },
+
+	reject: [
+		{
+			description: `a declaration closing its block with no semicolon behind it and a space in front of the brace, which the semicolon listed behind will part from the colon: the break is written into the declaration, in front of the semicolon`,
+			code: `a { color: }`,
+			fixed: `
+				a { color:
+				; }
+			`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 11,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 11,
+					message: trailingSemicolonMessages.expected,
+				},
+			],
 		},
 	],
 })

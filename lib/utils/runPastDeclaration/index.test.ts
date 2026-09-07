@@ -31,6 +31,15 @@ function declarationOf (code: string, index: number = 0): Declaration {
 }
 
 /**
+ * Builds the least of a Stylelint result that lists the trailing-semicolon rule under an option.
+ * @param option - The option.
+ * @returns The result.
+ */
+function configured (option: string): PostcssResult {
+	return { stylelint: { config: { rules: { "@stylistic/declaration-block-trailing-semicolon": option } } } } as unknown as PostcssResult
+}
+
+/**
  * Reads the run standing past one declaration of a stylesheet.
  * @param code - The stylesheet.
  * @param [index] - Which declaration of it to ask about, the first by default.
@@ -61,6 +70,15 @@ describe(`runPastDeclaration`, () => {
 	it(`a semicolon behind the declaration, which keeps the run inside the value`, () => {
 		expect(run(`a { b:  ; }`)).toBeUndefined()
 		expect(run(`a { b:  ; c: red }`)).toBeUndefined()
+	})
+
+	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/536
+	it(`the boundary as the trailing-semicolon rule will leave it: a semicolon a live always is to write, which makes the run the block's, and one a live never is to take away with the run in front of it, which makes the run behind the block's raw the colon's`, () => {
+		expect(runPastDeclaration(css, declarationOf(`a { b:  }`), configured(`always`))).toBeUndefined()
+		expect(runPastDeclaration(css, declarationOf(`a { b: ; }`), configured(`never`))).toBe(` `)
+		expect(runPastDeclaration(css, declarationOf(`a { b: ; /*c*/ }`), configured(`never`))).toBe(` `)
+		expect(runPastDeclaration(css, declarationOf(`a { b: ; }`), configured(`always`))).toBeUndefined()
+		expect(runPastDeclaration(css, declarationOf(`a { b:  }`), configured(`never`))).toBe(`  `)
 	})
 
 	it(`a declaration printing something behind its colon, which holds the run itself`, () => {

@@ -1,5 +1,6 @@
 import { messages as declarationBlockSemicolonNewlineBeforeMessages } from "../declaration-block-semicolon-newline-before/index.ts"
 import { messages as declarationBlockSemicolonSpaceBeforeMessages } from "../declaration-block-semicolon-space-before/index.ts"
+import { messages as trailingSemicolonMessages } from "../declaration-block-trailing-semicolon/index.ts"
 
 import { messages, ruleName } from "./index.ts"
 
@@ -474,6 +475,67 @@ testRule({
 			endLine: 1,
 			endColumn: 8,
 			message: messages.expectedAfterSingleLine(),
+		},
+	],
+})
+
+// `declaration-block-trailing-semicolon: never` takes the semicolon away along with the run in front of it, and the run in the block's raw becomes the run behind the colon; this rule reads the run as that rule will leave it whichever order the configuration lists the two in (#536).
+testRule({
+	ruleName,
+	config: [`never`],
+	extraRules: { "@stylistic/declaration-block-trailing-semicolon": `never` },
+
+	reject: [
+		{
+			description: `a value that is nothing but a space, with a space in front of the brace behind the semicolon the neighbour listed behind is to take away: the run in front of the brace is the one this rule takes, and the neighbour takes the semicolon and the space in front of it`,
+			code: `a { color: ; }`,
+			fixed: `a { color:}`,
+			warnings: [
+				{
+					line: 1,
+					column: 11,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.rejectedAfter(),
+				},
+				{
+					line: 1,
+					column: 12,
+					endLine: 1,
+					endColumn: 13,
+					message: trailingSemicolonMessages.rejected,
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-block-trailing-semicolon": `always` },
+
+	reject: [
+		{
+			description: `a declaration closing its block with no semicolon behind it and a space in front of the brace, which the semicolon listed behind will part from the colon: the space is written into the declaration, in front of the semicolon`,
+			code: `a { color: }`,
+			fixed: `a { color: ; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 11,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 11,
+					message: trailingSemicolonMessages.expected,
+				},
+			],
 		},
 	],
 })

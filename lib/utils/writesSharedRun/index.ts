@@ -6,12 +6,12 @@ import type { Syntax } from "../../syntaxes/index.ts"
 import { addNamespace } from "../addNamespace/index.ts"
 import { betweenTailAfterColon } from "../betweenTailAfterColon/index.ts"
 import { blockString } from "../blockString/index.ts"
+import { closedBySemicolon, valueAsClosed } from "../closedBySemicolon/index.ts"
 import { colonIndexInBetween } from "../colonIndexInBetween/index.ts"
 import { declarationValueAsSpelled } from "../declarationValueAsSpelled/index.ts"
 import { defersToRunEnd } from "../defersToRunEnd/index.ts"
 import { isCustomProperty } from "../isCustomProperty/index.ts"
 import { isInlineStyleAttribute } from "../isInlineStyleAttribute/index.ts"
-import { isLastNodeWithoutSemicolon } from "../isLastNodeWithoutSemicolon/index.ts"
 import { isSingleLineString } from "../isSingleLineString/index.ts"
 import { type NeighbourRule, neighbourSettings, speaksOf } from "../neighbourSettings/index.ts"
 import { runInDeclarationEndsTheStylesheet } from "../runInDeclarationEndsTheStylesheet/index.ts"
@@ -84,8 +84,9 @@ function sharedRunsOf (syntax: Syntax, decl: Declaration, result: PostcssResult)
 	if (colonIndex === -1) return runs
 
 	let { parent } = decl
-	let readBySemicolonRules = !decl.important && parent !== undefined && (isAtRule(parent) || isRule(parent) || isInlineStyleAttribute(parent)) && !isLastNodeWithoutSemicolon(decl)
-	let text = between.slice(colonIndex + 1) + syntax.read(decl)
+	// Whether a semicolon closes the declaration, and what the value keeps in front of it, are read as `declaration-block-trailing-semicolon` will leave them (#536), so that the runs are the same at every rule's turn
+	let readBySemicolonRules = !decl.important && parent !== undefined && (isAtRule(parent) || isRule(parent) || isInlineStyleAttribute(parent)) && closedBySemicolon(syntax, decl, result)
+	let text = between.slice(colonIndex + 1) + valueAsClosed(syntax, decl, result)
 
 	if (WHITESPACE_OR_NOTHING.test(text)) {
 		// Where the run the declaration prints behind its colon is the text the stylesheet ends on, `declaration-colon-space-after` passes the declaration over and reads nothing of it, so its neighbour has that run to itself (#546) — left in the set, it would gate the write of a neighbour configured `always` under each of its own three options and leave a warning no run of `--fix` can clear. The question is asked here and nowhere else below: it is this very text that the reading is about, so a text holding anything but whitespace answers it no. The run that has left the declaration altogether at such a place is read by neither of the two (#537), and there is nothing to say about it anywhere here: no rule reading the head run asks about a declaration both of them pass over.
@@ -281,7 +282,7 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 	})
 
 	// The spelling the run stands in when the asking rule takes its turn, for asking whether a rule ahead has already reported it. The run is the one the asking rule's group reads: the trailing run in front of the semicolon for the semicolon's group, and for the head group the whitespace behind the colon — what the parser trimmed onto `raws.between`, what a fix ahead wrote onto its tail, the run a custom property's value opens with, and the run that ran on past the declaration into the raw of what stands next (#387), together
-	let standingRun = readers === semicolon ? run : betweenTailAfterColon(syntax, decl, result) + (syntax.read(decl).match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0] + (runPastDeclaration(syntax, decl, result) ?? ``)
+	let standingRun = readers === semicolon ? run : betweenTailAfterColon(syntax, decl, result) + (valueAsClosed(syntax, decl, result).match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0] + (runPastDeclaration(syntax, decl, result) ?? ``)
 	let standing = spellingOf(standingRun)
 
 	// A lineness-conditioned asker runs after every rule ahead of it as well (#355), and those have had their say already: a write one of them would not accept leaves the file violating a rule that reported nothing, and the next run rewriting — the swing of #416 across runs. So a rule ahead gates the write unless it accepts what the write leaves, judged over the file as it rests — reparsed, a break in the value whoever wrote it. Two things free it: a rule ahead that has warned already — it spoke of the run as it stands and did not accept it, so its warning stands over whatever the write makes and nothing is silent — and one the write itself silences. A turned-off fix exempts nothing here, unlike behind: a rule behind still speaks after the write and reports what it sees, while a rule ahead judged the run before the write and stands silent over what the write made of it

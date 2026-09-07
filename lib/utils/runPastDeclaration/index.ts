@@ -4,9 +4,9 @@ import type { PostcssResult } from "stylelint"
 import { WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { betweenTailAfterColon } from "../betweenTailAfterColon/index.ts"
+import { closedBySemicolon, valueAsClosed } from "../closedBySemicolon/index.ts"
 import { colonIndexInBetween } from "../colonIndexInBetween/index.ts"
 import { declarationEndsTheStylesheet } from "../declarationEndsTheStylesheet/index.ts"
-import { isLastNodeWithoutSemicolon } from "../isLastNodeWithoutSemicolon/index.ts"
 
 /**
  * Finds the whitespace standing behind a declaration's colon where the file leaves it past the declaration's own text, and says whether the raw holding it is the tail of the stylesheet itself.
@@ -15,6 +15,8 @@ import { isLastNodeWithoutSemicolon } from "../isLastNodeWithoutSemicolon/index.
  * https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
  *
  * A declaration prints nothing behind its colon where `raws.between` ends at the colon the parser read, the printed value is empty and no `!important` follows — `a { b:  ; }` keeps the run in the raw of its value, `a { --b:  }` in `decl.value`, and `a { b:  !important }` in the raw the flag is printed behind, so none of the three is asked about here.
+ *
+ * Whether a semicolon closes the declaration, and whether the value keeps its run, is read as `declaration-block-trailing-semicolon` will leave them rather than as the file stands (#536): under a live `always` the run behind a declaration with no semicolon is the block's, since the semicolon will part it from the colon, and under a live `never` the run in front of a semicolon goes with it, so the run past the declaration is the one behind the colon already. Read as the file stands, a colon rule read the run before or after that rule's move by the order the configuration listed the two in, and so did the file.
  *
  * A raw the node carries none of is refused rather than read as an empty one: PostCSS computes a raw of its own where a node carries none, and a run written in its place would take that default away. So is a raw holding anything but whitespace, which is a run that did not simply go on.
  *
@@ -33,11 +35,11 @@ function runOf (syntax: Syntax, decl: Declaration, result: PostcssResult): {
 
 	if (!parent) return undefined
 
-	if (decl.important || syntax.read(decl) !== ``) return undefined
+	if (decl.important || valueAsClosed(syntax, decl, result) !== ``) return undefined
 
 	if (colonIndexInBetween(syntax, decl, result) === -1 || betweenTailAfterColon(syntax, decl, result) !== ``) return undefined
 
-	if (!isLastNodeWithoutSemicolon(decl)) return undefined
+	if (closedBySemicolon(syntax, decl, result)) return undefined
 
 	let next = decl.next()
 	let run = next ? next.raws.before : parent.raws.after

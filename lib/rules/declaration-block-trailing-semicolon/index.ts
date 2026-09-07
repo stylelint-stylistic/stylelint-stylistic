@@ -1,14 +1,14 @@
 import type { AtRule, ChildNode, Container, Declaration, Node } from "postcss"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
+import { TRAILING_CSS_WHITESPACE, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
+import { betweenTailAfterColon } from "../../utils/betweenTailAfterColon/index.ts"
+import { semicolonOutlivesTheFlag, standsInADeclarationBlock } from "../../utils/closedBySemicolon/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
-import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
-import { isInlineStyleAttribute } from "../../utils/isInlineStyleAttribute/index.ts"
 import { lastNonCommentNode } from "../../utils/lastNonCommentNode/index.ts"
 import { nextNonCommentNode } from "../../utils/nextNonCommentNode/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
@@ -29,42 +29,6 @@ const MESSAGES = defineMessages({
 export let meta = {
 	url: getRuleDocUrl(shortName),
 	fixable: true,
-}
-
-/**
- * Asks whether the node stands in a declaration block, the trailing semicolon of which is what this rule is named for. Whether the node is the one closing that block is asked separately, by each walk.
- *
- * A stylesheet is no declaration block. The semicolon behind the last of its own nodes is every bit as optional as a block's — dart-sass compiles a file ending in `$var: pink`, and `lightningcss` parses one ending in `@import "a"` and prints the semicolon back itself — so what leaves it alone here is not the syntax but this rule's own scope: the semicolon it is named for is the one a declaration block ends on, and the top level of a file ends no block. The walk over at-rules has said so since the rule was written, and the walk over declarations says it now too.
- *
- * The root of an inline `style` attribute is the one exception, since the value of such an attribute is a declaration block and nothing else, and `declaration-block-semicolon-*` read such a root the same way. An at-rule is left outside that exception all the same: an attribute holds declarations, so an at-rule the parser puts on such a root is nothing it has a place for, and the semicolon behind it is not this rule's to move.
- *
- * A Sass map is no declaration block either: a container of declarations with no block of its own, so no semicolon closes it and nothing is asked of its last node, comments or none.
- * @param node - The node the semicolon would stand behind.
- * @returns True where the node stands in a declaration block.
- */
-function standsInADeclarationBlock (node: Node): boolean {
-	let container = node.parent
-
-	// The two walks throw on a node with no parent before they ask, so this stands for whoever asks next rather than for them
-	if (!container || container.type === `object`) return false
-	if (!isRoot(container)) return true
-
-	return isDeclaration(node) && isInlineStyleAttribute(container)
-}
-
-/**
- * Asks whether the semicolon behind a node is written whatever the block's `raws.semicolon` says.
- *
- * PostCSS writes one behind a childless at-rule and behind a custom property wherever any sibling stands behind that node, and a comment closing the block is such a sibling. Without it the comment would be folded into the at-rule's parameters or into the custom property's value on the next parse and would stop being a node of the block at all. So `never` has nothing it can take away there, and the warning stands over code the fix leaves alone.
- *
- * That is what `pushBody` of PostCSS's stringifier does, and this restates it rather than asking the stringifier itself, which would mean printing the whole block twice for one warning. The at-rule half of it arrived in PostCSS 8.5.21 and the custom property half in 8.5.22, and the copy that prints the file is neither this package's nor Stylelint's but the one the custom syntax resolves, its stringifier being a subclass of that copy's; where an install resolves an older copy than those, the fix is declined on a node it would have got right, which costs a warning its fix and no more.
- * @param node - The node the semicolon stands behind.
- * @returns True where clearing the block's flag would leave the semicolon where it is.
- */
-function semicolonOutlivesTheFlag (node: Node): boolean {
-	if (!node.next()) return false
-
-	return (isAtRule(node) && !hasBlock(node)) || (isDeclaration(node) && isCustomProperty(node.prop))
 }
 
 /** A raw standing behind the node closing a block: the node holding it, the key it is held under, where it opens in the file and what it holds. */
@@ -307,7 +271,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 									if (whitespace) writeWhitespaceBeforeSemicolon(syntax, bodilessAtRule, whitespace)
 								}
-								else if (isDeclaration(node) && whitespace) writeWhitespaceBeforeSemicolon(syntax, node, whitespace)
+								// Where the value is nothing but whitespace and no flag follows it, the run in front of the semicolon is the run behind the colon as well, and a colon rule listed ahead may have written its spelling onto the tail of `raws.between` already, where the parser will read it as the value's head on the run after (#50): the semicolon rules read that tail and the value as one run, and so does this write, or the space a colon rule wrote and the space asked for here would stand one behind the other until the next run put them right (#536). Behind a flag the run in front of the semicolon is the end of the flag's raw, and nothing a colon rule writes reaches it
+								else if (isDeclaration(node) && whitespace && !(!node.important && WHITESPACE_OR_NOTHING.test(syntax.read(node)) && betweenTailAfterColon(syntax, node, result) + syntax.read(node) === whitespace)) writeWhitespaceBeforeSemicolon(syntax, node, whitespace)
 							}
 							else if (primary === `never`) takeTheTrailingSemicolonsAway(syntax, node, result)
 						},
