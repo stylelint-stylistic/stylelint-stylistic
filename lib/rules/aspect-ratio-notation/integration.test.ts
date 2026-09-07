@@ -2,7 +2,7 @@ import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
 
-// The solidus the fix adds is spelled the way the two `value-slash-space-*` rules ask (#550). The library lists the rule a block names first and its extra rules behind it, so every block below has the neighbours run last: that is the order in which a solidus written bare would have been one they see only on the run after.
+// The solidus the fix adds is spelled as the two `value-slash-space-*` rules ask (#550). The library lists a block's rule first and its extra rules behind it, so the neighbours run last in every block below: the order in which a solidus written bare would have waited for the run after.
 testRule({
 	ruleName,
 	config: [`ratio`],
@@ -13,7 +13,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/550
+			// See #550
 			description: `a whole number written on its own, whose second number is written behind a solidus spelled tight as both neighbours ask`,
 			code: `a { aspect-ratio: 2; }`,
 			fixed: `a { aspect-ratio: 2/1; }`,
@@ -92,7 +92,7 @@ testRule({
 	],
 })
 
-// A neighbour whose fix the configuration turned off cannot rewrite what this rule writes, and it wins where no live rule speaks of the run: the whitespace it asks for is still what is written, the write being this rule's own text (#485).
+// A neighbour whose fix is turned off still wins where no live rule speaks of the run: the whitespace it asks for is written, the write being this rule's own text (#485).
 testRule({
 	ruleName,
 	config: [`ratio`],
@@ -115,7 +115,7 @@ testRule({
 	],
 })
 
-// A `-single-line` option speaks of the declaration as printed, from its property to the end of its value, which is the text the two neighbours count the lines of.
+// A `-single-line` option speaks of the declaration as printed, property to end of value, which is the text the two neighbours count the lines of.
 testRule({
 	ruleName,
 	config: [`ratio`],
@@ -257,7 +257,7 @@ testRule({
 	],
 })
 
-// The rules about a line break beside the solidus are read as the rules about a space are (#622): the later-listed live rule of either kind wins, and a break is spelled the way `getLineBreak` spells it.
+// The rules about a line break beside the solidus are read as those about a space (#622): the later-listed live rule of either kind wins, and a break is spelled as `getLineBreak` spells it.
 testRule({
 	ruleName,
 	config: [`ratio`],

@@ -59,7 +59,7 @@ describe(`removeEmptyLineBefore`, () => {
 		expect(run(`a {\n;;\n}`)).toBe(`a {\n;;}`)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+	// See #292
 	it(`takes the empty line out of the whitespace an at-rule with neither a block nor a semicolon swallowed`, () => {
 		expect(run(`a {\n\t@extend .b\n\n}`)).toBe(`a {\n\t@extend .b\n}`)
 		expect(run(`a {\r\n@extend .b\r\n\r\n}`)).toBe(`a {\r\n@extend .b\r\n}`)

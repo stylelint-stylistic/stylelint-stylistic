@@ -16,7 +16,7 @@ testRule({
 			code: `h1 { max-height: #{($line-height) * ($lines-to-show)}em; }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/230
+			// See #230
 			description: `a calculation closing in front of a unit, whose parentheses group the expression the unit belongs to and open no call`,
 			code: `h1 { width: (1 + 2)px; }`,
 		},
@@ -33,7 +33,7 @@ testRule({
 			code: `a { b: #{$name}(1)px; }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/230
+			// See #230
 			description: `the same calculation negated, whose hyphen names no call and leaves the parenthesis a group's`,
 			code: `h1 { width: -(1 + 2)px; }`,
 		},
@@ -42,7 +42,7 @@ testRule({
 			code: `h1 { width: 2-(1)px; }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/225
+			// See #225
 			description: `a parenthesis standing in the text of a comment this syntax does spell is no parenthesis of the value`,
 			code: `
 				a {
@@ -91,7 +91,7 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/225
+			// See #225
 			description: `an unquoted address behind which the syntax's own comment still stands: the address hides the parenthesis from neither reading`,
 			code: `
 				a {
@@ -118,7 +118,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/257
+			// See #257
 			description: `the arithmetic of this syntax, whose sum is spelled the way a calculation spells one`,
 			code: `a { b: foo($a) - 2px; }`,
 		},
@@ -127,7 +127,7 @@ testRule({
 			code: `a { b: foo($a) //c\n - 2px; }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/264
+			// See #264
 			description: `the same arithmetic with the sign opening the number behind it, which this syntax reads as a list of two values and reads closed up as a subtraction`,
 			code: `a { b: foo($a) -2px; }`,
 		},
@@ -155,7 +155,7 @@ testRule({
 			code: `@import url(example.css) -1px;`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/230
+			// See #230
 			description: `a calculation closing in front of a space and a unit, which are the two values the author wrote and not one`,
 			code: `h1 { width: (1 + 2) px; }`,
 		},
@@ -164,7 +164,7 @@ testRule({
 			code: `h1 { max-height: ((1) * (2)) em; }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/230
+			// See #230
 			description: `the same two values with the calculation negated, whose hyphen names no call`,
 			code: `h1 { width: -(1 + 2) px; }`,
 		},
@@ -172,7 +172,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/230
+			// See #230
 			description: `a call spaced from the group behind it, whose own parenthesis is read while the group's is not`,
 			code: `a { b: translate(1px) (1 + 2)px; }`,
 			fixed: `a { b: translate(1px)(1 + 2)px; }`,
@@ -181,7 +181,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/264
+			// See #264
 			description: `a call in front of the operator of a product, which this syntax reads whether whitespace stands beside it or not`,
 			code: `a { b: foo($a) * 2px; }`,
 			fixed: `a { b: foo($a)* 2px; }`,
@@ -199,7 +199,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/264
+			// See #264
 			description: `a page holding a block of each syntax, each of which carries its own reading of the sign behind the call: the plain one closes up and the Sass one is left as it is written`,
 			code: `
 				<style>a { b: url(x) -1px; }</style>

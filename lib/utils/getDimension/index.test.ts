@@ -57,7 +57,7 @@ it(`getDimension`, () => {
 	expect(getDimension(css, valueParser(`+.1e-1s`).nodes[0]).unit).toBe(`s`)
 	expect(getDimension(css, valueParser(`-.1e-1s`).nodes[0]).unit).toBe(`s`)
 	expect(getDimension(css, valueParser(`-.1e+1s`).nodes[0]).unit).toBe(`s`)
-	// A percent sign is no code point of an identifier, and the unit ends in front of it: the tokenizer reads `100%` as a percentage of its own and `10PX%` as the dimension `10PX` with a delimiter behind it
+	// A percent sign is no code point of an identifier, so the unit ends in front of it: the tokenizer reads `100%` as a percentage and `10PX%` as the dimension `10PX` with a delimiter behind it
 	expect(getDimension(css, valueParser(`100%`).nodes[0]).unit).toBe(``)
 	expect(getDimension(css, valueParser(`10PX%`).nodes[0]).unit).toBe(`PX`)
 	expect(getDimension(css, valueParser(`100`).nodes[0]).unit).toBe(``)
@@ -202,7 +202,7 @@ it(`getDimension`, () => {
 })
 
 it(`getDimension positions`, () => {
-	// Where each character of the copy the reading was taken from stands in the text the node holds. A word no cut touches maps onto itself
+	// Where each character of the copy the reading was taken from stands in the text the node holds; a word no cut touches maps onto itself
 	expect(getDimension(css, valueParser(`10px`).nodes[0]).positions).toEqual([0, 1, 2, 3])
 	expect(getDimension(css, valueParser(`.5REM`).nodes[0]).positions).toEqual([0, 1, 2, 3, 4])
 	expect(getDimension(css, valueParser(`1px!important`).nodes[0]).positions).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
@@ -215,7 +215,7 @@ it(`getDimension positions`, () => {
 	expect(getDimension(css, valueParser(`1PX\\9!important`).nodes[0]).positions).toEqual([0, 1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
 	expect(getDimension(css, valueParser(`10PX\\9*2rem`).nodes[0]).positions).toEqual([0, 1, 2, 3, 6, 7, 8, 9, 10])
 
-	// Only a hack unit is taken out of the copy. What the unit ends in front of stays on the map, unread: the caller measures the run it underlines from the length of the number and the length of the unit, and never reaches past them
+	// Only a hack unit is taken out of the copy; what the unit ends in front of stays on the map unread, since the caller measures the run it underlines from the lengths of the number and the unit and never reaches past them
 	expect(getDimension(css, valueParser(`2px}`).nodes[0]).positions).toEqual([0, 1, 2, 3])
 	expect(getDimension(css, valueParser(`10px#fff`).nodes[0]).positions).toEqual([0, 1, 2, 3, 4, 5, 6, 7])
 	expect(getDimension(css, valueParser(`10px#fff\\9`).nodes[0]).positions).toEqual([0, 1, 2, 3, 4, 5, 6, 7])
@@ -242,7 +242,7 @@ it(`getDimension under a syntax that ends a unit at an escape`, () => {
 	expect(getDimension(partingSyntax, valueParser(`10PX\\*2REM`).nodes[0]).unit).toBe(`PX`)
 	expect(getDimension(css, valueParser(`10PX\\*2REM`).nodes[0]).unit).toBe(`PX\\*2REM`)
 
-	// A hexadecimal escape between the letters of a unit ends it as any escape does, where the core reads the letter it spells as one of the unit's. The value parser parts such a word at the escape's whitespace and the rule welds it back before asking, so the node is built whole here
+	// A hexadecimal escape between the letters of a unit ends it as any escape does, where the core reads the letter it spells as the unit's. The value parser parts such a word at the escape's whitespace and the rule welds it back before asking, so the node is built whole here
 	let weldedLetter = { type: `word`, value: `10P\\61 X`, sourceIndex: 0, sourceEndIndex: 8 } as const
 
 	expect(getDimension(partingSyntax, weldedLetter).unit).toBe(`P`)

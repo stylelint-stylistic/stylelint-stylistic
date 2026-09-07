@@ -2,10 +2,10 @@ import { EVERY_COMMENT_DELIMITER } from "../../regexps.ts"
 import { findInlineCommentSpans, type InlineCommentSpan } from "../findInlineCommentSpans/index.ts"
 
 /**
- * Rewrites the inline comments of a value into block comments, as `postcss-scss` does when it fills the raw of that value: the two slashes opening a comment become the two characters opening a block comment, its line break becomes the two closing them, and a `*` followed by `/` in the text — or the other way round — is cut in two so that it closes nothing.
- * @param spelled - The copy spelled as the file spells it.
- * @param spans - The spans its inline comments occupy in it, where they are already known.
- * @returns The value with each of those comments rewritten.
+ * Rewrites the `//` comments of a value into block comments as `postcss-scss` fills the raw: `//` becomes `/*`, the break `*\/`, and a `*\/` or `/*` inside is split so that it closes nothing.
+ * @param spelled - The value as spelled.
+ * @param spans - Its `//` comment spans, where known.
+ * @returns The value rewritten.
  */
 export function rewriteInlineComments (spelled: string, spans: InlineCommentSpan[] = findInlineCommentSpans(spelled)): string {
 	let rewritten = ``

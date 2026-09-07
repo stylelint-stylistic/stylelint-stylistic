@@ -1,9 +1,9 @@
 /**
- * A colon spelled inside what `raws.between` holds besides the declaration's own — a comment, in the block spelling and in the one a double slash opens, and a string — standing wherever the parser files such a thing between the property and the value, in front of every shape of value the colon rules tell apart. Four spellings of the block comment are the ones a reader may take unlike PostCSS: one opening `/*\/`, which `postcss-value-parser` closes on its own star; one whose text ends in a backslash, which `style-search` never closes; two comments abutting, whose `*\/` and `/*` the search reads as the double slash of a third; and one behind a backslash, which the comment scan reads as an escape where PostCSS's tokenizer lets no backslash escape a slash. The inline comment behind a backslash is the same divergence on the other kind; the one welded to the word in front of it opens no comment for either preprocessor's parser, neither of which breaks a word at a slash; and the string behind a bare double slash is a plain CSS file's — code to the parser, a comment to `style-search`, which then opened no string inside it. A parenthesised group stands beside them, holding a colon and holding none, since the tokenizer takes such a group whole and a colon inside it opens no declaration either — and the property is spelled `url` as well as plainly, that being the one name behind which the tokenizer takes a group whatever it holds.
+ * A colon inside what `raws.between` holds besides the declaration's own (a block comment, an inline comment, a string, a group), in front of every value shape the colon rules tell apart. Four block comments a reader may take unlike PostCSS: one opening `/*\/`, which `postcss-value-parser` closes on its own star; one ending in a backslash, which `style-search` never closes; two abutting, whose `*\/` and `/*` the search reads as a double slash; one behind a backslash, which the scan reads as an escape. The inline comment behind a backslash is the same divergence; one welded to a word opens no comment for either preprocessor; the string behind a bare double slash is code to the parser and a comment to `style-search`. The property is also spelled `url`, behind which the tokenizer takes a group whole.
  *
- * Written for #388 and #499, where `declaration-colon-newline-after` walked `raws.between` character by character and took a comment's colon for the declaration's, while the three other readers of that raw find the first colon standing outside a comment. The controls are the same comment and the same string with no colon inside, since a corpus in which every comment spells one is blind to what the branch does to the reading of the run behind the real colon; what moves on a control is the branch's doing and not the colon's.
+ * Written for [#388](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/388) and [#499](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/499), where `declaration-colon-newline-after` took a comment's colon for the declaration's. The controls carry no colon.
  *
- * The rules are every reader of the raw — the three `declaration-colon-*` rules, and the two `declaration-block-semicolon-*-before` rules that read the tail behind the colon through `betweenTailAfterColon` and `sharedRunsOf` — and `declaration-block-trailing-semicolon` beside them as a control, a rule about the same declarations that reads no raw of theirs.
+ * The rules are every reader of the raw, the `declaration-colon-*` and `declaration-block-semicolon-*-before` rules, and `declaration-block-trailing-semicolon` as a control.
  */
 
 import { multiply } from "../harness/matrix.ts"
@@ -65,7 +65,7 @@ const corpus: Sweep[`corpus`] = multiply({
 	}
 })
 
-/** Every reader of `raws.between`, under every primary option `scripts/oracles/options.ts` lists for it. */
+/** Every reader of `raws.between`, under every primary option it takes. */
 const configs: Sweep[`configs`] = ([
 	[`declaration-colon-newline-after`, [`always`, `always-multi-line`]],
 	[`declaration-colon-space-after`, [`always`, `never`, `always-single-line`]],

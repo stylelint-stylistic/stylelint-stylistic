@@ -50,7 +50,7 @@ testRule({
 			column: 2,
 			message: messages.expected(2),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/481
+		// See #481
 		{
 			description: `three blank lines in front of the closing brace behind an include written without a semicolon, which the parser files inside the include itself`,
 			code: `a {\n\t@include x\n\n\n\n}\n`,

@@ -1,4 +1,4 @@
-// These are the ones that can have single-colon notation
+/** Pseudo-elements single-colon notation is allowed for */
 export const LEVEL_ONE_AND_TWO_PSEUDO_ELEMENTS = new Set([
 	`before`,
 	`after`,

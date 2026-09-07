@@ -7,10 +7,10 @@ import { css } from "../../syntaxes/css/index.ts"
 
 import { colonIndexInBetween } from "./index.ts"
 
-/** The least of a Stylelint result, which names no syntax, so that the file is read as plain CSS. */
+/** The least of a Stylelint result, naming no syntax, so that the file is read as plain CSS. */
 const RESULT = {} as unknown as PostcssResult
 
-/** The least of a Stylelint result naming the syntax an SCSS file is opened with, whose own tokenizer reads a double slash as the opening of a comment. The reading turns on the syntax the file was opened with rather than on the namespace the rule is built over, so the core's adapter is what every case asks. */
+/** The least of a Stylelint result naming the SCSS syntax, whose tokenizer reads a double slash as opening a comment. The reading turns on the syntax the file was opened with, not on the rule's namespace, so every case asks the core's adapter. */
 const SCSS_RESULT = { opts: { syntax: scssSyntax } } as unknown as PostcssResult
 
 /**
@@ -49,7 +49,7 @@ function scssDeclarationOf (block: string): Declaration {
 
 /**
  * Finds the colon of the first declaration of a block, read as plain CSS.
- * @param block - The block.
+ * @param block - The stylesheet text holding the declaration.
  * @returns The index of the colon in `raws.between`.
  */
 function colonOf (block: string): number {

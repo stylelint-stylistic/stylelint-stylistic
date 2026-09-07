@@ -33,7 +33,7 @@ testRule({
 			column: 1,
 			message: messages.expected(0),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/481
+		// See #481
 		{
 			description: `a blank line in front of the closing brace of a rule`,
 			code: `a {\n\tb: c;\n\n}\n`,
@@ -42,7 +42,7 @@ testRule({
 			column: 1,
 			message: messages.expected(0),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/404
+		// See #404
 		{
 			description: `a stylesheet holding a line break and a run of spaces, whose one empty line is the line it opens on and whose run ends a line of its own and is left where it stood`,
 			code: `\n   `,
@@ -152,7 +152,7 @@ testRule({
 			description: `the same blank lines written with carriage-return line breaks`,
 			code: `a {}\r\n\r\n/** horse */\r\n\r\nb {}`,
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/404
+		// See #404
 		{
 			description: `a stylesheet holding nothing but a line break, which is one empty line and not one for its beginning and one for its end`,
 			code: `\n`,
@@ -280,7 +280,7 @@ testRule({
 			column: 1,
 			message: messages.expected(1),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/481
+		// See #481
 		{
 			description: `two blank lines in front of the closing brace of a rule`,
 			code: `a {\n\tb: c;\n\n\n}\n`,
@@ -329,7 +329,7 @@ testRule({
 			column: 1,
 			message: messages.expected(1),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/404
+		// See #404
 		{
 			description: `a stylesheet holding nothing but two line breaks, which are two empty lines and not three, and of which one is taken away`,
 			code: `\n\n`,
@@ -484,7 +484,7 @@ a {}
 			column: 1,
 			message: messages.expected(1),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/481
+		// See #481
 		{
 			description: `two blank lines in front of the closing brace of a rule in an embedded stylesheet`,
 			code: `<style>\na {\n\tb: c;\n\n\n}\n</style>\n`,
@@ -529,7 +529,7 @@ testRule({
 			description: `a rule closed by two blank lines and a run of spaces, which is exactly the option's count`,
 			code: `a {}\n\n   `,
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/404
+		// See #404
 		{
 			description: `a stylesheet holding nothing but two line breaks, which are exactly the option's count`,
 			code: `\n\n`,
@@ -593,7 +593,7 @@ testRule({
 			column: 1,
 			message: messages.expected(2),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/481
+		// See #481
 		{
 			description: `three blank lines in front of the closing brace of a rule`,
 			code: `a {\n\tb: c;\n\n\n\n}\n`,
@@ -602,7 +602,7 @@ testRule({
 			column: 1,
 			message: messages.expected(2),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/404
+		// See #404
 		{
 			description: `a stylesheet holding nothing but three line breaks, which are three empty lines and not four`,
 			code: `\n\n\n`,

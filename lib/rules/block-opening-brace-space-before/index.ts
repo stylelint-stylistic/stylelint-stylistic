@@ -34,13 +34,13 @@ export let meta = {
 
 /**
  * Requires or disallows whitespace before the opening brace of blocks.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always`, `never`, `always-single-line`, `never-single-line`, `always-multi-line` and `never-multi-line`.
- * @param secondaryOptions - The secondary options: `ignoreAtRules` and `ignoreSelectors`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always`, `never`, `always-single-line`, `never-single-line`, `always-multi-line` or `never-multi-line`.
+ * @param secondaryOptions - `ignoreAtRules` and `ignoreSelectors`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line` | `always-multi-line` | `never-multi-line`, secondaryOptions: {
 	ignoreAtRules?: string | RegExp | (string | RegExp)[],
@@ -75,22 +75,22 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		// Check both kinds of statements: rules and at-rules
+		// Rules and at-rules alike
 		root.walkRules(check)
 		root.walkAtRules(check)
 
 		/**
-		 * Checks a statement for opening brace space before violations.
-		 * @param statement - The rule or at-rule to check.
+		 * Checks the whitespace in front of a statement's brace.
+		 * @param statement - The rule or at-rule.
 		 */
 		function check (statement: Rule | AtRule): void {
-			// Return early if blockless or has an empty block
+			// Blockless or empty
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 
-			// Return early if at-rule is to be ignored
+			// An ignored at-rule
 			if (statement.type === `atrule` && optionsMatches(secondaryOptions, `ignoreAtRules`, statement.name)) return
 
-			// Return early if selector is to be ignored
+			// An ignored selector
 			if (statement.type === `rule` && optionsMatches(secondaryOptions, `ignoreSelectors`, statement.selector)) return
 
 			let source = beforeBlockString(statement, result)
@@ -108,9 +108,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				lineCheckStr: blockString(statement, result),
 				err: (m) => {
 					let between = statement.raws.between ?? ``
-					// Only the whitespace run right before the brace may be replaced, so that comments survive
+					// Comments in `between` survive
 					let beforeWhitespace = between.replace(TRAILING_WHITESPACE, ``)
-					// An inline comment ends only with a line break, so the brace can never join its line, and neither option is satisfiable there: leave the code alone and let the warning stand
+					// Behind an inline comment the brace cannot join its line, so neither option is satisfiable; the warning stands unfixed
 					let isFixable = !syntax.endsWithInlineComment(between, syntax.inlineComments(statement, result))
 
 					report({

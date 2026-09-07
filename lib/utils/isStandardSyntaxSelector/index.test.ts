@@ -108,7 +108,7 @@ describe(`isStandardSyntaxSelector`, () => {
 		expect(isStandardSyntaxSelector(`a\n//comment\nb`)).toBe(false)
 	})
 	it(`ERB templates`, () => {
-		// E. g. like in https://github.com/stylelint/stylelint/issues/4489
+		// As in https://github.com/stylelint/stylelint/issues/4489
 		expect(isStandardSyntaxSelector(`<% COLORS.each do |color| %>\na`)).toBe(false)
 		expect(isStandardSyntaxSelector(`<% eng %>\na`)).toBe(false)
 	})

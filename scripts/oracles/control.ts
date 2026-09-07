@@ -1,11 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * Asks of every rule, under every primary option it accepts: does a `//` comment move a warning, against a block comment of exactly the same width standing in its place?
+ * Asks of every rule, under every primary option, whether a `//` comment moves a warning against a block comment of the same width in its place.
  *
- * Every fixture is written with an inline comment four characters wide, so that a block comment stands in it character for character and the two files hold the same code on the same lines in the same columns. Any disagreement is the comment's doing, and it is the whole of #139 and of half a dozen issues before it.
- *
- * The run reports warnings only, with no fixing: a rule that correctly declines to write into a comment differs from its block-comment twin on purpose, and comparing the two outputs would say so on every guarded rule. What it says nothing about is the column the warning came out at.
+ * The two files hold the same code in the same columns, so any disagreement is the comment's ([#139](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/139)). Warnings only: declining to write into a comment differs from the twin on purpose.
  */
 
 import { stdout } from "node:process"
@@ -14,11 +12,11 @@ import { type Config, lint } from "../harness/lint.ts"
 
 import { buildRuns, type Run } from "./runs.ts"
 
-/** The inline comment every fixture is written with, and the block comment of exactly its width that stands in its place. Both are spelled out of the source of this file, so that nothing here is read as a comment of its own. */
+/** The two comments, spelled so that neither is read as a comment of this file. */
 const INLINE_COMMENT = `//${` `}c`
 const BLOCK_COMMENT = `/${`*`.repeat(2)}/`
 
-/** The shapes a comment can stand in, each of them the same code whichever way the comment is spelled. The last two were written for #139: no earlier one puts the comment inside a set of parameters that carries on past it — in every other bodiless at-rule here the comment lands in `raws.between` and the syntax keeps no second copy — so no fixture reached `at-rule-semicolon-space-before` at all; and none put the break closing the comment where a rule counting past it lands on the next line rather than in the next column. */
+/** The shapes a comment can stand in; the last two ([#139](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/139)) reach `at-rule-semicolon-space-before` and put the closing break where a rule counting past it lands on the next line. */
 const CORPUS: [string, string][] = [
 	[`value-continues`, `a { b: 1px ${INLINE_COMMENT}\n\t2px; }\n`],
 	[`value-ends-block`, `a {\n\tcolor: pink ${INLINE_COMMENT}\n}\n`],
@@ -39,10 +37,10 @@ const CORPUS: [string, string][] = [
 ]
 
 /**
- * Lints one snippet and hands back what it said.
+ * Lints one snippet.
  * @param code - The snippet.
  * @param config - The Stylelint configuration.
- * @returns The warnings, each with its position.
+ * @returns The warnings with positions.
  */
 async function warningsOf (code: string, config: Config): Promise<string[]> {
 	let result = await lint({ code, config, fix: false })
@@ -51,9 +49,9 @@ async function warningsOf (code: string, config: Config): Promise<string[]> {
 }
 
 /**
- * Lints one fixture in both of its spellings and compares what each one drew.
- * @param run - The rule, the option, the syntax and the fixture.
- * @returns The finding, or null where the two agree.
+ * Lints a fixture in both spellings.
+ * @param run - The rule, option, syntax and fixture.
+ * @returns The finding, or null where they agree.
  */
 async function probe (run: Run): Promise<object | null> {
 	let inline

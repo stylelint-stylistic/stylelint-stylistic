@@ -43,7 +43,7 @@ describe(`isStandardSyntaxFunction`, () => {
 
 /**
  * Reads the first call of a value.
- * @param declValue - The value.
+ * @param declValue - The value text parsed for calls.
  * @returns That call.
  */
 function getFunction (declValue: string): FunctionNode {

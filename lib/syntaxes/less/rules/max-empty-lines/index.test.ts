@@ -18,7 +18,7 @@ testRule({
 	],
 
 	reject: [
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/481
+		// See #481
 		{
 			description: `two blank lines in front of the closing brace behind a mixin call written without a semicolon, which the parser files inside the call itself`,
 			code: `a {\n\t.m()\n\n\n}\n`,

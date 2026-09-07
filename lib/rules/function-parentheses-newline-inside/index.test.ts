@@ -8,7 +8,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			// See #378
 			description: `a call the value parser closed on a parenthesis standing inside a comment opening with a solidus, a star and a solidus, which is no parenthesis the file writes, so the call is left alone as one closed inside an end-of-line comment is`,
 			code: `a { b: f(1 /*/ ) */\n); }`,
 		},
@@ -257,7 +257,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/272
+			// See #272
 			description: `a call standing behind a comment the value parser does not give back as it read it`,
 			code: `a { b: x/*/*a*/f(1,\n2)c; }`,
 			fixed: `a { b: x/*/*a*/f(\n1,\n2\n)c; }`,
@@ -275,7 +275,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			// See #378
 			description: `a call standing beside a comment opening with a solidus, a star and a solidus, whose text spells a call of its own that the value parser hands back as a call`,
 			code: `a { b: g(1,\n2) /*/ f(1,\n2) */ 3; }`,
 			fixed: `a { b: g(\n1,\n2\n) /*/ f(1,\n2) */ 3; }`,
@@ -293,8 +293,8 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
+			// See #378
+			// See #506
 			description: `such a comment standing first inside the call, whose break goes behind the comment CSS reads and not behind the star the value parser closed it on`,
 			code: `a { b: f(/*/ c */ 2); }`,
 			fixed: `a { b: f(/*/ c */\n 2\n); }`,
@@ -312,7 +312,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
+			// See #506
 			description: `such a comment standing last inside the call, whose closing warning is reported at the character in front of the parenthesis as it is for the twin holding a comment of that width the value parser gives back as it read it, rather than on the parenthesis itself`,
 			code: `a { b: f(\n2 /*/ c */); }`,
 			fixed: `a { b: f(\n2 /*/ c */\n); }`,
@@ -353,7 +353,7 @@ testRule({
 			code: `a { transform: translate(\r\n1, 1\r\n); }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/244
+			// See #244
 			description: `a form feed as the only break inside the arguments, which is whitespace and no line break, so the function is single-line`,
 			code: `a { b: fn(1,\f2); }`,
 		},
@@ -537,7 +537,7 @@ testRule({
 			message: messages.expectedOpeningMultiLine,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			// See #508
 			description: `a call in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no call`,
 			code: `a { b: f(1,\n2) /*/ " */ "f(1,\n2)"; }`,
 			fixed: `a { b: f(\n1,\n2\n) /*/ " */ "f(1,\n2)"; }`,
@@ -741,7 +741,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/225
+			// See #225
 			description: `a double slash of plain CSS opens no comment, so the parenthesis has a line to join and the fix is written`,
 			code: `
 				a {
@@ -786,8 +786,8 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
+			// See #378
+			// See #506
 			description: `such a comment standing first inside the call, whose whitespace is emptied around the comment CSS reads and not around the star the value parser closed it on`,
 			code: `a { b: f(\n/*/ c */ 2\n); }`,
 			fixed: `a { b: f(/*/ c */2); }`,
@@ -805,8 +805,8 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
+			// See #378
+			// See #506
 			description: `such a comment standing last inside the call, over which the whitespace in front of the closing parenthesis is read as over any other block comment`,
 			code: `a { b: f(f(1,\n2) /*/ c */); }`,
 			fixed: `a { b: f(f(1,\n2)/*/ c */); }`,
@@ -817,14 +817,14 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off with the run.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
 testRule({
 	ruleName,
 	config: [`never-multi-line`],
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab in the run behind the opening parenthesis: only the tokenizer's run goes, and the character stays`,
 			code: `a { b: f( \vx,\ny); }`,
 			fixed: `a { b: f(\vx,\ny); }`,
@@ -835,7 +835,7 @@ testRule({
 			message: messages.rejectedOpeningMultiLine,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab in the run before the closing parenthesis: only the tokenizer's run goes, and the character stays`,
 			code: `a { b: f(x,\ny\v ); }`,
 			fixed: `a { b: f(x,\ny\v); }`,
@@ -854,7 +854,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a break standing behind a vertical tab, a word to the tokenizer: no break opens the runs beside the parentheses, so both are written, and the character stays`,
 			code: `a { b: f(\v\nx,\ny); }`,
 			fixed: `a { b: f(\n\v\nx,\ny\n); }`,

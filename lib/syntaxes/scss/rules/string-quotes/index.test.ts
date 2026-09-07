@@ -38,7 +38,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/178
+			// See #178
 			description: `an inline comment standing in the selector, which the fix leaves spelled as the file spells it, the warning at the quote it is about`,
 			code: `.a // c\n[title='y'] {}`,
 			fixed: `.a // c\n[title="y"] {}`,
@@ -79,7 +79,7 @@ testRule({
 			message: messages.expected(`double`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/33
+			// See #33
 			description: `accurate position after a comment inside at-rule params`,
 			code: `
 				@mixin foo(
@@ -98,7 +98,7 @@ testRule({
 			message: messages.expected(`double`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/61
+			// See #61
 			description: `comments within a map literal are kept`,
 			code: `
 				$somevar: ( /* This is a comment */
@@ -280,7 +280,7 @@ testRule({
 			message: messages.expected(`double`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			// See #378
 			description: `a string standing beside a comment opening with a solidus, a star and a solidus, in a value that also carries an end-of-line comment, so that the syntax keeps a pair of copies and the block comment is found beside the pair's reading`,
 			code: `
 				a {
@@ -310,7 +310,7 @@ testRule({
 	],
 })
 
-// A rule fixing the same value stands beside this one in a real run, and `postcss-scss` gives that value a copy apiece: both fixes now go to the copy the syntax prints, and the raw beside it is kept in step, so what the pair says between them about the comments in the value still holds afterwards.
+// A rule fixing the same value stands beside this one in a real run, and `postcss-scss` gives that value a copy apiece: both fixes go to the copy the syntax prints and the raw is kept in step, so what the pair says about the comments in the value still holds afterwards.
 describe(`${ruleName} beside a rule fixing the same value`, () => {
 	it(`fixes a value another rule has written a prefix into`, async () => {
 		// `declaration-colon-space-after` puts the space it asks for in front of the value

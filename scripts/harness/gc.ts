@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * Takes out of the store every result measured over a `lib/` that no branch, remote or tag still reaches, and every file of a result the store no longer holds.
+ * Removes from the store every result measured over a `lib/` tree no branch, remote or tag reaches, and every stray file of an unfinished result.
  *
- * The rules a result was measured over are named in its meta, as the hash of the `lib/` tree; the trees of every commit a ref reaches are listed in one call; and a result whose tree is in neither list belongs to a state of the tree that only the reflog still knows. What is kept is never touched. Which files a result is kept as, and which of them a key with no meta may still be standing under, is the store's to say — `collect` in `cache.ts` names them, so that nothing is spelled here that could fall behind what `write` puts beside a result.
+ * Which files make a result, `collect` in `cache.ts` says, so nothing here can fall behind `write`.
  */
 
 import { execFileSync } from "node:child_process"

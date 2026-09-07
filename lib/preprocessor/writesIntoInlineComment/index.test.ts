@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest"
 
 import { writesIntoInlineComment } from "./index.ts"
 
-/** Plain CSS as a syntax object, since a syntax object is what a rule is handed for the file it reads. */
+/** Plain CSS as a syntax object, which is what a rule is handed for the file it reads. */
 const PLAIN_CSS = { parse }
 
 /**
@@ -52,13 +52,13 @@ describe(`writesIntoInlineComment`, () => {
 		expect(ask(scss, `a {\n\tcolor: red // c\n\t\t!important\n\t;\n}`, (root) => block(root).first)).toBe(false)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/333
+	// See #333
 	it(`a form feed standing in the middle of the value, which is whitespace and closes no comment under either syntax`, () => {
 		expect(ask(scss, `a {\n\tcolor: red // c\f2px\n\t;\n}`, (root) => block(root).first)).toBe(true)
 		expect(ask(less, `a {\n\tcolor: red // c\f2px\n\t;\n}`, (root) => block(root).first)).toBe(true)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/333
+	// See #333
 	it(`a form feed the value ends with, which is whitespace the comment holds and the very whitespace the write goes into, under either syntax`, () => {
 		expect(ask(scss, `a {\n\tcolor: red // c\f;\n\ttop: 0;\n}`, (root) => block(root).first)).toBe(true)
 		expect(ask(less, `a {\n\tcolor: red // c\f;\n\ttop: 0;\n}`, (root) => block(root).first)).toBe(true)
@@ -112,8 +112,7 @@ describe(`writesIntoInlineComment`, () => {
 		expect(ask(scss, `a {\n\tcolor: red;\n\t// c\n\ttop: 0;\n}`, (root) => block(root).first?.next(), `;`)).toBe(true)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/231
-	// Every case below spells out the run the fix leaves standing, so nothing of it — the whitespace the node ends with included — is read as room the write goes into.
+	// Every case below spells out the run the fix leaves standing, so nothing of it, the node's trailing whitespace included, is read as room the write goes into. See #231
 	it(`a declaration whose own trailing whitespace holds the break that closes the comment`, () => {
 		expect(ask(scss, `a {\n\tcolor: red // c\n\t;\n}`, (root) => block(root).first, ``)).toBe(false)
 	})

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest"
 
 import { nextNonCommentNode } from "./index.ts"
 
-/** The length of a run of comments the walk used to overflow the stack on. The threshold sits around eleven thousand on Node 26; this many throws every time. */
+/** The length of a run of comments the walk used to overflow the stack on: the threshold is around eleven thousand on Node 26, and this many throws every time. */
 const COMMENT_RUN_LENGTH = 20_000
 
 describe(`nextNonCommentNode`, () => {
@@ -120,7 +120,7 @@ describe(`nextNonCommentNode`, () => {
 		expect(steps).toEqual([[`x`, undefined]])
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/360
+	// See #360
 	it(`next node is a declaration preceded by a run of comments longer than the stack is deep`, () => {
 		let root = parse(`a { ${`/* c */ `.repeat(COMMENT_RUN_LENGTH)}color: pink; }`)
 
@@ -134,7 +134,7 @@ describe(`nextNonCommentNode`, () => {
 		expect(nextNonCommentNode(aNode?.first)).toBe(colorNode)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/360
+	// See #360
 	it(`next node is null preceded by a run of comments longer than the stack is deep`, () => {
 		let root = parse(`a { ${`/* c */ `.repeat(COMMENT_RUN_LENGTH)}}`)
 
@@ -145,7 +145,7 @@ describe(`nextNonCommentNode`, () => {
 		expect(nextNonCommentNode(aNode?.first)).toBe(null)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/409
+	// See #409
 	it(`the callback is called once per comment of a run longer than the stack is deep`, () => {
 		let root = parse(`a { ${`/* c */ `.repeat(COMMENT_RUN_LENGTH)}color: pink; }`)
 		let steps = 0

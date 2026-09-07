@@ -24,7 +24,7 @@ testRule({
 			code: `a { transform: translate(1,1); }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/153
+			// See #153
 			description: `a bare address in front of the comma, whose double slash opens no comment`,
 			code: `a { background: url(http://x/y.png) ,url(http://x/z.png); }`,
 		},
@@ -180,7 +180,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/153
+			// See #153
 			description: `a comma behind a bare address, whose double slash opens no comment`,
 			code: `a { background: url(http://x/y.png),url(http://x/z.png); }`,
 			fixed: `a { background: url(http://x/y.png) ,url(http://x/z.png); }`,
@@ -189,7 +189,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/216
+			// See #216
 			description: `two block comments standing side by side, whose delimiters spell a double slash between them and open no comment`,
 			code: `a { b: 1px/*x*//*y*/,2px; }`,
 			fixed: `a { b: 1px/*x*//*y*/ ,2px; }`,
@@ -198,7 +198,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/216
+			// See #216
 			description: `a bare address inside a call the plugin knows nothing of: plain CSS spells no comment with a double slash`,
 			code: `a { b: myurl(//a),2px; }`,
 			fixed: `a { b: myurl(//a) ,2px; }`,
@@ -207,7 +207,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/216
+			// See #216
 			description: `a double slash inside an address whose second slash opens no comment of its own`,
 			code: `a { b: url(a//*b*/),2px; }`,
 			fixed: `a { b: url(a//*b*/) ,2px; }`,
@@ -524,14 +524,14 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off with the run.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab in front of the comma, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `a { b: x\v, y; }`,
 			fixed: `a { b: x\v , y; }`,
@@ -550,7 +550,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab at the run before the comma: only the tokenizer's run goes, and the character stays`,
 			code: `a { b: x\v , y; }`,
 			fixed: `a { b: x\v, y; }`,

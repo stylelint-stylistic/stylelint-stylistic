@@ -12,288 +12,276 @@ import { less } from "./less/index.ts"
 import { scss } from "./scss/index.ts"
 import { styled } from "./styled/index.ts"
 
-/**
- * How a family of the plugin's rules reads a stylesheet: the namespace the family is registered under, and the syntaxes it answers for.
- *
- * Every rule module exports a factory taking one of these, and `lib/index.ts` registers the factory's rule once per syntax listed below beside the core, under `@stylistic/<namespace>/<rule>`. An adapter defines the whole contract coherently: no member derives from another at run time, so overriding one method of an existing adapter changes no answer of its neighbours — a new syntax implements the family, not a patch. What a syntax adds to this contract as the rules come to ask it more — where the comments of a text stand, what a construct of a preprocessor is — is added here, and answered for plain CSS by the core's own syntax.
- */
+/** How a family of rules reads a stylesheet. `lib/index.ts` registers every rule once per syntax, as `@stylistic/<namespace>/<rule>`; plain CSS is the core's. No member derives from another. */
 export type Syntax = {
 
-	/** The segment between `@stylistic/` and the rule's name — `scss` for `@stylistic/scss/color-hex-case` — and nothing for the rules of the core. */
+	/** The segment between `@stylistic/` and the rule's name; none for the core. */
 	namespace?: string,
 
 	/**
-	 * Asks whether the rules read the given root, by the shape its parser left on it and by the syntax the file was opened with.
-	 * @param root - The root a check was handed.
-	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
-	 * @returns True where the rules are written for it; a root refused here is answered by one warning naming the rule, and checked by nothing.
+	 * Asks whether the rules read the root; a refused root gets one warning and no check.
+	 * @param root - The stylesheet the rules are asked to read.
+	 * @param result - The lint result naming the syntax the file was parsed with.
+	 * @returns True where they do.
 	 */
 	accepts (root: Root, result: PostcssResult): boolean,
 
 	/**
-	 * Reads what the code around an embedded stylesheet gives a node of it: the indentation of the line the embedding expression opens on, and whether the expression is broken over lines, which puts what it holds one level deeper.
-	 * @param node - The node whose stylesheet may be embedded.
-	 * @returns The indentation and the spread; an empty indent, unbroken, for a stylesheet standing on its own.
+	 * Reads the host code around an embedded stylesheet: the indent of the line the embedding opens on, and whether it is broken over lines, which puts its content a level deeper.
+	 * @param node - A node inside the embedded stylesheet.
+	 * @returns Empty and unbroken for a stylesheet on its own.
 	 */
 	embedding (node: Node): { indent: string, multiline: boolean },
 
 	/**
-	 * Asks whether a declaration's value embeds an expression of the host language, whose lines are the host's rather than the stylesheet's.
+	 * Asks whether a declaration's value embeds host code.
 	 * @param decl - The declaration.
-	 * @returns True where the value holds such an expression.
+	 * @returns True where it does.
 	 */
 	valueEmbedsHostCode (decl: Declaration): boolean,
 
 	/**
-	 * Asks whether an at-rule is standard CSS rather than a construct of a preprocessor.
+	 * Asks whether an at-rule is standard CSS, not a preprocessor construct.
 	 * @param atRule - The at-rule.
-	 * @returns True where it is standard.
+	 * @returns True where it is.
 	 */
 	isStandardAtRule (atRule: AtRule): boolean,
 
 	/**
-	 * Asks whether a rule is standard CSS rather than a construct of a preprocessor.
-	 * @param rule - The rule.
-	 * @returns True where it is standard.
+	 * Asks whether a rule is standard CSS, not a preprocessor construct.
+	 * @param rule - The rule node asked about.
+	 * @returns True where it is.
 	 */
 	isStandardRule (rule: PostcssRule): boolean,
 
 	/**
-	 * Asks whether a declaration is standard CSS rather than a construct of a preprocessor.
+	 * Asks whether a declaration is standard CSS, not a preprocessor construct.
 	 * @param decl - The declaration.
-	 * @returns True where it is standard.
+	 * @returns True where it is.
 	 */
 	isStandardDeclaration (decl: Declaration): boolean,
 
 	/**
-	 * Asks whether a property is standard CSS rather than a variable or an interpolation.
+	 * Asks whether a property is standard CSS, not a variable or an interpolation.
 	 * @param property - The property's text.
-	 * @returns True where it is standard.
+	 * @returns True where it is.
 	 */
 	isStandardProperty (property: string): boolean,
 
 	/**
-	 * Asks whether a value is standard CSS rather than a variable, an interpolation or an operation.
+	 * Asks whether a value is standard CSS, not a variable, an interpolation or an operation.
 	 * @param value - The value's text.
-	 * @returns True where it is standard.
+	 * @returns True where it is.
 	 */
 	isStandardValue (value: string): boolean,
 
 	/**
-	 * Asks whether a selector is standard CSS rather than a construct of a preprocessor.
+	 * Asks whether a selector is standard CSS, not a preprocessor construct.
 	 * @param selector - The selector's text.
-	 * @returns True where it is standard.
+	 * @returns True where it is.
 	 */
 	isStandardSelector (selector: string): boolean,
 
 	/**
-	 * Asks whether a function of a value is standard CSS rather than a list of Sass or an interpolation.
-	 * @param fn - The function node, as the value parser hands it over.
-	 * @returns True where it is standard.
+	 * Asks whether a value function is standard CSS, not a Sass list or an interpolation.
+	 * @param fn - The function node.
+	 * @returns True where it is.
 	 */
 	isStandardFunction (fn: FunctionNode): boolean,
 
 	/**
-	 * Asks whether a comment is one CSS spells, rather than an inline comment of a preprocessor.
-	 * @param comment - The comment.
-	 * @returns True where it is standard.
+	 * Asks whether a comment is a CSS one, not a preprocessor's inline comment.
+	 * @param comment - The comment node asked about.
+	 * @returns True where it is.
 	 */
 	isStandardComment (comment: Comment): boolean,
 
 	/**
 	 * Asks whether a combinator of a parsed selector is standard CSS.
-	 * @param combinator - The combinator node, as the selector parser hands it over.
-	 * @returns True where it is standard.
+	 * @param combinator - The combinator node.
+	 * @returns True where it is.
 	 */
 	isStandardCombinator (combinator: SelectorNode): boolean,
 
 	/**
-	 * Reads the text of a node as the file spells it — a declaration's value, a rule's selector, an at-rule's params — whichever copies the syntax keeps of it.
+	 * Reads a node's value, selector or params as the file writes it.
 	 * @param node - The declaration, rule or at-rule.
-	 * @returns The text, in the file's own spelling.
+	 * @returns The text.
 	 */
 	read (node: AtRule | Declaration | PostcssRule): string,
 
 	/**
-	 * Writes the text of a node into the copy of it the syntax prints, keeping whatever other copies it holds in step.
+	 * Writes a node's text into the copy the syntax prints and keeps its other copies in step.
 	 * @param node - The declaration, rule or at-rule.
-	 * @param text - The text to write.
+	 * @param text - The value, selector or params written over the node's own.
 	 */
 	write (node: AtRule | Declaration | PostcssRule, text: string): void,
 
 	/**
-	 * Reads what the node's own syntax makes of a comment opened by a double slash: whether it opens one at all, and whether such a comment survives in the text the rule reads.
-	 * @param node - The node whose stylesheet's syntax is asked.
-	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
+	 * Reads what the node's syntax makes of `//`: whether it opens a comment, and whether one survives in the text a rule reads.
+	 * @param node - The node whose syntax says what a double slash opens.
+	 * @param result - The lint result naming the syntax the file was parsed with.
 	 * @returns The reading.
 	 */
 	inlineComments (node: Node, result: PostcssResult): InlineCommentReading,
 
 	/**
-	 * Finds the first character of a text that the node's parser reads as a colon token, a colon it read as text — inside a comment, a string, a parenthesised group, an at-word or an escape — being none of a declaration's. What stands in front of the text is read with it, since a tokenizer carries state across the two.
-	 * @param before - What the node carries in front of the text, read but not answered for; the property, as the parser hands it back rather than as the file spells it.
-	 * @param text - The text, as the file spells it.
-	 * @param node - The node the text belongs to.
-	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
-	 * @returns The index of that colon in the text, or `-1` where the text holds none.
+	 * Finds the first colon token of a text; one inside a comment, a string, a parenthesised group, an at-word or an escape is none. The text in front is tokenized too, since a tokenizer carries state.
+	 * @param before - The text in front, tokenized but not answered for: the property.
+	 * @param text - The text searched for the colon, tokenized behind the text in front.
+	 * @param node - The node the text is from, whose syntax tokenizes it.
+	 * @param result - The lint result naming the syntax the file was parsed with.
+	 * @returns The index of the colon, or `-1`.
 	 */
 	colonTokenIndex (before: string, text: string, node: Node, result: PostcssResult): number,
 
 	/**
-	 * Finds the spans every comment occupies in a text of the node's stylesheet — the block comments, and the inline ones where the node's syntax reads them there.
-	 * @param text - The text, as the rule reads it.
-	 * @param node - The node the text belongs to.
-	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
-	 * @returns The spans, in the text's own coordinates.
+	 * Finds the spans of every comment in a text: block ones, and inline ones where the syntax reads them.
+	 * @param text - The text scanned for comments.
+	 * @param node - The node the text is from, whose syntax says whether inline comments open.
+	 * @param result - The lint result naming the syntax the file was parsed with.
+	 * @returns The spans, in the text's coordinates.
 	 */
 	commentSpans (text: string, node: Node, result: PostcssResult): CommentSpan[],
 
 	/**
-	 * Asks whether a text ends inside an inline comment, under the reading given.
-	 * @param text - The text.
-	 * @param reading - What the syntax makes of a double slash.
-	 * @returns True where the end of the text stands inside such a comment.
+	 * Asks whether a text ends inside an inline comment under the reading.
+	 * @param text - The text whose tail is asked about.
+	 * @param reading - What the syntax makes of `//`.
+	 * @returns True where it does.
 	 */
 	endsWithInlineComment (text: string, reading: InlineCommentReading): boolean,
 
 	/**
-	 * Asks whether a fix would take the end of a text from outside an inline comment into one, under the reading given.
-	 * @param standingText - The text as it stands, up to and including the character the fix moves.
-	 * @param fixedText - The same text as the fix would leave it.
-	 * @param reading - What the syntax makes of a double slash.
-	 * @returns True where the end moves into a comment.
+	 * Asks whether a fix moves the end of a text into an inline comment.
+	 * @param standingText - The text through the character the fix moves.
+	 * @param fixedText - The same text after the fix.
+	 * @param reading - What the syntax makes of `//`.
+	 * @returns True where it does.
 	 */
 	movesEndIntoInlineComment (standingText: string, fixedText: string, reading: InlineCommentReading): boolean,
 
 	/**
-	 * Asks whether a write onto the whitespace the node ends with would land inside an inline comment.
-	 * @param node - The node the write is about.
-	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
-	 * @param [spelledBetween] - The run that will stand between the node and the write once the fix has run, where the write does not land on the node's own trailing whitespace.
-	 * @returns True where such a write would land inside an inline comment.
+	 * Asks whether a write onto the node's trailing whitespace lands inside an inline comment.
+	 * @param node - The node whose trailing whitespace the write lands on.
+	 * @param result - The lint result naming the syntax the file was parsed with.
+	 * @param [spelledBetween] - The run between the node and a write off its own trailing whitespace.
+	 * @returns True where it does.
 	 */
 	writesIntoInlineComment (node: Node, result: PostcssResult, spelledBetween?: string): boolean,
 
 	/**
-	 * Builds the copy of a text a search runs over: the double slashes the node's syntax reads as code are hidden, so a scan finds only the comments the syntax reads.
-	 * @param text - The text, as the rule reads it.
-	 * @param node - The node the text belongs to.
-	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
-	 * @returns The copy, with the spans of the comments the syntax reads.
+	 * Builds the copy of a text a search runs over, every `//` the syntax reads as code hidden.
+	 * @param text - The text the search runs over.
+	 * @param node - The node the text is from, whose syntax says which double slashes are code.
+	 * @param result - The lint result naming the syntax the file was parsed with.
+	 * @returns The copy and the comment spans.
 	 */
 	searchCopy (text: string, node: Node, result: PostcssResult): { searchString: string, commentSpans: CommentSpan[] },
 
 	/**
-	 * Finds the spans every comment occupies in the text a node prints — a declaration's value or an at-rule's params, as `read` hands it over — the block comments and the inline ones alike.
-	 *
-	 * Where the syntax keeps a pair of copies and the pair is still in step, the inline comments are read off the pair, exactly as the parser saw them; where the pair has gone out of step, the text is scanned as one carrying no pair at all; and where the syntax spells no inline comment in that text, there are none of that kind. The block comments are found by the scan in every case, since the two copies spell them alike.
+	 * Finds the spans of every comment in the text `read` returns: inline ones off the syntax's pair of copies while in step and from a scan once drifted, block ones from the scan always.
 	 * @param node - The declaration or at-rule.
-	 * @param text - The text the node prints, as `read` hands it over.
-	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
-	 * @returns The spans, in the text's own coordinates.
+	 * @param text - The text `read` returns.
+	 * @param result - The lint result naming the syntax the file was parsed with.
+	 * @returns The spans, in the text's coordinates.
 	 */
 	printedComments (node: AtRule | Declaration, text: string, result: PostcssResult): CommentSpan[],
 
 	/**
-	 * Opens a rule's selector for a rule that parses it.
-	 *
-	 * `postcss-scss` rewrites every inline comment of a selector into a block comment in the raw copy a parser can read, keeps the source spelling beside it and prints that one, so the two copies drift apart by two characters per comment. What comes back holds the parsed copy, the map from its positions into the file's own coordinates, the file's own spelling of a stretch of it, and the writer that lands a fixed selector in every copy the syntax keeps.
+	 * Opens a rule's selector for parsing. `postcss-scss` rewrites each inline comment into a block one in the raw, so the copies drift two characters per comment; the result maps between them and writes both.
 	 * @param rule - The rule whose selector is opened.
 	 * @returns The copies.
 	 */
 	selectorCopies (rule: PostcssRule): SelectorCopies,
 
 	/**
-	 * Asks whether the node must keep its trailing semicolon whatever an option says, because the language will not part with it.
-	 * @param node - The node the semicolon stands behind.
-	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
-	 * @returns True where the semicolon has to stay.
+	 * Asks whether the language requires the node's trailing semicolon, whatever an option says.
+	 * @param node - The node whose trailing semicolon is asked about.
+	 * @param result - The lint result naming the syntax the file was parsed with.
+	 * @returns True where it stays.
 	 */
 	requiresTrailingSemicolon (node: Node, result: PostcssResult): boolean,
 
 	/**
-	 * Asks whether the syntax that spelled a node reads arithmetic of its own, in which the whitespace in front of every sign is what makes the sign an operator.
+	 * Asks whether the node's syntax has arithmetic of its own, where whitespace in front of a sign makes it an operator.
 	 *
-	 * Nothing in the tree can answer this: `foo($a) -2px`, which Sass reads as a list of two values, and `foo($a)-2px`, which it reads as a subtraction, are one declaration node either way, and the difference lives in the compiler of the language rather than in what PostCSS hands over. What can be asked is whether a double slash opens a comment in that syntax, and the two answers coincide: Sass and Less spell arithmetic of their own and comments of their own both, and plain CSS spells neither. A syntax the probe learns nothing about is answered yes, which leaves the whitespace standing and costs a warning rather than a file.
-	 *
-	 * What this question cannot do is tell Sass from Less, and one place where those two differ is the plus: Less reads the whitespace in front of it as it reads the whitespace in front of a minus, and Sass reads a plus as an operator whatever whitespace stands beside it. So one reading answers for both syntaxes, and a plus behind a call is left alone under Sass as well, where closing it up would have been safe. That is a warning left unsaid, which is the side of the answer this whole question is decided on. A probe telling those two apart is there to be written — `postcss-less` reads `@a: 1;` as an at-rule it marks a variable and `postcss-scss` reads a plain one — so this is one reading chosen for two languages rather than a wall.
-	 *
-	 * The question is put to the node rather than to the file, since a page may hold a plain `<style>` beside a `<style lang="scss">` and each block carries the syntax that spelled it.
-	 * @param node - The node whose text is being read.
-	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
-	 * @returns True where the syntax that spelled that node spells arithmetic of its own.
+	 * The tree cannot tell `foo($a) -2px`, a Sass list, from `foo($a)-2px`, a subtraction, so whether `//` opens a comment is asked instead: Sass and Less have both, plain CSS neither, an unknown syntax is answered yes. Sass reads a plus as an operator whatever stands beside it, so a plus behind a call is left alone under both. The node is asked, not the file: a page may hold a plain `<style>` beside a `<style lang="scss">`.
+	 * @param node - The node whose own syntax is asked, not the file's.
+	 * @param result - The lint result naming the syntax the file was parsed with.
+	 * @returns True where it has.
 	 */
 	spellsOwnArithmetic (node: Node, result: PostcssResult): boolean,
 
 	/**
-	 * Asks whether the syntax reads a solidus standing between two nodes of a value as an operator of its own arithmetic rather than as the separator CSS spells there — between the numbers of a ratio, the sizes of a font shorthand, the lines of a grid area, the colour and the alpha of a colour function.
+	 * Asks whether the syntax reads a solidus between two value nodes as division rather than the CSS separator.
 	 *
-	 * Plain CSS divides nowhere outside a math function, and a rule about a separator passes the arguments of those over on its own. Sass divides wherever either operand is one of its own — a variable, a call it evaluates — and keeps the solidus of two plain values, of a `var()` and of an `env()`: measured against dart-sass 1.104, `4/2` and `var(--x)/2` print as they stand while `4/$a` and `fn()/2` print a quotient. Less divides only inside parentheses under its default `math` mode, measured against Less 4.9.1, and a parenthesised group is a nameless call the rules pass over; under `math: always` it divides everywhere, and the whitespace beside the solidus changes nothing to it either way.
-	 * @param left - The node in front of the solidus, none where the solidus opens the text.
-	 * @param right - The node behind it, none where the solidus closes the text.
-	 * @returns True where the syntax divides there, so that the solidus is no separator to read.
+	 * Plain CSS divides only inside a math function, which the separator rules skip. Sass divides where either operand is a variable or a call it evaluates, and keeps the solidus of plain values, `var()` and `env()`. Less divides only inside parentheses under its default `math`, a nameless call the rules skip. Whitespace beside the solidus changes nothing.
+	 * @param left - The node in front, none where the solidus opens the text.
+	 * @param right - The node behind, none where it closes the text.
+	 * @returns True where the syntax divides.
 	 */
 	readsSlashAsOperator (left: ValueParserNode | undefined, right: ValueParserNode | undefined): boolean,
 
 	/**
-	 * Asks whether the syntax ends the unit of a dimension at an escape, reading what the escape spells as a value of its own rather than as characters of the unit.
+	 * Asks whether the syntax ends a dimension's unit at an escape.
 	 *
-	 * To the grammar of CSS an escape is a code point of the identifier it stands in, so `10px\#fff` is one dimension whose unit is `px#fff`: `@csstools/css-tokenizer` reads it so, and Sass and `lightningcss` both print the word whole. Less parts the word there. Its reader of an expression takes a unit as ASCII letters and underscores alone and a backslash as the first character of a keyword, so the same value prints as `10px \#fff`, a dimension and an escaped value it carries through as it stands — measured against Less 4.9.1 in a variable's value, in media parameters, in the arguments of a call, in a custom property and in a declaration whose value spells any of `. # @ $ + / ' " * ` ( { } -`; a declaration whose value spells none of those and closes on a semicolon it stores without reading, and prints whole. In no reading of its is the escape part of the unit, so a rule recasing the whole of that identifier under Less recases a value of the file's (#527).
-	 * @returns True where the unit ends in front of the first escape, whatever the escape spells.
+	 * To CSS an escape is a code point of the identifier, so `10px\#fff` is one dimension with the unit `px#fff`. Less reads a backslash as the start of a keyword, so recasing the whole identifier under Less would recase a value ([#527](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527)).
+	 * @returns True where the unit ends at the first escape.
 	 */
 	endsUnitAtEscape (): boolean,
 
 	/**
-	 * Finds the spans the interpolations of a preprocessor occupy in a text — a stretch written in a language of its own, which no rule reads code beside.
-	 * @param text - The text, with its comments blanked where a brace inside one must not close an interpolation.
-	 * @param node - The node the text belongs to, whose own syntax says which spellings interpolate at all.
-	 * @param result - The Stylelint result, which holds the syntax the file was opened with.
-	 * @returns The spans, in the text's own coordinates.
+	 * Finds the spans of a preprocessor's interpolations in a text; no rule reads code beside one.
+	 * @param text - The text, its comments blanked so a brace inside one cannot close an interpolation.
+	 * @param node - The node, whose syntax says which spellings interpolate.
+	 * @param result - The lint result naming the syntax the file was parsed with.
+	 * @returns The spans, in the text's coordinates.
 	 */
 	interpolationSpans (text: string, node: Node, result: PostcssResult): InterpolationSpan[],
 
 	/**
-	 * Asks whether the parser hung a parameter list of the syntax's own on a rule — a Less mixin definition — which `indentation` holds one level deeper than the selector it closes.
-	 * @param rule - The rule.
-	 * @returns True where the rule carries such a list.
+	 * Asks whether the rule carries a parameter list, a Less mixin definition, which `indentation` holds a level deeper than the selector.
+	 * @param rule - The rule whose selector may carry a parameter list.
+	 * @returns True where it does.
 	 */
 	readsRuleParams (rule: PostcssRule): boolean,
 
 	/**
-	 * Asks whether an at-rule is a variable of the syntax — `@foo: bar;` under Less — whose params are a value to walk the way a declaration's is walked.
+	 * Asks whether an at-rule is a variable, `@foo: bar;` under Less, whose params are walked as a value.
 	 * @param atRule - The at-rule.
-	 * @returns True where the at-rule is such a variable.
+	 * @returns True where it is.
 	 */
 	readsAtRuleAsVariable (atRule: AtRule): boolean,
 }
 
-/** A rule's selector, opened for parsing and writing: see {@link Syntax#selectorCopies}. */
+/** A rule's selector opened for parsing: see {@link Syntax#selectorCopies}. */
 export type SelectorCopies = {
 
-	/** The copy a parser can read, every inline comment rewritten into a block one. */
+	/** The parseable copy, every inline comment rewritten into a block one. */
 	selector: string,
 
-	/** The inline comments the pair of copies holds, each with its span in both. */
+	/** The inline comments, each with its span in both copies. */
 	comments: InlineComment[],
 
 	/**
-	 * Maps a position of the parsed copy into the file's own coordinates.
+	 * Maps a position of the parsed copy into the file.
 	 * @param index - The index in the parsed copy.
-	 * @returns The index in the file's spelling.
+	 * @returns The index in the file.
 	 */
 	toSourceIndex (index: number): number,
 
 	/**
-	 * Gives back the way the file spells a stretch of the parsed copy.
-	 * @param text - The text as the parsed copy spells it.
-	 * @param rawIndex - The index that text stands at in the parsed copy.
-	 * @returns The same stretch, spelled as the file spells it.
+	 * Returns the file's spelling of a stretch of the parsed copy.
+	 * @param text - The stretch in the parsed copy.
+	 * @param rawIndex - Its index there.
+	 * @returns The stretch in the file.
 	 */
 	sourceSpelling (text: string, rawIndex: number): string,
 
 	/**
-	 * Writes a fixed selector into every copy the syntax keeps, the inline comments of the printed one spelled the way the file spells them.
-	 * @param fixedSelector - The selector, as the fix leaves the parsed copy.
+	 * Writes a fixed selector into every copy, inline comments in the file's spelling.
+	 * @param fixedSelector - The fixed parsed copy.
 	 */
 	write (fixedSelector: string): void,
 }
@@ -301,5 +289,5 @@ export type SelectorCopies = {
 export type { InlineComment } from "../preprocessor/findSelectorInlineComments/index.ts"
 export type { InlineCommentReading } from "../preprocessor/readsInlineComments/index.ts"
 
-/** The syntaxes registered beside the core, each under a namespace of its own. A syntax is not registered until it is listed here. */
+/** The syntaxes registered beside the core; one not listed is not registered. */
 export let namespaces: Syntax[] = [less, scss, styled]

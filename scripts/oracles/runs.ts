@@ -6,7 +6,7 @@ import type { Config } from "../harness/lint.ts"
 import { FIXTURES, INLINE_FIXTURES } from "./fixtures.ts"
 import { RULE_OPTIONS } from "./options.ts"
 
-/** The plugin is loaded by its place on disk, so that an oracle runs the same from any directory — and from another checkout's `lib/` where `HARNESS_LIB` names one, which is how a base is measured with the branch's oracles without moving the working tree. */
+/** Loaded by path, so an oracle runs from any directory and over the `lib/` `HARNESS_LIB` names. */
 const PLUGIN = path.join(env.HARNESS_LIB || new URL(`../../lib`, import.meta.url).pathname, `index.ts`)
 
 export type Run = {
@@ -19,10 +19,8 @@ export type Run = {
 }
 
 /**
- * Builds every run an oracle makes: every rule, under every primary option it accepts, over every fixture the syntax can hold.
- *
- * The list is built before anything is linted, so that an oracle is one loop over it rather than four nested ones.
- * @param corpus - The fixtures to use in place of the shared ones, where an oracle carries its own. Such a corpus is read under the two custom syntaxes alone, since every fixture of one is written around a comment spelled with a double slash.
+ * Builds every run an oracle makes, every rule under every primary option over every fixture, as one list to loop over.
+ * @param corpus - Fixtures in place of the shared ones, read under the two custom syntaxes alone, since each is written around a `//` comment.
  * @returns Every run, in a stable order.
  */
 function buildRuns (corpus?: [string, string][]): Run[] {
@@ -43,10 +41,8 @@ function buildRuns (corpus?: [string, string][]): Run[] {
 }
 
 /**
- * Asks whether a result is one an oracle can say anything about.
- *
- * A fixture no syntax reads is no fixture, and an option a rule does not take is `options.ts` falling behind the plugin rather than the plugin being wrong. Neither is a finding.
- * @param result - The result of one lint, of which the warnings and the objections to the options are read.
+ * Asks whether an oracle can read a result: a syntax error and a refused option are not findings.
+ * @param result - One entry of `results` from a `lint` call.
  * @returns True where the run is worth reading.
  */
 function isUsable (result: {

@@ -1,14 +1,10 @@
-/**
- * Compares two results of one run, row by row and never by count.
- *
- * A row can change shape without leaving and leave while another arrives, and a count stands still through both. So the two sides are read as maps from a row's key to what the row holds, and the finding is three lists: the keys one side holds and the other does not, either way round, and the keys both hold under a different value.
- */
+/** Compares two results of one run row by row, never by count: a row can change without leaving, or leave while another arrives, and the count stands still. */
 
 /**
  * Diffs two results keyed alike.
- * @param base - The rows of the base, by key.
- * @param head - The rows of the branch, by key.
- * @returns The keys the branch added, the keys it removed, the keys it changed, and how many it left as they were.
+ * @param base - The base rows, by key.
+ * @param head - The branch rows, by key.
+ * @returns The keys added, removed and changed, and the count of unchanged ones.
  */
 function diff (base: Record<string, unknown>, head: Record<string, unknown>): {
 	added: string[],
@@ -37,11 +33,11 @@ function diff (base: Record<string, unknown>, head: Record<string, unknown>): {
 }
 
 /**
- * Writes a diff as Markdown a reader can go through row by row.
+ * Renders a diff as Markdown.
  * @param result - The diff.
- * @param base - The rows of the base, by key.
- * @param head - The rows of the branch, by key.
- * @param limit - How many rows of each list to spell out.
+ * @param base - The base rows, by key.
+ * @param head - The branch rows, by key.
+ * @param limit - Rows spelled out per list.
  * @returns The Markdown.
  */
 function render (result: ReturnType<typeof diff>, base: Record<string, unknown>, head: Record<string, unknown>, limit: number = 200): string {

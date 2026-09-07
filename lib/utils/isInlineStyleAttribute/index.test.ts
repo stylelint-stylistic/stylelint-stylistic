@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 
 import { isInlineStyleAttribute } from "./index.ts"
 
-/** The syntax as its own declaration should spell it: the parser is always there, whatever the optional field says. */
+/** The syntax as its declaration should spell it: the parser is always there, whatever the optional field says. */
 let html = postcssHtml as { parse: Parser }
 
 describe(`isInlineStyleAttribute`, () => {

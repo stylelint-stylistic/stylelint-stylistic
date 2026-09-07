@@ -12,7 +12,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/326
+			// See #326
 			description: `a Less variable standing on the root of the file, which this syntax reads as an at-rule and the walk over at-rules has always let stand`,
 			code: `@var: pink`,
 		},
@@ -20,7 +20,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/232
+			// See #232
 			description: `an inline comment behind the value, which this syntax keeps inside it: the semicolon cannot leave the comment's line, so the code is left alone and the warning stands`,
 			code: `
 				a {
@@ -37,7 +37,7 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/232
+			// See #232
 			description: `the same comment standing behind the flag, whose raw the guard reads along with the value`,
 			code: `
 				a {
@@ -54,7 +54,7 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/232
+			// See #232
 			description: `a flag standing in the text of the comment, which Less reads as comment text while the parser reads it as the flag`,
 			code: `
 				a {
@@ -71,7 +71,7 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/232
+			// See #232
 			description: `a bodiless at-rule whose parameters this syntax keeps the comment inside, rather than the raw standing where the closing brace would be`,
 			code: `
 				a {
@@ -88,7 +88,7 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/232
+			// See #232
 			description: `a custom property on one line, whose value the comment runs to the end of: no line break closes that comment, so the semicolon has nowhere of its own to stand and the warning stands instead`,
 			code: `a { --x: pink // keep me }`,
 			fixed: `a { --x: pink // keep me }`,
@@ -96,7 +96,7 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/287
+			// See #287
 			description: `the same custom property broken across lines, whose value swallows the line break as well: the semicolon lands past the comment rather than inside it, so the fix goes through and the closing brace takes its line`,
 			code: `
 				a {
@@ -113,7 +113,7 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/287
+			// See #287
 			description: `the same custom property carrying a flag, which this syntax reads no flag out of at all, so the comment and the line break behind it stay inside the value`,
 			code: `
 				a {
@@ -202,7 +202,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/326
+			// See #326
 			description: `a Less variable standing on the root of the file, which this syntax reads as an at-rule and the walk over at-rules has always let stand`,
 			code: `@var: pink;`,
 		},
@@ -210,8 +210,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/232
-			// The code is spelled with escapes rather than as an indented block because the line the semicolon leaves behind holds a tab and nothing else, which a block would leave to whatever trims the file
+			// Spelled with escapes because the line the semicolon leaves behind holds a tab and nothing else, which an indented block would leave to whatever trims the file. See #232
 			description: `an inline comment behind the value, with the semicolon on the line under it: this option takes the semicolon away rather than writing one, so it has nowhere to write and the fix goes through`,
 			code: `a {\n\tcolor: pink // keep me\n\t;\n}\n`,
 			fixed: `a {\n\tcolor: pink // keep me\n\t\n}\n`,
@@ -220,7 +219,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/217
+			// See #217
 			description: `the same comment standing behind the semicolon instead, where this syntax reads it as a node of its own rather than as part of the value`,
 			code: `
 				a {
@@ -237,7 +236,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/325
+			// See #325
 			description: `a second semicolon standing behind the one that closes the declaration, which this syntax keeps in the same raw plain CSS keeps it in`,
 			code: `a { color: pink;; }`,
 			fixed: `a { color: pink }`,
@@ -246,7 +245,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/309
+			// See #309
 			description: `an extend at-rule closing the block, whose semicolon Less reads as the end of the at-rule rather than as the separator this option takes away, so the problem is reported and the file left alone`,
 			code: `
 				a {
@@ -263,7 +262,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/309
+			// See #309
 			description: `the same at-rule standing behind a declaration, which is no closer to being able to part with its semicolon`,
 			code: `
 				a {
@@ -282,7 +281,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/309
+			// See #309
 			description: `a layer at-rule closing the block, which is plain CSS and holds Less to the same reading as its own at-rules`,
 			code: `
 				a {
@@ -299,7 +298,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/309
+			// See #309
 			description: `an at-rule whose options open with a parenthesis and no space, which this parser files the way it files a call to a detached ruleset while Less reads it as the at-rule it is`,
 			code: `
 				a {
@@ -316,7 +315,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/309
+			// See #309
 			description: `the extend at-rule with an inline comment behind its parameters, which this syntax keeps inside them and Less compiles as readily as the bare at-rule`,
 			code: `
 				a {
@@ -333,7 +332,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/309
+			// See #309
 			description: `a Less variable closing the block, which Less does read as a declaration and this rule does not, so the semicolon is reported and left where it stands`,
 			code: `a { @v: pink; }`,
 			fixed: `a { @v: pink; }`,
@@ -342,7 +341,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/309
+			// See #309
 			description: `a call to a detached ruleset closing the block, which Less reads as a call rather than as an at-rule and parts with just as readily`,
 			code: `
 				@dr: { color: pink }
@@ -357,7 +356,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/357
+			// See #357
 			description: `the same call carrying a lookup, which Less inlines just as it inlines the bare one`,
 			code: `
 				@dr: { color: pink }
@@ -372,7 +371,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/309
+			// See #309
 			description: `a mixin call closing the block, which this syntax hands over as an at-rule named for the class and Less reads as a call`,
 			code: `a { .b(); }`,
 			fixed: `a { .b() }`,
@@ -381,7 +380,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/309
+			// See #309
 			description: `a value Less itself refuses in a declaration, which is what telling a declaration from an at-rule would have to catch and what this rule declines to read`,
 			code: `a { @v: pink !IMPORTANT; }`,
 			fixed: `a { @v: pink !IMPORTANT; }`,
@@ -390,7 +389,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/309
+			// See #309
 			description: `a Less variable spelling no value, which Less reads as a directive rather than as a declaration and asks the semicolon of`,
 			code: `a { @v:; }`,
 			fixed: `a { @v:; }`,
@@ -407,12 +406,12 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/327
+			// See #327
 			description: `a mixin call alone in its block with a comment standing in front of it, which this syntax reads as a bodiless at-rule`,
 			code: `a { /* keep me */ .mixin() }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/327
+			// See #327
 			description: `the same call with an inline comment standing in front of it`,
 			code: `
 				a {
@@ -422,7 +421,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/327
+			// See #327
 			description: `a Less variable alone in its block with a comment standing in front of it, which this syntax also reads as a bodiless at-rule`,
 			code: `a { /* keep me */ @var: pink }`,
 		},
@@ -436,8 +435,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/309
-			// The Sass half of the page this case once shared a fixture with stays with the core: a style element carries the syntax of its own block, and Less will not part with the semicolon behind an at-rule without a block, so the warning stands over code the fix leaves alone
+			// The Sass half of the page this case once shared stays with the core: a style element carries the syntax of its own block, and Less keeps the semicolon behind an at-rule without a block, so the warning stands over code the fix leaves alone. See #309
 			description: `an at-rule closing a block of a Less style element, whose semicolon the language keeps`,
 			code: `<style lang="less">a { @extend .b; }</style>`,
 			fixed: `<style lang="less">a { @extend .b; }</style>`,
@@ -455,7 +453,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/479
+			// See #479
 			description: `an inline comment ending the declaration, whose closing break the strip leaves where it stands, taking the semicolon alone`,
 			code: `a { b: c // x\n; }`,
 			fixed: `a { b: c // x\n }`,

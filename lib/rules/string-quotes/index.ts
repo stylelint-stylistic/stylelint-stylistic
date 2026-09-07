@@ -31,13 +31,13 @@ const DOUBLE_QUOTE = `"`
 
 /**
  * Specifies single or double quotes around strings.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `single` and `double`.
- * @param secondaryOptions - The secondary options: `avoidEscape`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `single` or `double`.
+ * @param secondaryOptions - `avoidEscape`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `single` | `double`, secondaryOptions: { avoidEscape?: boolean }): RuleCheck {
 	let correctQuote: typeof SINGLE_QUOTE | typeof DOUBLE_QUOTE = primary === `single` ? SINGLE_QUOTE : DOUBLE_QUOTE
@@ -81,15 +81,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		})
 
 		/**
-		 * Checks a rule node for quote violations.
-		 * @param ruleNode - The rule node to check.
+		 * Checks the attribute selectors of a rule.
+		 * @param ruleNode - The rule whose selector is checked.
 		 */
 		function checkRule (ruleNode: Rule): void {
 			if (!syntax.isStandardRule(ruleNode)) return
 
 			let copies = syntax.selectorCopies(ruleNode)
 
-			// `ruleNode.selector` is a copy with every comment taken out, so a position counted in it stands short of the file wherever a comment goes before, and a fix written to it prints without the comments. The raw is the text the file holds — except under `postcss-scss`, which spells every inline comment of the raw as a block one and keeps the file's spelling beside it, two characters shorter per comment. The raw is what is parsed here, every position is translated back into the file's coordinates, and a fix is written to both copies.
+			// `ruleNode.selector` lacks the comments, so a fix written to it drops them; the raw is parsed, positions translated back, and the fix written to both copies.
 			let { selector } = copies
 
 			if (!selector.includes(`[`) || !selector.includes(`=`)) return
@@ -182,25 +182,25 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		}
 
 		/**
-		 * Checks a declaration or at-rule node for quote violations.
-		 * @param node - The node to check.
-		 * @param rawValue - The value to check, as the raws of the node record it.
-		 * @param getIndex - Function to get the index of the node.
+		 * Checks the strings of a value or of at-rule params.
+		 * @param node - The declaration or at-rule the value or params belong to.
+		 * @param rawValue - The value as the file spells it.
+		 * @param getIndex - Returns the index the value starts at.
 		 */
 		function checkDeclOrAtRule<T extends AtRule | Declaration> (node: T, rawValue: string, getIndex: (node: T) => number): void {
 			let fixPositions: number[] = []
 			let value = rawValue
 
-			// Get out quickly if there are no erroneous quotes
+			// No erroneous quote, nothing to do
 			if (!value.includes(erroneousQuote)) return
 
-			// Where the comments of the text stand is the syntax's to say: off the pair of copies it keeps while the pair is in step, off a scan of the text otherwise. Every comment is asked for, since the value parser closes one opening `/*/` on the star it opened with and hands the rest of its text back as nodes of the value, a string it pairs there among them (#378)
+			// Blanked, since the value parser closes `/*/` on its own star and reads the rest as value nodes (#378)
 			let commentSpans = syntax.printedComments(node, value, result)
 
 			if (isAtRule(node) && node.name === `charset`) {
 				let hasValidQuotes = node.params.startsWith(`"`) && node.params.endsWith(`"`)
 
-				// pass through to the fixer only if the primary option is "double"
+				// Only a `double` option fixes it; `@charset` takes double quotes alone
 				if (hasValidQuotes || correctQuote === `'`) return
 			}
 
@@ -209,7 +209,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let needsEscape = valueNode.value.includes(correctQuote)
 
 					if (avoidEscape && needsEscape) {
-						// don't consider this an error
+						// Not an error
 						return
 					}
 
@@ -238,14 +238,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (fixPositions.length === 0) return
 
-			// The write lands in every copy the syntax keeps, the raw regenerated from the fixed text the way the syntax itself fills it — which is byte for byte the old raw with the quotes replaced, since a quote the rule fixes never stands inside a comment
+			// A fixed quote never stands inside a comment, so the old raw with the quotes replaced is written to every copy
 			syntax.write(node, replaceQuotes(value, fixPositions))
 		}
 
 		/**
-		 * Replaces the quotation marks a text carries at the given indexes with the correct one.
-		 * @param text - The text to fix.
-		 * @param indexes - The indexes of the quotation marks, in the coordinates of the text.
+		 * Replaces the marks at the indexes with the correct one.
+		 * @param text - The value or params the marks stand in.
+		 * @param indexes - The mark indexes.
 		 * @returns The fixed text.
 		 */
 		function replaceQuotes (text: string, indexes: number[]): string {
@@ -259,11 +259,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 }
 
 /**
- * Replaces a quote character in a string at the specified index.
- * @param string - The input string.
- * @param index - The index at which to replace the quote.
- * @param replace - The replacement quote character.
- * @returns The string with the quote replaced.
+ * Replaces the quote at an index.
+ * @param string - The text.
+ * @param index - The offset of the quote to replace.
+ * @param replace - The replacement.
+ * @returns The text, replaced.
  */
 function replaceQuote (string: string, index: number, replace: string): string {
 	return string.slice(0, index) + replace + string.slice(index + replace.length)

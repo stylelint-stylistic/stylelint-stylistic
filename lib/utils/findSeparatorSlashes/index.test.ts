@@ -6,15 +6,15 @@ import { css } from "../../syntaxes/css/index.ts"
 
 import { findSeparatorSlashes, type SlashOptions } from "./index.ts"
 
-/** The least of a Stylelint result, which names no syntax: every text below is plain CSS. */
+/** The least of a Stylelint result, naming no syntax: every text below is plain CSS. */
 const RESULT = {} as unknown as PostcssResult
 
-/** A declaration of plain CSS, asked about the syntax of every text below; the text itself is handed over beside it, so a text PostCSS would refuse in a stylesheet is read all the same. */
+/** A plain CSS declaration standing for every text below; the text is handed over beside it, so one PostCSS would refuse in a stylesheet is read all the same. */
 const DECL = (parse(`a { b: c }`).first as Rule).first as Declaration
 
 /**
  * Finds the separator solidi of a value written in plain CSS.
- * @param value - The value.
+ * @param value - The declaration value the solidi are sought in.
  * @param options - What the walk is told, a declaration's reading unless said otherwise.
  * @returns The indices, counted in the value.
  */

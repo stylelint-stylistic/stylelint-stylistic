@@ -22,7 +22,7 @@ testRule({
 			code: `a { color: pink; }b { color: red; }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `a space in front of the brace of a block an at-rule with neither a block nor a semicolon closes`,
 			code: `a { @extend .b }`,
 		},
@@ -111,7 +111,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `a break in front of the brace of a block an at-rule with neither a block nor a semicolon closes, which the parser files into that at-rule rather than into the block`,
 			code: `
 				a {
@@ -172,7 +172,7 @@ testRule({
 			code: `a { color: pink;}b { color: red;}`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `a brace abutting an at-rule with neither a block nor a semicolon, which closes the block`,
 			code: `a { @extend .b}`,
 		},
@@ -276,7 +276,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `a space in front of the brace of a block an at-rule with neither a block nor a semicolon closes`,
 			code: `a { @extend .b }`,
 			fixed: `a { @extend .b}`,
@@ -424,7 +424,7 @@ testRule({
 			message: messages.expectedBeforeSingleLine(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `a brace abutting an at-rule with neither a block nor a semicolon, which closes a single-line block`,
 			code: `a { @extend .b}`,
 			fixed: `a { @extend .b }`,
@@ -536,7 +536,7 @@ testRule({
 			message: messages.rejectedBeforeSingleLine(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `a space in front of the brace of a single-line block an at-rule with neither a block nor a semicolon closes`,
 			code: `a { @extend .b }`,
 			fixed: `a { @extend .b}`,
@@ -632,7 +632,7 @@ testRule({
 			message: messages.expectedBeforeMultiLine(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `a break in front of the brace of a block an at-rule with neither a block nor a semicolon closes`,
 			code: `
 				a {
@@ -735,7 +735,7 @@ testRule({
 			message: messages.rejectedBeforeMultiLine(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `a break in front of the brace of a block an at-rule with neither a block nor a semicolon closes`,
 			code: `
 				a {
@@ -753,7 +753,7 @@ testRule({
 	],
 })
 
-// Two checks both put off for their lineness options run in the plugin's own order rather than the configuration's (#502): the neighbour's subject is a line break, so it speaks first whichever of the two the configuration lists first, and both orders rest on one and the same file.
+// Two checks deferred for their lineness options run in the plugin's own order rather than the configuration's (#502): the neighbour's subject is a line break, so it speaks first whichever order the configuration lists, and both orders rest on one file.
 testRule({
 	ruleName,
 	config: [`always-single-line`],
@@ -761,7 +761,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/502
+			// See #502
 			description: `an outer block the neighbour's break puts over lines, the neighbour listed behind this rule: the file as it stands is single-line and draws a warning from each rule about each brace, and under the fix the neighbour goes first all the same, so the space in front of the outer closing brace is written no more`,
 			code: `@media(min-width:100px){a{b:c}}\n`,
 			fixed: `@media(min-width:100px){a\n{b:c }}\n`,

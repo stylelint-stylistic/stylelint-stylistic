@@ -3,7 +3,7 @@ import { messages as colonSpaceAfterMessages } from "../declaration-colon-space-
 
 import { messages, ruleName } from "./index.ts"
 
-// Where a declaration's value is nothing but whitespace, the run this rule reads in front of the semicolon is the run the `declaration-colon-*-after` rules read behind the colon (#416). The library lists the rule a block names first and its extra rules behind it, so every block below has the neighbour run last and have the last word.
+// Where a value is nothing but whitespace, the run in front of the semicolon is the run the `declaration-colon-*-after` rules read behind the colon (#416). The library lists the block's rule first and its extra rules behind, so the neighbour runs last in every block below and has the last word.
 let testRule = createTestRule({ ruleName })
 
 testRule({
@@ -13,7 +13,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/416
+			// See #416
 			description: `a value that is nothing but a break, which the neighbour asks to stand behind the colon: the neighbour is listed last and has the last word, so the break is not taken away and the warning stands`,
 			code: `
 				a {
@@ -59,7 +59,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/417
+			// See #417
 			description: `the shared run written by this rule first, which the other order now spells the same way`,
 			code: `a { color:  /*c*/ ; }`,
 			fixed: `a { color:  /*c*/\n; }`,
@@ -124,7 +124,7 @@ testRule({
 	],
 })
 
-// The break this rule's fix puts onto the value's copy is laid out the way the parser lays it — the run in the raw, `decl.value` without it — so a colon rule reading the value's lineness later in the pass reads what the next parse would hand it (#487). Both blocks run this rule first: the order in which its break used to make the declaration read as multi-line for the rest of the pass.
+// The break this rule's fix writes is laid out as the parser lays it, in the raw and not in `decl.value`, so a colon rule reading the value's lineness later in the pass reads what the next parse would hand it (#487). Both blocks run this rule first, the order in which its break used to make the declaration read as multi-line for the rest of the pass.
 testRule({
 	ruleName,
 	config: [`always`],
@@ -132,7 +132,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/487
+			// See #487
 			description: `a single-line declaration missing its space, which the neighbour used to fall silent about once the written break polluted the value's copy: both fixes land in one run now`,
 			code: `a { color:red; }`,
 			fixed: `
@@ -188,7 +188,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494
+			// See #494
 			description: `a value that is a vertical tab behind its run, a word to the tokenizer: both breaks are written around it in one run, and both orders rest on this file`,
 			code: `a { color: \v; }`,
 			fixed: `a { color:\n \v\n; }`,

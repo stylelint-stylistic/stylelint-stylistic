@@ -5,12 +5,10 @@ import { pick } from "../../../vitest.helpers.ts"
 import plugins from "../../index.ts"
 
 /**
- * Fixes one snippet under two rules and reads the output back under both of them.
- *
- * Stylelint runs each rule once and in the order the configuration spells them, so the object handed here decides which of the two takes its turn first.
+ * Fixes one snippet under two rules and reads the output back under both; Stylelint runs the rules in the order the configuration spells them, so the object handed here decides which takes its turn first.
  * @param code - The snippet.
  * @param rules - The two rules, in the order the configuration is to spell them.
- * @returns What the run left behind and how much of it the pair still has to say about.
+ * @returns The file the run left and how many warnings the pair still has about it.
  */
 async function fix (code: string, rules: object): Promise<{
 	code: string,
@@ -37,7 +35,7 @@ async function expectBothOrders (code: string, partner: object, expected: string
 	expect(partnerFirst).toEqual({ code: expected, warnings: 0 })
 }
 
-// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/390
+// See #390
 describe(`the output of no-missing-end-of-source-newline beside a rule that writes into the end of the file`, () => {
 	it(`closes a file ending on a free semicolon the same way in both orders of no-extra-semicolons`, async () => {
 		await expectBothOrders(`@media all { a {} }\n;`, { "@stylistic/no-extra-semicolons": true }, `@media all { a {} }\n\n`)

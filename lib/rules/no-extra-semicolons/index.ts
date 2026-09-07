@@ -23,9 +23,9 @@ export let meta = {
 }
 
 /**
- * Gets the offset by node.
- * @param node - The PostCSS node.
- * @returns The offset index.
+ * Finds the source index of a node's first character.
+ * @param node - The node whose start is located in the source.
+ * @returns The index, or 0 inside a document.
  */
 function getOffsetByNode (node: Node): number {
 	if (node.parent && `document` in node.parent && node.parent.document) return 0
@@ -63,12 +63,12 @@ function getOffsetByNode (node: Node): number {
 
 /**
  * Disallows extra semicolons.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, which is `true`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `true`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: true): RuleCheck {
 	return (root, result) => {
@@ -125,7 +125,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (typeof node.raws.after === `string` && node.raws.after.trim().length > 0) {
 				let rawAfterNode = node.raws.after
 
-				// Where the last child is a Less mixin followed by more than one semicolon, `node.raws.after` holds that semicolon. Less mixins are passed over, so this one is too
+				// A Less mixin last child puts its extra semicolon in `node.raws.after`; mixins are passed over
 				if (`last` in node && node.last && node.last.type === `atrule` && !syntax.isStandardAtRule(node.last)) return
 
 				let fixSemiIndices: number[] = []
@@ -166,8 +166,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		})
 
 		/**
-		 * Reports an extra semicolon violation.
-		 * @param index - The index of the violation.
+		 * Reports an extra semicolon.
+		 * @param index - The offset of the semicolon in the source.
 		 */
 		function complain (index: number): void {
 			report({
@@ -184,10 +184,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 }
 
 /**
- * Removes characters at the specified indices from a string.
- * @param str - The input string.
- * @param indices - The indices to remove.
- * @returns The string with characters removed.
+ * Removes the characters at the given indices.
+ * @param str - The string.
+ * @param indices - The offsets of the semicolons to drop.
+ * @returns The rest.
  */
 function removeIndices (str: string, indices: number[]): string {
 	let result = str

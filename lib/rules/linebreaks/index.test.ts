@@ -47,7 +47,7 @@ testRule({
 			description: `a line feed after the closing brace`,
 			code: `a {}\n b {}`,
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/293
+		// See #293
 		{
 			description: `a bare carriage return between two rules, which is whitespace and no line break`,
 			code: `a {}\rb {}`,
@@ -256,7 +256,7 @@ testRule({
 			column: 1,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/235
+		// See #235
 		{
 			description: `a carriage-return line break inside a value that holds a block comment`,
 			code: `a { b: 1px /* c */\r\n\t2px; }`,
@@ -265,7 +265,7 @@ testRule({
 			column: 19,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/270
+		// See #270
 		{
 			description: `a carriage-return line break inside a set of at-rule parameters`,
 			code: `@media (min-width: 1px),\r\n(min-width: 2px) { a { b: c; } }`,
@@ -274,7 +274,7 @@ testRule({
 			column: 25,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/270
+		// See #270
 		{
 			description: `a carriage-return line break inside a set of at-rule parameters that hold a block comment`,
 			code: `@media (min-width: 1px) /* c */,\r\n(min-width: 2px) { a { b: c; } }`,
@@ -283,7 +283,7 @@ testRule({
 			column: 33,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/270
+		// See #270
 		{
 			description: `a carriage-return line break inside the parameters of an at-rule that has no body`,
 			code: `@import url(a),\r\nurl(b);`,
@@ -292,7 +292,7 @@ testRule({
 			column: 16,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/270
+		// See #270
 		{
 			description: `a carriage-return line break beside an at-rule that has no parameters at all`,
 			code: `@font-face { a: b; }\r\n@media (c: d) { e { f: g; } }`,
@@ -301,7 +301,7 @@ testRule({
 			column: 21,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/269
+		// See #269
 		{
 			description: `a carriage-return line break inside a selector that holds a block comment`,
 			code: `a /* c */,\r\nb { c: d; }`,
@@ -310,7 +310,7 @@ testRule({
 			column: 11,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a carriage-return line break between the name of an at-rule and its parameters`,
 			code: `@media\r\n(min-width: 1px) { a { b: c; } }`,
@@ -319,7 +319,7 @@ testRule({
 			column: 7,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a carriage-return line break between the parameters of an at-rule and its block`,
 			code: `@media (min-width: 1px)\r\n{ a { b: c; } }`,
@@ -328,7 +328,7 @@ testRule({
 			column: 24,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a carriage-return line break between a selector and its block`,
 			code: `a\r\n{ b: c; }`,
@@ -337,7 +337,7 @@ testRule({
 			column: 2,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a carriage-return line break between a property and its value`,
 			code: `a { b:\r\nc; }`,
@@ -346,7 +346,7 @@ testRule({
 			column: 7,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a carriage-return line break between a value and the bang behind it`,
 			code: `a { b: c\r\n!important; }`,
@@ -355,7 +355,7 @@ testRule({
 			column: 9,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a carriage-return line break behind the opening delimiter of a comment`,
 			code: `/*\r\na */\nb { c: d; }`,
@@ -364,7 +364,7 @@ testRule({
 			column: 3,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a carriage-return line break in front of the closing delimiter of a comment`,
 			code: `/* a\r\n*/\nb { c: d; }`,
@@ -373,7 +373,7 @@ testRule({
 			column: 5,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a carriage-return line break between a selector that holds a block comment and its block`,
 			code: `a /* c */\r\n{ b: c; }`,
@@ -382,7 +382,7 @@ testRule({
 			column: 10,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/372
+		// See #372
 		{
 			description: `a carriage-return line break in front of a stray semicolon standing behind a nested block, which is the only break of the stylesheet`,
 			code: `a { b { c: d }\r\n; }`,
@@ -391,7 +391,7 @@ testRule({
 			column: 15,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/372
+		// See #372
 		{
 			description: `the same break in front of a stray semicolon standing behind a rule of the top level, which the parser files in the very same raw`,
 			code: `a { b: c }\r\n;`,
@@ -643,7 +643,7 @@ testRule({
 			column: 2,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/235
+		// See #235
 		{
 			description: `a bare line feed inside a value that holds a block comment`,
 			code: `a { b: 1px /* c */\n\t2px; }`,
@@ -652,7 +652,7 @@ testRule({
 			column: 19,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/270
+		// See #270
 		{
 			description: `a bare line feed inside a set of at-rule parameters`,
 			code: `@media (min-width: 1px),\n(min-width: 2px) { a { b: c; } }`,
@@ -661,7 +661,7 @@ testRule({
 			column: 25,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/270
+		// See #270
 		{
 			description: `a bare line feed inside a set of at-rule parameters that hold a block comment`,
 			code: `@media (min-width: 1px) /* c */,\n(min-width: 2px) { a { b: c; } }`,
@@ -670,7 +670,7 @@ testRule({
 			column: 33,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/270
+		// See #270
 		{
 			description: `a bare line feed inside the parameters of an at-rule that has no body`,
 			code: `@import url(a),\nurl(b);`,
@@ -679,7 +679,7 @@ testRule({
 			column: 16,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/270
+		// See #270
 		{
 			description: `a bare line feed beside an at-rule that has no parameters at all`,
 			code: `@font-face { a: b; }\n@media (c: d) { e { f: g; } }`,
@@ -688,7 +688,7 @@ testRule({
 			column: 21,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/269
+		// See #269
 		{
 			description: `a bare line feed inside a selector that holds a block comment`,
 			code: `a /* c */,\nb { c: d; }`,
@@ -697,7 +697,7 @@ testRule({
 			column: 11,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a bare line feed between the name of an at-rule and its parameters`,
 			code: `@media\n(min-width: 1px) { a { b: c; } }`,
@@ -706,7 +706,7 @@ testRule({
 			column: 7,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a bare line feed between the parameters of an at-rule and its block`,
 			code: `@media (min-width: 1px)\n{ a { b: c; } }`,
@@ -715,7 +715,7 @@ testRule({
 			column: 24,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a bare line feed between a selector and its block`,
 			code: `a\n{ b: c; }`,
@@ -724,7 +724,7 @@ testRule({
 			column: 2,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a bare line feed between a property and its value`,
 			code: `a { b:\nc; }`,
@@ -733,7 +733,7 @@ testRule({
 			column: 7,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a bare line feed between a value and the bang behind it`,
 			code: `a { b: c\n!important; }`,
@@ -742,7 +742,7 @@ testRule({
 			column: 9,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a bare line feed behind the opening delimiter of a comment`,
 			code: `/*\na */\r\nb { c: d; }`,
@@ -751,7 +751,7 @@ testRule({
 			column: 3,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a bare line feed in front of the closing delimiter of a comment`,
 			code: `/* a\n*/\r\nb { c: d; }`,
@@ -760,7 +760,7 @@ testRule({
 			column: 5,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a bare line feed between a selector that holds a block comment and its block`,
 			code: `a /* c */\n{ b: c; }`,
@@ -769,7 +769,7 @@ testRule({
 			column: 10,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/372
+		// See #372
 		{
 			description: `a bare line feed in front of a stray semicolon standing behind a nested block, which is the only break of the stylesheet`,
 			code: `a { b { c: d }\n; }`,
@@ -778,7 +778,7 @@ testRule({
 			column: 15,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/372
+		// See #372
 		{
 			description: `the same break in front of a stray semicolon standing behind a rule of the top level, which the parser files in the very same raw`,
 			code: `a { b: c }\n;`,

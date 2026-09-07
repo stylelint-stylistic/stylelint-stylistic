@@ -1,11 +1,7 @@
 /**
- * Keeps the result of a run by what it depends on, so that no state of the tree is measured twice.
+ * Caches the result of a run under a key of its inputs, so no tree is measured twice.
  *
- * A result depends on the rules that were run, on the scripts and the corpus that ran them, and on the versions of the packages under both; the key is a hash of the hashes Git keeps of those. Every directory in it — `lib/` as much as a directory of scripts — stands there as the hash of its sources rather than the one Git keeps of its tree, since a test or a document standing beside a source is not one of the things a result depends on, and rewording either would otherwise send every run that key belongs to — all six oracles, or a sweep — to measure both sides afresh. So a commit amended for its message or its date keeps its key, a commit that rewrote a case of a rule keeps it, a rebase onto a `main` that moved no source keeps it too, and two branches that measure the same base share one entry rather than one apiece. A file of the store is written once and made read-only: a result is deterministic, and a second answer to the same question is a finding rather than an update.
- *
- * A result is kept as three files under its key, and it is its meta: the meta is written last, so a key with no meta beside it is a result the store never finished keeping or never finished taking out, and nothing here answers for one. The collector takes such a key out whole, along with every result measured over a `lib/` the caller no longer keeps — which is asked of the tree, and so of the meta rather than of the key: `measuredTreeOf` is what puts it there.
- *
- * The store lives outside every working tree, under `~/.cache/stylelint-stylistic/`, so that it survives a worktree and is shared between them all; `STYLISTIC_CACHE` names another place.
+ * The key hashes the Git hashes of the inputs, a directory as the hash of its sources so a reworded test keeps the key. A result is three read-only files, the meta last; without a meta it is unfinished, and the collector removes it and every result whose `lib/` tree is unreachable. The store is `~/.cache/stylelint-stylistic/`; `STYLISTIC_CACHE` overrides it.
  */
 
 import { execFileSync } from "node:child_process"
@@ -20,25 +16,25 @@ import { ROOT } from "./checkout.ts"
 /** Where the store is. */
 const CACHE_DIR = env.STYLISTIC_CACHE ?? path.join(homedir(), `.cache`, `stylelint-stylistic`)
 
-/** The kinds of result the store holds, each under a directory of its own with one directory per oracle or per sweep inside it. Whatever else stands under the store — the records `scripts/verified.ts` keeps of the trees `make verify` answered for — is no result, and no function here reads it or takes it out. */
+/** The kinds of result, one directory each; other store contents (`scripts/verified.ts`) are left alone. */
 const KINDS = [`oracles`, `sweeps`]
 
-/** The parts a result is kept as, in the order they are written: the rows, one short hash per row, and what the key was made of. The meta comes last so that a key it does not stand under is never a result — whatever the two writes before it left behind where a run died is a file of no result, and the collector takes it out as such. */
+/** The parts of a result, in write order; the meta last. */
 const PARTS = [`rows`, `digest`, `meta`] as const
 
-/** How many characters of the hash a key is, which is also how many characters of the name of every file of a result the key is. */
+/** The length of a key. */
 const KEY_LENGTH = 24
 
-/** The mode a written result is left in: readable by everyone, writable by no one. */
+/** The mode of a written result. */
 const READ_ONLY = 0o444
 
-/** The index the working tree is hashed through, so that the real one is never touched; it is named by the process, since two runs asking for the hash at once would otherwise write over each other's. */
+/** The index the working tree is hashed through; one per process. */
 const SCRATCH_INDEX = path.join(ROOT, `tmp`, `harness-index-${pid}`)
 
-/** One of the parts a result is kept as. */
+/** A part of a result. */
 type Part = (typeof PARTS)[number]
 
-/** What the collector counts: the results it took out, the results it kept, and the files it took out that belonged to no result. */
+/** Results removed and kept, and stray files removed. */
 export type Collected = {
 	removed: number,
 	kept: number,
@@ -46,22 +42,22 @@ export type Collected = {
 }
 
 /**
- * Runs Git in the repository and hands back what it printed.
+ * Runs Git in the repository.
  * @param args - The arguments.
- * @param extraEnv - Variables to add to the environment.
- * @returns Standard output, trimmed.
+ * @param extraEnv - Extra environment variables.
+ * @returns Trimmed stdout.
  */
 function git (args: string[], extraEnv: object = {}): string {
 	return execFileSync(`git`, args, { cwd: ROOT, encoding: `utf8`, env: { ...env, ...extraEnv } }).trim()
 }
 
-/** The tree of the working tree as it stands, computed once per process. */
+/** The working tree's tree hash, computed once. */
 let worktreeTree: string | undefined
 
 /**
- * Resolves a revision to a tree, `worktree` standing for the working tree as it stands — tracked files with their changes, untracked ones included, ignored ones not.
- * @param revision - Anything `git rev-parse` reads, or `worktree`.
- * @returns The hash of the tree.
+ * Resolves a revision to a tree hash; `worktree` is the working tree with untracked files.
+ * @param revision - A revision, or `worktree`.
+ * @returns The tree hash.
  */
 function treeOf (revision: string): string {
 	if (revision !== `worktree`) return git([`rev-parse`, `${revision}^{tree}`])
@@ -78,7 +74,7 @@ function treeOf (revision: string): string {
 			worktreeTree = git([`write-tree`], indexEnv)
 		}
 		finally {
-			// A name of its own is a file of its own, and a throw between the three calls would leave it standing where the one name every run shared was written over by the next
+			// A file left by a throw is never reused; the name is per process
 			rmSync(SCRATCH_INDEX, { force: true })
 		}
 	}
@@ -87,59 +83,55 @@ function treeOf (revision: string): string {
 }
 
 /**
- * Hashes one path inside a revision — a tree or a blob, whichever the path names.
- * @param revision - Anything `treeOf` reads.
- * @param inside - The path inside it.
- * @returns The hash Git keeps for it.
+ * Hashes one path inside a revision.
+ * @param revision - As `treeOf` reads it.
+ * @param inside - The path.
+ * @returns Git's hash.
  */
 function hashAt (revision: string, inside: string): string {
 	return git([`rev-parse`, `${treeOf(revision)}:${inside}`])
 }
 
-/** The files standing beside the sources of a directory the key hashes, by name: a test and a document. Neither is imported by a run — not a test of a script, not a test of a rule, not the README of either — and nothing either can say changes what a run answers, so rewording one moves no result and must move no key. */
+/** Files no run imports; rewording one moves no key. */
 const NOT_A_DEPENDENCY = /\.(?:test\.ts|md)$/u
 
 /**
- * Hashes a listing of Git entries, leaving out the ones a result does not depend on.
- * @param entries - The records `git ls-tree -r -z` printed, each a mode, a type, a hash and a path; the empty one the terminator of that format leaves behind is dropped.
- * @returns The hash of what is left, which is the same whether a file a result does not depend on stands there, stands there rewritten, or does not stand there at all.
+ * Hashes a `git ls-tree -r -z` listing without the entries no result depends on.
+ * @param entries - The records; the empty last one is dropped.
+ * @returns The hash.
  */
 function hashListing (entries: string[]): string {
 	let sources = entries.filter((entry) => entry !== `` && !NOT_A_DEPENDENCY.test(entry))
 
-	// The records are joined by the character they were parted on, which no path and no hash can hold, so one listing is never spelled the same as another — a path may hold a line break, and joining by that would let a file whose name carries one stand for two files
+	// Joined by NUL; a path may hold a line break
 	return createHash(`sha256`).update(sources.join(`\0`)).digest(`hex`)
 }
 
 /**
- * Hashes the sources of a directory inside a revision.
- *
- * The hash Git keeps of a tree moves for every file under it, so a directory taken through `hashAt` carries into the key what it holds beside its sources. The blobs are listed and hashed one by one instead, and `hashListing` says which of them a result stands on.
- * @param revision - Anything `treeOf` reads.
- * @param inside - The path of the directory inside it.
- * @returns The hash of its sources.
+ * Hashes a directory's sources blob by blob, since Git's tree hash moves for a test too.
+ * @param revision - As `treeOf` reads it.
+ * @param inside - The directory.
+ * @returns The hash.
  */
 function hashSourcesAt (revision: string, inside: string): string {
-	// `-r` so that a file in a subdirectory is listed as itself rather than arriving inside the hash of that subdirectory's tree, and `-z` rather than the default, under which a path holding a tab or a quotation mark is printed quoted and escaped and the name a file is left out by would be spelled differently from the name it has
+	// `-r` flattens subdirectories, `-z` leaves an odd path unquoted
 	return hashListing(git([`ls-tree`, `-r`, `-z`, `${treeOf(revision)}:${inside}`]).split(`\0`))
 }
 
 /**
- * Names the tree of `lib/` a result was measured over, which is what the collector reaches it by.
+ * Names the `lib/` tree a result was measured over, for the meta.
  *
- * It stands in the meta and never in the key. The key carries the sources of `lib/`, under a name of their own, so that a commit moving only a test or a README under it is answered out of the store; the collector holds the trees of every commit a branch, a remote or a tag reaches, and a hash of the sources is nothing it can ask about. So the tree keeps the name it has always stood at, `lib`, and the collector is not touched at all — a checkout on either side of this change collects a store the other has been writing into and takes nothing of it out, which matters because the store is shared between every worktree and every branch.
- *
- * One key answers for every tree whose sources are spelled the same, while the meta names the one tree its run measured. So the collector takes out a result whose own tree has gone unreachable although another tree the key would have answered for is still reached — the rebase that reworded a case and nothing else, met from the far side. The result is measured again, which is the cost the run would have paid before the key carried the sources at all.
- * @param revision - The side, as `treeOf` reads it.
- * @returns The one name the collector reads, at the hash Git keeps of the tree.
+ * The collector reaches a result by this tree, not the key, since it lists the trees of the commits a ref reaches; the name `lib` stays for older checkouts.
+ * @param revision - As `treeOf` reads it.
+ * @returns The tree under the name the collector reads.
  */
 function measuredTreeOf (revision: string): Record<string, string> {
 	return { lib: hashAt(revision, `lib`) }
 }
 
 /**
- * Builds the key of a result from what it depends on.
- * @param parts - Every input, as a name and the hash or text it stands at; the order of the names is part of the key.
+ * Builds the key of a result.
+ * @param parts - The inputs by name; order counts.
  * @returns The key.
  */
 function keyOf (parts: object): string {
@@ -147,20 +139,18 @@ function keyOf (parts: object): string {
 }
 
 /**
- * Names the files a result is kept as, which is the one list whoever writes a result and whoever takes one out both read: a part added here is written and taken out alike, and a file written beside a result under no part of its own has nowhere to be named.
- * @param key - The key.
- * @returns The name of the file of each part, inside the directory of the oracle or the sweep.
+ * Names the files of a result; the collector reads the same list.
+ * @param key - The hash of a result's inputs, as `keyOf` builds it.
+ * @returns The file name of each part.
  */
 function filesOf (key: string): Record<Part, string> {
 	return { rows: `${key}.json`, digest: `${key}.digest.json`, meta: `${key}.meta.json` }
 }
 
 /**
- * Digests a result down to one short hash per row, so that two results can be compared without either being read whole.
- *
- * A result of the largest sweep is half a million rows and a hundred megabytes of JSON, and a comparison that reads both sides whole spends its seconds parsing text it will find unchanged. The digest is what a comparison reads instead; the rows themselves are read only for the keys the digest says have moved, which is most often none.
+ * Hashes each row, so a comparison reads only the rows whose digest moved.
  * @param rows - The rows by key.
- * @returns A hash of each row by the same key.
+ * @returns A hash per row, by key.
  */
 function digestOf (rows: Record<string, unknown> | unknown[]): Record<string, string> {
 	let digest: Record<string, string> = {}
@@ -171,9 +161,9 @@ function digestOf (rows: Record<string, unknown> | unknown[]): Record<string, st
 }
 
 /**
- * Sorts the files of one oracle's or one sweep's directory by the key they stand under.
- * @param directory - The directory.
- * @returns The files of each key, by key; a file no key names — one that is no part of any result — is left out.
+ * Groups a directory's result files by key; a file no key names is left out.
+ * @param directory - The directory of one kind and name whose result files are listed.
+ * @returns The files by key.
  */
 function filesByKey (directory: string): Map<string, string[]> {
 	let keys = new Map<string, string[]>()
@@ -190,10 +180,10 @@ function filesByKey (directory: string): Map<string, string[]> {
 }
 
 /**
- * Takes out of one oracle's or one sweep's directory every result the caller does not keep, and every file standing under a key with no meta beside it.
- * @param directory - The directory.
- * @param keeps - Whether a result is kept, asked with its meta.
- * @param tally - Where the results taken out and kept, and the files of no result taken out, are counted.
+ * Removes a directory's results `keeps` refuses, and every file under a key with no meta.
+ * @param directory - The directory of one kind and name under the store.
+ * @param keeps - Asked with the meta.
+ * @param tally - The counts.
  */
 function collectIn (directory: string, keeps: (meta: Record<string, unknown>) => boolean, tally: Collected): void {
 	for (let [key, files] of filesByKey(directory)) {
@@ -216,9 +206,9 @@ function collectIn (directory: string, keeps: (meta: Record<string, unknown>) =>
 }
 
 /**
- * Opens a store standing at a directory. The one every run reads is at `CACHE_DIR`, and the functions below are that store's; a suite opens one of its own under `tmp/`, since where the store is is read off the environment as this module loads and a case cannot move it afterwards.
+ * Opens a store; runs use the one at `CACHE_DIR`, a test suite its own.
  * @param store - The directory.
- * @returns What can be asked of a store: a kept result, its digest, keeping one, and collecting what is no longer kept.
+ * @returns Read, write and collect.
  */
 function storeAt (store: string): {
 	read: <T>(kind: string, name: string, key: string) => T | undefined,
@@ -226,15 +216,15 @@ function storeAt (store: string): {
 	write: (kind: string, name: string, key: string, rows: Record<string, unknown> | unknown[], meta: object, digest?: Record<string, string>) => void,
 	collect: (keeps: (meta: Record<string, unknown>) => boolean) => Collected,
 } {
-	/** The digests read in this process, by file. */
+	/** Digests read so far, by file. */
 	let digests = new Map<string, Record<string, string>>()
 
 	/**
 	 * Names the file of one part of a result.
 	 * @param kind - `oracles` or `sweeps`.
-	 * @param name - The oracle's or the sweep's.
-	 * @param key - The key.
-	 * @param part - The part.
+	 * @param name - The oracle or sweep.
+	 * @param key - The hash of the result's inputs.
+	 * @param part - Which of the rows, digest or meta files is named.
 	 * @returns The path.
 	 */
 	function fileOf (kind: string, name: string, key: string, part: Part): string {
@@ -244,9 +234,9 @@ function storeAt (store: string): {
 	/**
 	 * Reads a kept result.
 	 * @param kind - `oracles` or `sweeps`.
-	 * @param name - The oracle's or the sweep's.
-	 * @param key - The key.
-	 * @returns The rows, or nothing where none were kept.
+	 * @param name - The oracle or sweep the result belongs to.
+	 * @param key - The hash of the result's inputs.
+	 * @returns The rows, or undefined.
 	 */
 	function read<T> (kind: string, name: string, key: string): T | undefined {
 		let file = fileOf(kind, name, key, `rows`)
@@ -257,31 +247,31 @@ function storeAt (store: string): {
 	}
 
 	/**
-	 * Reads the digest of a kept result, which is all a comparison needs until a row has moved.
+	 * Reads the digest of a kept result.
 	 * @param kind - `oracles` or `sweeps`.
-	 * @param name - The oracle's or the sweep's.
-	 * @param key - The key.
-	 * @returns The hash of each row by key, or nothing where no result was kept.
+	 * @param name - The oracle or sweep the result belongs to.
+	 * @param key - The hash of the result's inputs.
+	 * @returns The digest, or undefined.
 	 */
 	function readDigest (kind: string, name: string, key: string): Record<string, string> | undefined {
 		let file = fileOf(kind, name, key, `digest`)
 
 		if (!existsSync(file)) return
 
-		// Two sides standing on one tree ask for one digest, and a file of half a million keys is parsed once for both
+		// Two sides on one tree share a digest; parsed once
 		if (!digests.has(file)) digests.set(file, JSON.parse(readFileSync(file, `utf8`)))
 
 		return digests.get(file)
 	}
 
 	/**
-	 * Keeps a result, once, with its digest beside it.
+	 * Writes a result once, with its digest.
 	 * @param kind - `oracles` or `sweeps`.
-	 * @param name - The oracle's or the sweep's.
-	 * @param key - The key.
+	 * @param name - The oracle or sweep the result belongs to.
+	 * @param key - The hash of the result's inputs.
 	 * @param rows - The result.
-	 * @param meta - What the key was made of, and where and when the run was made, kept beside the rows for a reader and for the collector.
-	 * @param digest - The digest of the rows, where the caller has it already.
+	 * @param meta - The key's inputs.
+	 * @param digest - The rows' digest, if the caller has it.
 	 */
 	function write (kind: string, name: string, key: string, rows: Record<string, unknown> | unknown[], meta: object, digest?: Record<string, string>): void {
 		let file = fileOf(kind, name, key, `rows`)
@@ -303,9 +293,9 @@ function storeAt (store: string): {
 	}
 
 	/**
-	 * Takes out of the store every result the caller does not keep, and every file standing under a key with no meta beside it. Only the directories of results are walked, so whatever else stands under the store is left as it is.
-	 * @param keeps - Whether a result is kept, asked with its meta.
-	 * @returns How many results were taken out and kept, and how many files of no result were taken out.
+	 * Removes every result `keeps` refuses and every file under a key with no meta.
+	 * @param keeps - Asked with the meta.
+	 * @returns The counts.
 	 */
 	function collect (keeps: (meta: Record<string, unknown>) => boolean): Collected {
 		let tally: Collected = { removed: 0, kept: 0, stray: 0 }

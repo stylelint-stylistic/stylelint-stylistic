@@ -6,7 +6,7 @@ import plugins from "../../index.ts"
 
 import { messages, ruleName } from "./index.ts"
 
-/** The length of a run of comments the walk of this rule used to overflow the stack on. The threshold sits around eight thousand on Node 26, lower than the walk this one was copied from took; this many throws every time. */
+/** The length of a run of comments the walk of this rule used to overflow the stack on: the threshold sits around eight thousand on Node 26, and this many throws every time. */
 const COMMENT_RUN_LENGTH = 20_000
 
 let testRule = createTestRule({ ruleName })
@@ -292,7 +292,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/244
+			// See #244
 			description: `a form feed between the declarations, which is whitespace and no line break, so the block is single-line and none of this option's business`,
 			code: `a {color: pink;\ftop: 0;}`,
 		},
@@ -649,7 +649,7 @@ testRule({
 	],
 })
 
-// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/409
+// See #409
 describe(`${ruleName} on a run of comments longer than the stack is deep`, () => {
 	let run = `/*c*/`.repeat(COMMENT_RUN_LENGTH)
 
@@ -716,7 +716,7 @@ describe(`${ruleName} on the whitespace it carries past a comment`, () => {
 		expect(await fixQuietly(code, `always`)).toEqual({ code, warnings: 0 })
 	})
 
-	// A block holding nothing but comments reaches neither restore of the map, so the two fixtures below are the shapes of such a block where nothing is carried in the first place. One where something is carried comes back rewritten, and that is #410
+	// A block holding nothing but comments reaches neither restore of the map, so the two fixtures below are the shapes of such a block where nothing is carried in the first place; one where something is carried comes back rewritten, which is #410
 	it(`carries nothing onto a comment that stands behind a bare carriage return and a form feed, which are whitespace and no break`, async () => {
 		let code = `a {\r/*c*/\f/*tail*/}`
 

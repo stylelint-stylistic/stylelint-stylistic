@@ -3,9 +3,9 @@ import type { Rule } from "postcss"
 import { isStandardSyntaxSelector } from "../isStandardSyntaxSelector/index.ts"
 
 /**
- * Checks whether a Node is a standard rule.
- * @param rule - The rule node to check.
- * @returns True if the rule is standard syntax, false otherwise.
+ * Checks for a standard rule.
+ * @param rule - The PostCSS node checked for a rule type and a standard selector.
+ * @returns True where it is.
  */
 export function isStandardSyntaxRule (rule: Rule): boolean {
 	if (rule.type !== `rule`) return false

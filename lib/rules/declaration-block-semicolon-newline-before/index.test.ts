@@ -7,7 +7,7 @@ testRule({
 	config: [`always`],
 
 	accept: [
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/208
+		// See #208
 		{
 			description: `a comment closing the block behind a declaration without a semicolon, which has no semicolon to break in front of — the fix used to write a break in front of the comment, and another one on every run`,
 			code: `a { color: pink /* c */ }`,
@@ -75,7 +75,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/208
+			// See #208
 			description: `a nested rule closing the block, whose declaration keeps its semicolon and is still measured`,
 			code: `a { color: pink; b {} }`,
 			fixed: `
@@ -168,7 +168,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/203
+			// See #203
 			description: `important flag, which the break used to be written in front of rather than behind`,
 			code: `a { color: pink !important; }`,
 			fixed: `a { color: pink !important\n; }`,
@@ -387,7 +387,7 @@ testRule({
 			message: messages.expectedBeforeMultiLine(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/203
+			// See #203
 			description: `important flag, which the break used to be written in front of rather than behind`,
 			code: `
 				a {
@@ -614,7 +614,7 @@ testRule({
 			message: messages.rejectedBeforeMultiLine(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/225
+			// See #225
 			description: `a double slash of plain CSS opens no comment, so the semicolon has a line to join and the fix is written`,
 			code: `
 				a {

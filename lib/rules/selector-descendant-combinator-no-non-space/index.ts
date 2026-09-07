@@ -25,12 +25,12 @@ export let meta = {
 
 /**
  * Disallows non-space characters for descendant combinators of selectors.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, which is `true`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `true`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: true): RuleCheck {
 	return (root, result) => {
@@ -53,20 +53,20 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!fullSelector) return
 
-			// Everything below rests on one thing: the text of a node stands in the file where its `sourceIndex` says it does. A selector the tree does not stand for is passed over, since the text of a warning, the position it is reported at and the selector a fix writes back would all be measured against a rendering the file does not hold.
+			// Skipped where the tree does not print the source back, since message, index and fix are measured against it.
 			if (!standsForSource(fullSelector, selector)) return
 
 			fullSelector.walkCombinators((combinatorNode) => {
-				// Every combinator CSS defines keeps its whitespace beside `value` rather than in it — `>`, `+`, `~` and `||`, and the legacy `>>>` and `/deep/` too. A descendant combinator is `" "`, with any surplus in `spaces.before`, or in `raws.value` where the run does not end in a literal space. So a `value` that holds whitespace and yet is not a single space is one of the things CSS has no combinator for, and saying so is what this rule is for.
+				// A descendant combinator is `" "`, surplus in `spaces.before` or `raws.value`; other whitespace in `value` is what this rule reports.
 				let isDescendant = combinatorNode.value === ` `
 
 				if (!isDescendant && !WHITESPACE.test(combinatorNode.value)) return
 
-				// `toString()` is the whole text the node stands for, the whitespace it was split across included, and `sourceIndex` is where that text begins in the selector.
+				// The node's whole text, whitespace included; `sourceIndex` is where it begins.
 				let text = combinatorNode.toString()
 
 				if (!isDescendant) {
-					// Nothing this rule could write would turn what CSS has no combinator for into something valid, so the problem is reported and the code left as it was. The warning names the text it is about, and the text a node stands for is read out of the raw, so it is read back out of the copy the file spells before it goes into the message.
+					// No fix could make this valid; the message reads the text back out of the source copy.
 					report({
 						result,
 						ruleName,
@@ -80,13 +80,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					return
 				}
 
-				// A comment breaks the run of a combinator in two, and the parser reads the whitespace left over on the far side as a descendant combinator of its own. There is no descendant relation there — `.foo > /*c*/  .bar` is a child combinator and nothing else — so such a node is passed over. It takes a comment to split the run: without one the parser keeps the whole of it in the combinator itself, surplus whitespace and all.
+				// A comment splits a combinator's run and the parser reads the rest as a descendant combinator; `.foo > /*c*/  .bar` is a child combinator alone.
 				if (isLeftOverOfCombinator(combinatorNode)) return
 
-				// A descendant combinator, on the other hand, keeps whatever comments stand inside it, and they are what the whitespace has to be measured between: each stretch of it is a run of its own, reported at its own position and collapsed on its own, so that every comment stays where the author put it.
+				// Whitespace is measured between the comments, each stretch reported and collapsed on its own.
 				let segments = splitAtComments(text, combinatorNode.sourceIndex, copies.comments)
 
-				// The combinator prints its raw value where it has one, so writing the whole run there — and emptying the spaces the parser had split it across — is what makes a collapsed run reach the output. It is the shape the parser itself gives a combinator whose text does not come apart into whitespace and a single space.
+				// The whole run goes into the raw value and the split spaces are emptied, the parser's own shape for it.
 				function write (): void {
 					combinatorNode.spaces.before = ``
 					combinatorNode.spaces.after = ``
@@ -94,7 +94,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				}
 
 				/**
-				 * Reports a run of whitespace that is not the single space the rule asks for.
+				 * Reports a run that is not a single space.
 				 * @param segment - The run, as {@link splitAtComments} cut it.
 				 */
 				function reportRun (segment: {
@@ -103,10 +103,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					isComment: boolean,
 					closesInlineComment: boolean,
 				}): void {
-					// A run already a single space is what the rule asks for, and an empty one — a comment abutting the selector beside it — has no whitespace to complain of.
+					// A single space is what the rule asks for; an empty run is a comment abutting the selector.
 					if (segment.isComment || segment.value === ` ` || segment.value === ``) return
 
-					// An inline comment ends with the line break standing behind it, and that break is in this run. A single space would close no comment, so there is nothing this rule could ask for here and nothing it could write: the run is passed over, as the whitespace behind a combinator of another kind is.
+					// The break in this run closes a `//` comment, which a single space would not, so the run is skipped.
 					if (segment.closesInlineComment) return
 
 					let index = copies.toSourceIndex(segment.index)
@@ -140,14 +140,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 }
 
 /**
- * Tells whether a parsed selector stands for the source it was parsed from, giving a combinator back the text the parser moved on the way where that can be done.
+ * Tells whether a parsed selector prints the source back, after restoring the text the parser moved.
  *
- * A parenthesised group standing where a combinator belongs is nothing CSS has a name for, and nothing `postcss-selector-parser` has a place for either: it reads the group as a combinator whose value is the whitespace in front of it and the group itself, and a comment standing between the two is filed into the raws behind that node rather than inside it. So `.foo /*c*\/\t( )\t.bar` comes back out as `.foo ( )/*c*\/\t\t.bar`, the comment having crossed the group and a tab having appeared where none was written. Only whitespace opening with a space is read that way, since a space is what the value of such a combinator opens with; a comment standing behind a tab or a line break is kept in the raws in front of it and printed as the file spells it.
- *
- * The pieces are all there, in the wrong order, so the node is given its own text back: the whitespace its value opens with, then what was filed behind it, then the group. The reading is only kept where the text it spells is the text the file holds at that node's index.
+ * A parenthesised group where a combinator belongs is read as a combinator whose value is the whitespace in front plus the group, a comment between the two moved into `raws.spaces.after`: `.foo /*c*\/\t( )\t.bar` prints as `.foo ( )/*c*\/\t\t.bar`. The node gets the three back where the file holds them at its index.
  * @param selectorTree - The parsed selector.
- * @param selector - The selector the tree was parsed from.
- * @returns True if the tree gives the selector back the way the source spells it.
+ * @param selector - The source.
+ * @returns True if the tree prints the source.
  */
 function standsForSource (selectorTree: Root, selector: string): boolean {
 	if (String(selectorTree) === selector) return true
@@ -173,11 +171,9 @@ function standsForSource (selectorTree: Root, selector: string): boolean {
 }
 
 /**
- * Tells whether a combinator node is only what a comment left over of the combinator in front of it, rather than a combinator of its own.
- *
- * The comment is what the answer turns on: a run the parser split at one carries on in a node of its own, while a run with no comment in it stays whole however wide it is. So a combinator standing right behind this one, with nothing but comments between them, is the combinator this whitespace belongs to.
- * @param node - The combinator to look back from.
- * @returns True if a comment separates this node from a combinator in front of it.
+ * Tells whether a combinator node is whitespace a comment split off the combinator in front; a run without a comment stays whole.
+ * @param node - The combinator.
+ * @returns True if only comments separate it from a combinator.
  */
 function isLeftOverOfCombinator (node: Combinator): boolean {
 	let previous = node.prev()
@@ -190,15 +186,13 @@ function isLeftOverOfCombinator (node: Combinator): boolean {
 }
 
 /**
- * Splits a stretch of selector text into the comments it holds and the runs between them.
+ * Splits selector text into its comments and the runs between them.
  *
- * The runs come first and last, empty where a comment sits at either end, so that joining every segment gives the text back unchanged.
- *
- * An inline comment is taken whole, however many block comments the raw spells it with, and the run behind one is marked: the line break it holds is what closes that comment, and a fix may not write over it.
- * @param text - The text to split.
- * @param offset - The index the text begins at in the selector.
- * @param inlineComments - The inline comments of the selector.
- * @returns The segments, in the order they stand in.
+ * Runs come first and last, empty at a comment, so joining the segments gives the text back. The run behind a `//` comment is marked: its break closes the comment, and a fix may not write over it.
+ * @param text - The stretch of selector to split.
+ * @param offset - Where the text begins in the selector.
+ * @param inlineComments - The selector's inline comments.
+ * @returns The segments in order.
  */
 function splitAtComments (text: string, offset: number, inlineComments: InlineComment[]): Array<{
 	value: string,

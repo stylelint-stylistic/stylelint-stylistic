@@ -6,7 +6,7 @@ import { messages, ruleName } from "./index.ts"
 
 let testRuleListedFirst = createTestRule({ ruleName })
 
-// The semicolon this rule writes is formatted by neither rule about the whitespace in front of a block's semicolons where the configuration lists that rule ahead of this one (#354), and the one it writes behind an at-rule is one `at-rule-semicolon-space-before` has no fixer to space at all (#477). The library lists the rule a block names first and its extra rules behind it, so every block below names the neighbour and lists this rule as the extra one: for the declaration rules that is the order the fix has to answer for, since in the other one the neighbour respells whatever this rule wrote, and the at-rule blocks keep it for uniformity, their neighbour having nothing to respell in either order.
+// A `declaration-block-semicolon-*-before` rule listed ahead of this one formats no semicolon this rule writes (#354), and `at-rule-semicolon-space-before` has no fixer to space the one written behind an at-rule at all (#477). The library lists the block's rule first and its extra rules behind, so every block below names the neighbour and lists this rule as the extra: the order the fix has to answer for, since in the other the neighbour respells whatever this rule wrote; the at-rule blocks keep it for uniformity.
 let testRule = createTestRule({ ruleName, extraRules: { [ruleName]: `always` } })
 
 testRule({
@@ -15,7 +15,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/354
+			// See #354
 			description: `the block of the issue, whose last semicolon is written behind a line break like the one the neighbour puts in front of the other`,
 			code: `
 				@media screen{
@@ -151,7 +151,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/354
+			// See #354
 			description: `the block of the issue, whose last semicolon is written behind a space like the one the neighbour puts in front of the other`,
 			code: `
 				@media screen{
@@ -268,7 +268,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/477
+			// See #477
 			description: `a bodiless at-rule closing the block, whose written semicolon gets the space that rule asks for and has no fixer to write`,
 			code: `a { @foo bar }`,
 			fixed: `a { @foo bar ; }`,
@@ -311,7 +311,7 @@ testRule({
 	],
 })
 
-// The whitespace in front of the semicolon `never` takes away goes with it (#479). The library lists the rule a block names first and its extra rules behind it, so the two blocks below run the neighbour first — the order in which the run that neighbour wrote used to outlive the semicolon — and the third runs this rule first, pinning that both orders rest on one file.
+// The whitespace in front of the semicolon `never` takes away goes with it (#479). The two blocks below run the neighbour first, the order in which the run it wrote used to outlive the semicolon, and the third runs this rule first, pinning that both orders rest on one file.
 testRule({
 	ruleName: spaceBeforeRuleName,
 	config: [`always`],
@@ -319,7 +319,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/479
+			// See #479
 			description: `the space the neighbour writes in front of the semicolon, which the strip takes along instead of leaving it in front of the brace`,
 			code: `a { aspect-ratio: 2; }`,
 			fixed: `a { aspect-ratio: 2 }`,
@@ -410,7 +410,7 @@ testRuleListedFirst({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/485
+			// See #485
 			description: `a neighbour whose fix is turned off and no live one speaking, whose ask the written semicolon still honours: the write is this rule's own text, not the turned-off fix`,
 			code: `a { b: c }`,
 			fixed: `a { b: c ; }`,

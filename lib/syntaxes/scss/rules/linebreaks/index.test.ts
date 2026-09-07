@@ -22,7 +22,7 @@ testRule({
 	],
 
 	reject: [
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/235
+		// See #235
 		{
 			description: `a carriage-return line break closing an end-of-line comment the value holds`,
 			code: `a { b: 1px // c\r\n\t2px; }`,
@@ -31,7 +31,7 @@ testRule({
 			column: 16,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/270
+		// See #270
 		{
 			description: `a carriage-return line break closing an end-of-line comment a set of at-rule parameters holds`,
 			code: `@media (min-width: 1px), // c\r\n(min-width: 2px) { a { b: c; } }`,
@@ -40,7 +40,7 @@ testRule({
 			column: 30,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/269
+		// See #269
 		{
 			description: `a carriage-return line break closing an end-of-line comment the selector holds`,
 			code: `a // c\r\n, b { c: d; }`,
@@ -49,7 +49,7 @@ testRule({
 			column: 7,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/269
+		// See #269
 		{
 			description: `a carriage-return line break inside a selector that holds a block comment, which this syntax keeps in one raw like any other`,
 			code: `a /* c */,\r\nb { c: d; }`,
@@ -58,7 +58,7 @@ testRule({
 			column: 11,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a carriage-return line break closing an end-of-line comment that stands between a selector and its block`,
 			code: `a // c\r\n{ b: d; }`,
@@ -67,7 +67,7 @@ testRule({
 			column: 7,
 			message: messages.expected(`unix`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a carriage-return line break closing an end-of-line comment that stands between a property and its value`,
 			code: `a { b // c\r\n: d; }`,
@@ -95,7 +95,7 @@ testRule({
 	],
 
 	reject: [
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/235
+		// See #235
 		{
 			description: `a bare line feed closing an end-of-line comment the value holds`,
 			code: `a { b: 1px // c\n\t2px; }`,
@@ -104,7 +104,7 @@ testRule({
 			column: 16,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/270
+		// See #270
 		{
 			description: `a bare line feed closing an end-of-line comment a set of at-rule parameters holds`,
 			code: `@media (min-width: 1px), // c\n(min-width: 2px) { a { b: c; } }`,
@@ -113,7 +113,7 @@ testRule({
 			column: 30,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/269
+		// See #269
 		{
 			description: `a bare line feed closing an end-of-line comment the selector holds`,
 			code: `a // c\n, b { c: d; }`,
@@ -122,7 +122,7 @@ testRule({
 			column: 7,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/269
+		// See #269
 		{
 			description: `a bare line feed inside a selector that holds a block comment, which this syntax keeps in one raw like any other`,
 			code: `a /* c */,\nb { c: d; }`,
@@ -131,7 +131,7 @@ testRule({
 			column: 11,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a bare line feed closing an end-of-line comment that stands between a selector and its block`,
 			code: `a // c\n{ b: d; }`,
@@ -140,7 +140,7 @@ testRule({
 			column: 7,
 			message: messages.expected(`windows`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283
+		// See #283
 		{
 			description: `a bare line feed closing an end-of-line comment that stands between a property and its value`,
 			code: `a { b // c\n: d; }`,

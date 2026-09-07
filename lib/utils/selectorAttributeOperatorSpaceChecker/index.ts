@@ -10,7 +10,7 @@ let { utils: { report } } = stylelint
 
 /**
  * Checks whitespace around attribute operators in selectors.
- * @param options - The options object.
+ * @param options - The root, result, syntax, location checker and fixer of the calling rule.
  */
 export function selectorAttributeOperatorSpaceChecker (options: {
 	root: Root,
@@ -62,12 +62,12 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 		}
 
 		/**
-		 * Checks an operator for whitespace violations.
-		 * @param source - The source string.
-		 * @param index - The index to check.
-		 * @param node - The node with the violation.
-		 * @param attributeNode - The attribute node.
-		 * @param operator - The operator being checked.
+		 * Checks one operator.
+		 * @param source - The attribute's text.
+		 * @param index - The index checked.
+		 * @param node - The node reported.
+		 * @param attributeNode - The parsed selector node handed to the fixer.
+		 * @param operator - The matched text, `=` or a two-character form.
 		 */
 		function checkOperator (source: string, index: number, node: Node, attributeNode: Attribute, operator: string): void {
 			options.locationChecker({

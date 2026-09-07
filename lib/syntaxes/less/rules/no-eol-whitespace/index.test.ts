@@ -15,9 +15,9 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/254
+			// See #254
 			description: `two spaces making up the whole of an inline comment a file ends on`,
-			// This syntax files such a comment the way `postcss-scss` files every one of them: an empty text, with the whitespace in the raw in front of it and nothing in the raw behind.
+			// This syntax files such a comment as `postcss-scss` files every one: an empty text, the whitespace in the raw in front and nothing in the raw behind.
 			code: `//  `,
 			fixed: `//`,
 			warnings: [

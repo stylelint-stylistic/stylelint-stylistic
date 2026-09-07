@@ -92,7 +92,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/196
+			// See #196
 			description: `a form feed beside the comma, which is whitespace and no line break, so the break is written in front of it`,
 			code: `a\f,b {}`,
 			fixed: `a\f\n,b {}`,
@@ -344,7 +344,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab in the run before a comma of a multi-line list: the run goes down to the character, which stays`,
 			code: `a\v\n, b,\nc {}`,
 			fixed: `a\v, b,\nc {}`,

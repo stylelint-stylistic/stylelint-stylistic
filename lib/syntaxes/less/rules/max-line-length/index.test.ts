@@ -5,8 +5,7 @@ let { ruleName, messages } = createRule(less)
 
 let testRule = createTestRule({ ruleName })
 
-// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427
-// What comes off a line is the address of every `url()` the file spells, and a `url(` written inside a comment spells none. Which double slashes open a comment is the file's own syntax's answer, so the same line is counted one way here and another under the core, where a double slash is two characters of code and the address behind it comes off.
+// The address of every `url()` comes off a line, and a `url(` inside a comment spells none. The file's syntax says which double slashes open a comment, so the same line is counted one way here and another under the core, where a double slash is code and the address behind it comes off. See #427
 testRule({
 	ruleName,
 	config: [22],

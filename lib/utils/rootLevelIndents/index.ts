@@ -6,12 +6,12 @@ import { hasBlock } from "../hasBlock/index.ts"
 import { isAtRule, isRule } from "../typeGuards/index.ts"
 
 /**
- * Reads the indentation of every line of a root that stands at the root's own level: the line each child of the root opens on, and the line each block of such a child closes on. A line inside a statement — the continuation of a selector, of a value, of an at-rule's parameters — and a line of a nested block are left out: the rule measures every one of them against the level read here, so a level read off such a line would answer for itself, and one the rule writes deeper than the root would rise with every run of the fix.
+ * Reads the indentation of the lines at the root's own level: where each child opens and where its block closes. Continuation and nested lines are left out, or a level read off one would rise with every run of the fix.
  *
- * The line the first child opens on may be the line of the tag the stylesheet hangs from, `<style>a {` or a `style` attribute: what stands in front of the child on it is the tail of `raws.codeBefore`, and the child's own indentation is unknown there. Such a line is handed back apart, under `tagLine`, indented by what the tag is. The line is the stylesheet's own where nothing but whitespace short of a break stands in front of the child, and that whole run is its indentation — a form feed or a bare carriage return in it included, since the rule reads and writes over the same run in front of the first node (#452).
- * @param root - The root.
- * @param closingBraceIndented - Whether a closing brace stands a level deeper than its block, as `indentClosingBrace` asks: the line it closes on is then no line of the root's either.
- * @returns The indentation of the root's own lines, and of the tag's line where the first child stands on it.
+ * The first child may open on the tag's line, `<style>a {`, returned apart under `tagLine`. Whitespace alone in front of the child is its indentation whole, form feed or bare carriage return included, since the rule writes over the same run ([#452](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/452)).
+ * @param root - The stylesheet whose top-level lines are read.
+ * @param closingBraceIndented - Whether a closing brace stands a level deeper; its line is then none of the root's.
+ * @returns The root's own lines, and the tag's line apart.
  */
 export function rootLevelIndents (root: Root, closingBraceIndented: boolean): { own: string[], tagLine: string[] } {
 	let own: string[] = []
@@ -23,7 +23,7 @@ export function rootLevelIndents (root: Root, closingBraceIndented: boolean): { 
 
 		if (beforeLines.length > 1) own.push(lastBeforeLine)
 		else if (child === root.first) {
-			// Whatever stands on the line in front of the first child: the tail of the code the stylesheet hangs from, and the run in front of the child behind it. Where that is whitespace alone, the line is the stylesheet's own, opened after a break of `codeBefore`, and the whitespace is its indentation
+			// The tail of `codeBefore` and the run behind it
 			let lineBefore = `${(root.raws.codeBefore ?? ``).split(EVERY_LINE_BREAK).at(-1) ?? ``}${lastBeforeLine}`
 			let pastWhitespace = lineBefore.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``)
 

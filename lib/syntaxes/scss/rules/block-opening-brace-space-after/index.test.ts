@@ -12,7 +12,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/139
+			// See #139
 			description: `a space behind each of the two opening braces of a media query holding an inline comment, the outer one of which the rule reaches only once the block is measured as the file spells it`,
 			code: `
 				@media (min-width: 100px // c

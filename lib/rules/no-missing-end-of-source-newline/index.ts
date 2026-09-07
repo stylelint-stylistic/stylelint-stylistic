@@ -23,13 +23,13 @@ export let meta = {
 
 /**
  * Disallows missing end-of-source newlines.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, which is `true`.
- * @param _secondaryOptions - The secondary options, of which this rule takes none.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `true`.
+ * @param _secondaryOptions - Unused.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: true, _secondaryOptions: unknown): RuleCheck {
 	return (root, result) => {
@@ -57,17 +57,17 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			result,
 			ruleName,
 			fix () {
-				// The break is written behind what the raw holds rather than in place of it. The file that ends on no break of its own may still end on a free semicolon, which PostCSS parks in this raw along with the whitespace around it, or on an empty line — whether such a semicolon belongs in a stylesheet is what `no-extra-semicolons` answers, and how many empty lines a file may end on is what `max-empty-lines` answers, so neither is this rule's to take away.
+				// The break goes behind the raw, not in place of it: a free semicolon PostCSS parks there is `no-extra-semicolons`' to take, and the empty lines a file ends on are `max-empty-lines`'.
 				//
-				// What does go is a run of spaces and tabs standing on its own behind the file's last break. The check reads the file as it was parsed, so it reports such a file although the break is there, and that run is all that stands between the break and the end of the file; a second break written behind the run would leave the file an empty line it never had, and set this rule and `no-eol-whitespace` disagreeing over the two orders a configuration can list them in. Behind anything the file spells the run is kept and the break is written behind it in turn: that line is a line, and the whitespace at the end of it is `no-eol-whitespace`'s to take.
+				// A run of spaces and tabs alone behind the file's last break comes off instead: the check reports it although the break is there, and a second break would leave an empty line, setting this rule against `no-eol-whitespace` in one order. Behind anything else the run stays, since it is `no-eol-whitespace`'s.
 				//
-				// The run comes off only where the raw and the file agree that it is what the file ends on, and a break is written wherever they part. Each of the two answers a question the other cannot. The raw is the only place this fix can write, so where the run is not in it there is nothing to take off: a bare carriage return or a form feed behind a `//` comment is text of that comment, along with the whitespace after it, leaving the root's raw empty while the file ends on a run all the same, and taking a run out of an empty raw writes nothing at all. The file, for its part, is the text this warning was made about: Stylelint runs each rule once and in the order the configuration spells them, so a rule listed ahead of this one has written into the raw already — `no-extra-semicolons` takes the free semicolon out of it — and what is left ends on the break the file spells in front of that semicolon while the file itself ends on the semicolon still. Asked of the raw alone this rule writes a break in one of the two orders and nothing in the other; asked of the file alone it writes nothing where nothing can be written. Asked of both, it closes every file it reports on, and closes it the same way on either side of `no-extra-semicolons` and of `max-empty-lines`. Beside `linebreaks` the order still decides, and that is [#352](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/352) rather than anything this fix reads.
+				// The run comes off only where the raw and the file agree it ends the file. The raw is the only place to write: behind a `//` comment a bare carriage return or form feed is the comment's text and the raw is empty. The file is what the warning was about: `no-extra-semicolons` listed ahead has already taken the semicolon out of the raw, which then ends on a break while the file ends on the semicolon. Asked of both, the fix ends the same way on either side of those rules; beside `linebreaks` the order still decides (#352).
 				let after = typeof root.raws.after === `string` ? root.raws.after : ``
 				let ended = after.replace(TRAILING_SPACES_AND_TABS, ``)
 				let endedInFile = rootString.replace(TRAILING_SPACES_AND_TABS, ``)
 				let endsTheLine = TRAILING_LINE_BREAK.test(ended) && TRAILING_LINE_BREAK.test(endedInFile)
 
-				// The file is closed with the break a written one is spelled with: as `linebreaks` asks, or as the file spells its lines
+				// The break is the one `linebreaks` asks for, or the file's own
 				root.raws.after = endsTheLine ? ended : after + getLineBreak(syntax, root, result)
 			},
 		})

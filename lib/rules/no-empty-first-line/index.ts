@@ -22,11 +22,11 @@ let meta = {
 
 /**
  * Disallows empty first lines.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
- * @param primary - The primary option, which is `true`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
+ * @param primary - `true`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true): RuleCheck {
 	return (root, result) => {
@@ -49,7 +49,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true
 				fix () {
 					let { first } = root
 
-					// A root holding no node keeps the whole of the file in its trailing raw, and the break the file opens with at the head of that raw. A file of free semicolons and whitespace alone is that shape, since one of whitespace alone is passed over above; the break used to be asked of the first node, which such a root does not have, and the lint ended in an error rather than in a warning (#602)
+					// A root with no node keeps the file in `raws.after`; asking the first node for the break ended the lint in an error (#602)
 					if (first === undefined) {
 						if (root.raws.after === undefined) throw new Error(`The root node must keep the file in its trailing raw.`)
 

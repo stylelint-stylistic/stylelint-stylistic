@@ -1,33 +1,33 @@
-// `style-search` ships no declaration and DefinitelyTyped carries none, so what the plugin reads of it is declared here: the options the calls of `lib/` pass and the fields of a match they read, as its README describes them.
+// `style-search` ships no declaration; what the plugin reads of it is declared here, as its README says.
 declare module "style-search" {
 
-	/** How the search treats one syntactic feature: pass over matches inside it, report them along with the rest, or report nothing else. */
+	/** Skip matches inside the feature, check them too, or check only them. */
 	type StyleSearchMode = `skip` | `check` | `only`
 
 	interface StyleSearchOptions {
 
-		/** The text to search. */
+		/** The text. */
 		source: string,
 
-		/** What to look for: one string, or several that all count as a match. */
+		/** One target or several. */
 		target: string | string[],
 
 		/** Stop after the first match. */
 		once?: boolean,
 
-		/** Comments, both block ones and the `//` kind; skipped by default. */
+		/** Block and `//` comments; skipped by default. */
 		comments?: StyleSearchMode,
 
-		/** Quoted strings; skipped by default. */
+		/** Skipped by default. */
 		strings?: StyleSearchMode,
 
-		/** The name in front of a call's parenthesis; skipped by default. */
+		/** The name before a call's `(`; skipped by default. */
 		functionNames?: StyleSearchMode,
 
-		/** The inside of a call's parentheses, the parentheses included; checked by default. */
+		/** A call's arguments, parentheses included; checked by default. */
 		functionArguments?: StyleSearchMode,
 
-		/** The inside of any parentheses, a call's or not; checked by default. */
+		/** Inside any parentheses; checked by default. */
 		parentheticals?: StyleSearchMode,
 	}
 
@@ -36,10 +36,10 @@ declare module "style-search" {
 		/** Where the match opens. */
 		startIndex: number,
 
-		/** Where the match closes, one past its last character. */
+		/** One past the last character. */
 		endIndex: number,
 
-		/** Which of the targets was matched. */
+		/** The target matched. */
 		target: string,
 		insideFunctionArguments: boolean,
 		insideComment: boolean,
@@ -48,9 +48,9 @@ declare module "style-search" {
 	}
 
 	/**
-	 * Calls back on every match of the target in the source.
-	 * @param options - What to search and what to pass over.
-	 * @param callback - Called with each match and the count of matches so far.
+	 * Calls back on every match.
+	 * @param options - What to search and pass over.
+	 * @param callback - Gets each match and the count so far.
 	 */
 	function styleSearch (options: StyleSearchOptions, callback: (match: StyleSearchMatch, count: number) => void): void
 

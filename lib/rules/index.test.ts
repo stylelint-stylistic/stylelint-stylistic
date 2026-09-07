@@ -52,9 +52,8 @@ let ruleNames = Object.keys(factories)
 let rulesListDoc = await getRulesListDoc()
 
 /**
- * Retrieves the documentation for the rules list.
- *
- * @returns The content of the rules list documentation in UTF-8 format.
+ * Reads the rules list document.
+ * @returns Its text.
  */
 async function getRulesListDoc (): Promise<string> {
 	return await readFile(new URL(`../../docs/user-guide/rules.md`, import.meta.url), `utf8`)
@@ -117,7 +116,7 @@ describe(`custom message option`, () => {
 		it(`"${name}" should describe a custom message option in the document`, async () => {
 			let jsCode = await readFile(new URL(`./${name}/index.ts`, import.meta.url), `utf8`)
 
-			// The check is skipped for a rule whose messages take no arguments, since such a rule has no custom message option to document. Once every rule has one, the `if` goes.
+			// A rule whose messages take no arguments has no custom message option to document; once every rule has one, the `if` goes.
 			if (!jsCode.includes(`\tmessageArgs: [`)) return
 
 			let doc = await readFile(new URL(`./${name}/README.md`, import.meta.url), `utf8`)

@@ -1,18 +1,18 @@
 import type { Combinator } from "postcss-selector-parser"
 
 /**
- * Checks whether a combinator is standard (i.e. not a reference combinator).
- * @param node - The combinator node to check.
- * @returns True if the combinator is standard, false otherwise.
+ * Asks whether a combinator is standard, not a reference combinator.
+ * @param node - The combinator.
+ * @returns True for a standard combinator.
  */
 export function isStandardSyntaxCombinator (node: Combinator): boolean {
-	// if it's not a combinator, then it's not a standard combinator
+	// Not a combinator
 	if (node.type !== `combinator`) return false
 
-	// Ignore reference combinators like `/deep/`
+	// A reference combinator like `/deep/`
 	if (node.value.startsWith(`/`) || node.value.endsWith(`/`)) return false
 
-	// ignore the combinators that are the first or last node in their container
+	// First or last in its container
 	if (node.parent !== undefined && node.parent !== null) {
 		let parent = node.parent
 

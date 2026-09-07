@@ -38,7 +38,7 @@ describe(`setBlockAfter`, () => {
  * Writes the run behind the block of the first statement of a stylesheet and prints what that left.
  * @param css - The stylesheet.
  * @param after - The run to write.
- * @param syntax - The syntax to read it with, where plain CSS is not the one.
+ * @param syntax - The syntax to read it with, plain CSS unless given.
  * @returns The stylesheet as it prints after the write.
  */
 function run (css: string, after: string, syntax?: { parse: Parser }): string {

@@ -7,7 +7,7 @@ testRule({
 	config: [`always`],
 
 	accept: [
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/208
+		// See #208
 		{
 			description: `a comment closing the block behind a declaration without a semicolon, which has no semicolon to space`,
 			code: `a { color: pink /* c */ }`,
@@ -54,7 +54,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/208
+			// See #208
 			description: `a nested rule closing the block, whose declaration keeps its semicolon and is still measured`,
 			code: `a { color: pink; b {} }`,
 			fixed: `a { color: pink ; b {} }`,
@@ -201,7 +201,7 @@ testRule({
 		},
 		{
 			// A custom property may hold nothing but whitespace, and that whitespace is its value rather than the space in front of the semicolon
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/50
+			// See #50
 			description: `a custom property whose value is nothing but whitespace`,
 			code: `a { --foo: ; }`,
 		},
@@ -313,7 +313,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/225
+			// See #225
 			description: `a double slash of plain CSS opens no comment, so the semicolon has a line to join and the fix is written`,
 			code: `
 				a {
@@ -518,7 +518,7 @@ testRule({
 		},
 		{
 			// A custom property may hold nothing but whitespace, and that whitespace is its value rather than the space in front of the semicolon
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/50
+			// See #50
 			description: `a custom property whose value is whitespace, in a single-line block`,
 			code: `a { --foo: ; }`,
 		},

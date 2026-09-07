@@ -1,16 +1,14 @@
 /**
- * A quotation mark written inside a comment, in front of a string of the value holding the same text the code beside the comment spells.
+ * A quotation mark inside a comment, in front of a string holding the same text the code beside the comment spells ([#504](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504)).
  *
- * Written for #504. `postcss-value-parser` has no node for a comment opened by a double slash and closes a block comment opening `/*\/` on its own star, so a quotation mark written in the text of either opens a string to it that runs to the next quotation mark of the value — and from there on every opening mark of the file is a closing one to the parser and the other way round. A rule passing over the node that opens inside the comment is not out of it: the string the file spells behind the comment comes back as words of the value and a string never closed, and what the rule says about the words it says about the text inside the quotation marks. The corpus puts the same text beside the comment as code and behind it inside quotation marks of the kind the comment holds, so that a row says two things at once — whether the code beside the comment is still read, and whether the text inside the string is left alone.
- *
- * The controls are the same mark in a block comment the parser closes where CSS does, `/* … *\/`, and no comment at all: a branch that moves either has done something other than it meant to. The `slash-star-slash` sweep holds the same texts behind a comment holding an even number of marks, which pairs them back before the string; this one holds one.
+ * The value parser has no `//` comment node and closes `/*\/` on its own star, so a mark in either opens a string to it and every mark behind changes sides. A row says whether the code beside the comment is still read and whether the string's text is left alone. The controls are a block comment the parser closes where CSS does, and no comment; a branch moving either has done something else. Unlike `slash-star-slash`, the comment holds one mark.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** The text a rule has something to say about, one per rule of the ten and the four comma rules. */
+/** One text per rule, which that rule has something to say about. */
 const TEXTS: Record<string, string> = {
 	unit: `2PX`,
 	fractionWithoutZero: `.5`,
@@ -25,13 +23,13 @@ const TEXTS: Record<string, string> = {
 	gridRow: `a  a`,
 }
 
-/** The quotation mark the comment holds, which is also the one the string behind it is written with. */
+/** The mark in the comment, and around the string behind it. */
 const MARKS: Record<string, string> = {
 	doubleMark: `"`,
 	singleMark: `'`,
 }
 
-/** How the comment is spelled around its mark: the shape of the issue, the inline one the preprocessors read, the control of the same width the parser closes where CSS does, and no comment at all. */
+/** How the comment is spelled: the issue's shape, the inline one, a block comment of the same width as control, and none. */
 const SPELLINGS: Record<string, (mark: string) => string> = {
 	slashStarSlash: (mark) => `/*/ ${mark} */`,
 	inline: (mark) => `// ${mark}\n`,
@@ -39,7 +37,7 @@ const SPELLINGS: Record<string, (mark: string) => string> = {
 	none: () => ``,
 }
 
-/** Where the comment and the string stand: in a declaration's value beside the same text as code, inside a call's parentheses, in a grid's rows, where the string is a row, between the parameters of a media query, which is the one text `media-feature-parentheses-space-inside` reads, and behind a bare address holding the same mark, which is a character of the address to every tokenizer and which the scan finding the comments used to read as a string's, so that everything behind the address was read a mark late (#504). The code goes first, so that a rule reading the string's text reports two problems where it should report one. */
+/** Where the comment and the string stand. The code goes first, so a rule reading the string's text reports two problems for one; `behindAddress` puts the mark in a bare address too, which the comment scan read as a string's until [#504](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504). */
 const PLACES: Record<string, (text: string, comment: string, mark: string) => string> = {
 	value: (text, comment, mark) => `a { b: ${text} ${comment} ${mark}${text}${mark}; }\n`,
 	call: (text, comment, mark) => `a { b: g(${text} ${comment} ${mark}${text}${mark}); }\n`,
@@ -59,7 +57,7 @@ const corpus: Sweep[`corpus`] = multiply({ place: keysOf(PLACES), spelling: keys
 	return wrap(text, spell(mark), mark)
 })
 
-/** The ten rules of #378 under every primary option `scripts/oracles/options.ts` lists for them, and the four comma rules #275 moved the same way. */
+/** The ten rules of [#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378) and the four comma rules of [#275](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/275), under every primary option. */
 const configs: Sweep[`configs`] = ([
 	[`color-hex-case`, [`lower`, `upper`]],
 	[`function-max-empty-lines`, [0, 1]],

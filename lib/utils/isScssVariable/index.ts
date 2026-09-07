@@ -1,13 +1,13 @@
 /**
- * Checks whether a property is an SCSS variable.
- * @param property - The property name to check.
- * @returns True if the property is an SCSS variable, false otherwise.
+ * Whether a property name is a Sass variable, `$var` or `namespace.$var`.
+ * @param property - The property name.
+ * @returns True where it is.
  */
 export function isScssVariable (property: string): boolean {
-	// SCSS var (e.g. $var: x), list (e.g. $list: (x)) or map (e.g. $map: (key:value))
+	// `$var`, `$list: (x)` or `$map: (k: v)`
 	if (property.startsWith(`$`)) return true
 
-	// SCSS var within a namespace (e.g. namespace.$var: x)
+	// `namespace.$var`
 	if (property.includes(`.$`)) return true
 
 	return false

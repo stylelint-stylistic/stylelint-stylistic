@@ -1,8 +1,4 @@
-/**
- * Every fixture of the oracles, its line breaks respelled four ways at once and a carriage return or a form feed put in each of its whitespace positions one at a time, under every rule and every primary option.
- *
- * Written for the change that made the plugin read a line break the way PostCSS does — a line feed or a Windows pair, and nothing else — so that every rule's answer about a bare carriage return and a form feed could be read before and after it, row by row. The whole-file respellings ask what a rule says about a file broken one way throughout; the single positions ask what it says about one such character standing where whitespace stands, since that is what a bare `\r` or `\f` now is.
- */
+/** Every fixture of the oracles, its line breaks respelled four ways at once and a bare `\r` or `\f` put in each whitespace position one at a time, under every rule and primary option: written for the change that made the plugin read a line break as PostCSS does, a line feed or a Windows pair only. */
 
 import { FIXTURES, INLINE_FIXTURES } from "../oracles/fixtures.ts"
 import { RULE_OPTIONS } from "../oracles/options.ts"
@@ -12,10 +8,10 @@ import type { Sweep } from "./run.ts"
 /** The four spellings a whole file is broken with. */
 const SPELLINGS = { lf: `\n`, crlf: `\r\n`, cr: `\r`, ff: `\f` }
 
-/** The two characters put into one whitespace position at a time. */
+/** The two characters put into one position at a time. */
 const SINGLES = { cr: `\r`, ff: `\f` }
 
-/** Every run of whitespace in a text, where a single character is put. */
+/** Every whitespace run. */
 const EVERY_WHITESPACE_RUN = /\s+/gu
 
 /** Every break of a fixture, a Windows pair counting as one. */
@@ -37,7 +33,7 @@ const corpus: Sweep[`corpus`] = [...FIXTURES, ...INLINE_FIXTURES].flatMap(([fixt
 	return rows
 })
 
-// A primary the list spells as an array is a setting whole, the primary opening it and the secondary options closing it
+// An array primary is a whole setting: primary, then secondary options
 const configs: Sweep[`configs`] = Object.entries(RULE_OPTIONS).flatMap(([rule, primaries]) => primaries.map((primary) => (Array.isArray(primary) ? { rule, primary: primary[0] as unknown, secondary: primary[1] as object } : { rule, primary })))
 
 export { configs, corpus, name }

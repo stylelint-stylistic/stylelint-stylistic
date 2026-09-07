@@ -1,22 +1,18 @@
 #!/usr/bin/env node
 
 /**
- * Asks of every rule, under every primary option it accepts, over every fixture: does the rule say the same thing about a file whose breaks are spelled with a Windows pair as it says about the line-feed original?
+ * Asks whether every rule says the same about a Windows-break file as about the original.
  *
- * A line feed and a Windows pair are the two spellings PostCSS reads a break in, so a rule that reads one of them and not the other answers differently about two files that hold the same stylesheet. That is one bug wearing many faces — #173, #196, #204, #209, #244, #245, #246 and #247 are all of them — and none of the other oracles can see it: the outputs converge, they parse, and every comment survives. A bare carriage return and a form feed were twins here once as well, until the plugin took PostCSS's reading of a break — a line feed with or without the carriage return of a pair in front of it, and nothing else — and the two stopped being breaks to any rule; the `eol` sweep is what measures those two now.
+ * A rule reading one break and not the other is one bug in many faces ([#173](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/173), [#196](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/196), [#204](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/204), [#209](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/209), [#244](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/244), [#245](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/245), [#246](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/246), [#247](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/247)), which no other oracle sees.
  *
- * Four kinds of row come out:
+ * Rows, reported on the first failing:
  *
- * - `warns-differently` — the twin draws warnings the original does not, or misses ones it draws. The reading that decides what the rule reports is too narrow, or too wide.
- * - `writes-differently` — the fix writes something else into the twin, once every break of both outputs is normalised back to a line feed. What is compared is therefore what the fix did, never which character it wrote.
- * - `position-differs` — the twin draws the same warnings somewhere else, on another line or in another column. PostCSS counts a pair as one line, so the two files have the same lines and a position that moves is the rule's doing.
- * - `parses-differently` — the syntax reads the original and cannot read the twin. Not the rule's doing at all, and the parse happens before any rule runs, so such a row is reported once for the syntax, the fixture and the spelling rather than once for every rule that met it.
+ * - `warns-differently` — other warnings.
+ * - `writes-differently` — another fix output, breaks normalised.
+ * - `position-differs` — elsewhere; PostCSS counts a pair as one line.
+ * - `parses-differently` — the syntax reads the original alone, once per fixture.
  *
- * A twin is reported once, on the first of those it fails, so the count is a lower bound on the disagreements rather than a tally of them.
- *
- * ## What a twin is built from
- *
- * Every break of the fixture is written back as a line feed first, and the twin is respelled from that. Respelling without normalising would turn an existing `\r\n` into two breaks and ask the rule about a file that is not the original's twin at all; skipping such a fixture instead would drop the only shapes in the shared corpus that carry whitespace in front of a break, which is exactly what #247 turns on.
+ * The fixture is normalised to line feeds first: a `\r\n` would double, and skipping it would drop the only shapes with whitespace before a break ([#247](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/247)).
  */
 
 import { stdout } from "node:process"
@@ -25,25 +21,25 @@ import { type Config, lint } from "../harness/lint.ts"
 
 import { buildRuns, isUsable, type Run } from "./runs.ts"
 
-/** Every break of a text, a Windows pair counting as one so that normalising never leaves an empty line behind it. */
+/** Every break. */
 const EVERY_BREAK = /\r?\n/gu
 
-/** The spelling a twin is built in, under the name its rows are reported by. */
+/** Each twin's break, by row name. */
 const TWINS: [string, string][] = [[`crlf`, `\r\n`]]
 
-/** Every syntax, fixture and spelling already reported as one the syntax cannot read, since the parse happens before any rule does and reporting it per rule would say one thing two hundred and three times. */
+/** Every unparsable twin reported. */
 let reportedUnparsable = new Set()
 
-/** Every question already asked, as the rule, the option, the syntax and the normalised fixture together. Two fixtures of the shared corpus may differ only in the break they are spelled with — `plain` and `crlf` are close to one text — so normalising can make them the same question, and asking it twice would count one disagreement as two. A row is reported under whichever of the two the run reached first, so the name of the other stands in no row at all. */
+/** Every question asked; `plain` and `crlf` differ only in their break. */
 let asked = new Set()
 
-/** The one rule whose subject is the spelling itself: `linebreaks` asks which of the two characters a file ends its lines with, so a twin is a different file to it on purpose and every row it would give is the oracle being wrong rather than the rule. */
+/** A twin is another file to `linebreaks`. */
 const SPELLING_IS_THE_SUBJECT = new Set([`linebreaks`])
 
 /**
- * Spells every break of a text with one character in place of the line feed.
- * @param code - The line-feed original.
- * @param spelling - The break to write in its place.
+ * Respells every line feed.
+ * @param code - The original.
+ * @param spelling - The break.
  * @returns The twin.
  */
 function respell (code: string, spelling: string): string {
@@ -51,21 +47,19 @@ function respell (code: string, spelling: string): string {
 }
 
 /**
- * Writes every break of a text back as a line feed, so that two outputs can be compared on what the fix did rather than on which character it wrote.
- * @param code - The text to normalise.
- * @returns The same text with one spelling of a break throughout.
+ * Normalises every break to a line feed.
+ * @param code - The text.
+ * @returns The text.
  */
 function normalise (code: string): string {
 	return code.replaceAll(EVERY_BREAK, `\n`)
 }
 
 /**
- * Lints a text once for its warnings and once for its fix.
- *
- * A run that says nothing is told apart from one the syntax could not read at all, since the second is a finding here rather than a fixture to pass over: where the original parses and the twin does not, the syntax itself reads one break and not another, and that is the same bug this oracle is about, one layer down in a dependency.
- * @param code - The text to lint.
- * @param config - The configuration to lint it under.
- * @returns What the rule said and wrote, or why the run cannot be read.
+ * Lints a text for warnings and for its fix, telling silence from an unparsable text.
+ * @param code - The text.
+ * @param config - The Stylelint configuration the fixture is linted under.
+ * @returns What the rule said and wrote, or why not.
  */
 async function ask (code: string, config: Config): Promise<{
 	read: false,
@@ -103,23 +97,23 @@ async function ask (code: string, config: Config): Promise<{
 }
 
 /**
- * Names a run, without carrying its configuration into the report.
- * @param run - The run to name.
- * @returns The four fields that identify it.
+ * Names a run without its configuration.
+ * @param run - One rule under one primary option over one fixture.
+ * @returns The identifying fields.
  */
 function label (run: Run): object {
 	return { rule: run.rule, primary: run.primary, syntaxName: run.syntaxName, name: run.name }
 }
 
 /**
- * Asks one fixture and its three twins, and reports where they disagree.
- * @param run - The rule, the option, the syntax and the fixture.
- * @returns Every finding of this run, and the empty array where there is none.
+ * Asks one fixture and its twins.
+ * @param run - One rule under one primary option over one fixture.
+ * @returns Every finding.
  */
 async function probe (run: Run): Promise<object[]> {
 	if (SPELLING_IS_THE_SUBJECT.has(run.rule)) return []
 
-	// The fixture is normalised rather than passed over where it spells a break with a pair already: respelling a line feed in a text that holds `\r\n` would make two breaks of one, while normalising first makes every fixture a line-feed original with a twin, and the `crlf` shape of the shared corpus — one of the few carrying whitespace in front of a break, which is what #247 turns on — joins the run instead of being skipped
+	// Normalised first, or `\r\n` would double (#247)
 	let source = normalise(run.code)
 
 	if (!source.includes(`\n`)) return []
@@ -138,7 +132,7 @@ async function probe (run: Run): Promise<object[]> {
 
 	for (let [spelling, character] of TWINS) {
 		let code = respell(source, character)
-		// Each twin is a lint of its own, asked in turn rather than at once so that a run of the oracle stays as light on the machine as the ones it joins
+		// In turn, to stay light
 		// eslint-disable-next-line no-await-in-loop
 		let twin = await ask(code, run.config)
 

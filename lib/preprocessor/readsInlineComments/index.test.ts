@@ -53,7 +53,7 @@ describe(`syntaxKeepsInlineComments`, () => {
 /**
  * Reads what a syntax makes of an inline comment off a node.
  *
- * The stylesheet the node comes from is parsed by PostCSS itself whatever the syntax is, since the question is about the syntax the file was opened with rather than about the one that read this stylesheet, and a syntax written here to throw would throw on this too.
+ * The stylesheet is parsed by PostCSS itself whatever the syntax, since the question is about the syntax the file was opened with rather than the one that read this stylesheet, and a syntax written here to throw would throw on this too.
  * @param syntax - The syntax the file was opened with, none of it standing for plain CSS.
  * @returns What that syntax makes of such a comment.
  */

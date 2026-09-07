@@ -1,7 +1,7 @@
 /**
- * Checks whether a property is a custom one.
- * @param property - The CSS property name.
- * @returns True if the property is custom, false otherwise.
+ * Checks whether a property is custom.
+ * @param property - The property name.
+ * @returns True if custom.
  */
 export function isCustomProperty (property: string): boolean {
 	return property.startsWith(`--`)

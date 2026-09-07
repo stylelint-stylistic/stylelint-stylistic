@@ -26,10 +26,10 @@ export let meta = {
 }
 
 /**
- * Gets everything the declaration's `between` holds in front of the colon.
- * @param decl - The declaration to look at.
- * @param index - The index of the colon within the checked string.
- * @returns The part of `between` in front of the colon.
+ * Returns the part of `raws.between` in front of the colon.
+ * @param decl - The declaration.
+ * @param index - The colon's index in the checked string.
+ * @returns That part.
  */
 function beforeColonString (decl: Declaration, index: number): string {
 	let between = decl.raws.between
@@ -41,12 +41,12 @@ function beforeColonString (decl: Declaration, index: number): string {
 
 /**
  * Requires a single space or disallows whitespace before the colon of declarations.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always` and `never`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always` or `never`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
@@ -65,7 +65,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
-			// The colon stands right after this part, so an inline comment ending it would swallow the colon. The guard reads the text with every backslash in front of a slash blanked, since a backslash escapes no slash to the parser: `\//` opens a comment the guard would otherwise read as code, and the fix would take the break closing it away.
+			// An inline comment ending this part would swallow the colon; a backslash in front of a slash is blanked first, since `\//` opens a comment to the parser but not to the guard
 			isFixable: (decl, index) => !syntax.endsWithInlineComment(beforeColonString(decl, index).replace(EVERY_BACKSLASH_IN_FRONT_OF_A_SLASH, ` `), syntax.inlineComments(decl, result)),
 			fix: (decl, index) => {
 				let beforeColon = beforeColonString(decl, index)

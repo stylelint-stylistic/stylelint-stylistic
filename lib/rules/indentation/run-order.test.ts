@@ -14,7 +14,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/353
+			// See #353
 			description: `a declaration the neighbour's break carries onto a line of its own: the line gets its indent in the same run, where it used to keep the single space and draw no warning`,
 			code: `a {\n\tcolor: red; top: 0;\n}\n`,
 			fixed: `a {\n  color: red;\n  top: 0;\n}\n`,
@@ -45,7 +45,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/353
+			// See #353
 			description: `a block the neighbour's break opens onto a new line: that line is indented in the same run`,
 			code: `@media screen{\na{b:c}\n}\n`,
 			fixed: `@media screen{\n\ta{\n\t\tb:c}\n}\n`,
@@ -76,7 +76,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/353
+			// See #353
 			description: `a break written by a lineness-deferred neighbour: this rule's check runs behind even those, so the line that break begins is indented too`,
 			code: `@media screen{\na{b:c;\nd:e}\n}\n`,
 			fixed: `@media screen{\n\ta{\n\t\tb:c;\n\t\td:e}\n}\n`,
@@ -114,7 +114,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/509
+			// See #509
 			description: `the closing brace of a block whose last at-rule the neighbour puts a semicolon behind: that semicolon hands the run in front of the brace from the at-rule to the block, and the brace is measured in whichever of the two raws holds it`,
 			code: `a {\n\t@extend .b\n\t\t}\n`,
 			fixed: `a {\n\t@extend .b;\n}\n`,
@@ -145,7 +145,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
+			// See #510
 			description: `a comment in front of the semicolon the neighbour takes away, the statement's while the semicolon stands and the block's once it is gone`,
 			code: `a {\n\t@extend .b\n\t/* c */;\n}\n`,
 			fixed: `a {\n\t@extend .b\n\t/* c */\n}\n`,
@@ -167,7 +167,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/509
+			// See #509
 			description: `the same brace where the neighbour takes the semicolon away instead, which leaves the run standing in the block's own raw`,
 			code: `a {\n\t@extend .b;\n\t\t}\n`,
 			fixed: `a {\n\t@extend .b\n}\n`,

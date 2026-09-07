@@ -28,12 +28,12 @@ export let meta = {
 
 /**
  * Requires a single space or disallows whitespace after the commas of value lists.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always`, `never`, `always-single-line` and `never-single-line`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always`, `never`, `always-single-line` or `never-single-line`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line`): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
@@ -54,8 +54,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.after,
 			checkedRuleName: ruleName,
-			// Stylelint counts a fixer as applied whatever it does, so a rule that cannot repair a problem has to say so here rather than from inside the fixer.
-			// A comma standing before the value is one such: it belongs to the property name, and nothing this rule could write would reach it. A comma opening the value is the value's first character, and the whitespace behind it belongs to the value like any other, so the boundary takes that one in.
+			// Declined here, since Stylelint counts a fixer as applied whatever it does: a comma in the property name is out of reach, one opening the value is not.
 			isFixable: (declNode, index) => index >= declarationValueIndex(declNode),
 			fix: (declNode, index) => {
 				fixData = fixData || (new Map())

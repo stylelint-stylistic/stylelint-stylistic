@@ -3,15 +3,15 @@ import type { Node as ValueParserNode } from "postcss-value-parser"
 import { LEADING_OPERATOR } from "../../../regexps.ts"
 import { isScssVariable } from "../../../utils/isScssVariable/index.ts"
 
-/** The calls Sass hands through as the plain CSS they are, a solidus beside them staying the separator the file spells. Measured against dart-sass 1.104: `var(--x)/2` and `env(safe-area-inset-top)/2` print as they stand, while `fn()/2`, `abs(-4)/2`, `max(4px, 2px)/2` and `2/round(1.5)` print a quotient and `rgb(0 0 0)/2` is refused as an operation on a colour — so every other call is read as one Sass may evaluate, which puts the doubt on the side that declines. */
+/** The calls Sass hands through as plain CSS, a solidus beside them a separator; every other call may be evaluated (dart-sass 1.104 prints `fn()/2` as a quotient). */
 const PLAIN_CSS_CALLS: Set<string> = new Set([`env`, `var`])
 
 /**
- * Asks whether a node standing beside a solidus is one Sass computes with, so that the solidus is its division.
+ * Asks whether a node beside a solidus is one Sass computes with.
  *
- * A variable is one, `$a` and `ns.$a` alike and whichever sign stands in front of it — `-$a/2` and `2/-$a` both print a quotient. A call is one unless Sass hands it through as plain CSS, and a parenthesised group, which the parser hands over as a call with no name, is one too: `(4)/2` is a quotient. A number, a dimension, a keyword and a string are not: `4/2`, `4px/2px`, `a/b` and `"a"/2` all print as they stand.
- * @param node - The node, none where the solidus stands at the edge of the text.
- * @returns True where Sass divides by or into it.
+ * A variable is, whatever sign is in front; a call is unless Sass hands it through, and so is a parenthesised group, a nameless call to the parser; a number, a dimension, a keyword and a string are not.
+ * @param node - The node, none at the text's edge.
+ * @returns True where Sass divides by it.
  */
 function isOperand (node: ValueParserNode | undefined): boolean {
 	if (!node) return false
@@ -24,11 +24,11 @@ function isOperand (node: ValueParserNode | undefined): boolean {
 }
 
 /**
- * Asks whether Sass reads a solidus standing between two nodes as its division operator rather than as the separator CSS spells there.
+ * Asks whether Sass reads a solidus between two nodes as division rather than CSS's separator.
  *
- * Sass decides by the operands and not by the whitespace: `$a/2`, `$a / 2` and `$a /2` all print a quotient, and `4/2`, `4 / 2` and `4 /2` all print `4/2`. So a solidus with such an operand on either side is one the rules about the separator pass over under this namespace — writing beside it would be writing beside an operator — and every other solidus is read as the core reads it. The reading is Dart Sass's up to 2.0, which is to drop the operator outside `calc()` in favour of `math.div`; a file spelling `$a/2` will be refused there, and the namespace reads what the file spells today.
- * @param left - The node in front of the solidus, none where the solidus opens the text.
- * @param right - The node behind it, none where the solidus closes the text.
+ * Sass decides by the operands, not the whitespace: `$a /2` is a quotient, `4 /2` is not. The separator rules pass over a solidus beside such an operand. Dart Sass 2.0 drops the operator outside `calc()` for `math.div`.
+ * @param left - The node in front, if any.
+ * @param right - The node behind, if any.
  * @returns True where Sass divides there.
  */
 export function readsSlashAsOperator (left: ValueParserNode | undefined, right: ValueParserNode | undefined): boolean {

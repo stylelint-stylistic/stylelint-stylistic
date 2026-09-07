@@ -26,13 +26,13 @@ export let meta = {
 
 /**
  * Requires a newline or disallows whitespace after the commas of selector lists.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always`, `always-multi-line` and `never-multi-line`.
- * @param _secondaryOptions - The secondary options, of which this rule takes none.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always`, `always-multi-line` or `never-multi-line`.
+ * @param _secondaryOptions - None taken.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
@@ -48,9 +48,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		root.walkRules((ruleNode) => {
 			if (!syntax.isStandardRule(ruleNode)) return
 
-			// The raw selector is what is read, so that an end-of-line comment is allowed, e.g.
-			//   a, /* comment */
-			//   b {}
+			// The raw selector is read, so an end-of-line comment behind the comma is allowed
 			let copies = syntax.selectorCopies(ruleNode)
 			let { selector } = copies
 
@@ -65,17 +63,17 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				(match) => {
 					let nextChars = selector.slice(match.endIndex)
 
-					// An inline comment is closed by a newline and by nothing else, so the newline this rule asks for is already there
+					// A newline alone closes an inline comment, so the one asked for is there
 					if (WHITESPACE_THEN_INLINE_COMMENT.test(nextChars)) return
 
-					// If there are spaces and then a comment begins, look for the newline
+					// Behind spaces and a block comment, look after the comment
 					let indextoCheckAfter = WHITESPACE_THEN_BLOCK_COMMENT.test(nextChars) ? selector.indexOf(`*/`, match.endIndex) + 1 : match.startIndex
 
 					checker.afterOneOnly({
 						source: selector,
 						index: indextoCheckAfter,
 						err: (m) => {
-							// Under the `never` options the whitespace behind the comma — or behind the comment standing after it — is taken away, and it may hold the line break that closes an inline comment: without that break everything behind it would land in the comment's text. The problem is reported and the code left as it was. The `always` options only add a break in front of that whitespace, and take nothing.
+							// A `never` fix may take the break closing an inline comment: reported unfixed. The `always` options take nothing
 							let fixIndex = indextoCheckAfter + 1
 							let runEnd = fixIndex + (selector.slice(fixIndex).length - selector.slice(fixIndex).trimStart().length)
 							let closesInlineComment = primary.startsWith(`never`) && copies.comments.some((inlineComment) => fixIndex <= inlineComment.endIndex && inlineComment.endIndex < runEnd)

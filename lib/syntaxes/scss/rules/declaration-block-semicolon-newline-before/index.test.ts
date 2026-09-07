@@ -24,7 +24,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/207
+			// See #207
 			description: `inline comment before the semicolon: the semicolon cannot join the comment's line, so the code is left alone and the warning stands`,
 			code: `
 				a {
@@ -43,7 +43,7 @@ testRule({
 			message: messages.rejectedBeforeMultiLine(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/207
+			// See #207
 			description: `inline comment behind the flag: the semicolon cannot join its line either`,
 			code: `
 				a {
@@ -62,7 +62,7 @@ testRule({
 			message: messages.rejectedBeforeMultiLine(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/207
+			// See #207
 			description: `inline comment in front of the flag: the whitespace behind the flag goes, and the comment stays where it is`,
 			code: `
 				a {
@@ -141,7 +141,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/139
+			// See #139
 			description: `a Sass nested property with a declaration behind it, whose own text ends where its value does rather than where its block does`,
 			code: `
 				a {

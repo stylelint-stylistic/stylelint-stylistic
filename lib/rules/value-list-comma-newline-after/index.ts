@@ -28,13 +28,13 @@ export let meta = {
 
 /**
  * Requires a newline or disallows whitespace after the commas of value lists.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always`, `always-multi-line` and `never-multi-line`.
- * @param _secondaryOptions - The secondary options, of which this rule takes none.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always`, `always-multi-line` or `never-multi-line`.
+ * @param _secondaryOptions - Unused.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
@@ -55,8 +55,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.afterOneOnly,
 			checkedRuleName: ruleName,
-			// Stylelint counts a fixer as applied whatever it does, so a rule that cannot repair a problem has to say so here rather than from inside the fixer.
-			// A comma standing before the value is one such: it belongs to the property name, and nothing this rule could write would reach it. A comma opening the value is the value's first character, and the whitespace behind it belongs to the value like any other, so the boundary takes that one in.
+			// Declined here, since Stylelint counts a fixer as applied whatever it does: a comma in the property name is out of reach, one opening the value is not.
 			isFixable: (declNode, index) => index >= declarationValueIndex(declNode),
 			fix: (declNode, index) => {
 				fixData = fixData || (new Map())
@@ -69,10 +68,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			determineIndex: (declString, match) => {
 				let nextChars = declString.slice(match.endIndex)
 
-				// An inline comment is closed by a newline and by nothing else, so the newline this rule asks for is already there
+				// Only a newline closes a `//` comment, so the break is there
 				if (SPACES_THEN_INLINE_COMMENT.test(nextChars)) return false
 
-				// If there are spaces and then a comment begins, look for the newline
+				// Behind a block comment, the break is asked for past it
 				return SPACES_THEN_BLOCK_COMMENT.test(nextChars) ? declString.indexOf(`*/`, match.endIndex) + 1 : match.startIndex
 			},
 		})

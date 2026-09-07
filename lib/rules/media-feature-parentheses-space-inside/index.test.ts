@@ -128,7 +128,7 @@ testRule({
 			message: messages.expectedOpening,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			// See #508
 			description: `a comment holding a parenthesis between two quotation marks it closes around them: the string those marks open reaches past nothing, so the mask leaves them where they stand and the parenthesis stays the comment's`,
 			code: `@media ( b: 2 /*/ "(" */ ) and (c: d) { a { c: d; } }`,
 			fixed: `@media ( b: 2 /*/ "(" */ ) and ( c: d ) { a { c: d; } }`,
@@ -301,7 +301,7 @@ testRule({
 			message: messages.rejectedClosing,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/225
+			// See #225
 			description: `a bare address inside a call the plugin knows nothing of: plain CSS spells no comment with a double slash, so the feature behind it is read`,
 			code: `@media (myurl(//a)) and ( min-width:1px ) { c {} }`,
 			fixed: `@media (myurl(//a)) and (min-width:1px) { c {} }`,
@@ -319,7 +319,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/272
+			// See #272
 			description: `a feature standing behind a comment the value parser does not give back as it read it`,
 			code: `@media (min-width:1px) and x/*/*a*/( max-width:2px ) { a { b: c; } }`,
 			fixed: `@media (min-width:1px) and x/*/*a*/(max-width:2px) { a { b: c; } }`,
@@ -337,7 +337,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			// See #378
 			description: `a feature standing beside a comment opening with a solidus, a star and a solidus, whose text spells a feature of its own that the value parser hands back as one`,
 			code: `@media ( a: 1 ) /*/ ( b: 2 ) */ and (c: 3) { a { b: c; } }`,
 			fixed: `@media (a: 1) /*/ ( b: 2 ) */ and (c: 3) { a { b: c; } }`,
@@ -355,7 +355,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			// See #508
 			description: `a feature in front of a comment holding one quotation mark, and a feature of the same spelling inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no feature`,
 			code: `@media ( b: 2 ) /*/ " */ and (c: "( b: 2 )") { a { c: d; } }`,
 			fixed: `@media (b: 2) /*/ " */ and (c: "( b: 2 )") { a { c: d; } }`,
@@ -373,9 +373,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/347
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			// See #347, #506 and #508
 			description: `a comment leaving a quotation mark open in front of a parenthesis it also holds: taking the mark away hands the parser that parenthesis, which closes the feature inside the comment, and this rule asks nothing about where the parenthesis it writes at stands`,
 			code: `@media ( b: 2 /*/ " ) */ ) and (c: d) { a { b: c; } }`,
 			fixed: `@media (b: 2 /*/ ") */ ) and (c: d) { a { b: c; } }`,
@@ -393,7 +391,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
+			// See #506
 			description: `the whitespace in front of the closing parenthesis of a feature holding a comment opening with a solidus, a star and a solidus, reported at the character in front of the parenthesis as it is for the twin holding a comment of that width the value parser gives back as it read it, rather than a column further on`,
 			code: `@media (a: 1 /*/ c */ ) { a { b: c; } }`,
 			fixed: `@media (a: 1 /*/ c */) { a { b: c; } }`,
@@ -404,9 +402,9 @@ testRule({
 	],
 })
 
-// A feature holding no node at all is the one shape where the whitespace behind the opening parenthesis and the whitespace in front of the closing one are one and the same span of no characters, and nothing else covers it. No `testRule` case can stand here: the parser hands the whole run back as `before` on the next parse, so the closing half is reported again, and the testing library fails a fixture whose warning survives its own fix — which is #329, older than this and none of its doing.
+// A feature holding no node is the one shape where the whitespace behind the opening parenthesis and in front of the closing one are the same empty span. No `testRule` case can stand here: the parser hands the whole run back as `before` on the next parse, so the closing half is reported again and the testing library fails a fixture whose warning survives its own fix (#329, older than this).
 //
-// What the case holds is the output and not the fold that writes it. The two halves of `always` put the same one space at the same index, so writing them as one edit and writing them as two come to the same text, and only the contract of `applyEditsFromEnd` tells them apart.
+// The case holds the output, not the fold that writes it: both halves of `always` put the same one space at the same index, so one edit and two come to the same text, and only the contract of `applyEditsFromEnd` tells them apart.
 describe(`${ruleName} on a feature holding no node at all`, () => {
 	it(`writes both halves of always into the one span such a feature encloses`, async () => {
 		let { code } = await stylelint.lint({

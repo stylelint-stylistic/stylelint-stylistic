@@ -1,14 +1,10 @@
-/**
- * A character outside the Basic Multilingual Plane standing in a cell of a grid — alone in the narrowest cell of its column, in the widest, inside a name, in a column that is not the last, in the last, in every cell of its row, in a row of its own, in a row short of a cell, in the widest row, in the second row of the grid, and in a grid of three rows one of which holds no cell at all.
- *
- * Written for #520. `named-grid-areas-alignment` built the width of every column with `String.prototype.length` and padded the cells out to it with `padEnd`, and both count the UTF-16 code units JavaScript stores a text in, where such a character is a surrogate pair standing on one column: a column came out as wide as the code units of its widest cell rather than as the characters of it, and the value came back from the fix out of line, which is what the rule is about. The corpus puts such a character in every place a cell has for it, so that a row says what the padding made of it there; an ordinary letter is the control, whose rows must not move, and the characters beside it come from three planes between them, since nothing of the reading knows one plane from another.
- */
+/** A character outside the Basic Multilingual Plane in every place a grid cell has for it. For [#520](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/520), where `named-grid-areas-alignment` measured columns in UTF-16 code units and a surrogate pair made its column a unit too wide. An ordinary letter is the control. */
 
 import { keysOf, multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** The character a cell is named with: the control first, stored in one code unit, then four stored in a surrogate pair, out of three planes between them. */
+/** The control in one code unit, then four surrogate pairs from three planes. */
 const CHARACTERS: Record<string, string> = {
 	basicLatinLetter: `z`,
 	mathematicalBoldA: `𝐚`,
@@ -17,7 +13,7 @@ const CHARACTERS: Record<string, string> = {
 	privateUse: `󰀀`,
 }
 
-/** Where the character stands, beside a row whose cells do not line up with it. */
+/** Where the character stands, beside a row that does not line up with it. */
 const PLACES: Record<string, (character: string) => string[]> = {
 	narrowestCell: (character) => [`"${character} bb"`, `"ccc  d"`],
 	widestCell: (character) => [`"${character}${character} b"`, `"cc  ddd"`],
@@ -32,7 +28,7 @@ const PLACES: Record<string, (character: string) => string[]> = {
 	noCellRow: (character) => [`"${character}${character} b"`, `""`, `"cc  ddd"`],
 }
 
-/** The declaration on one line and over several, since the padding of a cell is written only over several. */
+/** Padding is written only over several lines. */
 const LAYOUTS: Record<string, (rows: string[]) => string> = {
 	singleLine: (rows) => `a { grid-template-areas: ${rows.join(` `)}; }\n`,
 	multiLine: (rows) => `a {\n\tgrid-template-areas:\n\t\t${rows.join(`\n\t\t`)};\n}\n`,
@@ -49,7 +45,7 @@ const corpus: Sweep[`corpus`] = multiply({ layout: keysOf(LAYOUTS), place: keysO
 	return lay(put(character))
 })
 
-/** The rule under its primary and each of its secondary options, the two of them together, and `string-quotes` as the control that reads the same strings and writes nothing of their text. */
+/** Each option and both together, with `string-quotes` as a control reading the same strings without rewriting their text. */
 const configs: Sweep[`configs`] = [
 	{ rule: `named-grid-areas-alignment`, primary: true },
 	{ rule: `named-grid-areas-alignment`, primary: true, secondary: { gap: 2 } },

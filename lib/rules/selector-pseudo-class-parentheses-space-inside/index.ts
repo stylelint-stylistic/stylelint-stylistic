@@ -10,7 +10,7 @@ import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
-/** A node of the selector with the raws the parser hangs on one it found a comment beside: the run of whitespace and comment it prints in place of `spaces`, and the value it prints in place of the node's own. */
+/** A selector node with the raws a comment adds; `toString()` prints them over `spaces` and `value`. */
 type NodeWithRaws = Node & {
 	raws?: {
 		spaces?: Partial<Spaces>,
@@ -33,13 +33,13 @@ export let meta = {
 }
 
 /**
- * Requires a single space or disallows whitespace on the inside of the parentheses within pseudo-class selectors.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * Requires a single space or disallows whitespace inside the parentheses of pseudo-class selectors.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always` and `never`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always` or `never`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
 	return (root, result) => {
@@ -66,18 +66,18 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!selectorTree) return
 
-			// Everything below is measured against the tree and written back from it, so the tree has to stand for the file: a fix made in one pseudo-class is written back with the whole selector list, and would carry off whatever the parser has moved anywhere else in it.
+			// A fix writes the whole selector back, so the tree must print as the source
 			if (!standsForSource(selectorTree, selector)) return
 
 			selectorTree.walkPseudos((pseudoNode) => {
 				if (pseudoNode.length === 0) return
 
 				let paramString = pseudoNode.map((node) => node.toString()).join(`,`)
-				// A line ends where PostCSS ends one, on a line feed, which is the break `findSelectorInlineComments` reads as well, so a list broken with one is a multi-line list and a list holding a bare carriage return or a form feed is not.
+				// Multi-line by line feed only, as PostCSS counts lines
 				let isParamStringMultiline = LINE_BREAK.test(paramString)
 				let openIndex = pseudoNode.sourceIndex + pseudoNode.value.length + 1
 
-				// The whitespace this rule has an opinion about is kept on the node standing at that end of the arguments, and an argument with no node in it has none to keep it. So an end with nothing at it has neither a space to report nor anywhere to write one, and each side is asked about on its own, the other going on as before.
+				// The whitespace at each end hangs on the node there
 				let firstNode = firstNodeInside(pseudoNode)
 				let lastNode = lastNodeInside(pseudoNode)
 
@@ -101,7 +101,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					}
 				}
 
-				// An inline comment ends with the line break standing behind it, and where that break is the whitespace this end is about, it is what an option would write over. A space there would put the closing parenthesis inside the comment, and taking the break away would do the same, so the end is passed over: neither option can be satisfied, and neither can be asked for.
+				// A closing run ending a `//` comment: either option would write the `)` into it
 				if (copies.comments.some((inlineComment) => inlineComment.startIndex < openIndex + paramString.trimEnd().length && openIndex + paramString.trimEnd().length <= inlineComment.endIndex)) lastNode = undefined
 
 				if (lastNode) {
@@ -133,9 +133,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			}
 
 			/**
-			 * Reports a pseudo-class parentheses space violation.
-			 * @param message - The error message to report.
-			 * @param rawIndex - The index of the violation in the selector as it is parsed.
+			 * Reports a problem.
+			 * @param message - The warning text to report.
+			 * @param rawIndex - The index in the parsed selector.
 			 */
 			function complain (message: string, rawIndex: number): void {
 				let index = copies.toSourceIndex(rawIndex)
@@ -155,14 +155,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 }
 
 /**
- * Tells whether a parsed selector stands for the source it was parsed from, giving it back what the parser moved on the way where that can be done.
+ * Tells whether a parsed selector prints as its source, putting back what the parser dropped.
  *
- * `postcss-selector-parser` keeps no whitespace between a comment and the end of the argument it closes: an argument whose last node is a comment has no node to fold the run into, and the parser holds it nowhere else. Where the argument is the last one, the run is handed to whatever stands behind the closing parenthesis, so that `a:not( /*c*\/ ):is(b)` comes back out as `a:not( /*c*\/) :is(b)` — a compound selector turned into a descendant one. Both are put back the way the source spells them: the run goes on the comment, and whatever follows the pseudo-class is given the whitespace the source has in front of it.
- *
- * An argument holding no node at all keeps no whitespace either, and nothing in the tree can hold that one: an empty container prints nothing, whatever its spaces are set to. A selector carrying one is what this answers no for.
+ * `postcss-selector-parser` drops the whitespace between a closing comment and the `)`, or moves it behind the `)`: `a:not( /*c*\/ ):is(b)` prints as `a:not( /*c*\/) :is(b)`. An empty argument prints nothing: no.
  * @param selectorTree - The parsed selector.
- * @param selector - The selector the tree was parsed from.
- * @returns True if the tree gives the selector back the way the source spells it.
+ * @param selector - Its source.
+ * @returns True if the tree prints as the source.
  */
 function standsForSource (selectorTree: Root, selector: string): boolean {
 	if (String(selectorTree) === selector) return true
@@ -180,7 +178,7 @@ function standsForSource (selectorTree: Root, selector: string): boolean {
 
 		comment.spaces.after = dropped
 
-		// A run standing in front of a comma is only dropped, and the argument behind the comma keeps the whitespace the source gives it. One standing in front of the closing parenthesis is handed on instead, to whatever comes next in the selector — the node behind the pseudo-class, the combinator standing there, or the one that opens the next selector of the list, since the run reaches out of as many parentheses as it has to.
+		// A run in front of a comma is only dropped; one in front of the `)` moves to the next node, however many parentheses out
 		let following = nodeAfter(node.parent)
 
 		if (following) restoreSpaceBefore(following, selector)
@@ -190,9 +188,9 @@ function standsForSource (selectorTree: Root, selector: string): boolean {
 }
 
 /**
- * Gets the node that comes after another one in the selector, climbing out of the containers it closes.
- * @param node - The node to look ahead from.
- * @returns The node, or nothing where it closes the selector.
+ * The node after another, climbing out of the containers it closes.
+ * @param node - The node whose successor is sought.
+ * @returns The next node, or nothing at the selector's end.
  */
 function nodeAfter (node: Node | Container | undefined): Node | undefined {
 	let current: Node | Container | undefined = node
@@ -203,7 +201,7 @@ function nodeAfter (node: Node | Container | undefined): Node | undefined {
 		while (next) {
 			if (next.type !== `selector`) return next
 
-			// A selector of a list is a container of its own, and the node standing at its head is what comes next in the text. One holding nothing has no such node, and what comes next stands in the selector after it.
+			// A list's selector is a container: its head comes next, an empty one is skipped
 			next = next.first || next.next()
 		}
 
@@ -212,11 +210,9 @@ function nodeAfter (node: Node | Container | undefined): Node | undefined {
 }
 
 /**
- * Gives a node the whitespace the source has in front of it, writing it where the node prints that whitespace from.
- *
- * A descendant combinator is the whitespace itself, and the parser folds a comment standing in it into the raws beside it, so the whole run — comment and all — is written as the text the combinator prints. Anything else keeps its whitespace in `spaces.before`, and a raw already holding it is left alone, since nothing here could put back what such a raw carries.
- * @param node - The node to give the whitespace to.
- * @param selector - The selector the tree was parsed from.
+ * Gives a node the source whitespace in front of it: a descendant combinator prints its raw value, comments included; anything else `spaces.before`, unless a raw holds it.
+ * @param node - The node whose leading whitespace is restored.
+ * @param selector - The source.
  */
 function restoreSpaceBefore (node: Node, selector: string): void {
 	if (node.type === `combinator` && WHITESPACE.test(node.value)) {
@@ -231,10 +227,10 @@ function restoreSpaceBefore (node: Node, selector: string): void {
 }
 
 /**
- * Gets the run of whitespace a string has at an index.
- * @param text - The text to read.
- * @param index - The index to read from.
- * @returns The whitespace standing there, empty where none does.
+ * The whitespace run at an index.
+ * @param text - The selector source the run is read from.
+ * @param index - The offset the run starts at.
+ * @returns The run, empty where none.
  */
 function leadingWhitespace (text: string, index: number): string {
 	let match = LEADING_WHITESPACE_RUN.exec(text.slice(index))
@@ -243,12 +239,10 @@ function leadingWhitespace (text: string, index: number): string {
 }
 
 /**
- * Gets the run of whitespace and comments a string has at an index.
- *
- * A node's own index is where its text begins, and for a namespaced one that is the local name rather than the prefix in front of it, so the run is read for what it is made of rather than measured up to the node behind it.
- * @param text - The text to read.
- * @param index - The index to read from.
- * @returns The whitespace and comments standing there, empty where neither does.
+ * The run of whitespace and comments at an index, read by content since a namespaced node's index is at its local name, not its prefix.
+ * @param text - The selector source the run is read from.
+ * @param index - The offset the run starts at.
+ * @returns The run, empty where none.
  */
 function whitespaceAndComments (text: string, index: number): string {
 	let end = index
@@ -263,10 +257,10 @@ function whitespaceAndComments (text: string, index: number): string {
 }
 
 /**
- * Gets the run of whitespace a string has in front of an index.
- * @param text - The text to read.
- * @param index - The index to read up to.
- * @returns The whitespace standing there, empty where none does.
+ * The whitespace run in front of an index.
+ * @param text - The selector source the run is read from.
+ * @param index - The offset the run ends at.
+ * @returns The run, empty where none.
  */
 function trailingWhitespace (text: string, index: number): string {
 	let match = TRAILING_WHITESPACE_RUN.exec(text.slice(0, index))
@@ -275,9 +269,9 @@ function trailingWhitespace (text: string, index: number): string {
 }
 
 /**
- * Gets the node standing at the beginning of a container's contents, walking down through the selectors it is nested in.
- * @param node - The container node.
- * @returns The node, or nothing where the container holds none.
+ * The first node inside a container, down through nested selectors.
+ * @param node - The container.
+ * @returns The node, or nothing where empty.
  */
 function firstNodeInside (node: Container): Node | undefined {
 	let target = node.first
@@ -288,9 +282,9 @@ function firstNodeInside (node: Container): Node | undefined {
 }
 
 /**
- * Gets the node standing at the end of a container's contents, walking down through the selectors it is nested in.
- * @param node - The container node.
- * @returns The node, or nothing where the container holds none.
+ * The last node inside a container, down through nested selectors.
+ * @param node - The container.
+ * @returns The node, or nothing where empty.
  */
 function lastNodeInside (node: Container): Node | undefined {
 	let target = node.last
@@ -301,11 +295,9 @@ function lastNodeInside (node: Container): Node | undefined {
 }
 
 /**
- * Sets the space before a node.
- *
- * A comment beside a node moves the whole run around it — the space, the comment, the space — into `raws.spaces`, and `toString()` prints the raw one whenever it is there. A write to `spaces` alone would land on a field nothing reads, so the raw is trimmed alongside it, keeping the comment where the author put it.
- * @param target - The node to set the space of.
- * @param value - The space value to set.
+ * Sets the space before a node, in `raws.spaces` too where a comment moved the run there, since `toString()` prints the raw.
+ * @param target - The node.
+ * @param value - The space.
  */
 function setSpaceBefore (target: Node, value: string): void {
 	target.spaces.before = value
@@ -316,11 +308,9 @@ function setSpaceBefore (target: Node, value: string): void {
 }
 
 /**
- * Sets the space after a node.
- *
- * The mirror of `setSpaceBefore`, and the side a comment actually reaches: a trailing comment is folded into the raws of the node in front of it whenever whitespace separates the two, which is what makes the raw the printed one here. With nothing between them it is a node of its own instead, and no raw appears. Nothing ever folds into the raws of a pseudo-class's first node — the parser does write `raws.spaces.before`, but on a combinator with a comment in front of it, never here — so the mirror has no reproducer of its own.
- * @param target - The node to set the space of.
- * @param value - The space value to set.
+ * The mirror of `setSpaceBefore`, whose raws branch has no reproducer: the parser writes `raws.spaces.before` only on a combinator behind a comment.
+ * @param target - The node.
+ * @param value - The space.
  */
 function setSpaceAfter (target: Node, value: string): void {
 	target.spaces.after = value

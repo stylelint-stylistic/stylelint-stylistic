@@ -30,11 +30,11 @@ export let meta = {
 
 /**
  * Requires or disallows whitespace after the closing brace of blocks.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
- * @param primary - The primary option, one of `always`, `never`, `always-single-line`, `never-single-line`, `always-multi-line` and `never-multi-line`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
+ * @param primary - `always`, `never`, or either with `-single-line` or `-multi-line`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line` | `always-multi-line` | `never-multi-line`): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
@@ -54,13 +54,13 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 
 		if (!validOptions) return
 
-		// Check both kinds of statements: rules and at-rules
+		// Rules and at-rules
 		root.walkRules(check)
 		root.walkAtRules(check)
 
 		/**
-		 * Checks a statement for closing brace space after violations.
-		 * @param statement - The rule or at-rule to check.
+		 * Checks a statement.
+		 * @param statement - The rule or at-rule.
 		 */
 		function check (statement: Rule | AtRule): void {
 			let nextNode = statement.next()
@@ -72,7 +72,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 			let reportIndex = nodeString(statement, result).length
 			let source = rawNodeString(nextNode, result)
 
-			// Skip a semicolon at the beginning, if any
+			// Skip a leading semicolon
 			if (source && source.startsWith(`;`)) {
 				source = source.slice(1)
 				reportIndex += 1

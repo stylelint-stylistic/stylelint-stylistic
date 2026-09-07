@@ -29,12 +29,12 @@ export let meta = {
 
 /**
  * Disallows trailing zeros in numbers.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, which is `true`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `true`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: true): RuleCheck {
 	return (root, result) => {
@@ -51,9 +51,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		root.walkDecls((decl) => check(decl, syntax.read(decl)))
 
 		/**
-		 * Checks a node for trailing zeros violations.
-		 * @param node - The node to check.
-		 * @param value - The value to check.
+		 * Checks a node for trailing zeros.
+		 * @param node - The declaration or at-rule the value belongs to.
+		 * @param value - Its text as read.
 		 */
 		function check (node: AtRule | Declaration, value: string): void {
 			let fixPositions: Array<{
@@ -61,45 +61,40 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				endIndex: number,
 			}> = []
 
-			// Get out quickly if there are no periods
+			// No period, no fraction
 			if (!value.includes(`.`)) return
 
-			// Every comment the value holds, both kinds. A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind, so what such a comment holds comes back as ordinary words and calls; a block comment reaches the walk as a node of its own — except one opening `/*/`, which the parser closes on the star it opened with, handing the rest of its text back the same way (#378)
+			// The value parser knows nothing of `//` comments and closes `/*/` on its own star (#378)
 			let comments = syntax.commentSpans(value, node, result)
 
-			// The value is parsed in a copy of itself with every quotation mark its comments leave open masked, so that the parser pairs the marks the value spells the way the file pairs them (#508)
+			// Quotation marks in comments are masked, so the parser pairs the rest as the file does (#508)
 			valueParser(hideQuotesInComments(value, comments)).walk((valueNode, at, siblings) => {
-				// A call opening an address holds a URL and no arguments of its own, so it is passed over whole. The name is read rather than matched against four characters, so that `u\rl(`, `\75 rl(` and `URL(` are the token `url(` is here as they are to the scan that finds the comments — and to Sass, and to `lightningcss`.
+				// An address, not arguments; the name is read as CSS does, so `\75 rl(` counts
 				if (opensAnAddress(valueNode, at, siblings)) return false
 
-				// A node standing in the text of a comment is no node of the value: leave it alone. What it holds is still walked, and every node of that asked the same question, since a call opened inside such a comment reaches past the break or the delimiter that closes it and the code it gathers there is code the file spells. An address is passed over first, since the scan that finds the comments steps over one only where it reads it as code: an `url()` opened in a comment's text is a node of that comment holding an address that reaches past the comment's end, and what stands there is nothing this rule may read.
+				// A node in a comment is skipped but its children walked, since a call opened in a comment reaches past its end into code; an address likewise, so it is asked first
 				if (findCommentSpanHolding(valueNode, comments)) return
 
-				// Ignore strings, comments, etc
+				// Words only
 				if (valueNode.type !== `word`) return
 
 				let match = FRACTION_WITH_TRAILING_ZEROS.exec(valueNode.value)
 
-				// `match[1]` is whatever digits stand between the decimal point and the trailing zeros, and may be empty
-				// `match[2]` is the trailing zeros themselves
+				// `match[1]`: the digits between the point and the zeros; `match[2]`: the zeros
 				if (match === null || match[1] === undefined || match[2] === undefined) return
 
-				// The index is made of four parts:
-				//  where the value node begins +
-				//  where the match begins in it +
-				//  one for the decimal point +
-				//  the digits standing behind it, which is `match[1]`
+				// Node start, match start, the point, then `match[1]`
 				let index = valueNode.sourceIndex + match.index + 1 + match[1].length
 
-				// The start index is that same index, except where the fraction is nothing but zeros: the decimal point goes with them then, so the index steps back one.
+				// A fraction of nothing but zeros takes the point with it
 				let startIndex = match[1].length > 0 ? index : index - 1
 
-				// The end index is that index plus the run of trailing zeros
+				// Past the trailing zeros
 				let endIndex = index + match[2].length
 
 				let baseIndex = isAtRule(node) ? atRuleParamIndex(node) : declarationValueIndex(node)
 
-				// this is the index of the _first_ trailing zero
+				// The first trailing zero
 				let problemIndex = baseIndex + index
 
 				report({
@@ -131,11 +126,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 }
 
 /**
- * Removes trailing zeros from a number in the specified range.
- * @param input - The input string.
- * @param startIndex - The start index of the range to remove.
- * @param endIndex - The end index of the range to remove.
- * @returns The string with trailing zeros removed.
+ * Removes a range from a string.
+ * @param input - The string.
+ * @param startIndex - Range start.
+ * @param endIndex - Range end.
+ * @returns The string without the range.
  */
 function removeTrailingZeros (input: string, startIndex: number, endIndex: number): string {
 	return input.slice(0, startIndex) + input.slice(endIndex)

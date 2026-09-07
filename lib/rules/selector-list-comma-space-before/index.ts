@@ -26,13 +26,13 @@ export let meta = {
 }
 
 /**
- * Requires a single space or disallows whitespace before the commas of selector lists.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * Requires a single space or no whitespace before the commas of selector lists.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always`, `never`, `always-single-line` and `never-single-line`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always`, `never`, `always-single-line` or `never-single-line`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line`): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
@@ -53,7 +53,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
-			// The whitespace in front of the comma may hold the line break that closes an inline comment, and that break is nothing a fix may write over: taking it away or replacing it with the space `always` asks for would carry the comma, and the rest of the list, into the comment's text. The problem is reported and the code left as it was.
+			// The run in front of the comma may hold the break closing an inline comment, which no fix may write over
 			isFixable: (selector, index, inlineComments) => {
 				let runStart = selector.slice(0, index).trimEnd().length
 

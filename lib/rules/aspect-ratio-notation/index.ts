@@ -33,23 +33,23 @@ export let meta = {
 	fixable: true,
 }
 
-/** The rules about the whitespace on either side of a solidus, each by the whitespace its `always` options write, and the text they count the lines of where an option turns on it. A declaration's value has one pair, a media feature another. */
+/** The solidus's neighbour rules by the whitespace they write, and the text whose lines they count. */
 type SolidusNeighbours = {
 	before: Partial<Record<Whitespace, NeighbourRule>>,
 	after: Partial<Record<Whitespace, NeighbourRule>>,
 	isSingleLine: () => boolean,
 }
 
-/** The options the two rules about the space beside a solidus in a value take. */
+/** `value-slash-space-*` options. */
 const VALUE_SLASH_SPACE_OPTIONS = [`always`, `never`, `always-single-line`, `never-single-line`]
 
-/** The options the two rules about the line break beside a solidus in a value take. */
+/** `value-slash-newline-*` options. */
 const VALUE_SLASH_NEWLINE_OPTIONS = [`always`, `always-multi-line`, `never-multi-line`]
 
-/** The options the two rules about the whitespace beside a solidus in a media feature take. */
+/** `media-feature-slash-space-*` options. */
 const MEDIA_SLASH_SPACE_OPTIONS = [`always`, `never`]
 
-/** The rules about the run in front of a solidus in a value, each by the whitespace its `always` options write (#550, #622). */
+/** Rules about the run in front of a value's solidus ([#550](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/550), [#622](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/622)). */
 const RULES_BEFORE_THE_SOLIDUS: Partial<Record<Whitespace, NeighbourRule>> = {
 	space: { name: `value-slash-space-before`, options: VALUE_SLASH_SPACE_OPTIONS },
 	newline: { name: `value-slash-newline-before`, options: VALUE_SLASH_NEWLINE_OPTIONS },
@@ -61,7 +61,7 @@ const RULES_AFTER_THE_SOLIDUS: Partial<Record<Whitespace, NeighbourRule>> = {
 	newline: { name: `value-slash-newline-after`, options: VALUE_SLASH_NEWLINE_OPTIONS },
 }
 
-/** The rule about the run in front of a solidus in a media feature. */
+/** The same for a media feature. */
 const MEDIA_RULES_BEFORE_THE_SOLIDUS: Partial<Record<Whitespace, NeighbourRule>> = {
 	space: { name: `media-feature-slash-space-before`, options: MEDIA_SLASH_SPACE_OPTIONS },
 }
@@ -71,20 +71,20 @@ const MEDIA_RULES_AFTER_THE_SOLIDUS: Partial<Record<Whitespace, NeighbourRule>> 
 	space: { name: `media-feature-slash-space-after`, options: MEDIA_SLASH_SPACE_OPTIONS },
 }
 
-/** What the fix writes on either side of a solidus where no rule speaks of the run: a single space, which is what the fix wrote before it read anybody. */
+/** Written beside a solidus no rule speaks of. */
 const SOLIDUS_WHITESPACE_FALLBACK = ` `
 
 /**
- * Specifies the notation for the value of `aspect-ratio`, and for the `<ratio>` of a media feature.
+ * Specifies the notation for the value of `aspect-ratio` and for the `<ratio>` of a media feature.
  *
- * The rule reads one value along two axes that do not depend on each other: the primary option decides how many numbers are written, and `smallestIntegers` decides what those numbers are. Both are settled before anything is written, and the whole value is written once, so neither axis can be applied by halves and no order in the configuration can change the outcome. The solidus the fix adds is spelled the way `value-slash-space-before` and `value-slash-space-after` ask wherever the configuration lists them, and with a space on either side where it lists neither (#550): Stylelint runs each rule once and in the order the configuration lists them, so a solidus written bare behind a `never` of either rule would be one that rule sees only on the run after.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * The options are settled before the one write, so configuration order changes nothing; a solidus the fix adds is spaced as the `value-slash-*` rules ask, a space where none is configured ([#550](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/550)).
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `ratio`, `number-where-possible` and `as-written`.
- * @param secondaryOptions - The secondary options: `smallestIntegers`, and `ignore` with `at-rules`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `ratio`, `number-where-possible` or `as-written`.
+ * @param secondaryOptions - `smallestIntegers`, and `ignore` with `at-rules`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `ratio` | `number-where-possible` | `as-written`, secondaryOptions: { smallestIntegers?: boolean, ignore?: string[] } = {}): RuleCheck {
 	return (root, result) => {
@@ -109,7 +109,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		let smallestIntegers = secondaryOptions.smallestIntegers ?? false
 
-		// `as-written` says nothing about how many numbers are written, so with the other axis off the rule has an opinion about nothing at all
+		// `as-written` with `smallestIntegers` off asks for nothing
 		if (primary === `as-written` && !smallestIntegers) return
 
 		root.walkDecls(ASPECT_RATIO_PROPERTY, (decl) => {
@@ -131,7 +131,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					isSingleLine: () => isSingleLineString(params),
 				}
 
-				// The range form puts two values of one feature in one set of parameters, and each is a text of its own. They are checked from the last forward, so that a write into one leaves the positions of those in front of it where they were counted; each write reads the parameters as the writes before it left them and replaces its own span, which stands in front of every span written already
+				// A range feature holds two values; checked from the last forward so earlier positions hold
 				for (let { start, end } of findMediaFeatureValues(params, RATIO_MEDIA_FEATURES).toReversed()) {
 					check(atRule, params.slice(start, end), atRuleParamIndex(atRule) + start, (fixed) => {
 						let current = syntax.read(atRule)
@@ -143,18 +143,16 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		}
 
 		/**
-		 * Checks one text a `<ratio>` may be written in, and reports the ratio it holds where that ratio is written otherwise than the options ask.
-		 *
-		 * The node, its text, where that text begins and how it is written back are all handed over, rather than read off the node here, so that a declaration's value and the value of a media feature are two callers rather than a branch inside.
-		 * @param node - The node the text was read from, which a problem is reported against.
-		 * @param text - The text to check.
-		 * @param textIndex - The offset from the start of the node to the first character of that text.
-		 * @param write - Writes the fixed text back to the node.
-		 * @param neighbours - The rules about the whitespace on either side of a solidus written into this text, and the text they count the lines of.
+		 * Checks one text a `<ratio>` may stand in; a declaration's value and a media feature's value are its two callers.
+		 * @param node - The node the text is from.
+		 * @param text - The value or media feature value a ratio may stand in.
+		 * @param textIndex - Its offset in the node.
+		 * @param write - Writes the fixed text.
+		 * @param neighbours - The solidus's neighbour rules.
 		 */
 		function check (node: Node, text: string, textIndex: number, write: (fixed: string) => void, neighbours: SolidusNeighbours): void {
 			let comments = syntax.commentSpans(text, node, result)
-			// The value parser has a node for a block comment and none for a comment opened by a double slash, whose text comes back as ordinary words and divs. Blanking every comment out answers both at once: the copy spells the text character for character everywhere else, so every position below counts in the text itself, and what the parse holds is code the file spells and nothing else.
+			// The value parser has no `//` comment node
 			let ratio = findRatio(valueParser(blankComments(text, comments)).nodes)
 
 			if (!ratio) return
@@ -168,7 +166,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (writesHeight && height && height.value !== expectedHeight) edits.push({ start: height.sourceIndex, end: height.sourceEndIndex, text: expectedHeight })
 
-			// The whitespace on either side of the solidus is what the rule about that run asks for, the later-listed one where two speak, and the fallback where none does; each side is a run of its own with a rule of its own
+			// Each side: its rule's whitespace, the later-listed rule where two speak, else the fallback
 			if (writesHeight && !height) {
 				let before = whitespaceAsked(syntax, node, result, neighbours.before, neighbours.isSingleLine, SOLIDUS_WHITESPACE_FALLBACK)
 				let after = whitespaceAsked(syntax, node, result, neighbours.after, neighbours.isSingleLine, SOLIDUS_WHITESPACE_FALLBACK)
@@ -176,7 +174,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				edits.push({ start: width.sourceEndIndex, end: width.sourceEndIndex, text: `${before}/${after}${expectedHeight}` })
 			}
 
-			// The run taken out reaches from the end of the first number to the end of the second, so the solidus goes with it however it is spaced
+			// The cut takes the solidus however it is spaced
 			if (!writesHeight && height) edits.push({ start: width.sourceEndIndex, end: height.sourceEndIndex, text: `` })
 
 			if (edits.length === 0) return
@@ -194,24 +192,22 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				endIndex: textIndex + end,
 				result,
 				ruleName,
-				// A comment standing between the two numbers is code, and the run that takes the second number away holds it: taking a comment out of a stylesheet is nothing this rule was asked to do, so the problem is reported and the value left for a reader to settle
+				// An edit over a comment would remove it: no fix
 				...(!edits.some((edit) => holdsComment(edit, comments)) && { fix: (): void => write(applyEditsFromEnd(text, edits)) }),
 			})
 		}
 	}
 }
 
-/** The two numbers a `<ratio>` is written with, as the value parser read them. */
+/** The two numbers of a `<ratio>`. */
 type Ratio = {
 	width: ValueParserNode,
 	height: ValueParserNode | undefined,
 }
 
 /**
- * Finds the numbers of the `<ratio>` a value holds, where the value spells `auto || <ratio>` and nothing else.
- *
- * The grammar of the property is `auto || <ratio>`, and `<ratio>` is one number with an optional second one behind a solidus. Anything else standing at the top level — a call, a variable of another syntax, a keyword such as `inherit` — makes the value one this rule cannot read, and reading part of it would be reading a value the file does not spell.
- * @param nodes - The nodes of the parsed value, comments already blanked out of it.
+ * Finds the numbers of a value that is `auto || <ratio>` and nothing else; a call, a variable or a keyword makes it unreadable.
+ * @param nodes - The parsed value, comments blanked.
  * @returns The numbers, or nothing where the value is no bare ratio.
  */
 function findRatio (nodes: ValueParserNode[]): Ratio | undefined {
@@ -227,7 +223,7 @@ function findRatio (nodes: ValueParserNode[]): Ratio | undefined {
 			if (hasAuto) return
 
 			hasAuto = true
-			// The two components of `auto || <ratio>` stand apart, so a keyword read once a number has been is one standing behind the whole ratio — until another of its tokens turns up behind that keyword, and then the keyword was reaching in between them
+			// `auto` behind a number ends the ratio, so a ratio token after it stood inside
 			hasAutoBehindNumber = numbers.length > 0
 			continue
 		}
@@ -240,7 +236,7 @@ function findRatio (nodes: ValueParserNode[]): Ratio | undefined {
 		}
 
 		if (node.type === `word` && NUMBER_WITHOUT_SIGN_OR_EXPONENT.test(node.value)) {
-			// Two numbers stand in a ratio only with the solidus between them, and a third stands in none
+			// A solidus between two numbers, and no third
 			if (hasAutoBehindNumber || numbers.length === 2 || (numbers.length === 1 && !hasSolidus)) return
 
 			numbers.push(node)
@@ -260,15 +256,11 @@ function findRatio (nodes: ValueParserNode[]): Ratio | undefined {
 }
 
 /**
- * Works out what the two numbers of a ratio are to be, and whether the second of them is one.
- *
- * With `smallestIntegers` off the numbers are the ones the file spells, and the second is the one it spells or, where it spells none, the `1` the grammar reads there. With it on they are the smallest pair of whole numbers the same ratio can be written with.
- *
- * A ratio with a zero on either side is degenerate and there is nothing to divide it by, so it comes back written as it stands. That leaves it to the other axis, which asks how many numbers are written and never what they are: making the whole value escape both axes would tie the one to the other, and the two are meant to be answerable apart.
- * @param width - The first number, as it is written.
- * @param height - The second number as it is written, or nothing where the value spells none.
- * @param smallestIntegers - Whether the numbers are to be the smallest whole ones.
- * @returns The first number, the second, and whether the second is one.
+ * The two numbers of a ratio and whether the second is one: as written (`1` where unwritten), or the smallest whole numbers under `smallestIntegers`; a zero on either side stays as written.
+ * @param width - The first number as written.
+ * @param height - The second, or nothing.
+ * @param smallestIntegers - Whether to reduce.
+ * @returns The two numbers and whether the second is one.
  */
 function expectedNumbers (width: string, height: string | undefined, smallestIntegers: boolean): [string, string, boolean] {
 	let writtenHeight = height ?? `1`
@@ -284,28 +276,26 @@ function expectedNumbers (width: string, height: string | undefined, smallestInt
 }
 
 /**
- * Says whether the second number of the ratio is written.
- * @param primary - The primary option.
- * @param isWritten - Whether the value spells a second number as it stands.
- * @param isHeightOne - Whether the second number is one.
- * @returns True where the second number is to be written.
+ * Says whether the second number is written.
+ * @param primary - `ratio`, `number-where-possible` or `as-written`.
+ * @param isWritten - Whether the value writes one.
+ * @param isHeightOne - Whether it is one.
+ * @returns True where it is written.
  */
 function spellsHeight (primary: string, isWritten: boolean, isHeightOne: boolean): boolean {
 	if (primary === `ratio`) return true
 
 	if (primary === `number-where-possible`) return !isHeightOne
 
-	// Under `as-written` the choice is the author's, and the arithmetic overrules it only where the second number carries something a single number cannot say
+	// `as-written`: the author's choice stands where one number can say the ratio
 	return isWritten || !isHeightOne
 }
 
 /**
- * Takes two numbers to a common scale, as the whole numbers they are written with and a power of ten.
- *
- * The scaling is done on the digits rather than on the numbers: `1.777` times a thousand is `1777.0000000000002` in a float, and every question below is asked of exact whole numbers instead.
+ * Takes two numbers to a common scale as whole numbers, by their digits: `1.777` times a thousand is `1777.0000000000002` in a float.
  * @param width - The first number.
- * @param height - The second number.
- * @returns The two numbers at a common scale, or nothing where either of them is zero.
+ * @param height - The second.
+ * @returns The scaled numbers, or nothing where either is zero.
  */
 function toCommonScale (width: string, height: string): [bigint, bigint] | undefined {
 	let [widthDigits, widthScale] = splitDecimal(width)
@@ -320,9 +310,9 @@ function toCommonScale (width: string, height: string): [bigint, bigint] | undef
 }
 
 /**
- * Splits a number into the digits it is written with and how far its point stands from the end of them.
- * @param number - The number, written with neither a sign nor an exponent.
- * @returns The digits, and how many of them stand behind the point.
+ * Splits a number into its digits and the count behind the point.
+ * @param number - The number, without sign or exponent.
+ * @returns The digits and the count.
  */
 function splitDecimal (number: string): [string, number] {
 	let point = number.indexOf(`.`)
@@ -333,9 +323,9 @@ function splitDecimal (number: string): [string, number] {
 }
 
 /**
- * Says whether a number is one, whichever of its spellings it is written in.
- * @param number - The number, written with neither a sign nor an exponent.
- * @returns True where the number is one.
+ * Says whether a number is one in any spelling.
+ * @param number - The number, without sign or exponent.
+ * @returns True where it is one.
  */
 function isOne (number: string): boolean {
 	let [digits, scale] = splitDecimal(number)
@@ -344,10 +334,10 @@ function isOne (number: string): boolean {
 }
 
 /**
- * The greatest number both of two whole numbers can be divided by.
- * @param one - The first number, which is above zero.
- * @param other - The second number, which is above zero.
- * @returns Their greatest common divisor.
+ * The greatest common divisor of two whole numbers.
+ * @param one - The first, above zero.
+ * @param other - The second, above zero.
+ * @returns The divisor.
  */
 function greatestCommonDivisor (one: bigint, other: bigint): bigint {
 	let divided = one
@@ -364,10 +354,10 @@ function greatestCommonDivisor (one: bigint, other: bigint): bigint {
 }
 
 /**
- * Says whether an edit covers any part of a comment.
- * @param edit - The edit, in the coordinates of the text it is to be written into.
- * @param comments - The spans the comments of that text occupy in it.
- * @returns True where a comment stands in what the edit writes over.
+ * Says whether an edit overlaps a comment.
+ * @param edit - The edit, in the text's coordinates.
+ * @param comments - The comment spans.
+ * @returns True where one overlaps.
  */
 function holdsComment (edit: {
 	start: number,

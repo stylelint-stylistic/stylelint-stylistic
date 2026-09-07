@@ -2,12 +2,12 @@ import { hasInterpolation } from "../hasInterpolation/index.ts"
 import { isScssVariable } from "../isScssVariable/index.ts"
 
 /**
- * Checks whether a property is standard (i.e. not a preprocessor construct).
- * @param property - The property to check.
- * @returns True if the property is standard syntax, false otherwise.
+ * Checks whether a property is no preprocessor construct.
+ * @param property - The declaration's property name as written.
+ * @returns True where it is.
  */
 export function isStandardSyntaxProperty (property: string): boolean {
-	// A `$` variable — Sass's, and postcss-simple-vars' over plain CSS
+	// A `$` variable, Sass's or postcss-simple-vars'
 	if (isScssVariable(property)) return false
 
 	// SCSS or Less interpolation

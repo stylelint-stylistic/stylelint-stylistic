@@ -19,7 +19,7 @@ function git (args: string[], input = ``): string {
 }
 
 /**
- * Names the blob a text would be kept as, without keeping it: a listing names its blobs and never reads them, so nothing here needs one to stand in the object database.
+ * Hashes a text as Git would keep it, without writing the blob: a listing names its blobs and never reads them.
  * @param content - The text the blob would hold.
  * @returns The hash Git would keep it under.
  */
@@ -33,14 +33,14 @@ function blobOf (content: string): string {
  * @returns The hash of the tree.
  */
 function treeOfEntries (entries: string[]): string {
-	// The blobs the entries name were never written, and a tree naming a missing object is refused without this
+	// The blobs the entries name were never written, and `mktree` refuses a tree naming a missing object without this
 	return git([`mktree`, `--missing`], `${entries.join(`\n`)}\n`)
 }
 
 /**
- * Builds a tree holding a directory named `harness` and a second one beside it, so that two states of a directory the key hashes the sources of can be put to `hashSourcesAt` without either standing on disk.
- * @param files - The path of every file under `harness`, and the text it holds; a path may name a directory of its own.
- * @param outside - The text of the one file standing under the other directory, which is no part of what is asked about.
+ * Builds a tree holding a `harness` directory and one beside it, so that a state of the directory can be put to `hashSourcesAt` without standing on disk.
+ * @param files - The path and text of every file under `harness`; a path may hold a directory.
+ * @param outside - The text of the one file under the other directory.
  * @returns The hash of the tree the two directories stand in.
  */
 function treeHolding (files: Record<string, string>, outside = `x`): string {
@@ -70,16 +70,16 @@ function treeHolding (files: Record<string, string>, outside = `x`): string {
 	])
 }
 
-/** A directory of two sources, the two tests standing beside them and a document, one pair of source and test in a directory of its own — so that a case reads a listing of the whole directory rather than of the top of it. */
+/** Two sources, their tests and a document, one source-and-test pair in a subdirectory so that a case reads a listing of the whole directory rather than of its top. */
 const FILES = { "lint.ts": `a`, "lint.test.ts": `b`, "README.md": `c`, "deep/matrix.ts": `d`, "deep/matrix.test.ts": `e` }
 
-/** A name Git cannot print in a listing as it stands: it puts the whole path in quotation marks and escapes the one inside, so a printed record for it ends with a quotation mark rather than with the name the file is left out by. */
+/** A name Git prints quoted in a listing, escaping the quotation mark inside, so the record ends with a quotation mark rather than with the suffix the file is left out by. */
 const QUOTED_TEST = `a"b.test.ts`
 
 /**
- * Hashes the sources of a directory holding the files, as the `key.ts` of the oracles and the one of the sweeps hash the ones on disk.
- * @param files - The path of every file under it, and the text it holds.
- * @param outside - The text of the file standing outside it.
+ * Hashes the sources of a directory holding the files, as the `key.ts` of the oracles and of the sweeps hash the ones on disk.
+ * @param files - The path and text of every file under it.
+ * @param outside - The text of the file outside it.
  * @returns The hash of its sources.
  */
 function hashOf (files: Record<string, string>, outside?: string): string {
@@ -96,13 +96,13 @@ function recordFor (file: string, content = `a`): string {
 	return `100644 blob ${blobOf(content)}\t${file}`
 }
 
-/** Where the objects a run writes go. `git mktree` writes the tree it builds and cannot be told not to, and the cases build 32 of them; naming another database keeps the one the worktrees share as it was, and every object a case reads is one it wrote, so a database holding nothing else answers them all. It stands under `tmp/`, as the scratch index of `cache.ts` does. */
+/** Where the objects a run writes go: `git mktree` writes every tree it builds, so a database of the run's own under `tmp/` keeps the one the worktrees share as it was, and every object a case reads is one it wrote. */
 let objects: string
 
-/** What `GIT_OBJECT_DIRECTORY` stood at before, which is nothing at all unless a caller had it pointed somewhere already. */
+/** What `GIT_OBJECT_DIRECTORY` stood at before, if anything. */
 let objectsBefore: string | undefined
 
-/** The hash the directory stands at as `FILES` spells it, which every case of the first block is measured against. */
+/** The hash of the directory as `FILES` spells it, which the first block measures every case against. */
 let baseline: string
 
 beforeAll(() => {
@@ -120,7 +120,7 @@ afterAll(() => {
 	rmSync(objects, { recursive: true, force: true })
 })
 
-// #544: the key carried the hash Git keeps of the whole `scripts/harness` tree, where the runner's test stands since #540, so a reworded case description there sent every oracle and every sweep to measure both sides afresh
+// #544: the key hashed the whole `scripts/harness` tree, where the runner's test stands since #540, so rewording a case there sent every oracle and sweep to measure both sides afresh
 describe(`the hash of the sources of a directory`, () => {
 	it(`is the same where a test standing there is rewritten, and where the document beside them is`, () => {
 		expect(hashOf({ ...FILES, "lint.test.ts": `rewritten`, "deep/matrix.test.ts": `rewritten` })).toBe(baseline)
@@ -172,13 +172,13 @@ describe(`the listing a hash of sources is taken from`, () => {
 		let second = recordFor(`gc.ts`)
 		let two = hashListing([recordFor(`lint.ts`), second])
 
-		// A path may hold a tab and a line break alike, so a name can be spelled as a record standing right behind this one and as a record on the next line
+		// A path may hold a tab or a line break, so a name can spell a second record behind this one or on the next line
 		expect(hashListing([recordFor(`lint.ts${second}`)])).not.toBe(two)
 		expect(hashListing([recordFor(`lint.ts\n${second}`)])).not.toBe(two)
 	})
 })
 
-// #555: the key carried the hash Git keeps of the whole `lib/` tree, where 297 tests and 82 documents stand beside the 204 sources, so a reworded case description sent every oracle and every sweep to measure that side afresh — and the tree could not simply be dropped, since it is the collector that reads it
+// #555: the key hashed the whole `lib/` tree, tests and documents included, so rewording a case sent every oracle and sweep to measure that side afresh; the tree could not be dropped, since the collector reads it
 describe(`the tree a result was measured over`, () => {
 	/**
 	 * Fabricates a side holding a `lib/` of one source, since the database this file writes into holds no revision of this repository.
@@ -197,28 +197,28 @@ describe(`the tree a result was measured over`, () => {
 	})
 
 	it(`stands under the name the collector has always read, so that a store written on either side of #555 is collected whole by either`, () => {
-		// `gc.ts` cannot be imported by a case — it lists the trees every ref reaches and collects as it loads — so it is read as text instead, the way the last case of the block below holds the files it takes out. The name is asked of the writer rather than spelled here, so that moving the field turns this red rather than the store empty
+		// `gc.ts` collects as it loads, so it is read as text. The name is asked of the writer rather than spelled here, so that moving the field turns this red rather than the store empty
 		let script = readFileSync(path.join(ROOT, `scripts`, `harness`, `gc.ts`), `utf8`)
 
 		for (let name of Object.keys(measuredTreeOf(sideHoldingALib().side))) expect(script).toMatch(new RegExp(`\\bmeta\\.${name}\\b`, `u`))
 	})
 
 	it(`is written into the meta by both writers of a result, since a result the collector cannot reach is taken out at the next collection`, () => {
-		// Neither writer can be imported by a case either — each reads `argv` and measures as it loads — so both are read as text as well
+		// Each writer measures as it loads, so both are read as text
 		let writers: [string, string][] = [[`oracles`, `compare.ts`], [`sweeps`, `run.ts`]]
 
 		for (let [directory, file] of writers) expect(readFileSync(path.join(ROOT, `scripts`, directory, file), `utf8`)).toMatch(/\bmeasuredTreeOf\(/u)
 	})
 })
 
-/** The directory of one oracle's results in a store of a case's own, and the key of the one result a case keeps there. */
+/** The oracle whose results directory the cases write into. */
 const NAME = `converge`
 
 /** The kind that directory stands under. */
 const KIND = `oracles`
 
 /**
- * Opens a store of a case's own under `tmp/`, holding nothing.
+ * Opens an empty store of a case's own under `tmp/`.
  * @returns The store, and the directory `NAME`'s results stand in.
  */
 function emptyStore (): { store: ReturnType<typeof storeAt>, directory: string } {
@@ -228,8 +228,8 @@ function emptyStore (): { store: ReturnType<typeof storeAt>, directory: string }
 }
 
 /**
- * Puts a file under the directory of `NAME`'s results by name, standing for what a run or the collector before #554 left behind.
- * @param directory - The directory.
+ * Puts a file under the directory of `NAME`'s results by name, standing for what a run or the collector before [#554](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/554) left behind.
+ * @param directory - Where `NAME`'s results stand in the store.
  * @param file - The name.
  */
 function leave (directory: string, file: string): void {
@@ -237,7 +237,7 @@ function leave (directory: string, file: string): void {
 	writeFileSync(path.join(directory, file), `{}`)
 }
 
-// #554: the collector took out the rows and the meta of a result and left its digest standing, so the store filled with digests of results it no longer held — 666 of them under `oracles/` — and a sweep meeting one found the digest, went for the rows and died
+// #554: the collector took out a result's rows and meta and left its digest, so a sweep meeting the digest went for the rows and died
 describe(`the collector of the store`, () => {
 	let stores: string[] = []
 
@@ -324,7 +324,7 @@ describe(`the collector of the store`, () => {
 	it(`walks the directories of results alone, so that whatever stands under \`verified/\` stays, spelled like a record of \`make verify\` or like a part of a result`, () => {
 		let { store, directory } = open()
 		let trees = path.join(path.dirname(path.dirname(directory)), `verified`, `trees`)
-		// A record is named by a tree, which is longer than a key, so the record alone would stand whether the collector walks that directory or not; the second file is named as a digest is, and only a collector that never looks there leaves it
+		// A record is named by a tree hash, longer than a key, so it would stand whether the collector walks there or not; the second file is named as a digest, and only a collector that never looks there leaves it
 		let stamp = path.join(trees, `${`0`.repeat(40)}.json`)
 		let digest = path.join(trees, filesOf(keyOf({ lib: `f` })).digest)
 
@@ -338,7 +338,7 @@ describe(`the collector of the store`, () => {
 	})
 
 	it(`is all \`gc.ts\` takes out through, since that script names no file of a result itself`, () => {
-		// The script cannot be imported by a case — it lists the trees every ref reaches and collects as it loads — so it is read as text instead, the way the fifth case of `scripts/sweeps/key.test.ts` holds the runner
+		// The script collects as it loads, so it is read as text, as `scripts/sweeps/key.test.ts` holds the runner
 		let script = readFileSync(path.join(ROOT, `scripts`, `harness`, `gc.ts`), `utf8`)
 
 		expect(script).toMatch(/\bcollect\(/u)

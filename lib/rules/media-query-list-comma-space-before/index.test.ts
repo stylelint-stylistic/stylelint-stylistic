@@ -48,12 +48,12 @@ testRule({
 			code: `@media-non screen and (color), projection and (color) {}`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/153
+			// See #153
 			description: `a bare address in front of the comma, whose double slash opens no comment`,
 			code: `@media (min-width: url(http://x/y.png)) ,print { a { b: c; } }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/213
+			// See #213
 			description: `a comma inside the arguments of a function is a comma of the address and of no query list`,
 			code: `@media (min-width: url(x/a,b.png)) { a { b: c; } }`,
 		},
@@ -147,7 +147,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/153
+			// See #153
 			description: `a comma behind a bare address, whose double slash opens no comment`,
 			code: `@media (min-width: url(http://x/y.png)),print { a { b: c; } }`,
 			fixed: `@media (min-width: url(http://x/y.png)) ,print { a { b: c; } }`,
@@ -156,7 +156,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/216
+			// See #216
 			description: `a double slash standing in the code of a plain CSS text, which spells no comment`,
 			code: `@media (a//b),(c) { d { e: f; } }`,
 			fixed: `@media (a//b) ,(c) { d { e: f; } }`,
@@ -478,14 +478,14 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off with the run.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab in front of the comma, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `@media a\v, b {}`,
 			fixed: `@media a\v , b {}`,
@@ -504,7 +504,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab at the run before the comma: only the tokenizer's run goes, and the character stays`,
 			code: `@media a\v , b {}`,
 			fixed: `@media a\v, b {}`,

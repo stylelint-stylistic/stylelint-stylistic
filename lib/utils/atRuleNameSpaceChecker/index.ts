@@ -7,7 +7,7 @@ let { utils: { report } } = stylelint
 
 /**
  * Checks whitespace around at-rule names.
- * @param options - The options object.
+ * @param options - The root, the checker, the result, the syntax, the rule name and its fix.
  */
 export function atRuleNameSpaceChecker (options: {
 	root: Root,
@@ -33,10 +33,10 @@ export function atRuleNameSpaceChecker (options: {
 	})
 
 	/**
-	 * Checks a colon for whitespace violations in at-rule names.
-	 * @param source - The source string.
+	 * Checks one at-rule.
+	 * @param source - The at-rule's text.
 	 * @param index - The index to check.
-	 * @param node - The at-rule node.
+	 * @param node - The at-rule.
 	 */
 	function checkColon (source: string, index: number, node: AtRule): void {
 		let { fix } = options

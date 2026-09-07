@@ -532,7 +532,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/173
+			// See #173
 			description: `a form feed inside the arguments, which is whitespace and no line break, so the list is single-line and the space in front of the closing parenthesis goes`,
 			code: `a:not(b\f, c ) {}`,
 			fixed: `a:not(b\f, c) {}`,

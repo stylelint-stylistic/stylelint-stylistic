@@ -28,12 +28,12 @@ export let meta = {
 
 /**
  * Requires a single space or disallows whitespace before the commas of media query lists.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always`, `never`, `always-single-line` and `never-single-line`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always`, `never`, `always-single-line` or `never-single-line`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line`): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
@@ -54,7 +54,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
-			// The comma goes right after this text, and the whitespace run the fix writes ends it. Where an inline comment stands there, the line break that run holds is what closes the comment, so either option would take the comma, and the whole query behind it, into the comment's text: leave the parameters alone and let the warning stand
+			// The fix's whitespace ends this text, and its break would close an inline comment standing there, taking the comma into the comment: leave the parameters alone
 			isFixable: (params, index, atRule) => !syntax.endsWithInlineComment(params.slice(0, index), syntax.inlineComments(atRule, result)),
 			fix: (atRule, index) => {
 				let paramCommaIndex = index - atRuleParamIndex(atRule)

@@ -18,13 +18,13 @@ import { runInDeclarationEndsTheStylesheet } from "../runInDeclarationEndsTheSty
 import { runPastDeclaration } from "../runPastDeclaration/index.ts"
 import { isAtRule, isRule } from "../typeGuards/index.ts"
 
-/** The rules a shared run is asked about: two reading it from the colon, two from the semicolon. */
+/** The four rules that read a shared run: two from the colon, two from the semicolon. */
 type Participant = `colonSpace` | `colonNewline` | `semicolonSpace` | `semicolonNewline`
 
-/** What a run of whitespace may be to one of those rules: a single space, a line break at the rule's end of it, nothing at all — or a spelling none of them writes or leaves alone, two spaces or a tab, which every option that speaks of the run reports (#627). */
+/** `other` (two spaces, a tab) is a spelling no option writes or accepts, so every option reports it ([#627](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/627)). */
 type Run = `space` | `newline` | `none` | `other`
 
-/** The four rules, each with the whitespace its `always` options ask for. */
+/** The four rules and the whitespace their `always` options write. */
 const PARTICIPANTS: Record<Participant, NeighbourRule & { writes: Run }> = {
 	colonSpace: {
 		name: `declaration-colon-space-after`,
@@ -48,10 +48,10 @@ const PARTICIPANTS: Record<Participant, NeighbourRule & { writes: Run }> = {
 	},
 }
 
-/** The two rules reading the run from the semicolon, which every shared run is read by. */
+/** The semicolon rules read every shared run. */
 const FROM_THE_SEMICOLON: Participant[] = [`semicolonSpace`, `semicolonNewline`]
 
-/** The two runs of one declaration that two rules may have to settle between them, each with the rules that must: the run at the head of the text behind the colon, and the run in front of the semicolon. A rule the set does not name writes that run as it pleases — whether the run is that rule's alone or no run of its at all — so a set of fewer than two names settles nothing, and either kind of set is written as it comes out rather than made to say which of the two it is. `runIsTheText` says that the semicolon's run is the whole of what stands behind the colon, which is where the semicolon rules leave a single space alone (#50). */
+/** The two runs and their readers; under two names a set settles nothing. `runIsTheText`: the semicolon's run is the whole text behind the colon ([#50](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/50)). */
 type SharedRuns = {
 	head: Set<Participant>,
 	semicolon: Set<Participant>,
@@ -61,17 +61,15 @@ type SharedRuns = {
 }
 
 /**
- * Finds the runs of a declaration that more than one rule is asked about, and the rules reading each.
+ * Finds the runs of a declaration more than one rule reads, and their readers.
  *
- * The run at the head of the text behind the colon is read by both `declaration-colon-space-after` and `declaration-colon-newline-after` on every standard declaration — a word, a flag or an inline comment further along parts them from the semicolon's run, never from each other's — save two shapes, one for each rule. Behind a block comment standing right on the colon, the newline rule asks about the run behind that comment instead, and the head run is the space rule's alone. Where that run is the text the stylesheet ends on, the space rule passes the declaration over — no spelling of its options keeps the break a closed last line ends on — and the head run is the newline rule's alone (#546).
+ * Both colon rules read the head run, except that the newline rule reads past a block comment on the colon and the space rule passes over a run the stylesheet ends on ([#546](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/546)). `commentBehindHead`: a block comment behind the head run, which a space or nothing written there puts on the colon's line ([#590](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/590)).
  *
- * Whether the head run is the newline rule's to read depends on the run itself, and a write changes it: a block comment standing behind a head run that holds a break is off the colon's line until a colon rule writes a space or nothing over that run, and on it from then on, so the newline rule reads the head run before such a write and the run behind the comment after it. `commentBehindHead` says that a closing block comment stands behind the head run, as the newline rule finds one, and `writesSharedRun` reads the head's readers through it as the write it asks about leaves them (#590).
- *
- * The run in front of the semicolon is the two `declaration-block-semicolon-*-before` rules', and the colon rules join them only where their own run reaches it: where the text behind the colon down to the end of the printed value is nothing but whitespace, the one run is every one of the four's; where it is a block comment with nothing but whitespace behind, that tail is the newline rule's and the semicolon rules'. A flag parts the runs whatever the value holds, since the semicolon's run is then the end of the flag's raw; and a declaration the semicolon rules pass over — the last of its block where the file writes no semicolon behind it, or one standing outside a block and an inline style attribute — keeps its semicolon run to itself, whatever the value holds.
- * @param syntax - The syntax the rule is built over.
+ * The semicolon rules read the semicolon's run, both colon rules too on a whitespace-only text, the newline rule on whitespace alone behind a block comment. A flag, a missing semicolon, or a parent the semicolon rules do not read (the root, unless an inline style attribute) empties that set.
+ * @param syntax - The syntax the declaration is read under.
  * @param decl - The declaration.
- * @param result - The Stylelint result, which holds the syntax the file was opened with.
- * @returns The two runs with their readers.
+ * @param result - The Stylelint result.
+ * @returns The runs and their readers.
  */
 function sharedRunsOf (syntax: Syntax, decl: Declaration, result: PostcssResult): SharedRuns {
 	let runs: SharedRuns = { head: new Set(), semicolon: new Set(), semicolonRun: ``, commentBehindHead: false, runIsTheText: false }
@@ -84,12 +82,12 @@ function sharedRunsOf (syntax: Syntax, decl: Declaration, result: PostcssResult)
 	if (colonIndex === -1) return runs
 
 	let { parent } = decl
-	// Whether a semicolon closes the declaration, and what the value keeps in front of it, are read as `declaration-block-trailing-semicolon` will leave them (#536), so that the runs are the same at every rule's turn
+	// Read as `declaration-block-trailing-semicolon` will leave them (#536)
 	let readBySemicolonRules = !decl.important && parent !== undefined && (isAtRule(parent) || isRule(parent) || isInlineStyleAttribute(parent)) && closedBySemicolon(syntax, decl, result)
 	let text = between.slice(colonIndex + 1) + valueAsClosed(syntax, decl, result)
 
 	if (WHITESPACE_OR_NOTHING.test(text)) {
-		// Where the run the declaration prints behind its colon is the text the stylesheet ends on, `declaration-colon-space-after` passes the declaration over and reads nothing of it, so its neighbour has that run to itself (#546) — left in the set, it would gate the write of a neighbour configured `always` under each of its own three options and leave a warning no run of `--fix` can clear. The question is asked here and nowhere else below: it is this very text that the reading is about, so a text holding anything but whitespace answers it no. The run that has left the declaration altogether at such a place is read by neither of the two (#537), and there is nothing to say about it anywhere here: no rule reading the head run asks about a declaration both of them pass over.
+		// Not the space rule's where the stylesheet ends on it (#546), or it would gate an `always` neighbour for good; a run that left the declaration is neither rule's (#537)
 		if (!runInDeclarationEndsTheStylesheet(syntax, decl, result)) runs.head.add(`colonSpace`)
 
 		runs.head.add(`colonNewline`)
@@ -104,7 +102,7 @@ function sharedRunsOf (syntax: Syntax, decl: Declaration, result: PostcssResult)
 	}
 
 	if (OPENS_WITH_BLOCK_COMMENT.test(text)) {
-		// A comment closes at the first `*/` behind its own opening, as the newline rule finds it; one that never closes is no shape the parser hands over, and the rule then reads the head run like its neighbour
+		// The parser returns no unclosed comment; behind one both colon rules would read the head run
 		let commentEnd = text.indexOf(`*/`, text.indexOf(`/*`) + 2)
 
 		if (commentEnd !== -1) {
@@ -119,7 +117,7 @@ function sharedRunsOf (syntax: Syntax, decl: Declaration, result: PostcssResult)
 		}
 	}
 
-	// The text behind the head run, which a write of the space rule leaves on the colon's line: a block comment opening it and closing is one the newline rule then reads the run behind, exactly as it finds one standing on the colon's line before any write
+	// A space rule's write puts this on the colon's line, where a closed block comment moves the newline rule behind it
 	let behindHead = text.replace(LEADING_CSS_WHITESPACE, ``)
 
 	runs.commentBehindHead = OPENS_WITH_BLOCK_COMMENT.test(behindHead) && behindHead.indexOf(`*/`, behindHead.indexOf(`/*`) + 2) !== -1
@@ -129,14 +127,14 @@ function sharedRunsOf (syntax: Syntax, decl: Declaration, result: PostcssResult)
 }
 
 /**
- * Tells what a rule's option accepts of a shared run.
+ * The spellings a rule's option accepts of a shared run.
  *
- * An `always` option accepts the whitespace the rule writes and nothing else. A `never` option accepts nothing at all — save where the rule leaves a single space alone (#50): `declaration-block-semicolon-newline-before` does so on every declaration, `declaration-block-semicolon-space-before` on a custom property, and on such a declaration `none` and `space` both answer them. Either rule leaves that space alone only where it is the whole of what stands behind the colon, so the answer holds where the shared run is that text and not where it is the tail behind a comment on the colon's line, which the rule reports like any other run: read as accepted there, the space the semicolon rule had warned of counted as a run it was content with, and the gate ahead of `declaration-colon-newline-after` held the pair on two warnings with nothing written; and a space `declaration-block-semicolon-space-before: always` asked to write was counted as one `never-multi-line` behind it would take, so the space rule wrote what the newline rule then reported (#627).
+ * `always` accepts what the rule writes. `never` accepts only the single space a rule leaves alone ([#50](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/50)), the semicolon newline rule always and the semicolon space rule on a custom property, and only where that space is the whole text behind the colon; wider, a pair sat on two warnings ([#627](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/627)).
  * @param participant - The rule.
- * @param option - Its primary option.
- * @param decl - The declaration whose run is asked about.
- * @param runIsTheText - Whether the shared run is the whole of what stands behind the colon.
- * @returns What the option accepts.
+ * @param option - The rule's primary option, `always` or `never` with any line suffix.
+ * @param decl - The declaration.
+ * @param runIsTheText - Whether the run is the whole text behind the colon.
+ * @returns The accepted spellings.
  */
 function accepts (participant: Participant, option: string, decl: Declaration, runIsTheText: boolean): Run[] {
 	if (option.startsWith(`always`)) return [PARTICIPANTS[participant].writes]
@@ -146,14 +144,12 @@ function accepts (participant: Participant, option: string, decl: Declaration, r
 }
 
 /**
- * Asks whether the run a rule reads of this declaration is the run in front of its semicolon.
- *
- * A rule that writes into a shared run answers to the semicolon's side of it as much as to its own, and this is the question it asks before finishing the run for the neighbour — `sharedRunsOf` above holds what counts as shared and for whom, and the head run the two colon rules share between themselves does not answer it.
+ * Asks whether the run a rule reads of this declaration is the one in front of its semicolon; the head run alone does not count.
  * @param syntax - The syntax the asking rule is built over.
  * @param decl - The declaration.
- * @param result - The Stylelint result, which holds the syntax the file was opened with.
- * @param ruleName - The name the asking rule is registered under.
- * @returns True where the asking rule is one of the four and its run is the semicolon's too.
+ * @param result - The Stylelint result.
+ * @param ruleName - The asking rule's registered name.
+ * @returns True where the asking rule reads the semicolon's run.
  */
 export function sharesRunWithSemicolon (syntax: Syntax, decl: Declaration, result: PostcssResult, ruleName: string): boolean {
 	let asking = (Object.keys(PARTICIPANTS) as Participant[]).find((participant) => addNamespace(PARTICIPANTS[participant].name, syntax.namespace) === ruleName)
@@ -163,19 +159,17 @@ export function sharesRunWithSemicolon (syntax: Syntax, decl: Declaration, resul
 
 /**
  * Counts the line breaks of a text.
- * @param text - The text.
- * @returns How many breaks it holds.
+ * @param text - The run or block text whose line breaks are counted.
+ * @returns The count.
  */
 function breaksOf (text: string): number {
 	return text.match(EVERY_LINE_BREAK)?.length ?? 0
 }
 
 /**
- * Reads what a run of whitespace is to the rules asked about it.
- *
- * The single space is the one spelling of a breakless run an option ever accepts — `always` asks for exactly one, and the exception of #50 is one space as the whole value — so a run of two spaces or a tab is read as neither, and a rule ahead that speaks of it has reported it: read as a space, a run of two in front of the semicolon counted the `always` rule ahead as content, and its warning held the deferred rule behind it on a second one with nothing written (#627).
- * @param run - The run as it stands.
- * @returns What it is to the rules.
+ * Reads a run's spelling. Two spaces or a tab is `other`, the single space being the one breakless run an option accepts; read as a space it held a deferred rule on a second warning ([#627](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/627)).
+ * @param run - The whitespace standing in the shared run before any write.
+ * @returns Its spelling.
  */
 function spellingOf (run: string): Run {
 	if (run === ``) return `none`
@@ -185,20 +179,20 @@ function spellingOf (run: string): Run {
 }
 
 /**
- * Asks whether a rule about the whitespace behind a declaration's colon, or about the whitespace in front of its semicolon, is one to write that whitespace where the two are one and the same run.
+ * Asks whether the asking rule is the one to write a run more than one of the four reads.
  *
- * Where a declaration's value is nothing but whitespace, the run behind the colon is the run in front of the semicolon, and one character cannot answer to two options. Stylelint runs each rule once and in the order the configuration lists them, and the colon rules write into `raws.between` while the semicolon rules read the value, so a pair asked for two different things used to take the run in turns: on one run of `--fix` the semicolon rule took it away, on the next the colon rule put it back where the semicolon rule could not see it, and the file never came to rest (#416).
+ * On a whitespace-only value the run behind the colon is the one in front of the semicolon; the colon rules write `raws.between` and the semicolon rules the value, so a pair took it in turns across runs of `--fix` ([#416](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/416)).
  *
- * What a rule writes is what the file is left with only where no rule listed behind it writes otherwise, since those run after it and rewrite what they are not content with. So a rule writes the run only where every rule listed behind it that speaks of the declaration and has its fix to write with either shares with it a spelling of the run both are content with, or writes what silences it — one whose fix the configuration turned off rewrites nothing and gates nothing, reporting whatever the run comes to; otherwise it reports the run and leaves it alone, so the file rests on what the rules behind it write and the warning of the rule the configuration contradicted stands. The rules ahead of a rule taking its turn where the configuration lists it need no asking: a rule ahead that was discontent has written its spelling or warned, and the asking rule either writes a spelling both are content with or is rewritten the run after. A rule whose check waits for the run's end (#355) runs after every rule ahead of it as well, and those have had their say already — so it also writes only where each of them accepts what the write leaves, freed by one that has warned already, whose warning stands over whatever the write makes, and by one the write itself silences; a turned-off fix exempts nothing there, since a rule that was silently content stays silently violated. The settings are read through `neighbourSettings`, under the names of the asking rule's namespace and in the order the run makes them.
+ * A rule writes only where every rule behind it (in `neighbourSettings` order) that speaks with its fix on accepts a spelling it accepts too or is silenced by the write; otherwise it reports and leaves the run. A rule deferred to the run's end ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)) also needs each rule ahead to accept what the write leaves, to have warned, or to be silenced; a turned-off fix exempts nothing there.
  *
- * Whether a `-single-line` or `-multi-line` option speaks of the declaration is decided the way each rule decides it — over the declaration's own value for the colon rules, over the block for the semicolon rules — and as either text will stand when the option reads it. The rules behind are asked about the text as the asking rule's write leaves it within the pass, since that is what they run over: a break written anywhere into a block on one line is what wakes `never-multi-line` up, while the value of a custom property gains a break only from a semicolon rule, which writes into the value itself — one a colon rule writes stands in `raws.between` until the file is parsed again, so the other colon rule still reads the value as it was and acts on it. And the asking rule is asked about the text as a rule behind it leaves it for the run after, when the file has been parsed again and a break stands in the value whichever rule wrote it: where that write is what silences it — a break written into the block a `-single-line` option speaks of, or into the value of a custom property one reads — what it writes costs the file nothing, and it writes as it always did.
+ * A `-single-line` or `-multi-line` option speaks as its rule judges over the text as it sees it: a colon rule's break stays in `raws.between` within the pass and reaches the value on the reparsed run after.
  *
- * The rules asked are the readers of the run as the write leaves it. Behind a head run holding a break, a block comment stands off the colon's line, and the newline rule reads the head run like its neighbour; a space, or nothing, written over that run puts the comment on the colon's line, where the newline rule asks about the run behind the comment instead (#400) — a run the asking rule does not write — so it is no reader of the head run after such a write and gates nothing, ahead or behind. `a { b:` with a break, a comment and another break in front of the word `x` under `declaration-colon-space-after: always` and `declaration-colon-newline-after: always-multi-line` used to be called a contradiction, and the space rule reported it on every run of `--fix` while the file it would have written — the comment on the colon's line behind a single space, the break behind it — answers both (#590).
+ * The readers asked are those of the run as the write leaves it, since a write can move a block comment onto the colon's line ([#400](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/400), [#590](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/590)).
  * @param syntax - The syntax the asking rule is built over.
  * @param decl - The declaration.
  * @param result - The Stylelint result, which holds the configuration.
- * @param ruleName - The name the asking rule is registered under.
- * @returns True where the asking rule writes the run: it reads no shared run of this declaration, or every rule behind it is content with a spelling it is content with too or silences it — and, where its check waits for the run's end, every rule ahead accepts what the write leaves, has warned already, or is silenced by it.
+ * @param ruleName - The asking rule's registered name.
+ * @returns True where the asking rule writes the run.
  */
 export function writesSharedRun (syntax: Syntax, decl: Declaration, result: PostcssResult, ruleName: string): boolean {
 	let asking = (Object.keys(PARTICIPANTS) as Participant[]).find((participant) => addNamespace(PARTICIPANTS[participant].name, syntax.namespace) === ruleName)
@@ -206,7 +200,7 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 	if (!asking) return true
 
 	let { head, semicolon, semicolonRun, commentBehindHead, runIsTheText } = sharedRunsOf(syntax, decl, result)
-	// The semicolon's group holds the colon rules only where the head run reaches the semicolon, so wherever the asking rule stands in it, that group is the head's readers too
+	// The semicolon's group holds a colon rule only where the head run reaches it, so it is the head's readers too
 	let readers = semicolon.has(asking) ? semicolon : head
 	let run = semicolonRun
 
@@ -221,28 +215,28 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 
 	if (!parent) throw new Error(`A parent node must be present`)
 
-	// Held under a name of its own, since the narrowing above does not reach into the function below
+	// The narrowing does not reach into the function below
 	let block = parent
 	let breaksOutsideTheRun: number | undefined
 
 	/**
-	 * Tells what a participant's option writes over the run: the whitespace of its `always` options, and nothing under a `never` one — or the single space a `never` option of a semicolon rule writes over a custom property's run of spaces and tabs, which is one and the same to `speaksAfter`, since neither holds a break.
+	 * What an option writes; the space a semicolon rule's `never` leaves on a custom property is nothing here, holding no break.
 	 * @param participant - The rule.
-	 * @param option - Its primary option.
-	 * @returns What it writes.
+	 * @param option - The rule's primary option, `always` or `never` with any line suffix.
+	 * @returns The written spelling.
 	 */
 	function writtenBy (participant: Participant, option: string): Run {
 		return option.startsWith(`always`) ? PARTICIPANTS[participant].writes : `none`
 	}
 
 	/**
-	 * Asks whether a participant's option speaks of the declaration once a run has been written over the shared one.
+	 * Asks whether an option speaks of the declaration once `written` stands over the shared run.
 	 *
-	 * A semicolon rule counts the lines of the block, which a written break puts over several wherever it lands, and which otherwise stands on one line where it holds no break outside the run. A colon rule counts the lines of the declaration's own value, as the file spells it (#389), with the shared run taken out of it first wherever the parser keeps that run in the value — since that run is the one about to be written over, and a value counted with it in would be over several lines by the very break the write replaces. The run in front of the semicolon is in the value on a custom property alone, the parser keeping every other property's trailing whitespace out of it; the run at the head is in the value where the value has no word — on a custom property whatever else it holds, and on an ordinary one where a comment stands behind the run, since a head run that is the trailing run as well is kept out with it. What is left is counted over what it holds, a break spelled inside a comment included, and where a break is what is written and the run is in the value, the value is over several lines once the break has reached it: a break a colon rule writes stands in `raws.between` until the file is parsed again, so it reaches the value within the pass only from a semicolon rule, and on the run after from either.
+	 * A semicolon rule counts the block's lines. A colon rule counts the value's lines as spelled ([#389](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/389)) less the shared run wherever the parser keeps it in the value (a custom property's semicolon run, a wordless value's head run unless it is also an ordinary property's trailing run), plus a written break once it reaches the value.
 	 * @param participant - The rule.
-	 * @param option - Its primary option.
+	 * @param option - The rule's primary option, `always` or `never` with any line suffix.
 	 * @param written - The run written over the shared one.
-	 * @param breakReachesValue - Whether a written break stands in the value when the option reads it: within the pass only a semicolon rule's does, and on the run after any rule's.
+	 * @param breakReachesValue - Whether a written break is in the value as the option reads it: within the pass a semicolon rule's only, on the run after any rule's.
 	 * @returns True where the option speaks.
 	 */
 	function speaksAfter (participant: Participant, option: string, written: Run, breakReachesValue: boolean): boolean {
@@ -258,7 +252,7 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 			let value = declarationValueAsSpelled(syntax, decl, result)
 			let fromTheSemicolon = readers === semicolon
 			let counted = fromTheSemicolon ? (isCustomProperty(decl.prop) ? value.replace(TRAILING_CSS_WHITESPACE, ``) : value) : value.replace(LEADING_CSS_WHITESPACE, ``)
-			// The head run of a wordless value stands in the value, save where it is the value's trailing run as well and the parser keeps it out on an ordinary property; `decl.value` is whitespace-only where the value has no word, the comments being dropped from that copy
+			// A wordless value keeps the head run, save an ordinary property's that is the trailing run too; `decl.value` drops comments, so it is whitespace-only there
 			let runInValue = fromTheSemicolon ? isCustomProperty(decl.prop) : WHITESPACE_OR_NOTHING.test(decl.value) && (isCustomProperty(decl.prop) || counted !== ``)
 
 			return isSingleLineString(counted) && !(written === `newline` && breakReachesValue && runInValue)
@@ -269,11 +263,11 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 	let writes = writtenBy(participant, option)
 	let accepted = accepts(participant, option, decl, runIsTheText)
 	let asksFromTheSemicolon = FROM_THE_SEMICOLON.includes(participant)
-	// The readers of the run as the write leaves it rather than as it stands: a space, or nothing, written over a head run that a block comment stands behind puts that comment on the colon's line, and the newline rule then asks about the run behind the comment — which the asking rule does not write — rather than about the head run (#590). A break written there leaves the comment where it is, and so does any write where no comment stands behind the run
+	// A space or nothing written over a head run with a block comment behind puts the comment on the colon's line, moving the newline rule behind it (#590)
 	let readersAfterTheWrite = readers === head && writes !== `newline` && commentBehindHead ? new Set([...head].filter((reader) => reader !== `colonNewline`)) : readers
 
 	let restsBehind = settings.slice(position + 1).every(([behind, behindOption, behindFixTurnedOff]) => {
-		// A rule whose fix the configuration turned off speaks of the run and reports it, but cannot write: it will not rewrite what the asking rule leaves, and its warning stands over a violation whichever way the run is spelled, so it gates nothing — deferring to it left the run unwritten with two warnings where the configuration asked for a report and one write (#485)
+		// A turned-off fix rewrites nothing, so it gates nothing; deferring to it left the run unwritten with two warnings (#485)
 		if (behindFixTurnedOff || !readersAfterTheWrite.has(behind) || !speaksAfter(behind, behindOption, writes, asksFromTheSemicolon)) return true
 
 		let behindAccepts = accepts(behind, behindOption, decl, runIsTheText)
@@ -281,11 +275,11 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 		return accepted.some((candidate) => behindAccepts.includes(candidate)) || !speaksAfter(participant, option, writtenBy(behind, behindOption), true)
 	})
 
-	// The spelling the run stands in when the asking rule takes its turn, for asking whether a rule ahead has already reported it. The run is the one the asking rule's group reads: the trailing run in front of the semicolon for the semicolon's group, and for the head group the whitespace behind the colon — what the parser trimmed onto `raws.between`, what a fix ahead wrote onto its tail, the run a custom property's value opens with, and the run that ran on past the declaration into the raw of what stands next (#387), together
+	// The head group's run: `raws.between`'s tail, the run a custom property's value opens with, and the run that ran past the declaration (#387)
 	let standingRun = readers === semicolon ? run : betweenTailAfterColon(syntax, decl, result) + (valueAsClosed(syntax, decl, result).match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0] + (runPastDeclaration(syntax, decl, result) ?? ``)
 	let standing = spellingOf(standingRun)
 
-	// A lineness-conditioned asker runs after every rule ahead of it as well (#355), and those have had their say already: a write one of them would not accept leaves the file violating a rule that reported nothing, and the next run rewriting — the swing of #416 across runs. So a rule ahead gates the write unless it accepts what the write leaves, judged over the file as it rests — reparsed, a break in the value whoever wrote it. Two things free it: a rule ahead that has warned already — it spoke of the run as it stands and did not accept it, so its warning stands over whatever the write makes and nothing is silent — and one the write itself silences. A turned-off fix exempts nothing here, unlike behind: a rule behind still speaks after the write and reports what it sees, while a rule ahead judged the run before the write and stands silent over what the write made of it
+	// A rule ahead judged the run before the write (#355), so it gates the write unless it accepts what the write leaves, has warned already, or is silenced; a rejected write is a silent violation rewritten next run (#416)
 	let restsAhead = !defersToRunEnd(option) || settings.slice(0, position).every(([ahead, aheadOption]) => {
 		if (!readersAfterTheWrite.has(ahead)) return true
 

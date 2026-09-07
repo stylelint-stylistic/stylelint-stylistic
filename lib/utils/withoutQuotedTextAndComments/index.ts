@@ -1,15 +1,11 @@
 import { EVERY_ESCAPE_STRING_OR_COMMENT } from "../../regexps.ts"
 
 /**
- * Empties every quoted run of a text and takes out every comment, keeping the length of what stood there, so that neither the text inside a pair of quotes nor the text of a comment is read as the code around it — an attribute value taken for selector syntax, where a selector is what is handed over, and a line break taken for the file's own, where the whole file is.
+ * Blanks every quoted run and every comment of a text, keeping its length, so neither is read as the code around it.
  *
- * A comment goes with its delimiters, since the two of them standing side by side spell the double slash of an inline comment between them: `/*one*\//*two*\/` is two comments and no comment of that kind at all. A double slash is read before a comment is, so that the second slash of one cannot open a block comment either: `a//*x*\/b` is an inline comment and the text of it, whatever the text spells.
- *
- * An escape is read before a quotation mark is, so that a quote escaped outside a string — the one in `.x\\'y`, which Less takes for a class of that name — opens nothing, and the code standing behind it is read as the code it is.
- *
- * The `s` flag is what lets a backslash escape a line break, as a string spanning more than one line does; without it such a string would not be recognised at all, and its text would go on being read as the code around it.
- * @param text - The text to blank the quoted runs and the comments of.
- * @returns The text with what stands inside each pair of quotes, and each comment, replaced by spaces.
+ * A comment goes with its delimiters, since two side by side spell a `//`: `/*one*\//*two*\/` is two block comments. A `//` is read before a `/*`, so `a//*x*\/b` is a `//` comment whatever its text. An escape is read before a quotation mark, so a quote escaped outside a string, as in the Less class `.x\\'y`, opens nothing. The `s` flag lets a backslash escape a line break inside a string.
+ * @param text - The text to blank.
+ * @returns The text with each quoted run and each comment replaced by spaces.
  */
 export function withoutQuotedTextAndComments (text: string): string {
 	return text.replaceAll(EVERY_ESCAPE_STRING_OR_COMMENT, (match) => {

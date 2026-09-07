@@ -8,7 +8,7 @@ import { parseSelector } from "../parseSelector/index.ts"
 
 let { utils: { report } } = stylelint
 
-/** A function that checks whitespace at a specific location. */
+/** Checks whitespace at one location. */
 export type LocationChecker = (args: {
 	source: string,
 	index: number,
@@ -17,9 +17,9 @@ export type LocationChecker = (args: {
 }) => void
 
 /**
- * Gets the closest preceding sibling that is not a comment.
- * @param node - The node to start from.
- * @returns The node, or nothing if the node is preceded by comments only.
+ * The nearest preceding non-comment sibling.
+ * @param node - The selector node whose earlier sibling is sought.
+ * @returns The sibling, or nothing.
  */
 function prevNonComment (node: SelectorParserNode): SelectorParserNode | undefined {
 	let prev = node.prev()
@@ -31,7 +31,7 @@ function prevNonComment (node: SelectorParserNode): SelectorParserNode | undefin
 
 /**
  * Checks whitespace around selector combinators.
- * @param opts - The options object.
+ * @param opts - The options.
  */
 export function selectorCombinatorSpaceChecker (opts: {
 	root: Root,
@@ -58,18 +58,18 @@ export function selectorCombinatorSpaceChecker (opts: {
 		if (!selectorTree) return
 
 		selectorTree.walkCombinators((node) => {
-			// Ignore non-standard combinators
+			// Non-standard
 			if (!opts.syntax.isStandardCombinator(node)) return
 
-			// Ignore spaced descendant combinator
+			// Spaced descendant
 			if (WHITESPACE.test(node.value)) return
 
-			// A selector may open with a combinator, as nesting syntax spells one, and then there is nothing in front of it to measure the whitespace against. A comment does not open a selector, so it does not count as such a thing either.
+			// A nesting selector may open with a combinator, and a comment in front does not count
 			if (opts.locationType === `before` && !prevNonComment(node)) return
 
 			let parentParentNode = node.parent && node.parent.parent
 
-			// Ignore pseudo-classes selector like `.foo:nth-child(2n + 1) {}`
+			// Inside a pseudo-class, as in `:nth-child(2n + 1)`
 			if (parentParentNode && parentParentNode.type === `pseudo`) return
 
 			let sourceIndex = node.sourceIndex
@@ -86,15 +86,15 @@ export function selectorCombinatorSpaceChecker (opts: {
 	})
 
 	/**
-	 * Checks a combinator for whitespace violations.
-	 * @param source - The source string.
-	 * @param combinator - The combinator node.
+	 * Checks a combinator.
+	 * @param source - The selector.
+	 * @param combinator - The parsed combinator node whose whitespace is checked.
 	 * @param index - The index to check.
-	 * @param node - The parent node.
-	 * @param reportIndex - The index of the combinator in the source of the parent node.
+	 * @param node - The rule.
+	 * @param reportIndex - The combinator's index in the rule's source.
 	 */
 	function check (source: string, combinator: Combinator, index: number, node: Node, reportIndex: number): void {
-		// A comment standing beside a combinator is folded into the raws of that side, and a raw is what the parser prints in place of the spaces the fix writes. Stylelint counts a fixer as applied whatever it does, so a write nothing would print has to be declined here rather than from inside the fixer, or the warning goes down with it and `--fix` reports a clean pass on a file it has not touched.
+		// A comment beside a combinator folds into that side's raws, printed over the spaces the fix writes; declined here, since a fixer doing nothing still counts as applied and eats the warning
 		let isFixable = fix && combinator.raws?.spaces?.[opts.locationType] === undefined
 
 		opts.locationChecker({

@@ -3,9 +3,9 @@ import type { Container } from "postcss"
 import { isRoot } from "../typeGuards/index.ts"
 
 /**
- * Checks whether a container holds the declarations of an inline `style` attribute of an HTML-like document.
- * @param container - The container node to check.
- * @returns True if the container is the root of a `style` attribute, false otherwise.
+ * Whether a container is the root of an inline `style` attribute.
+ * @param container - The node.
+ * @returns True when it is.
  */
 export function isInlineStyleAttribute (container: Container): boolean {
 	if (!isRoot(container)) return false

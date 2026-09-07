@@ -12,7 +12,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/89
+			// See #89
 			description: `inline comment between the selector and the opening brace: the brace cannot leave its line, so the code is left alone and the warning stands`,
 			code: `
 				.some-class // v3+
@@ -49,7 +49,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/89
+			// See #89
 			description: `inline comment between the selector and the opening brace: the brace cannot leave its line, so the code is left alone and the warning stands`,
 			code: `
 				.some-class // v3+
@@ -72,7 +72,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/139
+			// See #139
 			description: `two single-line blocks behind a media feature holding an inline comment, the outer one of which the option reaches only once the block is measured as the file spells it`,
 			code: `
 				@media (min-width: 100px // c

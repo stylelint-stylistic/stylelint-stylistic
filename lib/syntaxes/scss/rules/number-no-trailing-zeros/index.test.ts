@@ -12,7 +12,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/271
+			// See #271
 			description: `a trailing zero standing in the text of an inline comment the value holds`,
 			code: `
 				a { b: 1.5px // 1.50px
@@ -20,7 +20,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/271
+			// See #271
 			description: `a trailing zero standing in the text of an inline comment a set of media parameters holds`,
 			code: `
 				@media (min-width: 100px // 1.50px
@@ -30,7 +30,7 @@ testRule({
 	],
 
 	reject: [
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/268
+		// See #268
 		{
 			description: `a trailing zero standing behind an end-of-line comment the value holds`,
 			code: `

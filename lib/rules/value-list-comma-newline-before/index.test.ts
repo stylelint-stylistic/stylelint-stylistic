@@ -48,7 +48,7 @@ testRule({
 			code: `a { transform: translate(1,1); }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/153
+			// See #153
 			description: `a bare address in front of the comma, whose double slash opens no comment`,
 			code: `
 				a { background: url(http://x/y.png)
@@ -87,7 +87,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/153
+			// See #153
 			description: `a comma behind a bare address, whose double slash opens no comment`,
 			code: `a { background: url(http://x/y.png),url(http://x/z.png); }`,
 			line: 1,

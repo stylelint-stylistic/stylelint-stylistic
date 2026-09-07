@@ -16,7 +16,7 @@ testRule({
 			code: `.a when (@size>=60) and (@size<102) {}`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/66
+			// See #66
 			description: `selector list whose second selector begins with a comment and a combinator`,
 			code: `
 				.a,

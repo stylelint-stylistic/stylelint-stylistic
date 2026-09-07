@@ -12,7 +12,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/207
+			// See #207
 			description: `inline comment before the semicolon: the semicolon cannot join the comment's line, so the code is left alone and the warning stands`,
 			code: `
 				a {
@@ -31,7 +31,7 @@ testRule({
 			message: messages.rejectedBeforeMultiLine(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/207
+			// See #207
 			description: `a flag standing in the text of the comment, which Less reads as comment text while the parser reads it as the flag — the value and the flag's raw together show the comment running on to the semicolon`,
 			code: `
 				a {

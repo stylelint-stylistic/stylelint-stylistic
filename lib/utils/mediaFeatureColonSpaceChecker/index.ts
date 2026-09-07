@@ -11,8 +11,8 @@ import { findFunctionArgumentSpans } from "../findFunctionArgumentSpans/index.ts
 let { utils: { report } } = stylelint
 
 /**
- * Checks whitespace around colons in media feature declarations.
- * @param opts - The options object.
+ * Checks whitespace around the colons of media features.
+ * @param opts - The options.
  */
 export function mediaFeatureColonSpaceChecker (opts: {
 	root: Root,
@@ -32,7 +32,7 @@ export function mediaFeatureColonSpaceChecker (opts: {
 		let params = opts.syntax.read(atRule)
 		let { searchString } = opts.syntax.searchCopy(params, atRule, opts.result)
 
-		// A colon standing inside the arguments of a function belongs to those arguments and to no media feature: the one in `url(http://x)` is part of the protocol, and a space written beside it names no resource at all
+		// A colon inside a function's arguments is no feature's: `url(http://x)`
 		let functionArguments = findFunctionArgumentSpans(searchString).filter(({ name }) => !MEDIA_QUERY_COMBINATORS.has(name))
 
 		styleSearch({ source: searchString, target: `:` }, (match) => {
@@ -45,10 +45,10 @@ export function mediaFeatureColonSpaceChecker (opts: {
 	})
 
 	/**
-	 * Checks a colon for whitespace violations.
-	 * @param source - The source string.
-	 * @param index - The index of the colon.
-	 * @param node - The at-rule node.
+	 * Checks one colon.
+	 * @param source - The at-rule's params the colon is checked in.
+	 * @param index - The colon's index.
+	 * @param node - The at-rule.
 	 */
 	function checkColon (source: string, index: number, node: AtRule): void {
 		opts.locationChecker({

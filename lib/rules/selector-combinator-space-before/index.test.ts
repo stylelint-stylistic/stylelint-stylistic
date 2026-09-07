@@ -152,7 +152,7 @@ testRule({
 			code: `namespace|type#id > .foo {}, space|customtype#id_withunder > a {}`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/66
+			// See #66
 			description: `selector list whose second selector begins with a comment and a combinator`,
 			code: `
 				.a,
@@ -348,7 +348,7 @@ testRule({
 			code: `namespace|type#id> .foo {}`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/66
+			// See #66
 			description: `selector list whose second selector begins with a comment and a combinator`,
 			code: `
 				.a,

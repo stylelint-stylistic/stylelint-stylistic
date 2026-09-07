@@ -40,12 +40,12 @@ testRule({
 			code: `@media (width >= /*>*/ 600px) {}`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/213
+			// See #213
 			description: `an operator inside the arguments of a function belongs to the address and to no media feature`,
 			code: `@media (width >= 1px) and (height >= url(a>=b)) { a { b: c; } }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/215
+			// See #215
 			description: `a media feature standing behind a bare address, whose double slash opens no comment`,
 			code: `@media (url(http://x) >= 1px) { a { b: c; } }`,
 		},
@@ -150,7 +150,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/215
+			// See #215
 			description: `a media feature standing behind a bare address, whose double slash opens no comment`,
 			code: `@media (url(http://x)>=1px) { a { b: c; } }`,
 			fixed: `@media (url(http://x) >=1px) { a { b: c; } }`,
@@ -159,7 +159,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/216
+			// See #216
 			description: `a double slash standing in the code of a plain CSS text, which spells no comment`,
 			code: `@media (a//b>=1px) { c { d: e; } }`,
 			fixed: `@media (a//b >=1px) { c { d: e; } }`,
@@ -168,7 +168,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/240
+			// See #240
 			description: `a two-character operator standing right behind another one, which the single run the fixture is put through has to space as well`,
 			code: `@media ,a<>=b screen<screen { a { b: c; } }`,
 			fixed: `@media ,a < >=b screen <screen { a { b: c; } }`,
@@ -191,7 +191,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/240
+			// See #240
 			description: `two one-character operators standing side by side, of which the second used to be read as the tail of the first`,
 			code: `@media (a<<b) { c { d: e; } }`,
 			fixed: `@media (a < <b) { c { d: e; } }`,
@@ -351,14 +351,14 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off with the run.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab in front of the range operator, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `@media (a\v>= 10px) {}`,
 			fixed: `@media (a\v >= 10px) {}`,
@@ -377,7 +377,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab at the run before the range operator: only the tokenizer's run goes, and the character stays`,
 			code: `@media (a\v >= 10px) {}`,
 			fixed: `@media (a\v>= 10px) {}`,

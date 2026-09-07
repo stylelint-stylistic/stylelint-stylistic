@@ -63,7 +63,7 @@ testRule({
 			message: messages.rejectedBeforeMultiLine,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `a block a mixin call with no semicolon of its own closes, the break in front of the brace parsed into that call`,
 			code: `
 				a {

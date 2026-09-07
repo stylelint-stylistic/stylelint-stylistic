@@ -30,11 +30,11 @@ export let meta = {
 
 /**
  * Requires a single space or disallows whitespace after the semicolons of declaration blocks.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
- * @param primary - The primary option, one of `always`, `never`, `always-single-line` and `never-single-line`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
+ * @param primary - `always`, `never`, `always-single-line` or `never-single-line`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line`): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)

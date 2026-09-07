@@ -26,9 +26,9 @@ import { nodeSyntax } from "../../utils/nodeSyntax/index.ts"
 import type { SyntaxRaw } from "../../utils/typeGuards/index.ts"
 import type { SelectorCopies, Syntax } from "../index.ts"
 
-/** The syntax of the core: plain CSS, which every rule of the plugin is written for. A root a namespace's syntax reads is refused — a styled template by its parser's mark, a Less or SCSS stylesheet by the probe of a double slash — and every other root is still accepted, custom syntaxes without a namespace of their own included. */
+/** The core syntax, plain CSS, which every rule is written for. A root a namespace's syntax reads is refused; every other root is accepted, custom syntaxes without a namespace included. */
 export let css: Syntax = {
-	// A styled template is the styled namespace's, a Less file the less namespace's and an SCSS file the scss namespace's: a syntax that spells a double slash as a comment at all is one the core's rules are no longer written for, whether it keeps such a comment in the text a rule reads or rewrites it away. Plain CSS — a file opened with no custom syntax at all — asks no probe, and a syntax the probe learned nothing about is still the core's: only a syntax's own answer turns a file away.
+	// A syntax spelling a double slash as a comment is a namespace's; a file with no custom syntax asks no probe, and one the probe cannot classify stays the core's
 	accepts (root: Root, result: PostcssResult): boolean {
 		if (root.raws.styledSyntaxRangeStart !== undefined) return false
 
@@ -40,7 +40,7 @@ export let css: Syntax = {
 	},
 	embedding: () => ({ indent: ``, multiline: false }),
 	valueEmbedsHostCode: () => false,
-	// An at-rule or a comment the core once turned away was a preprocessor's construct alone, and a file of such a syntax no longer reaches these rules
+	// What the core once turned away was a preprocessor's, and such a file no longer reaches these rules
 	isStandardAtRule: () => true,
 	isStandardRule: isStandardSyntaxRule,
 	isStandardDeclaration: isStandardSyntaxDeclaration,
@@ -50,7 +50,7 @@ export let css: Syntax = {
 	isStandardFunction: isStandardSyntaxFunction,
 	isStandardComment: () => true,
 	isStandardCombinator: isStandardSyntaxCombinator,
-	// Whichever copies a node carries are read and written: the raw PostCSS keeps beside a text holding comments, and the spelled copy `postcss-scss` keeps beside that. A root the probe could not classify may still have been parsed by that syntax, and a text read out of the wrong copy counts its positions two characters off per comment and lands its fix nowhere
+	// The raw PostCSS keeps beside a text holding comments, and the `scss` copy beside that, are read and written where they exist: a root the probe could not classify may still be `postcss-scss`'s
 	read: printedText,
 	write: writePrintedText,
 	inlineComments: inlineCommentReading,
@@ -63,34 +63,34 @@ export let css: Syntax = {
 	printedComments (node: AtRule | Declaration, text: string, result: PostcssResult): CommentSpan[] {
 		let raws = rawsOf(node)
 		let pair = raws && typeof raws.scss === `string` ? { rewritten: raws.raw, spelled: raws.scss } : undefined
-		// The comments the syntax rewrote in the raw are the comments it found, and the two copies say between them where each of them runs — while both still measure the same text; a pair out of step leaves the text to be scanned as one carrying no pair at all
+		// The two copies say where each rewritten comment runs; a pair out of step is read as none
 		let inline = pair ? findRewrittenCommentSpans(pair.rewritten, pair.spelled)?.map(({ start, end }) => ({ start, end, isInline: true })) : null
 
-		// The block comments the two copies spell alike, and the scan finds them in the copy the inline ones are blanked out of: a double slash left standing there is code, part of an address most often, and a `/*` inside an inline comment's text opens nothing once that text is spaces
+		// Block comments are found with the inline ones blanked: a double slash left there is code, and a `/*` inside an inline comment opens nothing
 		if (inline) return [...inline, ...findCommentSpans(blankComments(text, inline), false)].toSorted((one, other) => one.start - other.start)
 
-		// A double slash of plain CSS is code — part of an address, most often — and so is one of a syntax that marks its comments in a copy of its own, unless the pair it marked them in has gone out of step and the text is read for what it spells. The syntax is asked only where the text holds a pair of slashes to ask about
+		// A double slash of plain CSS is code, and so is one of a syntax marking its comments in a copy of its own, unless that pair is out of step
 		let spellsInlineComments = text.includes(`//`) && (pair !== undefined || syntaxKeepsInlineComments(nodeSyntax(node, result)))
 
 		return findCommentSpans(text, spellsInlineComments)
 	},
 	requiresTrailingSemicolon: () => false,
-	// No rule of plain CSS carries a parameter list, and no at-rule of it is a variable: both marks are `postcss-less`'s, and the less namespace reads them
+	// Both marks are `postcss-less`'s, read by the less namespace
 	readsRuleParams: () => false,
 	readsAtRuleAsVariable: () => false,
 	spellsOwnArithmetic: readsInlineComments,
-	// Plain CSS divides inside a math function and nowhere else, and the arguments of one are passed over by the rules that read a separator, so no solidus reaching this question is an operator
+	// Plain CSS divides inside a math function alone, whose arguments the separator rules pass over
 	readsSlashAsOperator: () => false,
-	// An escape is a code point of the identifier it stands in, to the tokenizer as to every browser, so a unit runs on behind one: `10PX\*2REM` is one dimension whose unit is `PX\*2REM` (#414)
+	// An escape is a code point of its identifier: `10PX\*2REM` has the unit `PX\*2REM` (#414)
 	endsUnitAtEscape: () => false,
-	// The spellings a preprocessor interpolates with, read over plain CSS too: `$(…)` is postcss-simple-vars' over a plain file, and a rule that read the text inside a `#{…}` as CSS would rewrite it (#298)
+	// A preprocessor's interpolations are read over plain CSS too, since a rule reading the inside of a `#{…}` as CSS would rewrite it (#298)
 	interpolationSpans: findInterpolationSpans,
 	selectorCopies (rule: PostcssRule): SelectorCopies {
 		let selectorRaws: SyntaxRaw | undefined = rule.raws.selector
 		let selector = selectorRaws ? selectorRaws.raw : rule.selector
 		let inlineComments: InlineComment[] | undefined
 
-		// The comments are scanned on the first question that needs them rather than up front: most call sites throw the copies away behind a cheap guard, and the scan reads both spellings character by character — and finds none where the node carries no spelled copy
+		// Scanned on the first question that needs them; most call sites never ask
 		function commentsOf (): InlineComment[] {
 			inlineComments ??= findSelectorInlineComments(selector, selectorRaws && selectorRaws.scss)
 
@@ -112,7 +112,7 @@ export let css: Syntax = {
 				if (selectorRaws) {
 					selectorRaws.raw = fixedSelector
 
-					// The stringifier reads the copy the source spelled, so the fix has to reach that one as well, with every inline comment spelled the way the file spells it
+					// The stringifier reads the spelled copy, so the fix reaches it too
 					if (typeof selectorRaws.scss === `string`) selectorRaws.scss = restoreSelectorInlineComments(fixedSelector, commentsOf())
 				}
 				else {

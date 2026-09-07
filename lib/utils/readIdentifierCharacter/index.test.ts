@@ -40,7 +40,7 @@ describe(`readIdentifierCharacter`, () => {
 		expect(readIdentifierCharacter(`\\\r\nurl(`, 0)).toEqual({ character: undefined, end: 1 })
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566
+	// See #566
 	it(`a backslash before a bare carriage return or a form feed, which the grammar reads a newline in as it reads one in a line feed, so that it spells nothing`, () => {
 		expect(readIdentifierCharacter(`\\\rurl(`, 0)).toEqual({ character: undefined, end: 1 })
 		expect(readIdentifierCharacter(`\\\furl(`, 0)).toEqual({ character: undefined, end: 1 })

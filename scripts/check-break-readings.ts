@@ -3,38 +3,30 @@
 /**
  * Accounts for every line of `lib/` that spells a line break, and refuses one nobody has classified.
  *
- * [AGENTS.md](../AGENTS.md) asks that every regular expression the plugin reads a stylesheet with live in [lib/regexps.ts](../lib/regexps.ts) under a name, so that a question is asked once and in the same words wherever it is asked. A comparison is not a regular expression, though, and a `===` against a break character, an `includes` of one, a `style-search` target and a pattern built out of a template literal all slip past that convention — which is where #246 stood, and where half the readings of a break in this plugin still stand. `oxlint` has no `no-restricted-syntax`, so the check is written here.
+ * [AGENTS.md](../AGENTS.md) wants every stylesheet-reading pattern under a name in [lib/regexps.ts](../lib/regexps.ts); a `===` against a break, an `includes`, a `style-search` target and a template-literal pattern slip past that ([#246](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/246)), and `oxlint` has no `no-restricted-syntax`. Matching the shapes of a reading cannot work (the first draft missed the line of [#247](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/247)), so every line spelling a break is a finding until a list classifies it.
  *
- * The first draft of it looked for the shapes a reading is written in, and missed thirteen of them, one being the very line #247 is about. Looking for shapes cannot work: a reading can be spelled in as many ways as JavaScript has syntax, and every list of those is a list of the ones somebody thought of. So the question is turned around. **Every line spelling a break is a finding until it is classified**, and the two lists below are the classification — which cannot leak, since a line matching neither is what the check fails on.
+ * `ALLOWED` puts a break into a text or spells a stylesheet as data; it asks nothing and may stand for ever. `DEBT` reads one and is meant to shrink: a line leaves it through a name in `lib/regexps.ts`, or a name of its own where the narrow reading is right.
  *
- * `ALLOWED` is a line that puts a break into a text, or spells a stylesheet as data. It asks nothing, so it may stand anywhere and stay for ever: a fixer has to be free to write the character the file is spelled with.
- *
- * `DEBT` is a line that reads one. Each is a place the next bug of the class can be, and the list is meant to shrink: taking a line off it means either asking the question through a name in `lib/regexps.ts`, or — where the narrow reading is the right one — moving it behind a name of its own that says so. Nothing here says a listed reading is wrong. Several are right and say why in a comment beside them, `whitespaceChecker`'s own three-character test among them. What the list says is that they stand outside the one place this question is meant to be answered from.
- *
- * A line is matched by its text rather than by its number, so moving one leaves it classified while changing one asks for the classification again, and the two lists are counted rather than looked up, or a second copy of a listed line would grow the debt without the list saying so.
- *
- * Two spellings are still outside this, and both are worth naming rather than pretending about, since neither can be seen by a check that reads the text of a file at all. A break named by its code point rather than written, `charCodeAt(0) === 10` for one, spells nothing to find. And a template literal holding a real line break rather than an escape spells it across two lines of source, neither of which shows it. Nothing in `lib/` is written either way today.
- *
- * One line is skipped that need not be: a statement continued under a leading operator, `* b.indexOf(\`\\n\`)` for one, is read as the middle of a block comment. Nothing in `lib/` is written in that style, and telling the two apart by text alone cannot be done.
+ * A line is matched by its text and counted, so moving one keeps it classified, changing one asks again, and a copy is reported. Invisible to a text check: a break named by code point, `charCodeAt(0) === 10`, a template literal holding a real break, and a statement continued under a leading `*`, read as a comment's middle; `lib/` writes none.
  */
 
 import { readdirSync, readFileSync } from "node:fs"
 import { exit, stdout } from "node:process"
 import { fileURLToPath } from "node:url"
 
-/** The directory read, resolved from this file rather than from the working one, so that the check answers the same from any directory. */
+/** The directory read, resolved from this file. */
 const LIB = fileURLToPath(new URL(`../lib`, import.meta.url))
 
-/** A line break spelled as an escape, in any of the spellings JavaScript reads one by: the three short ones, the two numeric ones, the braced Unicode one, and the control escape a pattern may carry. */
+/** A line break spelled as an escape, in every spelling JavaScript reads. */
 const MENTIONS = /\\(?:[nrf]|u000[acd]|x0[acd]|u\{0*[acd]\}|c[jlm])/iu
 
-/** A line that is nothing but prose about the code, where a break may be quoted rather than spelled. A line carrying either delimiter of a block comment counts only where the comment runs to that end of it, so that code written before the opening one or after the closing one is still read. */
+/** A line that is prose alone; a delimiter counts only where the comment runs to that end of the line. */
 const COMMENT_ONLY = /^(?:\/\/|\*(?!\/\s*\S))|^\/\*(?:(?!\*\/)[\s\S])*(?:\*\/\s*)?$/u
 
-/** The file the answers are meant to come from, and the tests, whose fixtures are stylesheets rather than readings of one. */
+/** The file the answers come from, and the tests, whose fixtures are stylesheets. */
 const SKIPPED = /(?:^|\/)regexps\.ts$|\.test\.ts$/u
 
-/** Every line that puts a break into a text, or spells one inside a stylesheet written as data. None of them asks whether anything is a break, so none is debt. */
+/** Lines that write a break or spell one in a stylesheet written as data. */
 const ALLOWED: Record<string, string[]> = {
 	"lib/rules/function-max-empty-lines/index.ts": [
 		`let allowedLFNewLinesString = \`\\n\`.repeat(maxAdjacentNewlines)`,
@@ -60,7 +52,7 @@ const ALLOWED: Record<string, string[]> = {
 	"lib/preprocessor/readsInlineComments/index.ts": [`const INLINE_COMMENT_PROBE = \`a {}\\n// comment\\na { b: 'x', // comment\\n  'y'; }\\n\``],
 }
 
-/** Every line that reads a break without asking `lib/regexps.ts` what one is. */
+/** Lines that read a break without asking `lib/regexps.ts`. */
 const DEBT: Record<string, string[]> = {
 	"lib/rules/block-closing-brace-empty-line-before/index.ts": [`if (statementString[index - 1] === \`\\r\`) index -= 1`],
 	"lib/rules/block-closing-brace-newline-before/index.ts": [`if (statementString[index - 1] === \`\\r\`) index -= 1`],
@@ -112,8 +104,8 @@ const DEBT: Record<string, string[]> = {
 }
 
 /**
- * Every JavaScript file of `lib/` a break could be spelled in.
- * @returns The paths, relative to the repository root.
+ * Every TypeScript file of `lib/` a break could be spelled in.
+ * @returns The paths from the repository root.
  */
 function collectSources (): string[] {
 	return readdirSync(LIB, { recursive: true, encoding: `utf8` })
@@ -124,9 +116,9 @@ function collectSources (): string[] {
 }
 
 /**
- * Counts how many times each line of a list stands in it.
+ * Counts each line of a list.
  * @param lines - The classified lines of one file.
- * @returns Each line against the number of times it is expected.
+ * @returns Line to expected count.
  */
 function tally (lines: string[]): Map<string, number> {
 	let counts = new Map()
@@ -161,7 +153,7 @@ for (let path of collectSources()) {
 	}
 }
 
-// A file named by either list and no longer in `lib/` is never reached by the loop above, so its lines would go unanswered for rather than be reported
+// A file named by a list and gone from `lib/` is never reached above
 for (let path of [...Object.keys(ALLOWED), ...Object.keys(DEBT)]) {
 	if (!seen.has(path)) stale.push(`${path}\t(the file itself is gone)`)
 }

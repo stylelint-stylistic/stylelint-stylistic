@@ -1,11 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * Checks that the built plugin needs none of the syntax packages a project may not have.
+ * Checks that the built plugin needs none of the syntax packages a project may lack.
  *
- * The four custom syntaxes are development dependencies: a project installs the one its own stylesheets are written in, and most install none. The plugin reads what their parsers hand over and never the parsers themselves — with one exception, the tokenizer of `postcss-scss`, which the reading of a declaration's colon asks for and which is therefore reached by name at the moment it is needed. A static import of it would keep the whole plugin from loading in every other project, which is what happened once and what no reading of the source has proved absent since: an import statement, a re-export, a dynamic import and a call at the top of a module all load a package as the module is loaded, and a scan of the text catches whichever shapes it was written for.
- *
- * So the property is checked rather than the spelling. The built `dist/` is put in a project holding every dependency the package declares and none of the four, and the plugin is loaded there. Then the same project is given a second one beside it that has `postcss-scss` — the shape of a workspace whose packages carry dependencies of their own, where Stylelint reaches the syntax from the configuration and the plugin cannot reach the tokenizer from itself — and an SCSS stylesheet whose declaration carries an inline comment is linted with the fix on: the rules pass such a declaration over there, and the file comes back as it went in. Reading it with the tokenizer of plain CSS would take that comment for code and write a line break into it.
+ * The four custom syntaxes are devDependencies; the plugin reaches only `postcss-scss`'s tokenizer, lazily. A static import once kept the plugin from loading, and a source scan misses import shapes, so the property is checked: `dist/` is loaded in a project holding every dependency and none of the four. A second project is then given `postcss-scss` where Stylelint reaches it and the plugin cannot, and an SCSS declaration with an inline comment is linted with `--fix`: the rules pass it over, where the CSS tokenizer would write a line break into the comment.
  */
 
 import { execFileSync } from "node:child_process"
@@ -16,15 +14,15 @@ import process, { stderr, stdout } from "node:process"
 
 const ROOT = path.resolve(import.meta.dirname, `..`)
 
-/** The stylesheet the second project is linted over: a declaration whose property is parted from its colon by an inline comment, which only `postcss-scss` reads there. */
+/** A property parted from its colon by an inline comment, which only `postcss-scss` reads. */
 const SCSS_STYLESHEET = `a { b //x:y\n: red; }\n`
 
 /**
- * Lints one stylesheet with the built plugin and hands back what the fix left in the file.
+ * Lints one stylesheet with the built plugin.
  * @param project - The project holding the plugin.
- * @param directory - The directory the stylesheet stands in.
- * @param from - The directory Stylelint is run from, which is where it looks a custom syntax up.
- * @returns The stylesheet, as the fix left it.
+ * @param directory - The stylesheet's directory.
+ * @param from - Where Stylelint runs, and looks the syntax up.
+ * @returns The stylesheet as the fix left it.
  */
 function lint (project: string, directory: string, from: string): string {
 	let stylesheet = path.join(directory, `a.scss`)
@@ -50,9 +48,9 @@ function lint (project: string, directory: string, from: string): string {
 }
 
 /**
- * Puts a package of the checkout into a project's `node_modules`, by the path Node resolves it at.
+ * Symlinks a package of the checkout into a project's `node_modules`.
  * @param modules - The `node_modules` directory.
- * @param name - The package's name, scope and all.
+ * @param name - The package to link, as `node_modules` names it.
  */
 function link (modules: string, name: string): void {
 	let target = path.join(ROOT, `node_modules`, name)
@@ -79,7 +77,7 @@ try {
 
 	stdout.write(`\t📦 ${loaded} rules load in a project holding none of ${optional.join(`, `)}\n`)
 
-	// A workspace whose packages carry dependencies of their own: `postcss-scss` stands where the stylesheet is, and the plugin's own chain has none of it
+	// `postcss-scss` beside the stylesheet, out of the plugin's chain
 	let beside = path.join(project, `beside`)
 
 	mkdirSync(beside, { recursive: true })
@@ -92,7 +90,7 @@ try {
 
 	stdout.write(`\t📦 the tokenizer of a syntax is reached from the stylesheet it parsed\n`)
 
-	// The same again with the package where Stylelint finds it and nowhere the plugin can reach: neither the stylesheet's directory nor the plugin's has it
+	// `postcss-scss` where only Stylelint finds it
 	let apart = path.join(project, `apart`)
 	let runner = path.join(project, `runner`)
 

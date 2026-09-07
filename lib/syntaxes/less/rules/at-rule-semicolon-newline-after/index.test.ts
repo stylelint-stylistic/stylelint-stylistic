@@ -24,7 +24,7 @@ testRule({
 				span { background-color: @myVariable; }
 			`,
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/357
+		// See #357
 		{
 			description: `a call to a Less detached ruleset, which takes no arguments and no space in front of its parentheses`,
 			code: `@dr: { color: red; }; span { @dr(); color: red; }`,

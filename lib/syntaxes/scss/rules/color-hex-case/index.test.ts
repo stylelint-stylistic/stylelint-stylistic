@@ -12,7 +12,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/271
+			// See #271
 			description: `an upper-case hex colour standing in the text of an inline comment the value holds`,
 			code: `
 				a { b: #aabbcc // #DDEEFF
@@ -23,7 +23,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/271
+			// See #271
 			description: `an upper-case hex colour on either side of an inline comment whose text holds one as well`,
 			code: `
 				a { b: #AABBCC // #DDEEFF
@@ -47,7 +47,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/115
+			// See #115
 			description: `the fix reaches the copy of the value this syntax prints, and the inline comment keeps its spelling`,
 			code: `
 				$m: (

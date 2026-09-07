@@ -12,7 +12,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/139
+			// See #139
 			description: `a space in front of the semicolon of an at-rule whose parameters carry on past an inline comment, which this syntax keeps a second copy of`,
 			code: `
 				@import "a" // c

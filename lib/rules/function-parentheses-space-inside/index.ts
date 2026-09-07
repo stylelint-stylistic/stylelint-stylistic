@@ -32,84 +32,68 @@ export let meta = {
 	fixable: true,
 }
 
-/** A character put where the first argument of a function begins, so that the guard reading the text in front of it is answered about that position and not about the whitespace the fix would write over. Any character that opens nothing and that `String.prototype.trimEnd` leaves standing answers the same, and the argument's own first character is not one of those: the value parser counts as space only what stands below the blank, so a separator of Unicode standing there is a character of the argument, and the scan behind the guard would trim it away together with the line break in front of it and read the comment as still open. */
+/** Stands in for the first argument, which may open on a Unicode separator `trimEnd` would strip with the break in front of it. */
 const ARGUMENT_STAND_IN = `x`
 
 /**
- * Asks whether the file spells the function the value parser has handed back.
+ * Asks whether the function the value parser returned is one the file writes.
  *
- * A preprocessor construct is none, and neither is a function the parser has marked unclosed. The parser knows nothing of a comment opened by a double slash, so a `/*` standing in the text of one opens a block comment to it that never closes and swallows the closing parenthesis of every function open around it. The stringifier then prints what such a node keeps in front of its parenthesis behind it instead, so the whitespace an `always` option asks for there lands outside the function; PostCSS trims that whitespace out of the value and into the raws of what follows, which leaves the value looking untouched to the next run, and the next run writes another one — a character a run, for as long as the fixer is asked (#131).
- *
- * A function the parser closed on a parenthesis standing inside such a comment is none the file spells either, and is the third question. The parser closes a call on the first parenthesis it meets, and the text of a comment is text it reads as code, so `f(1px // c) h(2px` and a break and `2px)` — one call of `f` reaching over that break, as every syntax spelling such a comment reads it — comes back as a closed `f(1px // c)` with an `h(2px` and the break and `2px)` beside it. Neither parenthesis the parser gives that `f` is one the file writes, and the whitespace an `always` option asks for in front of the second lands inside the comment's text, while a `never` option takes away a space that text holds (#320).
- *
- * The two guards standing in front of the fixes answer nothing here. They ask whether a fix would take something from outside a comment into one, and this parenthesis is inside one on both sides of the fix — which #132 lets through on purpose, a value already broken that way being one the fix leaves no worse. That reasoning holds for a parenthesis the file really spells and not for one the parser invented.
- *
- * Half the node is no answer, though the halves are not alike. The opening parenthesis of such a call is one the file really writes, and so is the whitespace behind it, so the opening half of an option could be read and fixed where it stands. The closing half could not: the parenthesis the file closes the call on is one the parser never hands over, so whether the option is satisfied there is a question the rule cannot put at all. Sometimes it already is — the last parenthesis of `f(1px // c) h( 2px`, a break, `2px )` has the space an `always` option wants in front of it, the file reading `f(1px` and the break and `2px )` — and sometimes it is not, as in `f(1px // c) h(2px`, a break and `2px)`. A rule keeping the opening half would write its whitespace and report the problem solved in both, and in the second it would hand back a value still violating the option at a parenthesis no run can ever reach, which is the shape #285 is about. Nothing the rule can see tells the two apart, so reporting nothing is the honest answer, and the warnings that costs are the price of a parse it cannot mend.
- *
- * The whole node is turned away rather than the closing half of it, warning and all: the parentheses the options are about are not where the parser puts them, and nothing read out of a value the parser has misread this way is worth reporting. A closed call standing inside such a function is reached by the walk as ever, and read and fixed where it stands. A bracket the file really leaves open never gets here — PostCSS throws on one of those before any rule sees the declaration — so a comment is the only thing the second question turns away.
+ * No for a preprocessor construct, an unclosed function, or one closed on a `)` inside a `//` comment, which the parser cannot see: a `/*` in one swallows every `)` behind it ([#131](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/131)), a `)` in one closes the call early ([#320](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/320)), and the fix guards see neither ([#132](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/132)). The whole node is refused: the closing `)` is one the parser never returns ([#285](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/285)).
  * @param syntax - The syntax the rule is built over.
- * @param valueNode - The function the walk has reached.
- * @param comments - The spans the comments of the value occupy in it, both kinds.
- * @returns True where the rule may read the function's parentheses and write between them.
+ * @param valueNode - The function.
+ * @param comments - The value's comment spans.
+ * @returns True where the parentheses may be written.
  */
 function isFunctionParsedAsWritten (syntax: Syntax, valueNode: FunctionNode, comments: CommentSpan[]): boolean {
 	if (!syntax.isStandardFunction(valueNode)) return false
 
 	if (valueNode.unclosed) return false
 
-	// The parenthesis the node ends on, asked after `unclosed` because a node marked so ends on no parenthesis of its own while the index still lands on a character: `f(1px // /*` and ` c`, a break and `2px)` ends on a parenthesis standing outside every comment, and `f("abc)` ends one character past the text altogether
+	// After `unclosed`: an unclosed node's end index is no `)`
 	return !findCommentSpanAt(valueNode.sourceEndIndex - 1, comments)
 }
 
 /**
- * Asks whether the fix would take a function's first argument from outside an inline comment into one.
- *
- * The fix writes the whitespace the function keeps behind its opening parenthesis and nothing else, so everything in front of that parenthesis stays where it is written and the argument closes up against it. Where an inline comment stands in front of the whitespace, the line break that whitespace holds is what closes the comment, so taking the break away leaves the argument, and everything the declaration has behind it, inside the comment's text.
- *
- * The stand-in stands where the argument's first character does, since {@link movesEndIntoInlineComment} asks about the character a text ends with.
+ * Asks whether the fix puts the first argument into a `//` comment the line break behind the `(` closes. The stand-in replaces the argument: {@link movesEndIntoInlineComment} reads a text's last character.
  * @param syntax - The syntax the rule is built over.
- * @param declValue - The value the rule has read and parsed, which the node's positions count in.
- * @param valueNode - The function whose opening parenthesis is being fixed.
- * @param reading - What the syntax the value was spelled in makes of a comment opened by a double slash.
- * @returns True where a reading has the argument move into a comment.
+ * @param declValue - The whole value the function stands in.
+ * @param valueNode - The function.
+ * @param reading - The `//` comment reading.
+ * @returns True where the argument lands in a comment.
  */
 function movesOpeningIntoComment (syntax: Syntax, declValue: string, valueNode: FunctionNode, reading: InlineCommentReading): boolean {
 	let openingIndex = valueNode.sourceIndex + valueNode.value.length + 1
 	let firstIndex = openingIndex + valueNode.before.length
 	let standingText = declValue.slice(0, firstIndex)
-	// The fix writes the whitespace behind the parenthesis and nothing else, so everything in front of that parenthesis stays where it is written and the argument closes up against it. A single space is all the `always` options put there, and a space closes no comment, so both options leave the argument standing behind the same text.
+	// Same for both options: a single space closes no comment
 	let fixedText = declValue.slice(0, openingIndex)
 
 	return syntax.movesEndIntoInlineComment(`${standingText}${ARGUMENT_STAND_IN}`, `${fixedText}${ARGUMENT_STAND_IN}`, reading)
 }
 
 /**
- * Asks whether the fix would take a function's closing parenthesis from outside an inline comment into one.
- *
- * The fix writes the whitespace the function keeps in front of that parenthesis and nothing else, so the line break standing in that whitespace — the one closing a comment the value left open — is exactly what it takes away.
+ * Asks whether the fix puts the `)` into a `//` comment the line break in front of it closes.
  * @param syntax - The syntax the rule is built over.
- * @param declValue - The value the rule has read and parsed, which the node's positions count in.
- * @param valueNode - The function whose closing parenthesis is being fixed.
- * @param reading - What the syntax the value was spelled in makes of a comment opened by a double slash.
- * @returns True where a reading has the parenthesis move into a comment.
+ * @param declValue - The whole value the function stands in.
+ * @param valueNode - The function.
+ * @param reading - The `//` comment reading.
+ * @returns True where the `)` lands in a comment.
  */
 function movesClosingIntoComment (syntax: Syntax, declValue: string, valueNode: FunctionNode, reading: InlineCommentReading): boolean {
 	let closingIndex = valueNode.sourceEndIndex - 1
 	let standingText = declValue.slice(0, closingIndex)
-	// The fix writes the whitespace the function keeps in front of the parenthesis and nothing else, so everything behind that whitespace stays on the line it is written on, and only the parenthesis moves. A single space is all the `always` options put there, and a space closes no comment, so both options leave the parenthesis standing behind the same text.
+	// Same for both options: a single space closes no comment
 	let fixedText = declValue.slice(0, closingIndex - valueNode.after.length)
 
-	// The parenthesis is written back on the end of each text, since it is the character the fix moves
+	// Each text ends on the `)` the fix moves
 	return syntax.movesEndIntoInlineComment(`${standingText})`, `${fixedText})`, reading)
 }
 
 /**
- * Names the span the whitespace behind a function's opening parenthesis stands in, and what goes there.
- *
- * The span is counted in the value the file spells, so that the fix is written where the whitespace stands rather than printed back as the whole value.
- * @param valueNode - The function being fixed.
- * @param text - The whitespace to put there.
- * @returns The edit that writes it.
+ * The edit rewriting the whitespace behind a function's `(`.
+ * @param valueNode - The function.
+ * @param text - The whitespace to write.
+ * @returns The edit.
  */
 function openingEdit (valueNode: FunctionNode, text: string): Edit {
 	let start = valueNode.sourceIndex + valueNode.value.length + 1
@@ -118,21 +102,19 @@ function openingEdit (valueNode: FunctionNode, text: string): Edit {
 }
 
 /**
- * Names where a function's closing parenthesis stands in the value the file spells.
- *
- * A function the parser has marked unclosed never gets here, so the parenthesis is the character the node ends on, and the parser marks that end in the file's own coordinates. The length of a printed copy of the node is no measure of it: the stringifier gives a comment opening `/*\/` back as `/**\/`, a character wider than the file spells it, and an index counted from that length landed a character past the one it was about (#506).
- * @param valueNode - The function being read.
- * @returns The index of the parenthesis.
+ * The closing `)`'s index, from the node's end: a printed copy prints `/*\/` as `/**\/` and was a character off ([#506](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506)).
+ * @param valueNode - The function.
+ * @returns The index.
  */
 function closingParenthesisIndex (valueNode: FunctionNode): number {
 	return valueNode.sourceEndIndex - 1
 }
 
 /**
- * Names the span the whitespace in front of a function's closing parenthesis stands in, and what goes there.
- * @param valueNode - The function being fixed.
- * @param text - The whitespace to put there.
- * @returns The edit that writes it.
+ * The edit rewriting the whitespace in front of a function's `)`.
+ * @param valueNode - The function.
+ * @param text - The whitespace to write.
+ * @returns The edit.
  */
 function closingEdit (valueNode: FunctionNode, text: string): Edit {
 	let end = closingParenthesisIndex(valueNode)
@@ -141,13 +123,13 @@ function closingEdit (valueNode: FunctionNode, text: string): Edit {
 }
 
 /**
- * Requires a single space or disallows whitespace on the inside of the parentheses of functions.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * Requires a single space or disallows whitespace inside the parentheses of functions.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always`, `never`, `always-single-line` and `never-single-line`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always`, `never`, `always-single-line` or `never-single-line`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line`): RuleCheck {
 	return (root, result) => {
@@ -162,23 +144,23 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (!decl.value.includes(`(`)) return
 
 			let fix: FixCallback | undefined
-			// What a fix changed, and nothing else: the value is edited at the positions the fixes name rather than printed anew from the parsed tree, since `postcss-value-parser` does not always give back the text it was handed — a comment opening `/*/` comes back as `/**/` — and a fix made anywhere in such a value would rewrite a comment standing elsewhere in it
+			// Edited at positions: the value parser prints `/*/` as `/**/`
 			let edits: Edit[] = []
 			let declValue = syntax.read(decl)
-			// A double slash spells a comment only where the syntax says one, and a file of plain CSS spells none: the pair in `myurl(//a)` is code there, and taking it for a comment would silence everything standing behind it on the line
+			// A `//` is a comment only where the syntax says: `myurl(//a)` is CSS
 			let reading = syntax.inlineComments(decl, result)
-			// Every comment the value holds, both kinds. A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind, so what such a comment holds comes back as ordinary words and calls; a block comment reaches the walk as a node of its own — except one opening `/*/`, which the parser closes on the star it opened with, handing the rest of its text back the same way (#378)
+			// Both kinds: a `//` comment's text comes back as words and calls, a `/*/` comment closes on its own star (#378)
 			let comments = syntax.commentSpans(declValue, decl, result)
-			// The value is parsed in a copy of itself with every quotation mark its comments leave open masked, so that the parser pairs the marks the value spells the way the file pairs them (#508)
+			// Masks quotation marks a comment leaves open, so the parser pairs them right (#508)
 			let parsedValue = valueParser(hideQuotesInComments(declValue, comments))
 
 			parsedValue.walk((valueNode) => {
 				if (valueNode.type !== `function`) return
 
-				// The node narrowed to a call, under a name the closures below can read it by: a narrowing made in this callback is not carried into a function created inside it
+				// A narrowing here is not carried into a nested function
 				let functionNode = valueNode
 
-				// A call standing in the text of a comment is no call of the value, and its parentheses are none of this rule's: leave it alone. A call nested inside it is still walked and asked the same question, since one opened inside such a comment reaches past the break or the delimiter that closes it and gathers code the file spells.
+				// A call in a comment is none; one nested in it is still walked, since one opened in a `//` comment reaches past its closing break
 				if (findCommentSpanHolding(valueNode, comments)) return
 
 				if (!isFunctionParsedAsWritten(syntax, valueNode, comments)) return
@@ -193,12 +175,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let openingIndex = valueNode.sourceIndex + valueNode.value.length + 1
 
 				/**
-				 * Asks whether the whitespace behind the opening parenthesis can be written at all.
-				 *
-				 * The first argument goes right after that whitespace, and the fix writes over the whitespace itself. Where an inline comment stands in front of it, the line break it holds is what closes the comment, so no option can be satisfied without taking the argument, and everything the declaration has behind it, into the comment's text: leave the value alone and let the warning stand, as the closing parenthesis has done since #114. The single-line options ask as well, cheaply and for safety's sake rather than against a shape any case pins: a function this rule counts as single-line holds no line feed for a comment of that kind to end on, and the text in front of its first argument would have to be left open by something standing outside the function itself.
-				 *
-				 * Only one option is ever in force, so this is asked once at most, and only where a problem has been found: reading the whole value in front of the argument, four times over, is not work to do for a function nothing is the matter with.
-				 * @returns True if the fix can write without commenting the first argument out.
+				 * Asks whether the line break behind the `(` closes a `//` comment, which no option can satisfy without commenting the argument out; the warning then stands unfixed ([#114](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/114)).
+				 * @returns True if the argument stays outside a comment.
 				 */
 				function isOpeningFixable (): boolean {
 					return !movesOpeningIntoComment(syntax, declValue, functionNode, reading)
@@ -225,16 +203,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				}
 
 				// Check closing ...
-				// The character in front of the parenthesis, which is where the whitespace the closing half of an option is about ends
+				// The character in front of the `)`
 				let closingIndex = closingParenthesisIndex(valueNode) - 1
 
 				/**
-				 * Asks whether the parenthesis can be moved at all.
-				 *
-				 * The parenthesis goes right after the text this reads, and the whitespace the fix overwrites ends it. Where an inline comment stands there, the line break that whitespace holds is what closes the comment, so no option can be satisfied without taking the parenthesis, and everything the declaration has left, into the comment's text: leave the value alone and let the warning stand. The single-line options ask as well, cheaply and for safety's sake rather than against a shape any case pins: a function this rule counts as single-line holds no line feed for a comment of that kind to end on, and the text in front of its parenthesis would have to be left open by something standing outside the function itself.
-				 *
-				 * Only one option is ever in force, so this is asked once at most, and only where a problem has been found: reading the whole value in front of the parenthesis, four times over, is not work to do for a function nothing is the matter with.
-				 * @returns True if the fix can write without commenting the parenthesis out.
+				 * Asks whether the line break in front of the `)` closes a `//` comment, which no option can satisfy without commenting it out; the warning then stands unfixed.
+				 * @returns True if the `)` stays outside a comment.
 				 */
 				function isClosingFixable (): boolean {
 					return !movesClosingIntoComment(syntax, declValue, functionNode, reading)
@@ -264,13 +238,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (edits.length > 0) syntax.write(decl, applyEditsFromEnd(declValue, edits))
 
 			/**
-			 * Hands `report` the fix for a write, or nothing at all where the guard standing in front of that write has turned it down.
-			 *
-			 * Stylelint reads the absence of a callback as the answer that the problem cannot be fixed, so the warning stands and the value is left exactly as it is.
-			 *
-			 * No two writes of this rule ever name one span: a function whose parentheses hold nothing but whitespace is the only shape where the two sides of an option are the same span of the value, and such a function is turned away above for holding no arguments.
-			 * @param isFixable - The guard the write stands behind, asked here and nowhere else, so that it is asked once and only where a problem has been found.
-			 * @param write - The span the write changes, and what goes there.
+			 * Returns the fix, or nothing where the guard refuses, which Stylelint reports as unfixable. No two writes name one span, an argumentless function being refused above.
+			 * @param isFixable - The guard, asked once.
+			 * @param write - The edit.
 			 * @returns The fix, or nothing.
 			 */
 			function fixBehind (isFixable: () => boolean, write: () => Edit): (() => void) | undefined {
@@ -282,9 +252,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			}
 
 			/**
-			 * Reports a parentheses space violation.
-			 * @param message - The error message to report.
-			 * @param offset - The offset index of the violation.
+			 * Reports a violation.
+			 * @param message - The warning text to report.
+			 * @param offset - The index in the value.
 			 */
 			function complain (message: string, offset: number): void {
 				let problemIndex = declarationValueIndex(decl) + offset

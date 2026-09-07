@@ -16,19 +16,19 @@ import { optionsMatches } from "../optionsMatches/index.ts"
 import { isAtRule, isDeclaration, isRoot } from "../typeGuards/index.ts"
 import { whitespaceBeforeSemicolon } from "../whitespaceBeforeSemicolon/index.ts"
 
-/** The rule that writes and takes away the semicolon a declaration block ends on, and the primaries it takes. */
+/** The trailing-semicolon rule and its primaries. */
 const TRAILING_SEMICOLON_RULE = { name: `declaration-block-trailing-semicolon`, options: [`always`, `never`] }
 
-/** The keys a secondary option of any rule may carry, which Stylelint reads for itself and `validateOptions` lets through. */
+/** Secondary keys Stylelint reads itself. */
 const STYLELINT_SECONDARY_KEYS = new Set([`severity`, `message`, `reportDisables`, `disableFix`, `url`])
 
-/** The one secondary option the rule declares, with the one value it takes. */
+/** The rule's only secondary value. */
 const IGNORE = `single-declaration`
 
 /**
- * Asks whether the rule would take the secondary options it is configured with, the way `validateOptions` asks it: `ignore` holding `single-declaration`, as one or in a list, and nothing else beside what Stylelint reads for itself. A rule handed an option it refuses runs no check and writes nothing, so a reader that took it for live would count in a write that never comes.
- * @param secondary - The secondary options as the configuration spells them.
- * @returns True where the rule runs under them.
+ * Asks whether the rule accepts the secondary options, as `validateOptions` does; refusing, it runs no check.
+ * @param secondary - The secondary options.
+ * @returns True where the rule runs.
  */
 function takesSecondary (secondary: Record<string, unknown>): boolean {
 	return Object.entries(secondary).every(([key, value]) => {
@@ -40,20 +40,16 @@ function takesSecondary (secondary: Record<string, unknown>): boolean {
 }
 
 /**
- * Asks whether the node stands in a declaration block, the trailing semicolon of which is what `declaration-block-trailing-semicolon` is named for. Whether the node is the one closing that block is asked separately, by each walk of that rule and by {@link trailingSemicolonAsked}.
+ * Asks whether the node stands in a declaration block; the callers ask whether it closes one.
  *
- * A stylesheet is no declaration block. The semicolon behind the last of its own nodes is every bit as optional as a block's — dart-sass compiles a file ending in `$var: pink`, and `lightningcss` parses one ending in `@import "a"` and prints the semicolon back itself — so what leaves it alone here is not the syntax but that rule's own scope: the semicolon it is named for is the one a declaration block ends on, and the top level of a file ends no block. The walk over at-rules has said so since the rule was written, and the walk over declarations says it now too.
- *
- * The root of an inline `style` attribute is the one exception, since the value of such an attribute is a declaration block and nothing else, and `declaration-block-semicolon-*` read such a root the same way. An at-rule is left outside that exception all the same: an attribute holds declarations, so an at-rule the parser puts on such a root is nothing it has a place for, and the semicolon behind it is not the rule's to move.
- *
- * A Sass map is no declaration block either: a container of declarations with no block of its own, so no semicolon closes it and nothing is asked of its last node, comments or none.
- * @param node - The node the semicolon would stand behind.
- * @returns True where the node stands in a declaration block.
+ * The root ends no block, except an inline `style` attribute's; an at-rule there stays out. A Sass map has no block.
+ * @param node - The node whose container is asked about.
+ * @returns True where it stands in a declaration block.
  */
 export function standsInADeclarationBlock (node: Node): boolean {
 	let container = node.parent
 
-	// The two walks throw on a node with no parent before they ask, so this stands for whoever asks next rather than for them
+	// A guard for callers other than the walks
 	if (!container || container.type === `object`) return false
 	if (!isRoot(container)) return true
 
@@ -61,13 +57,11 @@ export function standsInADeclarationBlock (node: Node): boolean {
 }
 
 /**
- * Asks whether the semicolon behind a node is written whatever the block's `raws.semicolon` says.
+ * Asks whether PostCSS writes the semicolon behind a node whatever the block's `raws.semicolon` says.
  *
- * PostCSS writes one behind a childless at-rule and behind a custom property wherever any sibling stands behind that node, and a comment closing the block is such a sibling. Without it the comment would be folded into the at-rule's parameters or into the custom property's value on the next parse and would stop being a node of the block at all. So `never` has nothing it can take away there, and the warning stands over code the fix leaves alone.
- *
- * That is what `pushBody` of PostCSS's stringifier does, and this restates it rather than asking the stringifier itself, which would mean printing the whole block twice for one warning. The at-rule half of it arrived in PostCSS 8.5.21 and the custom property half in 8.5.22, and the copy that prints the file is neither this package's nor Stylelint's but the one the custom syntax resolves, its stringifier being a subclass of that copy's; where an install resolves an older copy than those, the fix is declined on a node it would have got right, which costs a warning its fix and no more.
- * @param node - The node the semicolon stands behind.
- * @returns True where clearing the block's flag would leave the semicolon where it is.
+ * `pushBody` writes one behind a childless at-rule and a custom property wherever a sibling follows, so `never` has nothing to take; restated rather than printed per warning, and false under a PostCSS older than 8.5.22.
+ * @param node - The at-rule or declaration a sibling follows.
+ * @returns True where clearing the flag leaves the semicolon.
  */
 export function semicolonOutlivesTheFlag (node: Node): boolean {
 	if (!node.next()) return false
@@ -76,12 +70,12 @@ export function semicolonOutlivesTheFlag (node: Node): boolean {
 }
 
 /**
- * Asks whether `declaration-block-trailing-semicolon`, configured as the setting says, runs over a declaration and may write there: with its fix on, under secondary options it takes, not silenced over the declaration by a disable comment, over the node closing a declaration block, and not over a block of one declaration where `ignore: single-declaration` says so.
- * @param syntax - The syntax the asking rule is built over.
+ * Asks whether `declaration-block-trailing-semicolon` can fix a declaration: fix on, secondaries it takes, no disable on the line, closing a block, not alone under `ignore: single-declaration`.
+ * @param syntax - The asking rule's syntax.
  * @param decl - The declaration.
- * @param result - The Stylelint result, which holds the configuration and the disabled ranges.
+ * @param result - The Stylelint result, whose disable ranges are read.
  * @param setting - The rule's setting, as `neighbourSetting` reads it.
- * @returns True where the rule reaches the declaration with its fix.
+ * @returns True where the fix reaches the declaration.
  */
 function reaches (syntax: Syntax, decl: Declaration, result: PostcssResult, setting: { fixDisabled: boolean, secondary: Record<string, unknown> }): boolean {
 	if (setting.fixDisabled || !takesSecondary(setting.secondary)) return false
@@ -98,15 +92,13 @@ function reaches (syntax: Syntax, decl: Declaration, result: PostcssResult, sett
 }
 
 /**
- * Asks what `declaration-block-trailing-semicolon` will leave behind a declaration once it has taken its turn: a semicolon under a live `always`, none under a live `never`.
+ * Asks what `declaration-block-trailing-semicolon` leaves behind a declaration: a semicolon under a live `always`, none under a live `never`, nothing where its fix cannot write.
  *
- * The rule is read the way it reads itself — under the asking rule's namespace, with secondary options it takes, with its fix on and not silenced over the declaration by a disable comment, over the node closing a declaration block, past a block of one declaration where `ignore: single-declaration` says so, and only where its fix can be written: `always` writes behind no node carrying a block and none whose text an inline comment closes, since the semicolon would land inside the comment; `never` takes away no semicolon PostCSS writes whatever the flag says and none the language will not part with. Wherever the rule is not configured, cannot reach the node or cannot write, it leaves the file as it stands, and so does the answer here.
- *
- * A disable comment is asked about by the line the declaration ends on, which is where the rule reports under `always`; under `never` it reports on the semicolon, which stands on that line save where a comment behind the declaration carries it further, and a range opened over the one line and not the other is read here by the declaration's.
- * @param syntax - The syntax the asking rule is built over.
+ * `always` writes behind no node with a block and none an inline comment closes; `never` takes no semicolon PostCSS writes regardless or the language requires. The disable line is the declaration's last, where `always` reports.
+ * @param syntax - The asking rule's syntax.
  * @param decl - The declaration.
  * @param result - The Stylelint result, which holds the configuration.
- * @returns True where a semicolon will close the declaration, false where none will, and nothing where the rule leaves that to the file.
+ * @returns True for a semicolon, false for none, nothing where the rule leaves it.
  */
 export function trailingSemicolonAsked (syntax: Syntax, decl: Declaration, result: PostcssResult): boolean | undefined {
 	let setting = neighbourSetting(syntax, result, TRAILING_SEMICOLON_RULE)
@@ -119,10 +111,10 @@ export function trailingSemicolonAsked (syntax: Syntax, decl: Declaration, resul
 }
 
 /**
- * Asks whether a semicolon closes a declaration, as the file will stand once `declaration-block-trailing-semicolon` has taken its turn.
+ * Asks whether a semicolon closes a declaration once `declaration-block-trailing-semicolon` has run.
  *
- * Whether the whitespace behind a declaration's colon belongs to the declaration or to the block turns on that one character: where the file writes one, the parser keeps the run inside the declaration, and where it writes none, the run goes on into the raw of whatever stands next (#387). That rule moves the boundary while the run is on, and Stylelint runs each rule once in the order the configuration lists them, so a rule reading the run as the file stands at its own turn read it before or after the move by the order alone, and the file the user was left with went with the order (#536). Read as the semicolon rule will leave it, the boundary is the same at every rule's turn, wherever the configuration lists it.
- * @param syntax - The syntax the asking rule is built over.
+ * Without the semicolon the run behind the colon is the next node's raw ([#387](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387)); reading the boundary as the rule will leave it frees a reader from configuration order ([#536](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/536)).
+ * @param syntax - The asking rule's syntax.
  * @param decl - The declaration.
  * @param result - The Stylelint result, which holds the configuration.
  * @returns True where a semicolon closes the declaration, or will.
@@ -134,11 +126,11 @@ export function closedBySemicolon (syntax: Syntax, decl: Declaration, result: Po
 /**
  * Reads a declaration's printed value as `declaration-block-trailing-semicolon` will leave it.
  *
- * Its `never` takes the whitespace in front of the semicolon away along with the semicolon (#479): the end of the value, where the declaration carries no flag and no inline comment closes its text — the same write `takeTheTrailingSemicolonsAway` makes, and nothing else of the value moves. A reader of the run behind the colon that read the value as it stands would read a run the rule is about to take away, and would write it or report it by the order the configuration lists the two in.
- * @param syntax - The syntax the asking rule is built over.
+ * Its `never` takes the whitespace in front of the semicolon too ([#479](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/479)) where no flag or inline comment closes the declaration.
+ * @param syntax - The asking rule's syntax.
  * @param decl - The declaration.
  * @param result - The Stylelint result, which holds the configuration.
- * @returns The value in the copy the syntax prints, less the run `never` takes away.
+ * @returns The printed value, less the run `never` takes.
  */
 export function valueAsClosed (syntax: Syntax, decl: Declaration, result: PostcssResult): string {
 	let value = syntax.read(decl)

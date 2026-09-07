@@ -27,13 +27,13 @@ export let meta = {
 
 /**
  * Requires a newline or disallows whitespace before the commas of selector lists.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always`, `always-multi-line` and `never-multi-line`.
- * @param _secondaryOptions - The secondary options, of which this rule takes none.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always`, `always-multi-line` or `never-multi-line`.
+ * @param _secondaryOptions - Unused.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
@@ -54,7 +54,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.beforeAllowingIndentation,
 			checkedRuleName: ruleName,
-			// Under `never-multi-line` the whitespace in front of the comma is taken away, and it may hold the line break that closes an inline comment: without that break the comma, and the rest of the list, would land in the comment's text. The problem is reported and the code left as it was. `always` only adds a break in front of whatever whitespace stands there, and takes nothing.
+			// `never-multi-line` may take away the break closing a `//` comment and put the comma into it; report and leave the code. `always` only adds a break.
 			isFixable: (selector, index, inlineComments) => {
 				if (primary !== `never-multi-line`) return true
 

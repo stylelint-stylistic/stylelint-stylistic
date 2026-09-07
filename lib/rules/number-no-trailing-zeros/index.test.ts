@@ -200,7 +200,7 @@ testRule({
 			column: 24,
 			message: messages.rejected,
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/268
+		// See #268
 		{
 			description: `a trailing zero standing behind a block comment the value holds`,
 			code: `a { b: 1px /* c */ 0.50em; }`,
@@ -209,7 +209,7 @@ testRule({
 			column: 23,
 			message: messages.rejected,
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/268
+		// See #268
 		{
 			description: `a trailing zero on either side of a block comment the value holds and one more behind it`,
 			code: `a { b: 1.50px /* c */ 2.50em 3.50rem; }`,
@@ -232,7 +232,7 @@ testRule({
 				},
 			],
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/268
+		// See #268
 		{
 			description: `a trailing zero in front of a block comment the parameters of a media query hold`,
 			code: `@media (min-width: 100.0px /* c */) { a { b: c; } }`,
@@ -242,7 +242,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			// See #378
 			description: `a fraction standing beside a comment opening with a solidus, a star and a solidus, whose text spells a fraction of its own that the value parser hands back as a word`,
 			code: `a { b: 1.50px /*/ 1.50px */ 3; }`,
 			fixed: `a { b: 1.5px /*/ 1.50px */ 3; }`,
@@ -251,7 +251,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			// See #508
 			description: `a number with a trailing zero in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no number`,
 			code: `a { b: 1.50px /*/ " */ "1.50px"; }`,
 			fixed: `a { b: 1.5px /*/ " */ "1.50px"; }`,

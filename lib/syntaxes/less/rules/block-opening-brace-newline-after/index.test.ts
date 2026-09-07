@@ -12,7 +12,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/248
+			// See #248
 			description: `an inline comment abutting the brace, whose line break is what closes it, so the declaration behind it cannot join its line`,
 			code: `
 				a {// c
@@ -29,7 +29,7 @@ testRule({
 			message: messages.rejectedAfterMultiLine(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/248
+			// See #248
 			description: `an inline comment on a line of its own behind the brace, where the fix would take away two breaks and the second of them closes the comment`,
 			code: `
 				a {
@@ -48,7 +48,7 @@ testRule({
 			message: messages.rejectedAfterMultiLine(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/248
+			// See #248
 			description: `a block comment standing between an inline one and the declaration, which the fix would carry into the inline comment along with everything behind it`,
 			code: `
 				a {

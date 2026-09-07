@@ -8,20 +8,15 @@ import { colonIndexInBetween } from "../colonIndexInBetween/index.ts"
 import { declarationEndsTheStylesheet } from "../declarationEndsTheStylesheet/index.ts"
 
 /**
- * Asks whether the whitespace behind a declaration's colon is the declaration's own text and the text the stylesheet ends on.
+ * Asks whether a whitespace run behind a declaration's colon is its own text and ends the stylesheet.
  *
- * PostCSS keeps a whitespace-only value in `decl.value` itself, and a custom property is where it keeps one that a plain property would have handed to the raw behind it. Where such a declaration ends the stylesheet, that value is the tail of the file: the root's own raw is empty, and the line break the file closes its last line with stands inside the declaration.
+ * PostCSS keeps a whitespace-only value in `decl.value`, so the file's closing break stands inside such a declaration. `declaration-colon-space-after` writes the run where it stands ([#371](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/371)), taking that break, and no spelling satisfies both the option and a closed last line; the declaration is passed over, like one whose run has left it ([#537](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537), [#546](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/546)).
  *
- * `declaration-colon-space-after` writes the whitespace behind the colon where the run stands, which for such a value is the value itself (#371), so a write there takes the file's last break with it. No spelling of that rule's options answers both the option and a closed last line — `always` asks for a single space with no whitespace behind it, `never` for no whitespace at all — so the declaration is passed over rather than drawing a warning nothing can settle, exactly as the run that has left the declaration altogether is (#537).
- * https://github.com/stylelint-stylistic/stylelint-stylistic/issues/546
- *
- * The text asked about is the whole of what the declaration prints behind its colon, `raws.between`'s tail and the printed value together, rather than the value alone: a fix of `declaration-colon-newline-after` running ahead in the same pass moves that run onto the tail of `raws.between` and leaves the value empty, and the run is the file's tail there as much as it was in the value.
- *
- * A flag parts the run from the end of the file whatever the value holds, since what the file writes behind it is printed out of the raw the flag carries — `--b: !important\n` keeps the break there — so such a declaration is read like any other.
- * @param syntax - The syntax the asking rule is built over.
+ * The text is `raws.between`'s tail plus the printed value, since a fix of `declaration-colon-newline-after` ahead in the pass moves the run onto that tail. A flag parts the run from the file's end, the break staying in its raw.
+ * @param syntax - The syntax the rule is built over.
  * @param decl - The declaration.
- * @param result - The Stylelint result, which holds the syntax the file was opened with.
- * @returns True where the declaration prints a run of whitespace behind its colon and the stylesheet ends on it.
+ * @param result - The Stylelint result.
+ * @returns True where a whitespace run behind the colon ends the stylesheet.
  */
 export function runInDeclarationEndsTheStylesheet (syntax: Syntax, decl: Declaration, result: PostcssResult): boolean {
 	if (decl.important || !declarationEndsTheStylesheet(decl)) return false

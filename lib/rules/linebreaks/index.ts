@@ -23,12 +23,12 @@ export let meta = {
 
 /**
  * Specifies unix or windows linebreaks.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `unix` and `windows`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `unix` or `windows`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `unix` | `windows`): RuleCheck {
 	return (root, result) => {
@@ -42,15 +42,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let shouldHaveCR = primary === `windows`
 
 		/**
-		 * Rewrites the line breaks of the texts a node holds: its selector, its value, its at-rule parameters, the text of a comment, and every raw the node writes the whitespace of the file into.
+		 * Rewrites the breaks of every text a node holds: selector, value or params, comment text, whitespace raws.
 		 *
-		 * A selector and a value alike are read and written through their pair rather than as a bare property, since PostCSS keeps the comments of one in `raws.selector.raw` and `raws.value.raw`, `postcss-scss` keeps the copy it prints in `raws.selector.scss` and `raws.value.scss`, and writing the property throws both away. The breaks a comment itself holds are rewritten along with the rest: a break inside a comment is a break of the file like any other. The text of a comment standing as a node of its own is written the same way, and reaches the file for a block comment under every syntax. For an end-of-line comment under `postcss-scss` it reaches nothing, that syntax keeping a `raws.text` beside the text and printing the raw; nothing is lost by it, since that syntax ends such a comment on a carriage return as readily as on a line feed and no break can stand in its text at all.
+		 * A selector, value or params is written through the syntax, not as a bare property, since writing the property throws away the comment copy in `raws.selector.raw` and `raws.value.raw` and the printed `postcss-scss` copy in `raws.selector.scss` and `raws.value.scss`. A comment's text is written too; a `//` comment under `postcss-scss` prints `raws.text` instead and holds no break.
 		 *
-		 * A set of at-rule parameters is read and written through its own pair for the same reason, and for every at-rule rather than for the Less at-variable alone: the variable is the one at-rule that carries a third copy of its text, and the `write` of the less namespace's syntax keeps that one in step as well.
-		 *
-		 * The raws are written bare, since none of the five the walk reads past `raws.before` and `raws.after` is kept in a second copy by any syntax. Each is written only where the node holds it: `raws.afterName` belongs to an at-rule and `raws.important` to a declaration, and either is as often absent as not; `raws.left` and `raws.right` belong to a comment; `raws.between` is held by the three nodes that have two halves to part, and stands empty where the file writes nothing between them; `raws.ownSemicolon` belongs to a rule, and only to one a stray semicolon stands behind. Three of the five hold a character of code beside the whitespace — the colon of a declaration, the colon `postcss-less` files in `raws.afterName` for a Less at-variable, and the semicolon of `raws.ownSemicolon` — which the respelling passes over untouched, reading breaks and nothing else. The first four were #283, the last #372.
-		 *
-		 * `raws.ownSemicolon` is written in the branch that reads a rule because a rule is the only node the parser hands it to: `freeSemicolon` gives it to the node in front of a stray semicolon and only where that node is a rule, so any other node in the same place — an at-rule, a declaration, a comment — leaves the semicolon in the `raws.after` of the parent, which the walk reads already. A rule is handed it once, a second stray semicolon behind the same block going to that same `raws.after`. `postcss-scss`, `postcss-less` and `postcss-styled-syntax` read the shape as PostCSS does, and PostCSS prints the raw for a rule and for nothing else.
+		 * The raws are written where the node holds them: `raws.afterName`, `raws.important`, `raws.left`, `raws.right`, `raws.between` ([#283](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283)) and `raws.ownSemicolon` ([#372](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/372)); the code in them beside the whitespace is left alone. `raws.ownSemicolon` is written for a rule alone since `freeSemicolon` hands it to a rule alone; elsewhere the semicolon lands in the parent's `raws.after`, which the walk reads already.
 		 */
 		function fix (): void {
 			root.walk((node) => {
@@ -73,7 +69,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				}
 
 				if (isComment(node)) {
-					// The text of an end-of-line comment is written like any other, carriage return and all. `postcss-less` ends such a comment on a line feed alone and hands one the carriage returns behind it as text, but Less normalises the line endings of a file before parsing it, so that break closed the comment before the parser ever saw it; respelling it is what makes the printed file say what Less reads.
+					// A `//` comment's text is respelled too: `postcss-less` keeps a carriage return behind one as text, but Less normalises line endings first, so the printed file then says what Less reads.
 					node.text = fixData(node.text)
 
 					if (node.raws.left) node.raws.left = fixData(node.raws.left)
@@ -93,13 +89,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (root.source === undefined) throw new Error(`The root node must have a source`)
 
-		// Every line is read with the break that ends it, since the break is what the question is about; the last line ends in none, and is asked nothing
+		// Each line comes with its break; the last line has none and is skipped
 		let lines = root.source.input.css.match(EVERY_LINE_WITH_BREAK) ?? []
 
 		for (let [i, line] of lines.entries()) {
 			if (hasError(line)) {
 				let lineNum = i + 1
-				// The warning stands on the first character of the break: the carriage return of a pair the option refuses, or the line feed the option wanted a pair in front of
+				// The warning stands on the first character of the break
 				let colNum = shouldHaveCR ? line.length : line.length - 1
 
 				reportNewlineError(lineNum, colNum)
@@ -107,9 +103,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		}
 
 		/**
-		 * Checks if a string has incorrect linebreak characters.
-		 * @param dataToCheck - The string to check for linebreak errors.
-		 * @returns True if the string has incorrect linebreaks, false otherwise.
+		 * Checks whether a string's line breaks are not the option's.
+		 * @param dataToCheck - The string.
+		 * @returns True if a break is wrong.
 		 */
 		function hasError (dataToCheck: string): boolean {
 			let hasNewlineToVerify = LINE_BREAK.test(dataToCheck)
@@ -119,11 +115,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		}
 
 		/**
-		 * Writes every line break of a text as the option asks for it.
-		 *
-		 * A break is respelled rather than taken apart and put back, so that a replacement never lands between the two characters of a Windows pair. A bare carriage return is no break to PostCSS and is left where it stands, as every other rule leaves it.
-		 * @param data - The text to write the breaks of.
-		 * @returns The text, with every break spelled as the option asks for it.
+		 * Respells every break whole, so nothing lands inside a Windows pair; a bare carriage return is no break and stays.
+		 * @param data - The text.
+		 * @returns The text with the breaks respelled.
 		 */
 		function fixData (data: string): string {
 			if (data) return data.replaceAll(EVERY_LINE_BREAK, shouldHaveCR ? `\r\n` : `\n`)
@@ -132,12 +126,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		}
 
 		/**
-		 * Reports a newline character error.
-		 * @param line - The line number of the error.
-		 * @param column - The column number of the error.
+		 * Reports a line break error.
+		 * @param line - The line the break stands on.
+		 * @param column - The column the break stands at.
 		 */
 		function reportNewlineError (line: number, column: number): void {
-			// A node made by hand is what lets a warning point at an empty line.
+			// A hand-made node lets a warning point at an empty line
 			let node = _rule({
 				source: {
 					start: { line, column, offset: 0 },

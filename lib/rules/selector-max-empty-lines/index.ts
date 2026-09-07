@@ -21,12 +21,12 @@ export let meta = {
 
 /**
  * Limits the number of adjacent empty lines within selectors.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, a number.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - The most empty lines allowed.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: number): RuleCheck {
 	let maxAdjacentNewlines = primary + 1
@@ -48,7 +48,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let copies = syntax.selectorCopies(ruleNode)
 			let { selector } = copies
 
-			// The line break that closes each comment stands outside it and survives the fix, since collapsing the empty lines always leaves the first break standing.
+			// The break closing each comment survives the fix, which leaves the first break of every run
 
 			if (violatedLFNewLinesRegex.test(selector) || violatedCRLFNewLinesRegex.test(selector)) {
 				report({

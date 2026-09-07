@@ -1,14 +1,14 @@
 /**
- * A character JavaScript calls whitespace and the tokenizer may not, standing in a row of a grid — between two cell names, inside one, at either end of the row, or as the whole of it.
+ * A JavaScript whitespace character the tokenizer may not read as one, in every place a grid row has for it.
  *
- * Written for #401. `named-grid-areas-alignment` cut a row into cells with `trim` and `\s`, which take every separator Unicode has, where the tokenizer reads a space, a tab, a line feed, a carriage return and a form feed and nothing else, and `lightningcss` reads every code point outside ASCII as a character of a cell's name, the grammar reading any run that is no ident code point as a trash token: a cell named with a no-break space was no cell to the rule, and a name holding one was two names. The corpus puts each character in every place a row has for it, so that a row says what the rule made of the character there; the space is the control, and the tab and the form feed are the characters that must collapse like it.
+ * Written for [#401](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/401): `named-grid-areas-alignment` cut a row with `trim` and `\s`, which take every Unicode separator, where the tokenizer reads five characters and `lightningcss` reads every non-ASCII code point as part of a name. The space is the control; the tab and the form feed must collapse like it.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** The character, by what it is: the tokenizer's whitespace first, then what only JavaScript calls whitespace. */
+/** The tokenizer's whitespace first, then what only JavaScript calls whitespace. */
 const CHARACTERS: Record<string, string> = {
 	space: ` `,
 	tab: `\t`,
@@ -21,7 +21,7 @@ const CHARACTERS: Record<string, string> = {
 	byteOrderMark: `﻿`,
 }
 
-/** Where the character stands in the first row, over a second row whose cells do not line up. */
+/** Where the character stands in the first row; the second row's cells are out of line. */
 const PLACES: Record<string, (character: string) => [string, string]> = {
 	between: (character) => [`"a${character}b"`, `"cc  c"`],
 	insideName: (character) => [`"a${character}b c"`, `"dd   d"`],
@@ -31,7 +31,7 @@ const PLACES: Record<string, (character: string) => [string, string]> = {
 	trailingCell: (character) => [`"a ${character}"`, `"cc  c"`],
 }
 
-/** The declaration on one line and over several, since the padding of a cell is written only over several. */
+/** One line and several, since a cell is padded only over several. */
 const LAYOUTS: Record<string, (rows: [string, string]) => string> = {
 	singleLine: (rows) => `a { grid-template-areas: ${rows.join(` `)}; }\n`,
 	multiLine: (rows) => `a {\n\tgrid-template-areas:\n\t\t${rows.join(`\n\t\t`)};\n}\n`,
@@ -48,7 +48,7 @@ const corpus: Sweep[`corpus`] = multiply({ layout: keysOf(LAYOUTS), place: keysO
 	return lay(put(character))
 })
 
-/** The rule under its primary and each of its secondary options, and `string-quotes` as the control that reads the same strings and writes nothing of their text. */
+/** The rule under each option, and `string-quotes` as the control that writes none of the strings' text. */
 const configs: Sweep[`configs`] = [
 	{ rule: `named-grid-areas-alignment`, primary: true },
 	{ rule: `named-grid-areas-alignment`, primary: true, secondary: { gap: 2 } },

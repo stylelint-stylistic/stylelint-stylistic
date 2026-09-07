@@ -12,7 +12,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/137
+			// See #137
 			description: `inline comment before the comma: the comma cannot join the comment's line, so the parameters are left alone and the warning stands`,
 			code: `
 				@media (min-width: 1px) // c
@@ -35,7 +35,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/137
+			// See #137
 			description: `a comma inside the text of an inline comment is no comma of the query`,
 			code: `
 				@media (min-width: 1px), // a , b
@@ -46,7 +46,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/137
+			// See #137
 			description: `inline comment before the comma: the comma cannot join the comment's line, so the parameters are left alone and the warning stands`,
 			code: `
 				@media (min-width: 1px) // c

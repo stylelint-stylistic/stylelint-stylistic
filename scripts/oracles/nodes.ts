@@ -1,11 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * Asks of every rule, under every primary option it accepts: does every declaration, rule and at-rule the file held survive the fix?
+ * Asks of every rule under every primary option whether every declaration, rule and at-rule survives the fix.
  *
- * This is the mirror image of `comments.ts`, and the half of the question that oracle cannot ask. That one counts the comment openings a file holds, so it catches a comment a fixer deleted; the opposite failure is code a fixer swallowed *into* a comment that survives, and to a count of comments nothing has happened at all. Nothing else sees it either: the output parses, since a commented-out declaration leaves a stylesheet every parser is happy with, and the run after it is stable. #248 is that shape, and `converge.ts` reports no row for either of its rules.
- *
- * What is counted is nodes rather than characters. A fixer may take a character away and be right to — `no-extra-semicolons` removes a stray semicolon, `number-no-trailing-zeros` a zero, `declaration-block-trailing-semicolon` under `never` the last semicolon of a block — and none of those is a node. No stylistic rule adds or removes a declaration, a rule or an at-rule, so any change in those three counts is a fixer carrying code off.
+ * The mirror of `comments.ts`: code swallowed into a surviving comment moves no comment count ([#248](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/248)). Nodes, not characters: a fixer may remove a character, but no stylistic rule removes a node.
  */
 
 import { stdout } from "node:process"
@@ -18,14 +16,14 @@ import { lint } from "../harness/lint.ts"
 
 import { buildRuns, isUsable, type Run } from "./runs.ts"
 
-/** The parser each syntax of a run is read back with, so that what came out of the fix is counted the way what went in was written. */
+/** The parser each syntax is read back with. */
 const PARSERS: Record<string, { parse: Parser }> = { css: postcss, less, scss }
 
 /**
- * Counts the declarations, rules and at-rules a stylesheet holds.
- * @param code - The stylesheet to count in.
- * @param syntaxName - The syntax it is written in.
- * @returns The tally, as a key two stylesheets can be compared by, or null where the text does not parse.
+ * Counts the declarations, rules and at-rules.
+ * @param code - The stylesheet.
+ * @param syntaxName - The name the parser is looked up by: `css`, `less` or `scss`.
+ * @returns A comparable key, or null where the text does not parse.
  */
 function tally (code: string, syntaxName: string): string | null {
 	let counts = { decl: 0, rule: 0, atrule: 0 }
@@ -47,14 +45,14 @@ function tally (code: string, syntaxName: string): string | null {
 }
 
 /**
- * Fixes one fixture and counts what came out against what went in.
- * @param run - The rule, the option, the syntax and the fixture.
- * @returns The finding, or null where there is none.
+ * Fixes one fixture and compares the counts.
+ * @param run - One rule under one primary option over one fixture.
+ * @returns The finding, or null.
  */
 async function probe (run: Run): Promise<object | null> {
 	let before = tally(run.code, run.syntaxName)
 
-	// A fixture the syntax cannot read is no fixture, and one holding nothing to lose is nothing to ask about
+	// Nothing to ask of unparsable or empty input
 	if (before === null || before === `decl:0 rule:0 atrule:0`) return null
 
 	let result
@@ -73,7 +71,7 @@ async function probe (run: Run): Promise<object | null> {
 	let output = result.code ?? run.code
 	let after = tally(output, run.syntaxName)
 
-	// Output that no longer parses is `converge.ts`'s finding rather than this one's, and reporting it here would say the same thing twice
+	// Output that no longer parses is `converge.ts`'s finding
 	if (after === null || after === before) return null
 
 	return { rule: run.rule, primary: run.primary, syntaxName: run.syntaxName, name: run.name, before, after, code: run.code, output }

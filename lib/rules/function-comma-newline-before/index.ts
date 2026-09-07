@@ -27,13 +27,13 @@ export let meta = {
 
 /**
  * Requires a newline or disallows whitespace before the commas of functions.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always`, `always-multi-line` and `never-multi-line`.
+ * @param primary - `always`, `always-multi-line` or `never-multi-line`.
  * @param secondaryOptions - The secondary options: `ignoreFunctions`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, secondaryOptions: { ignoreFunctions?: string | RegExp | (string | RegExp)[] }): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)

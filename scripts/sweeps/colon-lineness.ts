@@ -1,7 +1,7 @@
 /**
- * A comment standing in a declaration's value, holding a line break inside it or none, in every place the value has for one — in front of its first word, between two words, behind its last word, in front of its flag, and alone as the whole of the value — with a break, a space or nothing behind the comment, over a plain property and a custom one, and behind every run the colon rules tell apart: a single space, two, and a break. The comment in front of the colon is the control, since it is no part of the value and a break inside it makes no line of the declaration.
+ * A comment in a declaration's value, with a line break or none, at its head, between two words, at its tail, in front of the flag, and as the whole value; with a break, a space or nothing behind it; over a plain and a custom property; behind a single space, two spaces and a break after the colon. The comment in front of the colon is the control.
  *
- * Written for #389, where the two `declaration-colon-*-after` rules counted the lines of `decl.value`, the copy PostCSS builds with every comment taken out: a break spelled inside a comment, or between a comment and the word behind it, was in no line of that copy, and one declaration was single-line to `always-single-line` and to `always-multi-line` at once. The rules are the two whose lineness options read the value, the `always` and `never` options of both as controls, `declaration-colon-space-before`, which shares the checker of the space rule and takes no lineness option, and the two `declaration-block-semicolon-*-before` rules, whose lineness options read the block rather than the value and which read the run behind the colon through `writesSharedRun`, where the same reading stood a third time.
+ * Written for [#389](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/389): the two `declaration-colon-*-after` rules counted the lines of `decl.value`, which PostCSS builds with every comment taken out. The controls are `declaration-colon-space-before`, with no lineness option, and the two `declaration-block-semicolon-*-before` rules, reading the run through `writesSharedRun`.
  */
 
 import { multiply } from "../harness/matrix.ts"
@@ -48,7 +48,7 @@ const corpus: Sweep[`corpus`] = multiply({
 	}
 })
 
-/** The two rules whose lineness options read the value, under every primary option `scripts/oracles/options.ts` lists for them, and the three controls beside them. */
+/** Every primary `scripts/oracles/options.ts` lists for the two rules and the three controls. */
 const configs: Sweep[`configs`] = ([
 	[`declaration-colon-newline-after`, [`always`, `always-multi-line`]],
 	[`declaration-colon-space-after`, [`always`, `never`, `always-single-line`]],

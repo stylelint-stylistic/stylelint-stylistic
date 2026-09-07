@@ -48,14 +48,14 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`url(http://x) // c`)).toEqual([{ start: 14, end: 18, isInline: true }])
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+	// See #378
 	it(`a slash and a star inside a bare address, which are two characters of the address to every tokenizer and open no comment`, () => {
 		expect(findCommentSpans(`url(a/* x) 1PX /* c */ 3PX`)).toEqual([{ start: 15, end: 22, isInline: false }])
 		expect(findCommentSpans(`url(a/* x) 1PX // c`)).toEqual([{ start: 15, end: 19, isInline: true }])
 		expect(findCommentSpans(`url(a/*)b*/) // c`)).toEqual([{ start: 13, end: 17, isInline: true }])
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504
+	// See #504
 	it(`a quotation mark inside a bare address, which is a character of the address to every tokenizer and opens no string, so that the marks behind the address pair as the file pairs them`, () => {
 		expect(findCommentSpans(`url(a"b)c" /* " */ "d"`)).toEqual([])
 		expect(findCommentSpans(`url(a'b)c' // '\n'd'`)).toEqual([])
@@ -89,8 +89,7 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`url( a/* x) 1PX // c`)).toEqual([{ start: 16, end: 20, isInline: true }])
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/321
-	// Every case below stands on an escape, which the scan used to read as an ordinary character everywhere but inside an address and inside a quoted string.
+	// Every case below stands on an escape, which the scan used to read as an ordinary character everywhere but inside an address or a quoted string. See #321
 	it(`a double slash whose first character an escape spells`, () => {
 		expect(findCommentSpans(`a\\//b 1px`)).toEqual([])
 	})
@@ -141,8 +140,7 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`\\0 rl(http://x)`)).toEqual([{ start: 11, end: 15, isInline: true }])
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/343
-	// The cases below stand on a name the scan used to read in ASCII word characters alone, so that a call named otherwise came out an address. The last two pin what had to survive the widening, and so does the second half of the case that puts one name in two spellings: an escape opened a name whatever it spelled, so the file that writes the name `\e9 url(` reached a call on either side of the branch where the file that writes it as the character it spells did not.
+	// The cases below stand on a name the scan used to read in ASCII word characters alone, so a call named otherwise came out an address. The last two, and the second half of the case putting one name in two spellings, pin what had to survive the widening: an escape opened a name whatever it spelled, so `\e9 url(` reached a call on either side of the branch where the name written as the character it spells did not. See #343
 	it(`a double slash inside a call whose name opens on a code point outside ASCII`, () => {
 		expect(findCommentSpans(`\u00E9url(http://x)`)).toEqual([{ start: 10, end: 14, isInline: true }])
 	})
@@ -204,8 +202,7 @@ describe(`findCommentSpans`, () => {
 	})
 })
 
-// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427
-// The other answer of the walk that finds the comments, which no caller could ask for until this one: the same reading of what a `url()` is, put to the addresses it steps over instead of to the comments it steps around.
+// The other answer of the walk that finds the comments: the same reading of what a `url()` is, put to the addresses it steps over instead of the comments it steps around. See #427
 describe(`findAddressSpans`, () => {
 	it(`a text holding no call at all`, () => {
 		expect(findAddressSpans(`1px 2px`)).toEqual([])
@@ -274,7 +271,7 @@ describe(`findAddressSpans`, () => {
 		expect(findAddressSpans(`url(aa\\\\41 )`)).toEqual([{ start: 4, end: 10 }])
 	})
 
-	// Which whitespace a backslash spells is the one reading of an escape the plugin holds and no reading of this module's, and it is the grammar's: a backslash in front of any of the four newlines spells nothing, the form feed and the bare carriage return of the last two lines among them, which used to be read as characters the escape spells (#566).
+	// Which whitespace a backslash spells is the grammar's reading, held once by the plugin and not by this module: a backslash in front of any of the four newlines spells nothing, the form feed and the bare carriage return of the last two lines among them, which used to be read as characters the escape spells (#566).
 	it(`a line break behind an escape, which a hexadecimal one closes on and a backslash spells nothing in front of`, () => {
 		expect(findAddressSpans(`url(a\\\n)`)).toEqual([{ start: 4, end: 6 }])
 		expect(findAddressSpans(`url(a\\41\r\n)`)).toEqual([])
@@ -296,7 +293,7 @@ describe(`findAddressSpans`, () => {
 describe(`findCommentSpanAt`, () => {
 	// The comment of `1px // c\n2px`, which runs from the double slash to the break
 	let spans = [{ start: 4, end: 8, isInline: true }]
-	// The comment of `1px /*/ c */ 2px`, which CSS closes on the last of its slashes and `postcss-value-parser` on the first star: everything from the fourth character to the twelfth is text the parser hands back as nodes of the value (#378)
+	// The comment of `1px /*/ c */ 2px`, which CSS closes on the last of its slashes and `postcss-value-parser` on the first star, so the fourth to the twelfth character come back as nodes of the value (#378)
 	let slashStarSlash = [{ start: 4, end: 12, isInline: false }]
 
 	it(`a position in front of the comment`, () => {

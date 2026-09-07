@@ -79,7 +79,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `a break in front of the brace of a block an at-rule with neither a block nor a semicolon closes, which the parser files into that at-rule rather than into the block`,
 			code: `
 				a {
@@ -164,7 +164,7 @@ testRule({
 			message: messages.expectedBefore,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `a space in front of the brace of a single-line block an at-rule with neither a block nor a semicolon closes`,
 			code: `a { @extend .b }`,
 			fixed: `a { @extend .b\n }`,
@@ -225,7 +225,7 @@ testRule({
 			code: `a { color: pink;;;\r\ntop: 0;;;\r\n}`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/209
+			// See #209
 			description: `a form feed on either side of the declaration, which is whitespace and no line break, so the block is single-line and none of this option's business`,
 			code: `a {\fcolor: pink;\f}`,
 		},
@@ -280,7 +280,7 @@ testRule({
 			code: `a { color: pink;}b { color: red;}`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `a break in front of the brace of a block an at-rule with neither a block nor a semicolon closes, which the parser files into that at-rule rather than into the block`,
 			code: `
 				a {
@@ -570,7 +570,7 @@ testRule({
 			message: messages.rejectedBeforeMultiLine,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `a break in front of the brace of a block an at-rule with neither a block nor a semicolon closes, which the parser files into that at-rule rather than into the block`,
 			code: `
 				a {

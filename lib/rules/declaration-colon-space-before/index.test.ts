@@ -36,7 +36,7 @@ testRule({
 			code: `a { background : url(data:application/font-woff;...); }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/92
+			// See #92
 			description: `comment with an URL, space before the declaration's own colon`,
 			code: `a { color/* https://foo.bar/ */ :pink; }`,
 		},
@@ -48,7 +48,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/408
+			// See #408
 			description: `a property ending in a run of two solidi, which the search that finds the colon reads to the end of the line as a comment though no syntax spells one there`,
 			code: `a { --b//c:\nx:y; }`,
 			fixed: `a { --b//c :\nx:y; }`,
@@ -57,7 +57,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/421
+			// See #421
 			description: `a property spelling a colon of its own, escaped, which opens no declaration`,
 			code: `a { b\\:c: pink; }`,
 			fixed: `a { b\\:c : pink; }`,
@@ -122,7 +122,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/88
+			// See #88
 			description: `a comment holding a double slash, which opens none of its own`,
 			code: `a { color/* keep // me */:/*comment*/pink; }`,
 			fixed: `a { color/* keep // me */ :/*comment*/pink; }`,
@@ -131,7 +131,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/92
+			// See #92
 			description: `a comment holding an address, likewise`,
 			code: `a { color/* https://foo.bar/ */:pink; }`,
 			fixed: `a { color/* https://foo.bar/ */ :pink; }`,
@@ -184,7 +184,7 @@ testRule({
 			code: `$map :(key :value)`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/92
+			// See #92
 			description: `comment with an URL, no space before the declaration's own colon`,
 			code: `a { color/* https://foo.bar/ */:pink; }`,
 		},
@@ -252,7 +252,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/88
+			// See #88
 			description: `the same comment holding a double slash`,
 			code: `a { color/* keep // me */ :/*comment*/pink; }`,
 			fixed: `a { color/* keep // me */:/*comment*/pink; }`,
@@ -261,7 +261,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/92
+			// See #92
 			description: `the same comment holding an address`,
 			code: `a { color/* https://foo.bar/ */ :pink; }`,
 			fixed: `a { color/* https://foo.bar/ */:pink; }`,
@@ -280,14 +280,14 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off with the run.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab in front of the colon, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `a { b \v: c; }`,
 			fixed: `a { b \v : c; }`,
@@ -306,7 +306,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab at the run before the colon: only the tokenizer's run goes, and the character stays`,
 			code: `a { b \v : c; }`,
 			fixed: `a { b \v: c; }`,

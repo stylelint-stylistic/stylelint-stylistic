@@ -22,11 +22,11 @@ export let meta = {
 
 /**
  * Requires or disallows Unicode BOM.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
- * @param primary - The primary option, one of `always` and `never`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
+ * @param primary - `always` or `never`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
 	return (root, result) => {
@@ -35,7 +35,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 			possible: [`always`, `never`],
 		})
 
-		// A `document` root is an HTML file holding stylesheets, and a byte order mark stands at the head of the file rather than of any block in it
+		// A byte order mark stands at the head of the file, not of a `document` root's stylesheets
 		let source: EmbeddedSource | undefined = root.source
 		let { document } = root as { document?: Document }
 

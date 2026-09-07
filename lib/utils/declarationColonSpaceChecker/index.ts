@@ -9,7 +9,7 @@ import { declarationValueIndex } from "../declarationValueIndex/index.ts"
 
 let { utils: { report } } = stylelint
 
-/** A function that checks whitespace at a specific location. */
+/** Checks the whitespace at one index. */
 export type LocationChecker = (args: {
 	source: string,
 	index: number,
@@ -18,8 +18,8 @@ export type LocationChecker = (args: {
 }) => void
 
 /**
- * Checks whitespace around colons in declarations.
- * @param opts - The options object.
+ * Checks the whitespace beside the colon of every declaration.
+ * @param opts - The options.
  */
 export function declarationColonSpaceChecker (opts: {
 	root: Root,
@@ -36,35 +36,29 @@ export function declarationColonSpaceChecker (opts: {
 	opts.root.walkDecls((decl) => {
 		if (!opts.syntax.isStandardDeclaration(decl)) return
 
-		// A declaration the parser did not build has no text between its property and its value for either rule to read: PostCSS prints a colon and a space in place of the raw it lacks, and `declarationValueIndex` counts a colon alone, so the two disagree by the very character these rules are about. No syntax this plugin reads through leaves that raw empty; a declaration another plugin's fix built and put in the tree does.
+		// Another plugin's declaration has no `raws.between`
 		if (!decl.raws.between) return
 
-		// A rule may have nothing to say about a declaration at all, whatever its option: the text one of the two rules reads is no text of this declaration's, and the other reads it as it always did.
+		// The rule's own filter
 		if (opts.isChecked && !opts.isChecked(decl)) return
 
-		// The declaration down to the end of its value, as the file prints it, and behind that whatever run ran on past the declaration: whatever the shape of the value, the run standing behind the colon is in this text wherever the file keeps it.
 		let source = declarationColonSource(opts.syntax, decl, opts.result)
 
-		// The declaration's own colon is the one PostCSS filed in `raws.between`, that raw holding everything the file spells between the property and the value, so the search is over that raw and no further.
-		// A colon standing anywhere else opens no declaration: the value may spell one, a data URI's, and the property may spell one of its own, an escaped `\:`, and reading either as the declaration's sends the check and the fix to a character they are not about.
-		// Inside that raw the colon is the first one the parser read as a colon rather than as text, since the comments, strings and parenthesised groups standing in front of it are the raw's own text and may hold a colon apiece, a URL's for one.
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/92
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/408
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/421
+		// The first colon of `raws.between` outside a comment, string or parentheses (#92, #408, #421)
 		let indexInBetween = colonIndexInBetween(opts.syntax, decl, opts.result)
 
 		if (indexInBetween === -1) return
 
-		// The colon was found in a span of the declaration's text, and everything downstream counts from the start of the whole of it
+		// Counted from the start of the declaration
 		let startIndex = declarationValueIndex(decl) - decl.raws.between.length + indexInBetween
 		let problemIndex = decl.prop.toString().length + 1
-		// A rule may know that this particular problem cannot be fixed without breaking the code
+		// The rule's own fix guard
 		let isFixable = fix && (!opts.isFixable || opts.isFixable(decl, startIndex))
 
 		opts.locationChecker({
 			source,
 			index: startIndex,
-			// Whether the declaration stands on one line is asked of its value as the file spells it, comments and all: `decl.value` drops them, and a break spelled inside one or beside one is no line of that copy (#389)
+			// `decl.value` drops comments, and a break inside one with them (#389)
 			lineCheckStr: declarationValueAsSpelled(opts.syntax, decl, opts.result),
 			err: (message) => {
 				report({

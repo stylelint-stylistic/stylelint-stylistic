@@ -38,7 +38,7 @@ describe(`the core`, () => {
 			if (file.endsWith(`.test.ts`)) continue
 
 			for (let line of text.split(`\n`)) {
-				// A name reached inside a block is reached when a stylesheet of that syntax is read, and a project that lints none never loads it; a type import and an export of types are erased by the build and load nothing at all; a comment loads nothing either. Everything else runs as the module is loaded, which is where a package a project has no use for keeps the whole plugin from starting. What the plugin really loads is checked by `make packages-check`, which puts the built package in a project holding none of them; this is the cheaper half, and it fails before the build does
+				// A name inside a block is reached only when a stylesheet of that syntax is read; a type import, an export of types and a comment load nothing. Everything else runs as the module loads, where a package a project has no use for keeps the whole plugin from starting. `make packages-check` checks what the plugin really loads by putting the built package in a project holding none of them; this is the cheaper half, and fails before the build does
 				if (line.startsWith(`\t`) || line.startsWith(`import type `) || line.startsWith(`export type `) || OPENS_A_COMMENT.test(line)) continue
 
 				if (optional.some((name) => line.includes(`"${name}`) || line.includes(`\`${name}`))) offending.push(`${file} → ${line.trim()}`)

@@ -48,17 +48,17 @@ testRule({
 			code: `@media-non screen and (color),projection and (color) {}`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/153
+			// See #153
 			description: `a bare address in front of the comma, whose double slash opens no comment`,
 			code: `@media (min-width: url(http://x/y.png)), print { a { b: c; } }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/213
+			// See #213
 			description: `a comma inside the arguments of a function is a comma of the address and of no query list`,
 			code: `@media (min-width: url(x/a,b.png)) { a { b: c; } }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/213
+			// See #213
 			description: `an escaped parenthesis inside an address closes the arguments of nothing`,
 			code: `@media (min-width: url(a\\)b,c)) { a { b: c; } }`,
 		},
@@ -74,7 +74,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/230
+			// See #230
 			description: `a list inside parentheses a run opening on a digit stands in front of, which names no call and so leaves them a list's rather than a call's arguments`,
 			code: `@media 2and(a,b) {}`,
 			fixed: `@media 2and(a, b) {}`,
@@ -161,7 +161,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/153
+			// See #153
 			description: `a comma behind a bare address, whose double slash opens no comment`,
 			code: `@media (min-width: url(http://x/y.png)),print { a { b: c; } }`,
 			fixed: `@media (min-width: url(http://x/y.png)), print { a { b: c; } }`,
@@ -461,14 +461,14 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off with the run.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab behind the comma, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `@media a,\vb {}`,
 			fixed: `@media a, \vb {}`,
@@ -487,7 +487,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab behind the run after the comma: only the tokenizer's run goes, and the character stays`,
 			code: `@media a, \vb {}`,
 			fixed: `@media a,\vb {}`,

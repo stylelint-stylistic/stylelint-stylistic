@@ -4,15 +4,15 @@ import type { Syntax } from "../../syntaxes/index.ts"
 import { addNamespace } from "../addNamespace/index.ts"
 import { compareRanks, defersToRunEnd, linenessRank } from "../defersToRunEnd/index.ts"
 
-/** A neighbouring rule a writer reads the setting of: the name its directory spells, and the primary options it accepts, since a rule handed an option outside them refuses it and runs over nothing. */
+/** A neighbouring rule: its directory name and the primaries it accepts. */
 export type NeighbourRule = {
 	name: string,
 	options: string[],
 }
 
 /**
- * Reads the primary option out of a rule's setting: the array a normalised configuration wraps every setting in, which the option opens and the secondary options close, or the option alone as a setting may be handed over before normalisation.
- * @param setting - The setting.
+ * Reads the primary option out of a setting.
+ * @param setting - A rule's configured value: a keyword, or an array opening with one.
  * @returns The option, where it is a keyword.
  */
 function primaryOf (setting: unknown): string | undefined {
@@ -22,13 +22,13 @@ function primaryOf (setting: unknown): string | undefined {
 }
 
 /**
- * Reads the settings of some neighbouring rules out of the configuration, in the order the run makes them: the configuration's for the rules that run at their turn, and behind them the lineness-conditioned ones, which wait for the run's writers (#355) and stand among themselves in the plugin's own order (#502).
+ * Reads some neighbours' settings in run order: configuration order, then the lineness-conditioned rules, which wait for the run's writers ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)) in the plugin's order ([#502](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/502)).
  *
- * Stylelint runs each rule once and in the order the configuration lists them: it sorts the rules of a run by its own registry, a plugin's rules stand nowhere in it, and the sort is stable, so the order of the keys is the order of the run. The settings are read out of `result.stylelint.config`, which holds every rule's normalised settings and is assigned before any rule runs, under the names of the namespace the asking rule is registered under: the configuration of a file lists the core's names and a namespace's alike, and the family that reads the file is the one the rule belongs to. A rule listed with an option outside the ones it accepts is passed over, since it refuses such an option and runs over nothing. Whether the fix of a neighbour is turned off travels with its option, since a neighbour that speaks and reports but cannot write is a different thing to a writer than one that will rewrite what it is not content with (#485).
- * @param syntax - The syntax the asking rule is built over, whose namespace names the neighbours.
- * @param result - The Stylelint result, which holds the configuration.
- * @param rules - The neighbours to read, each under a key of the caller's; a key may stand empty, as a table shared by callers with unlike neighbours leaves some.
- * @returns Each neighbour the configuration lists with an option it accepts, by the caller's key, with that option and with whether the configuration turned the neighbour's fix off, in the order the run makes them.
+ * Stylelint runs rules in configuration order, so the key order of `result.stylelint.config` is the run's. A neighbour refusing its option is passed over; whether its fix is off travels with the option ([#485](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/485)).
+ * @param syntax - The asking rule's syntax, whose namespace names the neighbours.
+ * @param result - The PostCSS result carrying the configuration.
+ * @param rules - The neighbours by the caller's keys; a key may stand empty.
+ * @returns Key, option and whether the fix is off, per neighbour, in run order.
  */
 export function neighbourSettings<Key extends string> (syntax: Syntax, result: PostcssResult, rules: Partial<Record<Key, NeighbourRule>>): [Key, string, boolean][] {
 	let settings: Record<string, unknown> = result.stylelint?.config?.rules ?? {}
@@ -49,7 +49,7 @@ export function neighbourSettings<Key extends string> (syntax: Syntax, result: P
 		found.push({ setting: [key, option, fixDisabledBy(setting)], rank: linenessRank(rule.name, syntax.namespace, option) })
 	}
 
-	// A lineness-conditioned neighbour waits for the run's writers (#355), so the run makes its turn after every neighbour that does not, whatever the configuration's spelling order; and behind that line the deferred ones stand in the plugin's own order rather than the configuration's (#502), which this reading has to repeat, or a rule asking which neighbours run behind it would be asking about a run other than the one being made
+	// The deferred go behind every other (#355), in the plugin's order (#502)
 	let undeferred = found.filter(({ setting: [, option] }) => !defersToRunEnd(option))
 	let deferred = found.filter(({ setting: [, option] }) => defersToRunEnd(option)).toSorted((one, other) => compareRanks(one.rank, other.rank))
 
@@ -57,11 +57,9 @@ export function neighbourSettings<Key extends string> (syntax: Syntax, result: P
 }
 
 /**
- * Reads whether a setting turns the rule's fix off: `disableFix` stands among the secondary options, which close the array a normalised configuration wraps every setting in.
- *
- * Stylelint holds two readings of it, and the one that governs this plugin is the wider: `report` refuses to run a fix wherever the option is truthy, and every rule here fixes through the callback it hands `report`, while the `disableFix === true` of `lintPostcssResult` only unsets the `context.fix` no rule of this plugin reads. So the reading here is the truthy one — a neighbour whose spelling of the option `report` honours is one that cannot write, however that spelling reads elsewhere.
- * @param setting - The setting.
- * @returns True where the fix is turned off.
+ * Reads whether `disableFix` turns the fix off; `report` refuses a fix wherever it is truthy, the wider of Stylelint's two readings.
+ * @param setting - A rule's configured value, an array where secondaries are given.
+ * @returns True where the fix is off.
  */
 function fixDisabledBy (setting: unknown): boolean {
 	if (!Array.isArray(setting)) return false
@@ -72,11 +70,9 @@ function fixDisabledBy (setting: unknown): boolean {
 }
 
 /**
- * Asks whether an option of a rule about whitespace speaks of a piece of text at all.
- *
- * `always` and `never` speak of every one; the `-single-line` and `-multi-line` options of a text on one line or over several, the way the rule itself decides it through `lineCheckStr`. An option silent about the text asks for nothing and takes nothing away.
- * @param option - The primary option, where the configuration lists the rule.
- * @param isSingleLine - Whether the text the rule counts the lines of stands on one line, asked only where the option turns on it.
+ * Asks whether a whitespace option speaks of a text: `always` and `never` always, the `-line` ones by the text's lines.
+ * @param option - The whitespace keyword a rule is configured with.
+ * @param isSingleLine - Whether the text is one line, asked only where the option turns on it.
  * @returns True where the option speaks of the text.
  */
 export function speaksOf (option: string, isSingleLine: () => boolean): boolean {
@@ -87,20 +83,18 @@ export function speaksOf (option: string, isSingleLine: () => boolean): boolean 
 	return false
 }
 
-/** A neighbouring rule whose primary is a keyword or `true`, read for its secondary options as much as for its primary. */
+/** A neighbouring rule whose primary is a keyword or `true`, read with its secondaries. */
 export type NeighbourRuleSetting = {
 	name: string,
 	options: (string | true)[],
 }
 
 /**
- * Reads the setting of one neighbouring rule out of the configuration, whole: its primary option, whether its fix is turned off, and its secondary options.
- *
- * `neighbourSettings` reads several neighbours in the order the run makes them and hands back their primaries alone, which is what a writer asking what to spell into a run wants. A rule asking whether a neighbour owns a run it would otherwise rewrite wants one neighbour and its secondary options, since the owning may be an option of the neighbour's rather than its primary — `no-multiple-whitespaces` asks `named-grid-areas-alignment` whether it lays a shorthand out as a table (#45). The neighbour is read under the namespace the asking rule is registered under, as `neighbourSettings` reads its own.
- * @param syntax - The syntax the asking rule is built over, whose namespace names the neighbour.
- * @param result - The Stylelint result, which holds the configuration.
- * @param rule - The neighbour, and the primaries it accepts.
- * @returns The setting, or nothing where the configuration lists the neighbour with no primary it accepts, or not at all.
+ * Reads one neighbour's setting whole, secondaries included: `no-multiple-whitespaces` asks `named-grid-areas-alignment` whether it lays a shorthand out as a table ([#45](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/45)).
+ * @param syntax - The asking rule's syntax, whose namespace names the neighbour.
+ * @param result - The PostCSS result carrying the configuration.
+ * @param rule - The neighbour and the primaries it accepts.
+ * @returns The setting, or nothing where the neighbour is unlisted or refuses its primary.
  */
 export function neighbourSetting (syntax: Syntax, result: PostcssResult, rule: NeighbourRuleSetting): { option: string | true, fixDisabled: boolean, secondary: Record<string, unknown> } | undefined {
 	let settings: Record<string, unknown> = result.stylelint?.config?.rules ?? {}

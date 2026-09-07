@@ -15,7 +15,7 @@ describe(`isLessVariableDeclaration`, () => {
 		expect(isLessVariableDeclaration(lessAtRule(`@dr: { color: red; }; a { @dr(); }`))).toBe(true)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/394
+	// See #394
 	it(`a variable declared with whitespace in front of its colon, which the parser leaves unmarked`, () => {
 		expect(isLessVariableDeclaration(lessAtRule(`@v : pink; a { b: @v }`))).toBe(true)
 		expect(isLessVariableDeclaration(lessAtRule(`@v\t: pink; a { b: @v }`))).toBe(true)

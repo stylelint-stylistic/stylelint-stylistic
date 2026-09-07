@@ -33,13 +33,13 @@ export let meta = {
 
 /**
  * Requires a newline or disallows whitespace after the semicolons of declaration blocks.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always`, `always-multi-line` and `never-multi-line`.
- * @param _secondaryOptions - The secondary options, of which this rule takes none.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always`, `always-multi-line` or `never-multi-line`.
+ * @param _secondaryOptions - None.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
@@ -72,9 +72,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let problemIndex = nodeString(decl, result).length + 1
 			let previousNode = nodeToCheck.prev() as ChildNode
-			// Under `never-multi-line` the fix takes away the whitespace standing in front of the node it checks, and where an inline comment stands in front of that whitespace, the line break the whitespace opens with is what closes the comment: taking it away would put the node inside the comment's text, and the declaration it holds out of the stylesheet altogether. Nothing can be written there, so the block is left alone and the warning stands. The `always` options are in no such danger, since the break they keep or write is what closes such a comment anyway
-			//
-			// The semicolon stands between the declaration and that whitespace, so it is handed in with the declaration: a value ending in the break that closes its own comment is asked about with the semicolon behind it, which is where the write lands. Where a comment node stands between the two instead, the semicolon is in front of that comment rather than behind it, and there is nothing to hand in
+			// Under `never-multi-line` the fix takes the whitespace in front of the checked node, and the break opening it may close an inline comment, so the block is left alone; the `always` options keep the break. The semicolon is handed in with the declaration, since the write lands behind it; behind a comment node there is none
 			let isFixable = primary.startsWith(`always`) || !syntax.writesIntoInlineComment(previousNode, result, previousNode === decl ? `;` : ``)
 
 			checker.afterOneOnly({
@@ -92,7 +90,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						...(isFixable && {
 							fix: (): void => {
 								if (primary.startsWith(`always`)) {
-									// Trim up to the break that already stands there, whichever character it is, and add one only where none does
+									// Trim up to the break already there, and add one only where none is
 									let index = nodeToCheck.raws.before.search(LINE_BREAK)
 
 									nodeToCheck.raws.before = index >= 0 ? nodeToCheck.raws.before.slice(index) : getLineBreak(syntax, root, result) + nodeToCheck.raws.before

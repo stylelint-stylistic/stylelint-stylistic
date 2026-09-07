@@ -87,7 +87,7 @@ testRule({
 			message: messages.expected(`#12345AA`, `#12345aa`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			// See #378
 			description: `a colour standing beside a comment opening with a solidus, a star and a solidus, whose text spells a colour of its own that the value parser hands back as a word`,
 			code: `a { b: #ABC /*/ #FFF */ 3; }`,
 			fixed: `a { b: #abc /*/ #FFF */ 3; }`,
@@ -96,7 +96,7 @@ testRule({
 			message: messages.expected(`#ABC`, `#abc`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			// See #508
 			description: `a colour in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no colour`,
 			code: `a { b: #FFF /*/ " */ "#FFF"; }`,
 			fixed: `a { b: #fff /*/ " */ "#FFF"; }`,
@@ -192,7 +192,7 @@ testRule({
 			message: messages.expected(`#12345aa`, `#12345AA`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/272
+			// See #272
 			description: `a colour standing behind a comment the value parser does not give back as it read it`,
 			code: `a { b: x/*/*a*/#aabbcc; }`,
 			fixed: `a { b: x/*/*a*/#AABBCC; }`,

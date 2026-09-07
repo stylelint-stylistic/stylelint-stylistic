@@ -12,7 +12,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/135
+			// See #135
 			description: `a comma inside the text of an inline comment is no comma of the value`,
 			code: `a { t: translate(1px,2px // a, b\n  ); }`,
 		},
@@ -25,18 +25,17 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/344
-			// Sass compiles every spelling of the name to a plain address, and `lightningcss` reads one in every spelling too, so what stands inside the parentheses is a URL and nothing a rule may write to.
+			// Sass and `lightningcss` both read the escaped name as `url`, so what stands inside the parentheses is an address no rule may write to. See #344
 			description: `a comma inside an address whose name an escape spells, which is a comma of the address`,
 			code: `a { b: u\\rl(a,b); }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/344
+			// See #344
 			description: `the same comma inside an address whose name a hexadecimal escape spells, which the value parser hands the rule as a word and a call of two letters`,
 			code: `a { b: \\75 rl(a,b); }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/135
+			// See #135
 			description: `a comma inside the text of an inline comment is no comma of the value`,
 			code: `a { t: translate(1px, 2px // a, b\n  ); }`,
 		},

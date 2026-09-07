@@ -12,7 +12,7 @@ testRule({
 	customSyntax: `postcss-scss`,
 
 	accept: [
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/322
+		// See #322
 		{
 			description: `rows aligned to each other rather than to the row standing in a comment between them`,
 			code: `
@@ -26,7 +26,7 @@ testRule({
 	],
 
 	reject: [
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/322
+		// See #322
 		{
 			description: `a row standing in the text of an end-of-line comment that follows a row on its line, which the syntax keeps in the value`,
 			code: `
@@ -91,7 +91,7 @@ testRule({
 			endColumn: 8,
 			message: messages.expected(`grid-template-areas`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504
+		// See #504
 		{
 			description: `a quotation mark standing inside such a comment, which the value parser pairs with the opening mark of the row on the line below, so that the rows behind the comment are cut at the wrong places`,
 			code: `

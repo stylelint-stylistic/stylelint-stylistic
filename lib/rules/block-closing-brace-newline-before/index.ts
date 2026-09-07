@@ -33,13 +33,13 @@ export let meta = {
 
 /**
  * Requires a newline or disallows whitespace before the closing brace of blocks.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always`, `always-multi-line` and `never-multi-line`.
- * @param _secondaryOptions - The secondary options, of which this rule takes none.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always`, `always-multi-line` or `never-multi-line`.
+ * @param _secondaryOptions - Unused.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
 	return (root, result) => {
@@ -50,16 +50,16 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		// Check both kinds of statements: rules and at-rules
+		// Rules and at-rules alike
 		root.walkRules(check)
 		root.walkAtRules(check)
 
 		/**
-		 * Checks a statement for closing brace newline violations.
-		 * @param statement - The rule or at-rule node to check.
+		 * Checks a statement.
+		 * @param statement - The rule or at-rule.
 		 */
 		function check (statement: Rule | AtRule): void {
-			// Return early if blockless or has empty block
+			// Blockless or empty: nothing to check
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 
 			let blockAfter = getBlockAfter(statement) || ``
@@ -74,16 +74,16 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (statementString[index - 1] === `\r`) index -= 1
 
-			// The `never-multi-line` option takes every whitespace out of the block's final raw, so no break of that raw survives to close an inline comment the last node of the block left open — only one standing in the whitespace that node itself ends with does, which the option never reaches. Where neither holds one, the brace goes into the comment's text and takes the block's close with it, a file neither Sass nor Less reads back whatever `postcss-less` makes of it, so the statement is left alone and the warning stands. The `always` options are in no such danger, since the break they write is what closes such a comment anyway
+			// `never-multi-line` empties the final raw, so a `//` comment the last node left open is closed only by a break in the node's own trailing whitespace; where none is, the brace would land in the comment, so no fix. An `always` break closes the comment anyway
 			//
-			// Where the last node has swallowed the block's final raw, that raw is the whitespace the node itself ends with, and the option does reach it, so nothing stands between the node and the write — which is what the guard reads when it is told nothing of where the write goes. Spelling the surviving run out there would count that whitespace twice over, the text a write follows already carrying the whole of the node's `raws.between`
+			// Where the last node has swallowed the final raw, the guard is told nothing of the surviving run, since `raws.between` already carries it
 			let { last } = statement
 
 			if (!last) throw new Error(`The block must hold a node`)
 
 			let isFixable = primary.startsWith(`always`) || !syntax.writesIntoInlineComment(last, result, lastNodeHoldsTheBlockAfter(statement) ? undefined : blockAfter.replaceAll(EVERY_WHITESPACE, ``))
 
-			// What is checked is whether a break *starts* the block's final space — the run between the last declaration and the closing brace. The rest of that whitespace is the indentation rule's business, which is why the question is asked with `LEADING_LINE_BREAK` rather than with `OPENS_WITH_LINE_BREAK`: whitespace in front of the break is the very thing this rule reports.
+			// The question is whether a break *starts* the final run (`LEADING_LINE_BREAK`); the whitespace behind it is `indentation`'s.
 			if (!LEADING_LINE_BREAK.test(after)) {
 				if (primary === `always`) complain(messages.expectedBefore)
 				else if (blockIsMultiLine && primary === `always-multi-line`) complain(messages.expectedBeforeMultiLine)
@@ -92,8 +92,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (after !== `` && blockIsMultiLine && primary === `never-multi-line`) complain(messages.rejectedBeforeMultiLine)
 
 			/**
-			 * Reports a closing brace newline violation.
-			 * @param message - The error message to report.
+			 * Reports a violation.
+			 * @param message - The warning text to report.
 			 */
 			function complain (message: string): void {
 				report({

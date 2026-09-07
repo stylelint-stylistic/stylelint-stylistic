@@ -6,15 +6,13 @@ import { nodeSyntax } from "../nodeSyntax/index.ts"
 import { isAtRule, isRule } from "../typeGuards/index.ts"
 
 /**
- * Gets the string a statement's block opens behind: its `raws.before`, its head, and the raw standing between that head and the opening brace.
+ * Returns the string a statement's block opens behind: `raws.before`, the head, and the raw before the brace.
  *
- * The head is taken from the stringifier of the syntax the file was opened with rather than built here, since building it means spelling that stringifier's grammar out a second time: `postcss-scss` prints a second copy of the selector and of the parameters, `postcss-less` prints the `.` of a mixin call out of `raws.identifier` and the flag out of `raws.important`, and a plain at-rule spells a space of its own where `raws.afterName` is missing. A stringifier hands its builder `start + between + "{"` as the first thing it says about a container, marked `start`, and that string without its final brace is exactly what is wanted here.
- *
- * A statement with no block has nothing to stand in front of, and a nested Sass property — a declaration carrying a block — is no part of what the callers of this util measure. Both are answered with an empty string. For the nested property that is what this util always said; for the blockless statement it is not, since the head used to come back whole from `@import "a";`, and no caller reaches either — all four guard with `hasBlock` — so nothing turns on which of the two is answered.
- * @param statement - The PostCSS container node.
- * @param result - The Stylelint result, which holds the syntax the file was opened with.
- * @param options - Whether to leave the statement's `raws.before` out of the result.
- * @returns The string before the block.
+ * The head comes from the syntax's stringifier, since `postcss-scss` prints a second selector, `postcss-less` `raws.identifier` and `raws.important`, and a plain at-rule a missing `raws.afterName` as a space; the `start` part it hands its builder, minus the brace, is the head. No block, or a Sass nested property, gives an empty string.
+ * @param statement - The container.
+ * @param result - Holds the syntax.
+ * @param options - Whether to drop `raws.before`.
+ * @returns The string.
  */
 export function beforeBlockString (statement: Container, result?: PostcssResult, options: { noRawBefore?: boolean } = {}): string {
 	let { noRawBefore = false } = options
@@ -26,7 +24,7 @@ export function beforeBlockString (statement: Container, result?: PostcssResult,
 
 	let syntax = nodeSyntax(statement, result)
 
-	// A file read as plain CSS has no syntax of its own, and PostCSS's own stringifier is the one that prints it
+	// Plain CSS has no syntax; PostCSS prints it
 	let print = (syntax && syntax.stringify) || stringify
 
 	print(statement, (part, node, type) => {

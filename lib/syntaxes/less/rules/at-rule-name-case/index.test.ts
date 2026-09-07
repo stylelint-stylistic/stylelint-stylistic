@@ -26,7 +26,7 @@ testRule({
 				span { background-color: @myVariable; }
 			`,
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/357
+		// See #357
 		{
 			description: `a call to a Less detached ruleset, which takes no arguments and no space in front of its parentheses`,
 			code: `
@@ -34,7 +34,7 @@ testRule({
 				span { @detachedRuleset(); }
 			`,
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/394
+		// See #394
 		{
 			description: `a Less variable declared with a space in front of its colon, which the parser leaves unmarked`,
 			code: `
@@ -91,7 +91,7 @@ testRule({
 	config: [`upper`],
 
 	accept: [
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/394
+		// See #394
 		{
 			description: `a Less variable declared with a space in front of its colon, which the parser leaves unmarked`,
 			code: `

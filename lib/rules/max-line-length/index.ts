@@ -22,19 +22,17 @@ export let meta = {
 	url: getRuleDocUrl(shortName),
 }
 
-/** The spans a line's length is not counted over besides the addresses the file's `url()` calls hold: the quoted address of an `@import`. Neither that nor an address is the author's to shorten, a string being closed by its own quotation mark and a `url()` token by its parenthesis. */
+/** Spans not counted besides `url()` addresses. */
 const EXCLUDED_PATTERNS = [EVERY_IMPORT_ADDRESS]
 
 /**
- * Measures a line in columns, a tab reaching the next tab stop, less the columns the excluded substrings take.
+ * Measures a line in columns, a tab reaching the next tab stop, less the excluded spans.
  *
- * The spans are walked beside the line, one step each, rather than every span being asked about every character: a line holds as many addresses as the file writes on it, and a stylesheet printed on one line holds all of them, so asking each of them about each character costs the square of what the file is.
- *
- * One pointer is enough for spans that hold one another, which the two kinds do — the pattern that looks for the address of an `@import` runs to the last quotation mark of its line and swallows a `url()` written behind it, whose address is a span of its own ([#552](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/552)). The queue hands them over sorted by where each opens, so the pointer stops at the first span ending behind the character being measured: every span it has stepped over ends in front of that character, and every span behind the one it stopped at opens at or past where that one opens. A character two spans hold is therefore counted off once, and one no span holds is reached by none.
- * @param lineText - The text of the line.
- * @param excludedSpans - The spans of the excluded substrings inside the line, sorted by where each opens.
- * @param tabSize - The columns a tab reaches over, from the secondary options.
- * @returns The width of the line without the excluded substrings.
+ * One pointer walks the spans beside the line, since asking every span about every character is quadratic; a character two spans hold is counted off once ([#552](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/552)).
+ * @param lineText - The text of the line measured.
+ * @param excludedSpans - The excluded spans, sorted by start.
+ * @param tabSize - The columns of a tab.
+ * @returns The width less the excluded spans.
  */
 function measureLine (lineText: string, excludedSpans: Array<[number, number]>, tabSize: number): number {
 	let column = 0
@@ -56,13 +54,13 @@ function measureLine (lineText: string, excludedSpans: Array<[number, number]>, 
 
 /**
  * Limits the length of a line.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, a number.
- * @param secondaryOptions - The secondary options: `ignore`, `ignorePattern` and `tabSize`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - The maximum length.
+ * @param secondaryOptions - `ignore`, `ignorePattern` and `tabSize`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: number, secondaryOptions: {
 	ignore?: (`non-comments` | `comments`) | (`non-comments` | `comments`)[],
@@ -96,11 +94,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let ignoreComments = optionsMatches(secondaryOptions, `ignore`, `comments`)
 		let tabSize = secondaryOptions?.tabSize ?? 1
 		let rootString = root.source.input.css
-		// The spans the count leaves out: the address of every `url()` the file spells, and the quoted address of every `@import`
+		// The spans left out of the count
 		let skippedSubStrings: Array<[number, number]> = []
 		let skippedSubStringsIndex = 0
 
-		// The addresses are found by the walk that finds the comments of a text rather than by a pattern, since each of the two is the other's exception: a `url(` written inside a comment or inside a quoted string opens no address, a name in front of one leaves an ordinary call whose arguments the author may break where they like, and the three letters of the name may each be spelled with an escape (#427). The walk is asked what the file spells, so it is told whether the file's own syntax spells a comment with a double slash — not whether such a comment survives in the text a rule reads, which is a question about a copy this rule never looks at
+		// From the comment-finding walk: a `url(` inside a comment or string opens no address, and each letter of `url` may be an escape (#427)
 		for (let { start, end } of findAddressSpans(rootString, syntax.inlineComments(root, result).spells)) skippedSubStrings.push([start, end])
 
 		for (let pattern of EXCLUDED_PATTERNS) {
@@ -120,8 +118,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		styleSearch({ source: rootString, target: [`\n`], comments: `check` }, (match) => checkNewline(match))
 
 		/**
-		 * Reports a line length violation.
-		 * @param index - The index of the violation.
+		 * Reports a line over the limit.
+		 * @param index - The index reported.
 		 */
 		function complain (index: number): void {
 			report({
@@ -136,15 +134,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		}
 
 		/**
-		 * Takes every skipped substring standing on the current line off the queue.
-		 * @param start - The start index of the line.
-		 * @param end - The end index of the line.
-		 * @returns The spans of the excluded substrings inside the line.
+		 * Takes every excluded span on the line off the queue.
+		 * @param start - The line's start index.
+		 * @param end - The line's end index.
+		 * @returns The spans, in the line's coordinates.
 		 */
 		function popSubStrings (start: number, end: number): Array<[number, number]> {
 			let spans: Array<[number, number]> = []
 
-			// A substring starting at or past the end of the line stands on a later line. No substring reaches past the end of one: the address of an `@import` is looked for with a pattern whose capture stops at a break, and a run holding a break is no address of a `url()` either
+			// No span reaches past the line's end: the `@import` capture stops at a break, an address holds none
 			for (let next = skippedSubStrings[skippedSubStringsIndex]; next && next[0] < end; next = skippedSubStrings[skippedSubStringsIndex]) {
 				let [startSubString, endSubString] = next
 
@@ -156,9 +154,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		}
 
 		/**
-		 * Checks a newline for line length violations.
-		 * @param match - The style search match.
-		 * @returns Nothing; a line over the limit is reported, and one within it is left alone.
+		 * Checks the line a match opens.
+		 * @param match - The style-search match, or the first line's start.
+		 * @returns Nothing; a line over the limit is reported.
 		 */
 		function checkNewline (match: StyleSearchMatch | { endIndex: number }): void {
 			let nextNewlineIndex = rootString.indexOf(`\n`, match.endIndex)
@@ -174,7 +172,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Case sensitive ignorePattern match
 			if (optionsMatches(secondaryOptions, `ignorePattern`, lineText)) return
 
-			// A line no longer than the max is left alone, so everything below this is about the lines that are longer. The length is measured with the address of a `url()` and the address of an `@import` taken out of it.
+			// Measured without the addresses
 			if (measureLine(lineText, excludedSpans, tabSize) <= primary) return
 
 			let complaintIndex = nextNewlineIndex - 1
@@ -182,8 +180,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (ignoreComments) {
 				if (`insideComment` in match && match.insideComment) return
 
-				// This trimming business is to notice when the line starts a comment but that comment is indented, e.g.
-				//       /* something here */
+				// Trimmed past the indent
 				let nextTwoChars = rootString.slice(match.endIndex).trim().slice(0, 2)
 
 				if (nextTwoChars === `/*` || nextTwoChars === `//`) return
@@ -192,8 +189,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (ignoreNonComments) {
 				if (`insideComment` in match && match.insideComment) return complain(complaintIndex)
 
-				// This trimming business is to notice when the line starts a comment but that comment is indented, e.g.
-				//       /* something here */
+				// Trimmed past the indent
 				let nextTwoChars = rootString.slice(match.endIndex).trim().slice(0, 2)
 
 				if (nextTwoChars !== `/*` && nextTwoChars !== `//`) return
@@ -201,7 +197,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				return complain(complaintIndex)
 			}
 
-			// If there are no spaces besides initial (indent) spaces, ignore it
+			// A line with no space past its indent is left alone
 			let lineString = rootString.slice(match.endIndex, nextNewlineIndex)
 
 			if (!lineString.replace(LEADING_WHITESPACE_RUN, ``).includes(` `)) return

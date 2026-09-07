@@ -48,7 +48,7 @@ testRule({
 			code: `@import\nurl('landscape.css')\nprojection ;`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/395
+			// See #395
 			description: `a bodiless at-rule closing its block, which the file spells no semicolon behind`,
 			code: `
 				a {
@@ -81,7 +81,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/357
+			// See #357
 			description: `an at-rule spelled without a space in front of its options, which the parser gives the shape of a call to a Less detached ruleset`,
 			code: `@layer(l);`,
 			line: 1,
@@ -131,7 +131,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/545
+			// See #545
 			description: `a semicolon abutting the params of an at-rule closing its block, which the block does spell, whose column stands two past the mark, displaced by the leading raw of the at-rule`,
 			code: `
 				a {
@@ -203,7 +203,7 @@ testRule({
 			code: `@import\nurl('landscape.css')\nprojection;`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/395
+			// See #395
 			description: `a bodiless at-rule closing its block on the block's own line, which the file spells no semicolon behind`,
 			code: `a { @import "styles/mystyle" }`,
 		},
@@ -278,7 +278,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/545
+			// See #545
 			description: `a space in front of the semicolon of an at-rule closing its block, which the block does spell, whose column stands two past the mark, displaced by the leading raw of the at-rule`,
 			code: `
 				a {
@@ -299,7 +299,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/395
+			// See #395
 			description: `a style attribute holding an at-rule the file spells no semicolon behind`,
 			code: `<div style="@import 'x'">x</div>`,
 		},
@@ -322,7 +322,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/545
+			// See #545
 			description: `a style block whose at-rule abuts the semicolon the declaration block does spell, whose warning falls on the line of the closing brace, displaced by the at-rule's leading raw`,
 			code: `<style>\n\ta {\n\t\t@import "x";\n\t}\n</style>`,
 			line: 4,
@@ -339,7 +339,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/395
+			// See #395
 			description: `a style block whose at-rule closes a declaration block, the closing brace standing on a line of its own`,
 			code: `<style>\n\ta {\n\t\t@import "x"\n\t}\n</style>`,
 		},
@@ -358,7 +358,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/545
+			// See #545
 			description: `a style block with a space in front of the semicolon the declaration block does spell, whose warning falls on the line of the closing brace, displaced by the at-rule's leading raw`,
 			code: `<style>\n\ta {\n\t\t@import "x" ;\n\t}\n</style>`,
 			line: 4,

@@ -3,7 +3,7 @@ import { messages as colonSpaceAfterMessages } from "../declaration-colon-space-
 
 import { messages, ruleName } from "./index.ts"
 
-// Where a declaration's value is nothing but whitespace, the run this rule reads in front of the semicolon is the run the `declaration-colon-*-after` rules read behind the colon (#416). The library lists the rule a block names first and its extra rules behind it, so every block below has the neighbour run last and have the last word.
+// Where a declaration's value is nothing but whitespace, the run this rule reads in front of the semicolon is the run the `declaration-colon-*-after` rules read behind the colon (#416). The library lists the rule a block names first and its extra rules behind it, so in every block below the neighbour runs last and has the last word.
 let testRule = createTestRule({ ruleName })
 
 testRule({
@@ -13,7 +13,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/416
+			// See #416
 			description: `a value that is nothing but a space, which the neighbour asks to stand behind the colon: the neighbour is listed last and has the last word, so the space is not taken away and the warning stands`,
 			code: `a { color: ; }`,
 			fixed: `a { color: ; }`,
@@ -115,7 +115,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494
+			// See #494
 			description: `a value ending in a vertical tab, which the tokenizer reads as a word: the space is written behind it, and the character stays where the fix used to carry it off`,
 			code: `a { color: red\v; }`,
 			fixed: `a { color: red\v ; }`,
@@ -134,7 +134,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494
+			// See #494
 			description: `a custom property's value ending in a vertical tab in front of the space, a word to the tokenizer: only the space goes, and the character stays`,
 			code: `a { --x:\v ; }`,
 			fixed: `a { --x:\v; }`,
@@ -154,7 +154,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355
+			// See #355
 			description: `an empty custom property the neighbour finishes as \`--x: ;\` in the same run: the space stands on the tail of the raw between until the file is read back, the exception of #50 reads it there, and the deferred check stays silent about the finished form`,
 			code: `a { --bar:; x: y; }`,
 			fixed: `a { --bar: ; x: y; }`,

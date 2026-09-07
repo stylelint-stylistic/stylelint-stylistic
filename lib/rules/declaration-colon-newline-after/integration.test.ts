@@ -4,7 +4,7 @@ import { messages as colonSpaceAfterMessages } from "../declaration-colon-space-
 
 import { messages, ruleName } from "./index.ts"
 
-// Where a declaration's value is nothing but whitespace, the run this rule reads behind the colon is the run the `declaration-block-semicolon-*-before` rules read in front of the semicolon (#416). The library lists the rule a block names first and its extra rules behind it, so every block below has the neighbour run last: that is the order in which the neighbour used to be blind to what this rule wrote, and the two took the run in turns.
+// Where a declaration's value is nothing but whitespace, the run this rule reads behind the colon is the run the `declaration-block-semicolon-*-before` rules read in front of the semicolon (#416). The library lists the rule a block names first and its extra rules behind it, so every block below has the neighbour run last, the order in which the neighbour used to be blind to what this rule wrote and the two took the run in turns.
 let testRule = createTestRule({ ruleName })
 
 testRule({
@@ -14,7 +14,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/416
+			// See #416
 			description: `a value that is nothing but a space, which the neighbour asks to stand in front of the semicolon and this rule asks to stand behind a break: the neighbour is listed last and has the last word, so the break is not written and the warning stands`,
 			code: `a { color: ; }`,
 			fixed: `a { color: ; }`,
@@ -114,7 +114,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/484
+			// See #484
 			description: `a custom property whose single space the other colon rule asks for: the break this rule writes would stand in the raw between until the next parse, so that rule still reads the value as one line and would fold the break away, and the break is not written`,
 			code: `a { --a: ; }`,
 			fixed: `a { --a: ; }`,
@@ -134,7 +134,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/417
+			// See #417
 			description: `a neighbour asking for a break of its own, which the one this rule writes answers as well: the run is written down to the bare break the neighbour's fix spells, so both orders rest on one file`,
 			code: `a { color: ; }`,
 			fixed: `a { color:\n; }`,
@@ -198,7 +198,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/488
+			// See #488
 			description: `a run spelled with a bare carriage return, which is whitespace and no break, and goes with the trim like a space`,
 			code: `a { color: \r; }`,
 			fixed: `a { color:\n; }`,
@@ -264,7 +264,7 @@ testRule({
 	],
 })
 
-// The two colon rules read one and the same run behind the colon of every declaration, and settle between them who writes it (#484). The library lists the rule a block names first and its extra rules behind it, so the block below runs this rule first — the order in which its blind break used to grow the file — and the SCSS spelling of the shape stands in that namespace's own file.
+// The two colon rules read one run behind the colon of every declaration and settle between them who writes it (#484). The library lists the rule a block names first, so the block below runs this rule first, the order in which its blind break used to grow the file; the SCSS spelling of the shape stands in that namespace's own file.
 testRule({
 	ruleName,
 	config: [`always`],
@@ -272,7 +272,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/484
+			// See #484
 			description: `a value that is a flag behind its run, over which the file used to grow by a space on every run of the fixer: the space rule is listed last and has the last word, so the break is not written and the warning stands`,
 			code: `a { color: !important ; }`,
 			fixed: `a { color: !important ; }`,
@@ -313,7 +313,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/485
+			// See #485
 			description: `the other colon rule with its fix turned off, which this rule no longer defers to: the break is written, and that rule's report stands over it as the configuration asked`,
 			code: `a { color: !important ; }`,
 			fixed: `
@@ -329,14 +329,14 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to the tokenizer, and the machinery of the shared run reads whitespace the tokenizer's way (#494): the fix writes its break in front of such a character, and the question of whether the run already opens on a break steps over the tokenizer's whitespace only, never over the character itself.
+// A vertical tab and a no-break space are words to the tokenizer, and the shared run reads whitespace the tokenizer's way (#494): the fix writes its break in front of such a character, and the question of whether the run already opens on a break steps over the tokenizer's whitespace only.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494
+			// See #494
 			description: `a value opening on a vertical tab in front of the line break, a word to the tokenizer: the break is written before it, instead of the fix taking the run for already broken and writing nothing`,
 			code: `a { color:\v\nred; }`,
 			fixed: `a { color:\n\v\nred; }`,
@@ -356,7 +356,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494
+			// See #494
 			description: `a vertical tab in front of a block comment: the character is a word, so the run does not open on the comment, each rule writes its own break, and nothing is written twice`,
 			code: `a { color:\v/*c*/ ; }`,
 			fixed: `a { color:\n\v/*c*/\n; }`,
@@ -380,7 +380,7 @@ testRule({
 	],
 })
 
-// A deferred rule writes the head run the two colon rules share only where the rule ahead accepts what the write leaves (#355): one that was content with the run as it stood has spoken by staying silent, and erasing its run would leave the file violating a rule that reported nothing.
+// A deferred rule writes the head run the two colon rules share only where the rule ahead accepts what the write leaves (#355): a rule content with the run has spoken by staying silent, and erasing its run would leave the file violating a rule that reported nothing.
 testRule({
 	ruleName,
 	config: [`always-multi-line`],
@@ -388,7 +388,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355
+			// See #355
 			description: `a space behind the colon the neighbour is content with: the deferred multi-line option reports the run and leaves it alone, and the file rests with that warning standing`,
 			code: `a { b: x,\ny; }`,
 			fixed: `a { b: x,\ny; }`,
@@ -401,7 +401,7 @@ testRule({
 	],
 })
 
-// The run behind the colon of a declaration closing a block with no semicolon behind it stands in the block's own raw, and `declaration-block-trailing-semicolon: always` puts the semicolon between the colon and that run, so the run is the block's once that rule has taken its turn; this rule reads it that way whichever order the configuration lists the two in (#536).
+// The run behind the colon of a declaration closing a block with no semicolon stands in the block's own raw, and `declaration-block-trailing-semicolon: always` puts the semicolon between the colon and that run, so this rule reads the run as the block's whichever order the configuration lists the two in (#536).
 testRule({
 	ruleName,
 	config: [`always`],

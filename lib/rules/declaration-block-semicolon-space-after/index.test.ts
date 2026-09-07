@@ -7,7 +7,7 @@ testRule({
 	config: [`always`],
 
 	accept: [
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/208
+		// See #208
 		{
 			description: `a comment closing the block behind a declaration without a semicolon, which has no semicolon to space — the fix used to pull the comment up to the declaration`,
 			code: `
@@ -85,7 +85,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/208
+			// See #208
 			description: `a comment closing the block behind a declaration without a semicolon, which has no semicolon to space — the fix used to close the comment up to the declaration`,
 			code: `a { color: pink /* c */ }`,
 		},
@@ -169,7 +169,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/244
+			// See #244
 			description: `a form feed in front of the brace, which is whitespace and no line break, so the block is single-line and the semicolon is asked for its space`,
 			code: `a { color: pink;top: 0\f}`,
 			fixed: `a { color: pink; top: 0\f}`,
@@ -333,7 +333,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/49
+			// See #49
 			description: `a style attribute of a Vue template`,
 			code: `
 				<template>

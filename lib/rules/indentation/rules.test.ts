@@ -782,7 +782,7 @@ testRule({
 			message: messages.expected(`2 spaces`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/237
+			// See #237
 			description: `the lines inside a parenthesis the value opens at the end of a line, which that parenthesis indents whatever the option says about the value itself`,
 			code: `
 				a {

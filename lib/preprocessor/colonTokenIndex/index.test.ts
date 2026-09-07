@@ -46,7 +46,7 @@ describe(`colonTokenIndex`, () => {
 	})
 
 	it(`a syntax that says nothing of an inline comment, which is answered as plain CSS: a tokenizer read for a parser that never used it reads constructs that parser never saw`, () => {
-		// The two ways a syntax says nothing: one that cannot read the probe as a stylesheet at all, and one that reads it and finds no rule or declaration in it, which is what `postcss-styled-syntax` does with a file holding no template
+		// The two ways a syntax says nothing: one that cannot read the probe as a stylesheet, and one that reads it and finds no rule or declaration, as `postcss-styled-syntax` does with a file holding no template
 		let refusesTheProbe = { parse: (): Declaration => new Declaration({ prop: `a`, value: `b` }) }
 		let findsNothingInIt = { parse: (): Document => new Document() }
 

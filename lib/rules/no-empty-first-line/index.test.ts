@@ -106,7 +106,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/602
+			// See #602
 			description: `an empty first line in front of a free semicolon, which leaves the root no node`,
 			code: `\n;`,
 			fixed: `;`,
@@ -154,7 +154,7 @@ testRule({
 	],
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/602
+			// See #602
 			description: `a style element with an empty line in front of a free semicolon, which leaves the element's root no node`,
 			code: `<style>\n\n;</style>`,
 			fixed: `<style>\n;</style>`,

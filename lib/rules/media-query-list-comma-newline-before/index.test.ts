@@ -64,7 +64,7 @@ testRule({
 			code: `@media-non screen and (color), projection and (color) {}`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/153
+			// See #153
 			description: `a bare address in front of the comma, whose double slash opens no comment`,
 			code: `
 				@media (min-width: url(http://x/y.png))
@@ -72,7 +72,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/213
+			// See #213
 			description: `a comma inside the arguments of a function is a comma of the address and of no query list`,
 			code: `@media (min-width: url(x/a,b.png)) { a { b: c; } }`,
 		},
@@ -115,7 +115,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/153
+			// See #153
 			description: `a comma behind a bare address, whose double slash opens no comment`,
 			code: `@media (min-width: url(http://x/y.png)),print { a { b: c; } }`,
 			line: 1,

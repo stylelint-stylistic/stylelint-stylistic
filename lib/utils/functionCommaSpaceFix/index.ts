@@ -3,13 +3,13 @@ import type { DivNode as ValueParserDivNode, FunctionNode as ValueParserFunction
 import type { Edit } from "../applyEditsFromEnd/index.ts"
 
 /**
- * Measures the whitespace run standing on one side of a comma that the comma itself does not hold.
+ * Measures the whitespace run on one side of a comma that the comma's div node does not hold.
  *
- * A div node opens where its own leading whitespace does and ends where the whitespace behind the divider does, so most of the time either side of a comma is a span of that node. `postcss-value-parser` hands a run to whichever neighbour will hold it, though, and three of those neighbours are not the comma: the run between two dividers goes to the `after` of the one in front — any divider, a slash and a colon as readily as a comma — the run between the opening parenthesis and the first node goes to the function's `before`, and the run between the last node and the closing parenthesis to the function's `after`. In each of the three the comma's own `before` or `after` is empty, so what this measures is added to a span that would otherwise be empty; everywhere else it is zero and the span is the comma's own (#349).
+ * `postcss-value-parser` gives the run between two dividers to the `after` of the first, the run behind the opening parenthesis to the function's `before`, and the run in front of the closing one to the function's `after`; there the comma's own span is empty ([#349](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/349)).
  * @param index - The comma's place among the arguments.
- * @param functionNode - The function the comma divides the arguments of.
- * @param position - The side of the comma being written.
- * @returns The length of the run the neighbour holds, or zero where the comma holds its own.
+ * @param functionNode - The call holding the arguments.
+ * @param position - The side of the comma.
+ * @returns The length of the run the neighbour holds, or zero.
  */
 function runHeldByNeighbour (index: number, functionNode: ValueParserFunctionNode, position: `before` | `after`): number {
 	let { nodes } = functionNode
@@ -26,15 +26,13 @@ function runHeldByNeighbour (index: number, functionNode: ValueParserFunctionNod
 }
 
 /**
- * Names the span one side of a comma stands in, and what goes there.
- *
- * The span reaches over the whole run the file spells there, wherever the parser filed it: {@link runHeldByNeighbour} says how much of it the comma does not hold, and the span grows away from the comma by that much. An unclosed function needs nothing of its own — the parser gives such a function an empty `after`, whatever the text behind its last node, so the length asked for there is zero and the span is the one it always was.
+ * Names the span one side of a comma stands in, and what goes there. The span grows away from the comma by what {@link runHeldByNeighbour} measures; an unclosed function has an empty `after`.
  * @param div - The comma node.
  * @param index - The comma's place among the arguments.
- * @param functionNode - The function the comma divides the arguments of.
- * @param position - The side of the comma to write.
+ * @param functionNode - The call holding the comma.
+ * @param position - The side of the comma.
  * @param text - The whitespace to put there.
- * @returns The edit that writes it.
+ * @returns The edit.
  */
 function whitespaceEdit (div: ValueParserDivNode, index: number, functionNode: ValueParserFunctionNode, position: `before` | `after`, text: string): Edit {
 	let commaIndex = div.sourceIndex + div.before.length
@@ -46,13 +44,9 @@ function whitespaceEdit (div: ValueParserDivNode, index: number, functionNode: V
 }
 
 /**
- * Fixes whitespace around commas in function arguments.
- *
- * Nothing is written here and nothing in the parsed tree is touched: the fix is given back as the spans of the value it changes, so that the caller writes those and leaves every other character of the value as the file spells it.
- *
- * The function is taken whole rather than as its list of arguments, since the run standing beside a comma may be held by the function itself and not by any argument of it.
+ * Fixes whitespace around commas in function arguments. Nothing is written: the fix comes back as spans of the value for the caller to write. The function is taken whole, since it may hold the run beside a comma itself.
  * @param params - The parameters object.
- * @returns The edits the fix writes, each one a span of the value the file spells.
+ * @returns The edits.
  */
 export function functionCommaSpaceFix (params: {
 	div: ValueParserDivNode,
@@ -70,7 +64,7 @@ export function functionCommaSpaceFix (params: {
 	if (expectation.startsWith(`never`)) {
 		let edits = [whitespaceEdit(div, index, functionNode, position, ``)]
 
-		// A comment standing behind the comma closes the div there and hands the whitespace after it to nodes of its own, so the run is emptied node by node and one fix comes out as several edits. The run behind the comma is walked whichever side the option writes, as it always has been: under `before` that is the far side of the comma, which is a reading of its own and not one this branch changes.
+		// A comment behind the comma closes the div, and the whitespace after it becomes nodes of its own, emptied one by one. The run behind the comma is walked whichever side the option writes.
 		for (let i = index + 1; i < nodes.length; i += 1) {
 			let node = nodes[i]
 

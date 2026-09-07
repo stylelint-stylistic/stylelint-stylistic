@@ -9,7 +9,7 @@ let { ruleName: newlineBeforeRuleName } = createNewlineBefore(less)
 let { ruleName: spaceBeforeRuleName } = createSpaceBefore(less)
 let { ruleName: atRuleSpaceBeforeRuleName } = createAtRuleSpaceBefore(less)
 
-// The neighbour is named and this rule listed behind it, for the reason the core's integration test gives (#354); what these blocks add is that the settings read are the namespace's own, under the names a configuration for this syntax lists, and that a double slash comment ending the value is where the two whitespaces part: a break closes the comment ahead of the semicolon, and a space would take the semicolon into it.
+// The neighbour is named and this rule listed behind it, as in the core's integration test (#354); these blocks add that the settings read are the namespace's own, and that a `//` comment ending the value parts the two whitespaces: a break closes the comment ahead of the semicolon, and a space would take the semicolon into it.
 let testRule = createTestRule({ ruleName, extraRules: { [ruleName]: `always` }, customSyntax: `postcss-less` })
 
 testRule({
@@ -86,7 +86,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/477
+			// See #477
 			description: `a bodiless at-rule closing the block, whose written semicolon gets the space the namespace's rule asks for`,
 			code: `a { @foo bar }`,
 			fixed: `a { @foo bar ; }`,

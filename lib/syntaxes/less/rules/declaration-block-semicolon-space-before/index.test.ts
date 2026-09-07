@@ -12,7 +12,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/398
+			// See #398
 			description: `a call named with a code point of an identifier that lies outside ASCII, whose double slashes open a comment the semicolon cannot join`,
 			code: `a { b: éurl(http://a/b.png) 1px; c: 2px }`,
 			fixed: `a { b: éurl(http://a/b.png) 1px; c: 2px }`,
@@ -21,7 +21,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/117
+			// See #117
 			description: `inline comment before the semicolon: the semicolon cannot join the comment's line, so the code is left alone and the warning stands`,
 			code: `
 				a {
@@ -40,7 +40,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/117
+			// See #117
 			description: `inline comment in front of the flag: the space goes behind the flag, and the comment stays where it is`,
 			code: `
 				a {
@@ -59,7 +59,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/211
+			// See #211
 			description: `a flag standing in the text of the comment, which Less reads as comment text while the parser reads it as the flag — the value and the flag's raw together show the comment running on to the semicolon`,
 			code: `
 				a {
@@ -78,7 +78,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/211
+			// See #211
 			description: `the same flag with the semicolon already standing on the comment's line, which the parser keeps no raw of, so the value alone shows the comment`,
 			code: `
 				a {
@@ -95,7 +95,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/333
+			// See #333
 			description: `a form feed inside an inline comment, which is whitespace and no line break, so the semicolon stands in the comment's text and the value is left alone`,
 			code: `a { b: 1px // c\f\t2px; }`,
 			fixed: `a { b: 1px // c\f\t2px; }`,
@@ -112,7 +112,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/117
+			// See #117
 			description: `inline comment before the semicolon: the semicolon cannot join the comment's line, so the code is left alone and the warning stands`,
 			code: `
 				a {
@@ -131,7 +131,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/211
+			// See #211
 			description: `a flag standing in the text of the comment, which Less reads as comment text while the parser reads it as the flag — the value and the flag's raw together show the comment running on to the semicolon`,
 			code: `
 				a {

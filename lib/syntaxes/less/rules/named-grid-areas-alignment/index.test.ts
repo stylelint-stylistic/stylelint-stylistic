@@ -12,7 +12,7 @@ testRule({
 	customSyntax: `postcss-less`,
 
 	accept: [
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/322
+		// See #322
 		{
 			description: `a row standing in the text of an end-of-line comment that opens the value, where the rows behind it are aligned`,
 			code: `
@@ -49,7 +49,7 @@ testRule({
 	],
 
 	reject: [
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504
+		// See #504
 		{
 			description: `an apostrophe written in one end-of-line comment and another in the next, whose quotation marks the value parser pairs into a string of neither, so that the row standing between the two comments is that string's text to the parser`,
 			code: `
@@ -74,7 +74,7 @@ testRule({
 			endColumn: 8,
 			message: messages.expected(`grid-template-areas`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/322
+		// See #322
 		{
 			description: `a row standing in the text of an end-of-line comment that opens the value, where the rows behind it are not aligned`,
 			code: `
@@ -211,7 +211,7 @@ testRule({
 			endColumn: 10,
 			message: messages.expected(`grid-template-areas`),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/368
+		// See #368
 		{
 			description: `a row holding no cell in front of a row standing in the text of an end-of-line comment, which is a row of no grid and takes no place among them`,
 			code: `
@@ -244,7 +244,7 @@ testRule({
 	customSyntax: `postcss-less`,
 
 	reject: [
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/322
+		// See #322
 		{
 			description: `a row shorter than the longest of the rows, measured without the row standing in a comment`,
 			code: `

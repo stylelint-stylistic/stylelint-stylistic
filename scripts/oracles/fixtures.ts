@@ -1,4 +1,4 @@
-/** The shapes the defects of this plugin have come out of: a comment beside code, a Windows pair, a bare carriage return and a form feed — whitespace to PostCSS and to every rule, and a break to neither — a bang, a run of them, an at-rule closing a block with neither a block nor a semicolon of its own, a run of empty lines inside a call that holds another call, an interpolation holding whitespace. Each is as small as it can be and still be wrong, since every fixture costs the run about a dozen lints per rule and option — three for `converge.ts`, one each for `comments.ts` and `nodes.ts`, and four for `twins.ts`, which lints an original and its Windows twin twice over. */
+/** The shapes the plugin's defects have come out of: a comment beside code, a Windows pair, a bare carriage return and a form feed, bangs, an at-rule closing a block, empty lines in a nested call, an interpolation holding whitespace. Each is as small as it can be, since every fixture costs a dozen lints per rule and option. */
 const FIXTURES: [string, string][] = [
 	[`plain`, `a { color: pink; }\n`],
 	[`plain-multi`, `a,\nb {\n\tcolor: pink;\n\ttransform: translate(1px, 2px);\n}\n`],
@@ -39,7 +39,7 @@ const FIXTURES: [string, string][] = [
 	[`interpolation-with-space`, `a { --x: 10px#{$a != $b}; }\n`],
 ]
 
-/** The same shapes again with the comment the two custom syntaxes spell with a double slash. The last three are placed rather than translated. Two of them stand where a fixer is about to take a break away — behind the opening brace, and behind a semicolon — since that is where taking one carries the code after it into the comment, which is #248 and which no fixture reached until this pair was written. The third stands where a fixer is about to write one in: the comment there runs past a second call to the end of the line, so a break written into the first call closes the comment and hands the second one back to the value, which is #288 and which no fixture reached until this one was written. */
+/** The same shapes with a `//` comment. The last three stand where a fixer removes a break, carrying the code after it into the comment ([#248](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/248)), or writes one in, closing the comment and handing the second call back to the value ([#288](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/288)). */
 const INLINE_FIXTURES: [string, string][] = [
 	[`inline-value`, `a { b: 1px // c\n\t2px; }\n`],
 	[`inline-trailing`, `a {\n\tcolor: pink // c\n}\n`],

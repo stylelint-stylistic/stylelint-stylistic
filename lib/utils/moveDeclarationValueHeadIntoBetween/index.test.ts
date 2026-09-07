@@ -7,11 +7,11 @@ import { css as syntax } from "../../syntaxes/css/index.ts"
 import { moveDeclarationValueHeadIntoBetween } from "./index.ts"
 
 /**
- * Reads the first declaration of a stylesheet, moves the head of its value, and says what came of it.
+ * Reads the first declaration of a stylesheet and moves the head of its value.
  * @param parser - The parser to read the stylesheet with.
  * @param css - The stylesheet, whose first rule holds the declaration.
  * @param length - How many characters of the printed value to move.
- * @returns What the file prints, what the value now reads as, and what stands between the property and it.
+ * @returns What the file prints, what the value now reads as, and what stands between property and value.
  */
 function move (parser: { parse: Parser }, css: string, length: number): {
 	printed: string,

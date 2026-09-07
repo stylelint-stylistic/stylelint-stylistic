@@ -12,7 +12,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/116
+			// See #116
 			description: `inline comment before the bang: the bang cannot join the comment's line, so the code is left alone and the warning stands`,
 			code: `
 				a {
@@ -39,7 +39,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/116
+			// See #116
 			description: `inline comment before a bang standing inside the value`,
 			code: `
 				a {
@@ -83,7 +83,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/116
+			// See #116
 			description: `inline comment before the bang: the bang cannot join the comment's line, so the code is left alone and the warning stands`,
 			code: `
 				a {
@@ -110,7 +110,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/116
+			// See #116
 			description: `inline comment before a bang standing inside the value`,
 			code: `
 				a {

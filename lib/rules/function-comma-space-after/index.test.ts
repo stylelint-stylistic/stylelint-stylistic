@@ -40,17 +40,17 @@ testRule({
 			code: `a { transform: translate(1, /* comment */1); }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/153
+			// See #153
 			description: `a bare address inside each argument, whose double slash opens no comment`,
 			code: `a { background: image-set(url(//cdn/a.png) 1x, url(//cdn/b.png) 2x); }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/214
+			// See #214
 			description: `two comments, the first of which code follows straight away: the second is no continuation of it`,
 			code: `a { b: translate(1px/*k*/, /*c*/ 2px); }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/275
+			// See #275
 			description: `a comma inside the text of a comment the value parser closes early, which is no comma of the value`,
 			code: `a { b: f(x/*/*q,w*/y); }`,
 		},
@@ -174,7 +174,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/153
+			// See #153
 			description: `a comma between two bare addresses, whose double slashes open no comment`,
 			code: `a { background: image-set(url(//cdn/a.png) 1x,url(//cdn/b.png) 2x); }`,
 			fixed: `a { background: image-set(url(//cdn/a.png) 1x, url(//cdn/b.png) 2x); }`,
@@ -183,7 +183,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/214
+			// See #214
 			description: `a run inside a string that spells the delimiters of a comment lures the reading across no comma: the comma at 24 has its space and only the one at 33 has none`,
 			code: `a { b: translate("a/*b", "c*/ d",1px); }`,
 			fixed: `a { b: translate("a/*b", "c*/ d", 1px); }`,
@@ -192,7 +192,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/238
+			// See #238
 			description: `a call standing behind a comment the value parser does not give back as it read it`,
 			code: `a { b: x/*/*a,b*/f(1,2)c; }`,
 			fixed: `a { b: x/*/*a,b*/f(1, 2)c; }`,
@@ -201,7 +201,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/275
+			// See #275
 			description: `a comma of the value behind a comment the value parser closes early: the one inside the comment's text is passed over and this one is placed`,
 			code: `a { b: f(x/*/*q,w*/y,2); }`,
 			fixed: `a { b: f(x/*/*q,w*/y, 2); }`,
@@ -210,7 +210,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/349
+			// See #349
 			description: `a break behind a comma that closes the arguments, which is the whitespace this option replaces and not a place to write beside`,
 			code: `a { b: f(a,\n); }`,
 			fixed: `a { b: f(a, ); }`,
@@ -219,7 +219,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			// See #508
 			description: `a comma in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and the comma its text holds is no comma of the arguments`,
 			code: `a { b: f(1,2) /*/ " */ "f(1,2)"; }`,
 			fixed: `a { b: f(1, 2) /*/ " */ "f(1,2)"; }`,
@@ -264,7 +264,7 @@ testRule({
 			code: `a { transform: translate(1,/* comment */1); }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/275
+			// See #275
 			description: `a space behind a comma inside the text of a comment the value parser closes early, neither of them the value's`,
 			code: `a { b: f(x/*/*q, w*/y,2); }`,
 		},
@@ -378,7 +378,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/214
+			// See #214
 			description: `a run inside a string that spells the delimiters of a comment lures the reading across no comma`,
 			code: `a { b: translate("a/*b", "c*/ d",1px); }`,
 			fixed: `a { b: translate("a/*b","c*/ d",1px); }`,
@@ -387,7 +387,7 @@ testRule({
 			message: messages.rejectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/275
+			// See #275
 			description: `a comma of the value carrying the whitespace this option takes away, behind a comment the value parser closes early whose text carries whitespace of its own: only the value's is taken`,
 			code: `a { b: f(x/*/*q, w*/y, 2); }`,
 			fixed: `a { b: f(x/*/*q, w*/y,2); }`,
@@ -396,7 +396,7 @@ testRule({
 			message: messages.rejectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/349
+			// See #349
 			description: `the whitespace between a comma that closes the arguments and the closing parenthesis, which the parser hands to the function`,
 			code: `a { b: f(a, ); }`,
 			fixed: `a { b: f(a,); }`,
@@ -461,7 +461,7 @@ testRule({
 			code: `a { background: linear-gradient(45deg\n,rgba(0, 0, 0, 1)\n,red); }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/275
+			// See #275
 			description: `a comma inside the text of a comment the value parser closes early, which is no comma of the value`,
 			code: `a { b: f(x/*/*q,w*/y); }`,
 		},
@@ -493,7 +493,7 @@ testRule({
 			message: messages.expectedAfterSingleLine(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/349
+			// See #349
 			description: `a run of tabs between a comma that closes the arguments and the closing parenthesis, which the parser hands to the function and this option replaces with one space`,
 			code: `a { b: f(a,\t\t); }`,
 			fixed: `a { b: f(a, ); }`,
@@ -554,7 +554,7 @@ testRule({
 			code: `a { color: rgba(0\n, 0, 0); }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/275
+			// See #275
 			description: `a space behind a comma inside the text of a comment the value parser closes early, neither of them the value's`,
 			code: `a { b: f(x/*/*q, w*/y,2); }`,
 		},
@@ -586,7 +586,7 @@ testRule({
 			message: messages.rejectedAfterSingleLine(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/349
+			// See #349
 			description: `the whitespace between a comma that closes the arguments and the closing parenthesis, which the parser hands to the function`,
 			code: `a { b: f(a, ); }`,
 			fixed: `a { b: f(a,); }`,

@@ -2,10 +2,10 @@ import { LINE_BREAK } from "../../regexps.ts"
 import { findSelectorBlockComments } from "../../utils/findSelectorBlockComments/index.ts"
 
 /**
- * Gets the index the line an index stands on ends at, which is the end of the text where the line is the last one.
- * @param text - The text to read.
- * @param index - The index to read from.
- * @returns The index the line ends at.
+ * Gets the end of the line holding `index`, or of the text.
+ * @param text - The selector's source.
+ * @param index - An offset on the line asked about.
+ * @returns The end of the line.
  */
 function endOfLine (text: string, index: number): number {
 	let match = LINE_BREAK.exec(text.slice(index))
@@ -13,7 +13,7 @@ function endOfLine (text: string, index: number): number {
 	return match ? index + match.index : text.length
 }
 
-/** An inline comment of a selector, as both spellings have it. */
+/** An inline comment of a selector in both spellings. */
 export type InlineComment = {
 	value: string,
 	firstOrdinal: number,
@@ -25,16 +25,12 @@ export type InlineComment = {
 }
 
 /**
- * Collects the inline comments of a selector, pairing the text of each one in the raw the rules read with the text the source gives it.
+ * Collects a selector's `//` comments, pairing raw text with source text.
  *
- * `postcss-scss` rewrites every inline comment of a selector into block comments inside `raws.selector.raw`, keeps the source spelling in `raws.selector.scss` and prints that one, so the two strings drift apart wherever a comment stands.
- *
- * The two spellings are read side by side rather than counted, since one comment does not always answer to one: a `*\/` in the text of an inline comment closes a block comment, so `// a *\/ b` is written with two. Where the strings part they are followed to the end of the line, which is where the comment ends and the two meet again — the syntax ends one on a carriage return and on a form feed as readily as on a line feed.
- *
- * Each comment is recorded by the place its block comments stand in among the block comments of the selector, which is what a fixed selector can be read back through: a fix moves whitespace and leaves every comment where it was, so the count and the order hold.
- * @param rawSelector - The selector as the rules read it.
- * @param scssSelector - The source spelling of the selector, if the two differ.
- * @returns The inline comments, in source order.
+ * `postcss-scss` rewrites every `//` comment of a selector into block comments in `raws.selector.raw` and prints the source kept in `raws.selector.scss`. The two are read side by side, not counted, since `// a *\/ b` becomes two block comments, and followed to the end of the line where they part. A comment is recorded by the place of its block comments among the selector's, which a fixed selector is read back through.
+ * @param rawSelector - The raw the rules read.
+ * @param scssSelector - The source, if it differs.
+ * @returns The comments in source order.
  */
 export function findSelectorInlineComments (rawSelector: string, scssSelector?: string): InlineComment[] {
 	let inlineComments: InlineComment[] = []
@@ -54,7 +50,7 @@ export function findSelectorInlineComments (rawSelector: string, scssSelector?: 
 			continue
 		}
 
-		// The two spellings share the slash the comment opens with, so the divergence stands a character inside it; the comment begins where its first block comment does.
+		// Both spellings share the opening slash; the divergence is one character in.
 		let startIndex = rawSelector.lastIndexOf(`/*`, rawIndex)
 		let endIndex = endOfLine(rawSelector, rawIndex)
 		let sourceStartIndex = sourceIndex - (rawIndex - startIndex)

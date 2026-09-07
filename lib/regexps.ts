@@ -1,296 +1,296 @@
 /**
- * The regular expressions the rules and the utils read a stylesheet with, gathered so that a pattern is written once and explained once, and so that two rules asking the same question ask it in the same words.
+ * The regular expressions the rules and utils read a stylesheet with, written and explained once.
  *
- * A name says what the expression matches rather than what a caller does with it, and a name opening with `EVERY_` carries the `g` flag. Every such expression is read here with `match`, `matchAll`, `replace`, `replaceAll` or `split`, none of which leaves `lastIndex` behind it; a `test` or an `exec` over one would carry state from one call to the next, so neither is written against a global expression.
+ * A name says what the expression matches; one opening with `EVERY_` carries the `g` flag and is read only with `match`, `matchAll`, `replace`, `replaceAll` or `split`, never `test` or `exec`, which keep `lastIndex`.
  */
 
-/** The name of the `aspect-ratio` property, in whatever case it is written. */
+/** `aspect-ratio`, any case. */
 export const ASPECT_RATIO_PROPERTY = /^aspect-ratio$/iu
 
-/** The first line break of a text, in either of the two spellings PostCSS reads one in, captured so that a replacement can write it back. A Windows pair is one break and is read as one, so that a replacement never lands between its two characters. Read by `addEmptyLineAfter` to put a break beside the one already standing, and by `getLineBreak` to read the first break a whole file spells. */
+/** The first line break, captured. */
 export const CAPTURED_LINE_BREAK = /(\r?\n)/u
 
-/** A hex colour standing anywhere in a text. */
+/** A hex colour anywhere. */
 export const CONTAINS_HEX_COLOR = /#[\da-z]+/iu
 
-/** A Windows line break. Read by `max-empty-lines` to tell a pair from a bare line feed, which is a question about the spelling and is meant, and by `indentation`, to ask of the line feed a search has stopped at whether a carriage return in front of it belongs to the same break — a question about the pair itself, so the narrowness is the whole of what is wanted there. */
+/** A Windows break alone; narrow since `max-empty-lines` and `indentation` ask about the pair. */
 export const CRLF = /\r\n/u
 
-/** A run of Windows line breaks. Read by `max-empty-lines`, and narrow for the reason {@link CRLF} is. */
+/** A run of Windows breaks; narrow as {@link CRLF} is. */
 export const CRLF_RUN = /(?:\r\n)+/u
 
-/** A line break as the grammar counts one where it asks whether a backslash opens an escape: the line feed, and the carriage return and the form feed a stylesheet is preprocessed into line feeds from. A backslash written in front of any of the three opens no escape and is a delimiter of its own, so `10PX\` and a break is the dimension `10PX` with a delimiter behind it, while `10PX\` closing the text is one dimension whose unit ends in that backslash. */
+/** A break to the grammar, asking whether a backslash opens an escape: line feed, carriage return or form feed; a backslash before any is a delimiter, so `10PX\` and a break is the dimension `10PX`. */
 export const CSS_LINE_BREAK = /[\n\r\f]/u
 
-/** Two line breaks with nothing but horizontal whitespace between them, each in either of the two spellings PostCSS reads a break in. A Windows pair is one break and never two, since the carriage return is read only as the front of a pair. */
+/** Two breaks with only horizontal whitespace between them. */
 export const EMPTY_LINE = /\r?\n[\t ]*\r?\n/u
 
-/** Every backslash standing right in front of a slash, which escapes nothing to PostCSS's tokenizer: an escape there is stepped over only where the character behind the backslash is neither a slash nor whitespace, so `\/*` opens a comment to it. */
+/** Every backslash before a slash, which escapes nothing to the tokenizer: `\/*` opens a comment. */
 export const EVERY_BACKSLASH_IN_FRONT_OF_A_SLASH = /\\(?=\/)/gu
 
-/** Every opening and closing pair of a block comment. */
+/** Every block comment delimiter. */
 export const EVERY_COMMENT_DELIMITER = /(\*\/|\/\*)/gu
 
-/** Every run of Windows line breaks, the run captured whole. Read by `max-empty-lines`, and narrow for the reason {@link CRLF} is. */
+/** Every run of Windows breaks, captured; narrow as {@link CRLF} is. */
 export const EVERY_CRLF_RUN = /(\r\n)+/gu
 
-/** The properties whose value spells the rows of a grid as strings: the longhand, and the two shorthands that put a row's size and its line names beside each string and the columns behind a solidus — in whatever case they are written, a property being case-insensitive to CSS (#614). */
+/** The properties spelling grid rows as strings, any case ([#614](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/614)). */
 export const GRID_AREAS_PROPERTY = /^(?:grid-template-areas|grid-template|grid)$/iu
 
-/** Every run of whitespace, however wide, read as PostCSS's tokenizer reads whitespace — a space, a tab, a line feed, a carriage return or a form feed; a no-break space, a vertical tab and every other separator Unicode has are words to it and part no run (#494, #401). The tokenizer-true narrowing of `\s+`, for a reading that cuts a text into the words the file really spells, such as the cells of a grid row. */
+/** Every run of tokenizer whitespace; a no-break space and a vertical tab are words ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494), [#401](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/401)). The narrowing of `\s+`. */
 export const EVERY_CSS_WHITESPACE_RUN = /[ \t\n\r\f]+/gu
 
-/** Every run of line breaks that leaves an empty line behind it, the first break of the run captured so that it can be written in the whole run's place and the file keep the spelling it is written in. A stray semicolon may stand between two breaks of the run, since the readers of this question measure the whitespace with those taken out and would otherwise ask for an empty line to go that nothing here could take. Reads a break the way {@link EMPTY_LINE} does, a Windows pair counting as one. */
+/** Every run of breaks leaving an empty line, the first break captured; a stray semicolon may stand between two breaks, since the readers measure whitespace with semicolons out. */
 export const EVERY_EMPTY_LINE_RUN = /(\r?\n)(?:[\t ;]*\r?\n)+/gu
 
-/** Every escape, quoted run and block comment of a selector, in the order they stand in it. */
+/** Every escape, quoted run and block comment. */
 export const EVERY_ESCAPE_STRING_OR_BLOCK_COMMENT = /\\.|"[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'|\/\*.*?\*\//gsu
 
-/** The same as {@link EVERY_ESCAPE_STRING_OR_BLOCK_COMMENT}, with the double slash of an inline comment among the alternatives. */
+/** {@link EVERY_ESCAPE_STRING_OR_BLOCK_COMMENT} plus `//`. */
 export const EVERY_ESCAPE_STRING_OR_COMMENT = /\\.|\/\/|"[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'|\/\*.*?\*\//gsu
 
-/** The quoted address of every `@import`, captured without the at-rule around it. */
+/** Every `@import` address, captured. */
 export const EVERY_IMPORT_ADDRESS = /@import\s+(['"].*['"])/gui
 
-/** Every interpolation a preprocessor writes, placed rather than tallied: the three spellings {@link SCSS_INTERPOLATION}, {@link LESS_INTERPOLATION} and {@link PSV_INTERPOLATION} read one at a time. Each alternative reads what its own name reads, the line break the Sass one crosses and the two others do not included, and the run handed back opens at the character in front of the delimiter where the spelling carries one. Narrow of the four an interpolation is spelled in: the `{…}` of {@link TPL_INTERPOLATION} is not among them, since in a value a pair of bare braces is far likelier to be a pair of characters than an interpolation — the braces of a string, of a comment, or of the block a custom property is allowed to carry — and reading such a pair as one would carry off the code standing between them. */
+/** {@link SCSS_INTERPOLATION}, {@link LESS_INTERPOLATION} and {@link PSV_INTERPOLATION} in one; only the Sass one crosses a break. {@link TPL_INTERPOLATION} is left out: bare braces in a value are likelier a string or a comment. */
 export const EVERY_INTERPOLATION = /#\{[\s\S]+?\}|@\{.+?\}|\$\(.+?\)/gu
 
-/** Every run of Unix line breaks, the run captured whole. Read by `max-empty-lines`, and narrow for the reason {@link CRLF} is. */
-// A line terminator of the JavaScript around a styled template, as `postcss-styled-syntax` counts the host file's lines: a Windows pair as one, then a line feed, a bare carriage return, or either separator of Unicode — and no form feed. This is a reading of the host, measured of that parser itself, and no stylesheet reading: PostCSS counts a line feed alone.
+/** A line terminator as `postcss-styled-syntax` counts host lines: a Windows pair as one, a line feed, a bare carriage return or either Unicode separator, no form feed; PostCSS counts line feeds alone. */
 export const EVERY_JS_LINE_TERMINATOR = /\r\n|[\n\r\u2028\u2029]/gu
 
+/** Every run of Unix breaks, captured; narrow as {@link CRLF} is. */
 export const EVERY_LF_RUN = /(\n)+/gu
 
-/** Every line of a text that a break ends, the break included, so that a line is read together with the character that ends it. Read by `linebreaks`, which asks of each line which of the two spellings its break is written in. */
+/** Every line ending in a break, break included. */
 export const EVERY_LINE_WITH_BREAK = /[^\n]*\n/gu
 
-/** Every line break of a text, one at a time: a line feed, with the carriage return of a Windows pair in front of it where there is one. A text split on it keeps neither character of a pair. */
+/** Every break, a pair's carriage return included; a split keeps neither. */
 export const EVERY_LINE_BREAK = /\r?\n/gu
 
-/** Every line break with the indentation behind it, where content or the end of the text follows, the break captured so that a replacement can write it back and the file keep the spelling it is written in. A Windows pair is one break and is read as one, so that a replacement never lands between its two characters. The indentation is whatever the tokenizer reads as whitespace short of a break — a form feed and a bare carriage return among it, since a reader of the line hands both back as part of its indentation, and a fix that stopped at spaces and tabs wrote nothing over them (#452); the carriage return of the next line's Windows pair is left to that pair. Read by `indentation`, whose fix writes the indentation an option asks for behind every break of a text. */
+/** Every break and the indentation behind it, where content or the end follows, the break captured; the indentation is tokenizer whitespace short of a break, form feed and bare carriage return among it, which a fix stopping at spaces and tabs wrote nothing over ([#452](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/452)). */
 export const EVERY_LINE_BREAK_AND_INDENT = /(\r?\n)(?:[ \t\f]|\r(?!\n))*(?=\S|$)/gu
 
-/** Every run of line feeds and carriage returns, a Windows break counting as two of them, and the empty run wherever none stands. Read by `named-grid-areas-alignment`, which counts the lines a run of them spans. */
+/** Every run of line feeds and carriage returns, a Windows pair counting as two, and the empty run everywhere else. */
 export const EVERY_LINE_BREAK_RUN = /[\r\n]*/gu
 
-/** The indentation of every line that holds content, captured apart from the break that opens the line and from the character that ends the run. Where a line begins is named here rather than left to the `m` flag, whose set is a different one: it begins a line after the two separators of Unicode, which end a line to JavaScript and to no stylesheet. */
+/** The indentation of every content line, captured; the line start is spelled since `m` also begins a line after the two Unicode separators. */
 export const EVERY_LINE_INDENT_WITH_CONTENT = /(?:^|\n)([\t ]*)\S/gu
 
-/** The spaces every line that holds content is indented by, tabs not among them. Where a line begins is named here for the reason it is in {@link EVERY_LINE_INDENT_WITH_CONTENT}. */
+/** The spaces each content line is indented by, tabs excluded; the line start is spelled as in {@link EVERY_LINE_INDENT_WITH_CONTENT}. */
 export const EVERY_LINE_SPACE_INDENT = /(?<=^|\n) *(?=\S)/gu
 
-/** Every semicolon of a text, one at a time. */
+/** Every semicolon. */
 export const EVERY_SEMICOLON = /;/gu
 
-/** Every space of a text, one at a time. */
+/** Every space. */
 export const EVERY_SPACE = / /gu
 
-/** Every tab of a text. */
+/** Every tab. */
 export const EVERY_TAB = /\t/gu
 
-/** Every character of whitespace, one at a time. */
+/** Every whitespace character. */
 export const EVERY_WHITESPACE = /\s/gu
 
-/** The `__MSG_…__` a browser extension replaces at load time. */
+/** A browser extension's `__MSG_…__`. */
 export const EXTENSION_MESSAGE = /__MSG_\S+__/u
 
-/** A fraction opening straight on its point, with no digit in front of it. */
+/** A fraction opening on its point. */
 export const FRACTION_WITHOUT_LEADING_ZERO = /(?:\D|^)(\.\d+)/u
 
-/** A fraction with zeros in front of its point, the zeros captured apart from the fraction. */
+/** A fraction behind zeros, the zeros captured apart. */
 export const FRACTION_WITH_LEADING_ZEROS = /(?:\D|^)(0+)(\.\d+)/u
 
-/** A fraction ending in zeros, the digits that are kept captured apart from the zeros that are not. */
+/** A fraction ending in zeros, the kept digits captured apart. */
 export const FRACTION_WITH_TRAILING_ZEROS = /\.(\d{0,100}?)(0+)(?:\D|$)/u
 
-/** A hex colour opening a text. */
+/** A leading hex colour. */
 export const HEX_COLOR = /^#[\da-z]+/iu
 
-/** The whitespace closing a hexadecimal escape, and nothing else: one character, or the Windows pair, which CSS counts as the one. */
+/** The one whitespace character closing a hexadecimal escape; a Windows pair counts as one. */
 export const HEX_ESCAPE_TERMINATOR = /^(?:\r\n|[ \t\n\r\f])$/u
 
-/** One character an identifier of CSS is spelled with, an escape aside: a letter, a digit, an underscore, a hyphen, or one of the code points outside ASCII the grammar names. Read one UTF-16 code unit at a time, so each half of a surrogate pair answers for itself and every character above the basic plane is a code point of an identifier, which is what the grammar has of them anyway. */
+/** One UTF-16 unit of a CSS identifier, an escape aside; a surrogate half answers for itself, so every character above the basic plane counts. */
 export const IDENTIFIER_CODE_POINT = /[\w\-\u00B7\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u037D\u037F-\u1FFF\u200C-\u200D\u203F\u2040\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uD800-\uDFFF\uF900-\uFDCF\uFDF0-\uFFFD]/u
 
-/** The name of an `@import`, in whatever case it is written. */
+/** `import`, any case. */
 export const IMPORT_AT_RULE = /^import$/iu
 
-/** The last line of a text, the break in front of it aside — the carriage return of a Windows pair aside with it — and nothing at all where the text ends in a break. Read by `named-grid-areas-alignment`. */
+/** The last line, its break excluded; nothing where the text ends in one. */
 export const LAST_LINE = /[^\r\n]+$/u
 
-/** A block comment opening a text, line breaks aside, with what it holds captured. */
+/** A leading block comment, breaks aside, its content captured. */
 export const LEADING_BLOCK_COMMENT = /^[^\S\n]*\/\*([\s\S]*?)\*\//u
 
-/** A closing brace opening a text, spaces and tabs aside. */
+/** A leading `}`, spaces and tabs aside. */
 export const LEADING_CLOSING_BRACE = /^[ \t]*\}/u
 
-/** A closing parenthesis opening a text, spaces and tabs aside. */
+/** A leading `)`, spaces and tabs aside. */
 export const LEADING_CLOSING_PARENTHESIS = /^[ \t]*\)/u
 
-/** A colon opening a text, with whatever whitespace follows it — whitespace as the tokenizer reads it, since what stands past that set is a word of the value (#494). */
+/** A leading colon and the tokenizer whitespace behind it ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). */
 export const LEADING_COLON_AND_WHITESPACE = /^:[ \t\n\r\f]*/u
 
-/** The whitespace a text opens with, read as PostCSS's tokenizer reads whitespace — a space, a tab, a line feed, a carriage return or a form feed; a vertical tab and a no-break space are words to it and open no run (#494). The tokenizer-true narrowing of {@link LEADING_WHITESPACE}, for the fixes that rewrite a run the parser made. */
+/** The leading tokenizer whitespace; a vertical tab and a no-break space are words ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). The narrowing of {@link LEADING_WHITESPACE}. */
 export const LEADING_CSS_WHITESPACE = /^[ \t\n\r\f]*/u
 
-/** The word a text opens with, read to the first character PostCSS's tokenizer calls whitespace — the complement of {@link LEADING_CSS_WHITESPACE}, for cutting a run `postcss-value-parser` read wider than the tokenizer does into the runs and the words the file really spells (#496). */
+/** The leading word, up to the first tokenizer whitespace, the complement of {@link LEADING_CSS_WHITESPACE}, for cutting a run `postcss-value-parser` read too wide ([#496](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496)). */
 export const LEADING_CSS_WORD = /^[^ \t\n\r\f]*/u
 
-/** The hexadecimal escape a text opens with, the whitespace closing it included: a backslash, up to six hexadecimal digits, and the one whitespace character that ends the digits whether they would run on or not, a Windows pair counting as the one break it is. */
+/** A leading hexadecimal escape with its one closing whitespace character; a Windows pair counts as one. */
 export const LEADING_HEX_ESCAPE = /^\\[\da-f]{1,6}(?:\r\n|[ \t\n\r\f])?/iu
 
-/** The indentation a text opens with, captured, up to the first character of content. */
+/** The leading indentation, captured, and the first content character. */
 export const LEADING_INDENT_AND_CONTENT = /^([ \t]*)\S/u
 
-/** A line break opening a text, with nothing whatever in front of it — the question a rule asks where a run of spaces before the break is exactly what it is about, and where {@link OPENS_WITH_LINE_BREAK} would therefore answer yes too often. */
+/** A leading break with nothing in front, where {@link OPENS_WITH_LINE_BREAK} says yes too often. */
 export const LEADING_LINE_BREAK = /^\r?\n/u
 
-/** The run of line breaks a text opens with, nothing standing between them or in front of them — the run `max-empty-lines` counts from the beginning of a file, one empty line a break, and writes as the whitespace in front of a first node where the file holds no node at all (#404). {@link LEADING_LINE_BREAK} reads the first of them alone. */
+/** The leading breaks, nothing between them: what `max-empty-lines` counts from the start of a file and writes where it has no node ([#404](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/404)). */
 export const LEADING_LINE_BREAK_RUN = /^(?:\r?\n)+/u
 
-/** A text opening on anything but whitespace. */
+/** A text opening on non-whitespace. */
 export const LEADING_NON_WHITESPACE = /^\S/u
 
-/** An arithmetic operator opening a text, as the one in front of `-$variable` is. */
+/** A leading arithmetic operator, as in `-$variable`. */
 export const LEADING_OPERATOR = /^[-+*/]/u
 
-/** The whitespace a text opens with, followed by a `+` or a `-`, whatever stands behind the sign. This is the reading for a syntax spelling arithmetic of its own, where a sign opening a number is no exception and the whitespace in front of it is what makes the sign an operator: Less reads `foo(@a) -2px` as two values and `foo(@a)-2px` as a subtraction, its parser taking a sign for an operator only where whitespace follows it or none precedes it, and Sass reads a minus the same way. Sass reads a plus as an operator whatever whitespace stands beside it, so the plus is taken along here rather than answered for: the question the caller puts to a syntax tells a preprocessor from plain CSS and does not tell Sass from Less, and one reading for the two is chosen over a second probe. What that costs under Sass is a warning left unsaid. {@link LEADING_SPACED_SUM_OPERATOR} is the reading CSS has, and this parts from it over the sign that opens a number. The five characters are the ones CSS calls whitespace, which `isWhitespace` reads by hand — `\s` would take in twenty more, a vertical tab and a no-break space and a line separator among them, that no stylesheet spells a space with. */
+/** Leading whitespace and a `+` or `-`, whatever follows: the preprocessor reading, where the whitespace makes a sign an operator even before a number. Sass reads a plus as an operator always, so one reading for both leaves a warning unsaid there; {@link LEADING_SPACED_SUM_OPERATOR} is the CSS reading. */
 export const LEADING_SPACED_SIGN = /^[ \t\n\r\f]+[+-]/u
 
-/** The whitespace a text opens with, followed by the `+` or the `-` of a sum standing on its own rather than opening a number. A sign is part of the number behind it only where a digit follows it, or a decimal point and a digit; anywhere else the sign stands alone, and with whitespace in front of it that is the operator of a sum. That is the reading CSS has, and CSS alone: a syntax spelling arithmetic of its own reads the whitespace in front of every sign, and {@link LEADING_SPACED_SIGN} is that reading. A point with no digit behind it is refused here all the same, `-.x` being nothing any stylesheet spells, and refusing it is what keeps this to one reading of one character: taking the whitespace away leaves a text no calculation can be read out of. The grammar asks for whitespace behind the operator as well, and this does not, engines differing on that side — `calc(1px +(2px))` is read by some and by the grammar is read by none, and closing it up would take a calculation away from the first while giving the second nothing. The five characters are the ones CSS calls whitespace, which `isWhitespace` reads by hand — `\s` would take in twenty more, a vertical tab and a no-break space and a line separator among them, that no stylesheet spells a space with. */
+/** Leading whitespace and a `+` or `-` opening no number, the CSS reading: a sign belongs to a number only where a digit, or a point and a digit, follows, `-.x` refused too. No whitespace is asked for behind it, since some engines read `calc(1px +(2px))`. */
 export const LEADING_SPACED_SUM_OPERATOR = /^[ \t\n\r\f]+[+-](?![\d.])/u
 
-/** The spaces and tabs a text opens with, and the empty run where it opens with none. */
+/** The leading spaces and tabs, the empty run included. */
 export const LEADING_SPACES_AND_TABS = /^[ \t]*/u
 
-/** The whitespace a text opens with, the empty run included, so that a replacement over it always lands. */
+/** The leading whitespace, the empty run included so a replacement always lands. */
 export const LEADING_WHITESPACE = /^\s*/u
 
-/** A text cut in two: the whitespace it opens with, and everything behind that. */
+/** The leading whitespace and the rest, captured apart. */
 export const LEADING_WHITESPACE_AND_REST = /^(\s*)([\s\S]*)$/u
 
-/** Whitespace or a block comment opening a text, whichever of the two comes first. */
+/** Leading whitespace or a block comment, whichever comes first. */
 export const LEADING_WHITESPACE_OR_BLOCK_COMMENT = /^(?:\s+|\/\*.*?\*\/)/su
 
-/** The whitespace a text opens with, where it opens with any. */
+/** The leading whitespace, where there is any. */
 export const LEADING_WHITESPACE_RUN = /^\s+/u
 
-/** The whitespace a text opens with, up to its first line break, which is left standing whole — the carriage return of a Windows pair with it. A vertical tab and a no-break space are words to the tokenizer and no whitespace at all (#494). */
+/** The leading whitespace up to the first break, a Windows pair left whole; a vertical tab and a no-break space are words ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). */
 export const LEADING_WHITESPACE_WITHOUT_BREAK = /^(?:[ \t\f]|\r(?!\n))*/u
 
-/** The `@{…}` Less interpolates a value with. */
+/** Less's `@{…}`. */
 export const LESS_INTERPOLATION = /@\{.+?\}/u
 
-/** A line break, as PostCSS reads one: a line feed, with or without the carriage return of a Windows pair in front of it. A bare carriage return and a form feed are whitespace to PostCSS's tokenizer and no line to its line counter, so a rule reading a line in either would report a position the file does not have, and every reading of a break that answers a question about a line of a stylesheet follows PostCSS rather than the grammar of CSS, which folds all four into one. Where the question is the grammar's own — whether a backslash opens an escape — the answer is the grammar's, and stands under {@link CSS_LINE_BREAK}. */
+/** A break as PostCSS reads one: a line feed, a carriage return optional in front. A bare carriage return or form feed is no line to PostCSS's counter, so a rule reading one reports a position the file lacks; {@link CSS_LINE_BREAK} is the grammar's. */
 export const LINE_BREAK = /\r?\n/u
 
-/** The name of a `@media`, in whatever case it is written. */
+/** `media`, any case. */
 export const MEDIA_AT_RULE = /^media$/iu
 
-/** Anything that is not a space. */
+/** Anything but a space. */
 export const NON_SPACE = /[^ ]/u
 
-/** A number of CSS spelling the whole of a text, written with neither a sign nor an exponent. It is narrow on purpose: `aspect-ratio-notation`, the one rule that reads it, rewrites the number it matches, and rewriting the spelling of a sign or of an exponent is nothing that rule was asked to do — a word carrying either is left alone by not matching here. */
+/** A CSS number without sign or exponent as the whole text; `aspect-ratio-notation` leaves a word carrying either alone. */
 export const NUMBER_WITHOUT_SIGN_OR_EXPONENT = /^(?:\d+(?:\.\d+)?|\.\d+)$/u
 
-/** An opening brace at the end of a text, spaces and tabs aside. */
+/** A `{` ending a text, spaces and tabs aside. */
 export const OPENING_BRACE_AT_END = /\{[ \t]*$/u
 
-/** An opening parenthesis at the end of a text, with nothing behind it but spaces, tabs and block comments. */
+/** A `(` ending a text, only spaces, tabs and block comments behind it. */
 export const OPENING_PARENTHESIS_AT_END = /\([ \t]*(?:\/\*(?:[^*]|\*(?!\/))*\*\/[ \t]*)*$/u
 
-/** The head of a run of identifier code points where the run is no identifier of CSS: a digit opens it, or a hyphen and a digit, or a hyphen stands there alone. Everything else a run of those characters can be is an identifier, `--` and `--1` among them, since two hyphens open one whatever follows. */
+/** The head of an identifier-character run that is no identifier: a digit, a hyphen and a digit, or a lone hyphen; `--` opens one whatever follows. */
 export const OPENS_NO_IDENTIFIER = /^-?\d|^-$/u
 
-/** A block comment opening a text, line breaks aside — with whitespace read the way PostCSS's tokenizer reads it, so a vertical tab or a no-break space in front of the comment is a word and the answer is no (#494). */
+/** A leading block comment, breaks aside; a vertical tab or no-break space in front is a word ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). */
 export const OPENS_WITH_BLOCK_COMMENT = /^(?:[ \t\f]|\r(?!\n))*\/\*/u
 
-/** An inline comment opening a text, line breaks aside. */
+/** A leading `//` comment, breaks aside. */
 export const OPENS_WITH_INLINE_COMMENT = /^[^\S\n]*\/\//u
 
-/** A text whose first line holds nothing but whitespace, read with `\s` on purpose: `no-empty-first-line`, its only reader, replaces by it greedily over every leading empty line, and a tokenizer-true spelling stops at the first break (#494). A fix asking whether a run opens on a break reads {@link OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE} instead. */
+/** A first line of whitespace alone, with `\s` on purpose: `no-empty-first-line` replaces by it over every leading empty line, which a tokenizer-true spelling stops short of ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)); a fix reads {@link OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE}. */
 export const OPENS_WITH_LINE_BREAK = /^\s*\n/u
 
-/** A line break opening a text once the tokenizer's non-break whitespace is stepped over — the question a fix asks before writing a break of its own. A vertical tab and a no-break space are words to the tokenizer and stop the run (#494), where {@link OPENS_WITH_LINE_BREAK} reads every `\s` character over and answers yes to a run no tokenizer-true trim can reach. */
+/** A break behind the leading tokenizer non-break whitespace; a vertical tab and a no-break space stop the run ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)), where {@link OPENS_WITH_LINE_BREAK} reads over them. */
 export const OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE = /^(?:[ \t\f]|\r(?!\n))*\r?\n/u
 
-/** A text opening on a quote, whitespace aside. */
+/** A leading quote, whitespace aside. */
 export const OPENS_WITH_QUOTE = /^\s*["']/u
 
-/** A text opening on a tag, whitespace aside, as a stylesheet read out of a page does. */
+/** A leading tag, whitespace aside. */
 export const OPENS_WITH_TAG = /^\s*</u
 
-/** The `$(…)` postcss-simple-vars interpolates a value with — a plugin's spelling over plain CSS rather than a syntax's, which is why the core reads it beside the two the preprocessors write. */
+/** postcss-simple-vars' `$(…)`, a plugin's spelling over plain CSS, read by the core beside the preprocessors' two. */
 export const PSV_INTERPOLATION = /\$\(.+?\)/u
 
-/** An operator of a range media feature. */
+/** A range media feature operator. */
 export const RANGE_FEATURE_OPERATOR = /[<>=]/u
 
 /** A run of semicolons. */
 export const SEMICOLON_RUN = /;+/u
 
-/** A text made of spaces and tabs, and of at least one of them. */
+/** Spaces and tabs only, at least one. */
 export const SPACES_AND_TABS_ONLY = /^[ \t]+$/u
 
-/** A block comment opening a text, spaces and tabs aside. */
+/** A leading block comment, spaces and tabs aside. */
 export const SPACES_THEN_BLOCK_COMMENT = /^[ \t]*\/\*/u
 
-/** An inline comment opening a text, spaces and tabs aside. */
+/** A leading `//` comment, spaces and tabs aside. */
 export const SPACES_THEN_INLINE_COMMENT = /^[ \t]*\/\//u
 
-/** The `#{…}` Sass interpolates a value with. */
+/** Sass's `#{…}`. */
 export const SCSS_INTERPOLATION = /#\{.+?\}/su
 
-/** A single space or tab. */
+/** A space or a tab. */
 export const SPACE_OR_TAB = /[ \t]/u
 
-/** The `{…}` a template literal or an HTML-like template interpolates a value with. */
+/** A template's `{…}`. */
 export const TPL_INTERPOLATION = /\{.+?\}/su
 
-/** The whitespace a text ends in, read as PostCSS's tokenizer reads whitespace — a space, a tab, a line feed, a carriage return or a form feed; a vertical tab and a no-break space are words to it and end no run (#494). The tokenizer-true narrowing of {@link TRAILING_WHITESPACE}, for the fixes that rewrite a run the parser made. */
+/** The trailing whitespace as the tokenizer reads it ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)); the narrowing of {@link TRAILING_WHITESPACE}. */
 export const TRAILING_CSS_WHITESPACE = /[ \t\n\r\f]*$/u
 
-/** A hexadecimal escape at the end of a text, the one whitespace character closing it aside — which `postcss-value-parser` hands back as a divider of its own, cutting the name of a call in two. */
+/** A trailing hexadecimal escape, its closing whitespace aside, which `postcss-value-parser` returns as a divider. */
 export const TRAILING_HEX_ESCAPE = /\\[\da-f]{1,6}$/iu
 
-/** The line break a text ends in, where it ends in one. Read by `no-missing-end-of-source-newline`, which asks whether a file has ended its last line, and by `indentation`, which asks the same of the code in front of an embedded stylesheet and of the whitespace behind one. A Windows pair ends in a line feed, so the pair needs no alternative of its own — which is why this answers whether a text ends in a break and never which break that is: matched against `a\r\n` it hands back the line feed alone. */
+/** The break a text ends in: against `a\r\n` the line feed alone, answering whether and never which. */
 export const TRAILING_LINE_BREAK = /\n$/u
 
-/** The spaces a text ends in, tabs and line breaks aside, and the empty run where it ends in none. */
+/** The trailing spaces, the empty run included. */
 export const TRAILING_SPACES = / *$/u
 
-/** The spaces and tabs a line ends in, where it ends in any. */
+/** The trailing spaces and tabs, where there are any. */
 export const TRAILING_SPACES_AND_TABS = /[ \t]+$/u
 
-/** The star or underscore an old hack writes in front of a property, standing at the end of whatever precedes it. */
+/** The star or underscore of an old property hack, at the end. */
 export const TRAILING_STAR_OR_UNDERSCORE = /[*_]$/u
 
-/** The whitespace a text ends in, the empty run included, so that a replacement over it always lands. */
+/** The trailing whitespace, the empty run included, so a replacement always lands. */
 export const TRAILING_WHITESPACE = /\s*$/u
 
-/** The whitespace a text ends in, where it ends in any: a search answers -1 on a text that does not. */
+/** The trailing whitespace, where there is any; a search answers -1 otherwise. */
 export const TRAILING_WHITESPACE_RUN = /\s+$/u
 
-/** The whitespace a text ends in, down to its last line break, which is left standing whole — the carriage return of a Windows pair with it. A bare carriage return and a form feed are whitespace and no break, so they go with the rest; a vertical tab and a no-break space are words to the tokenizer and no whitespace at all (#494); the trailing twin of {@link LEADING_WHITESPACE_WITHOUT_BREAK}. */
+/** The trailing whitespace down to the last break, a Windows pair left whole; a bare carriage return and a form feed go with it, a vertical tab and a no-break space are words ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). The twin of {@link LEADING_WHITESPACE_WITHOUT_BREAK}. */
 export const TRAILING_WHITESPACE_WITHOUT_BREAK = /(?:[ \t\f]|\r(?!\n))+$/u
 
-/** The vendor prefix a name opens with, the `-webkit-` of `-webkit-calc`, in whatever case it is written. */
+/** A leading vendor prefix, any case. */
 export const VENDOR_PREFIX = /^-[a-z]+-/iu
 
-/** A single character of whitespace. */
+/** One whitespace character. */
 export const WHITESPACE = /\s/u
 
-/** A text made of whitespace, and of at least one character of it — whitespace as the tokenizer reads it (#494). */
+/** Tokenizer whitespace only, at least one character ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). */
 export const WHITESPACE_ONLY = /^[ \t\n\r\f]+$/u
 
-/** A text made of whitespace or of nothing at all, whitespace being what PostCSS's tokenizer reads as some: a space, a tab, a line feed, a carriage return or a form feed. A vertical tab and a no-break space are words to it, so a text holding one is no whitespace at all (#494). */
+/** Tokenizer whitespace or nothing; a vertical tab or no-break space is a word ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). */
 export const WHITESPACE_OR_NOTHING = /^[ \t\n\r\f]*$/u
 
-/** A block comment opening a text behind whitespace, of which there must be some. */
+/** A block comment behind some leading whitespace. */
 export const WHITESPACE_THEN_BLOCK_COMMENT = /^\s+\/\*/u
 
-/** An inline comment opening a text behind whitespace, of which there must be some. */
+/** A `//` comment behind some leading whitespace. */
 export const WHITESPACE_THEN_INLINE_COMMENT = /^\s+\/\//u
 
-/** The whitespace a text opens with, short of a line break, where content or the end of the text follows it directly — so a text whose first line break comes before its content matches nothing at all, and the run in front of that break is left to the rule that reads it. The run is read the tokenizer's way, a form feed and a bare carriage return among it, for the reason given at {@link EVERY_LINE_BREAK_AND_INDENT}. */
+/** The leading whitespace short of a break, where content or the end follows directly; nothing where the first break precedes the content. Tokenizer whitespace, as {@link EVERY_LINE_BREAK_AND_INDENT} is. */
 export const WHITESPACE_WITHOUT_BREAK_BEFORE_CONTENT = /^(?:[ \t\f]|\r(?!\n))*(?=\S|$)/u

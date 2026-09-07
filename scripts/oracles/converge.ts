@@ -1,15 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * Asks of every rule, under every primary option it accepts, over every fixture: does `--fix` reach a fixed point, and does what it wrote still parse?
+ * Asks of every rule, primary and fixture whether `--fix` converges and its output parses; `testRule` runs the fixer once and cannot see [#131](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/131), [#196](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/196) or [#239](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/239).
  *
- * A fixer that reports a problem, counts it fixed, and hands the next run the same problem is the shape of #131, #196 and #239. `testRule` cannot see it: it asserts `fixed` once and never runs the fixer twice.
- *
- * Three kinds of row come out:
- *
- * - `broke` — the output of a run does not parse. The worst kind: the file is destroyed.
- * - `not-idempotent` — the second run writes something the first did not. A user who runs the fixer once is left with a file the rule still has something to say about.
- * - `diverges` — the third run writes something the second did not, so nothing bounds it.
+ * Rows: `broke` (no parse), `not-idempotent` (run two wrote) and `diverges` (run three wrote).
  */
 
 import { stdout } from "node:process"
@@ -19,9 +13,9 @@ import { lint } from "../harness/lint.ts"
 import { buildRuns, isUsable, type Run } from "./runs.ts"
 
 /**
- * Names a run, without carrying its configuration into the report.
- * @param run - The run to name.
- * @returns The four fields that identify it.
+ * Names a run without its configuration.
+ * @param run - The rule, primary, syntax and fixture named.
+ * @returns Its four identifying fields.
  */
 function label (run: Run): object {
 	return { rule: run.rule, primary: run.primary, syntaxName: run.syntaxName, name: run.name }
@@ -29,8 +23,8 @@ function label (run: Run): object {
 
 /**
  * Runs the fixer three times over one fixture.
- * @param run - The rule, the option, the syntax and the fixture.
- * @returns The finding, or null where there is none.
+ * @param run - The rule, primary, syntax and fixture probed.
+ * @returns The finding, or null.
  */
 async function probe (run: Run): Promise<object | null> {
 	let history = [run.code]
@@ -40,7 +34,7 @@ async function probe (run: Run): Promise<object | null> {
 		let result
 
 		try {
-			// Each run reads what the one before it wrote, so the three cannot be made at once
+			// Each run reads what the one before wrote
 			// eslint-disable-next-line no-await-in-loop
 			result = await lint({ code: current, config: run.config, fix: true })
 		}

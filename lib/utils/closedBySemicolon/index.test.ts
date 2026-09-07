@@ -69,7 +69,7 @@ describe(`closedBySemicolon`, () => {
 		expect(closed(`a { b: /*c*/ }`, {})).toBe(false)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/536
+	// See #536
 	it(`the file as the rule will leave it, whichever way it stands`, () => {
 		expect(closed(`a { b: }`, { [TRAILING]: `always` })).toBe(true)
 		expect(closed(`a { b: ; }`, { [TRAILING]: `never` })).toBe(false)
@@ -84,7 +84,7 @@ describe(`valueAsClosed`, () => {
 		expect(value(`a { b: }`, { [TRAILING]: `never` })).toBe(``)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/536
+	// See #536
 	it(`the value less the run a live never takes away with the semicolon`, () => {
 		expect(value(`a { b: ; }`, { [TRAILING]: `never` })).toBe(``)
 		expect(value(`a { b:  ; }`, { [TRAILING]: `never` })).toBe(``)

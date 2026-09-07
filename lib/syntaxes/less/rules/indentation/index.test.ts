@@ -63,7 +63,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/237
+			// See #237
 			description: `the same query read as Less`,
 			code: `
 				@media (min-width: 100px
@@ -78,8 +78,7 @@ testRule({
 			message: messages.expected(`0 tabs`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/375
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
+			// See #375 and #510
 			description: `a comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace rather than into a node of its own, indented a level past the block it is a line of`,
 			code: `
 				a {
@@ -98,7 +97,7 @@ testRule({
 			message: messages.expected(`1 tab`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/452
+			// See #452
 			autoStripIndent: false,
 			description: `a stylesheet whose first node stands behind a bare carriage return and a tab, whitespace to the parser and no line`,
 			code: `\r\ta{}`,
@@ -148,7 +147,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/236
+			// See #236
 			description: `a value whose closing line carries the inline comment`,
 			code: `
 				a {
@@ -163,7 +162,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/236
+			// See #236
 			description: `a value continued on the line behind an inline comment`,
 			code: `
 				a {
@@ -182,7 +181,7 @@ testRule({
 			message: messages.expected(`4 spaces`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/236
+			// See #236
 			description: `the closing parenthesis of a function on the line behind an inline comment`,
 			code: `
 				a {
@@ -201,7 +200,7 @@ testRule({
 			message: messages.expected(`2 spaces`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/236
+			// See #236
 			description: `a function's arguments opening on the line behind an inline comment, whose parenthesis the comment must not hide`,
 			code: `
 				a {
@@ -220,7 +219,7 @@ testRule({
 			message: messages.expected(`4 spaces`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/236
+			// See #236
 			description: `a value carrying two inline comments, every line behind one of them measured`,
 			code: `
 				a {
@@ -242,7 +241,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/236
+			// See #236
 			description: `a selector line holding nothing but an inline comment`,
 			code: `
 				x {
@@ -263,7 +262,7 @@ testRule({
 			message: messages.expected(`2 spaces`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/236
+			// See #236
 			description: `an at-rule's parameters continued on the line behind an inline comment`,
 			code: `
 				@media screen // c
@@ -286,7 +285,7 @@ testRule({
 			message: messages.expected(`2 spaces`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/236
+			// See #236
 			description: `a line holding nothing but an inline comment inside a set of parameters`,
 			code: `
 				@media screen,
@@ -316,7 +315,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/236
+			// See #236
 			description: `a value continued on the line behind an inline comment, measured in tabs`,
 			code: `
 				a {
@@ -653,7 +652,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/509
+			// See #509
 			description: `the closing brace of a block whose last statement is a mixin call carrying no semicolon, standing at the level the block does`,
 			code: `
 				a {
@@ -662,7 +661,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
+			// See #510
 			description: `a comment such a call swallowed, standing at the level of the block it is a line of`,
 			code: `
 				a {
@@ -683,7 +682,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
+			// See #510
 			description: `a comment such a call swallowed, indented a level past the block it is a line of`,
 			code: `
 				a {
@@ -702,7 +701,7 @@ testRule({
 			message: messages.expected(`1 tab`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/509
+			// See #509
 			description: `that closing brace indented a level in, the run in front of it standing in the mixin call's whitespace rather than in the block's own`,
 			code: `
 				a {

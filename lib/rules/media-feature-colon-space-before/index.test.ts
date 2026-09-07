@@ -32,12 +32,12 @@ testRule({
 			code: `@custom-selector:--enter :hover;`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/213
+			// See #213
 			description: `a colon inside the arguments of a function belongs to the address and to no media feature`,
 			code: `@media (min-width : url(a:b)) { a { b: c; } }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/215
+			// See #215
 			description: `a media feature standing behind a bare address, whose double slash opens no comment`,
 			code: `@media (min-width : url(http://x)) and (max-width :1px) { a { b: c; } }`,
 		},
@@ -142,7 +142,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/215
+			// See #215
 			description: `a media feature standing behind a bare address, whose double slash opens no comment`,
 			code: `@media (min-width : url(http://x)) and (max-width:1px) { a { b: c; } }`,
 			fixed: `@media (min-width : url(http://x)) and (max-width :1px) { a { b: c; } }`,
@@ -285,14 +285,14 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off with the run.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab in front of the colon, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `@media (a\v: 10px) {}`,
 			fixed: `@media (a\v : 10px) {}`,
@@ -311,7 +311,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab at the run before the colon: only the tokenizer's run goes, and the character stays`,
 			code: `@media (a\v : 10px) {}`,
 			fixed: `@media (a\v: 10px) {}`,

@@ -26,13 +26,13 @@ export let meta = {
 }
 
 /**
- * Requires a single space or disallows whitespace on the inside of the brackets within attribute selectors.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * Requires a single space or disallows whitespace inside attribute selector brackets.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always` and `never`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always` or `never`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
 	return (root, result) => {
@@ -115,9 +115,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			}
 
 			/**
-			 * Reports an attribute brackets space violation.
-			 * @param message - The error message to report.
-			 * @param index - The index of the violation.
+			 * Reports a problem.
+			 * @param message - The warning text to report.
+			 * @param index - The index in the selector copy.
 			 */
 			function complain (message: string, index: number): void {
 				let sourceIndex = copies.toSourceIndex(index)
@@ -136,8 +136,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 	}
 
 	/**
-	 * Fixes the space before an attribute selector.
-	 * @param attributeNode - The attribute node to fix.
+	 * Rewrites the whitespace behind `[`.
+	 * @param attributeNode - The parsed attribute selector whose opening whitespace is rewritten.
 	 */
 	function fixBefore (attributeNode: Attribute): void {
 		let spacesAttribute = attributeNode.raws.spaces && attributeNode.raws.spaces.attribute
@@ -167,8 +167,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 	}
 
 	/**
-	 * Fixes the space after an attribute selector.
-	 * @param attributeNode - The attribute node to fix.
+	 * Rewrites the whitespace in front of `]`.
+	 * @param attributeNode - The parsed attribute selector whose closing whitespace is rewritten.
 	 */
 	function fixAfter (attributeNode: Attribute): void {
 		let key: `insensitive` | `value` | `attribute` = attributeNode.operator ? (attributeNode.insensitive ? `insensitive` : `value`) : `attribute`

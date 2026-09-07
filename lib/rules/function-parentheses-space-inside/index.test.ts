@@ -194,8 +194,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			// See #506 and #508
 			description: `a comment holding a parenthesis between two quotation marks it closes around them: the string those marks open reaches past nothing, so the mask leaves them where they stand and the parenthesis stays the comment's`,
 			code: `a { b: g(1 /*/ "(" */ 2); }`,
 			fixed: `a { b: g( 1 /*/ "(" */ 2 ); }`,
@@ -213,8 +212,8 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			// See #506 and #508
+			// See #508
 			description: `a call holding a comment with one quotation mark and a string behind it: the string the mark of the comment used to open took the parenthesis the file closes the call on, and the rule read nothing of a call the parser never closed`,
 			code: `a { b: g(1 /*/ " */ "1"); }`,
 			fixed: `a { b: g( 1 /*/ " */ "1" ); }`,
@@ -296,7 +295,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/244
+			// See #244
 			description: `form feeds inside the parentheses, which are whitespace and no line break, so the function is single-line and the option asks for a space on the inside`,
 			code: `a { b: fn(\f1px\f); }`,
 			fixed: `a { b: fn( 1px ); }`,
@@ -434,7 +433,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			// See #378
 			description: `a call the value parser closed on a parenthesis standing inside a comment opening with a solidus, a star and a solidus, which is no parenthesis the file writes, so the call is left alone as one closed inside an end-of-line comment is`,
 			code: `a { b: f(1 /*/ ) */ ); }`,
 		},
@@ -615,7 +614,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/225
+			// See #225
 			description: `a double slash of plain CSS opens no comment, so the parenthesis has a line to join and the fix is written`,
 			code: `
 				a {
@@ -633,7 +632,7 @@ testRule({
 			message: messages.rejectedClosing,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/280
+			// See #280
 			description: `a line break in front of the first argument behind a double slash of plain CSS, which spells no comment there: the guard holds nothing back and the whitespace goes`,
 			code: `
 				a {
@@ -651,7 +650,7 @@ testRule({
 			message: messages.rejectedOpening,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/272
+			// See #272
 			description: `a call standing behind a comment the value parser does not give back as it read it`,
 			code: `a { b: x/*/*a*/f( 1 )c; }`,
 			fixed: `a { b: x/*/*a*/f(1)c; }`,
@@ -669,7 +668,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			// See #378
 			description: `a call standing beside a comment opening with a solidus, a star and a solidus, whose text spells a call of its own that the value parser hands back as a call`,
 			code: `a { b: g( 1 ) /*/ f( 1 ) */ 3; }`,
 			fixed: `a { b: g(1) /*/ f( 1 ) */ 3; }`,
@@ -687,7 +686,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			// See #508
 			description: `a call in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no call`,
 			code: `a { b: f( 1 ) /*/ " */ "f( 1 )"; }`,
 			fixed: `a { b: f(1) /*/ " */ "f( 1 )"; }`,
@@ -705,7 +704,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506
+			// See #506
 			description: `the whitespace in front of the closing parenthesis of a call holding a comment opening with a solidus, a star and a solidus, reported at the character in front of the parenthesis as it is for the twin holding a comment of that width the value parser gives back as it read it, rather than a column further on`,
 			code: `a { b: f(2 /*/ c */ ); }`,
 			fixed: `a { b: f(2 /*/ c */); }`,

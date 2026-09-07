@@ -6,15 +6,15 @@ import { MEDIA_QUERY_COMBINATORS } from "../../reference/mediaQueries.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { findFunctionArgumentSpans } from "../findFunctionArgumentSpans/index.ts"
 
-// `styleSearch` tries the targets in the order they are given and reports the first that matches, so the two-character operators stand in front of the one-character ones and `>=` is read whole rather than as a `>` with an `=` behind it
+// Two-character operators first; `styleSearch` takes the first match
 const RANGE_OPERATORS = [`>=`, `<=`, `>`, `<`, `=`]
 
 /**
- * Finds media operator matches in an at-rule and invokes a callback for each.
- * @param syntax - The syntax the rule is built over.
- * @param atRule - The at-rule to search.
- * @param result - The Stylelint result, which the syntax of the file is read from.
- * @param cb - The callback to invoke for each match.
+ * Calls back for every range operator in a `@media` at-rule's params.
+ * @param syntax - The syntax the at-rule's params are read under.
+ * @param atRule - The at-rule.
+ * @param result - The Stylelint result.
+ * @param cb - Called with each match.
  */
 export function findMediaOperator<T extends AtRule> (syntax: Syntax, atRule: T, result: PostcssResult, cb: (match: StyleSearchMatch, params: string, atRule: T) => void): void {
 	if (atRule.name.toLowerCase() !== `media`) return
@@ -22,10 +22,10 @@ export function findMediaOperator<T extends AtRule> (syntax: Syntax, atRule: T, 
 	let params = syntax.read(atRule)
 	let { searchString } = syntax.searchCopy(params, atRule, result)
 
-	// An operator standing inside the arguments of a function belongs to those arguments and to no media feature, so the one in `url(a>=b)` is passed over as a comma there is
+	// An operator inside function arguments is no media feature's
 	let functionArguments = findFunctionArgumentSpans(searchString).filter(({ name }) => !MEDIA_QUERY_COMBINATORS.has(name))
 
-	// The search goes on from the character behind the one a match opened at, so every two-character operator is reported a second time by its second character: the `=` of `>=` matches the `=` target one index later. Where the previous match ended says which readings those are, and it says it of the operator that was read rather than of the character in front of the one being read — a guard asking that character called the whole of `>=` a second reading of the `<` in front of it, and passed the operator over until a later run put a space between the two
+	// The `=` of `>=` matches again a character on and is dropped; reading the character in front instead misread `<>=`
 	let readUpTo = 0
 
 	styleSearch({ source: searchString, target: RANGE_OPERATORS }, (match) => {

@@ -25,32 +25,32 @@ export let meta = {
 	fixable: true,
 }
 
-/** The rule that lays the rows of a grid shorthand out as a table, whose `alignColumns` option makes the runs between the tokens of such a row its own. */
+/** The rule padding a grid shorthand's rows into columns under `alignColumns`, whose runs are then its own. */
 const GRID_ALIGNMENT: { name: string, options: (string | true)[] } = { name: `named-grid-areas-alignment`, options: [true] }
 
 /**
- * Checks if a character is a newline.
- * @param char - The character to check.
- * @returns True if the character is a newline.
+ * Checks whether a character is a newline.
+ * @param char - The character.
+ * @returns True for a newline.
  */
 function isNewline (char: string): boolean {
 	return char === `\n` || char === `\r`
 }
 
 /**
- * Checks if a character is an inline whitespace (not a newline).
- * @param char - The character to check.
- * @returns True if the character is an inline whitespace.
+ * Checks whether a character is inline whitespace.
+ * @param char - The character.
+ * @returns True for whitespace other than a newline.
  */
 function isInlineWhitespace (char: string): boolean {
 	return isWhitespace(char) && !isNewline(char)
 }
 
 /**
- * Checks if a quote at the given position is escaped.
- * @param value - The string value.
- * @param pos - The position of the quote.
- * @returns True if the quote is escaped.
+ * Checks whether the quote at a position is escaped.
+ * @param value - The string.
+ * @param pos - The quote's position.
+ * @returns True where escaped.
  */
 function isEscapedQuote (value: string, pos: number): boolean {
 	let backslashCount = 0
@@ -61,15 +61,13 @@ function isEscapedQuote (value: string, pos: number): boolean {
 }
 
 /**
- * Handles string character processing and updates string state.
- *
- * `skip: true` means the character is inside quotes or is a quote itself, so whitespace checks should be skipped for this character.
- * @param char - The current character.
- * @param inString - Whether currently inside a string.
- * @param stringChar - The quote character of the current string.
- * @param value - The full string value.
- * @param pos - The position of the character.
- * @returns Updated string state.
+ * Tracks whether a character stands inside a string; `skip` is true inside one and on its quotes.
+ * @param char - The character.
+ * @param inString - Whether inside a string.
+ * @param stringChar - The string's quote.
+ * @param value - The whole text the character stands in.
+ * @param pos - The character's position.
+ * @returns The new state.
  */
 function handleStringChar (char: string, inString: boolean, stringChar: string, value: string, pos: number): {
 	inString: boolean,
@@ -92,11 +90,9 @@ function handleStringChar (char: string, inString: boolean, stringChar: string, 
 }
 
 /**
- * Fixes whitespace errors by replacing multiple whitespaces with single ones.
- *
- * The errors are walked in reverse order, so that replacing one never shifts the indices of those still to come.
- * @param value - The original value.
- * @param errors - Array of error positions.
+ * Replaces each run with one space, from the end so no replacement shifts the next.
+ * @param value - The text the runs stand in.
+ * @param errors - The runs.
  * @returns The fixed value.
  */
 function fixWhitespaceErrors (value: string, errors: {
@@ -114,12 +110,12 @@ function fixWhitespaceErrors (value: string, errors: {
 
 /**
  * Disallows multiple whitespaces.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, which is `true`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `true`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: true): RuleCheck {
 	return (root, result) => {
@@ -129,7 +125,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		// The runs between the tokens of a row of a grid shorthand are `named-grid-areas-alignment`'s where the configuration lists it with `alignColumns`: that rule pads them into columns, and a rule collapsing them would take the run in turns with it, on one run of `--fix` and the next (#45). The runs are its own whether its fix is live or not, since a table an author wrote by hand is one that rule reports and this one would otherwise take apart on every run, leaving a warning no run of `--fix` clears. What is read is the option, once per root, and the lines of a declaration only where the option asks
+		// The runs between a grid row's tokens are `named-grid-areas-alignment`'s where it is configured with `alignColumns`: collapsing them would take turns with its padding on each `--fix` (#45). Its fix being live makes no difference, since it reports a hand-written table too
 		let laysTablesOut = neighbourSetting(syntax, result, GRID_ALIGNMENT)?.secondary.alignColumns === true
 
 		root.walkDecls((decl) => {
@@ -147,7 +143,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				count: number,
 			}[] = []
 
-			// Main character iteration to find multiple whitespace errors
+			// Walk the characters for whitespace runs
 			for (let i = 0; i < value.length; i += 1) {
 				let char = value.charAt(i)
 
@@ -166,7 +162,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				}
 
 				if (isInlineWhitespace(char)) {
-					// afterNewline: skip leading whitespace (indentation) after a newline
+					// Indentation behind a newline is left alone
 					if (afterNewline) {
 						while (i < value.length && isInlineWhitespace(value.charAt(i))) i += 1
 						afterNewline = false

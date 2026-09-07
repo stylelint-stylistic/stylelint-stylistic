@@ -29,12 +29,12 @@ const ACCEPTABLE_AFTER_CLOSING_PAREN = new Set([`)`, `,`, `}`, `:`, `/`, undefin
 
 /**
  * Requires or disallows whitespace after functions.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always` and `never`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always` or `never`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
 	return (root, result) => {
@@ -46,15 +46,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		if (!validOptions) return
 
 		/**
-		 * Checks a node for function whitespace after violations.
-		 * @param node - The node to check.
-		 * @param value - The value to check.
-		 * @param searchString - The copy of that value {@link searchCopy} builds, which is as long as it and spells it character for character outside its comments.
-		 * @param nodeIndex - The index of the node.
-		 * @param fix - The fix function.
+		 * Checks every closing parenthesis of a value.
+		 * @param node - The declaration or at-rule the text belongs to.
+		 * @param value - The value or params text, comments in place.
+		 * @param searchString - The {@link searchCopy} of the value, same length, comments blanked.
+		 * @param nodeIndex - The node's index.
+		 * @param fix - The fixer.
 		 */
 		function check (node: Node, value: string, searchString: string, nodeIndex: number, fix: (index: number) => void): void {
-			// The parenthesis a call closes is the one this rule is about, and it is looked for rather than come across: the parentheses of `(@a * 2)px` group an arithmetic expression, and the unit standing behind them belongs to it, so neither option may touch that spelling. A call the text never closes ends at the end of it, where no parenthesis stands and nothing follows to space from. The spans come in the order the text closes them, so the fixer is handed its positions front to back, as it reads them
+			// Only a call's closing `)` is the rule's: `(@a * 2)px` groups an expression, and an unclosed call ends with the text. The spans come in closing order, so the fixer gets its positions front to back
 			for (let { end } of findFunctionArgumentSpans(searchString)) {
 				if (searchString.charAt(end) !== `)`) continue
 
@@ -63,13 +63,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		}
 
 		/**
-		 * Checks a closing parenthesis for whitespace violations.
-		 * @param source - The source string.
-		 * @param searchString - The copy of that string {@link searchCopy} builds, whose comments are blanked out — which is what a sum is looked for in. CSS discards a comment rather than reading it as whitespace, so what makes a sum is the whitespace left standing in front of the operator once the comments are gone; blanking one to spaces reads it as though whitespace stood there, which is the wider question of the two, and a wider one here can only leave a warning unsaid where the fix would have been safe.
-		 * @param index - The index to check.
-		 * @param node - The node with the violation.
-		 * @param nodeIndex - The index of the node.
-		 * @param fix - The fix function.
+		 * Checks the whitespace behind one closing parenthesis.
+		 * @param source - The value or params text the parenthesis stands in.
+		 * @param searchString - The {@link searchCopy} with comments blanked; blanking asks the wider question and can only leave a safe fix unwritten.
+		 * @param index - The index behind the parenthesis.
+		 * @param node - The declaration or at-rule reported.
+		 * @param nodeIndex - The node's index.
+		 * @param fix - The fixer.
 		 */
 		function checkClosingParen (source: string, searchString: string, index: number, node: Node, nodeIndex: number, fix: (index: number) => void): void {
 			let nextChar = source.charAt(index)
@@ -79,7 +79,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let problemIndex = nodeIndex + index
 
 			if (primary === `always`) {
-				// Allow for the next character to be a single empty space, another closing parenthesis, a comma, or the end of the value
+				// A space, a break, a closer, a comma or the end of the value is accepted
 				if (nextChar === ` `) return
 
 				if (nextChar === `\n`) return
@@ -101,7 +101,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				})
 			}
 			else if (primary === `never` && isWhitespace(nextChar)) {
-				// The whitespace in front of a `+` or a `-` that stands as an operator belongs to the sum rather than to the call: it is what makes the sign one, so `a { b: calc(var(--x) + 1px); }` closed up is a calculation no browser reads and a declaration it drops. Which signs stand as operators is what the syntax says: CSS reads `-1px` as a single number token, so a sign opening a number is part of that number and the whitespace in front of it is the call's, while a syntax spelling arithmetic of its own reads that whitespace as the whole of what tells a list of two values from a subtraction
+				// The whitespace in front of an operator is the sum's: `calc(var(--x) + 1px)` closed up is no calculation. To CSS a sign opening a number (`-1px`) is no operator; a syntax with its own arithmetic tells a subtraction from a list by that whitespace alone
 				if ((syntax.spellsOwnArithmetic(node, result) ? LEADING_SPACED_SIGN : LEADING_SPACED_SUM_OPERATOR).test(searchString.slice(index))) return
 
 				report({
@@ -119,9 +119,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		}
 
 		/**
-		 * Creates a fixer function for whitespace violations.
-		 * @param value - The value to fix.
-		 * @returns The fixer object.
+		 * Creates a fixer over a value.
+		 * @param value - The value or params text the fixes are written into.
+		 * @returns The fixer.
 		 */
 		function createFixer (value: string): {
 			applyFix: (index: number) => void,
@@ -132,9 +132,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let lastIndex = 0
 
 			/**
-			 * Applies a fix at the given index.
-			 * @param index - The index to fix at.
-			 * @throws {Error} Throws an error if the primary option is unexpected.
+			 * Applies a fix at an index.
+			 * @param index - The offset just behind a closing parenthesis.
+			 * @throws {Error} On a primary option that is neither `always` nor `never`.
 			 */
 			function applyFix (index: number): void {
 				if (primary === `always`) {

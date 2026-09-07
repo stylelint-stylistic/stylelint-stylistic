@@ -38,7 +38,7 @@ testRule({
 			code: `a {\n background: url("${TEST_URL}");\n}`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566
+			// See #566
 			description: `a long bare address behind a backslash and a form feed, which the grammar reads a newline in, so that the backslash names nothing and the address comes off the line`,
 			code: `a {\n b: \\\furl(somethingsomethingsomething/something.png);\n}`,
 		},
@@ -869,8 +869,8 @@ testRule({
 	],
 })
 
-// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427
-// What comes off a line is the address of every `url()` the file spells, found by the walk that finds the comments of a text. The pattern that used to look for one asked nothing about the name in front of the parenthesis, ran to the last parenthesis of the line, read the three letters of the name as characters rather than as a name, and would not take an address of a single character off at all.
+// See #427
+// The address of every `url()` comes off a line, found by the walk that finds the comments of a text; the pattern it replaced asked nothing about the name in front of the parenthesis, ran to the last parenthesis of the line, matched the three letters inside another name, and took no single-character address off at all.
 testRule({
 	ruleName,
 	config: [30],
@@ -960,7 +960,7 @@ testRule({
 	],
 })
 
-// The reading of a double slash is the file's own syntax's, not the rule's namespace's: what `max-line-length` counts is the text the file spells, where such a comment stands as it was written rather than in the copy a syntax may have rewritten it out of.
+// A double slash is read by the file's own syntax, not the rule's namespace: `max-line-length` counts the text the file spells, not the copy a syntax may have rewritten such a comment out of.
 testRule({
 	ruleName,
 	config: [22],

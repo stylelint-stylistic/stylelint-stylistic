@@ -36,7 +36,7 @@ let core: Syntax = { ...css }
 let refusing: Syntax = { ...css, namespace: `never`, accepts: () => false }
 
 /**
- * Lints a text under the rules given, each registered as a plugin of its own and configured to look for `color`.
+ * Lints a text under the rules, each registered as a plugin of its own and configured to look for `color`.
  * @param rules - The rules, as the factory builds them.
  * @param code - The text.
  * @returns The warnings, by rule and text.
@@ -98,7 +98,7 @@ describe(`a rule built for a syntax`, () => {
 		let check = createRule(asked)(`color`, undefined, {})
 		let root = parse(`a { b: c; }`)
 
-		// The text holds no `color`, so the rule has nothing to report into a result that carries no Stylelint fields
+		// The text holds no `color`, so nothing is reported into a result carrying no Stylelint fields
 		check(root, {} as unknown as PostcssResult)
 
 		expect(seen).toEqual([root])

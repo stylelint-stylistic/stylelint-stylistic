@@ -1,27 +1,21 @@
 /**
- * A comment standing inside a call `function-max-empty-lines` reads, holding empty lines, a parenthesis or the opening of a call of its own, beside the empty lines the call itself holds.
+ * A comment inside a call `function-max-empty-lines` reads, beside the call's own empty lines. Written for [#503](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/503): the rule read a call as one string, so `--fix` collapsed the empty lines inside a comment.
  *
- * Written for #503. The rule used to read a call as one string, comments and all: it counted the runs of line breaks over the whole of that text and rewrote the whole of it, so the empty lines a comment held were the call's to it, and `--fix` collapsed them inside the comment's own text. What a comment is spelled with made no difference, since the text was never asked about its comments at all.
- *
- * The axis the corpus is built on is what the comment holds, which is what no earlier sweep put inside one — `slash-star-slash`, written for #378, put a violation inside a comment beside the same violation as code, and the empty lines it wrote there were the ones the call held all along. Beside that stands where the comment is written and what the call holds of its own, since a call whose own empty lines the rule must still collapse is the other half of the answer, and the spelling of the comment, since a comment opening `/*\/` closes on its own star to `postcss-value-parser` and a double slash opens no comment the parser knows at all.
- *
- * The line breaks are spelled three ways because the fix runs two passes, one for each spelling, and the second reads what the first wrote: a run of the Windows pair around bare feeds is where the two meet. The comment's run and the call's own are spelled apart, so that the pass which finds one is not always the pass which finds the other.
- *
- * The controls are the same text with no comment around it, where the rule reads code and nothing else, and the comment holding nothing a rule or a parser could act on.
+ * The main axis is what the comment holds, which no earlier sweep varied (`slash-star-slash`, [#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378)). The others are where the comment stands, what the call holds, and the comment's spelling: `/*\/` closes on its own star to `postcss-value-parser`, and `//` opens no comment it knows. Breaks are spelled three ways because the fix runs a pass per spelling and the second reads what the first wrote.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** How a run of line breaks long enough to violate either option is spelled: the feed alone, the Windows pair, and the two mixed, which is the run the fix's second pass only ever meets because its first pass wrote it. Read twice over, once for the run the comment holds and once for the run the call holds outside it. */
+/** A run violating either option; the mixed one is what the fix's second pass meets after its first. */
 const RUNS: Record<string, string> = {
 	lf: `\n\n\n`,
 	crlf: `\r\n\r\n\r\n`,
 	mixed: `\r\n\n\n\r\n`,
 }
 
-/** What the comment holds: empty lines of its own, a call holding them, a parenthesis that would close the call the comment stands in, that parenthesis with empty lines behind it, the opening of a call, and text no reader of a value acts on. */
+/** What the comment holds: empty lines, a call holding them, a `)`, a `)` with empty lines behind it, a call opening, and inert text. */
 const TEXTS: Record<string, (run: string) => string> = {
 	emptyLines: (run) => run,
 	callWithEmptyLines: (run) => `g(1,${run}2)`,
@@ -31,7 +25,7 @@ const TEXTS: Record<string, (run: string) => string> = {
 	plainText: () => `x`,
 }
 
-/** How the comment is spelled around its text: the block comment CSS reads, the one opening `/*\/`, which the value parser closes on the star it opened with, the double slash a preprocessor reads and plain CSS does not, and no comment at all, which is the control. */
+/** The comment's spelling; `none` is the control. */
 const SPELLINGS: Record<string, (text: string) => string> = {
 	block: (text) => `/* ${text} */`,
 	slashStarSlash: (text) => `/*/ ${text} */`,
@@ -39,7 +33,7 @@ const SPELLINGS: Record<string, (text: string) => string> = {
 	none: (text) => text,
 }
 
-/** Where the comment stands, and what empty lines the call holds without it: first, last and between the arguments of a call holding none, the same call holding a run in front of the comment, behind it, and on both sides of it, the comment inside a nested call, and the comment outside the call altogether. The run handed here is the call's own, which is spelled apart from the one the comment holds. */
+/** Where the comment stands; the run handed here is the call's own. */
 const PLACES: Record<string, (comment: string, run: string) => string> = {
 	callFirst: (comment) => `a { b: f(${comment} 1, 2); }\n`,
 	callMiddle: (comment) => `a { b: f(1, ${comment} 2); }\n`,
@@ -63,7 +57,7 @@ const corpus: Sweep[`corpus`] = multiply({ place: keysOf(PLACES), spelling: keys
 	return wrap(spell(hold(commentRun)), callRun)
 })
 
-/** The rule under both primary options `scripts/oracles/options.ts` lists for it. */
+/** The rule under both primary options. */
 const configs: Sweep[`configs`] = [0, 1].map((primary) => ({ rule: `function-max-empty-lines`, primary }))
 
 export { configs, corpus, name }

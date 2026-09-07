@@ -1,20 +1,16 @@
-/**
- * Puts the `lib/` of another revision on disk, so that a run can ask a base and a branch in one process.
- *
- * The working tree is never moved for the sake of a run. The directory is extracted once per content — it is named by the hash of the `lib` tree, which a rebase or an amend that touched no file of it leaves as it was — under `tmp/checkouts/`, which the repository ignores.
- */
+/** Puts another revision's `lib/` on disk under `tmp/checkouts/<tree hash>`, once per content, so a run can ask a base and a branch in one process. */
 
 import { execFileSync } from "node:child_process"
 import { existsSync, mkdirSync } from "node:fs"
 import path from "node:path"
 
-/** The root of the repository, whatever directory the run was started from. */
+/** The repository root. */
 const ROOT = execFileSync(`git`, [`rev-parse`, `--show-toplevel`], { encoding: `utf8` }).trim()
 
 /**
- * Hands back the path of a revision's `lib/`, extracting it where it is not on disk yet.
- * @param revision - Anything `git rev-parse` reads, or `worktree` for the working tree as it stands.
- * @returns The absolute path of that `lib/`.
+ * Returns a revision's `lib/` on disk.
+ * @param revision - A `git rev-parse` revision, or `worktree`.
+ * @returns The absolute path.
  */
 function libAt (revision: string): string {
 	if (revision === `worktree`) return path.join(ROOT, `lib`)
@@ -31,14 +27,14 @@ function libAt (revision: string): string {
 }
 
 /**
- * Names the revision a branch is measured against: where it left `origin/main`.
+ * Names the base of a branch: where it left `origin/main`.
  * @returns The commit.
  */
 function defaultBase (): string {
 	return execFileSync(`git`, [`merge-base`, `HEAD`, `origin/main`], { cwd: ROOT, encoding: `utf8` }).trim()
 }
 
-/** The two sides of a comparison: the revision a branch is measured against, and the branch. */
+/** The two sides of a comparison. */
 export type Side = `base` | `head`
 
 export { defaultBase, libAt, ROOT }

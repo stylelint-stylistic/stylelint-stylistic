@@ -186,7 +186,7 @@ describe(`linenessRank`, () => {
 })
 
 describe(`LINENESS_RULES`, () => {
-	// The plugin itself is asked which rules take a primary conditioned on lineness, so that a rule gaining or losing one is caught here rather than left to fall to the table's default. A rule refusing its option is what the answer is read off, and the runner of the oracles answers that as the linter does, since its configuration carries the `validate` flag `validateOptions` opens by reading
+	// The plugin itself is asked which rules take a lineness-conditioned primary, so a rule gaining or losing one is caught here rather than falling to the table's default; a rule refusing its option is what the answer is read off, and the oracle runner answers that as the linter does, its configuration carrying the `validate` flag `validateOptions` opens by reading
 	let plugin = new URL(`../../index.ts`, import.meta.url).pathname
 	let linenessPrimaries = [`always-single-line`, `never-single-line`, `always-multi-line`, `never-multi-line`]
 

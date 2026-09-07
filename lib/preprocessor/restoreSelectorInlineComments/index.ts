@@ -2,12 +2,10 @@ import { findSelectorBlockComments } from "../../utils/findSelectorBlockComments
 import type { InlineComment } from "../findSelectorInlineComments/index.ts"
 
 /**
- * Gives a selector's inline comments their source spelling back, so that a fix written to the raw suits the copy `postcss-scss` prints.
- *
- * A comment is found by the place it stands in among the block comments of the selector, rather than by its text: the same text may stand in a comment of the other kind, or in a quoted attribute value, and rewriting one of those would write code away.
- * @param rawSelector - The selector as the rules write it, block comments and all.
- * @param inlineComments - The inline comments of the selector.
- * @returns The selector spelled the way the source spells it.
+ * Gives a selector's inline comments their source spelling back, so a fix written to the raw suits the copy `postcss-scss` prints. A comment is found by its place among the block comments, not by its text, which may recur elsewhere.
+ * @param rawSelector - The selector as a fix left it, every comment a block one.
+ * @param inlineComments - The `//` comments of the source, each placed by its ordinals.
+ * @returns The selector as the source spells it.
  */
 export function restoreSelectorInlineComments (rawSelector: string, inlineComments: InlineComment[]): string {
 	if (inlineComments.length === 0) return rawSelector
@@ -20,7 +18,7 @@ export function restoreSelectorInlineComments (rawSelector: string, inlineCommen
 		let first = comments[inlineComment.firstOrdinal]
 		let last = comments[inlineComment.lastOrdinal]
 
-		// A selector the fix has left fewer comments in is one this cannot answer for, and the rest of it goes back as it stands.
+		// The fix left fewer comments; the rest goes back as it stands
 		if (!first || !last) break
 
 		spelled += rawSelector.slice(readUpTo, first.start) + inlineComment.value

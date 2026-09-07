@@ -192,7 +192,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab behind the solidus, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `a { grid-area: 1 /\v2; }`,
 			fixed: `a { grid-area: 1 / \v2; }`,
@@ -319,7 +319,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab at the run behind the solidus: only the tokenizer's run goes, and the character stays`,
 			code: `a { grid-area: 1/ \v2; }`,
 			fixed: `a { grid-area: 1/\v2; }`,

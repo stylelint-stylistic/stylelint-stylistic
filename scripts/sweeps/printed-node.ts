@@ -1,19 +1,17 @@
 /**
- * A comment of every spelling, standing wherever a rule that measures a printed node can meet one, in every kind of block and under every syntax.
+ * A comment of every spelling wherever a rule measuring a printed node can meet one, in every block and syntax.
  *
- * Written for #139, where every position counted in `node.toString()` stands as far past its mark as PostCSS's stringifier differs from the one the file was opened with. The positions themselves are `control.ts`'s question — a sweep keeps the text of a warning and not the place of it — so what this corpus is for is the other half: whether a rule that now reads the text the file spells says something it did not say before, and whether `--fix` writes something else. The block-measuring options turn on whether a block is single-line or multi-line, and two characters of a rewritten comment are enough to change that answer rather than the column, so a widening here shows as a warning arriving or leaving and as a fix output moving.
- *
- * The controls carry no comment at all: a corpus in which every block holds one is blind to what the branch does to a block that holds none, and the three utilities it rewrites are called for every statement of every file.
+ * Written for [#139](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/139): a position counted in `node.toString()` is off by as much as PostCSS's stringifier differs from the file's. Positions are `control.ts`'s question; this corpus asks whether the warnings and fixes differ, since the single-line options turn on a block's width. The controls carry no comment, since the rewritten utilities run for every statement.
  */
 
 import { place } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** The comment, in the two spellings of the same width, and the two shapes that carry no comment. A block comment is what the inline one is measured against, since neither the file nor the code around it differs by a character between the two. */
+/** Two comment spellings of one width, and the two shapes without one. */
 const COMMENTS = { inline: `// c`, block: `/**/`, none: ``, twoInline: `// c\n\t// c` }
 
-/** Where the comment stands: behind the value of the last declaration, on a line of its own, behind the opening brace, and behind a semicolon. */
+/** Where the comment stands. */
 const PLACES: Record<string, (comment: string) => string> = {
 	behindValue: (comment) => `a {\n\tcolor: pink ${comment}\n}\n`,
 	ownLine: (comment) => `a {\n\tcolor: pink;\n\t${comment}\n}\n`,
@@ -33,7 +31,7 @@ const PLACES: Record<string, (comment: string) => string> = {
 	emptyBlock: (comment) => `a {${comment}}\n`,
 }
 
-/** The shapes whose printed copy parts from the file for a reason other than a comment: a Less mixin call, whose leading dot and flag live in raws PostCSS prints neither of, and a Sass nested property, a declaration carrying a block that `postcss-scss` prints and PostCSS's own stringifier drops. The detached ruleset and the free semicolon behind a brace are controls: the two stringifiers agree on both, and a corpus in which every shape diverges says nothing about what the change does where none does. Five of them put a bang and a comma on either side of that block and three put a sibling behind it, since a rule reading a declaration's own text has to be measured on one that holds something to read and on one the rule does not pass over: the first draft of this branch handed such a declaration to the bang and comma checkers with the block laid onto the end of it, and every bang and comma the block held came past the checker a second time; the second draft handed it to the `declaration-block-semicolon-*-before` rules the same way, and every fixture that had it standing last in its block was passed over by all four of them before they could say so. */
+/** Shapes whose printed copy parts from the file without a comment: a Less mixin call, whose dot and flag live in raws PostCSS does not print, and a Sass nested property, whose block PostCSS's stringifier drops. The detached ruleset and the free semicolon are controls. The bang, comma and sibling shapes pin two drafts that handed the declaration to the bang, comma and `declaration-block-semicolon-*-before` checkers with the block laid onto its end. */
 const RAW_SHAPES: [string, string][] = [
 	[`raw|lessMixinCall`, `a {\n\t.m()\n}\n`],
 	[`raw|lessMixinCallWithBang`, `a {\n\t.m() !important\n}\n`],
@@ -62,7 +60,7 @@ const corpus: Sweep[`corpus`] = [
 	...RAW_SHAPES,
 ]
 
-/** Every rule this branch rewrites a measurement in, under every primary option `scripts/oracles/options.ts` lists for it. */
+/** Every rule with a rewritten measurement, under every listed primary. */
 const configs: Sweep[`configs`] = ([
 	[`at-rule-semicolon-newline-after`, [`always`]],
 	[`at-rule-semicolon-space-before`, [`always`, `never`]],

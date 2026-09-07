@@ -7,7 +7,7 @@ import { type GridColumn, gridTableLines, spansLinesOutsideRows } from "./index.
 
 /**
  * Reads the table of a value, each token as its text under its column and each gap as its text.
- * @param value - The value.
+ * @param value - A grid shorthand laid out over lines.
  * @returns One entry per line: the tokens and the gaps.
  */
 function tableOf (value: string): { tokens: [GridColumn, string][], gaps: string[] }[] {

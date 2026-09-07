@@ -12,7 +12,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/190
+			// See #190
 			description: `a selector carrying an inline comment, whose fix reaches the copy the file spells, reported in the file's own coordinates`,
 			code: `.a // c\n:not( [ t='y' ] ) {}`,
 			fixed: `.a // c\n:not( [t='y'] ) {}`,

@@ -40,7 +40,7 @@ testRule({
 			code: `a {color: pink;\r\n\r\n}`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/245
+			// See #245
 			description: `two form feeds in front of the brace, which are whitespace and no empty line, so the block stays single-line and is left alone`,
 			code: `a {color: pink;\f\f}`,
 		},
@@ -107,7 +107,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `an empty line in front of the brace of a block an at-rule with neither a block nor a semicolon closes, which the parser files into that at-rule rather than into the block`,
 			code: `
 				a {
@@ -272,7 +272,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `a single break in front of the brace of a block an at-rule with neither a block nor a semicolon closes, which the parser files into that at-rule rather than into the block`,
 			code: `
 				a {
@@ -380,7 +380,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `a single break in front of the brace of a block an at-rule with neither a block nor a semicolon closes, which the parser files into that at-rule rather than into the block`,
 			code: `
 				a {
@@ -566,7 +566,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `an empty line in front of the brace of a block an at-rule with neither a block nor a semicolon closes`,
 			code: `
 				a {
@@ -688,7 +688,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `an empty line in front of the brace of a block an at-rule with neither a block nor a semicolon closes, which the reversed option asks for`,
 			code: `
 				a {
@@ -841,7 +841,7 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `a single break in front of that brace, where the reversed option asks for an empty line`,
 			code: `
 				a {
@@ -926,7 +926,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `a single break in front of the brace of a block an at-rule with neither a block nor a semicolon closes, which the reversed option asks for`,
 			code: `
 				a {
@@ -1053,7 +1053,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `an empty line in front of that brace, which the reversed option asks to go`,
 			code: `
 				a {

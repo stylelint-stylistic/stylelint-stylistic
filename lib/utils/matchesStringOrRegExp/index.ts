@@ -1,8 +1,8 @@
 /**
- * Tests a value against a string, RegExp, or array of strings/RegExps.
- * @param value - The value to test.
- * @param comparison - The comparison value(s).
- * @returns False where nothing matched, or the match, the pattern it was made against and the substring it covers.
+ * Tests a value against each comparison.
+ * @param value - The string tested.
+ * @param comparison - A string, a RegExp, or a list of either to test against.
+ * @returns The match, or false.
  */
 function testAgainstStringOrRegExpOrArray (value: string, comparison: string | RegExp | Array<string | RegExp>): false | {
 	match: string,
@@ -21,24 +21,23 @@ function testAgainstStringOrRegExpOrArray (value: string, comparison: string | R
 }
 
 /**
- * Tests a value against a string or RegExp.
- * @param value - The value to test.
- * @param comparison - The comparison value.
- * @returns False where nothing matched, or the match, the pattern it was made against and the substring it covers.
+ * Tests a value against one comparison.
+ * @param value - The string tested.
+ * @param comparison - A literal string, a RegExp, or a string spelled `/…/`.
+ * @returns The match, or false.
  */
 function testAgainstStringOrRegExp (value: string, comparison: string | RegExp): false | {
 	match: string,
 	pattern: (string | RegExp),
 	substring: string,
 } {
-	// If it's a RegExp, test directly
 	if (comparison instanceof RegExp) {
 		let match = value.match(comparison)
 
 		return match ? { match: value, pattern: comparison, substring: match[0] || `` } : false
 	}
 
-	// Check if it's RegExp in a string
+	// A string spelled `/…/` or `/…/i` is a RegExp
 	let firstComparisonChar = comparison[0]
 	let lastComparisonChar = comparison.at(-1)
 	let secondToLastComparisonChar = comparison.at(-2)
@@ -47,22 +46,20 @@ function testAgainstStringOrRegExp (value: string, comparison: string | RegExp):
 
 	let hasCaseInsensitiveFlag = comparisonIsRegex && lastComparisonChar === `i`
 
-	// If so, create a new RegExp from it
 	if (comparisonIsRegex) {
 		let valueMatch = hasCaseInsensitiveFlag ? value.match(new RegExp(comparison.slice(1, -2), `iu`)) : value.match(new RegExp(comparison.slice(1, -1), `u`))
 
 		return valueMatch ? { match: value, pattern: comparison, substring: valueMatch[0] || `` } : false
 	}
 
-	// Otherwise, it's a string. Do a strict comparison
 	return value === comparison ? { match: value, pattern: comparison, substring: value } : false
 }
 
 /**
- * Compares a string to a second value that, if it fits a certain convention, is converted to a regular expression before the comparison. If it doesn't fit the convention, then two strings are compared. Any strings starting and ending with `/` are interpreted as regular expressions.
- * @param input - The input string or array of strings to test.
- * @param comparison - The comparison value(s).
- * @returns False where nothing matched, or the match, the pattern it was made against and the substring it covers.
+ * Compares a string, or any of several, to a comparison.
+ * @param input - The string or strings.
+ * @param comparison - A string, a RegExp, or a list of either to test against.
+ * @returns The match, or false.
  */
 export function matchesStringOrRegExp (input: string | Array<string>, comparison: string | RegExp | Array<string | RegExp>): false | {
 	match: string,

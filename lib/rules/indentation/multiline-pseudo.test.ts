@@ -39,7 +39,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/74
+			// See #74
 			description: `a multi-line pseudo-class standing second in a selector list`,
 			code: `
 				.foo,
@@ -52,7 +52,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/74
+			// See #74
 			description: `the same pseudo-class standing first`,
 			code: `
 				:where(
@@ -65,7 +65,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/74
+			// See #74
 			description: `the same standing last`,
 			code: `
 				.foo,
@@ -78,7 +78,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/74
+			// See #74
 			description: `nested parentheses inside a pseudo-class of a selector list`,
 			code: `
 				.foo,
@@ -90,7 +90,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/74
+			// See #74
 			description: `a multi-line pseudo-class standing in the middle of a list`,
 			code: `
 				.foo,
@@ -136,7 +136,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/74
+			// See #74
 			description: `a mis-indented multi-line pseudo-class in a selector list`,
 			code: `
 				.foo,
@@ -162,7 +162,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/74
+			// See #74
 			description: `a line inside parentheses another rule opened, level with that rule`,
 			code: `
 				.parent {
@@ -216,7 +216,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/74
+			// See #74
 			description: `a multi-line pseudo-class standing second in a selector list`,
 			code: `
 				.foo,
@@ -229,7 +229,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/237
+			// See #237
 			description: `a closing parenthesis standing alone in the first column, the pseudo-class it closes having been opened in the middle of the line above`,
 			code: `
 				a:not(.foo
@@ -240,7 +240,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/237
+			// See #237
 			description: `that closing parenthesis indented by a tab, which asks for the level of the selector and not for one below it`,
 			code: `
 				a:not(.foo

@@ -9,38 +9,38 @@ let { utils: { report } } = stylelint
 
 export interface ValueListCommaWhitespaceCheckerOptions {
 
-	/** The PostCSS root node. */
+	/** The root. */
 	root: Root,
 
-	/** The Stylelint result. */
+	/** The result. */
 	result: PostcssResult,
 
-	/** The syntax the rule is built over. */
+	/** The syntax. */
 	syntax: Syntax,
 
-	/** The location checker function. */
+	/** Reads the whitespace at an index and reports through `err`. */
 	locationChecker: (opts: {
 		source: string,
 		index: number,
 		err: (msg: string) => void,
 	}) => void,
 
-	/** The name of the rule being checked. */
+	/** The rule's name. */
 	checkedRuleName: string,
 
-	/** The fix function. */
+	/** Fixes the comma at an index. */
 	fix?: ((node: Declaration, index: number) => void),
 
-	/** Tells whether this particular problem can be fixed. The declaration comes with it as the checker has already printed it, so that a rule reading the text in front of the comma need not print it again. */
+	/** Whether a problem can be fixed; the printed declaration comes along. */
 	isFixable?: ((node: Declaration, index: number, declString: string) => boolean),
 
-	/** The index determination function. */
+	/** Moves the index a comma is checked at, or refuses it with `false`. */
 	determineIndex?: ((declString: string, match: StyleSearchMatch) => number | false),
 }
 
 /**
- * Checks whitespace around commas in value lists.
- * @param opts - The options object.
+ * Checks whitespace around the commas of value lists.
+ * @param opts - The options.
  */
 export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceCheckerOptions): void {
 	let { fix } = opts
@@ -68,17 +68,17 @@ export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceC
 	})
 
 	/**
-	 * Checks whitespace around a comma and reports violations.
-	 * @param source - The source string being checked.
-	 * @param index - The index of the comma.
-	 * @param node - The declaration node.
+	 * Checks one comma.
+	 * @param source - The declaration text.
+	 * @param index - The comma's index.
+	 * @param node - The declaration.
 	 */
 	function checkComma (source: string, index: number, node: Declaration): void {
 		opts.locationChecker({
 			source,
 			index,
 			err: (message) => {
-				// A rule may know that this particular problem cannot be fixed without breaking the code. Stylelint counts a fixer as applied whatever it does, so a fixer that declines from the inside takes the warning down with it; the decision has to be made before the report. It is made here rather than in front of the check, so that a declaration whose commas are all in order is not read through once per comma for nothing.
+				// Stylelint counts a fixer as applied whatever it does, so the decision is made before the report; here, not before the check, so a clean declaration is not read once per comma.
 				let isFixable = fix && (!opts.isFixable || opts.isFixable(node, index, source))
 
 				report({

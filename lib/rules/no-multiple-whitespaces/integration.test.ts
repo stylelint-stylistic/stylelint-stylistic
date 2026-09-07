@@ -4,7 +4,7 @@ import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
 
-// The other order of the pair the alignment rule's integration test holds: this rule listed first, the alignment rule behind it. The runs between the tokens of a line of the table are the alignment rule's under `alignColumns` (#45), so this rule passes them over before that rule has written anything, and collapses the run in front of the solidus as before.
+// The other order of the pair the alignment rule's integration test holds, this rule listed first: the runs between the tokens of a line of the table are the alignment rule's under `alignColumns` (#45), so this rule passes them over before that rule has written anything, and collapses the run in front of the solidus as before.
 testRule({
 	ruleName,
 	config: [true],

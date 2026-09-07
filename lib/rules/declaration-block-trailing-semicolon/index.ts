@@ -31,7 +31,7 @@ export let meta = {
 	fixable: true,
 }
 
-/** A raw standing behind the node closing a block: the node holding it, the key it is held under, where it opens in the file and what it holds. */
+/** A raw behind the node closing a block: owner, key, file offset and text. */
 type HeldRaw = {
 	owner: Node,
 	key: string,
@@ -40,9 +40,9 @@ type HeldRaw = {
 }
 
 /**
- * Reads where a node opens and closes in the file, which every node the parser built says of itself.
- * @param node - The node.
- * @returns The two offsets.
+ * Returns a node's start and end offsets.
+ * @param node - The node whose source is read.
+ * @returns The offsets.
  */
 function offsetsOf (node: Node): {
 	start: number,
@@ -56,11 +56,9 @@ function offsetsOf (node: Node): {
 }
 
 /**
- * Names the offset the block ends at.
+ * Returns the offset of the block's closing brace.
  *
- * A container carrying a block of its own ends on its closing brace, and `raws.after` is the text standing in front of that brace. A free semicolon written behind that brace moves the end of the container past it, so the brace is not simply one character back: PostCSS parks such a semicolon in `raws.ownSemicolon`, along with the whitespace in front of it, and sets the container's end to the semicolon's own offset plus the length of that raw. So the semicolon stands the raw's length back from the end, the raw runs back from the semicolon, and the brace stands the raw's length behind the semicolon in turn. `no-extra-semicolons` reads the same raw from its other side.
- *
- * The root of an inline `style` attribute carries no brace at all, so the block of such a root ends where the root itself does. No other root is asked: the two walks turn away every node standing on one, an at-rule of such an attribute included.
+ * A free semicolon behind the brace goes into `raws.ownSemicolon`, and PostCSS ends the container at its offset plus the raw's length, so the brace is twice that length back. An inline `style` root has no brace and ends where the root does.
  * @param container - The container the block belongs to.
  * @returns The offset in the file the block ends at.
  */
@@ -75,13 +73,11 @@ function blockEnd (container: Container): number {
 }
 
 /**
- * Enumerates the raws standing between the node closing the block and the end of that block, in the order the file spells them, each anchored to the offset it begins at.
+ * Returns the raws between the node closing the block and the block's end, in file order, with their start offsets.
  *
- * Only comments can stand behind that node, and between them stand whitespace and semicolons alone, so a semicolon found in one of these raws is code rather than the inside of a comment. That last is the walks' doing rather than the parser's: a comment lands in a `raws.after` wherever an at-rule closes a stylesheet with no semicolon of its own, which is how `postcss-html` hands over the root of an inline `style` attribute whose `@import` a block comment stands behind, and what keeps such a raw away from here is `standsInADeclarationBlock` turning away every at-rule that stands on a root.
- *
- * A comment's `raws.before` is anchored to that comment's own start rather than to the end of whatever stands in front of it, since `postcss-less` ends an inline comment one character short of the text it occupies and a chain of ends would carry that character into every anchor behind it. A raw a node carries none of is left out: PostCSS computes one of its own where a raw is missing, and an empty string written in its place would take that default away.
+ * Only comments follow that node, so a `;` here is code, not comment text. A comment's `raws.before` is anchored to the comment's own start, since `postcss-less` ends an inline comment one character short. A missing raw is skipped, since an empty string would override the PostCSS default.
  * @param node - The node closing the block.
- * @returns The raws, each named by the node holding it and the key it is held under.
+ * @returns The raws, each with its owner and key.
  */
 function rawsBehind (node: ChildNode): HeldRaw[] {
 	let container = node.parent
@@ -104,15 +100,11 @@ function rawsBehind (node: ChildNode): HeldRaw[] {
 }
 
 /**
- * Finds the semicolon the block ends on — the last one standing behind the node that closes it.
+ * Returns the index of the last semicolon behind the node closing the block.
  *
- * The block's `raws.semicolon` speaks of one semicolon alone, the one written straight behind that node's text, and PostCSS parks every further one in a raw: in the `raws.before` of a comment standing behind the node, or in the block's own `raws.after`. So the flag answers whether a semicolon is there and never which one the block ends on, and a rule that takes the last one away has to ask where it stands.
- *
- * The index is counted in the file rather than in the printed copy of the node, and `report` reads it the same way: `positionInside` walks the text of the input, so an index reaching past the end of the node lands on the character the file has there, across a line break as readily as along a line.
- *
- * What the raws are anchored to is the file as it was parsed, so a raw that another rule rewrote earlier in the same `--fix` pass carries this position along by whatever it changed in length. That is #356 seen from the side of the warning rather than of the write: every position this plugin reports is measured against whatever the tree holds at the moment the rule runs, be that a raw, the printed copy of a node or an offset counted in the file, and a neighbour listed ahead has already written.
+ * `raws.semicolon` covers only the semicolon right behind the node; further ones sit in a following comment's `raws.before` or the block's `raws.after`. The index is counted in the file, as `report` reads it, so it may reach past the node's end; a raw another rule rewrote in the same `--fix` pass shifts it ([#356](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/356)).
  * @param node - The node closing the block.
- * @returns The index, counted from the node's own start, or undefined where the block ends on no semicolon.
+ * @returns The index from the node's start, or undefined without a semicolon.
  */
 function trailingSemicolonIndex (node: ChildNode): number | undefined {
 	let { start, end } = offsetsOf(node)
@@ -120,19 +112,17 @@ function trailingSemicolonIndex (node: ChildNode): number | undefined {
 
 	if (holder) return holder.start + holder.text.lastIndexOf(`;`) - start
 
-	// The flag is answered last, and only where no raw holds a semicolon, since the one it speaks of is the first standing behind the node rather than the last. Its position is the end of the node's own span: PostCSS carries that span up to the semicolon closing the node, wherever that semicolon stands — behind a comment the value swallowed as readily as behind the value itself
+	// The flag's semicolon is the first behind the node, so it is asked last; the node's span ends on it
 	return node.parent?.raws.semicolon ? end - 1 - start : undefined
 }
 
 /**
- * Takes every semicolon standing behind the node away, the one the flag speaks of and the ones the raws hold alike, and takes the whitespace in front of the flag's own along with it.
+ * Removes every semicolon behind the node, in the flag and in the raws, and the whitespace in front of the flag's own.
  *
- * Taking one of them alone away would leave the block ending on a semicolon still, and that is what used to happen: the flag's own semicolon went, the raws kept theirs, and the next parse read the first of those as the flag's in its turn. So one run of `--fix` ended clean over a file the rule still had something to say about, and the work needed a second.
- *
- * The whitespace in front of the flag's own semicolon is the end of the node's value, of the raw of its flag or of a bodiless at-rule's `raws.between` — the three texts `writeWhitespaceBeforeSemicolon` writes into — and once the semicolon is gone nothing reads it back, so it goes with the semicolon it stood in front of (#479): the run a `declaration-block-semicolon-*-before` rule wrote there, or the author's own, used to outlive the semicolon whenever that rule was listed first, and the file went with the order. A semicolon parked in a raw behind the node is another matter: what stands in front of it is a comment's layout, and it stays as it is. And where the node's text ends with an inline comment, the whitespace opens with the line break that closes it, so nothing is trimmed there — the rules about that whitespace decline the same node for the same reason, and no order can put a run there for this fix to meet.
+ * Removing the flag's alone left one in a raw, which the next parse read as the flag's. The whitespace outlived the semicolon whenever a `declaration-block-semicolon-*-before` rule was listed first ([#479](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/479)); in front of a semicolon in a raw it is a comment's layout and stays. Behind an inline comment nothing is trimmed.
  * @param syntax - The syntax the rule is built over.
  * @param node - The node closing the block.
- * @param result - The Stylelint result, which holds the syntax the file was opened with.
+ * @param result - The Stylelint result.
  */
 function takeTheTrailingSemicolonsAway (syntax: Syntax, node: AtRule | Declaration, result: PostcssResult): void {
 	let { parent } = node
@@ -147,20 +137,14 @@ function takeTheTrailingSemicolonsAway (syntax: Syntax, node: AtRule | Declarati
 }
 
 /**
- * Asks whether the problem reported over a node can be handed a fix at all.
+ * Asks whether the warning over a node can carry a fix.
  *
- * Under `always` an inline comment ending the node would swallow the semicolon along with the code it was to close. Whichever of the node's texts ends that way is the guard's to know, so the node is handed over whole; which run the write follows is the caller's to say, and it says so with `spelledBetween`.
- *
- * A node carrying a block of its own stands in the way of `always` before that guard is reached at all, since the flag never reaches such a node: the stringifier of `postcss-scss` prints a Sass nested property as its head and its block and drops the semicolon it was handed, exactly as PostCSS drops it for an at-rule carrying a block — which the at-rule walk turns away for that very reason. That syntax is the only one that reads such a declaration; every other reads `font: 12px { … }` as a rule.
- *
- * Under `never` nothing is written, and two other things stand in the way instead. The first is the one semicolon PostCSS keeps writing whatever the flag is set to. The second is the one the language will not part with: Less reads an at-rule carrying no block of its own as running to its semicolon, so taking that semicolon away leaves a file its compiler refuses, whatever the parser makes of the output.
- *
- * Where any of them holds, the option cannot be satisfied over that node at all, and the warning stands over code the fix leaves alone rather than being called fixed over a write that never lands or one that breaks the file.
+ * Under `always`, no for a node with a block (`postcss-scss` drops a Sass nested property's semicolon) and where an inline comment ending the node would swallow the semicolon. Under `never`, no for the semicolon PostCSS writes regardless of the flag and the one Less requires behind a bodiless at-rule. The warning then stands over code the fix leaves alone.
  * @param syntax - The syntax the rule is built over.
  * @param node - The node the semicolon stands behind.
- * @param primary - The primary option.
- * @param spelledBetween - The run that will stand between the node and an `always` write once the fix has run, where that write does not land on the whitespace the node ends with.
- * @param result - The Stylelint result, which holds the syntax the file was opened with.
+ * @param primary - `always` or `never`.
+ * @param spelledBetween - The run between the node and an `always` write, where that write misses the node's trailing whitespace.
+ * @param result - The Stylelint result.
  * @returns True where the fix may be written.
  */
 function isFixable (syntax: Syntax, node: ChildNode, primary: `always` | `never`, spelledBetween: string | undefined, result: PostcssResult): boolean {
@@ -171,13 +155,13 @@ function isFixable (syntax: Syntax, node: ChildNode, primary: `always` | `never`
 
 /**
  * Requires or disallows a trailing semicolon within declaration blocks.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always` and `never`.
+ * @param primary - `always` or `never`.
  * @param secondaryOptions - The secondary options: `ignore`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never`, secondaryOptions: { ignore?: `single-declaration` | `single-declaration`[] }): RuleCheck {
 	return (root, result) => {
@@ -212,7 +196,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		})
 
 		/**
-		 * Checks the last node for trailing semicolon violations.
+		 * Checks the last node of a block.
 		 * @param node - The node to check.
 		 */
 		function checkLastNode (node: AtRule | Declaration): void {
@@ -221,7 +205,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (!parent) throw new Error(`A parent node must be present`)
 
 			let hasSemicolon = parent.raws.semicolon
-			// `never` asks where the block's trailing semicolon stands rather than whether the flag is set, since the flag speaks of one semicolon and the block can end on another. `always` asks the flag, and rightly: what it wants is a semicolon closing the last node, and one standing further behind answers nothing about that
+			// `never` asks for the semicolon's place, since the block can end on one the flag does not cover
 			let trailingSemicolon = primary === `never` ? trailingSemicolonIndex(node) : undefined
 			let ignoreSingleDeclaration = optionsMatches(
 				secondaryOptions,
@@ -229,7 +213,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				`single-declaration`,
 			)
 
-			// A comment is a node of the block and nothing the block is about, so it is walked past from the front here exactly as the two walks above walk past it from the back. Each of those has already said that this node is the last node of the block that is not a comment, so asking whether it is the first such node as well asks whether the block holds any other. Everything else the block holds is counted, a nested rule among the rest
+			// The last non-comment node being the first too means the block holds no other node
 			if (ignoreSingleDeclaration && nextNonCommentNode(parent.first) === node) return
 
 			let message
@@ -237,20 +221,18 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (primary === `always` && !hasSemicolon) message = messages.expected
 			else if (primary === `never` && trailingSemicolon !== undefined) message = messages.rejected
 
-			// Under `never` the warning stands on the semicolon the rule is named for, counted in the file. Under `always` the flag says no semicolon closes the node, so the warning stands at the end of that node, where one is to be written — and that end is measured in the node as the syntax prints it back, which is the copy the file spells rather than the one PostCSS's own stringifier hands over
+			// Under `never` the warning stands on the semicolon; under `always` at the node's end
 			let problemIndex = trailingSemicolon ?? nodeString(node, result).trim().length - 1
 
 			if (message) {
-				// The whitespace is handed over to the block's own final raw, which only the node closing the block stands in front of. Nothing else can stand there today — an unterminated bodiless at-rule swallows whatever follows it into `raws.between`, so it has no sibling to speak of — but that used to be guaranteed by the walk asking for `parent.last`, and the walk now looks past the comments instead
+				// An unterminated bodiless at-rule swallows what follows into `raws.between`, so it has no sibling
 				let bodilessAtRule = isAtRule(node) && !node.next() ? node : undefined
-				// The whitespace before the closing brace is parsed into the at-rule, not into the block
+				// The whitespace before the closing brace is parsed into the at-rule, not the block
 				let between = typeof bodilessAtRule?.raws.between === `string` ? bodilessAtRule.raws.between : ``
 				let beforeWhitespace = between.replace(TRAILING_CSS_WHITESPACE, ``)
-				// The semicolon `always` writes is written finished, with whatever the rules about the whitespace in front of a semicolon ask to stand there, wherever the configuration lists one: Stylelint runs each rule once and in the order the configuration spells them, so a bare semicolon written behind one of those rules is one it never sees, and the block ends up spelling its last semicolon unlike the others until the next run of `--fix` (#354) — or, behind an at-rule, one `at-rule-semicolon-space-before` reports on every run after and has no fixer to put right (#477)
+				// The written semicolon carries the whitespace the `*-semicolon-space-before` rules ask for, since one listed earlier never sees it (#354, #477)
 				let whitespace = message === messages.expected && (isDeclaration(node) || isAtRule(node)) ? whitespaceBeforeSemicolon(syntax, node, result) : ``
-				// Where the semicolon lands is this rule's to say, and there are two places it lands. Behind an at-rule the fix rewrites the raws of, it lands on the trailing whitespace that fix hands over to the block, which is the write the guard reads when it is told nothing at all; the space the fix may put in front of it closes no comment, so the guard's answer is the same with it or without. Behind every other node it lands past the whole printed text: PostCSS writes a declaration as its property, its `between`, its value and the raw of its flag and only then the semicolon, and a bodiless at-rule as its name, its `afterName`, its parameters, its `between` and only then the semicolon. So nothing stands between the node and the write but the whitespace the fix itself puts there, and a line break — the node's own text's, or the fix's — closes the comment ahead of the semicolon instead of swallowing it, while a space does not
-				//
-				// The at-rule half of that second place cannot be reached under `always`: an at-rule keeps its sibling only where a semicolon of its own already stands between the two, which sets the flag this message is missing
+				// Behind a bodiless at-rule the semicolon lands on the whitespace handed to the block, which the guard reads when told nothing; behind any other node only `whitespace` stands between, and a line break in it closes an inline comment
 				let spelledBetween = bodilessAtRule ? undefined : whitespace
 				report({
 					message,
@@ -265,13 +247,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								parent.raws.semicolon = true
 
 								if (bodilessAtRule) {
-									// Hand the trailing whitespace over to the block, so that the comment and the layout survive, and only then put the space in front of the semicolon, so that it stands between the parameters and the semicolon rather than behind the whitespace handed over
+									// The trailing whitespace goes to the block first, so the space lands in front of the semicolon
 									bodilessAtRule.raws.between = beforeWhitespace
 									parent.raws.after = between.slice(beforeWhitespace.length)
 
 									if (whitespace) writeWhitespaceBeforeSemicolon(syntax, bodilessAtRule, whitespace)
 								}
-								// Where the value is nothing but whitespace and no flag follows it, the run in front of the semicolon is the run behind the colon as well, and a colon rule listed ahead may have written its spelling onto the tail of `raws.between` already, where the parser will read it as the value's head on the run after (#50): the semicolon rules read that tail and the value as one run, and so does this write, or the space a colon rule wrote and the space asked for here would stand one behind the other until the next run put them right (#536). Behind a flag the run in front of the semicolon is the end of the flag's raw, and nothing a colon rule writes reaches it
+								// A whitespace-only value shares its run with the colon, and a colon rule listed earlier may have written onto the tail of `raws.between` (#50); that tail and the value are read as one run, as the semicolon rules do (#536)
 								else if (isDeclaration(node) && whitespace && !(!node.important && WHITESPACE_OR_NOTHING.test(syntax.read(node)) && betweenTailAfterColon(syntax, node, result) + syntax.read(node) === whitespace)) writeWhitespaceBeforeSemicolon(syntax, node, whitespace)
 							}
 							else if (primary === `never`) takeTheTrailingSemicolonsAway(syntax, node, result)

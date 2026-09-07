@@ -540,7 +540,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/67
+			// See #67
 			description: `every line of a comment containing an apostrophe`,
 			code: `/* This \n * fix \n * isn't \n * working. \n */`,
 			fixed: `/* This\n * fix\n * isn't\n * working.\n */`,

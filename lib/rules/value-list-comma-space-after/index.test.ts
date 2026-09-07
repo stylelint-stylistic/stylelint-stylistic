@@ -24,7 +24,7 @@ testRule({
 			code: `a { transform: translate(1,1); }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/153
+			// See #153
 			description: `a bare address in front of the comma, whose double slash opens no comment`,
 			code: `a { background: url(http://x/y.png), url(http://x/z.png); }`,
 		},
@@ -185,7 +185,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/153
+			// See #153
 			description: `a comma behind a bare address, whose double slash opens no comment`,
 			code: `a { background: url(http://x/y.png),url(http://x/z.png); }`,
 			fixed: `a { background: url(http://x/y.png), url(http://x/z.png); }`,
@@ -194,7 +194,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/216
+			// See #216
 			description: `a double slash standing in the code of a plain CSS value, which spells no comment`,
 			code: `a { b: a//b,2px; }`,
 			fixed: `a { b: a//b, 2px; }`,
@@ -500,14 +500,14 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off with the run.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, so such a character stays where it used to be carried off with the run.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab behind the comma, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `a { b: x,\vy; }`,
 			fixed: `a { b: x, \vy; }`,
@@ -526,7 +526,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a no-break space behind the run after the comma: only the tokenizer's run goes, and the character stays`,
 			code: `a { b: x, \u00A0y; }`,
 			fixed: `a { b: x,\u00A0y; }`,

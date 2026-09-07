@@ -28,13 +28,13 @@ export let meta = {
 
 /**
  * Requires a newline or disallows whitespace after the commas of media query lists.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always`, `always-multi-line` and `never-multi-line`.
- * @param _secondaryOptions - The secondary options, of which this rule takes none.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always`, `always-multi-line` or `never-multi-line`.
+ * @param _secondaryOptions - Unused.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
@@ -47,7 +47,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		// Only check for the newline after the comma, while allowing arbitrary indentation after the newline
+		// Indentation behind the newline is free
 		let fixData: Map<AtRule, number[]> | undefined
 
 		mediaQueryListCommaWhitespaceChecker({
@@ -79,7 +79,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let beforeComma = params.slice(0, index + 1)
 					let afterComma = params.slice(index + 1)
 
-					// Trim up to the break that already stands there, whichever character it is, and add one only where none does
+					// Trim to the break already there, adding one only where none stands
 					if (primary.startsWith(`always`)) params = OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(afterComma) ? beforeComma + afterComma.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : beforeComma + getLineBreak(syntax, root, result) + afterComma
 					else if (primary.startsWith(`never`)) params = beforeComma + afterComma.replace(LEADING_CSS_WHITESPACE, ``)
 				}

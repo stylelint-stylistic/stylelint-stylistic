@@ -12,8 +12,8 @@ import { assertString } from "../validateTypes/index.ts"
 let { utils: { report } } = stylelint
 
 /**
- * Checks whitespace around commas in media query lists.
- * @param opts - The options object.
+ * Checks whitespace around the commas of media query lists.
+ * @param opts - The options.
  */
 export function mediaQueryListCommaWhitespaceChecker (opts: {
 	root: Root,
@@ -35,7 +35,7 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 		let params = opts.syntax.read(atRule)
 		let { searchString, commentSpans } = opts.syntax.searchCopy(params, atRule, opts.result)
 
-		// A comma standing inside the arguments of a function is a comma of those arguments and of no list: the one in `url(x/a,b.png)` names the file as surely as the letters around it do, and whitespace written beside it would name another file. `valueListCommaWhitespaceChecker` has asked the search itself to pass such a comma over since it was written; the search cannot be asked here, since it reads the parenthesis a set of media parameters opens on as the opening of a call and would pass over the whole of the first query.
+		// A comma inside a function's arguments is not the list's (`url(x/a,b.png)`), but a media feature's parentheses are not a call's
 		let functionArguments = findFunctionArgumentSpans(searchString).filter(({ name }) => !MEDIA_QUERY_COMBINATORS.has(name))
 
 		styleSearch({ source: searchString, target: `,` }, (match) => {
@@ -44,7 +44,7 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 			if (functionArguments.some(({ start, end }) => index >= start && index < end)) return
 
 			if (opts.allowTrailingComments) {
-				// if there is a comment on the same line at after the comma, check the space after the comment. The horizontal whitespace such a comment may stand behind runs up to the first line feed and no further
+				// A block comment on the comma's line moves the check behind it
 				let execResult = LEADING_BLOCK_COMMENT.exec(params.slice(index + 1))
 
 				while (execResult) {
@@ -53,7 +53,7 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 					execResult = LEADING_BLOCK_COMMENT.exec(params.slice(index + 1))
 				}
 
-				// An inline comment standing there ends with its line, whichever break closes it — the spans know which one the syntax reads — and the whitespace checked is the one behind the comment's text
+				// An inline comment ends with its line, on the break the syntax closes it with; the whitespace checked is behind its text
 				execResult = OPENS_WITH_INLINE_COMMENT.exec(params.slice(index + 1))
 
 				if (execResult) {
@@ -69,10 +69,10 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 	})
 
 	/**
-	 * Checks a comma for whitespace violations.
-	 * @param source - The source string.
-	 * @param index - The index to check.
-	 * @param node - The at-rule node.
+	 * Checks one comma.
+	 * @param source - The at-rule's params the comma stands in.
+	 * @param index - The comma's index.
+	 * @param node - The at-rule.
 	 */
 	function checkComma (source: string, index: number, node: AtRule): void {
 		opts.locationChecker({
@@ -80,7 +80,7 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 			index,
 			err: (message) => {
 				let commaIndex = index + atRuleParamIndex(node)
-				// A rule may know that this particular problem cannot be fixed without breaking the code. The question is asked here rather than in front of the check, so that a set of parameters whose commas are all in order is not read through once per comma for nothing.
+				// Asked here, not in front of the check, so parameters in order are not read once per comma
 				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, node))
 
 				report({

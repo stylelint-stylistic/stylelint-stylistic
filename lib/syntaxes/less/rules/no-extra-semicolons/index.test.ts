@@ -23,7 +23,7 @@ testRule({
 			description: `a second semicolon behind each mixin call, which the syntax reads as part of the call`,
 			code: `a { .mixin();; .mixin2;; }`,
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/357
+		// See #357
 		{
 			description: `the semicolon closing the declaration of a detached ruleset in front of a call to it, which the rule passes over`,
 			code: `@dr: { color: red; }; @dr();`,
@@ -39,7 +39,7 @@ testRule({
 			column: 12,
 			message: messages.rejected,
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/357
+		// See #357
 		{
 			description: `that same semicolon in front of an at-rule spelled without a space in front of its options`,
 			code: `@dr: { color: red; }; @import(reference) "x";`,

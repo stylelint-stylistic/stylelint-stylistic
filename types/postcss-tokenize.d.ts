@@ -1,8 +1,8 @@
-// PostCSS and `postcss-scss` export their tokenizers as entry points of their own and ship no declaration for either, so what the plugin reads of them is declared here: the call, and the three fields of a token it reads. A token is an array whose first field names it — `:` for a colon, `word`, `comment`, `brackets` and the rest — with its text behind it. A token that stands somewhere in particular carries the position it opens at third and, where it spans several characters, the one it ends at fourth; a run of whitespace carries neither, and the type spells the fields as far as the one this reads and no further.
+// PostCSS and `postcss-scss` ship their tokenizers with no declaration; what the plugin reads of them is declared here. A token is an array: kind (`word`, `comment`…), text, and the opening index where the token has one; a whitespace run has none.
 declare module "postcss/lib/tokenize" {
 	import type { Input } from "postcss"
 
-	/** One token: what it is, the text it holds, and — on a token that stands somewhere in particular — the index it opens at. */
+	/** Kind, text, and the opening index where there is one. */
 	type Token = [string, string, number?]
 
 	interface Tokenizer {
@@ -16,9 +16,9 @@ declare module "postcss/lib/tokenize" {
 	}
 
 	/**
-	 * Reads a text the way PostCSS's parser reads it.
-	 * @param input - The text, wrapped in PostCSS's `Input`.
-	 * @param [options] - `ignoreErrors` lets an unclosed construct pass rather than throwing.
+	 * Reads a text as PostCSS's parser does.
+	 * @param input - The text.
+	 * @param [options] - `ignoreErrors` passes an unclosed construct.
 	 * @returns The tokenizer.
 	 */
 	function tokenize (input: Input, options?: { ignoreErrors?: boolean }): Tokenizer
@@ -32,9 +32,9 @@ declare module "postcss-scss/lib/scss-tokenize" {
 	import type { Tokenizer } from "postcss/lib/tokenize"
 
 	/**
-	 * Reads a text the way `postcss-scss`'s parser reads it: an inline comment is a token of its own there, and an interpolation is one word.
-	 * @param input - The text, wrapped in PostCSS's `Input`.
-	 * @param [options] - `ignoreErrors` lets an unclosed construct pass rather than throwing.
+	 * As `tokenize`, for `postcss-scss`: a `//` comment is a token, an interpolation one word.
+	 * @param input - The text.
+	 * @param [options] - `ignoreErrors` passes an unclosed construct.
 	 * @returns The tokenizer.
 	 */
 	function scssTokenize (input: Input, options?: { ignoreErrors?: boolean }): Tokenizer

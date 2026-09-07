@@ -24,7 +24,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/139
+			// See #139
 			description: `no space behind a semicolon standing on the line the value's inline comment ends, which this syntax keeps a second copy of`,
 			code: `
 				a { color: red // c

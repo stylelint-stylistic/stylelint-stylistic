@@ -4,12 +4,12 @@ import { hasScssInterpolation } from "../hasScssInterpolation/index.ts"
 import { hasTplInterpolation } from "../hasTplInterpolation/index.ts"
 
 /**
- * Checks whether a string has interpolation.
- * @param string - The string to check.
- * @returns True if the string has interpolation, false otherwise.
+ * Whether a string holds an interpolation of any syntax.
+ * @param string - The text searched for an interpolation.
+ * @returns True where it does.
  */
 export function hasInterpolation (string: string): boolean {
-	// SCSS or Less interpolation
+	// Less, Sass, template or simple-vars
 	if (hasLessInterpolation(string) || hasScssInterpolation(string) || hasTplInterpolation(string) || hasPsvInterpolation(string)) return true
 
 	return false

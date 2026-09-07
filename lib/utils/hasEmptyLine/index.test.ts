@@ -29,7 +29,7 @@ it(`hasEmptyLine`, () => {
 	expect(hasEmptyLine(`\r\n`)).toBe(false)
 	expect(hasEmptyLine(`\n\r\n`)).toBe(true)
 	expect(hasEmptyLine(`\r\n\n`)).toBe(true)
-	// A bare carriage return or a form feed is whitespace and no break, so two of them hold no empty line
+	// A bare carriage return or a form feed is whitespace and no break, so two hold no empty line
 	expect(hasEmptyLine(`\r\r`)).toBe(false)
 	expect(hasEmptyLine(`\f\f`)).toBe(false)
 	expect(hasEmptyLine(`\r\n \t`)).toBe(false)

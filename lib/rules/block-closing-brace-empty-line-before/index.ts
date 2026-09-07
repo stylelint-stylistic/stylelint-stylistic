@@ -33,13 +33,13 @@ export let meta = {
 
 /**
  * Requires or disallows an empty line before the closing brace of blocks.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always-multi-line` and `never`.
- * @param secondaryOptions - The secondary options: `except`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always-multi-line` or `never`.
+ * @param secondaryOptions - `except`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always-multi-line` | `never`, secondaryOptions: { except?: `after-closing-brace` | `after-closing-brace`[] }): RuleCheck {
 	return (root, result) => {
@@ -61,41 +61,35 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		// Check both kinds of statements: rules and at-rules
 		root.walkRules(check)
 		root.walkAtRules(check)
 
 		/**
-		 * Checks a statement for closing brace empty line violations.
-		 * @param statement - The rule or at-rule to check.
+		 * Checks one statement.
+		 * @param statement - The rule or at-rule.
 		 */
 		function check (statement: Rule | AtRule): void {
-			// Return early if blockless or has empty block
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 
-			// Get whitespace after ""}", ignoring extra semicolon
+			// Minus a stray semicolon
 			let before = (getBlockAfter(statement) || ``).replace(SEMICOLON_RUN, ``)
 
-			// Calculate index
 			let statementString = nodeString(statement, result)
 			let index = statementString.length - 1
 
 			if (statementString[index - 1] === `\r`) index -= 1
 
-			// Set expectation
 			let expectEmptyLineBefore = ((): boolean => {
 				let childNodeTypes = statement.nodes.map((item) => item.type)
 
-				// Reverse the primary options if `after-closing-brace` is set
+				// `after-closing-brace` reverses the option for a block with no declaration
 				if (optionsMatches(secondaryOptions, `except`, `after-closing-brace`) && !childNodeTypes.includes(`decl`)) return primary === `never`
 
 				return primary === `always-multi-line` && !isSingleLineString(blockString(statement, result))
 			})()
 
-			// Check for at least one empty line
 			let hasEmptyLineBefore = hasEmptyLine(before)
 
-			// Return if the expectation is met
 			if (expectEmptyLineBefore === hasEmptyLineBefore) return
 
 			let message = expectEmptyLineBefore ? messages.expected : messages.rejected

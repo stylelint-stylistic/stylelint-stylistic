@@ -1,21 +1,19 @@
 import { LEADING_NON_WHITESPACE, TRAILING_SPACES } from "../../regexps.ts"
 import { type CommentSpan, findCommentSpans } from "../findCommentSpans/index.ts"
 
-/** The run a comment takes out of a text when it is removed from it, from the first character taken to the one behind the last. */
+/** The run a comment takes out of a text when removed. */
 export type RemovedRun = {
 	start: number,
 	end: number,
 }
 
 /**
- * Says which runs of a text its comments take with them when they are removed.
+ * Says which runs a text's comments take with them when removed.
  *
- * A comment followed by whitespace, or by nothing at all, goes and takes the spaces in front of it with it: the two runs of whitespace around it would otherwise become one run twice as wide as either, and `f(1px, /*c*\/ 2px)` would be read as holding two spaces behind its comma. Spaces and nothing else, since a rule reading the copy is asking after the whitespace a file spells: a tab in front of the comment stays where it is, so that `f(1px,\t/*c*\/ 2px)` still answers for the tab standing behind its comma, and a line break stays too, being a break of the code rather than of the comment's own.
- *
- * A comment code follows straight away stays where it is, whole. Taking it out would leave the whitespace in front of it standing against that code — `f(1 /*c*\/, 1)` would be read as `f(1 , 1)` and reported for a space that is not there, and the fix that followed would take a space away from the far side of the comment.
- * @param text - The text to read.
- * @param spans - The spans its comments occupy in it, where they are already known.
- * @returns The runs, in the coordinates of the given text, in the order they stand in it.
+ * A comment followed by whitespace or nothing takes the spaces in front of it, or `f(1px, /*c*\/ 2px)` would read as two spaces behind its comma; spaces only, since a tab or a break there belongs to the code. One followed by code stays whole, or `f(1 /*c*\/, 1)` would read as `f(1 , 1)`.
+ * @param text - The text the comments stand in.
+ * @param spans - Its comment spans, where known.
+ * @returns The runs, in order.
  */
 function commentRemovalRuns (text: string, spans: CommentSpan[] = findCommentSpans(text)): RemovedRun[] {
 	let runs: RemovedRun[] = []
@@ -33,12 +31,12 @@ function commentRemovalRuns (text: string, spans: CommentSpan[] = findCommentSpa
 }
 
 /**
- * Takes the comments out of a text, each with whatever it carries off, so that a rule measuring the whitespace of the text does not measure a comment's own.
+ * Takes the comments out of a text, each with what it carries off, so a rule does not measure a comment's whitespace.
  *
- * `functionCommaSpaceChecker` read the same text with a regular expression until [#214](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/214). That expression carried no `g` flag, so only the first comment of a text was ever taken out, and its block-comment branch backtracked: where the `*\/` of one comment was followed by code, the match grew until it found a `*\/` that was followed by whitespace, swallowing everything in between — a comma of the arguments among it. A comment is found by reading the text here, which knows a string from code and cannot be lured across anything.
- * @param text - The text to take the comments out of.
- * @param spans - The spans its comments occupy in it, where they are already known.
- * @returns The text, with every comment and whatever it carries off taken out.
+ * Until [#214](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/214) a regular expression backtracked past a `*\/` followed by code and swallowed a comma.
+ * @param text - The text the comments are taken out of.
+ * @param spans - Its comment spans, where known.
+ * @returns The text without them.
  */
 export function withoutComments (text: string, spans: CommentSpan[] = findCommentSpans(text)): string {
 	let kept = ``
@@ -53,11 +51,11 @@ export function withoutComments (text: string, spans: CommentSpan[] = findCommen
 }
 
 /**
- * Counts the characters the comments of a text take out of the run standing in front of an index, so that a position measured in the text can be measured in the copy the comments were taken out of.
- * @param text - The text the index counts in.
- * @param index - The index in that text.
- * @param spans - The spans its comments occupy in it, where they are already known.
- * @returns The number of characters taken out in front of the index.
+ * Counts the characters the comments take out in front of an index.
+ * @param text - The text the comments stand in.
+ * @param index - The index in it.
+ * @param spans - Its comment spans, where known.
+ * @returns The count.
  */
 export function commentsRemovedBefore (text: string, index: number, spans: CommentSpan[] = findCommentSpans(text)): number {
 	let removed = 0

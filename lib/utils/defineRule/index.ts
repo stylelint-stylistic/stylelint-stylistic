@@ -8,14 +8,14 @@ import type { RuleCheck } from "../ruleCheck/index.ts"
 
 let { utils: { report, ruleMessages } } = stylelint
 
-/** What a rule is handed by the namespace it is registered under: the name a configuration refers to it by, and its messages, each closing with that name. */
+/** What the namespace hands a rule: its name, its messages closing with that name, and the syntax. */
 export type RuleScope<M extends RuleMessages> = {
 	ruleName: string,
 	messages: M,
 	syntax: Syntax,
 }
 
-/** What a rule module defines once, whichever namespaces the rule is then registered under. `defersToRunEnd` marks a rule that reads every line the writers of a run touch — `indentation` — whose check then takes the last turn of the run, behind even the lineness-deferred ones (#353). */
+/** What a rule module defines once, whichever namespaces it is registered under. `defersToRunEnd` marks `indentation`, which reads every line a run's writers touch and so checks last, behind the lineness-deferred rules ([#353](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/353)). */
 export type RuleDefinition<P, S, M extends RuleMessages> = {
 	shortName: string,
 	meta: RuleMeta,
@@ -25,21 +25,21 @@ export type RuleDefinition<P, S, M extends RuleMessages> = {
 }
 
 /**
- * Names the messages of a rule before any rule name closes them, so that `defineRule` can close them under each namespace's name in turn.
- * @param messages - Each message by its key, as `stylelint.utils.ruleMessages` takes them.
- * @returns The same messages, typed as they are written.
+ * Names a rule's messages before a rule name closes them under each namespace.
+ * @param messages - Each message by key.
+ * @returns The same messages, typed as written.
  */
 export function defineMessages<M extends RuleMessages> (messages: M): M {
 	return messages
 }
 
-/** The roots refused already, so that a stylesheet parsed with a syntax the rules of a namespace do not read is answered by one warning rather than by one per rule configured. */
+/** The roots refused already: one warning per stylesheet, not one per rule. */
 let refused: WeakSet<Root> = new WeakSet()
 
 /**
- * Turns what a rule module defines into a factory over a syntax: called with one, it names the rule under the syntax's namespace, closes the messages with that name, and hands both to the rule's own function — and it gates the check the rule returns, so that a root the syntax does not accept is refused in front of the rule rather than read by it.
- * @param definition - The rule's short name, its metadata, its messages before any name closes them, and the function that builds its check.
- * @returns The factory, whose result is what Stylelint's `createPlugin` takes.
+ * Turns a rule definition into a factory over a syntax, which names the rule under the syntax's namespace, closes the messages with that name, and refuses a root the syntax does not accept in front of the rule.
+ * @param definition - The rule's definition.
+ * @returns The factory, whose result `createPlugin` takes.
  */
 export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefinition<P, S, M>): (syntax: Syntax) => Rule<P, S, M> {
 	let { shortName, meta, messages, rule, defersToRunEnd: readsEveryLine } = definition
@@ -55,19 +55,19 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 		})
 
 		/**
-		 * The rule as Stylelint calls it, with its options.
-		 * @param primary - The primary option.
-		 * @param secondaryOptions - The secondary options, where the rule takes any.
-		 * @returns The check, run over every stylesheet the rule is configured for, unless the syntax refuses it.
+		 * The rule as Stylelint calls it.
+		 * @param primary - The configured primary, passed through unread.
+		 * @param secondaryOptions - The configured secondaries, passed through unread.
+		 * @returns The check, unless the syntax refuses the root.
 		 */
 		function scoped (primary: P, secondaryOptions: S): RuleCheck {
 			let check = rule({ ruleName, messages: scopedMessages, syntax }, primary, secondaryOptions)
 			let rank = linenessRank(shortName, syntax.namespace, typeof primary === `string` ? primary : ``)
 
 			/**
-			 * The whole of what the rule does at a turn, the syntax's refusal included, so a deferred rule refuses and reports exactly as an undeferred one would have.
-			 * @param root - The root of the stylesheet.
-			 * @param result - The result to report into.
+			 * What the rule does at a turn, refusal included, so a deferred rule refuses as an undeferred one would.
+			 * @param root - The stylesheet of the turn.
+			 * @param result - The lint result the warnings go into.
 			 */
 			function guarded (root: Root, result: PostcssResult): void {
 				if (syntax.accepts(root, result)) {
@@ -80,7 +80,7 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 
 				refused.add(root)
 
-				// The namespaces that do read the root are what the warning teaches, so a user meeting the refusal knows the names to configure instead
+				// The warning names the namespaces that do read the root
 				let takers = namespaces.filter((namespace) => namespace.accepts(root, result)).map((namespace) => `"@stylistic/${namespace.namespace}/"`).join(` and `)
 
 				report({ message: refusal, messageArgs: [takers], node: root, index: 0, endIndex: 0, result, ruleName })
@@ -89,7 +89,7 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 			return (root, result) => {
 				let last = lastConfiguredPluginRule(result)
 
-				// A lineness-conditioned check waits for the run's writers (#355), and one that reads every line waits for everything, the lineness-deferred writes included (#353) — either only where a flush is sure to come: a run whose configuration the plugin cannot read runs the check where it stands. The place a deferred check takes among the others is the plugin's to decide rather than the configuration's (#502)
+				// Deferred (#355 lineness, #353 every line) only where a flush is sure to come: under a configuration the plugin cannot read the check runs where it stands. Its place is the plugin's to decide, not the configuration's (#502)
 				if (readsEveryLine && last !== undefined) deferFinalCheck(root, rank, () => guarded(root, result))
 				else if (defersToRunEnd(primary) && last !== undefined) deferCheck(root, rank, () => guarded(root, result))
 				else guarded(root, result)

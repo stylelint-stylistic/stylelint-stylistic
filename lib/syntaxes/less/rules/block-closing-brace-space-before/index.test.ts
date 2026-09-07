@@ -60,7 +60,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `a block a mixin call with no semicolon of its own closes, the break in front of the brace parsed into that call`,
 			code: `
 				a {
@@ -153,7 +153,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+			// See #292
 			description: `a block a mixin call with no semicolon of its own closes, the break in front of the brace parsed into that call`,
 			code: `
 				a {
@@ -187,7 +187,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/398
+			// See #398
 			description: `a call named with an ASCII word in front of the three letters of an address, whose double slashes open a comment the brace has nowhere to go past`,
 			code: `a { b: aurl(http://a/b.png) 1px; }`,
 			fixed: `a { b: aurl(http://a/b.png) 1px; }`,
@@ -228,7 +228,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566
+			// See #566
 			description: `an address behind a backslash and a form feed, which the grammar reads a newline in, so that the backslash spells nothing and names nothing, and the address takes the brace`,
 			code: `a { b: \\\furl(http://a/b.png) 1px; }`,
 			fixed: `a { b: \\\furl(http://a/b.png) 1px;}`,
@@ -245,7 +245,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/333
+			// See #333
 			description: `a form feed inside an inline comment, which is whitespace and no line break, so the brace stands in the comment's text and the block is left alone`,
 			code: `a { b: 1px // c\f\t2px; }`,
 			fixed: `a { b: 1px // c\f\t2px; }`,

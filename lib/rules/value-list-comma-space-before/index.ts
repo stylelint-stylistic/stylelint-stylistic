@@ -28,12 +28,12 @@ export let meta = {
 
 /**
  * Requires a single space or disallows whitespace before the commas of value lists.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always`, `never`, `always-single-line` and `never-single-line`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always`, `never`, `always-single-line` or `never-single-line`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line`): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
@@ -54,9 +54,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
-			// Stylelint counts a fixer as applied whatever it does, so a rule that cannot repair a problem has to say so here rather than from inside the fixer. Two of them are such, and the comma has to clear both.
-			// A comma standing before the value belongs to the property name, and nothing this rule could write would reach it.
-			// A comma standing behind an inline comment cannot be moved either: the comma goes right after the whitespace the fix writes, and the line break that whitespace holds is what closes the comment, so either option would take the comma, and everything the declaration has left, into the comment's text.
+			// Refused before the report: a comma in front of the value is the property name's, and one behind a `//` comment is closed by the break either option removes
 			isFixable: (declNode, index, declString) => index >= declarationValueIndex(declNode) && !syntax.endsWithInlineComment(declString.slice(0, index), syntax.inlineComments(declNode, result)),
 			fix: (declNode, index) => {
 				fixData = fixData || (new Map())
@@ -70,11 +68,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (fixData) {
 			for (let [decl, commaIndices] of fixData.entries()) {
-				// The commas are written from the back of the declaration forward, so that a fix never moves the text a later one is counted in. The comma opening the value is the one that moves `declarationValueIndex`, and being the first of them it is written last.
+				// Back to front: the comma opening the value moves `declarationValueIndex`, so it is written last
 				for (let index of commaIndices.toSorted((a, b) => b - a)) {
 					let valueIndex = index - declarationValueIndex(decl)
 
-					// The whitespace in front of a comma opening the value is none of the value's: it is the text standing between the colon and the value, which `raws.between` holds, and no write to the value could reach it. It is also the text `declarationValueIndex` counts, so the positions already reported are counted in it as it was.
+					// Before a comma opening the value the whitespace is `raws.between`'s
 					if (valueIndex === 0) {
 						let between = decl.raws.between || `:`
 

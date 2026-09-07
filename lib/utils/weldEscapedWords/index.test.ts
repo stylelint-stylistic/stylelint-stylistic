@@ -26,7 +26,7 @@ function weldedNodesOf (value: string): unknown[] {
 }
 
 it(`weldEscapedWords`, () => {
-	// A word ending in an escape open to the whitespace behind it, that one character, and a word are one word standing where the first did and ending where the last does
+	// A word ending in an escape open to the whitespace behind it, that one character and the next word are one word, spanning from the first to the last
 	expect(weldedNodesOf(`10px\\9 2PX`)).toEqual([[`word`, `10px\\9 2PX`, 0, 10]])
 	expect(weldedNodesOf(`10P\\61 X`)).toEqual([[`word`, `10P\\61 X`, 0, 8]])
 	expect(weldedNodesOf(`10px\\9\t2PX`)).toEqual([[`word`, `10px\\9\t2PX`, 0, 10]])

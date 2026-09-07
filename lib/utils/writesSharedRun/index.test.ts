@@ -73,7 +73,7 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { --b: }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `never` }, COLON_NEWLINE)).toBe(false)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/590
+	// See #590
 	it(`a block comment behind a head run holding a break, which a space or nothing written over the run puts on the colon's line, where the newline rule reads the run behind the comment instead`, () => {
 		expect(ask(`a { b:\n/*c*/\nx; }`, { [COLON_SPACE]: `always`, [COLON_NEWLINE]: `always-multi-line` }, COLON_SPACE)).toBe(true)
 		expect(ask(`a { b:\n/*c*/\nx; }`, { [COLON_SPACE]: `never`, [COLON_NEWLINE]: `always-multi-line` }, COLON_SPACE)).toBe(true)
@@ -81,7 +81,7 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { --b:\n/*c\n*/ ; }`, { [COLON_SPACE]: `always`, [COLON_NEWLINE]: `always-multi-line` }, COLON_SPACE)).toBe(true)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/590
+	// See #590
 	it(`the same comment where the asking rule's check waits for the run's end and the newline rule ahead was content with the break, which the write takes off the head run — the break the newline rule then writes behind the comment is its own, on the run after`, () => {
 		expect(ask(`a { b:\n/*c*/ x; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `always-single-line` }, COLON_SPACE)).toBe(true)
 	})
@@ -118,20 +118,20 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { --b:  ; }`, { [SEMICOLON_SPACE]: `never`, [COLON_SPACE]: `always` }, SEMICOLON_SPACE)).toBe(true)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/627
+	// See #627
 	it(`the tail behind a comment on the colon's line of a custom property, which the never option of the semicolon space rule reports like any other run, so that a newline rule deferred behind it — the colon's, or the semicolon's own — is freed by that warning`, () => {
 		expect(ask(`a { --b: /*c\n*/ ; }`, { [SEMICOLON_SPACE]: `never`, [COLON_NEWLINE]: `always-multi-line` }, COLON_NEWLINE)).toBe(true)
 		expect(ask(`a { --b: /*c\n*/ ; }`, { [COLON_NEWLINE]: `always-multi-line`, [SEMICOLON_SPACE]: `never` }, COLON_NEWLINE)).toBe(true)
 		expect(ask(`a { --b: /*c\n*/ ; }`, { [SEMICOLON_SPACE]: `never`, [SEMICOLON_NEWLINE]: `always-multi-line` }, SEMICOLON_NEWLINE)).toBe(true)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/627
+	// See #627
 	it(`the same tail in a block over several lines, which the never option of the semicolon newline rule reports like any other run, so the space rule ahead of it does not write the space the newline rule would report`, () => {
 		expect(ask(`a {\n\tb: /*c*/\n;\n}`, { [SEMICOLON_SPACE]: `always`, [SEMICOLON_NEWLINE]: `never-multi-line` }, SEMICOLON_SPACE)).toBe(false)
 		expect(ask(`a {\n\tb:\n;\n}`, { [SEMICOLON_SPACE]: `always`, [SEMICOLON_NEWLINE]: `never-multi-line` }, SEMICOLON_SPACE)).toBe(true)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/627
+	// See #627
 	it(`a run of two spaces or a tab, which no option accepts, so a rule ahead that speaks of it has reported it and frees the deferred rule behind`, () => {
 		expect(ask(`a {\n\tb: /*c*/  ;\n}`, { [SEMICOLON_SPACE]: `always`, [SEMICOLON_NEWLINE]: `never-multi-line` }, SEMICOLON_NEWLINE)).toBe(true)
 		expect(ask(`a {\n\t--b:\t;\n}`, { [SEMICOLON_SPACE]: `never`, [SEMICOLON_NEWLINE]: `always-multi-line` }, SEMICOLON_NEWLINE)).toBe(true)
@@ -303,7 +303,7 @@ function ask (code: string, rules: Record<string, unknown>, ruleName: string, sy
 }
 
 /**
- * Parses a stylesheet and picks the last declaration of its first node — that node itself where the stylesheet holds a declaration at its top level.
+ * Parses a stylesheet and picks the last declaration of its first node, or that node where it is a top-level declaration.
  * @param code - The stylesheet.
  * @returns The declaration.
  */

@@ -32,17 +32,17 @@ testRule({
 			code: `@custom-selector :--enter :hover;`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/213
+			// See #213
 			description: `a colon inside the arguments of a function belongs to the address and to no media feature`,
 			code: `@media (min-width: url(a :b)) { a { b: c; } }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/215
+			// See #215
 			description: `a media feature standing behind a bare address, whose double slash opens no comment`,
 			code: `@media (min-width: url(http://x)) and (max-width: 1px) { a { b: c; } }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/252
+			// See #252
 			description: `the arguments of a call whose name closes on a hyphen, which are a call's rather than a feature's however the colon inside them is spaced`,
 			code: `@media a-(max-width:600px) {}`,
 		},
@@ -58,7 +58,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/230
+			// See #230
 			description: `the same feature behind a hyphen, which names no call and so leaves the parentheses a feature's rather than a call's arguments`,
 			code: `@media -(max-width:600px) {}`,
 			fixed: `@media -(max-width: 600px) {}`,
@@ -67,7 +67,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/252
+			// See #252
 			description: `the same feature behind a run opening on a digit and carrying a character outside ASCII, which is a dimension in front of a parenthesis and names no call either`,
 			code: `@media 2日e(max-width:600px) {}`,
 			fixed: `@media 2日e(max-width: 600px) {}`,
@@ -190,7 +190,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/213
+			// See #213
 			description: `a feature written without the space its grammar asks for is a feature all the same, and the word joining it names no function`,
 			code: `@media screen and(min-width:1px) { a { b: c; } }`,
 			fixed: `@media screen and(min-width: 1px) { a { b: c; } }`,
@@ -199,7 +199,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566
+			// See #566
 			description: `the same feature behind a backslash and a form feed, which the grammar reads a newline in, so that the backslash names nothing and the word is the one joining a feature`,
 			code: `@media \\\fand(min-width:1px) { a { b: c; } }`,
 			fixed: `@media \\\fand(min-width: 1px) { a { b: c; } }`,
@@ -208,7 +208,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/215
+			// See #215
 			description: `a media feature standing behind a bare address, whose double slash opens no comment`,
 			code: `@media (min-width: url(http://x)) and (max-width:1px) { a { b: c; } }`,
 			fixed: `@media (min-width: url(http://x)) and (max-width: 1px) { a { b: c; } }`,
@@ -217,7 +217,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/216
+			// See #216
 			description: `a bare address inside a call the plugin knows nothing of: plain CSS spells no comment with a double slash, so the feature behind it is read`,
 			code: `@media (min-width:myurl(//a)) and (max-width:2px) { a { b: c; } }`,
 			fixed: `@media (min-width: myurl(//a)) and (max-width: 2px) { a { b: c; } }`,
@@ -365,14 +365,14 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off with the run.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab behind the colon, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `@media (a:\v10px) {}`,
 			fixed: `@media (a: \v10px) {}`,
@@ -391,7 +391,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab behind the run after the colon: only the tokenizer's run goes, and the character stays`,
 			code: `@media (a: \v10px) {}`,
 			fixed: `@media (a:\v10px) {}`,

@@ -12,7 +12,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/271
+			// See #271
 			description: `a fraction with no leading zero standing in the text of an inline comment the value holds`,
 			code: `
 				a { b: 0.5px // .5px
@@ -20,7 +20,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/271
+			// See #271
 			description: `a fraction with no leading zero standing in the text of an inline comment a set of media parameters holds`,
 			code: `
 				@media (min-width: 1px // .5px
@@ -47,18 +47,17 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/344
-			// Sass compiles every spelling of the name to a plain address, and `lightningcss` reads one in every spelling too, so what stands inside the parentheses is a URL and nothing a rule may write to.
+			// Sass and `lightningcss` read every spelling of the name as `url`, so what stands inside the parentheses is an address and nothing a rule may write to. See #344
 			description: `a leading zero inside an address whose name an escape spells`,
 			code: `a { b: u\\rl(0.5px); }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/344
+			// See #344
 			description: `the same zero inside an address whose name a hexadecimal escape spells, which the value parser hands the rule as a word and a call of two letters`,
 			code: `a { b: \\75 rl(0.5px); }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/271
+			// See #271
 			description: `a leading zero standing in the text of an inline comment a set of media parameters holds`,
 			code: `
 				@media (min-width: 1px // 0.5px
@@ -66,7 +65,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/271
+			// See #271
 			description: `an address opened in the text of an inline comment and reaching past the break that closes it, which the rule passes over as it passes over every address`,
 			code: `
 				a { b: 1px // url(
@@ -77,7 +76,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/271
+			// See #271
 			description: `a leading zero a line below an inline comment, gathered by a call the parser opened inside that comment's text: the call is left alone and what it gathered is read where it stands`,
 			code: `
 				a { b: f(0.5px // c) calc(
@@ -101,7 +100,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/271
+			// See #271
 			description: `a leading zero on either side of an inline comment whose text holds one as well`,
 			code: `
 				a { b: 0.5px // 0.5px
@@ -132,8 +131,7 @@ testRule({
 			column: 7,
 			message: messages.rejected,
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/268
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/268
+		// See #268 and #268
 		{
 			description: `a leading zero in a value the raw of which ends in an end-of-line comment and a line break`,
 			code: `

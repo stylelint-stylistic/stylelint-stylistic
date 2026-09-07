@@ -48,7 +48,7 @@ testRule({
 			code: `a { background:\n  url(data:application/font-woff;...); }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/371
+			// See #371
 			description: `a break behind the colon, in front of a value that is nothing but a flag`,
 			code: `a { color:\n!important; }`,
 		},
@@ -61,12 +61,12 @@ testRule({
 			code: `a { color:\n; }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/408
+			// See #408
 			description: `a data URI behind whitespace wide enough to have carried the walk past the URI's own colon`,
 			code: `a { background  :\n        url(data:x); }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/499
+			// See #499
 			description: `a comment holding a colon of its own on the line behind the colon, whose break is where it is asked for`,
 			code: `a { b:\n/*x:y*/ red; }`,
 		},
@@ -75,28 +75,28 @@ testRule({
 			code: `a { b /*x:y*/ /*z:w*/:\n red; }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			// See #387
 			description: `a declaration printing nothing behind its colon, whose run the block's own raw holds and opens on a break`,
 			code: `a { color:\n }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			// See #387
 			description: `the same declaration with a comment written behind it, whose run that comment's raw holds`,
 			code: `a { color:\n /*comment*/ }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			// See #537
 			description: `a declaration standing last at the top level of a stylesheet, whose run behind the colon is the tail of the file`,
 			code: `color:${S}`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			// See #537
 			autoStripIndent: false,
 			description: `the same declaration whose tail is the break the file ends on`,
 			code: `color:\n`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			// See #537
 			description: `the same declaration with no tail at all, the file ending at the colon`,
 			code: `color:`,
 		},
@@ -192,7 +192,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/371
+			// See #371
 			description: `a space behind the colon, in front of a value that is nothing but a flag`,
 			code: `a { color: !important; }`,
 			fixed: `a { color:\n !important; }`,
@@ -225,7 +225,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/400
+			// See #400
 			description: `a comment opened as \`/*/\`, whose own solidus is no end of it, in front of a value with a word of its own`,
 			code: `a { color: /*/ c */pink; }`,
 			fixed: `a { color: /*/ c */\npink; }`,
@@ -242,7 +242,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/408
+			// See #408
 			description: `the same wide whitespace with no break in it: the declaration's own colon is reported and the URI's is not`,
 			code: `a { background  :        url(data:x); }`,
 			fixed: `a { background  :\n        url(data:x); }`,
@@ -251,7 +251,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/421
+			// See #421
 			description: `a property spelling a colon of its own, escaped, in front of a value opening on a comment: the break goes behind the comment rather than into its text`,
 			code: `a { b\\:c:/*c*/pink; }`,
 			fixed: `a { b\\:c:/*c*/\npink; }`,
@@ -260,7 +260,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/388
+			// See #388
 			description: `a comment holding a colon of its own in front of the declaration's, with two spaces behind that one`,
 			code: `a { b/*x:y*/:  x; }`,
 			fixed: `a { b/*x:y*/:\n  x; }`,
@@ -317,7 +317,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			// See #387
 			description: `a declaration printing nothing behind its colon, whose space the block's own raw holds`,
 			code: `a { color: }`,
 			fixed: `a { color:\n }`,
@@ -326,7 +326,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			// See #387
 			description: `the same declaration with a comment written behind it, whose two spaces that comment's raw holds`,
 			code: `a { color:  /*comment*/ }`,
 			fixed: `a { color:\n  /*comment*/ }`,
@@ -335,7 +335,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			// See #387
 			description: `a space in front of the break of such a run, which is what the fix trims rather than writing a second break in front of`,
 			code: `a { color: \n}`,
 			fixed: `a { color:\n}`,
@@ -344,7 +344,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			// See #387
 			description: `the same trailing space where a comment written behind the declaration holds the run`,
 			code: `a { color: \n /*comment*/ }`,
 			fixed: `a { color:\n /*comment*/ }`,
@@ -353,7 +353,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537
+			// See #537
 			description: `a declaration standing at the top level of a stylesheet with a comment written behind it, whose space that comment's raw holds`,
 			code: `color:${S}/*comment*/`,
 			fixed: `color:\n${S}/*comment*/`,
@@ -370,7 +370,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/196
+			// See #196
 			description: `a form feed after the colon, which is whitespace and no line break, so the value is single-line and none of this option's business`,
 			code: `a { color:\fpink }`,
 		},
@@ -416,7 +416,7 @@ testRule({
 			code: `a { color\r\n:  pink }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/371
+			// See #371
 			description: `a break behind the colon of a multi-line declaration whose value holds no word of its own`,
 			code: `a { color:\n/*comment*/\t!important; }`,
 		},
@@ -429,7 +429,7 @@ testRule({
 			code: `a { b:\n/*x:y*/ red\n blue; }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/389
+			// See #389
 			description: `a value broken between the comment in front of its word and the word, whose break stands behind the comment, where this option asks for it`,
 			code: `a { color:  /*c*/\nx; }`,
 		},
@@ -457,7 +457,7 @@ testRule({
 			message: messages.expectedAfterMultiLine(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/389
+			// See #389
 			description: `a value broken between the comment in front of its word and the word, with a space between the comment and the break`,
 			code: `a { color:  /*c*/ \nx; }`,
 			fixed: `a { color:  /*c*/\nx; }`,

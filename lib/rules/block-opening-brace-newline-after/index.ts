@@ -33,16 +33,14 @@ export let meta = {
 }
 
 /**
- * Asks whether the `never-multi-line` fix would take the node it checks into an inline comment.
+ * Asks whether the `never-multi-line` fix would take the checked node into an inline comment.
  *
- * That fix takes every line break out of the whitespace standing in front of each node of the run the block opens with, from the first one up to the node being checked, so every node of that run is asked rather than the last alone: a block comment standing between an inline one and the declaration is carried into the inline comment along with everything behind it, and the declaration with it.
- *
- * Each node of the run is asked about the text standing behind it, since the break taken away is the one the whitespace in front of the node that follows opens with. The opening brace is asked about nothing: the only whitespace it stands behind is the one in front of the first node, and a brace inside an inline comment opens no block at all, so taking that break away can comment nothing out.
- * @param syntax - The syntax the rule is built over.
- * @param statement - The statement whose block the run stands at the head of.
- * @param nodeToCheck - The first node of the block that is not a comment, which the run ends in front of.
- * @param result - The Stylelint result, which holds the syntax the file was opened with.
- * @returns True where any node of that run leaves an inline comment open behind it.
+ * The fix takes every line break out of the whitespace in front of each node of the run up to the checked node, so each node of the run is asked about the text behind it; a block comment between an inline one and the declaration is carried into the inline comment. The brace is asked about nothing, since a brace inside an inline comment opens no block.
+ * @param syntax - The syntax asked about each node of the run.
+ * @param statement - The rule or at-rule whose block is checked.
+ * @param nodeToCheck - The first non-comment node of the block.
+ * @param result - The Stylelint result.
+ * @returns True where a node of the run leaves an inline comment open.
  */
 function fixWouldCommentOutTheBlock (syntax: Syntax, statement: Rule | AtRule, nodeToCheck: Node, result: PostcssResult): boolean {
 	for (let node = statement.first; node && node !== nodeToCheck; node = node.next()) {
@@ -54,13 +52,13 @@ function fixWouldCommentOutTheBlock (syntax: Syntax, statement: Rule | AtRule, n
 
 /**
  * Requires a newline after the opening brace of blocks.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always`, `always-multi-line` and `never-multi-line`.
- * @param secondaryOptions - The secondary options: `ignore`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always`, `always-multi-line` or `never-multi-line`.
+ * @param secondaryOptions - `ignore`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, secondaryOptions: { ignore?: `rules` | `rules`[] }): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
@@ -84,34 +82,30 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		// Check both kinds of statement: rules and at-rules
 		if (!optionsMatches(secondaryOptions, `ignore`, `rules`)) root.walkRules(check)
 
 		root.walkAtRules(check)
 
 		/**
-		 * Checks a statement for opening brace newline violations.
-		 * @param statement - The rule or at-rule to check.
+		 * Checks the opening brace of one statement.
+		 * @param statement - The rule or at-rule.
 		 */
 		function check (statement: Rule | AtRule): void {
-			// Return early if blockless or has an empty block
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 
 			let backupCommentNextBefores = (new Map())
 
 			/**
-			 * Carries the line break standing in front of a comment onto the node behind it.
+			 * Carries the line break in front of a comment onto the node behind it.
 			 *
-			 * The check reads the whitespace in front of the node it is handed, and a comment standing at the head of the block is allowed to hold the break the option asks for. So the break in front of such a comment is moved onto the node the walk steps to, and the whitespace standing there in its place is filed in a map, which the fix reads back and the check restores from once it is done. A block holding nothing but comments is the one path reaching neither restore, and what this carried stays written there; that is #410, and the recursion this write was lifted out of left it standing just the same.
-			 *
-			 * Over a run of comments the move chains: each step reads what the step before it wrote, so a break standing anywhere inside the run reaches the node the run ends in front of, and a run holding none carries nothing. That is what lets a run of comments read as the one end-of-line comment the option allows.
-			 * @param comment - The comment the walk stepped over.
-			 * @param nextNode - The node standing behind that comment.
+			 * A comment at the head of the block may hold the break the option asks for, so its break is moved onto the next node, and the whitespace it replaces is filed in a map the fix reads back and the check restores from; a block of comments alone reaches neither restore, and the carried break stays written ([#410](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/410)). Over a run of comments the move chains.
+			 * @param comment - The comment stepped over.
+			 * @param nextNode - The node behind it.
 			 */
 			function carryBreakPastComment (comment: Node, nextNode: Node | undefined): void {
 				if (!nextNode) return
 
-				// A line break is what PostCSS reads as one: a line feed, with or without the carriage return of a Windows pair in front of it
+				// PostCSS reads a line feed as a break, with or without a carriage return in front
 				if (!LINE_BREAK.test(comment.raws.before || ``) || LINE_BREAK.test(nextNode.raws.before || ``)) return
 
 				backupCommentNextBefores.set(nextNode, nextNode.raws.before)
@@ -124,7 +118,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (!nodeToCheck) return
 
 			let problemIndex = beforeBlockString(statement, result, { noRawBefore: true }).length + 1
-			// The line break the `never-multi-line` fix takes away is the one that closes an inline comment standing in front of it, so taking it away would put the rest of the block inside that comment's text, and the declarations it holds out of the stylesheet altogether. Nothing can be written there, so the block is left alone and the warning stands. The `always` options are in no such danger, since the break they keep or write is what closes such a comment anyway — and nothing arrives at that half of the question here: an inline comment is closed by a break, so the whitespace in front of the node behind it always opens with one, and these options never report such a block at all. It is written for the symmetry with `declaration-block-semicolon-newline-after`, where the same short-circuit is reached and pinned
+			// Taking away the break closing an inline comment would put the rest of the block inside it, so the `never-multi-line` warning stands unfixed there. The `always` options never report such a block; the short-circuit mirrors `declaration-block-semicolon-newline-after`, where it is reached and pinned
 			let isFixable = primary.startsWith(`always`) || !fixWouldCommentOutTheBlock(syntax, statement, nodeToCheck, result)
 
 			checker.afterOneOnly({
@@ -146,7 +140,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								if (typeof nodeToCheckRaws.before !== `string`) return
 
 								if (primary.startsWith(`always`)) {
-									// Trim up to the break that already stands there, whichever character it is, and add one only where none does
+									// Trim to the break already there, or add one
 									let index = nodeToCheckRaws.before.search(LINE_BREAK)
 
 									nodeToCheckRaws.before = index >= 0 ? nodeToCheckRaws.before.slice(index) : getLineBreak(syntax, root, result) + nodeToCheckRaws.before
@@ -157,12 +151,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								}
 
 								if (primary === `never-multi-line`) {
-									// Restore the `before` of the node next to the comment node.
+									// Restore the carried breaks
 									for (let [node, before] of backupCommentNextBefores.entries()) node.raws.before = before
 
 									backupCommentNextBefores.clear()
 
-									// Fix
 									let fixTarget = statement.first
 
 									while (fixTarget) {
@@ -185,7 +178,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				},
 			})
 
-			// Restore the `before` of the node next to the comment node.
+			// Restore the carried breaks
 			for (let [node, before] of backupCommentNextBefores.entries()) node.raws.before = before
 		}
 	}

@@ -31,7 +31,7 @@ testRule({
 	ruleName,
 	config: [2],
 
-	// The library's declaration names a string alone, while it hands whatever it is given on to Stylelint, which takes a syntax object as readily as a package name
+	// The library's declaration names a string alone, but it hands whatever it is given to Stylelint, which takes a syntax object as readily as a package name
 	customSyntax: {
 		parse,
 		stringify,
@@ -47,7 +47,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/594
+			// See #594
 			description: `the same rule closing its block on the declaration's line, which leaves the rule's own line the one standing at the root's level`,
 			code: `
 				.foo {

@@ -25,12 +25,12 @@ export let meta = {
 
 /**
  * Requires a single space or disallows whitespace before the range operator in media features.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always` and `never`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always` or `never`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
@@ -49,7 +49,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			findMediaOperator(syntax, atRule, result, (match, params, node) => {
 				let problemIndex = match.startIndex - 1 + atRuleParamIndex(node)
 
-				// The extra `+ 1` is because the match itself contains the character before the operator
+				// The match holds the character in front of the operator too
 				checker.before({
 					source: params,
 					index: match.startIndex,

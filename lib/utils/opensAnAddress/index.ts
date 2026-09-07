@@ -4,13 +4,11 @@ import { HEX_ESCAPE_TERMINATOR, TRAILING_HEX_ESCAPE } from "../../regexps.ts"
 import { namesAnAddress } from "../namesAnAddress/index.ts"
 
 /**
- * The name a call of a value parse was made by, as the file spells it, with the parts `postcss-value-parser` handed back separately put together again.
- *
- * CSS closes a hexadecimal escape with one whitespace character belonging to the escape rather than to the text, and that parser reads no escape: it takes the whitespace for a divider and hands `\75 rl(a)` back as a word, a space and a call named `rl`. So the name is gathered by walking back over every pair of one such closing character and a word ending in such an escape — `\61 \75 rl(` gathers to `\61 \75 rl`, which spells `aurl` and names no address, while `a \75 rl(` stops at the space behind `a`, the word in front of it ending in no escape and being a value of its own.
+ * The name of a call as the file spells it. The parser takes the whitespace closing a hexadecimal escape for a divider and returns `\75 rl(a)` as a word, a space and a call named `rl`; the walk back joins every such pair.
  * @param valueNode - The call.
- * @param index - Where the call stands among its siblings.
- * @param siblings - The nodes the call stands among.
- * @returns The name, escapes unresolved and in the case the file writes it.
+ * @param index - Its index among its siblings.
+ * @param siblings - The nodes of the value the call stands among.
+ * @returns The name, escapes unresolved, in the file's case.
  */
 function readName (valueNode: Node, index: number, siblings: Node[]): string {
 	let name = valueNode.value
@@ -29,15 +27,11 @@ function readName (valueNode: Node, index: number, siblings: Node[]): string {
 }
 
 /**
- * Asks whether a node of a value parse opens a `url()`, whichever of the spellings CSS gives that name the file is written in.
- *
- * A rule reading a value has to know an address from an ordinary call, since what an address holds is a URL and not a list of arguments: its commas, its units, its numbers and its colours are the address's own. The name is read here rather than matched against the four characters `url(`, so that `u\rl(`, `\75 rl(` and `URL(` are the token `url(` is — which is what Sass compiles all of them to, and what `lightningcss` reads in all of them.
- *
- * The reading cuts both ways, and the second way is the sharper one: the whitespace closing a hexadecimal escape belongs to the escape rather than to the text, so it welds the name to whatever stands in front of it. `\61 url(` names one call, `aurl`, and `lightningcss` compiles it to `aurl(…)`; the parser hands that call back named `url` alone, and a reader matching the four characters takes it for an address and passes over everything it holds.
- * @param valueNode - The node to ask about.
- * @param index - Where the node stands among its siblings.
- * @param siblings - The nodes the node stands among.
- * @returns True where the node is a call opening an address.
+ * Asks whether a node of a value parse opens a `url()` in any spelling, since an address's commas, units and numbers are its own. The name is read, not matched against `url(`: `u\rl(`, `\75 rl(` and `URL(` count, as Sass and `lightningcss` read them, and `\61 url(`, one call named `aurl` which the parser returns as `url`, does not.
+ * @param valueNode - The value parser node asked about.
+ * @param index - Its index among its siblings.
+ * @param siblings - The nodes of the value the node stands among.
+ * @returns True where the node opens an address.
  */
 export function opensAnAddress (valueNode: Node, index: number, siblings: Node[]): boolean {
 	return valueNode.type === `function` && namesAnAddress(readName(valueNode, index, siblings))

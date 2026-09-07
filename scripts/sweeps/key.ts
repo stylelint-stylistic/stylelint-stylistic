@@ -1,7 +1,7 @@
 /**
- * Names what a side of a sweep result depends on, which is what the store keys it by.
+ * The inputs a side of a sweep result depends on; the store keys it by them.
  *
- * It stands apart from `run.ts` so that it can be asked: that file runs a sweep as it is imported — it reads `argv`, imports the module it was handed and measures both sides — and a suite cannot put a question to it. Nothing here is an input of its own, and that is no gap of the kind #553 was: this module measures no row, it only names the inputs, so a change to it that moves an answer moves the set or the values of those names and thereby the key itself. Anything that measures a row belongs in `run.ts`, which the key carries.
+ * Kept apart from `run.ts`, which runs a sweep on import. Not an input of its own (unlike the [#553](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/553) gap): it measures no row, so a change here moves the key.
  */
 
 import path from "node:path"
@@ -10,10 +10,10 @@ import { hashAt, hashSourcesAt } from "../harness/cache.ts"
 import { ROOT } from "../harness/checkout.ts"
 
 /**
- * Names the inputs a result of one sweep over one side depends on.
+ * The inputs a result of one sweep over one side depends on.
  * @param sweepFile - The absolute path of the sweep module.
  * @param revision - The side, as `treeOf` reads it.
- * @returns The six inputs, in the order they stand in the key, which is part of it: the hashes Git keeps of the sweep module and of the runner that measures every row of it, the hashes `hashSourcesAt` takes of the sources of `lib/`, of `scripts/oracles`, whose corpus and option list a sweep may import, and of `scripts/harness`, and the hash of the lock file. Only `lib/` is taken at the side; the scripts and the corpus are always the working tree's, so that the two sides are asked the same question. The tree of `lib/` is no input of the key and stands in the meta instead, under the `lib` this name gives up; `measuredTreeOf` says why.
+ * @returns The sweep module, the runner, `lib/` sources, `scripts/oracles`, `scripts/harness` and the lock file. Only `lib/` is taken at the side; its tree is in the meta (`measuredTreeOf`).
  */
 function inputsOf (sweepFile: string, revision: string): Record<string, string> {
 	return { sweep: hashAt(`worktree`, path.relative(ROOT, sweepFile)), runner: hashAt(`worktree`, `scripts/sweeps/run.ts`), libSources: hashSourcesAt(revision, `lib`), oracles: hashSourcesAt(`worktree`, `scripts/oracles`), harness: hashSourcesAt(`worktree`, `scripts/harness`), lock: hashAt(`worktree`, `pnpm-lock.yaml`) }

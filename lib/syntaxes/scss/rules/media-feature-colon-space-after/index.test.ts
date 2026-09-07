@@ -12,7 +12,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/213
+			// See #213
 			description: `a feature standing behind an interpolated query, which names no function and opens no call`,
 			code: `@media #{$q}(min-width:1px) { a { b: c; } }`,
 			fixed: `@media #{$q}(min-width: 1px) { a { b: c; } }`,
@@ -21,7 +21,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/115
+			// See #115
 			description: `the fix reaches the copy of the parameters this syntax prints, and the inline comment keeps its spelling`,
 			code: `
 				@media (min-width:1px) and // c

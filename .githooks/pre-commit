@@ -34,7 +34,7 @@ if [ -z "$changed_files" ]
 then exit 0
 fi
 
-# The checks read the commit rather than the working tree, and they read it from a copy of their own. So the working tree is never moved: whatever becomes of this hook, a session's uncommitted work is out of its reach, and nothing at all is shared with the commit running in the next worktree. `git stash` used to do that job, and its stack is one per repository — two commits at once took each other's entries, which is [#518](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/518).
+# The checks read the commit rather than the working tree, and they read it from a copy of their own. So the working tree is never moved: whatever becomes of this hook, a session's uncommitted work is out of its reach, and nothing at all is shared with the commit running in the next worktree. `git stash` used to do that job, and its stack is one per repository — two commits at once took each other's entries, which is #518.
 work=$(mktemp -d)
 
 trap 'rm -rf "$work"' EXIT

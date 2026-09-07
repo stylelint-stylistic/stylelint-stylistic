@@ -26,13 +26,13 @@ export let meta = {
 }
 
 /**
- * Enforces lowercase or uppercase case for hex color values.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * Enforces lowercase or uppercase hex colors.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `lower` and `upper`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `lower` or `upper`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `lower` | `upper`): RuleCheck {
 	return (root, result) => {
@@ -47,20 +47,20 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (!CONTAINS_HEX_COLOR.test(decl.value)) return
 
 			let declValue = syntax.read(decl)
-			// Every comment the value holds, both kinds. A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind, so what such a comment holds comes back as ordinary words and calls; a block comment reaches the walk as a node of its own — except one opening `/*/`, which the parser closes on the star it opened with, handing the rest of its text back the same way (#378)
+			// Both kinds: the value parser returns a `//` comment's text as nodes and closes `/*/` on its own star (#378)
 			let comments = syntax.commentSpans(declValue, decl, result)
-			// The value is parsed in a copy of itself with every quotation mark its comments leave open masked, so that the parser pairs the marks the value spells the way the file pairs them (#508)
+			// Masked so the parser pairs quotation marks as the file does (#508)
 			let parsedValue = valueParser(hideQuotesInComments(declValue, comments))
-			// What a fix changed, and nothing else: the value is edited at the positions the fixes name rather than printed anew from the parsed tree, since `postcss-value-parser` does not always give back the text it was handed — a comment opening `/*/` comes back as `/**/` — and a fix made anywhere in such a value would rewrite a comment standing elsewhere in it
+			// Edited by position rather than printed from the tree, which gives `/*/` back as `/**/`
 			let edits: Edit[] = []
 
 			parsedValue.walk((node, at, siblings) => {
 				let { value } = node
 
-				// A call opening an address holds a URL and no arguments of its own, so it is passed over whole. The name is read rather than matched against four characters, so that `u\rl(`, `\75 rl(` and `URL(` are the token `url(` is here as they are to the scan that finds the comments — and to Sass, and to `lightningcss`.
+				// An address is passed over whole; its name is read, not matched, so `u\rl(` and `URL(` are `url(` here as to the comment scan and Sass
 				if (opensAnAddress(node, at, siblings)) return false
 
-				// A node standing in the text of a comment is no node of the value: leave it alone. What it holds is still walked, and every node of that asked the same question, since a call opened inside such a comment reaches past the break or the delimiter that closes it and the code it gathers there is code the file spells. An address is passed over first, since the scan that finds the comments steps over one only where it reads it as code: an `url()` opened in a comment's text is a node of that comment holding an address that reaches past the comment's end, and what stands there is nothing this rule may read.
+				// Not the value's, but its children are walked: a call opened in a comment reaches past its end into code. The address check comes first since the scan steps over one only where it is code
 				if (findCommentSpanHolding(node, comments)) return
 
 				if (!isHexColor(node)) return
@@ -80,7 +80,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					result,
 					ruleName,
 					fix () {
-						// A hex colour is a word, and the text a word node stands in is its own value: the span is as long as the value the parser read, which is what the expected spelling replaces
+						// A word node's span is its value's length
 						edits.push({ start: node.sourceIndex, end: node.sourceIndex + value.length, text: expected })
 					},
 				})
@@ -92,9 +92,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 }
 
 /**
- * Checks if a node is a hex color value.
- * @param node - The value parser node to check.
- * @returns True if the node is a hex color, false otherwise.
+ * Asks whether a node is a hex color.
+ * @param node - The value parser node.
+ * @returns True for a hex color word.
  */
 function isHexColor (node: Node): boolean {
 	let { type, value } = node

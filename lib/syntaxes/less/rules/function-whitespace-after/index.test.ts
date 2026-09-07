@@ -12,7 +12,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/225
+			// See #225
 			description: `a parenthesis standing in the text of a comment this syntax does spell is no parenthesis of the value`,
 			code: `
 				a {
@@ -22,7 +22,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/230
+			// See #230
 			description: `a calculation closing in front of a unit, whose parentheses group the expression the unit belongs to and open no call`,
 			code: `h1 { width: (@a * 2)px; }`,
 		},
@@ -35,12 +35,12 @@ testRule({
 			code: `a { b: translate((@a * 2)px); }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/230
+			// See #230
 			description: `the options of an import, standing in parentheses that open no call and abutting the address behind them`,
 			code: `@import (reference)"foo.less";`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/230
+			// See #230
 			description: `the same calculation negated, whose hyphen names no call and leaves the parenthesis a group's`,
 			code: `h1 { width: -(@a * 2)px; }`,
 		},
@@ -60,7 +60,7 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/225
+			// See #225
 			description: `an unquoted address, whose double slash the scan that finds the calls would read as a comment opening whatever the syntax spells, were the masking not standing over it`,
 			code: `a { b: url(http://x/y.png)red; }`,
 			fixed: `a { b: url(http://x/y.png) red; }`,
@@ -69,7 +69,7 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/252
+			// See #252
 			description: `the format call of this syntax, whose name is an operator rather than an identifier`,
 			code: `a { b: %("%dpx", @a)red; }`,
 			fixed: `a { b: %("%dpx", @a) red; }`,
@@ -94,12 +94,12 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/257
+			// See #257
 			description: `the arithmetic of this syntax, whose sum is spelled the way a calculation spells one`,
 			code: `a { b: foo(@a) + 2px; }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/264
+			// See #264
 			description: `the same arithmetic with the sign opening the number behind it, whose whitespace is the whole of what keeps the two values two`,
 			code: `a { b: foo(@a) -2px; }`,
 		},
@@ -127,7 +127,7 @@ testRule({
 			code: `@import url(example.css) -1px;`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/230
+			// See #230
 			description: `a calculation closing in front of a space and a unit, which are the two values the author wrote and not one`,
 			code: `h1 { width: (@a * 2) px; }`,
 		},
@@ -136,12 +136,12 @@ testRule({
 			code: `h1 { max-height: ((@line-height) * (@lines-to-show)) em; }`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/230
+			// See #230
 			description: `the options of an import, standing in parentheses that open no call and spaced from the address behind them`,
 			code: `@import (reference) "foo.less";`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/230
+			// See #230
 			description: `the same two values with the calculation negated, whose hyphen names no call`,
 			code: `h1 { width: -(@a * 2) px; }`,
 		},
@@ -149,7 +149,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/230
+			// See #230
 			description: `a call spaced from the group behind it, whose own parenthesis is read while the group's is not`,
 			code: `a { b: translate(1px) (@a * 2)px; }`,
 			fixed: `a { b: translate(1px)(@a * 2)px; }`,
@@ -158,7 +158,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/264
+			// See #264
 			description: `a call in front of the operator of a product, which this syntax reads whether whitespace stands beside it or not`,
 			code: `a { b: foo(@a) * 2px; }`,
 			fixed: `a { b: foo(@a)* 2px; }`,

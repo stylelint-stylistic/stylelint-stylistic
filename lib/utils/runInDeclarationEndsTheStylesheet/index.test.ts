@@ -34,7 +34,7 @@ function declarationOf (code: string, index: number = 0): Declaration {
  * Asks whether the whitespace one declaration of a stylesheet prints behind its colon is the text that stylesheet ends on.
  * @param code - The stylesheet.
  * @param [index] - Which declaration of it to ask about, the first by default.
- * @returns True where the declaration prints a run of whitespace behind its colon and the stylesheet ends on it.
+ * @returns True where the stylesheet ends on that run.
  */
 function endsTheStylesheet (code: string, index?: number): boolean {
 	return runInDeclarationEndsTheStylesheet(css, declarationOf(code, index), RESULT)

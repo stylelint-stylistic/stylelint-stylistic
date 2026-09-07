@@ -3,10 +3,10 @@ import type { Node as ValueNode } from "postcss-value-parser"
 import { LEADING_CSS_WHITESPACE, LEADING_CSS_WORD, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 
 /**
- * Cuts a stretch `postcss-value-parser` called whitespace into the runs and the words PostCSS's tokenizer reads in it.
- * @param text - The stretch, spelled as the file spells it.
- * @param sourceIndex - Where the stretch begins, counted in the value the file spells.
- * @returns One node per run and per word, each at the position the file spells it at.
+ * Cuts a value-parser whitespace stretch into the tokenizer's runs and words.
+ * @param text - The stretch.
+ * @param sourceIndex - Its start in the value.
+ * @returns One node per run and per word.
  */
 function splitSpaceValue (text: string, sourceIndex: number): ValueNode[] {
 	let pieces: ValueNode[] = []
@@ -33,10 +33,10 @@ function splitSpaceValue (text: string, sourceIndex: number): ValueNode[] {
 }
 
 /**
- * Splits every whitespace node of a function at the characters PostCSS's tokenizer reads as words.
+ * Splits a function's whitespace nodes at the characters the tokenizer reads as words.
  *
- * `postcss-value-parser` counts a vertical tab as whitespace where the tokenizer counts only a space, a tab, a line feed, a carriage return and a form feed, so a stretch holding one came back as a single space node, and every walk of this rule read the character as part of the run beside a parenthesis — the `never-multi-line` fixes then emptied it out of the file in silence (#496). Such a character is a word of the value: a space node holding one is cut into the runs and the words the tokenizer reads, and a function's own `before` and `after` keep only the run touching their parenthesis, the rest joining the nodes. Every walk of the rule then ends where the tokenizer's run does, with nothing asked of the walks themselves, and the printed text is the same characters at the same positions throughout.
- * @param nodes - The nodes of a parsed value; every function among them is rewritten in place, however deep.
+ * `postcss-value-parser` counts a vertical tab as whitespace and the tokenizer does not, so the `never-multi-line` fixes emptied a stretch holding one ([#496](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496)). Such a node is cut into the tokenizer's runs and words; `before` and `after` keep only the run touching the parenthesis.
+ * @param nodes - A parsed value; every function is rewritten in place.
  */
 export function splitSpaceNodesAtWords (nodes: ValueNode[]): void {
 	for (let node of nodes) {

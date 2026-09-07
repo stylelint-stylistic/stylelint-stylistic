@@ -1,13 +1,11 @@
 #!/usr/bin/env node
 
 /**
- * Remembers the state of the tree `make verify` came back green over, and answers whether it has come back green over this one.
+ * Records the tree `make verify` came back green over, and answers whether it has for this one: `make verify` records on its way out and the `pre-push` hook asks first. A record is a file named by the tree hash under the oracles' store, outside every working tree.
  *
- * A run is a minute, and it answers about the tree and about nothing else, so a state already answered for is not asked about twice: `make verify` records here on its way out and the `pre-push` hook asks here first, so a run made by hand a moment before the push is the run the hook finds. A record is a file named by the hash of the tree, under the store the oracles keep their results in — outside every working tree, so a rebase that lands the same tree in another worktree finds it too.
+ * The hash is taken before the checks and again as they finish (`tree`); where the two differ nothing is recorded, since the checks read neither state whole.
  *
- * The hash is taken twice, which is what `tree` is for: once before the checks start and once as they finish. A session goes on editing while a run of a minute goes by, and a record written from the tree as it stands at the end would name a state no check ever read. Where the two hashes differ nothing is recorded at all, since the checks then read neither state whole.
- *
- * `tree` prints the hash, `record <hash>` writes a record where the tree still stands at that hash, and `check` exits 0 where a record stands and 1 where none does.
+ * `tree` prints the hash, `record <hash>` writes a record where the tree still stands at it, and `check` exits 0 where a record stands and 1 where none does.
  */
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs"

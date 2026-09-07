@@ -32,12 +32,12 @@ export let meta = {
 
 /**
  * Requires or disallows whitespace after the opening brace of blocks.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
- * @param primary - The primary option, one of `always`, `never`, `always-single-line`, `never-single-line`, `always-multi-line` and `never-multi-line`.
- * @param secondaryOptions - The secondary options: `ignore`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
+ * @param primary - `always`, `never`, or a `-single-line` or `-multi-line` form of either.
+ * @param secondaryOptions - `ignore`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line` | `always-multi-line` | `never-multi-line`, secondaryOptions: { ignore?: `at-rules` | `at-rules`[] }): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
@@ -68,17 +68,15 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `alw
 
 		if (!validOptions) return
 
-		// Check both kinds of statements: rules and at-rules
 		root.walkRules(check)
 
 		if (!optionsMatches(secondaryOptions, `ignore`, `at-rules`)) root.walkAtRules(check)
 
 		/**
-		 * Checks a statement for opening brace space after violations.
-		 * @param statement - The rule or at-rule to check.
+		 * Checks one statement.
+		 * @param statement - The rule or at-rule.
 		 */
 		function check (statement: Rule | AtRule): void {
-			// Return early if blockless or has an empty block
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 
 			let problemIndex = beforeBlockString(statement, result, { noRawBefore: true }).length + 1

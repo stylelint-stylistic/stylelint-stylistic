@@ -8,7 +8,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/236
+			// See #236
 			description: `a block comment standing in front of the closing parenthesis of a value, which the parenthesis of the line behind it is not read from`,
 			code: `
 				a {
@@ -22,7 +22,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/236
+			// See #236
 			description: `a value continued behind an address, whose double slashes open no comment`,
 			code: `
 				a {
@@ -41,7 +41,7 @@ testRule({
 			message: messages.expected(`4 spaces`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/236
+			// See #236
 			description: `a selector continued behind a pair of slashes plain CSS spells no comment with`,
 			code: `
 				a:not( //x
@@ -56,7 +56,7 @@ testRule({
 			message: messages.expected(`0 spaces`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/236
+			// See #236
 			description: `a value continued behind a pair of slashes plain CSS spells no comment with`,
 			code: `
 				a {

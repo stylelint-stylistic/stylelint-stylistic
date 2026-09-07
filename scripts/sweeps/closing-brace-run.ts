@@ -1,18 +1,16 @@
 /**
- * A run of empty lines standing in front of a closing brace, under `max-empty-lines`.
+ * A run of empty lines in front of a closing brace, under `max-empty-lines`.
  *
- * Written for #481. The fix of the rule rewrote the whitespace in front of every node, the runs around a comment's text and the tail of the stylesheet, and the run between a block's last node and its closing brace is none of those: it is the block's own `raws.after`, or the tail of the `raws.between` of an at-rule that runs to the brace without a semicolon of its own. The run was reported and never written, and since a fix cannot decline, `--fix` handed the file back as it was with the warnings gone.
+ * Written for [#481](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/481): the run between a block's last node and its closing brace is the block's `raws.after`, or the tail of an at-rule's `raws.between` where it has no semicolon, so the fix reported it and never wrote it, and `--fix` returned the file with the warnings gone.
  *
- * The axes are where the block stands and what closes it, since the parser files the run by what stands in front of the brace: a declaration with or without its semicolon, an at-rule with or without one, a comment, a mixin call, and nothing at all — which is an empty block. The run is spelled by its length, since the three primaries the rule is measured under draw the line at different counts, by what stands inside it — nothing, a stray semicolon, which PostCSS files into the same raw, or an indentation on every empty line, which is no empty line to the rule and the control of the writer — and by its break, the feed, the Windows pair and the two mixed, which is a control: the check looks for the Windows pair wherever the file holds one, so a run mixing the two spellings is no run of empty lines to it.
- *
- * The control is the same run behind the opening brace, which is the `raws.before` of the first node and was written on the base.
+ * The axes: where the block stands and what closes it, since the parser files the run by what is in front of the brace; the run's length; what stands inside it; and its break spelling. The controls are the mixed spelling and the run behind the opening brace, which the base wrote.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** Where the block stands, `§` marking its last node and `¶` the run in front of its closing brace, every break of it included, so that the indentation of a nested brace stands behind the run: a rule, an at-rule, a rule nested in an at-rule, a nested property of Sass, which the core reads as a rule whose selector ends in a colon, and, as the control, the run behind the opening brace of a rule. */
+/** Where the block stands: `§` the last node, `¶` the run in front of the closing brace. The Sass nested property is a rule whose selector ends in a colon to the core; the last place is the control. */
 const PLACES: Record<string, string> = {
 	rule: `a {⏎\t§¶}⏎`,
 	atRule: `@media (x) {⏎\t§¶}⏎`,
@@ -21,7 +19,7 @@ const PLACES: Record<string, string> = {
 	afterOpeningBrace: `a {¶\t§⏎}⏎`,
 }
 
-/** What closes the block: a declaration with and without its semicolon, an at-rule with and without one, a comment, a mixin call, which only Less reads, and nothing, which leaves the block empty. */
+/** What closes the block; only Less reads the mixin call, and `none` leaves the block empty. */
 const LASTS: Record<string, string> = {
 	declaration: `b: c;`,
 	bareDeclaration: `b: c`,
@@ -32,21 +30,21 @@ const LASTS: Record<string, string> = {
 	none: ``,
 }
 
-/** How long the run is, in breaks: two breaks are one empty line, which the primary of zero alone refuses; four are three, which every primary measured refuses. */
+/** The run in breaks: two are one empty line, which only zero refuses; four are three, which every primary refuses. */
 const LENGTHS: Record<string, number> = {
 	two: 2,
 	three: 3,
 	four: 4,
 }
 
-/** What stands inside the run: nothing, a stray semicolon between two runs of the length, and an indentation on every empty line, which makes the lines no empty lines to the rule. */
+/** A stray semicolon splits the run in two; an indentation on every empty line makes them no empty lines to the rule. */
 const FILLINGS: Record<string, (run: string) => string> = {
 	nothing: (run) => run,
 	straySemicolon: (run) => `${run};${run}`,
 	indented: (run) => run.replaceAll(`⏎`, `⏎\t`).replace(/\t$/u, ``),
 }
 
-/** How a break is spelled: the feed, the Windows pair, and the two taking turns, which the check reads no empty line in. */
+/** The break spelling; the check reads no empty line in the mixed one. */
 const BREAKS: Record<string, (text: string) => string> = {
 	lf: (text) => text.replaceAll(`⏎`, `\n`),
 	crlf: (text) => text.replaceAll(`⏎`, `\r\n`),
@@ -75,7 +73,7 @@ const corpus: Sweep[`corpus`] = multiply({ place: keysOf(PLACES), last: keysOf(L
 	return spell(template.replace(`§`, closing).replace(`¶`, fill(`⏎`.repeat(breaks))))
 })
 
-/** The rule under the primaries `scripts/oracles/options.ts` lists for it and the zero the core's own suite measures. */
+/** The primaries `scripts/oracles/options.ts` lists and the zero the core's suite measures. */
 const configs: Sweep[`configs`] = [0, 1, 2].map((primary) => ({ rule: `max-empty-lines`, primary }))
 
 export { configs, corpus, name }

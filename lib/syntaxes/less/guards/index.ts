@@ -11,9 +11,9 @@ import { isLessVariableDeclaration } from "../isLessVariableDeclaration/index.ts
 import { LESS_EXTEND, LESS_EXTEND_CALL, LESS_GUARD, LESS_PARAMETRIC_MIXIN, LESS_RESOLVED_MIXIN } from "../regexps.ts"
 
 /**
- * Checks whether an at-rule is standard under Less: what the core turns away, and the constructs `postcss-less` reads an at-rule for.
- * @param atRule - The at-rule node to check.
- * @returns True if the at-rule is standard, false otherwise.
+ * Checks whether an at-rule is standard under Less.
+ * @param atRule - The at-rule.
+ * @returns True where it is standard.
  */
 export function isStandardLessAtRule (atRule: AtRule | LessAtRule): boolean {
 	if (!isStandardPreprocessorAtRule(atRule)) return false
@@ -21,7 +21,7 @@ export function isStandardLessAtRule (atRule: AtRule | LessAtRule): boolean {
 	// Ignore Less mixins
 	if (`mixin` in atRule && atRule.mixin) return false
 
-	// Ignore Less variable declarations, whether the parser marked them or left the colon to the shape of the node, and calls to detached rulesets `@detached-ruleset: { background: red; }; .top { @detached-ruleset(); }`
+	// A variable declaration or a detached ruleset call, `@dr();`
 	if (isLessVariableDeclaration(atRule) || isLessDetachedRulesetCall(atRule)) return false
 
 	return true
@@ -29,13 +29,13 @@ export function isStandardLessAtRule (atRule: AtRule | LessAtRule): boolean {
 
 /**
  * Checks whether a rule is standard under Less.
- * @param rule - The rule node to check.
- * @returns True if the rule is standard syntax, false otherwise.
+ * @param rule - The rule node whose selector and extend mark are read.
+ * @returns True where it is standard.
  */
 export function isStandardLessRule (rule: Rule | LessRule): boolean {
 	if (rule.type !== `rule`) return false
 
-	// Ignore a Less `:extend`, which `postcss-less` marks the rule for by matching the text of its selector, quotes and all — so `[title=":extend(x)"]` carries the mark though what stands inside the quotes is an attribute value and nothing else. The mark is asked of the code instead, of the same copy `isStandardLessSelector` reads, with every quoted run emptied. The case is left as the mark reads it, which is any case at all, though Less reads its keywords in lower case only and prints `.a:EXTEND(.b)` as it stands: the one thing this plugin would write there is the lower case `selector-pseudo-class-case` asks for, and that would turn a selector matching nothing into an extend that changes what Less compiles.
+	// `extend` is set on the selector's text, quotes and all, so it is asked with quoted runs emptied; Less reads `:extend` in lower case only, so case is kept
 	let code = withoutQuotedTextAndComments(rule.selector)
 
 	if (`extend` in rule && rule.extend && LESS_EXTEND_CALL.test(code)) return false
@@ -44,18 +44,18 @@ export function isStandardLessRule (rule: Rule | LessRule): boolean {
 }
 
 /**
- * Checks whether a selector is standard under Less: everything the core turns away, and the shapes Less spells a selector with.
- * @param selector - The selector to check.
- * @returns True if the selector is standard syntax, false otherwise.
+ * Checks whether a selector is standard under Less.
+ * @param selector - The selector's text, quotes and comments still in it.
+ * @returns True where it is standard.
  */
 export function isStandardLessSelector (selector: string): boolean {
 	return isStandardLessSelectorCode(withoutQuotedTextAndComments(selector))
 }
 
 /**
- * The same reading over a copy the caller has already emptied, blanking the selector once however many checks stack on it.
- * @param code - The selector, its quoted runs emptied and its comments taken out.
- * @returns True if the selector is standard syntax, false otherwise.
+ * The check over a selector the caller has blanked, so stacked checks blank once.
+ * @param code - The selector, quoted runs emptied and comments blanked.
+ * @returns True where it is standard.
  */
 function isStandardLessSelectorCode (code: string): boolean {
 	if (!isStandardPreprocessorSelectorCode(code)) return false
@@ -63,14 +63,13 @@ function isStandardLessSelectorCode (code: string): boolean {
 	// Less :extend()
 	if (LESS_EXTEND.test(code)) return false
 
-	// Less mixin with resolved nested selectors (e.g. .foo().bar or .foo(@a, @b)[bar])
+	// A mixin with resolved nested selectors, `.foo().bar`
 	if (LESS_RESOLVED_MIXIN.test(code)) return false
 
-	// Less Parametric mixins (e.g. .mixin(@variable: x) {})
+	// A parametric mixin, `.mixin(@a: x) {}`
 	if (LESS_PARAMETRIC_MIXIN.test(code)) return false
 
-	// Less CSS guards (e.g. .mixin when (@a > 0) {}).
-	// A parenthesis opening after whitespace is nothing CSS has a selector for, and Less asks for no whitespace in front of the condition — `.a:hover when(1 = 1)` compiles as readily as the spaced form. The word is read in lower case only, as Less reads its keywords: `.a:hover WHEN (1 = 1)` is printed by the compiler as it stands, and `when NOT (1 = 1)` is a syntax error to it.
+	// A guard, `.mixin when (@a > 0) {}`; `when` is lower case only and needs no whitespace in front of the condition
 	if (LESS_GUARD.test(code)) return false
 
 	return true
@@ -78,8 +77,8 @@ function isStandardLessSelectorCode (code: string): boolean {
 
 /**
  * Checks whether a declaration is standard under Less.
- * @param decl - The declaration node to check.
- * @returns True if the declaration is standard syntax, false otherwise.
+ * @param decl - The declaration.
+ * @returns True where it is standard.
  */
 export function isStandardLessDeclaration (decl: Declaration | LessDeclaration): boolean {
 	if (!isStandardPreprocessorDeclaration(decl)) return false
@@ -87,16 +86,16 @@ export function isStandardLessDeclaration (decl: Declaration | LessDeclaration):
 	let prop = decl.prop
 	let parent = decl.parent
 
-	// Less var (e.g. @var: x), but exclude variable interpolation (e.g. @{var})
+	// A variable, `@var: x`, but not an interpolation, `@{var}`
 	if (prop[0] === `@` && prop[1] !== `{`) return false
 
 	// Less map declaration
 	if (parent && parent.type === `atrule` && parent.raws.afterName === `:`) return false
 
-	// Less map (e.g. #my-map() { myprop: red; })
+	// A map, `#my-map() { a: red; }`
 	if (parent && isRule(parent) && parent.selector && parent.selector.startsWith(`#`) && parent.selector.endsWith(`()`)) return false
 
-	// A Less `&:extend(...)`, which the parser splits at its colon: the property is `&` and the value is the extend call. A property `&` is nothing CSS has, whatever the value — the compiler reads an extend there and answers anything else, `&:EXTEND(.b)` and `& :extend(.b)` among it, with a syntax error — so the shape alone is the answer. The `extend` mark the syntax puts beside the node goes unasked: it is matched against the text of any value at all, quotes and all, so `b: "extend(x)"` and `b: myextend(y)` carried it too, though both are plain declarations Less compiles as they stand.
+	// `&:extend(...)` parses as the property `&`; the `extend` mark matches any value text, `b: "extend(x)"` too
 	if (prop === `&`) return false
 
 	return true
@@ -104,16 +103,16 @@ export function isStandardLessDeclaration (decl: Declaration | LessDeclaration):
 
 /**
  * Checks whether a property is standard under Less.
- * @param property - The property to check.
- * @returns True if the property is standard syntax, false otherwise.
+ * @param property - The property's text.
+ * @returns True where it is standard.
  */
 export function isStandardLessProperty (property: string): boolean {
 	if (!isStandardSyntaxProperty(property)) return false
 
-	// Less var (e.g. @var: x)
+	// A variable
 	if (property.startsWith(`@`)) return false
 
-	// Less append property value with space (e.g. transform+_: scale(2))
+	// A merge property, `transform+_: scale(2)`
 	if (property.endsWith(`+`) || property.endsWith(`+_`)) return false
 
 	return true
@@ -121,13 +120,13 @@ export function isStandardLessProperty (property: string): boolean {
 
 /**
  * Checks whether a value is standard under Less.
- * @param value - The value to check.
- * @returns True if the value is standard syntax, false otherwise.
+ * @param value - The value's text.
+ * @returns True where it is standard.
  */
 export function isStandardLessValue (value: string): boolean {
 	if (!isStandardPreprocessorValue(value)) return false
 
-	// The same operator strip the core makes, so that `*@var` and `/@var` are the variables they were before the core stopped reading them
+	// The core's operator strip: `/@var` stays a variable
 	let normalizedValue = LEADING_OPERATOR.test(value.charAt(0)) ? value.slice(1) : value
 
 	// Less variable

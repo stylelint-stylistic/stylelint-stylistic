@@ -23,7 +23,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/66
+			// See #66
 			description: `selector list interleaved with an inline comment: the fix reaches the output`,
 			code: `
 				.a,

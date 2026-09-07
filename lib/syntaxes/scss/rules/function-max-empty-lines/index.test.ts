@@ -11,7 +11,7 @@ testRule({
 	customSyntax: `postcss-scss`,
 
 	accept: [
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/322
+		// See #322
 		{
 			description: `the name of a call written in the text of an end-of-line comment, with the empty lines and the arguments on the lines below`,
 			code: `a { b: f(1) // g(\n\n\n2)\n; }`,
@@ -28,7 +28,7 @@ testRule({
 			description: `the same opening written in a block comment, whose text opens no call of the value either`,
 			code: `a { b: f(1) /* g( */\n\n\n2)\n; }`,
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/503
+		// See #503
 		{
 			description: `the empty lines a block comment holds inside a call, which are text of the comment and no lines of the call`,
 			code: `a { b: f(1,\n/* g(\n\n\n2) */ 3); }`,
@@ -36,7 +36,7 @@ testRule({
 	],
 
 	reject: [
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/322
+		// See #322
 		{
 			description: `a call written on the line below such a comment, holding empty lines of its own`,
 			code: `a { b: f(1) // g(\nh(\n\n\n2)\n)\n; }`,
@@ -69,7 +69,7 @@ testRule({
 			column: 7,
 			message: messages.expected(0),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/370
+		// See #370
 		{
 			description: `a comment opening with a solidus, a star and a solidus, standing in the text of an end-of-line comment the call reaches past`,
 			code: `a { b: f(1\n\n\n2 // /*/x\n); }`,
@@ -78,7 +78,7 @@ testRule({
 			column: 7,
 			message: messages.expected(0),
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/503
+		// See #503
 		{
 			description: `an end-of-line comment holding the parenthesis that would close the call, which closes nothing standing there, so the empty lines behind it are the call's`,
 			code: `a { b: f(1 // x)\n\n\n2); }`,

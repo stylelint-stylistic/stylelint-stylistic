@@ -3,7 +3,7 @@ import { namesAnAddress } from "../../utils/namesAnAddress/index.ts"
 import { readIdentifierCharacter } from "../../utils/readIdentifierCharacter/index.ts"
 import type { InlineCommentReading } from "../readsInlineComments/index.ts"
 
-/** Where a scan stands: what it is reading, how far it has read, the quote that would close the string it is inside, and where the name it is in the middle of began — which every state returning to the code says, since a name opens behind whatever closed the state and holds none of what stood inside it. */
+/** Where a scan stands; every state returning to code resets `wordStart`. */
 export type Scan = {
 	state: `blockComment` | `code` | `inlineComment` | `string` | `url`,
 	index: number,
@@ -12,14 +12,14 @@ export type Scan = {
 }
 
 /**
- * Reads one character of an inline comment.
- * @param text - The text being scanned.
- * @param scan - Where the scan stands, moved on by what is read.
+ * Reads one character of a `//` comment.
+ * @param text - The raw scanned, standing inside a `//` comment.
+ * @param scan - The scan, moved on.
  */
 function readInsideInlineComment (text: string, scan: Scan): void {
 	let char = text.charAt(scan.index)
 
-	// Which characters are breaks is the one thing the two languages disagree about, and the reading the scan was opened under is which of the two it is being asked as
+	// Which characters are breaks is where the two languages part
 	if (LINE_BREAK.test(char)) {
 		scan.state = `code`
 		scan.wordStart = scan.index + 1
@@ -28,8 +28,8 @@ function readInsideInlineComment (text: string, scan: Scan): void {
 
 /**
  * Reads one character of a block comment.
- * @param text - The text being scanned.
- * @param scan - Where the scan stands, moved on by what is read.
+ * @param text - The raw scanned, standing inside a block comment.
+ * @param scan - The scan, moved on.
  */
 function readInsideBlockComment (text: string, scan: Scan): void {
 	if (text[scan.index] === `*` && text[scan.index + 1] === `/`) {
@@ -41,8 +41,8 @@ function readInsideBlockComment (text: string, scan: Scan): void {
 
 /**
  * Reads one character of a quoted string.
- * @param text - The text being scanned.
- * @param scan - Where the scan stands, moved on by what is read.
+ * @param text - The raw scanned, standing inside a string.
+ * @param scan - The scan, moved on.
  */
 function readInsideString (text: string, scan: Scan): void {
 	let char = text[scan.index]
@@ -56,8 +56,8 @@ function readInsideString (text: string, scan: Scan): void {
 
 /**
  * Reads one character of an unquoted `url()`.
- * @param text - The text being scanned.
- * @param scan - Where the scan stands, moved on by what is read.
+ * @param text - The raw scanned, standing inside a bare address.
+ * @param scan - The scan, moved on.
  */
 function readInsideUrl (text: string, scan: Scan): void {
 	let char = text[scan.index]
@@ -70,20 +70,18 @@ function readInsideUrl (text: string, scan: Scan): void {
 }
 
 /**
- * Reads one character of the code itself, which is where every other state is opened from.
+ * Reads one character of the code, where every other state opens.
  *
- * Whether the parenthesis met here opens an address is the one reading of that question the plugin holds, {@link namesAnAddress}, put to the name the scan has just read through. Which characters that name is made of is the reading the scan that finds the comments of a text uses as it walks: a code point {@link IDENTIFIER_CODE_POINT} names, the closing brace of an interpolation, or an escape spelling anything at all. A pattern asking the same thing of the text behind the parenthesis read the name in the ASCII word characters and the hyphen alone, so `éurl(`, `@{p}url(` and `\75 url(` each looked like a `url(` with no name in front of it, and the ordinary call they name was taken for an address whose double slashes open nothing (#398).
- *
- * The name is followed rather than looked back on, since an escape spells one character of a name with several and the last of those tells nothing: the `\61 ` opening `\61 \75 rl(` closes on a space and the `\\` opening `\\\75 rl(` on a backslash, while both spell a name and both leave an ordinary call.
- * @param text - The text being scanned.
- * @param scan - Where the scan stands, moved on by what is read.
+ * A `(` opens an address where {@link namesAnAddress} says so of the name just read: {@link IDENTIFIER_CODE_POINT} code points, an interpolation's closing brace and escapes, since an ASCII pattern took `éurl(` for `url(` ([#398](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/398)). Read forward, since an escape spells one character with several.
+ * @param text - The raw scanned, standing in code.
+ * @param scan - The scan, moved on.
  */
 function readInsideCode (text: string, scan: Scan): void {
 	let char = text.charAt(scan.index)
 	let nextChar = text[scan.index + 1]
 
 	if (char === `\\`) {
-		// An escape is one character of a name however many the file spells it with, so the whole of it is stepped over and the name it stands in keeps the start it had. A backslash spelling nothing is a delimiter of its own and begins no name, and needs no saying here: it is the end of the text or a line break that leaves it spelling nothing, and the one stops the scan while the other reaches this branch's last one on the very next step
+		// The whole escape is one character; a backslash spelling nothing leaves its break to the next step
 		let escaped = readIdentifierCharacter(text, scan.index)
 
 		scan.index = escaped.end - 1
@@ -100,7 +98,7 @@ function readInsideCode (text: string, scan: Scan): void {
 		scan.state = `inlineComment`
 		scan.index += 1
 	}
-	// An unquoted URL carries the double slash of a protocol, and a quoted one is left to the string state
+	// An unquoted address carries a protocol's `//`; a quoted one is the string state's
 	else if (char === `(` && namesAnAddress(text.slice(scan.wordStart, scan.index)) && !OPENS_WITH_QUOTE.test(text.slice(scan.index + 1))) {
 		scan.state = `url`
 	}
@@ -109,7 +107,7 @@ function readInsideCode (text: string, scan: Scan): void {
 	}
 }
 
-/** How one character is read in each of the states the scan passes through. */
+/** The reader of one character, by state. */
 const READ_INSIDE = {
 	blockComment: readInsideBlockComment,
 	code: readInsideCode,
@@ -118,13 +116,13 @@ const READ_INSIDE = {
 	url: readInsideUrl,
 }
 
-/** The reading a caller naming none is answered under: a syntax that spells such a comment. */
+/** The default reading: a syntax that spells such a comment. */
 const NOTHING_SAID = { spells: true, keeps: false, answered: false }
 
 /**
- * Scans a text for the comment it may end inside.
- * @param text - The text to scan, its trailing whitespace already off it.
- * @returns True if the scan ends inside an inline comment.
+ * Scans a text to its end.
+ * @param text - The text, trailing whitespace off.
+ * @returns True if the scan ends inside a `//` comment.
  */
 function scanEndsInsideInlineComment (text: string): boolean {
 	let scan: Scan = { state: `code`, index: 0, openingQuote: ``, wordStart: 0 }
@@ -139,24 +137,17 @@ function scanEndsInsideInlineComment (text: string): boolean {
 }
 
 /**
- * Checks whether the last thing a raw string holds is an inline comment.
+ * Asks whether a raw ends inside a `//` comment, where a fixer writing behind it would write.
  *
- * An inline comment is closed by a line break and by nothing else — so whatever a fixer would put after it, a space, a brace, a colon, a semicolon, ends up inside the comment instead. Trailing whitespace does not close it either, and is therefore ignored here.
- *
- * A double slash only opens a comment where it stands in the code itself: the one in `url(http://example.com)` or in `content: "//"` opens nothing, and a string reaching that far is scanned rather than matched, so that neither is taken for a comment. Whether a name spells `url` at all is asked of {@link namesAnAddress}, the one reading of that question the plugin holds, which the scan that finds the comments of a text asks as well (#427).
- *
- * Nor does one open a comment where the syntax spells none that way, and a file of plain CSS spells none: `1px//c` ends in code there, and a fixer told otherwise holds back a write that would break nothing. The text cannot answer that, since the two spellings are identical, so the caller does.
- *
- * The break that closes one is the break PostCSS reads a line in, a line feed with or without the carriage return of a Windows pair in front of it; a bare carriage return and a form feed are whitespace of the comment's text.
- * @param source - The raw string to look at, a `raws` value or a part of one.
- * @param reading - What the syntax that spelled the string makes of such a comment, defaulted to a syntax that has said nothing.
- * @returns True if the string ends with an inline comment.
+ * Scanned rather than matched: the `//` in `url(http://example.com)` or `"//"` opens nothing, and `url` is {@link namesAnAddress}'s reading ([#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427)). A syntax spelling no such comment ends `1px//c` in code; the caller says which. Only a line feed closes the comment; a bare carriage return or form feed is its text.
+ * @param source - A raw or a part of one.
+ * @param reading - The syntax's reading of such a comment; defaults to spelling it.
+ * @returns True if it ends inside a `//` comment.
  */
 export function endsWithInlineComment (source: string, reading: InlineCommentReading = NOTHING_SAID): boolean {
-	// Where no double slash opens a comment, no text ends with one, and the scan below has nothing else it could answer with
 	if (!reading.spells) return false
 
-	// Whatever a fixer writes goes where the trailing whitespace is, the line break closing the comment among it, so none of that whitespace counts as closing anything here
+	// The trailing whitespace is where a fixer writes, so it closes nothing
 	let text = source.trimEnd()
 
 	return scanEndsInsideInlineComment(text)

@@ -1,10 +1,6 @@
 #!/usr/bin/env node
 
-/**
- * Compares the oracles' answers about a base with their answers about a branch, measuring only what has not been measured before.
- *
- * Every result is kept by what it depends on — see `scripts/harness/cache.ts` — so the two sides are first looked up, and only a side no entry answers for is measured. Each oracle is started once per missing side, with the branch's scripts and corpus over that side's `lib/`, so that the two sides are always asked the same question; and the diff of the six is written to `tmp/oracles-diff.md`, row by row and never by count.
- */
+/** Diffs the oracles' rows over a base against a branch, measuring only a side the cache (`scripts/harness/cache.ts`) lacks, with the branch's scripts over that side's `lib/`; the diff goes to `tmp/oracles-diff.md`. */
 
 import { execFileSync } from "node:child_process"
 import { mkdirSync, writeFileSync } from "node:fs"
@@ -17,16 +13,16 @@ import { diff, render } from "../harness/diff.ts"
 
 import { inputsOf } from "./key.ts"
 
-/** The oracles, in the order `make oracles` has always run them. */
+/** In `make oracles` order. */
 const ORACLES = [`converge`, `control`, `comments`, `twins`, `nodes`, `pairs`]
 
-/** The fields that tell one row from another; everything else a row holds is what the oracle found there. */
+/** What identifies a row. */
 const IDENTITY = [`kind`, `rule`, `primary`, `syntaxName`, `name`, `spelling`, `a`, `b`]
 
 /**
- * Keys the rows of one oracle by their identity.
- * @param rows - The rows.
- * @returns The rows by key; two rows of one identity are told apart by their place.
+ * Keys the rows of one oracle by identity.
+ * @param rows - One oracle's output, a record per finding.
+ * @returns The rows by key, twins numbered.
  */
 function keyed (rows: Record<string, unknown>[]): Record<string, object> {
 	let result: Record<string, object> = {}
@@ -44,8 +40,8 @@ function keyed (rows: Record<string, unknown>[]): Record<string, object> {
 }
 
 /**
- * Runs one oracle over one side, with the working tree's scripts.
- * @param oracle - The oracle.
+ * Runs one oracle over one side.
+ * @param oracle - The name of the script under `scripts/oracles`.
  * @param revision - The side.
  * @returns The rows.
  */
@@ -70,9 +66,9 @@ let plan: {
 let results: Record<Side, Record<string, Record<string, unknown>[]>> = { base: {}, head: {} }
 
 /**
- * Hands back the rows of one oracle over one side, which every oracle has by the time the report is written.
- * @param side - The side.
- * @param oracle - The oracle.
+ * The rows of one oracle over one side.
+ * @param side - Base or head.
+ * @param oracle - The name of the script whose rows are wanted.
  * @returns The rows.
  */
 function rowsOf (side: Side, oracle: string): Record<string, unknown>[] {
@@ -96,7 +92,7 @@ for (let side of [`base`, `head`] as const) {
 	}
 }
 
-// Two sides standing on one `lib/` tree — a branch that has not touched a rule yet — ask one question, and one run answers it for both
+// One `lib/` tree on both sides is measured once
 let answered: Map<string, typeof plan> = new Map()
 
 plan = plan.filter((item) => {

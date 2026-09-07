@@ -1,11 +1,11 @@
 import { EVERY_ESCAPE_STRING_OR_BLOCK_COMMENT } from "../../regexps.ts"
 
 /**
- * Finds the block comments of a selector, passing over what stands inside a quoted attribute value, since an attribute value may hold any text at all — `[x="/*"]` opens no comment.
+ * Finds a selector's block comments, passing over a quoted attribute value: `[x="/*"]` opens no comment.
  *
- * An escape is read before a quotation mark is, so that a quote escaped outside a string — the one in `.x\'y`, which Less takes for a class of that name — opens nothing.
- * @param selector - The selector to read.
- * @returns The comments, in the order they stand in.
+ * An escape is read before a quotation mark, so a quote escaped outside a string (`.x\'y`, a Less class name) opens nothing.
+ * @param selector - The text as the raw spells it, comments and strings in place.
+ * @returns The comments, in order.
  */
 export function findSelectorBlockComments (selector: string): Array<{
 	start: number,

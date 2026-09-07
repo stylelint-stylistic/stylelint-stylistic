@@ -12,7 +12,7 @@ An optional sentence after that says what it means for the user — for a�
 
 Where possible, end the entry with a link to the issue or PR in parentheses, plus the author's profile for outside contributions. Follow the surrounding entries: most of the file carries no links, and multi-part entries use a nested list rather than a long sentence.
 
-The entry for a bug fix is a full paragraph rather than a line: which rules, what happened before, what happens now, what a user will notice, with sub-bullets where a change has several faces. It is the only thing a user ever reads about the fix, so its facts are checked as carefully as the code's.
+The entry for a bug fix says which rules, what happened before and what happens now, in as few sentences as carry that, with sub-bullets where a change has several faces. It is the only thing a user ever reads about the fix, so its facts are checked as carefully as the code's.
 
 Where an entry concerns several rules of one family, open with the glob — “The `declaration-block-semicolon-*` rules …” — and refer back with “These rules…”, naming a single member only where it behaves differently from the rest. Do not list three rules at the start and then speak of “the four” in the explanation.
 

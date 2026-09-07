@@ -1,7 +1,7 @@
 /**
  * A solidus between two parts of a value, in every spacing the four `*-slash-space-*` rules distinguish, beside every kind of operand a syntax may divide at, and in every place a rule reads one.
  *
- * Written for #548. The spacings are the ones the options tell apart — nothing, a single space, a run of two, a tab, a line break, a comment and an inline comment on either side, and a vertical tab, which is a word to the tokenizer (#494) — crossed with the operands: two plain numbers, a dimension and a number, a keyword, a call the preprocessors hand through and one they may evaluate, a Sass and a Less variable, and a string. The places put the pair where a rule reads a value and where it must not: a declaration, a custom property, a colour function, a call of no known name, a math function spelled `calc`, in which the parser hands the solidus back as a word, and one spelled `min`, in which it hands it back as a divider, a parenthesised group in a declaration and in a custom property, a bare address, a string, a media feature in its colon form, in its range form and inside a grouped condition, and a value carrying a bang. A base the rules are not on throws in the runner, so the branch that wrote them measured itself over this corpus with a probe of its own — the fix run to a fixed point, the fixed text relinted, its comments compared with the file's — and the sweep stands for the next branch to touch the rules.
+ * Written for [#548](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/548). A vertical tab is a word to the tokenizer ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). The places put the pair where a rule reads a value and where it must not; inside `calc()` the parser returns the solidus as a word, inside `min()` as a divider.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"
@@ -71,7 +71,7 @@ const corpus: Sweep[`corpus`] = multiply({ place: keysOf(PLACES), operands: keys
 	return wrap(`${pair[0]}${sides[0]}/${sides[1]}${pair[1]}`)
 })
 
-/** The four rules about a space and the two about a line break, under every primary option `scripts/oracles/options.ts` lists for them. */
+/** The six slash rules, under every primary option `scripts/oracles/options.ts` lists for them. */
 const configs: Sweep[`configs`] = ([
 	[`value-slash-space-before`, [`always`, `never`, `always-single-line`, `never-single-line`]],
 	[`value-slash-space-after`, [`always`, `never`, `always-single-line`, `never-single-line`]],

@@ -34,13 +34,13 @@ export let meta = {
 
 /**
  * Requires a newline or disallows whitespace after the closing brace of blocks.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always`, `always-single-line`, `never-single-line`, `always-multi-line` and `never-multi-line`.
- * @param secondaryOptions - The secondary options: `ignoreAtRules`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always`, `always-single-line`, `never-single-line`, `always-multi-line` or `never-multi-line`.
+ * @param secondaryOptions - `ignoreAtRules`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-single-line` | `never-single-line` | `always-multi-line` | `never-multi-line`, secondaryOptions: { ignoreAtRules?: string | string[] }): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
@@ -70,13 +70,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		// Check both kinds of statements: rules and at-rules
+		// Rules and at-rules alike
 		root.walkRules(check)
 		root.walkAtRules(check)
 
 		/**
-		 * Checks a statement for closing brace newline after violations.
-		 * @param statement - The rule or at-rule to check.
+		 * Checks a statement.
+		 * @param statement - The rule or at-rule.
 		 */
 		function check (statement: Rule | AtRule): void {
 			if (!hasBlock(statement)) return
@@ -87,8 +87,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!nextNode) return
 
-			// Allow an end-of-line comment x spaces after the brace
-			// A line break is what PostCSS reads as one: a line feed, with or without the carriage return of a Windows pair in front of it
+			// An end-of-line comment behind the brace is allowed
 			let nextNodeIsSingleLineComment = nextNode.type === `comment` && !NON_SPACE.test(nextNode.raws.before || ``) && !LINE_BREAK.test(nextNode.toString())
 
 			let nodeToCheck = nextNodeIsSingleLineComment ? nextNode.next() : nextNode
@@ -98,13 +97,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let reportIndex = nodeString(statement, result).length
 			let source = rawNodeString(nodeToCheck, result)
 
-			// Skip a semicolon at the beginning, if any
+			// Skip a leading semicolon
 			if (source && source.startsWith(`;`)) {
 				source = source.slice(1)
 				reportIndex += 1
 			}
 
-			// Only check one after, because there might be other spaces handled by the indentation rule
+			// One character only; the rest is `indentation`'s
 			checker.afterOneOnly({
 				source,
 				index: -1,
@@ -123,7 +122,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 							if (typeof nodeToCheckRaws.before !== `string`) return
 
 							if (primary.startsWith(`always`)) {
-								// Trim up to the break that already stands there, whichever character it is, and add one only where none does
+								// Keep an existing break, add one where none is
 								let index = nodeToCheckRaws.before.search(LINE_BREAK)
 
 								nodeToCheckRaws.before = index >= 0 ? nodeToCheckRaws.before.slice(index) : getLineBreak(syntax, root, result) + nodeToCheckRaws.before

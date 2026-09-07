@@ -4,84 +4,84 @@ import { isWhitespace } from "../isWhitespace/index.ts"
 import { assertFunction, isNullish } from "../validateTypes/index.ts"
 
 /**
- * Tells whether a character ends a line, the way PostCSS reads one: a line feed does, and the carriage return of a Windows pair belongs to the break the line feed behind it ends. A bare carriage return and a form feed are whitespace to PostCSS's line counter and to every rule, so a checker asking for a newline takes neither.
- * @param char - The character to look at.
- * @returns True if the character ends a line.
+ * Whether a character is a line feed, the only break PostCSS counts; a bare `\r` or `\f` is whitespace.
+ * @param char - The character.
+ * @returns True for a line feed.
  */
 function isLineBreak (char: string | undefined): boolean {
 	return char === `\n`
 }
 
-/** A function that returns a message string. */
+/** Builds a message. */
 export type MessageFunction = (message: string) => string
 
-/** The messages a checker reports with. Each expectation reaches for the one named after it, so a rule has to carry the messages of the expectations it accepts and no others. */
+/** The messages a checker reports with; a rule carries only those of the expectations it accepts. */
 export interface Messages {
 
-	/** Reported by `always` where the whitespace in front of the index is missing. */
+	/** `always`, whitespace missing in front. */
 	expectedBefore?: MessageFunction,
 
-	/** Reported by `never` where whitespace stands in front of the index. */
+	/** `never`, whitespace in front. */
 	rejectedBefore?: MessageFunction,
 
-	/** Reported by `always` where the whitespace behind the index is missing. */
+	/** `always`, whitespace missing behind. */
 	expectedAfter?: MessageFunction,
 
-	/** Reported by `never` where whitespace stands behind the index. */
+	/** `never`, whitespace behind. */
 	rejectedAfter?: MessageFunction,
 
-	/** What `always-single-line` reports in place of `expectedBefore`. */
+	/** `always-single-line`. */
 	expectedBeforeSingleLine?: MessageFunction,
 
-	/** What `never-single-line` reports in place of `rejectedBefore`. */
+	/** `never-single-line`. */
 	rejectedBeforeSingleLine?: MessageFunction,
 
-	/** What `always-multi-line` reports in place of `expectedBefore`. */
+	/** `always-multi-line`. */
 	expectedBeforeMultiLine?: MessageFunction,
 
-	/** What `never-multi-line` reports in place of `rejectedBefore`. */
+	/** `never-multi-line`. */
 	rejectedBeforeMultiLine?: MessageFunction,
 
-	/** What `always-single-line` reports in place of `expectedAfter`. */
+	/** `always-single-line`. */
 	expectedAfterSingleLine?: MessageFunction,
 
-	/** What `never-single-line` reports in place of `rejectedAfter`. */
+	/** `never-single-line`. */
 	rejectedAfterSingleLine?: MessageFunction,
 
-	/** What `always-multi-line` reports in place of `expectedAfter`. */
+	/** `always-multi-line`. */
 	expectedAfterMultiLine?: MessageFunction,
 
-	/** What `never-multi-line` reports in place of `rejectedAfter`. */
+	/** `never-multi-line`. */
 	rejectedAfterMultiLine?: MessageFunction,
 }
 export interface WhitespaceCheckerArgs {
 
-	/** The source string. */
+	/** The source. */
 	source: string,
 
-	/** The index of the character to check before. */
+	/** The index checked around. */
 	index: number,
 
-	/** If a problem is found, this callback will be invoked with the relevant warning message. Typically this callback will report() the problem. */
+	/** Called with a problem's message. */
 	err: (message: string) => void,
 
-	/** If a problem is found, this string will be sent to the relevant warning message. */
+	/** Named in the message instead of the character at `index`. */
 	errTarget?: string,
 
-	/** Single- and multi-line checkers will use this string to determine whether they should proceed, i.e. if this string is one line only, single-line checkers will check, multi-line checkers will ignore. Only where none is passed at all do they use `source` in its place: an empty text is a text, and it stands on one line, while `source` may be the whole of a construct broken across several. */
+	/** What the `-single-line` and `-multi-line` options ask lineness of; `source` by default. */
 	lineCheckStr?: string,
 
-	/** Only check *one* character before. By default, "always-*" checks will look for the `targetWhitespace` one before and then ensure there is no whitespace two before. This option bypasses that second check. */
+	/** Checks one character only; otherwise `always-*` refuses whitespace beyond it too. */
 	onlyOneChar?: boolean,
 
-	/** Allow arbitrary indentation between the `targetWhitespace` (almost definitely a newline) and the `index`. With this option, the checker will see if a newline *begins* the whitespace before the `index`. */
+	/** Allows indentation between the newline and `index`. */
 	allowIndentation?: boolean,
 }
 
-/** A function that checks whitespace at a specific location. */
+/** Checks the whitespace at one index. */
 export type WhitespaceChecker = (args: WhitespaceCheckerArgs) => void
 
-/** An object containing whitespace checking functions. */
+/** The checking functions. */
 export type WhitespaceCheckers = {
 	before: WhitespaceChecker,
 	beforeAllowingIndentation: WhitespaceChecker,
@@ -90,23 +90,19 @@ export type WhitespaceCheckers = {
 }
 
 /**
- * Creates a whitespaceChecker, which exposes the following functions:
- * - `before()`
- * - `beforeAllowingIndentation()`
- * - `after()`
- * - `afterOneOnly()`
- * @param targetWhitespace - The target whitespace type to check for.
- * @param expectation - The expectation for whitespace.
- * @param messages - An object of message functions; calling `before*()` or `after*()` and the `expectation` that is passed determines which message functions are required.
- * @returns The checker, with its exposed checking functions.
+ * Creates a whitespace checker.
+ * @param targetWhitespace - The whitespace asked for.
+ * @param expectation - The primary option.
+ * @param messages - The messages the expectation and the side checked need.
+ * @returns The checking functions.
  */
 export function whitespaceChecker (targetWhitespace: `space` | `newline`, expectation: `always` | `never` | `always-single-line` | `always-multi-line` | `never-single-line` | `never-multi-line`, messages: Messages): WhitespaceCheckers {
-	// Keep track of active arguments in order to avoid passing too much stuff around, making signatures long and confusing. This variable gets reset anytime a checking function is called.
+	// Set by every checking function
 	let activeArgs: WhitespaceCheckerArgs
 
 	/**
-	 * Checks for whitespace _before_ a character.
-	 * @param args - Where to look, and what to do about what is found.
+	 * Checks the whitespace before a character.
+	 * @param args - Where to look.
 	 */
 	function before (args: WhitespaceCheckerArgs): void {
 		let { source, lineCheckStr, onlyOneChar = false, allowIndentation = false } = args
@@ -138,8 +134,8 @@ export function whitespaceChecker (targetWhitespace: `space` | `newline`, expect
 	}
 
 	/**
-	 * Checks for whitespace _after_ a character.
-	 * @param args - Where to look, and what to do about what is found.
+	 * Checks the whitespace after a character.
+	 * @param args - Where to look.
 	 */
 	function after (args: WhitespaceCheckerArgs): void {
 		let { source, lineCheckStr, onlyOneChar = false } = args
@@ -171,16 +167,16 @@ export function whitespaceChecker (targetWhitespace: `space` | `newline`, expect
 	}
 
 	/**
-	 * Checks for whitespace before a character, allowing indentation.
-	 * @param args - Where to look, and what to do about what is found.
+	 * `before` allowing indentation.
+	 * @param args - Where to look.
 	 */
 	function beforeAllowingIndentation (args: WhitespaceCheckerArgs): void {
 		before({ ...args, allowIndentation: true })
 	}
 
 	/**
-	 * Expects whitespace before a character.
-	 * @param messageFunc - The message function to use.
+	 * Expects whitespace before the character.
+	 * @param messageFunc - Builds the warning text from the character checked.
 	 */
 	function expectBefore (messageFunc: MessageFunction | undefined = messages.expectedBefore): void {
 		if (activeArgs.allowIndentation) {
@@ -205,8 +201,8 @@ export function whitespaceChecker (targetWhitespace: `space` | `newline`, expect
 	}
 
 	/**
-	 * Expects whitespace before a character, allowing indentation.
-	 * @param messageFunc - The message function to use.
+	 * Expects a newline before the character, indentation allowed.
+	 * @param messageFunc - Builds the warning text from the character checked.
 	 */
 	function expectBeforeAllowingIndentation (messageFunc: MessageFunction | undefined = messages.expectedBefore): void {
 		let localActiveArgs2 = activeArgs
@@ -217,7 +213,7 @@ export function whitespaceChecker (targetWhitespace: `space` | `newline`, expect
 		let isExpectedChar = targetWhitespace === `newline` ? isLineBreak : (): boolean => false
 		let i = index - 1
 
-		// The run of indentation is closed by the line feed of the break in front of it, which is the character a Windows pair ends in as well.
+		// The indentation is closed by a line feed, a Windows pair's too
 		while (!isExpectedChar(source[i])) {
 			if (source[i] === `\t` || source[i] === ` `) {
 				i -= 1
@@ -232,8 +228,8 @@ export function whitespaceChecker (targetWhitespace: `space` | `newline`, expect
 	}
 
 	/**
-	 * Rejects whitespace before a character.
-	 * @param messageFunc - The message function to use.
+	 * Rejects whitespace before the character.
+	 * @param messageFunc - Builds the warning text from the character checked.
 	 */
 	function rejectBefore (messageFunc: MessageFunction | undefined = messages.rejectedBefore): void {
 		let localActiveArgs3 = activeArgs
@@ -249,16 +245,16 @@ export function whitespaceChecker (targetWhitespace: `space` | `newline`, expect
 	}
 
 	/**
-	 * Checks for whitespace after a character, only checking one character.
-	 * @param args - Where to look, and what to do about what is found.
+	 * `after` asking for one character only.
+	 * @param args - Where to look.
 	 */
 	function afterOneOnly (args: WhitespaceCheckerArgs): void {
 		after({ ...args, onlyOneChar: true })
 	}
 
 	/**
-	 * Expects whitespace after a character.
-	 * @param messageFunc - The message function to use.
+	 * Expects whitespace after the character.
+	 * @param messageFunc - Builds the warning text from the character checked.
 	 */
 	function expectAfter (messageFunc: MessageFunction | undefined = messages.expectedAfter): void {
 		let localActiveArgs4 = activeArgs
@@ -272,10 +268,10 @@ export function whitespaceChecker (targetWhitespace: `space` | `newline`, expect
 		if (isNullish(oneCharAfter)) return
 
 		if (targetWhitespace === `newline`) {
-			// If index is followed by a Windows CR-LF ...
+			// A Windows pair
 			if (oneCharAfter === `\r` && twoCharsAfter === `\n` && (activeArgs.onlyOneChar || isNullish(threeCharsAfter) || !isWhitespace(threeCharsAfter))) return
 
-			// If index is followed by a line feed on its own ...
+			// A line feed alone
 			if (isLineBreak(oneCharAfter) && (activeArgs.onlyOneChar || isNullish(twoCharsAfter) || !isWhitespace(twoCharsAfter))) return
 		}
 
@@ -288,8 +284,8 @@ export function whitespaceChecker (targetWhitespace: `space` | `newline`, expect
 	}
 
 	/**
-	 * Rejects whitespace after a character.
-	 * @param messageFunc - The message function to use.
+	 * Rejects whitespace after the character.
+	 * @param messageFunc - Builds the warning text from the character checked.
 	 */
 	function rejectAfter (messageFunc: MessageFunction | undefined = messages.rejectedAfter): void {
 		let localActiveArgs5 = activeArgs

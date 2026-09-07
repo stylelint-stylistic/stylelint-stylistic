@@ -115,7 +115,7 @@ describe(`addEdit`, () => {
 
 		addEdit(edits, { start: 2, end: 3, text: `b` })
 
-		// Such a pair is one no caller may build, and one `applyEditsFromEnd` cannot apply. Folding it would put a text somewhere neither edit named and leave a caller reading its own value wrongly with nothing to show for it, so the two are left as they were.
+		// Such a pair no caller may build and `applyEditsFromEnd` cannot apply; folding it would put a text somewhere neither edit named and leave a caller reading its own value wrongly, so the two are left as they were.
 		expect(edits).toStrictEqual([
 			{ start: 2, end: 2, text: `a` },
 			{ start: 2, end: 3, text: `b` },

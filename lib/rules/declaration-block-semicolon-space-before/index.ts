@@ -34,12 +34,12 @@ export let meta = {
 
 /**
  * Requires a single space or disallows whitespace before the semicolons of declaration blocks.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always`, `never`, `always-single-line` and `never-single-line`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always`, `never`, `always-single-line` or `never-single-line`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line`): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
@@ -68,14 +68,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// Stored for future safe replacement
 				isCustomPropertyWithOnlySpaces = WHITESPACE_ONLY.test(value)
 
-				// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/50
-				// The single space may stand at the tail of `raws.between` rather than in the value until the file is read back: the fix of `declaration-colon-space-after` writes it there, and a check running behind that fix in the same pass — one deferred to the run's end above all (#355) — reads the declaration before the next parse
+				// The space may stand at the tail of `raws.between` until the next parse: `declaration-colon-space-after` writes it there, and a check deferred to the run's end (#355) runs before that (#50)
 				if (primary.startsWith(`never`) && betweenTailAfterColon(syntax, decl, result) + value === ` `) return
 			}
 
 			let declString = declarationString(syntax, decl)
 			let problemIndex = declString.length - 1
-			// The semicolon goes right after the declaration's text, and the whitespace run the fix cuts into ends it. Where an inline comment stands there, the line break that run begins with is what closes the comment, so either option would take the semicolon into the comment's text: neither can be satisfied, so leave the declaration alone and let the warning stand. Where the value is nothing but that run, it is the run behind the colon as well, and the rules asked about it settle between them which of them write it (#416)
+			// The semicolon goes at the end of the run the fix cuts into; a `//` comment there is closed by that run's break, so either option would take the semicolon into it: the warning stands. A value of nothing but that run is the run behind the colon too, whose writer the rules asked about it settle (#416)
 			let isFixable = !syntax.writesIntoInlineComment(decl, result) && writesSharedRun(syntax, decl, result, ruleName)
 
 			checker.before({

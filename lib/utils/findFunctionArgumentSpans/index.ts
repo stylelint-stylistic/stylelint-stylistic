@@ -2,10 +2,10 @@ import { IDENTIFIER_CODE_POINT, LINE_BREAK, OPENS_NO_IDENTIFIER } from "../../re
 import { readIdentifierCharacter } from "../readIdentifierCharacter/index.ts"
 
 /**
- * Skips a quoted string, from its opening quote to the character behind its closing one.
- * @param text - The text being scanned.
- * @param openIndex - The index of the opening quote.
- * @returns The index behind the closing quote, or the end of the scanned text.
+ * Skips a quoted string.
+ * @param text - The value the string stands in.
+ * @param openIndex - The opening quote.
+ * @returns The index behind the closing quote, or the end of the text.
  */
 function skipString (text: string, openIndex: number): number {
 	let quote = text[openIndex]
@@ -17,10 +17,10 @@ function skipString (text: string, openIndex: number): number {
 }
 
 /**
- * Skips whatever a text spells at an index that is not code: a quoted string, a block comment, an inline comment.
- * @param text - The text being scanned.
- * @param index - The index to read from.
- * @returns The index behind what was skipped, or null where code stands there.
+ * Skips a string, a block comment or a `//` comment standing at an index.
+ * @param text - The value scanned.
+ * @param index - Where the candidate opens.
+ * @returns The index behind it, or null where code stands there.
  */
 function skipNonCode (text: string, index: number): number | null {
 	let character = text.charAt(index)
@@ -44,12 +44,10 @@ function skipNonCode (text: string, index: number): number | null {
 }
 
 /**
- * The length of the escape a text carries at an index, backslash included, and zero where the backslash escapes nothing.
- *
- * An escape spells one character of an identifier with several, and {@link readIdentifierCharacter} reads both spellings CSS gives it, handing back the character along with the index behind it. So `\66 oo` is `foo` and `\)` is a parenthesis that closes nothing. A backslash escapes nothing where a line break stands behind it or where the text ends there — it is a delimiter of its own then, and no character of any name, which is the empty character that reading answers with.
- * @param text - The text being scanned.
- * @param index - The index of the backslash.
- * @returns The number of characters the escape occupies, or zero where the backslash opens none.
+ * The length of the escape at an index, backslash included. {@link readIdentifierCharacter} reads both spellings; a backslash in front of a line break or at the end escapes nothing.
+ * @param text - The value holding the backslash.
+ * @param index - The backslash.
+ * @returns The characters the escape occupies, or zero.
  */
 function escapeLength (text: string, index: number): number {
 	let { character, end } = readIdentifierCharacter(text, index)
@@ -58,20 +56,14 @@ function escapeLength (text: string, index: number): number {
 }
 
 /**
- * The name a call standing at an index was opened by, and the empty string where nothing nameable stands in front of it.
+ * The name of the call opened at an index, or the empty string where none stands in front of it.
  *
- * A name is a run of identifier code points and escapes, read forwards while the text is scanned rather than back from the parenthesis, since a backslash cannot be told from the character it escapes by looking behind it: the run in front of the parenthesis of `fo\6f(` reads `6f` and opens on a digit, while the identifier it spells is `foo` and opens on a letter.
- *
- * A run is a name unless it opens on a digit, or on a hyphen and a digit, or is a hyphen alone: `2px(`, `-2a(`, `-(` and `2-(` are a number or an operator in front of a parenthesis rather than a call, and reading one of them as a call is what corrupts `h1 { width: -(@a * 2)px; }`. An escape opens an identifier wherever it stands, so `\31 23(` is a call however the digits read.
- *
- * Less names one call by an operator rather than by an identifier, `%("%dpx", @a)` formatting a string, so a `%` in front of the parenthesis names that call and no other character does. It names one only where no run of name characters closes on the character in front of the `%` itself: the `%` of `50%(1)` and of `\31 %(1)` closes a percentage, which CSS reads as a number in front of a parenthesis and no call at all.
- *
- * The name is handed back in lower case and otherwise as the file spells it: an escape is not resolved, so a caller looking a name up finds `\75 rl` where the file means `url`. Nothing looks one up but the three media utilities, and they ask after `and`, `or`, `not` and `only`, which no file spells that way.
- * @param text - The text being scanned.
- * @param runStart - The index the run of identifier code points in front of the parenthesis opens at, or null where the character in front of it is no such code point.
- * @param runEnd - The index the last run of the text closed at, or minus one where it has held none.
- * @param index - The index of the opening parenthesis.
- * @returns The name, or the empty string where the run is no identifier and no operator names the call.
+ * The name is read forwards during the scan rather than back from the `(`, since the run in front of `fo\6f(` reads `6f`. A run opening on a digit, a hyphen and a digit, or a hyphen alone is a number or an operator, not a name: reading `-(` as a call corrupts `h1 { width: -(@a * 2)px; }`. An escape opens an identifier anywhere. Less names a call by `%`, so a `%` in front of the `(` names one unless a run closes right in front of it, as in `50%(1)`. The name is lower-cased but no escape is resolved, so a lookup finds `\75 rl` where the file means `url`; only the media utilities look one up.
+ * @param text - The value the `(` stands in.
+ * @param runStart - Where the run in front of the `(` opens, or null where none does.
+ * @param runEnd - Where the last run closed, or minus one.
+ * @param index - The opening `(`.
+ * @returns The name, or the empty string.
  */
 function readName (text: string, runStart: number | null, runEnd: number, index: number): string {
 	if (runStart === null) return text[index - 1] === `%` && runEnd !== index - 1 ? `%` : ``
@@ -81,7 +73,7 @@ function readName (text: string, runStart: number | null, runEnd: number, index:
 	return OPENS_NO_IDENTIFIER.test(run) ? `` : run.toLowerCase()
 }
 
-/** The span the arguments of one function call occupy in a text, from the character behind its opening parenthesis to its closing one, under the name the call was made by. */
+/** The arguments of one call, from behind its `(` to its `)`, with the call's name. */
 export type FunctionArgumentSpan = {
 	start: number,
 	end: number,
@@ -89,15 +81,11 @@ export type FunctionArgumentSpan = {
 }
 
 /**
- * Finds the spans the arguments of the function calls of a text occupy in it.
+ * Finds the argument spans of the function calls in a text.
  *
- * A parenthesis opens a call only where an identifier stands in front of it: `url(` and `translate(` open one, while the parentheses of `(min-width: 1px)` and of `screen and (color)` group a media feature and open nothing. `style-search` answers the same question of itself, and answers it wrongly for a text that opens on a parenthesis — it reads the character in front of the first one out of nothing at all and finds a letter there — which is exactly the shape a set of media parameters usually has. What counts as an identifier is {@link readName}'s to say; an interpolation spells none, so `#{$a}(1,2)` and `@{v}(1,2)` name nothing that can be looked up, and `#{$q}(min-width: 1px)` is a media feature behind an interpolated query.
- *
- * A call standing inside a call gets a span of its own, so the spans may lie inside one another; every one of them covers its own arguments and nothing else. A call left open reaches the end of the text, since the text behind it is the arguments as far as anything can tell. A parenthesis that stands inside a string or a comment opens and closes nothing, and neither does one that is escaped, so the address of `url(a\)b)` keeps the parenthesis it spells.
- *
- * The name a call was made by comes with its span, since a caller may know a word that names no function however a file spells it: `and(min-width: 1px)` is a media feature written without the space the grammar asks for, and the rules that read a media query list say so.
- * @param text - The text to scan.
- * @returns The spans, in the coordinates of the scanned text.
+ * A `(` opens a call only behind an identifier as {@link readName} reads one, so `(min-width: 1px)`, `screen and (color)` and `#{$a}(1,2)` open none. Spans nest. A call left open reaches the end of the text. A `(` inside a string or a comment, or escaped, opens nothing. The name comes with the span because a caller may know a word that names no function: `and(min-width: 1px)` is a media feature missing its space.
+ * @param text - The value or params to scan.
+ * @returns The spans, in the text's coordinates.
  */
 export function findFunctionArgumentSpans (text: string): FunctionArgumentSpan[] {
 	let spans: FunctionArgumentSpan[] = []
@@ -110,7 +98,7 @@ export function findFunctionArgumentSpans (text: string): FunctionArgumentSpan[]
 
 	let runStart: number | null = null
 
-	// The index the last run closed at, which the operator Less names a call by is told from a percentage by: a run closing on the character in front of a `%` makes that `%` the end of a number rather than a name of its own
+	// A run closing right in front of a `%` makes it a percentage, not Less's call operator
 	let runEnd = -1
 
 	while (index < text.length) {
@@ -159,7 +147,7 @@ export function findFunctionArgumentSpans (text: string): FunctionArgumentSpan[]
 		}
 	}
 
-	// A call the text never closes holds everything behind it
+	// An unclosed call holds everything behind it
 	for (let opening of openings) {
 		if (opening) spans.push({ start: opening.start, end: text.length, name: opening.name })
 	}

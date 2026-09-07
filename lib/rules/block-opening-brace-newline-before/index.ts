@@ -32,13 +32,13 @@ export let meta = {
 
 /**
  * Requires a newline or disallows whitespace before the opening brace of blocks.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always`, `always-single-line`, `never-single-line`, `always-multi-line` and `never-multi-line`.
- * @param _secondaryOptions - The secondary options, of which this rule takes none.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always`, `always-single-line`, `never-single-line`, `always-multi-line` or `never-multi-line`.
+ * @param _secondaryOptions - Unused.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-single-line` | `never-single-line` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
@@ -57,16 +57,16 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		// Check both kinds of statement: rules and at-rules
+		// Rules and at-rules alike
 		root.walkRules(check)
 		root.walkAtRules(check)
 
 		/**
-		 * Checks a statement for opening brace newline before violations.
-		 * @param statement - The rule or at-rule to check.
+		 * Checks a statement.
+		 * @param statement - The rule or at-rule.
 		 */
 		function check (statement: Rule | AtRule): void {
-			// Return early if blockless or has an empty block
+			// Blockless or empty
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 
 			let source = beforeBlockString(statement, result)
@@ -84,7 +84,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				index: source.length,
 				err: (m) => {
 					let between = typeof statement.raws.between === `string` ? statement.raws.between : ``
-					// The brace stands right after `between`, so an inline comment ending it would swallow the brace, and `never` demands that the brace joins the comment's line, which nothing can grant
+					// `never` would put the brace into a `//` comment ending `between`: no fix
 					let isFixable = !(primary.startsWith(`never`) && syntax.endsWithInlineComment(between, syntax.inlineComments(statement, result)))
 
 					report({

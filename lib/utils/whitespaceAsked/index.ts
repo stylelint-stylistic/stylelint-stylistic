@@ -5,22 +5,20 @@ import type { Syntax } from "../../syntaxes/index.ts"
 import { getLineBreak } from "../getLineBreak/index.ts"
 import { type NeighbourRule, neighbourSettings, speaksOf } from "../neighbourSettings/index.ts"
 
-/** The whitespace a rule about a run writes: a line break, or a single space. A rule asking for neither is a `never`, and asks for nothing at all. */
+/** A break or a single space. */
 export type Whitespace = `newline` | `space`
 
 /**
- * Reads what the rules about one run of whitespace ask a writer to put there, so that a fix writing the run spells it the way those rules would rather than bare, for one of them to respell on the run after — or, where the rule has no fixer, to report on every run after and never put right.
+ * Returns the whitespace the rules about one run ask for, so that a fix spells the run as they would rather than leaving it to a rule already run ([#354](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/354)).
  *
- * Stylelint runs each rule once and in the order the configuration lists them, so a run written behind a rule about it is one that rule never sees until the next run of `--fix` (#354). The settings are read through `neighbourSettings`, under the names of the namespace the asking rule is registered under and in the order the run makes them.
- *
- * Where two rules speak of the run, the one the configuration lists later wins — an `always` with its whitespace, a `never` with none: that is the rule that runs last, and over a run the file spelled from the start it rewrites or strips what the other wrote, so the file ends up spelling such runs one way either way, a configuration contradicting itself included. The winner is the last-listed speaking rule whose fix is turned on, since that is the last write the file gets: a speaking rule whose fix the configuration turned off cannot rewrite what a live one leaves, so it wins only where no live one speaks — and there the whitespace it asks for is still written, the write being the caller's own text rather than the turned-off fix (#485).
- * @param syntax - The syntax the asking rule is built over, whose namespace names the rules.
- * @param node - The node the run is written into, which the line break is read for.
- * @param result - The Stylelint result, which holds the configuration.
- * @param rules - The rules about the run, by the whitespace each of them writes.
- * @param isSingleLine - Whether the text those rules count the lines of stands on one line, asked only where an option turns on it.
- * @param fallback - What to write where no rule speaks of the run at all, which is nothing unless the caller says otherwise.
- * @returns The whitespace: the line break `getLineBreak` gives, a single space, nothing, or the fallback.
+ * The settings come through `neighbourSettings`, under the asking rule's namespace. Of two speaking rules the later-listed one with its fix on wins, its write being the file's last; a rule whose fix is off wins only where no live one speaks, and the caller still writes its whitespace ([#485](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/485)).
+ * @param syntax - The asking rule's, whose namespace names the rules.
+ * @param node - Written into, and read for the line break.
+ * @param result - Holds the configuration.
+ * @param rules - By the whitespace each writes.
+ * @param isSingleLine - Whether the counted text is one line, asked only where an option needs it.
+ * @param fallback - What to write where no rule speaks.
+ * @returns The break `getLineBreak` gives, a space, nothing, or the fallback.
  */
 export function whitespaceAsked (syntax: Syntax, node: Node, result: PostcssResult, rules: Partial<Record<Whitespace, NeighbourRule>>, isSingleLine: () => boolean, fallback: string = ``): string {
 	let spoke = false

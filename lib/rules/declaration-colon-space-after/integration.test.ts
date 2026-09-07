@@ -129,7 +129,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/371
+			// See #371
 			description: `a value that holds no word of its own: the run behind the colon is taken away, and the one in front of the semicolon is left where the parser filed it, so that the rule asked about that one reaches it still`,
 			code: `a { color:  /*comment*/ ; }`,
 			fixed: `a { color:/*comment*/; }`,
@@ -153,7 +153,7 @@ testRule({
 	],
 })
 
-// Where a declaration's value is nothing but whitespace, the run this rule reads behind the colon is the run the `declaration-block-semicolon-*-before` rules read in front of the semicolon (#416). The library lists the rule a block names first and its extra rules behind it, so every block below has the neighbour run last: that is the order in which the neighbour used to be blind to what this rule wrote, and the two took the run in turns.
+// Where a value is nothing but whitespace, the run behind the colon is the run the `declaration-block-semicolon-*-before` rules read in front of the semicolon (#416). The library lists the block's rule first and its extra rules behind, so the neighbour runs last in every block below: the order in which it used to be blind to what this rule wrote, and the two took the run in turns.
 testRule({
 	ruleName,
 	config: [`always`],
@@ -161,7 +161,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/416
+			// See #416
 			description: `a value that is nothing at all, which the neighbour asks to stay nothing and this rule asks to open with a space: the neighbour is listed last and has the last word, so the space is not written and the warning stands`,
 			code: `a { color:; }`,
 			fixed: `a { color:; }`,
@@ -260,7 +260,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/484
+			// See #484
 			description: `a break already standing behind the colon of a value that is a flag behind its run, which the newline rule listed last asks to stay: the space is not written and the warning stands`,
 			code: `
 				a { color:
@@ -308,11 +308,11 @@ testRule({
 			code: `
 				a { --b:
 				/*c
-				*/ ; }
+				 */ ; }
 			`,
 			fixed: `
 				a { --b: /*c
-				*/
+				 */
 				 ; }
 			`,
 			line: 1,
@@ -358,7 +358,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/485
+			// See #485
 			description: `a value that is nothing but a break, which the neighbour asks to take away and cannot: the space is written, and the neighbour's report stands over it as the configuration asked`,
 			code: `
 				a { color:
@@ -385,14 +385,14 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to the tokenizer, and the machinery of the shared run reads whitespace the tokenizer's way (#494): the fix writes its space in front of such a character instead of taking it for the run and carrying it off.
+// A vertical tab and a no-break space are words to the tokenizer, whose reading the shared run follows (#494): the fix writes its space in front of such a character instead of carrying it off with the run.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494
+			// See #494
 			description: `a value that is a vertical tab, which the tokenizer reads as a word: the space is written in front of it, and the character stays`,
 			code: `a { color:\v; }`,
 			fixed: `a { color: \v; }`,
@@ -412,7 +412,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494
+			// See #494
 			description: `a vertical tab behind the colon with a space of its own: the space this rule writes opens the value's word, the neighbour's \`never\` takes the run in front of the semicolon, and the character stands between them`,
 			code: `a { color:\v ; }`,
 			fixed: `a { color: \v; }`,
@@ -436,7 +436,7 @@ testRule({
 	],
 })
 
-// A deferred rule writes the head run the two colon rules share only where the rule ahead accepts what the write leaves (#355): one that was content with the run as it stood has spoken by staying silent, and erasing its run would leave the file violating a rule that reported nothing.
+// A deferred rule writes the head run the two colon rules share only where the rule ahead accepts what the write leaves (#355): a rule content with the run has spoken by staying silent, and erasing its run would leave the file violating a rule that reported nothing.
 testRule({
 	ruleName,
 	config: [`always-single-line`],
@@ -444,7 +444,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355
+			// See #355
 			description: `a break behind the colon the neighbour is content with: the deferred single-line option reports the run and leaves it alone, and the file rests with that warning standing`,
 			code: `a { b:\nx; }`,
 			fixed: `a { b:\nx; }`,
@@ -455,7 +455,7 @@ testRule({
 			message: messages.expectedAfterSingleLine(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			// See #387
 			description: `the same break where the declaration prints nothing behind its colon, so that the run the neighbour is content with is the one the block's own raw holds`,
 			code: `a { b:\n}`,
 			fixed: `a { b:\n}`,
@@ -466,7 +466,7 @@ testRule({
 			message: messages.expectedAfterSingleLine(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+			// See #387
 			description: `the same run held by the raw of a comment written behind the declaration`,
 			code: `a { b:\n/*c*/ }`,
 			fixed: `a { b:\n/*c*/ }`,
@@ -479,7 +479,7 @@ testRule({
 	],
 })
 
-// `declaration-block-trailing-semicolon: never` takes the semicolon away along with the run in front of it, and the run in the block's raw becomes the run behind the colon; this rule reads the run as that rule will leave it whichever order the configuration lists the two in (#536).
+// `declaration-block-trailing-semicolon: never` takes the semicolon and the run in front of it away, and the block's raw becomes the run behind the colon; this rule reads the run as that rule will leave it in either order (#536).
 testRule({
 	ruleName,
 	config: [`never`],

@@ -8,11 +8,11 @@ import type { Syntax } from "../index.ts"
 
 import { readsSlashAsOperator } from "./readsSlashAsOperator/index.ts"
 
-/** The syntax of the `scss` namespace: a stylesheet written in SCSS and parsed with `postcss-scss`. The namespace is a superset of the core — plain CSS is read exactly as the core reads it, an embedded plain block of a page included — so a project holding both configures these rules alone for the files that carry SCSS. What is the adapter's own is the gate and the guards over the constructs only Sass spells: a module reading, a placeholder, a nested property, `@content`, a comment the parser marked inline. The pair of copies the parser keeps of a text is read and written by the core's own adapter, which reads whichever copies a node carries. */
+/** The syntax of the `scss` namespace: SCSS parsed with `postcss-scss`. A superset of the core, plain CSS included, so a project holding both configures these rules alone for the SCSS files. */
 export let scss: Syntax = {
 	...css,
 	namespace: `scss`,
-	// A styled template is the styled namespace's whatever else holds; plain CSS — a file opened with no custom syntax at all — is accepted as the core accepts it; of the rest, the reading of a double slash tells the syntaxes apart: `postcss-scss` spells such a comment and keeps none in the text a rule reads, Less spells one and keeps it, and a syntax spelling none reads the probe as plain CSS
+	// A styled template is the styled namespace's, a file opened with no custom syntax plain CSS; the rest are told apart by a `//`: `postcss-scss` spells such a comment and keeps none in the text a rule reads, Less keeps it, a syntax spelling none reads the probe as plain CSS
 	accepts (root: Root, result: PostcssResult): boolean {
 		if (root.raws.styledSyntaxRangeStart !== undefined) return false
 

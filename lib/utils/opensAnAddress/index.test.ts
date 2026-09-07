@@ -39,7 +39,7 @@ describe(`opensAnAddress`, () => {
 		expect(addressesOf(`a \\75 rl(b)`)).toEqual([`rl`])
 	})
 
-	// The second of these is the shape the gathering is for: the call's own name is empty, every letter of `url` standing in a word of its own in front of it. `lightningcss` compiles `\75 \72 \6c (13PX)` to `url("13PX")` and Sass to `url(13PX)`.
+	// The second is the shape the gathering is for: the call's own name is empty, every letter of `url` standing in a word of its own in front of it. `lightningcss` compiles `\75 \72 \6c (13PX)` to `url("13PX")` and Sass to `url(13PX)`.
 	it(`a name gathered from several such escapes, which spells the name all the same`, () => {
 		expect(addressesOf(`\\75 \\72 l(a)`)).toEqual([`l`])
 		expect(addressesOf(`\\75 \\72 \\6c (a)`)).toEqual([``])
@@ -61,7 +61,7 @@ describe(`opensAnAddress`, () => {
 		expect(addressesOf(`urls(a)`)).toEqual([])
 	})
 
-	// CSS counts the Windows pair as the one whitespace character closing an escape, and `lightningcss` reads `\75\r\nrl(x.png)` as an address. Sass parts company here alone, answering `expected "("` — its own reading of the pair rather than anything about the name — so this spelling stands on the grammar and on `lightningcss`, where every other terminator has Sass behind it too.
+	// CSS counts the Windows pair as the one whitespace character closing an escape, and `lightningcss` reads `\75\r\nrl(x.png)` as an address; Sass alone answers `expected "("`, its own reading of the pair rather than of the name, so this spelling stands on the grammar and `lightningcss` where every other terminator has Sass behind it too.
 	it(`a Windows pair closing the escape, which CSS counts as the one character`, () => {
 		expect(addressesOf(`\\75\r\nrl(a)`)).toEqual([`rl`])
 	})

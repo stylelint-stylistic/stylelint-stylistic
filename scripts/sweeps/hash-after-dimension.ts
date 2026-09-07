@@ -1,7 +1,7 @@
 /**
- * A character an interpolation is spelled with, welded to a dimension where no interpolation stands, in every environment a value stands in, under the two rules that recase what they read.
+ * A character an interpolation is spelled with, welded to a dimension where no interpolation stands, under the two rules that recase what they read.
  *
- * Written for #426, where `unit-case` cut every such character out of the copy it read a word in, glued `10px` to `fff` and named `pxfff` the unit of `10px#fff` — recasing the hash along with the unit. The characters are welded behind the dimension, in front of it, and between the parts of a multiplication, since the reader reads such a word part by part and the writer has to cut where the reader did; the empty glue is the control, so that every head is also measured with nothing welded to it. An escaped hash is among the glues on purpose: to the tokenizer it is a code point of the identifier, so `10px\#fff` is one dimension token, and what this sweep says of it belongs to #414 rather than here.
+ * Written for [#426](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/426), where `unit-case` named `pxfff` the unit of `10px#fff`. The glue stands behind the dimension, in front of it, and inside a product; the empty glue is the control. The escaped hash is here on purpose: `10px\#fff` is one dimension token, which belongs to [#414](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/414).
  */
 
 import { multiply, place } from "../harness/matrix.ts"
@@ -21,7 +21,7 @@ const name: Sweep[`name`] = `hash-after-dimension`
 const corpus: Sweep[`corpus`] = place(
 	[
 		...multiply({ head: { ...HEADS, ...PRODUCTS }, glue: GLUES, side: SIDES }, ({ head = ``, glue = ``, side }) => (side === `ahead` ? `${glue}${head}` : `${head}${glue}`)),
-		// The glue welded to the first part of a product, in front of its star
+		// The glue in front of a product's star
 		...multiply({ head: PRODUCTS, glue: GLUES, side: { inside: `inside` } }, ({ head = ``, glue = `` }) => head.replace(`*`, `${glue}*`)),
 	],
 	{

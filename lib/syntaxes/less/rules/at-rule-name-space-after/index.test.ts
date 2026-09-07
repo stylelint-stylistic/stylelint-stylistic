@@ -23,7 +23,7 @@ testRule({
 			description: `a Less variable whose value stands on the next line`,
 			code: `@nice-blue:\n#5B83AD;`,
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/394
+		// See #394
 		{
 			description: `a Less variable declared with a tab in front of its colon, which the parser leaves unmarked`,
 			code: `@nice-blue\t: #5B83AD;`,
@@ -40,7 +40,7 @@ testRule({
 			description: `a detached ruleset passed to a mixin`,
 			code: `@detached-ruleset: { background: red; }; .top { @detached-ruleset(); }`,
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/357
+		// See #357
 		{
 			description: `the same call carrying a lookup, which Less inlines just as it inlines the bare one`,
 			code: `@detached-ruleset: { background: red; }; .top { @detached-ruleset()[background]; }`,

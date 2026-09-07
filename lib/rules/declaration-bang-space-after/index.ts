@@ -24,12 +24,12 @@ export let meta = {
 
 /**
  * Requires a single space or disallows whitespace after the bang of declarations.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always` and `never`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always` or `never`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
@@ -50,7 +50,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			checkedRuleName: ruleName,
 			fix: (target) => {
 				let start = target.index + 1
-				// Where the whitespace run behind the bang ends, which is where the print picks up again: a bang the declaration ends on has no run behind it, and the write is an insertion
+				// The end of the run behind the bang; a bang ending the declaration has none, and the write is an insertion
 				let end = target.text.length - target.text.slice(start).replace(LEADING_CSS_WHITESPACE, ``).length
 
 				if (primary === `always`) return [{ start, end, text: ` ` }]

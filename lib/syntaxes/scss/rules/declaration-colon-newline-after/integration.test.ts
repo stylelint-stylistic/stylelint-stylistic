@@ -7,7 +7,7 @@ let { ruleName: colonSpaceAfterRuleName } = createColonSpaceAfter(scss)
 
 let testRule = createTestRule({ ruleName })
 
-// The two colon rules read one and the same run behind the colon (#484), and an inline comment stands where a word does: the file used to grow by a space on every run of the fixer with this rule listed first.
+// The two colon rules read the same run behind the colon (#484), and an inline comment stands where a word does: the file used to grow by a space on every run of the fixer with this rule listed first.
 testRule({
 	ruleName,
 	config: [`always`],
@@ -16,7 +16,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/484
+			// See #484
 			description: `an inline comment on the colon's line, over whose run the file used to grow: the space rule is listed last and has the last word, so the break is not written and the warning stands`,
 			code: `
 				a { color: // c

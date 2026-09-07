@@ -11,7 +11,7 @@ import { isStandardLessAtRule, isStandardLessDeclaration, isStandardLessProperty
 import { requiresTrailingSemicolon } from "./requiresTrailingSemicolon/index.ts"
 import { syncLessVariableValue } from "./syncLessVariableValue/index.ts"
 
-/** The syntax of the `less` namespace: a stylesheet written in Less and parsed with `postcss-less`. The namespace is a superset of the core — plain CSS is read exactly as the core reads it, an embedded plain block of a page included — so a project holding both configures these rules alone for the files that carry Less. The guards are the core's remaining readings with the Less constructs on top, the writer keeps the copy the Less stringifier prints in step, and the one semicolon Less will not part with is answered here alone. */
+/** The syntax of the `less` namespace: Less parsed with `postcss-less`. A superset of the core, plain CSS included, so a project holding both configures these rules alone for the Less files. */
 export let less: Syntax = {
 	...css,
 	namespace: `less`,
@@ -25,17 +25,17 @@ export let less: Syntax = {
 	requiresTrailingSemicolon,
 	readsRuleParams: (rule: PostcssRule) => `params` in rule && Boolean(rule.params),
 	readsAtRuleAsVariable: (atRule: AtRule) => `variable` in atRule,
-	// Less divides only inside parentheses under its default `math` mode — measured against Less 4.9.1, `@a/2` prints `4/2` and `2/@a` prints `2/4` while `(4/2)` prints `2` — and a parenthesised group is a nameless call the rules pass over. Under `math: always` it divides everywhere, and whether whitespace stands beside the solidus changes nothing to it. So a solidus outside parentheses is the separator it is to the core
+	// Under its default `math` mode Less divides only inside parentheses (`@a/2` prints `4/2`), a nameless call the rules pass over, so a solidus outside is the separator it is to the core
 	readsSlashAsOperator: () => false,
-	// Less reads a unit as ASCII letters and underscores and a backslash as the first character of a keyword, so `10px\#fff` is a dimension and an escaped value to it, printed `10px \#fff` — measured against Less 4.9.1 in every place it reads an expression, while a declaration whose value spells none of `. # @ $ + / ' " * ` ( { } -` and closes on a semicolon it stores unread and prints whole. Answered for the whole namespace rather than probed node by node, as the solidus above is: the reading only shortens a unit, so the one thing it can cost is a warning about characters the core would have named, never a write (#527)
+	// Less reads a unit as ASCII letters and underscores, so `10px\#fff` is a dimension and an escaped value. Answered for the whole namespace, since the reading only shortens a unit and costs at most a warning, never a write (#527)
 	endsUnitAtEscape: () => true,
-	// The core writes every copy PostCSS and `postcss-scss` keep; a Less variable holds one more, the `value` its stringifier prints, and it is kept in step here
+	// A Less variable keeps one copy more than the core writes, the `value` its stringifier prints
 	write (node: AtRule | Declaration | PostcssRule, text: string): void {
 		css.write(node, text)
 
 		if (isAtRule(node)) syncLessVariableValue(node, text)
 	},
-	// A styled template is the styled namespace's whatever else holds; plain CSS — a file opened with no custom syntax at all — is accepted as the core accepts it; of the rest, the reading of a double slash tells the syntaxes apart: Less spells such a comment and keeps it in the text a rule reads, while `postcss-scss` spells one and keeps none, and a syntax spelling none reads the probe as plain CSS
+	// A styled template is the styled namespace's, a file opened with no custom syntax plain CSS; the rest are told apart by a `//`: Less spells such a comment and keeps it in the text a rule reads, `postcss-scss` keeps none, a syntax spelling none reads the probe as plain CSS
 	accepts (root: Root, result: PostcssResult): boolean {
 		if (root.raws.styledSyntaxRangeStart !== undefined) return false
 

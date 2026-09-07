@@ -175,7 +175,7 @@ testRule({
 			column: 20,
 			message: messages.expected,
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/268
+		// See #268
 		{
 			description: `a fraction with no leading zero standing behind a block comment the value holds`,
 			code: `a { b: 1px /* c */ .50em; }`,
@@ -184,7 +184,7 @@ testRule({
 			column: 20,
 			message: messages.expected,
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/268
+		// See #268
 		{
 			description: `three fractions with no leading zero and a block comment standing among them`,
 			code: `a { b: .50px /* c */ .50em .5rem; }`,
@@ -208,7 +208,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			// See #378
 			description: `a fraction standing beside a comment opening with a solidus, a star and a solidus, whose text spells a fraction of its own that the value parser hands back as a word`,
 			code: `a { b: .5 /*/ .5 */ 3; }`,
 			fixed: `a { b: 0.5 /*/ .5 */ 3; }`,
@@ -217,7 +217,7 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508
+			// See #508
 			description: `a fraction in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no number`,
 			code: `a { b: .5 /*/ " */ ".5"; }`,
 			fixed: `a { b: 0.5 /*/ " */ ".5"; }`,
@@ -393,7 +393,7 @@ testRule({
 			column: 20,
 			message: messages.rejected,
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/268
+		// See #268
 		{
 			description: `a leading zero standing behind a block comment the value holds`,
 			code: `a { b: 1px /* c */ 0.50em; }`,
@@ -402,7 +402,7 @@ testRule({
 			column: 20,
 			message: messages.rejected,
 		},
-		// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/268
+		// See #268
 		{
 			description: `a leading zero in front of a block comment the parameters of a media query hold`,
 			code: `@media (min-width: 0.5px /* c */) { a { b: c; } }`,
@@ -412,7 +412,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			// See #378
 			description: `a fraction standing beside a comment opening with a solidus, a star and a solidus, whose text spells a fraction of its own that the value parser hands back as a word`,
 			code: `a { b: 0.5 /*/ 0.5 */ 3; }`,
 			fixed: `a { b: .5 /*/ 0.5 */ 3; }`,

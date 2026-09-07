@@ -3,9 +3,9 @@ import type { Declaration } from "postcss"
 import { isObject, isString } from "../validateTypes/index.ts"
 
 /**
- * Gets the index of a declaration's value.
- * @param decl - The CSS declaration node.
- * @returns The starting index of the declaration's value.
+ * Gets the index a declaration's value opens at.
+ * @param decl - The declaration.
+ * @returns The index.
  */
 export function declarationValueIndex (decl: Declaration): number {
 	let raws = decl.raws

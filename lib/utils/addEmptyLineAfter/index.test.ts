@@ -58,7 +58,7 @@ describe(`addEmptyLineAfter`, () => {
 		expect(run(`x {y: 1;}\r\na {b: pink;}`, 1)).toBe(`x {y: 1;}\r\na {b: pink;\r\n\r\n}`)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/267
+	// See #267
 	it(`writes that break where it stands outside every raw the whitespace of the tree is kept in`, () => {
 		expect(run(`a {b,\r\nc {color: pink;}}`)).toBe(`a {b,\r\nc {color: pink;}\r\n\r\n}`)
 		expect(run(`a {color: pink !\r\nimportant;}`)).toBe(`a {color: pink !\r\nimportant;\r\n\r\n}`)
@@ -77,7 +77,7 @@ describe(`addEmptyLineAfter`, () => {
 		expect(run(`a {}\r\nb {}`, 0, { "@stylistic/linebreaks": `unix` })).toBe(`a {\n\n}\r\nb {}`)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/292
+	// See #292
 	it(`writes the whitespace an at-rule with neither a block nor a semicolon swallowed`, () => {
 		expect(run(`a {\n\t@extend .b\n}`)).toBe(`a {\n\t@extend .b\n\n}`)
 		expect(run(`a {@extend .b}`)).toBe(`a {@extend .b\n\n}`)

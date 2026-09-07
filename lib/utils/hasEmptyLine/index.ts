@@ -1,9 +1,9 @@
 import { EMPTY_LINE } from "../../regexps.ts"
 
 /**
- * Checks if a string contains at least one empty line.
- * @param string - The string to check.
- * @returns True if the string contains an empty line, false otherwise.
+ * Checks whether a string holds an empty line.
+ * @param string - A raw, undefined where PostCSS keeps none.
+ * @returns True where it does.
  */
 export function hasEmptyLine (string: string | undefined): boolean {
 	if (string === `` || string === undefined) return false

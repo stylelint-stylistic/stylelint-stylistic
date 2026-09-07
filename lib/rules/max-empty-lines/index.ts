@@ -28,12 +28,12 @@ export let meta = {
 
 /**
  * Limits the number of adjacent empty lines.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
- * @param primary - The primary option, a number.
- * @param secondaryOptions - The secondary options: `ignore`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
+ * @param primary - The maximum.
+ * @param secondaryOptions - `ignore`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: number, secondaryOptions: { ignore?: `comments` | `comments`[] }): RuleCheck {
 	return (root, result) => {
@@ -58,11 +58,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 		let ignoreComments = optionsMatches(secondaryOptions, `ignore`, `comments`)
 		let getChars = replaceEmptyLines.bind(null, primary)
 
-		/**
-		 * Collapses every run of empty lines to the number the option allows.
-		 *
-		 * The walk reaches the whitespace each node keeps in front of itself, the two runs a comment keeps around its text, and the run a block keeps in front of its closing brace, which is read and written in the raw `getBlockAfter` names — inside the node closing the block, where that node has swallowed it. The first node of the root and the text standing behind its last one are dealt with apart from the walk: neither is whitespace a node keeps, and the last of them counts an empty line one short, so a max of zero is read as one there.
-		 */
+		/** Collapses every run of empty lines to the maximum: `raws.before`, a comment's `left` and `right`, the run in front of a closing brace, and the root's first node and tail apart from the walk, where an empty line counts one short. */
 		function fix (): void {
 			root.walk((node) => {
 				if (node.type === `comment` && !ignoreComments) {
@@ -84,12 +80,12 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 			let firstNodeRawsBefore = first && first.raws.before
 			let rootRawsAfter = root.raws.after
 
-			// Where the stylesheet is a block embedded in a page, the whitespace in front of its first node and the whitespace behind its last one belong to the page around it, and are left alone.
+			// In an embedded block, the whitespace around the first and last nodes is the page's
 			if ((document && document.constructor.name) !== `Document`) {
 				if (first && firstNodeRawsBefore) first.raws.before = getChars(firstNodeRawsBefore, true)
 
 				if (rootRawsAfter) {
-					// Behind a last node the file ends on a break a max of zero tolerates, so zero is read as one there. A root holding no node keeps the whole of the file here, and the run of breaks it opens with is the one the check counts from the beginning of the file, one empty line a break: that run is written first, as the whitespace in front of a first node is — down to the option's count, and to nothing under a max of zero — and the tail formula then finds it at or under the count and leaves it, writing what stands behind it as the tail of any file. Written as a tail whole, such a file kept a break under every option, and the warning stood after every run of `--fix` (#404).
+					// Zero is read as one, a file ending on a break satisfying it. An empty root keeps the whole file here, and its leading run is written as such first, or a break survived every `--fix` (#404)
 					root.raws.after = replaceEmptyLines(primary === 0 ? 1 : primary, first ? rootRawsAfter : rootRawsAfter.replace(LEADING_LINE_BREAK_RUN, (run) => getChars(run, true)), true)
 				}
 			}
@@ -103,7 +99,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 		let lastIndex = -1
 		let rootString = root.toString()
 
-		// A file that ends on a line break is counted one empty line more than the breaks inside it, so where the file ends decides that count — and it is not the last character of the text. A run of spaces and tabs written behind the file's last break is a line of its own, and emptying it is `no-eol-whitespace`'s work; read as the last character, the end of the file would stand behind that run and hide the break in front of it. So `a {}` and two line feeds was reported for the empty line it ends on and the same file with three spaces written behind them was not, and which of the two a neighbouring fixer had left standing decided the answer. It is measured once here rather than at every match, where each would cost a slice of the tail.
+		// A file ending on a break counts one empty line more, and spaces and tabs behind the last break are `no-eol-whitespace`'s line, so the end is measured in front of them
 		let endOfFile = rootString.replace(TRAILING_SPACES_AND_TABS, ``).length
 		let opensTheFile = false
 
@@ -119,10 +115,10 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 		)
 
 		/**
-		 * Checks a match for empty line violations.
-		 * @param matchStartIndex - The start index of the match.
-		 * @param matchEndIndex - The end index of the match.
-		 * @param node - The root node.
+		 * Checks a match.
+		 * @param matchStartIndex - The match's start.
+		 * @param matchEndIndex - The match's end.
+		 * @param node - The root.
 		 */
 		function checkMatch (matchStartIndex: number, matchEndIndex: number, node: Root): void {
 			let eof = matchEndIndex >= endOfFile
@@ -152,7 +148,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 				})
 			}
 
-			// Additional check for end of file. It counts nothing where the run the file ends on is the run it opened with — the first break of the text and every break standing right behind one — since the check for the beginning of the file has counted each of those an empty line already: a file holding nothing but such a run and the spaces behind it was counted once for its beginning and once more for its end, a line over what it has (#404).
+			// Additional check for end of file, skipped where the file's last run is its first, counted already; such a run alone was counted at both ends (#404)
 			if (eof && primary && !opensTheFile) {
 				emptyLines += 1
 
@@ -174,22 +170,20 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: numb
 }
 
 /**
- * Asks whether a node carries a block, and so a run in front of a closing brace of its own.
- *
- * The question is put to the node rather than to a list of types, so that the declaration `postcss-scss` hangs a Sass nested property on is answered like a rule and an at-rule: it is a container at run time, however the declaration is typed, and the run it keeps in front of its brace is read and written the same way.
+ * Asks whether a node carries a block. Put to the node, not a list of types, so a Sass nested property's declaration is answered like a rule: a container however typed.
  * @param node - A node of the walk.
- * @returns True where the node carries a block.
+ * @returns True where it carries a block.
  */
 function carriesABlock (node: ChildNode): node is ChildNode & Container {
 	return hasBlock(node)
 }
 
 /**
- * Replaces excessive empty lines in a string with the allowed maximum.
- * @param maxLines - The maximum number of allowed adjacent empty lines.
- * @param str - The string to process.
- * @param isSpecialCase - Whether this is a special case (end of file).
- * @returns The string with excessive empty lines replaced.
+ * Collapses runs of empty lines to the maximum.
+ * @param maxLines - The maximum.
+ * @param str - The string.
+ * @param isSpecialCase - Whether at the end of file.
+ * @returns The collapsed string.
  */
 function replaceEmptyLines (maxLines: number, str: unknown, isSpecialCase: boolean = false): string {
 	let repeatTimes = isSpecialCase ? maxLines : maxLines + 1
@@ -213,15 +207,15 @@ function replaceEmptyLines (maxLines: number, str: unknown, isSpecialCase: boole
 }
 
 /**
- * Checks whether the given node is the last node of file.
- * @param document - The document node with `postcss-html` and `postcss-jsx`.
- * @param root - The root node of CSS.
- * @returns True if the node is the last node of file, false otherwise.
+ * Asks whether the root is the last node of the file.
+ * @param document - The document under a host syntax.
+ * @param root - The stylesheet parsed out of the document.
+ * @returns True if only whitespace follows.
  */
 function isEofNode (document: PostcssResult[`root`], root: Root): boolean {
 	if (!document || document.constructor.name !== `Document` || !(`type` in document)) return true
 
-	// In the `postcss-html` and `postcss-jsx` syntax, checks that there is text after the given node.
+	// The text behind the root
 	let after
 
 	if (root === document.last) after = document.raws && document.raws.codeAfter

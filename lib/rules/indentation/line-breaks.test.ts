@@ -3,7 +3,7 @@ import { messages, ruleName } from "./index.ts"
 let testRule = createTestRule({ ruleName })
 
 // Every fixture here is written on one line with escapes, since a carriage return is invisible in the source and no editor leaves it where it is put.
-// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/294
+// See #294
 
 testRule({
 	ruleName,
@@ -30,7 +30,7 @@ testRule({
 			message: messages.expected(`1 tab`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/452
+			// See #452
 			description: `a declaration whose indentation opens with a bare carriage return, which is whitespace to the parser and part of the run the fix writes over`,
 			code: `a {\n\r\t\tcolor: pink;\n}`,
 			fixed: `a {\n\tcolor: pink;\n}`,
@@ -79,7 +79,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/452
+			// See #452
 			autoStripIndent: false,
 			description: `a stylesheet whose first node stands behind a bare carriage return and a tab, whitespace to the parser and no line`,
 			code: `\r\ta{}`,

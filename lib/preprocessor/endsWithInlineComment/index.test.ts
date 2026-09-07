@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest"
 
 import { endsWithInlineComment } from "./index.ts"
 
-/** The reading Less has, which leaves such a comment standing in the value a rule reads. */
+/** Less's reading, which leaves such a comment in the value a rule reads. */
 const LESS = { spells: true, keeps: true, answered: true }
 
-/** The reading plain CSS has, which spells no comment with a double slash at all. */
+/** Plain CSS's reading, which spells no `//` comment. */
 const PLAIN_CSS = { spells: false, keeps: false, answered: true }
 
 describe(`endsWithInlineComment`, () => {
@@ -110,8 +110,7 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`myurl(//a)`, PLAIN_CSS)).toBe(false)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/398
-	// The name in front of the address, read as the walk that finds the comments reads it: a code point of an identifier, a closing brace, or an escape spelling anything at all. A pattern of the guard's own read the name in the ASCII word characters and the hyphen alone, so each of the three below was "no name" and the ordinary call it names was taken for an address whose double slashes opened nothing.
+	// The name in front of the address is read as the comment walk reads it: an identifier code point, a closing brace or an escape. A pattern of the guard's own read ASCII word characters and the hyphen alone, so each call below was "no name" and taken for an address whose double slashes opened nothing. See #398
 	it(`a call whose name ends in a character no ASCII word holds, whose arguments hold a comment`, () => {
 		expect(endsWithInlineComment(`b: aurl(http://a/b.png) 1px; `, LESS)).toBe(true)
 		expect(endsWithInlineComment(`b: éurl(http://a/b.png) 1px; `, LESS)).toBe(true)
@@ -119,12 +118,12 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`b: \\75 url(http://a/b.png) 1px; `, LESS)).toBe(true)
 	})
 
-	// The address is closed on the first parenthesis behind it, where the scan that finds the comments of a text counts the parentheses and reads the whole of `url(a(b)c//d)` as one address. Neither reading has a compiler behind it — Less answers `expected ')' got '('` and Sass `expected ")"` — and this one is the safe half of the two, a fix held back where the other would write.
+	// The address closes on the first parenthesis behind it, where the comment scan counts parentheses and reads the whole of `url(a(b)c//d)` as one address. Neither reading has a compiler behind it (Less and Sass both refuse the text), and this one is the safe half: a fix held back where the other would write.
 	it(`a parenthesis inside a bare address, which closes the address for this reading`, () => {
 		expect(endsWithInlineComment(`b: url(a(b)c//d) 1px; `, LESS)).toBe(true)
 	})
 
-	// A quotation mark opens the arguments of the url function, and a double slash among them opens the comment Sass reads there: it compiles the first of these to `a { b: url("a") 1px; }`. The scan that finds the comments of a text reads those slashes as code, which is the tokenizers' reading of them and the other half of the same divergence.
+	// A quoted argument of `url` leaves a double slash behind it opening the comment Sass reads there: the first of these compiles to `a { b: url("a") 1px; }`. The comment scan reads those slashes as code, the tokenizers' reading and the other half of the same divergence.
 	it(`a double slash beside a quoted address, which opens the comment Sass reads there`, () => {
 		expect(endsWithInlineComment(`b: url("a" // c\n) 1px; `, LESS)).toBe(false)
 		expect(endsWithInlineComment(`b: url("a" // c`, LESS)).toBe(true)
@@ -132,7 +131,7 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`b: url( "a" // c`, LESS)).toBe(true)
 	})
 
-	// The text is a prefix of the one the file spells there, and a `url(` it leaves open is one the file closes behind it: the address runs to the end of what there is, and the double slashes of the protocol open nothing.
+	// The text is a prefix of what the file spells, so a `url(` left open is one the file closes behind it: the address runs to the end, and the protocol's double slashes open nothing.
 	it(`an address the text is cut short inside, which the file closes behind it`, () => {
 		expect(endsWithInlineComment(`( c: url( http://a/b.png `, LESS)).toBe(false)
 		expect(endsWithInlineComment(`b: url(http://a/b.png`, LESS)).toBe(false)
@@ -140,7 +139,7 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`b: image-url( http://a/b.png `, LESS)).toBe(true)
 	})
 
-	// A name opens behind whatever closed the state in front of it and holds none of what stood inside: a reader keeping the name's start has to say so at every one of the four, or it puts `x"url`, `c*/url`, `c\nurl` and `x)url` to the question and reads an address as an ordinary call.
+	// A name opens behind whatever closed the state in front of it: a reader keeping the name's start has to say so at every one of the four, or it puts `x"url`, `c*/url`, `c\nurl` and `x)url` to the question and reads an address as an ordinary call.
 	it(`an address whose name abuts the character that closed the string, the comment or the address in front of it`, () => {
 		expect(endsWithInlineComment(`b: "x"url(http://a/b.png) 1px; `, LESS)).toBe(false)
 		expect(endsWithInlineComment(`b: 'x'url(http://a/b.png) 1px; `, LESS)).toBe(false)
@@ -149,14 +148,13 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`b: url(x)url(http://a/b.png) 1px; `, LESS)).toBe(false)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/344
+	// See #344
 	it(`an address whose name is spelled with an escape, whose double slashes open nothing`, () => {
 		expect(endsWithInlineComment(`b: u\\rl(http://a/b.png) 1px; `, LESS)).toBe(false)
 		expect(endsWithInlineComment(`b: \\75 rl(http://a/b.png) 1px; `, LESS)).toBe(false)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566
-	// A backslash in front of any of the four newlines the grammar reads spells nothing and is a delimiter of its own, so the name behind it stands on its own and names the address it spells. The form feed and the bare carriage return of the last two lines used to be read as characters the escape spells, which made an ordinary call of each and a comment of its protocol's double slashes.
+	// A backslash in front of any of the four newlines spells nothing and delimits, so the name behind it stands on its own. The form feed and the bare carriage return used to be read as escaped characters, which made an ordinary call of each and a comment of its protocol's double slashes. See #566
 	it(`an address behind a backslash and a newline of any of the four spellings, which the backslash names nothing in front of`, () => {
 		expect(endsWithInlineComment(`b: \\\nurl(http://a/b.png) 1px; `, LESS)).toBe(false)
 		expect(endsWithInlineComment(`b: \\\r\nurl(http://a/b.png) 1px; `, LESS)).toBe(false)

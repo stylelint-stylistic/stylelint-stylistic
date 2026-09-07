@@ -471,7 +471,7 @@ testRuleConfigs({
 	],
 })
 
-// The `<ratio>` of a media feature is read under the same options as the property's value (#551), in the plain form and in the range form alike, the `device-aspect-ratio` feature and the `min-` and `max-` spellings of both included.
+// The `<ratio>` of a media feature is read under the same options as the property's value (#551), in the plain and the range form, `device-aspect-ratio` and the `min-` and `max-` spellings of both included.
 testRule({
 	ruleName,
 	config: [`ratio`],

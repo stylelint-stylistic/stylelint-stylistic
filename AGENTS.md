@@ -75,6 +75,8 @@ Indentation is stripped from every fixture, so multi-line `code` and `fixed` 
 
 ## Comments
 
+A comment is as short as it can be and still keep what a reader would otherwise get wrong: the mechanism, the reason, the issue number. One sentence that says it beats three that build up to it, so a second phrasing of the same idea, the history of how the code came to be, and an example of what a sentence already says are cut. The same holds for every small piece of prose, JSDoc, a changelog entry, a commit body and a test description alike, and it is no column limit: a sentence stays whole, however long, and a paragraph stays one line.
+
 Nothing in a comment is ever wrapped by hand: a paragraph is one line, however long it turns out, and a blank comment line is all that separates one paragraph from the next. No column limit applies — where the text breaks is for the reader's window to decide, not for the author. Comments keep plain spaces, never the non-breaking ones of the section below.
 
 Three things inside a comment are not prose, and keep the lines they are written on: a list, a block of code, and a multi-line type literal such as the object type a parameter of a checker is written with in [selectorAttributeOperatorSpaceChecker](lib/utils/selectorAttributeOperatorSpaceChecker/index.ts).
@@ -103,7 +105,7 @@ Prose binds function words to their neighbours with a non-breaking space (`U+
 
 ## Commit messages
 
-The subject line is one imperative sentence, capitalized, with no trailing period and **no conventional-commits prefix** — write `Fix the build target`, never `fix:`, `chore(build):` or the like. Wrap code identifiers in backticks (`` Migrate from `node:test` to `vitest` ``). Explain the why in the body when the subject cannot carry it.
+The subject line is one imperative sentence, capitalized, with no trailing period and **no conventional-commits prefix** — write `Fix the build target`, never `fix:`, `chore(build):` or the like. Wrap code identifiers in backticks (`` Migrate from `node:test` to `vitest` ``). Explain the why in the body when the subject cannot carry it, in as few sentences as carry it; a body that retells the diff says nothing.
 
 Nothing in the body is ever wrapped by hand, exactly as in a comment and in a Markdown file: a paragraph is a single line, as long as the paragraph itself, and a blank line is all that separates one paragraph from the next. No column limit applies, neither 72 nor 80 nor 100. Everything else follows the rules for Markdown files, the prose typography above included.
 

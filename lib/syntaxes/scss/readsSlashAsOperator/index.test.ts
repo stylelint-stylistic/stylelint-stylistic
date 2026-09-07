@@ -5,7 +5,7 @@ import { readsSlashAsOperator } from "./index.ts"
 
 /**
  * Asks about the first solidus of a value, with the nodes the parser puts beside it.
- * @param value - The value.
+ * @param value - A declaration value holding a solidus.
  * @returns What the util answers.
  */
 function divides (value: string): boolean {

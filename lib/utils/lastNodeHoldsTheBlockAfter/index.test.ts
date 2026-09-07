@@ -41,7 +41,7 @@ describe(`lastNodeHoldsTheBlockAfter`, () => {
 		expect(run(`a {\n}`)).toBe(false)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/374
+	// See #374
 	it(`turns away a Less mixin call carrying an important flag, which that syntax prints behind the at-rule's own raw`, () => {
 		expect(run(`a {\n\t.m() !important\n}`, less)).toBe(false)
 		expect(run(`a {\n\t.m() !important}`, less)).toBe(false)
@@ -58,7 +58,7 @@ describe(`lastNodeHoldsTheBlockAfter`, () => {
 	it(`turns away a block whose own raw a fix has already filled, which no parse of this shape leaves anything in`, () => {
 		let statement = parse(`a {\n\t@extend .b;\n}`).first as Rule
 
-		// What `declaration-block-trailing-semicolon` under `never` leaves behind: the flag cleared and the whitespace standing where it stood
+		// What `declaration-block-trailing-semicolon` under `never` leaves: the flag cleared and the whitespace where it stood
 		statement.raws.semicolon = false
 
 		expect(lastNodeHoldsTheBlockAfter(statement)).toBe(false)
@@ -68,7 +68,7 @@ describe(`lastNodeHoldsTheBlockAfter`, () => {
 /**
  * Reads the first statement of a stylesheet and asks the question about it.
  * @param css - The stylesheet.
- * @param syntax - The syntax to read it with, where plain CSS is not the one.
+ * @param syntax - The syntax to read it with, plain CSS unless given.
  * @returns What the util answers.
  */
 function run (css: string, syntax?: { parse: Parser }): ReturnType<typeof lastNodeHoldsTheBlockAfter> {

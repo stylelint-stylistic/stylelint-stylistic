@@ -7,7 +7,7 @@ describe(`the plugin in the wrong field of a config`, () => {
 	it(`lints as usual where it is listed in "plugins"`, async () => {
 		let { results } = await stylelint.lint({
 			code: `a { color: #FFF; }`,
-			// The list the package exports is what a configuration naming the package is handed, so it is listed as a user's configuration lists it, which the types of a configuration do not spell
+			// The exported list is what a configuration naming the package is handed, so it is listed as a user's configuration lists it, which the types of a configuration do not spell
 			config: {
 				plugins: [plugins],
 				rules: { "@stylistic/color-hex-case": `lower` },

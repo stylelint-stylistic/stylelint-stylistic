@@ -1,22 +1,20 @@
 /**
- * A Less variable declaration in every spelling of the whitespace around its colon, put to every rule that reads at-rules.
+ * A Less variable declaration in every spelling of the whitespace around its colon, put to every rule reading at-rules.
  *
- * Written for #394. `postcss-less` marks a variable declaration `variable` only where the colon closes the name, so `@v : pink` came over as an at-rule named `v` carrying `: pink`, and `at-rule-name-case` renamed it. The corpus crosses the name's case with the whitespace in front of the colon and behind it, with what the declaration holds — a plain value, one with a flag, an escaped string, nothing, a detached ruleset, and a control Less reads a directive in rather than a value — with whether a semicolon closes it, and with where it stands. Every text but the control's carries a use of the variable behind the declaration, so that the Less compiler can tell a renamed declaration from an unchanged one: the fixed text of every row is put through `less.render` beside the corpus, and a row whose input compiles while its output does not is the defect.
- *
- * The controls are the at-rules Less reads a colon at the head of the parameters in: `@page :first`, in both cases, and `@supports :x`. A branch about the variable declaration should move none of them.
+ * Written for [#394](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/394): `postcss-less` marks a declaration `variable` only where the colon closes the name, so `@v : pink` came over as an at-rule named `v`. Every text but the control's uses the variable, so a row whose input compiles under `less.render` while its output does not is the defect. The controls are at-rules Less reads a colon at the head of the parameters in.
  */
 
 import { multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** The name of the variable, in the case the rule under test writes and in the other. */
+/** The variable's name, in the case the rule writes and the other. */
 const NAMES: Record<string, string> = {
 	lower: `v`,
 	upper: `V`,
 }
 
-/** The whitespace between the name and the colon: the one spelling the parser marks, and the four it does not. */
+/** Between name and colon: the spelling the parser marks, and four it does not. */
 const BEFORES: Record<string, string> = {
 	"none": ``,
 	"space": ` `,
@@ -25,13 +23,13 @@ const BEFORES: Record<string, string> = {
 	"twoSpaces": `  `,
 }
 
-/** The whitespace between the colon and the value. */
+/** Between the colon and the value. */
 const AFTERS: Record<string, string> = {
 	none: ``,
 	space: ` `,
 }
 
-/** What the declaration holds. The last is the control: Less reads no value in `a (b: 1px)` and prints the at-rule back as it stands, so a use of that variable would fail on the base and the branch alike, and the text carries none. */
+/** What the declaration holds; the last is the control, since Less reads no value in `a (b: 1px)`. */
 const VALUES: Record<string, string> = {
 	plain: `pink`,
 	list: `pink 1px`,
@@ -42,7 +40,7 @@ const VALUES: Record<string, string> = {
 	directive: `a (b: 1px)`,
 }
 
-/** Where the declaration stands, and whether a semicolon closes it: at the root, in a block, and last in a block with no semicolon of its own, which is the one place a Less file may leave it unclosed. `§` is the declaration and `¶` the use of the variable. */
+/** Where the declaration stands and whether a semicolon closes it. `§` is the declaration, `¶` the use. */
 const PLACES: Record<string, string> = {
 	root: `§;\n¶\n`,
 	block: `a {\n\t§;\n}\n¶\n`,
@@ -50,10 +48,10 @@ const PLACES: Record<string, string> = {
 }
 
 /**
- * Spells the use of the variable a text ends in: a call for a detached ruleset, a reference for a value, and no use at all for the control.
+ * Spells the use the text ends in: a call for a ruleset, a reference for a value, none for the control.
  * @param name - The variable's name.
  * @param value - What the declaration holds.
- * @returns The rule using the variable.
+ * @returns The use.
  */
 function useOf (name: string, value: string): string {
 	if (value === VALUES.directive) return `b { c: d }`
@@ -72,7 +70,7 @@ const corpus: Sweep[`corpus`] = [
 	[`control|supports`, `@supports :x { a { b: c } }\n`],
 ]
 
-/** Every rule that asks the syntax whether an at-rule is standard, under each of its primary options. */
+/** Every rule that asks whether an at-rule is standard, under each primary. */
 const configs: Sweep[`configs`] = [
 	{ rule: `at-rule-name-case`, primary: `lower` },
 	{ rule: `at-rule-name-case`, primary: `upper` },

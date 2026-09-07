@@ -24,12 +24,12 @@ export let meta = {
 
 /**
  * Requires or disallows whitespace before the semicolons of at-rules.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always` and `never`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always` or `never`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
@@ -47,7 +47,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!syntax.isStandardAtRule(atRule)) return
 
-			// The check asks about the position one character past the end of the at-rule, as though a semicolon always stood there, and that is right only where the file spells one: PostCSS prints a bodiless at-rule as its name, its `afterName`, its parameters, its `raws.between` and only then the semicolon, so that raw is exactly the whitespace in front of it. Where the file spells none, the at-rule runs to the brace closing its container or to the end of the file, and the position the check asks about is somebody else's — the whitespace in front of the brace, which the parser files into the same raw, or nothing at all, the run at the top level going to the root instead (#395)
+			// The check asks about the position one past the at-rule, as though a semicolon stood there; where the file spells none the at-rule runs to its container's `}` or the end of the file, and the position is somebody else's (#395)
 			if (isLastNodeWithoutSemicolon(atRule)) return
 
 			let atRuleString = rawNodeString(atRule, result)

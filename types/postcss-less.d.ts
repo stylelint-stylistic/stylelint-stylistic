@@ -1,17 +1,17 @@
-// `postcss-less` ships no declaration and DefinitelyTyped carries none, so what the plugin reads of it is declared here: the syntax object, and the flags its parser hangs on a node beyond what PostCSS declares, as its README and `LessParser.js` spell them.
+// `postcss-less` ships no declaration; what the plugin reads of it is declared here.
 declare module "postcss-less" {
 	import type { AtRule as PostcssAtRule, Comment as PostcssComment, Declaration as PostcssDeclaration, Parser, Rule as PostcssRule, Stringifier } from "postcss"
 
-	/** A comment opened with a double slash carries `inline`. */
+	/** A `//` comment carries `inline`. */
 	interface Comment extends PostcssComment {
 		inline?: boolean,
 	}
 
-	/** A variable, a mixin call and a detached-ruleset call are all read as at-rules, each flagged for what it is; a mixin call closed with `!important` carries that too. */
+	/** A variable, a mixin call and a detached-ruleset call are all at-rules, flagged; `important` is a mixin call's. */
 	interface AtRule extends PostcssAtRule {
 		"variable"?: boolean,
 
-		/** The text of a variable, kept beside `params`; the Less stringifier prints this copy. */
+		/** A variable's text; the Less stringifier prints this copy, not `params`. */
 		"value"?: string,
 		"mixin"?: boolean,
 		"function"?: boolean,

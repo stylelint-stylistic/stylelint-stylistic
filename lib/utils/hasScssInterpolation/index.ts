@@ -1,9 +1,9 @@
 import { SCSS_INTERPOLATION } from "../../regexps.ts"
 
 /**
- * Checks whether a string has SCSS interpolation.
- * @param string - The string to check.
- * @returns True if the string has SCSS interpolation, false otherwise.
+ * Whether a string holds an SCSS interpolation.
+ * @param string - The text.
+ * @returns True when it does.
  */
 export function hasScssInterpolation (string: string): boolean {
 	return SCSS_INTERPOLATION.test(string)

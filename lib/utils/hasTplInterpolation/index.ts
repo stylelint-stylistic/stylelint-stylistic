@@ -1,9 +1,9 @@
 import { TPL_INTERPOLATION } from "../../regexps.ts"
 
 /**
- * Checks whether a string has JS template literal interpolation or HTML-like template.
- * @param string - The string to check.
- * @returns True if the string has template literal interpolation, false otherwise.
+ * Checks whether a string holds a JS template literal interpolation or an HTML-like template tag.
+ * @param string - The text searched for an interpolation or a tag.
+ * @returns True where it does.
  */
 export function hasTplInterpolation (string: string): boolean {
 	return TPL_INTERPOLATION.test(string)

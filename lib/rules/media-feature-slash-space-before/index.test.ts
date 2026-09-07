@@ -164,7 +164,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab in front of the solidus, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `@media (aspect-ratio: 16\v/9) {}`,
 			fixed: `@media (aspect-ratio: 16\v /9) {}`,
@@ -303,7 +303,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496
+			// See #496
 			description: `a vertical tab at the run in front of the solidus: only the tokenizer's run goes, and the character stays`,
 			code: `@media (aspect-ratio: 16\v /9) {}`,
 			fixed: `@media (aspect-ratio: 16\v/9) {}`,

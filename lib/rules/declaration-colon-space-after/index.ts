@@ -31,12 +31,12 @@ export let meta = {
 
 /**
  * Requires a single space or disallows whitespace after the colon of declarations.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always`, `never` and `always-single-line`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always`, `never` or `always-single-line`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line`): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
@@ -55,15 +55,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.after,
 			checkedRuleName: ruleName,
-			// The run behind the colon of a declaration standing last at the top level of a stylesheet is the text that stylesheet ends on, which is no option of this rule's to write: a stylesheet closing its last line ends on a break, and no spelling this rule asks for keeps one. The run stands in the stylesheet's own trailing raw where the declaration prints nothing behind its colon (#537), and in the declaration's own text where it prints a run of whitespace there — a custom property's value above all (#546)
+			// A run behind the colon that ends the stylesheet, in the trailing raw (#537) or in the declaration's text, a custom property's above all (#546), is left alone: no spelling of this rule keeps the closing break
 			isChecked: (decl) => !runPastDeclarationEndsTheStylesheet(syntax, decl, result) && !runInDeclarationEndsTheStylesheet(syntax, decl, result),
-			// Where the value is nothing but the run behind the colon, that run is the one in front of the semicolon as well, and the rules asked about it settle between them which of them write it (#416)
+			// Where the value is only the run, the semicolon rules share it, and the rules asked settle who writes (#416)
 			isFixable: (decl) => writesSharedRun(syntax, decl, result, ruleName),
 			fix: (decl, index) => {
 				let space = primary === `never` ? `` : ` `
 
-				// Where the declaration prints nothing behind its colon at all, the run is in the raw of whatever the file wrote next, and the option is about that raw: a space written into `between` here would stand beside the run rather than over it, and the declaration would grow by one on every run of `--fix`
-				// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387
+				// Where nothing prints behind the colon the run is in the next raw; a space in `between` would grow the declaration every `--fix` (#387)
 				if (runPastDeclaration(syntax, decl, result) !== undefined) {
 					writeRunPastDeclaration(decl, space)
 
@@ -74,12 +73,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				assertString(between)
 
-				// Where the colon stands inside `between`, rather than how far its end is from there: the move that may follow writes onto the end of `between`, and only a count from the start of it survives that
+				// Counted from the start of `between`; the move below writes onto its end
 				let colonIndex = between.length + index - declarationValueIndex(decl)
 
-				// Where `between` ends at the colon, whatever run stands behind it stands at the head of the value instead, and there is no writing over it in place
-				// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/109
-				// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/371
+				// Where `between` ends at the colon the run is the value's head, unwritable in place (#109, #371)
 				if (colonIndex === between.length - 1) moveDeclarationValueHeadIntoBetween(syntax, decl, (syntax.read(decl).match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0].length)
 
 				let { raws } = decl

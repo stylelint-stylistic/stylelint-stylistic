@@ -32,7 +32,7 @@ function declarationOf (code: string, index: number = 0): Declaration {
 
 /**
  * Builds the least of a Stylelint result that lists the trailing-semicolon rule under an option.
- * @param option - The option.
+ * @param option - The primary the trailing-semicolon rule is set to.
  * @returns The result.
  */
 function configured (option: string): PostcssResult {
@@ -72,7 +72,7 @@ describe(`runPastDeclaration`, () => {
 		expect(run(`a { b:  ; c: red }`)).toBeUndefined()
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/536
+	// See #536
 	it(`the boundary as the trailing-semicolon rule will leave it: a semicolon a live always is to write, which makes the run the block's, and one a live never is to take away with the run in front of it, which makes the run behind the block's raw the colon's`, () => {
 		expect(runPastDeclaration(css, declarationOf(`a { b:  }`), configured(`always`))).toBeUndefined()
 		expect(runPastDeclaration(css, declarationOf(`a { b: ; }`), configured(`never`))).toBe(` `)

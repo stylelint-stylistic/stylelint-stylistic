@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
 /**
- * Asks of every pair of rules, each under every primary option it accepts: does `--fix` leave a different file behind when the configuration lists the two the other way round?
+ * Asks of every pair of rules, under every primary option, whether `--fix` leaves a different file when the configuration lists the two the other way round.
  *
- * Stylelint sorts the rules of a run by their place in its own registry, and a plugin's rules stand nowhere in it: they all sort equal, the sort is stable, and the order is therefore the one the configuration spells. The run is made once, with no second pass over what it wrote, so a rule that formats text another rule writes takes its turn either before that text exists or after it, and which file the user is left with is decided by the order two entries happen to stand in. That is [#352](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/352) to [#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355), and [#356](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/356) is the census.
+ * Stylelint runs rules in configuration order, once, so a rule formatting text another rule writes runs before that text exists or after it ([#352](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/352) to [#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355), census in [#356](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/356)).
  *
- * Three kinds of row come out:
+ * Kinds of row:
  *
- * - `cycle` — one of the two orders never brings the fixture to rest: run pass after pass over its own output, the fixer comes back to a file it wrote before without ever writing the same file twice in a row, or is still writing new ones when the passes run out. Every run of `--fix` writes a diff and no run is the last. That is [#416](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/416), and the row carries the files of the cycle with the warnings each of them draws.
- * - `hard` — one of the two orders leaves a file the pair still has something to say about. A rule the user enabled did not take effect, and a second run of the fixer would write again.
- * - `soft` — both orders leave a file the pair is content with, and the two files differ. Nothing is left unsaid, and the output is simply not the configuration's to predict.
+ * - `cycle` — one order never comes to rest within the passes given ([#416](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/416)); the row carries the cycle's files with their warnings.
+ * - `hard` — one order leaves a file the pair still warns on.
+ * - `soft` — both orders rest on a clean file, and the two differ.
  *
- * A pair whose orders both come to rest on a file carrying warnings is dropped rather than reported: the two options contradict each other, and no order of them can satisfy both. That is a configuration wrong about itself rather than the plugin wrong about the file — but only where the fixer rests, since a contradicting pair has a second thing it can do, which is to take the run in turns, and one pass cannot tell the two apart.
+ * A pair whose orders both rest on a file carrying warnings is a configuration contradicting itself and is dropped, but only where the fixer rests: a contradicting pair may take turns instead.
  */
 
 import { stdout } from "node:process"
@@ -21,7 +21,7 @@ import { lint as lintDirectly } from "../harness/lint.ts"
 import { RULE_OPTIONS } from "./options.ts"
 import { isUsable, PLUGIN } from "./runs.ts"
 
-/** Shapes short enough to read and dirty enough that many rules have something to say about each. They are read as CSS alone: a pair races over the shape of the text rather than over the syntax it is written in, and reading each shape three times over would treble a run that is already the square of what the fixture wakes. `free-semicolon`, `trailing-run`, `root-no-value` and `root-custom-run` end on something other than a line break, which is what makes the fix of `no-missing-end-of-source-newline` reachable at all: every other shape here has closed its last line already, so that rule wrote nothing in any run this oracle made, and a class of [#356](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/356) went unseen. `free-semicolon` is what puts a row of that class on the board; `trailing-run` puts none on either checkout — under a maximum of one or two `max-empty-lines` rewrote nothing there before this fix, so the pair was never made at all, and under a maximum of zero, where it did rewrite, the two orders already agreed — and stands guard over a fix rather than reporting one. `root-no-value` is a declaration standing at the top level of a stylesheet, where the whitespace behind the colon and the tail of the file are one and the same text: it is what puts the twelve rows [#537](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537) took off the board there in the first place. `root-custom-run` and `root-custom-tail` are the other half of that shape: a custom property keeps a whitespace-only value in `decl.value` itself, so at the top level of a stylesheet the tail of the file stands inside the declaration rather than in the root's own raw, and the text read behind the colon there is that tail itself ([#546](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/546)). The two are written apart because a pair is made only of the rules that rewrite the fixture on their own: `root-custom-tail` has closed its last line, so the break the file ends on stands inside the declaration and `no-missing-end-of-source-newline` has nothing to write, and `root-custom-run` has not, which is the only way round that puts the pair of a colon rule with that one on the board. `ratio-number` is a ratio of one number beside a solidus the `value-slash-space-*` rules rewrite on their own, which is what makes the pair of either with `aspect-ratio-notation` at all: the solidus that rule writes behind the number is the run the slash rules read, and the row of the two taking it in turns is [#550](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/550)'s. `ratio-feature` is the same shape in a media query, where the solidus is the `media-feature-slash-space-*` rules' ([#551](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/551)). `grid-shorthand` puts the rows `named-grid-areas-alignment` rewrites beside the solidus the `value-slash-space-*` rules rewrite, in one value ([#45](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/45)). `grid-table` is a shorthand with line names of two widths and a doubled run in front of its solidus: the rows are that rule's, the run between a name and its row is the rule's under `alignColumns` and `no-multiple-whitespaces`' otherwise, and the run in front of the solidus is the slash rules' and `no-multiple-whitespaces`' — so every pair of the four is made over it. */
+/** Short, dirty shapes, read as CSS alone: a pair races over the shape of the text, not its syntax. Only `free-semicolon`, `trailing-run`, `root-no-value` and `root-custom-run` end on something other than a line break, the one way to the fix of `no-missing-end-of-source-newline`, so a class of [#356](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/356) went unseen until `free-semicolon`; `trailing-run` guards a fix rather than reporting one. `root-no-value` is a top-level declaration, where the run behind the colon and the tail of the file are one text ([#537](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537)); `root-custom-run` and `root-custom-tail` are the custom-property half of that, the tail inside `decl.value` ([#546](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/546)), two fixtures because only the unclosed one wakes `no-missing-end-of-source-newline`. `ratio-number` pairs `aspect-ratio-notation` with the `value-slash-space-*` rules over one solidus ([#550](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/550)); `ratio-feature` is the same in a media query, with the `media-feature-slash-space-*` rules ([#551](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/551)). `grid-shorthand` puts the rows `named-grid-areas-alignment` rewrites beside a solidus the `value-slash-space-*` rules rewrite ([#45](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/45)); `grid-table` adds line names of two widths and a doubled run in front of the solidus, for `no-multiple-whitespaces`. */
 const CORPUS: [string, string][] = [
 	[`tight-block`, `a{color:red}\n`],
 	[`multi-decl`, `a {\n\tcolor: red; top: 0;\n}\n`],
@@ -45,10 +45,10 @@ const CORPUS: [string, string][] = [
 	[`grid-table`, `a { grid-template: [a] "x  x" 1fr\n\t[bb] "y y" auto  / 1fr; }\n`],
 ]
 
-/** How many runs of the fixer a pair is given to bring a fixture to rest before the run is called one that never ends. */
+/** Passes given to bring a fixture to rest before the run is called a cycle. */
 const PASSES = 8
 
-/** Every rule of the plugin under every primary option it accepts, each as a configuration of one rule. */
+/** Every rule under every primary option it accepts. */
 const CONFIGS = Object.entries(RULE_OPTIONS).flatMap(([rule, primaries]) => primaries.map((primary) => ({
 	rule: `@stylistic/${rule}`,
 	primary,
@@ -57,9 +57,9 @@ const CONFIGS = Object.entries(RULE_OPTIONS).flatMap(([rule, primaries]) => prim
 /**
  * Lints one snippet under the rules in the order given.
  * @param code - The snippet.
- * @param rules - The rules to run, in the order the configuration is to spell them.
- * @param fix - Whether the rules are let write.
- * @returns What the run left and what it said, and whether it is a run an oracle can read at all.
+ * @param rules - The rules, in configuration order.
+ * @param fix - Whether the rules may write.
+ * @returns The file left, the warning count, and whether the run is usable.
  */
 async function lint (code: string, rules: Record<string, unknown>, fix: boolean): Promise<{
 	code: string,
@@ -81,9 +81,7 @@ async function lint (code: string, rules: Record<string, unknown>, fix: boolean)
 }
 
 /**
- * Picks the configurations that have something to write about one fixture.
- *
- * A rule that changes nothing here cannot race with another over it, and pairing the whole list with itself regardless would cost the square of every option the plugin has rather than the square of the handful this shape wakes.
+ * Picks the configurations that rewrite one fixture: pairing the whole list would cost the square of every option rather than of the handful the shape wakes.
  * @param source - The fixture.
  * @returns The configurations that rewrote it.
  */
@@ -107,10 +105,10 @@ async function activeOn (source: string): Promise<{
 }
 
 /**
- * Runs the fixer over a fixture pass after pass, each over the output of the last, until it writes a file it has written before.
+ * Runs the fixer over a fixture pass after pass until it writes a file it has written before.
  * @param source - The fixture.
- * @param rules - The rules to run, in the order the configuration is to spell them.
- * @returns The file the first pass left, and the cycle the run ended on: one file where the fixer rests, several where it takes turns, and none at all where the passes ran out first — or nothing, where a run is one an oracle cannot read.
+ * @param rules - The rules, in configuration order.
+ * @returns The file the first pass left and the cycle the run ended on (one file at rest, several taking turns, none where the passes ran out), or null where the run is unusable.
  */
 async function settle (source: string, rules: Record<string, unknown>): Promise<{
 	first: string,
@@ -138,7 +136,7 @@ async function settle (source: string, rules: Record<string, unknown>): Promise<
 }
 
 /**
- * Counts the warnings each file of a cycle draws, so that two rules taking turns over one character, each leaving one warning, can be told from two rules resting on a file that carries both.
+ * Counts the warnings each file of a cycle draws.
  * @param files - The files of the cycle.
  * @param rules - The rules to run.
  * @returns One count per file.
@@ -155,8 +153,8 @@ async function warningsOver (files: string[], rules: Record<string, unknown>): P
 }
 
 /**
- * Runs one pair of configurations over one fixture in both orders, and asks what each order left unsaid.
- * @param name - The name of the fixture.
+ * Runs one pair over one fixture in both orders and compares what each left.
+ * @param name - The fixture's name.
  * @param source - The fixture.
  * @param a - One configuration.
  * @param b - The other.
@@ -176,7 +174,7 @@ async function probe (name: string, source: string, a: {
 
 	if (!aRun || !bRun) return null
 
-	// A cycle is reported whatever the warnings say: a pair taking the run in turns is a defect of the plugin, however the configuration contradicts itself
+	// A cycle is reported whatever the warnings say: taking turns is a defect of the plugin even under a contradicting configuration
 	if (aRun.cycle.length !== 1 || bRun.cycle.length !== 1) {
 		return {
 			kind: `cycle`,
@@ -188,7 +186,7 @@ async function probe (name: string, source: string, a: {
 		}
 	}
 
-	// The two kinds below are read off the first pass, as they always were, so that the census keeps its rows
+	// The other kinds are read off the first pass, as the census was
 	let aFirst = aRun.first
 	let bFirst = bRun.first
 

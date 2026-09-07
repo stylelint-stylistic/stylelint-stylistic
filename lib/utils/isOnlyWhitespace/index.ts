@@ -1,9 +1,9 @@
 import { isWhitespace } from "../isWhitespace/index.ts"
 
 /**
- * Returns a boolean indicating whether the input string is only whitespace.
- * @param input - The string to check.
- * @returns True if the string contains only whitespace, false otherwise.
+ * Tells whether a string is whitespace alone.
+ * @param input - The string.
+ * @returns True if every character is whitespace.
  */
 export function isOnlyWhitespace (input: string): boolean {
 	for (let element of input) if (!isWhitespace(element)) return false

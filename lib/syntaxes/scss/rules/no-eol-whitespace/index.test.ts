@@ -25,7 +25,7 @@ testRule({
 			code: `// c\na {}`,
 		},
 		{
-			// The syntax files this comment exactly as it files the whitespace-only inline one below — an empty text, with every character of the whitespace in the raw in front of it — and the only thing telling the two apart is the `raws.inline` that `isStandardSyntaxComment` reads.
+			// The syntax files this comment as it files the whitespace-only inline one below, an empty text with the whitespace in the raw in front of it, and only the `raws.inline` that `isStandardSyntaxComment` reads tells the two apart.
 			description: `two spaces making up the whole of a block comment under this syntax`,
 			code: `/*  */\na {}`,
 		},
@@ -33,7 +33,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/254
+			// See #254
 			description: `two spaces making up the whole of an end-of-line comment, which the syntax files where the trim of the comment's end reaches them`,
 			code: `//  \nb {}`,
 			fixed: `//\nb {}`,
@@ -115,7 +115,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/193
+			// See #193
 			description: `trailing whitespace in the text of an inline comment, which the fix trims in the copy the file spells`,
 			code: `.a // c \n.b {}`,
 			fixed: `.a // c\n.b {}`,

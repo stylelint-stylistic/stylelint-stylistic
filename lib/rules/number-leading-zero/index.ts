@@ -29,13 +29,13 @@ export let meta = {
 }
 
 /**
- * Requires or disallows a leading zero for fractional numbers less than 1.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * Requires or disallows a leading zero for fractions less than 1.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always` and `never`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always` or `never`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
 	return (root, result) => {
@@ -57,9 +57,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		root.walkDecls((decl) => check(decl, syntax.read(decl)))
 
 		/**
-		 * Checks a node for leading zero violations.
-		 * @param node - The node to check.
-		 * @param value - The value to check.
+		 * Checks a node's value.
+		 * @param node - The declaration or at-rule the value belongs to.
+		 * @param value - The text as the syntax reads it.
 		 */
 		function check (node: AtRule | Declaration, value: string): void {
 			let neverFixPositions: Array<{
@@ -69,21 +69,21 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let alwaysFixPositions: Array<{ index: number }> = []
 
-			// Get out quickly if there are no periods
+			// No fraction
 			if (!value.includes(`.`)) return
 
-			// Every comment the value holds, both kinds. A double slash opens a comment that runs to the end of its line, and the value parser knows nothing of the kind, so what such a comment holds comes back as ordinary words and calls; a block comment reaches the walk as a node of its own — except one opening `/*/`, which the parser closes on the star it opened with, handing the rest of its text back the same way (#378)
+			// Every comment, both kinds; the value parser reads a `//` comment as words, and closes `/*/` on its own star (#378)
 			let comments = syntax.commentSpans(value, node, result)
 
-			// The value is parsed in a copy of itself with every quotation mark its comments leave open masked, so that the parser pairs the marks the value spells the way the file pairs them (#508)
+			// Quotation marks a comment leaves open are masked (#508)
 			valueParser(hideQuotesInComments(value, comments)).walk((valueNode, at, siblings) => {
-				// A call opening an address holds a URL and no arguments of its own, so it is passed over whole. The name is read rather than matched against four characters, so that `u\rl(`, `\75 rl(` and `URL(` are the token `url(` is here as they are to the scan that finds the comments — and to Sass, and to `lightningcss`.
+				// A call opening an address is passed over whole; the name is read, not matched, so `u\rl(` and `URL(` are `url(`
 				if (opensAnAddress(valueNode, at, siblings)) return false
 
-				// A node standing in the text of a comment is no node of the value: leave it alone. What it holds is still walked, and every node of that asked the same question, since a call opened inside such a comment reaches past the break or the delimiter that closes it and the code it gathers there is code the file spells. An address is passed over first, since the scan that finds the comments steps over one only where it reads it as code: an `url()` opened in a comment's text is a node of that comment holding an address that reaches past the comment's end, and what stands there is nothing this rule may read.
+				// A node inside a comment is no node of the value, but its children are walked, since a call opened in a comment gathers code past its end; such a `url()` is turned away first
 				if (findCommentSpanHolding(valueNode, comments)) return
 
-				// Ignore strings, comments, etc
+				// Only words carry numbers
 				if (valueNode.type !== `word`) return
 
 				// Check leading zero
@@ -92,7 +92,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 					if (match === null || match[1] === undefined) return
 
-					// The match reaches back a character to make sure the dot opens a number, so it is one longer than the number itself wherever it did: subtracting the number's length gives the index the dot stands at, which is 1 for `-.5` and 0 for `.5`.
+					// The match reaches back a character, so the dot's index is the whole less the number
 					let capturingGroupIndex = match[0].length - match[1].length
 
 					let index = valueNode.sourceIndex + match.index + capturingGroupIndex
@@ -113,7 +113,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 					if (match === null || match[1] === undefined || match[2] === undefined) return
 
-					// The match reaches back a character to make sure the zeros open a number, so subtracting the zeros and the fraction behind them from the whole gives the index the first zero stands at, which is 1 for `-00.5` and 0 for `00.5`.
+					// The match reaches back a character, so the first zero's index is the whole less zeros and fraction
 					let zeros = match[1]
 					let capturingGroupIndex = match[0].length - (zeros.length + match[2].length)
 
@@ -122,7 +122,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					fix = (): void => {
 						neverFixPositions.unshift({
 							startIndex: index,
-							// `match[1]` is the run of zeros itself, so its length is how far the fix reaches
+							// Over the run of zeros
 							endIndex: index + zeros.length,
 						})
 					}
@@ -152,10 +152,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		}
 
 		/**
-		 * Reports a leading zero violation.
-		 * @param message - The error message to report.
-		 * @param node - The node with the violation.
-		 * @param index - The index of the violation.
+		 * Reports a violation.
+		 * @param message - The warning text to report.
+		 * @param node - The declaration or at-rule reported on.
+		 * @param index - The index in the node.
 		 */
 		function complain (message: string, node: Node, index: number): void {
 			report({
@@ -172,21 +172,21 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 }
 
 /**
- * Adds a leading zero to a number at the specified index.
- * @param input - The input string.
- * @param index - The index at which to add the leading zero.
- * @returns The string with the leading zero added.
+ * Inserts a zero at an index.
+ * @param input - The text.
+ * @param index - Where the zero goes.
+ * @returns The text with the zero.
  */
 function addLeadingZero (input: string, index: number): string {
 	return `${input.slice(0, index)}0${input.slice(index)}`
 }
 
 /**
- * Removes leading zeros from a number in the specified range.
- * @param input - The input string.
- * @param startIndex - The start index of the range to remove.
- * @param endIndex - The end index of the range to remove.
- * @returns The string with leading zeros removed.
+ * Removes a range of leading zeros.
+ * @param input - The text.
+ * @param startIndex - The range's start.
+ * @param endIndex - The range's end.
+ * @returns The text without the range.
  */
 function removeLeadingZeros (input: string, startIndex: number, endIndex: number): string {
 	return input.slice(0, startIndex) + input.slice(endIndex)

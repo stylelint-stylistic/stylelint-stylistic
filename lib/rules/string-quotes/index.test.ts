@@ -113,7 +113,7 @@ testRule({
 			message: messages.expected(`single`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/178
+			// See #178
 			description: `a comment standing in the selector, which the fix leaves where the author put it, the warning at the quote it is about`,
 			code: `.foo /* x */ [title="y"] {}`,
 			fixed: `.foo /* x */ [title='y'] {}`,
@@ -336,7 +336,7 @@ testRule({
 			message: messages.expected(`double`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			// See #378
 			description: `a string standing beside a comment opening with a solidus, a star and a solidus, whose text spells a string of its own that the value parser hands back as one`,
 			code: `a { b: 'a' /*/ 'x' */ 3; }`,
 			fixed: `a { b: "a" /*/ 'x' */ 3; }`,
@@ -362,7 +362,7 @@ testRule({
 			],
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			// See #378
 			description: `such a comment standing beside a quoted address inside its parentheses, which is a comment to every tokenizer`,
 			code: `a { b: url("a" /*/ 'x' */) 'y'; }`,
 			fixed: `a { b: url("a" /*/ 'x' */) "y"; }`,

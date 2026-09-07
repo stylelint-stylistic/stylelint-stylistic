@@ -8,7 +8,7 @@ import { isStandardPreprocessorComment } from "../../../preprocessor/guards/inde
 import { isStandardLessAtRule, isStandardLessDeclaration, isStandardLessProperty, isStandardLessRule, isStandardLessSelector, isStandardLessValue } from "./index.ts"
 
 describe(`isStandardLessAtRule`, () => {
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/357
+	// See #357
 	it(`at-rules spelled without a space in front of their options, which Less compiles as at-rules`, () => {
 		let spellings = [
 			`a { @import(reference) "x"; }`,
@@ -21,7 +21,7 @@ describe(`isStandardLessAtRule`, () => {
 		for (let spelling of spellings) expect(isStandardLessAtRule(pick(lessAtRules(spelling), 0))).toBe(true)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/357
+	// See #357
 	it(`a call to a detached ruleset spelled with a space in front of its parentheses, which Less reads as an at-rule`, () => {
 		let rules = lessAtRules(`@detached-ruleset: { background: red; }; .top { @detached-ruleset (); }`)
 
@@ -53,7 +53,7 @@ describe(`isStandardLessAtRule`, () => {
 		expect(isStandardLessAtRule(pick(rules, 0))).toBe(false)
 	})
 
-	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/394
+	// See #394
 	it(`a variable declared with whitespace in front of its colon, which the parser leaves unmarked`, () => {
 		let spellings = [
 			`@v : pink; a { b: @v }`,

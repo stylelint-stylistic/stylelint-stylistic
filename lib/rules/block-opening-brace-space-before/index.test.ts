@@ -89,7 +89,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/63
+			// See #63
 			description: `comment between the selector and the opening brace`,
 			code: `
 				.some-class /* v3+ */
@@ -273,7 +273,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/63
+			// See #63
 			description: `comment between the selector and the opening brace`,
 			code: `
 				.some-class /* v3+ */
@@ -739,7 +739,7 @@ testRule({
 	],
 })
 
-// A lineness-conditioned check waits for the run's writers (#355): the question whether the block is multi-line is asked of the text every writer has finished, so the order the configuration lists the two rules in decides neither the file nor whether this rule speaks.
+// A lineness-conditioned check waits for the run's writers (#355): whether the block is multi-line is asked of the text every writer has finished, so the configuration's order decides neither the file nor whether this rule speaks.
 testRule({
 	ruleName,
 	config: [`always-multi-line`],
@@ -747,7 +747,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355
+			// See #355
 			description: `a block the neighbour's break puts over lines within the same run: the option speaks of the finished block and writes its space, where it used to stay silent about a block that was about to stop being single-line`,
 			code: `@media screen{\na{b:c;d:e}\n}\n`,
 			fixed: `@media screen {\na {b:c;\nd:e}\n}\n`,
@@ -778,7 +778,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355
+			// See #355
 			description: `the same pair with this rule's fix turned off: the deferred check still reads the finished block, reports it, and writes nothing`,
 			code: `@media screen{\na{b:c;d:e}\n}\n`,
 			fixed: `@media screen{\na{b:c;\nd:e}\n}\n`,

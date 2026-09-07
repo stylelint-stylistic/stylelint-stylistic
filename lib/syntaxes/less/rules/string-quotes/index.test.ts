@@ -20,8 +20,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/343
-			// The reading is CSS's rather than this syntax's: Sass compiles `aurl(a/b)` and `éurl(a/b)` alike and fails on `aurl(a//b)` and `éurl(a//b)` alike, at one offset that is the length of the file, the comment the double slash opens having carried off the closing parenthesis, while `lightningcss` leaves all four whole.
+			// The reading is CSS's rather than this syntax's: Sass compiles `aurl(a/b)` and `éurl(a/b)` alike and fails on `aurl(a//b)` and `éurl(a//b)` alike, the comment having carried off the closing parenthesis, while `lightningcss` leaves all four whole. See #343
 			description: `single quotes behind a call whose name opens on a code point outside ASCII, which leaves them inside the text of a comment`,
 			code: `a { b: \u00E9url(http://a/b.png) 'horse'; }`,
 		},
@@ -104,7 +103,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/32
+			// See #32
 			description: `ignores double quotes inside a // comment of a multi-line variable`,
 			code: `
 				@foo: 'bar', // Some "comment"
@@ -156,7 +155,7 @@ testRule({
 			`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504
+			// See #504
 			description: `a quotation mark inside a bare address in front of an end-of-line comment holding another, where the address closes on its parenthesis to every tokenizer and the mark inside it opens no string, so that the comment is a comment and the mark it holds is its text — a file Less itself refuses`,
 			code: `a { background: url(a/a,')//x "z"; }`,
 		},
@@ -164,7 +163,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/171
+			// See #171
 			description: `an attribute value spelling a Less extend, which the syntax marks the whole rule as one for`,
 			code: `[title=":extend(x)"] {}`,
 			fixed: `[title=':extend(x)'] {}`,
@@ -326,7 +325,7 @@ testRule({
 			message: messages.expected(`single`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378
+			// See #378
 			description: `a parenthesis inside a block comment standing behind a bare address, which closes nothing; the comment used to stand inside the address, in a file Less refuses, and a bare address holds no comment to every tokenizer now`,
 			code: `a { background: url(a) /* ) */ "c"; }`,
 			fixed: `a { background: url(a) /* ) */ 'c'; }`,
@@ -438,7 +437,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/101
+			// See #101
 			description: `ignores double quotes inside a // comment of a block written in Less`,
 			code: `
 				<style lang="less">

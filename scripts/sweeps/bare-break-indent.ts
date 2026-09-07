@@ -1,16 +1,14 @@
 /**
- * A bare carriage return or a form feed standing where a line's indentation stands: in front of the first node of a file, of a later node, of a declaration, of a closing brace and of a property hack, beside the empty line of a file broken with Windows pairs.
+ * A bare carriage return or a form feed where a line's indentation stands, in front of every kind of node and beside the empty line of a Windows-broken file.
  *
- * Written for #452. Both characters are whitespace to PostCSS's tokenizer and no line to its line counter, so `indentation` read them as part of the indentation it reported, while its two writers looked for spaces and tabs alone and wrote nothing over them — and `--fix` then discarded the warning as fixed.
- *
- * The controls are the same positions holding a line feed, a Windows pair or a space: a branch that moves any of those rows, or the pairs of the Windows-broken file, has done something other than it meant to.
+ * Written for [#452](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/452): both are whitespace to PostCSS's tokenizer and no line to its counter, so `indentation` reported them, its writers, looking for spaces and tabs, wrote nothing, and `--fix` discarded the warning as fixed. The controls hold a line feed, a Windows pair or a space.
  */
 
 import { multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** The character put in front of the indentation: the two of the issue, and the three controls. */
+/** The two of the issue, and three controls. */
 const CHARACTERS: Record<string, string> = {
 	cr: `\r`,
 	ff: `\f`,
@@ -19,14 +17,14 @@ const CHARACTERS: Record<string, string> = {
 	space: ` `,
 }
 
-/** The indentation standing behind that character: one tab — the level a declaration and a hack stand at under `tab`, and one too many at the start of the file, in front of a later rule and in front of a closing brace — two tabs, and none. */
+/** One tab, the level of a declaration and a hack under `tab` and one too many elsewhere; two tabs; none. */
 const TAILS: Record<string, string> = {
 	level: `\t`,
 	deeper: `\t\t`,
 	none: ``,
 }
 
-/** Where the run stands, the character and the tail placed at `§`. Every text but the first opens with a line broken the ordinary way, so that a row says what one character did to one line. */
+/** The run stands at `§`; every text but the first opens with an ordinary break, so a row is about one line. */
 const PLACES: Record<string, string> = {
 	fileStart: `§a { color: pink; }\n`,
 	laterNode: `a { color: pink; }\n§b { color: pink; }\n`,

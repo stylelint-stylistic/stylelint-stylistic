@@ -12,7 +12,7 @@ testRule({
 
 	accept: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/453
+			// See #453
 			description: `a single-line template standing on a host line indented by one level, whose node stands on the line of the backtick and carries no indentation of the stylesheet`,
 			code: `
 				function f () {
@@ -428,7 +428,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
+			// See #510
 			description: `a comment an at-rule with neither a block nor a semicolon swallowed inside a rule of the template, indented a level past the block it is a line of`,
 			code: `
 				const StyledDiv = styled.div\`
@@ -701,7 +701,7 @@ testRule({
 			code: `function f () {\r\n\tconst a = styled.div\`\r\n\t\tcolor: red;\r\n\t\`;\r\n}`,
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/453
+			// See #453
 			description: `a single-line template standing on an indented host line, whose node stands on the line of the backtick and carries no indentation of the stylesheet`,
 			code: `
 				function f () {
@@ -741,9 +741,7 @@ testRule({
 
 	reject: [
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/377
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/452
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/453
+			// See #377, #452 and #453
 			description: `a template of a carriage-return-broken file, reported at a position the file holds rather than ending the lint in a TypeError; the bare carriage return is whitespace to the stylesheet's parser, so the node stands on the line of the backtick to it, is asked for no indentation, and the fix takes the run away and joins the template's first line to that line`,
 			code: `function f () {\r\tconst a = styled.div\`\r\t\tcolor: red;\r\t\`;\r}`,
 			fixed: `function f () {\r\tconst a = styled.div\`color: red;\r\t\`;\r}`,
@@ -754,7 +752,7 @@ testRule({
 			message: messages.expected(`0 tabs`),
 		},
 		{
-			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/453
+			// See #453
 			description: `spaces between the backtick and the node of a single-line template on an indented host line, which are no indentation of the stylesheet and go, where the host's tab used to be written in their place`,
 			code: `
 				function f () {

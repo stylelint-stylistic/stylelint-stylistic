@@ -1,18 +1,14 @@
 /**
- * A line an at-rule swallowed: a comment standing between the params of an at-rule that carries neither a block nor a semicolon and the brace closing its block, which the parser files into the at-rule's `raws.between` rather than into a node of its own.
+ * A comment between the params of an at-rule with neither block nor semicolon and the closing brace, which the parser puts in `raws.between`.
  *
- * Written for #375. `indentation` measured such a line with the at-rule's params and reported it at the right position, and its writer knew two raws, `afterName` and the params, so the fix for a position behind the params was written onto the end of the params — onto the at-rule's own line — and the file grew a level on every run.
- *
- * The controls are the same block with a semicolon behind the at-rule, and with a declaration in place of it: there the comment is a node of the block, measured off its own `raws.before`, and a branch that moves either row has done something other than it meant to.
- *
- * The same corpus measured #509, the other half of that raw: the rule read the run in front of the closing brace out of the block's own whitespace, which this shape leaves empty, so the brace's line went unmeasured. The `tail` axis is what sees it.
+ * Written for [#375](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/375): `indentation` wrote the fix onto the end of the params, so the file grew a level every run. The controls (a semicolon, a declaration) make the comment a node of its own; the `tail` axis measured [#509](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/509).
  */
 
 import { multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** The statement closing the block. The first five carry neither a block nor a semicolon and run to the brace — `postcss-less` reads the mixin call as an at-rule too, with its `.` in `raws.identifier`. `mixinCallImportant` is the one of the five that the parser files differently: `postcss-less` prints the flag behind `raws.between` rather than in front of it, so the run belongs to neither raw and no rule may write there ([#374](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/374)). The last two are the controls, where the run in front of the brace is the block's own `raws.after`. */
+/** The first five have neither block nor semicolon, the last two are controls; `postcss-less` prints a mixin call's `!important` behind `raws.between`, so no rule may write into that run ([#374](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/374)). */
 const STATEMENTS: Record<string, string> = {
 	extend: `@extend .b`,
 	includeCall: `@include m(1px)`,
@@ -23,7 +19,7 @@ const STATEMENTS: Record<string, string> = {
 	declaration: `color: pink;`,
 }
 
-/** What stands between the statement and the brace: a block comment at the level of the block, the same a level deeper — where `except: ["param"]` and `ignore: ["param"]` part from the default, which asks the params' level of it — an inline one, two comments, a comment on the statement's line and one below it, or nothing. */
+/** `blockDeeper` parts `except: ["param"]` and `ignore: ["param"]` from the default. */
 const SWALLOWED: Record<string, string> = {
 	block: `⏎\t/* c */`,
 	blockDeeper: `⏎\t\t/* c */`,
@@ -33,7 +29,7 @@ const SWALLOWED: Record<string, string> = {
 	none: ``,
 }
 
-/** The run in front of the closing brace: a break, which puts the brace at the level of its block, a break and one or two tabs more than that, or nothing, the brace closing on the last line of the body. */
+/** The run in front of the closing brace. */
 const TAILS: Record<string, string> = {
 	"break": `⏎`,
 	"indented": `⏎\t`,
@@ -41,13 +37,13 @@ const TAILS: Record<string, string> = {
 	"sameLine": ``,
 }
 
-/** The break the file is spelled with. */
+/** The file's line break. */
 const LINE_BREAKS: Record<string, string> = {
 	lf: `\n`,
 	crlf: `\r\n`,
 }
 
-/** Where the block stands: at the root, or inside a media query, a level deeper. */
+/** Where the block stands. */
 const PLACES: Record<string, string> = {
 	root: `a {⏎\t§}⏎`,
 	nested: `@media x {⏎\ta {⏎\t\t§}⏎}⏎`,
@@ -56,9 +52,9 @@ const PLACES: Record<string, string> = {
 const name: Sweep[`name`] = `atrule-swallowed-line`
 
 /**
- * Indents every line of a text by one tab, for the nested place.
- * @param text - The text, its lines marked with the placeholder break.
- * @returns The text with a tab behind every placeholder.
+ * Indents every line, for the nested place.
+ * @param text - The block's text with marker breaks.
+ * @returns The indented text.
  */
 function indentLines (text: string): string {
 	return text.replaceAll(`⏎`, `⏎\t`)
@@ -70,7 +66,7 @@ const corpus: Sweep[`corpus`] = multiply({ place: PLACES, statement: STATEMENTS,
 	return place.replace(`§`, place === PLACES.nested ? indentLines(body) : body).replaceAll(`⏎`, lineBreak)
 })
 
-/** The rule under both spellings of its primary, and under the secondary options that move the level a param or a closing brace is asked to stand at. */
+/** Both primaries, and the secondaries moving a param's or brace's level. */
 const configs: Sweep[`configs`] = [
 	{ rule: `indentation`, primary: `tab` },
 	{ rule: `indentation`, primary: 2 },

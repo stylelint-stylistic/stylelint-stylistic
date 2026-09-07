@@ -28,12 +28,10 @@ export let meta = {
 }
 
 /**
- * Names the span the whitespace behind a media feature's opening parenthesis stands in, and what goes there.
- *
- * The span is counted in the parameters the file spells, so that the fix is written where the whitespace stands rather than printed back as the whole query.
- * @param node - The media feature being fixed.
- * @param text - The whitespace to put there.
- * @returns The edit that writes it.
+ * The edit writing the whitespace behind a media feature's `(`, counted in the params.
+ * @param node - The media feature.
+ * @param text - The whitespace.
+ * @returns The edit.
  */
 function openingEdit (node: FunctionNode, text: string): Edit {
 	let start = node.sourceIndex + node.value.length + 1
@@ -42,27 +40,23 @@ function openingEdit (node: FunctionNode, text: string): Edit {
 }
 
 /**
- * Names where a media feature's closing parenthesis stands in the parameters the file spells, which is where the closing fix writes in front of and where the closing warning is reported one character in front of.
+ * Where a media feature's `)` stands in the params; the fix writes in front of it, the warning a character in front.
  *
- * A feature the file leaves unclosed carries no parenthesis to stand in front of: the parser hands out no whitespace of its own for one, and the stringifier prints what a fix puts there on the very end of the parameters. That end is named here, so that such a write stays where it has always been written — a query the parser has read this way is #131's, not this rule's.
- *
- * The end is the length of the parameters rather than the position the node reports. An unclosed feature reaches the end of the parameters by definition, so the two say the same thing — except where an unclosed `url()` stands inside one, which the parser ends a character past the text it was handed: `valueParser("g(url( abc")` gives the outer node `[0, 11)` for ten characters. An index outside the text is one no edit may carry, whatever the write it names would come to.
- *
- * A closed feature ends on its parenthesis, and the parser marks that end in the file's own coordinates. The length of a printed copy of the node is no measure of it: the stringifier gives a comment opening `/*\/` back as `/**\/`, a character wider than the file spells it, and a warning whose index was counted from that length landed on the parenthesis itself rather than on the character in front of it (#506).
- * @param node - The media feature being read.
- * @param params - The parameters the node's positions are counted in.
- * @returns The index of the parenthesis, or the end of the parameters where the feature has none.
+ * An unclosed feature ends on the params, where the stringifier prints a fix ([#131](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/131)), by the params length since an unclosed `url()` inside overshoots the node's end by a character. A closed one ends on its `)`, not its printed length, since `/*\/` prints as `/**\/` ([#506](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506)).
+ * @param node - The media feature.
+ * @param params - The at-rule's params the feature was parsed out of.
+ * @returns The index of the `)`, or the end of the params.
  */
 function closingParenthesisIndex (node: FunctionNode, params: string): number {
 	return node.unclosed ? params.length : node.sourceEndIndex - 1
 }
 
 /**
- * Names the span the whitespace in front of a media feature's closing parenthesis stands in, and what goes there.
- * @param node - The media feature being fixed.
- * @param text - The whitespace to put there.
- * @param params - The parameters the node's positions are counted in.
- * @returns The edit that writes it.
+ * The edit writing the whitespace in front of a media feature's `)`.
+ * @param node - The media feature.
+ * @param text - The whitespace.
+ * @param params - The at-rule's params the edit is placed in.
+ * @returns The edit.
  */
 function closingEdit (node: FunctionNode, text: string, params: string): Edit {
 	let end = closingParenthesisIndex(node, params)
@@ -71,13 +65,13 @@ function closingEdit (node: FunctionNode, text: string, params: string): Edit {
 }
 
 /**
- * Requires a single space or disallows whitespace on the inside of the parentheses within media features.
- * @param scope - What the namespace the rule is registered under hands it.
- * @param scope.ruleName - The name a configuration refers to the rule by.
- * @param scope.messages - The messages, each closing with that name.
+ * Requires a single space or disallows whitespace inside the parentheses of media features.
+ * @param scope - What the namespace hands the rule.
+ * @param scope.ruleName - The configured name.
+ * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The primary option, one of `always` and `never`.
- * @returns The check, run over every stylesheet the rule is configured for.
+ * @param primary - `always` or `never`.
+ * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
 	return (root, result) => {
@@ -91,9 +85,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		root.walkAtRules(MEDIA_AT_RULE, (atRule) => {
 			let params = syntax.read(atRule)
 			let indexBoost = atRuleParamIndex(atRule)
-			// A double slash spells a comment only where the syntax says one, and a file of plain CSS spells none: the pair in `myurl(//a)` is code there, and taking it for a comment would silence every feature standing behind it on the line
+			// In CSS `myurl(//a)` is code
 			let reading = syntax.inlineComments(atRule, result)
-			// Every comment the parameters hold, both kinds. A double slash opens a comment that runs to the end of its line, and `postcss-value-parser` knows nothing of the kind: a parenthesis standing in the text of one opens a media feature as far as that parser is concerned, and the fix then writes inside the comment. A block comment opening `/*/` is closed by the parser on the star it opened with, and a parenthesis behind that star opens a feature the same way (#378)
+			// The value parser would open a feature on a `(` in a `//` comment or behind `/*/` (#378)
 			let comments = syntax.commentSpans(params, atRule, result)
 
 			let problems: Array<{
@@ -102,14 +96,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				fix?: () => void,
 			}> = []
 
-			// What a fix changed, and nothing else: the parameters are edited at the positions the fixes name rather than printed anew from the parsed tree, since `postcss-value-parser` does not always give back the text it was handed — a comment opening `/*/` comes back as `/**/` — and a fix made anywhere in such a query would rewrite a comment standing elsewhere in it
-			//
-			// A feature holding no node at all encloses one span and not two — everything the parser finds between such parentheses it hands back as `before`, leaving `after` empty — so under `always` both halves of the option write at one index, and `applyEditsFromEnd` takes no two edits opening at one index. `addEdit` folds them into the one edit that place means. Both halves put the same single space there, so the text is the same either way and no case can fail without the fold; what it buys is that the list handed over is one the name may be handed.
+			// Edits at positions, since the value parser prints `/*/` as `/**/`; an empty feature under `always` writes both halves at one index, which `addEdit` folds
 			let edits: Edit[] = []
 
-			// The value is parsed in a copy of itself with every quotation mark its comments leave open masked, so that the parser pairs the marks the value spells the way the file pairs them (#508)
+			// Quotes in comments are masked (#508)
 			valueParser(hideQuotesInComments(params, comments)).walk((node) => {
-				// The parentheses of a comment are the comment's own. Everything they hold is still walked, since a comment left open by one of them takes the rest of the query into itself as far as the parser is concerned, features and all.
+				// A comment's `(` is its own; an unclosed comment holds the rest of the query, so the walk goes on inside
 				if (findCommentSpanHolding(node, comments)) return
 
 				if (node.type === `function`) {
@@ -125,7 +117,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						}
 
 						if (SPACE_OR_TAB.test(node.after)) {
-							// The parenthesis goes right after this text, and the whitespace the fix empties ends it. Where an inline comment stands there, the line break that whitespace holds is what closes the comment, so the option cannot be satisfied without taking the parenthesis, and the whole query behind it, into the comment's text: leave the parameters alone and let the warning stand.
+							// The fix would take the `)` into a `//` comment
 							let isFixable = !syntax.endsWithInlineComment(params.slice(0, node.sourceEndIndex - 1 - node.after.length), reading)
 
 							problems.push({
