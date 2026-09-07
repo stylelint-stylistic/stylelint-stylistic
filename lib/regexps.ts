@@ -73,13 +73,10 @@ export const EVERY_LINE_BREAK_AND_INDENT = /(\r?\n)(?:[ \t\f]|\r(?!\n))*(?=\S|$)
 /** Every run of line feeds and carriage returns, a Windows break counting as two of them, and the empty run wherever none stands. Read by `named-grid-areas-alignment`, which counts the lines a run of them spans. */
 export const EVERY_LINE_BREAK_RUN = /[\r\n]*/gu
 
-/** The spaces and tabs every line that holds content is indented by. Where a line begins is named here rather than left to the `m` flag, whose set is a different one: it begins a line after the two separators of Unicode, which end a line to JavaScript and to no stylesheet. */
-export const EVERY_LINE_INDENT = /(?<=^|\n)[ \t]*(?=\S)/gu
-
-/** The indentation of every line that holds content, captured apart from the break that opens the line and from the character that ends the run. Where a line begins is named here for the reason it is in {@link EVERY_LINE_INDENT}. */
+/** The indentation of every line that holds content, captured apart from the break that opens the line and from the character that ends the run. Where a line begins is named here rather than left to the `m` flag, whose set is a different one: it begins a line after the two separators of Unicode, which end a line to JavaScript and to no stylesheet. */
 export const EVERY_LINE_INDENT_WITH_CONTENT = /(?:^|\n)([\t ]*)\S/gu
 
-/** The spaces every line that holds content is indented by, tabs not among them. Where a line begins is named here for the reason it is in {@link EVERY_LINE_INDENT}. */
+/** The spaces every line that holds content is indented by, tabs not among them. Where a line begins is named here for the reason it is in {@link EVERY_LINE_INDENT_WITH_CONTENT}. */
 export const EVERY_LINE_SPACE_INDENT = /(?<=^|\n) *(?=\S)/gu
 
 /** Every semicolon of a text, one at a time. */
@@ -96,9 +93,6 @@ export const EVERY_WHITESPACE = /\s/gu
 
 /** The `__MSG_…__` a browser extension replaces at load time. */
 export const EXTENSION_MESSAGE = /__MSG_\S+__/u
-
-/** The first line of a text, the break that ends it aside — the carriage return of a Windows pair aside with it. */
-export const FIRST_LINE = /^[^\n\r]+/u
 
 /** A fraction opening straight on its point, with no digit in front of it. */
 export const FRACTION_WITHOUT_LEADING_ZERO = /(?:\D|^)(\.\d+)/u
@@ -120,9 +114,6 @@ export const IDENTIFIER_CODE_POINT = /[\w\-\u00B7\u00C0-\u00D6\u00D8-\u00F6\u00F
 
 /** The name of an `@import`, in whatever case it is written. */
 export const IMPORT_AT_RULE = /^import$/iu
-
-/** The indentation of the last line of a text, where that line holds nothing else. A Windows pair opens that line the way its line feed alone does, the carriage return in front of it belonging to the break rather than to the indentation. */
-export const INDENT_AT_END = /(?:^|\n)([ \t]*)$/u
 
 /** The last line of a text, the break in front of it aside — the carriage return of a Windows pair aside with it — and nothing at all where the text ends in a break. Read by `named-grid-areas-alignment`. */
 export const LAST_LINE = /[^\r\n]+$/u

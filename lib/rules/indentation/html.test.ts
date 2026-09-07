@@ -39,9 +39,50 @@ a {
 			description: `a style attribute, whose declarations stand on one line`,
 			code: `<a style="display:block; color:red;"></a>`,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/594
+			description: `a style attribute closing on an at-rule whose parameters span lines, the continuation line indented one level`,
+			code: `<a style="@import url(
+	'x')"></a>`,
+		},
 	],
 
 	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/594
+			description: `a style attribute closing on an at-rule whose parameters span lines, the continuation line not indented`,
+			code: `<a style="@import url(
+'x')"></a>`,
+			fixed: `<a style="@import url(
+	'x')"></a>`,
+			line: 2,
+			column: 1,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/594
+			description: `a stylesheet opening on the line of the style tag, whose one declaration is indented two levels and whose block closes on that declaration's line`,
+			code: `<style>a {
+		b: c; }</style>`,
+			fixed: `<style>a {
+	b: c; }</style>`,
+			line: 2,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/594
+			description: `the same stylesheet on the line of an indented style tag, the declaration indented one level`,
+			code: `	<style>a {
+	b: c; }
+	</style>`,
+			fixed: `	<style>a {
+		b: c; }
+	</style>`,
+			line: 2,
+			column: 2,
+			message: messages.expected(`2 tabs`),
+		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510
 			description: `a comment an at-rule with neither a block nor a semicolon swallowed inside the style element, indented a level past the block it is a line of`,
@@ -644,6 +685,48 @@ testRule({
 					line: 3,
 					column: 1,
 					message: messages.expected(`4 tabs`),
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`tab`, { indentClosingBrace: true }],
+	customSyntax: `postcss-html`,
+	autoStripIndent: false,
+
+	accept: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/594
+			description: `a stylesheet opening on the line of the style tag, its declaration and its closing brace both indented one level`,
+			code: `<style>a {
+	b: c;
+	}</style>`,
+		},
+	],
+
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/594
+			description: `a stylesheet opening on the line of the style tag, its declaration and its closing brace both at the left margin`,
+			code: `<style>a {
+b: c;
+}</style>`,
+			fixed: `<style>a {
+	b: c;
+	}</style>`,
+			warnings: [
+				{
+					line: 3,
+					column: 1,
+					message: messages.expected(`1 tab`),
+				},
+				{
+					line: 2,
+					column: 1,
+					message: messages.expected(`1 tab`),
 				},
 			],
 		},

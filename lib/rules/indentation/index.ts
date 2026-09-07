@@ -2,7 +2,7 @@ import type { AtRule, Declaration, Document, Node, Root, Rule, Source } from "po
 import styleSearch from "style-search"
 import stylelint from "stylelint"
 
-import { CRLF, EVERY_LINE_BREAK, EVERY_LINE_BREAK_AND_INDENT, EVERY_LINE_INDENT, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, FIRST_LINE, INDENT_AT_END, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, TRAILING_LINE_BREAK, TRAILING_STAR_OR_UNDERSCORE, TRAILING_WHITESPACE, WHITESPACE_WITHOUT_BREAK_BEFORE_CONTENT } from "../../regexps.ts"
+import { CRLF, EVERY_LINE_BREAK, EVERY_LINE_BREAK_AND_INDENT, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, TRAILING_LINE_BREAK, TRAILING_STAR_OR_UNDERSCORE, TRAILING_WHITESPACE, WHITESPACE_WITHOUT_BREAK_BEFORE_CONTENT } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
@@ -13,6 +13,7 @@ import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
+import { rootLevelIndents } from "../../utils/rootLevelIndents/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { isAtRule, isDeclaration, isRoot, isRule } from "../../utils/typeGuards/index.ts"
@@ -180,7 +181,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let calculatedLevel = level + embeddingLevel(syntax, node, indentChar).embeddedLevel
 
-			if (isRoot(node.parent)) return calculatedLevel + getRootBaseIndentLevel(node.parent, baseIndentLevel, primary)
+			if (isRoot(node.parent)) return calculatedLevel + getRootBaseIndentLevel(node.parent, baseIndentLevel, primary, indentClosingBrace)
 
 			// Indentation level equals the ancestor nodes separating this node from root; so recursively run this operation
 			calculatedLevel = indentationLevel(node.parent, calculatedLevel + 1)
@@ -480,9 +481,10 @@ function writeAtRuleIndentation (atRule: AtRule, fixPositions: FixPosition[], sy
  * @param root - The root node.
  * @param baseIndentLevel - The base indent level option.
  * @param space - The primary option: the number of spaces of one level, or `tab`.
+ * @param indentClosingBrace - Whether a closing brace stands a level deeper than its block.
  * @returns The calculated base indentation level.
  */
-function getRootBaseIndentLevel (root: Root, baseIndentLevel: number | `auto` | undefined, space: number | `tab`): number {
+function getRootBaseIndentLevel (root: Root, baseIndentLevel: number | `auto` | undefined, space: number | `tab`, indentClosingBrace: boolean | undefined): number {
 	let document = getDocument(root)
 
 	if (!document) return 0
@@ -495,7 +497,7 @@ function getRootBaseIndentLevel (root: Root, baseIndentLevel: number | `auto` | 
 
 	if (isNumber(indentLevel) && Number.isSafeInteger(indentLevel)) return indentLevel
 
-	let newIndentLevel = inferRootIndentLevel(root, baseIndentLevel, () => inferDocIndentSize(document, space))
+	let newIndentLevel = inferRootIndentLevel(root, baseIndentLevel, () => inferDocIndentSize(document, space), indentClosingBrace)
 
 	source.baseIndentLevel = newIndentLevel
 
@@ -585,9 +587,10 @@ function inferDocIndentSize (document: Document, space: number | `tab`): number 
  * @param root - The root node.
  * @param baseIndentLevel - The base indent level option.
  * @param indentSize - Function to get the indent size.
+ * @param indentClosingBrace - Whether a closing brace stands a level deeper than its block.
  * @returns The inferred root indentation level.
  */
-function inferRootIndentLevel (root: Root, baseIndentLevel: number | `auto` | undefined, indentSize: () => number): number {
+function inferRootIndentLevel (root: Root, baseIndentLevel: number | `auto` | undefined, indentSize: () => number, indentClosingBrace: boolean | undefined): number {
 	/**
 	 * Gets the indentation level from a string.
 	 *
@@ -607,21 +610,12 @@ function inferRootIndentLevel (root: Root, baseIndentLevel: number | `auto` | un
 	let newBaseIndentLevel
 
 	if (!isNumber(baseIndentLevel) || !Number.isSafeInteger(baseIndentLevel)) {
-		if (!root.source) throw new Error(`The root node must have a source`)
+		let { own, tagLine } = rootLevelIndents(root, indentClosingBrace ?? false)
 
-		let source = root.source.input.css
+		// The level is read off the lines of the root's own — the ones each statement opens on and each block closes on — and never off a line inside a statement or a nested block, since the rule measures those against the level read here: one the rule writes deeper than the root, the continuation of a set of parameters or a declaration nested in a block, rose by a level on every run of `--fix`, and one it writes at the root's level, the continuation of a selector, answered for itself and passed at whatever depth it stood (#594). A closing brace under `indentClosingBrace` is written a level deeper, and is left out with them. The tag's line stands in only where the stylesheet has no line of its own at that level: a sheet opening on the tag's line with a closing brace on a line of its own is read off that brace's line, as it always was, and a tag standing shallower than that line does not pull the level down
+		let indents = own.length > 0 ? own : tagLine
 
-		source = source.replace(FIRST_LINE, (firstLine) => {
-			let match = root.raws.codeBefore && INDENT_AT_END.exec(root.raws.codeBefore)
-
-			if (match) return match[1] + firstLine
-
-			return ``
-		})
-
-		let indentions = source.match(EVERY_LINE_INDENT)
-
-		if (indentions) return Math.min(...indentions.map((indent) => getIndentLevel(indent)))
+		if (indents.length > 0) return Math.min(...indents.map((indent) => getIndentLevel(indent)))
 
 		newBaseIndentLevel = 1
 	}
