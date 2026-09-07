@@ -47,11 +47,20 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: true
 				result,
 				ruleName,
 				fix () {
-					if (root.first === undefined) throw new Error(`The root node must have the first node.`)
+					let { first } = root
 
-					if (root.first.raws.before === undefined) throw new Error(`The first node must have spaces before.`)
+					// A root holding no node keeps the whole of the file in its trailing raw, and the break the file opens with at the head of that raw. A file of free semicolons and whitespace alone is that shape, since one of whitespace alone is passed over above; the break used to be asked of the first node, which such a root does not have, and the lint ended in an error rather than in a warning (#602)
+					if (first === undefined) {
+						if (root.raws.after === undefined) throw new Error(`The root node must keep the file in its trailing raw.`)
 
-					root.first.raws.before = root.first.raws.before.replace(OPENS_WITH_LINE_BREAK, ``)
+						root.raws.after = root.raws.after.replace(OPENS_WITH_LINE_BREAK, ``)
+
+						return
+					}
+
+					if (first.raws.before === undefined) throw new Error(`The first node must have spaces before.`)
+
+					first.raws.before = first.raws.before.replace(OPENS_WITH_LINE_BREAK, ``)
 				},
 			})
 		}

@@ -105,5 +105,62 @@ testRule({
 			column: 1,
 			message: messages.rejected,
 		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/602
+			description: `an empty first line in front of a free semicolon, which leaves the root no node`,
+			code: `\n;`,
+			fixed: `;`,
+			line: 1,
+			column: 1,
+			message: messages.rejected,
+		},
+		{
+			description: `the same written with a carriage-return line break`,
+			code: `\r\n;`,
+			fixed: `;`,
+			line: 1,
+			column: 1,
+			message: messages.rejected,
+		},
+		{
+			description: `the same semicolon with two line feeds behind it`,
+			code: `\n;\n\n`,
+			fixed: `;\n\n`,
+			line: 1,
+			column: 1,
+			message: messages.rejected,
+		},
+		{
+			description: `an empty first line in front of two free semicolons parted by a space`,
+			code: `\n; ;`,
+			fixed: `; ;`,
+			line: 1,
+			column: 1,
+			message: messages.rejected,
+		},
+	],
+})
+
+testRule({
+	customSyntax: `postcss-html`,
+	ruleName,
+	config: [true],
+
+	accept: [
+		{
+			description: `a style element whose content opens on the line behind the tag, the break behind the tag staying with the page`,
+			code: `<style>\n;</style>`,
+		},
+	],
+	reject: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/602
+			description: `a style element with an empty line in front of a free semicolon, which leaves the element's root no node`,
+			code: `<style>\n\n;</style>`,
+			fixed: `<style>\n;</style>`,
+			line: 2,
+			column: 1,
+			message: messages.rejected,
+		},
 	],
 })
