@@ -15,7 +15,7 @@ export type RuleScope<M extends RuleMessages> = {
 	syntax: Syntax,
 }
 
-/** What a rule module defines once, whichever namespaces it is registered under. `defersToRunEnd` marks `indentation`, which reads every line a run's writers touch and so checks last, behind the lineness-deferred rules ([#353](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/353)). */
+/** What a rule module defines once, whichever namespaces it is registered under. `defersToRunEnd` marks a rule that reads what a run's writers leave and writes nothing itself, so it checks last, behind the lineness-deferred rules: `indentation`, which reads every line ([#353](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/353)), and `declaration-block-single-line-max-declarations`, which reads a block's lineness. */
 export type RuleDefinition<P, S, M extends RuleMessages> = {
 	shortName: string,
 	meta: RuleMeta,

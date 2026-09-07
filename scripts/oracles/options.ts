@@ -22,6 +22,7 @@ const RULE_OPTIONS: Record<string, unknown[]> = {
 	"declaration-block-semicolon-newline-before": [`always`, `always-multi-line`, `never-multi-line`],
 	"declaration-block-semicolon-space-after": [`always`, `never`, `always-single-line`, `never-single-line`],
 	"declaration-block-semicolon-space-before": [`always`, `never`, `always-single-line`, `never-single-line`],
+	"declaration-block-single-line-max-declarations": [1, 2],
 	"declaration-block-trailing-semicolon": [`always`, `never`],
 	"declaration-colon-newline-after": [`always`, `always-multi-line`],
 	"declaration-colon-space-after": [`always`, `never`, `always-single-line`],

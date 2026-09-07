@@ -24,6 +24,7 @@ import { createRule as declarationBlockSemicolonNewlineAfter } from "./declarati
 import { createRule as declarationBlockSemicolonNewlineBefore } from "./declaration-block-semicolon-newline-before/index.ts"
 import { createRule as declarationBlockSemicolonSpaceAfter } from "./declaration-block-semicolon-space-after/index.ts"
 import { createRule as declarationBlockSemicolonSpaceBefore } from "./declaration-block-semicolon-space-before/index.ts"
+import { createRule as declarationBlockSingleLineMaxDeclarations } from "./declaration-block-single-line-max-declarations/index.ts"
 import { createRule as declarationBlockTrailingSemicolon } from "./declaration-block-trailing-semicolon/index.ts"
 import { createRule as declarationColonNewlineAfter } from "./declaration-colon-newline-after/index.ts"
 import { createRule as declarationColonSpaceAfter } from "./declaration-colon-space-after/index.ts"
@@ -111,6 +112,7 @@ let rules = {
 	"declaration-block-semicolon-newline-before": declarationBlockSemicolonNewlineBefore,
 	"declaration-block-semicolon-space-after": declarationBlockSemicolonSpaceAfter,
 	"declaration-block-semicolon-space-before": declarationBlockSemicolonSpaceBefore,
+	"declaration-block-single-line-max-declarations": declarationBlockSingleLineMaxDeclarations,
 	"declaration-block-trailing-semicolon": declarationBlockTrailingSemicolon,
 	"declaration-colon-newline-after": declarationColonNewlineAfter,
 	"declaration-colon-space-after": declarationColonSpaceAfter,
