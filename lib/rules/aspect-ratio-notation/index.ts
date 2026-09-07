@@ -74,6 +74,19 @@ const MEDIA_RULES_AFTER_THE_SOLIDUS: Partial<Record<Whitespace, NeighbourRule>> 
 /** Written beside a solidus no rule speaks of. */
 const SOLIDUS_WHITESPACE_FALLBACK = ` `
 
+/** `ratio` writes both numbers, `number-where-possible` drops a second number of one, `as-written` leaves the notation. */
+export type PrimaryOption = `ratio` | `number-where-possible` | `as-written`
+
+/** The secondary options. */
+export type SecondaryOptions = {
+
+	/** Whether the two numbers of a ratio are the smallest whole pair spelling it; `false` by default. */
+	smallestIntegers?: boolean,
+
+	/** `at-rules` leaves the ratio of a media feature alone and reads property values only. */
+	ignore?: string[],
+}
+
 /**
  * Specifies the notation for the value of `aspect-ratio` and for the `<ratio>` of a media feature.
  *
@@ -82,11 +95,11 @@ const SOLIDUS_WHITESPACE_FALLBACK = ` `
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `ratio`, `number-where-possible` or `as-written`.
- * @param secondaryOptions - `smallestIntegers`, and `ignore` with `at-rules`.
+ * @param primary - The primary option.
+ * @param secondaryOptions - The secondary options.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `ratio` | `number-where-possible` | `as-written`, secondaryOptions: { smallestIntegers?: boolean, ignore?: string[] } = {}): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, secondaryOptions: SecondaryOptions = {}): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,

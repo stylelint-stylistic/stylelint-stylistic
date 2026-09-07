@@ -24,17 +24,20 @@ export let meta = {
 	fixable: true,
 }
 
+/** `always` a newline after the commas; `always-multi-line` asks it, and `never-multi-line` refuses whitespace there, in a multi-line selector list only. */
+export type PrimaryOption = `always` | `always-multi-line` | `never-multi-line`
+
 /**
  * Requires a newline or disallows whitespace after the commas of selector lists.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `always`, `always-multi-line` or `never-multi-line`.
+ * @param primary - The primary option.
  * @param _secondaryOptions - None taken.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, _secondaryOptions: unknown): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
 
 	return (root, result) => {

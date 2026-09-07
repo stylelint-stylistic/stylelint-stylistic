@@ -122,16 +122,19 @@ function closingEdit (valueNode: FunctionNode, text: string): Edit {
 	return { start: end - valueNode.after.length, end, text }
 }
 
+/** `always` a single space inside the parentheses, `never` no whitespace; the `-single-line` forms in a single-line function only. */
+export type PrimaryOption = `always` | `never` | `always-single-line` | `never-single-line`
+
 /**
  * Requires a single space or disallows whitespace inside the parentheses of functions.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `always`, `never`, `always-single-line` or `never-single-line`.
+ * @param primary - The primary option.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line`): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,

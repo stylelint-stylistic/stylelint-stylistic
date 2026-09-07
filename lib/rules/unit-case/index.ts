@@ -41,16 +41,19 @@ type Problem = {
 	edit: Edit,
 }
 
+/** The case, `lower` or `upper`. */
+export type PrimaryOption = `lower` | `upper`
+
 /**
  * Specifies lowercase or uppercase for units.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `lower` or `upper`.
+ * @param primary - The primary option.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `lower` | `upper`): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,

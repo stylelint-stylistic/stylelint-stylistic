@@ -28,15 +28,18 @@ export let meta = {
 	fixable: true,
 }
 
+/** `always` a single space after the semicolon, `never` no whitespace; the `-single-line` forms in a single-line declaration block only. */
+export type PrimaryOption = `always` | `never` | `always-single-line` | `never-single-line`
+
 /**
  * Requires a single space or disallows whitespace after the semicolons of declaration blocks.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
- * @param primary - `always`, `never`, `always-single-line` or `never-single-line`.
+ * @param primary - The primary option.
  * @returns The check.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line`): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
 
 	return (root, result) => {

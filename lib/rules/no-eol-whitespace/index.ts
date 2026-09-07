@@ -84,17 +84,27 @@ function findErrorStartIndex (lastEOLIndex: number, string: string, options: {
 	return eolWhitespaceIndex
 }
 
+/** `true`; the rule has no other setting. */
+export type PrimaryOption = true
+
+/** The secondary options. */
+export type SecondaryOptions = {
+
+	/** `empty-lines` allows whitespace on a line holding nothing else. */
+	ignore?: `empty-lines` | `empty-lines`[],
+}
+
 /**
  * Disallows end-of-line whitespace.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `true`.
- * @param secondaryOptions - `ignore`.
+ * @param primary - The primary option.
+ * @param secondaryOptions - The secondary options.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: true, secondaryOptions: { ignore?: `empty-lines` | `empty-lines`[] }): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, secondaryOptions: SecondaryOptions): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,

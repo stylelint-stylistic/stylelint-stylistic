@@ -58,16 +58,19 @@ function replaceRuns (blanked: string, text: string, pattern: RegExp, replacemen
 	return [blankedPieces.join(``), pieces.join(``)]
 }
 
+/** The most empty lines allowed in a row inside a function. */
+export type PrimaryOption = number
+
 /**
  * Limits the number of adjacent empty lines within functions.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The maximum.
+ * @param primary - The primary option.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: number): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
 	let maxAdjacentNewlines = primary + 1
 
 	return (root, result) => {

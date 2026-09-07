@@ -31,17 +31,20 @@ export let meta = {
 	fixable: true,
 }
 
+/** `always` a newline after the colon, `always-multi-line` where the value is multi-line only. */
+export type PrimaryOption = `always` | `always-multi-line`
+
 /**
  * Requires a newline after the colon of declarations.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `always` or `always-multi-line`.
+ * @param primary - The primary option.
  * @param _secondaryOptions - Unused.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line`, _secondaryOptions: unknown): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, _secondaryOptions: unknown): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
 
 	return (root, result) => {

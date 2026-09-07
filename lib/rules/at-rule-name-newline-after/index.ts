@@ -19,16 +19,19 @@ export let meta = {
 	url: getRuleDocUrl(shortName),
 }
 
+/** `always` a newline after the at-rule's name, `always-multi-line` in an at-rule with multi-line params only. */
+export type PrimaryOption = `always` | `always-multi-line`
+
 /**
  * Requires a newline after at-rule names.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `always` or `always-multi-line`.
+ * @param primary - The primary option.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line`): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
 
 	return (root, result) => {

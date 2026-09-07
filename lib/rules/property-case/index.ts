@@ -22,17 +22,27 @@ export let meta = {
 	fixable: true,
 }
 
+/** The case, `lower` or `upper`. */
+export type PrimaryOption = `lower` | `upper`
+
+/** The secondary options. */
+export type SecondaryOptions = {
+
+	/** Rules whose selector matches are passed over, by name or pattern. */
+	ignoreSelectors?: string | RegExp | (string | RegExp)[],
+}
+
 /**
  * Specifies lowercase or uppercase for properties.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `lower` or `upper`.
- * @param secondaryOptions - `ignoreSelectors`.
+ * @param primary - The primary option.
+ * @param secondaryOptions - The secondary options.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `lower` | `upper`, secondaryOptions: { ignoreSelectors?: string | RegExp | (string | RegExp)[] }): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, secondaryOptions: SecondaryOptions): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,

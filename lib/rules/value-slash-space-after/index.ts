@@ -24,17 +24,30 @@ export let meta = {
 	fixable: true,
 }
 
+/** `always` a single space after the solidus, `never` no whitespace; the `-single-line` forms in a single-line declaration only. */
+export type PrimaryOption = `always` | `never` | `always-single-line` | `never-single-line`
+
+/** The secondary options. */
+export type SecondaryOptions = {
+
+	/** Functions whose solidi are passed over, nested functions included, by name or pattern. */
+	ignoreFunctions?: string | RegExp | (string | RegExp)[],
+
+	/** Properties whose solidi are passed over, by name or pattern. */
+	ignoreProperties?: string | RegExp | (string | RegExp)[],
+}
+
 /**
  * Requires a single space or no whitespace after a `/` in a value.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `always`, `never`, `always-single-line` or `never-single-line`.
- * @param secondaryOptions - `ignoreFunctions` and `ignoreProperties`.
+ * @param primary - The primary option.
+ * @param secondaryOptions - The secondary options.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line`, secondaryOptions: { ignoreFunctions?: string | RegExp | (string | RegExp)[], ignoreProperties?: string | RegExp | (string | RegExp)[] }): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, secondaryOptions: SecondaryOptions): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
 
 	return (root, result) => {

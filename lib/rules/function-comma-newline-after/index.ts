@@ -25,17 +25,27 @@ export let meta = {
 	fixable: true,
 }
 
+/** `always` a newline after the commas; `always-multi-line` asks it, and `never-multi-line` refuses whitespace there, in a multi-line function only. */
+export type PrimaryOption = `always` | `always-multi-line` | `never-multi-line`
+
+/** The secondary options. */
+export type SecondaryOptions = {
+
+	/** Functions whose commas are passed over, nested functions included, by name or pattern. */
+	ignoreFunctions?: string | RegExp | (string | RegExp)[],
+}
+
 /**
  * Requires a newline or disallows whitespace after the commas of functions.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `always`, `always-multi-line` or `never-multi-line`.
- * @param secondaryOptions - `ignoreFunctions`.
+ * @param primary - The primary option.
+ * @param secondaryOptions - The secondary options.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, secondaryOptions: { ignoreFunctions?: string | RegExp | (string | RegExp)[] }): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, secondaryOptions: SecondaryOptions): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
 
 	return (root, result) => {

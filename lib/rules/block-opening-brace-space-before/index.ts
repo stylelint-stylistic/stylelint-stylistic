@@ -32,20 +32,30 @@ export let meta = {
 	fixable: true,
 }
 
+/** `always` a single space before the opening brace, `never` no whitespace; the `-single-line` and `-multi-line` forms in a block of that shape only. */
+export type PrimaryOption = `always` | `never` | `always-single-line` | `never-single-line` | `always-multi-line` | `never-multi-line`
+
+/** The secondary options. */
+export type SecondaryOptions = {
+
+	/** At-rules whose opening brace is passed over, by name or pattern. */
+	ignoreAtRules?: string | RegExp | (string | RegExp)[],
+
+	/** Rules whose selector matches are passed over, by name or pattern. */
+	ignoreSelectors?: string | RegExp | (string | RegExp)[],
+}
+
 /**
  * Requires or disallows whitespace before the opening brace of blocks.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `always`, `never`, `always-single-line`, `never-single-line`, `always-multi-line` or `never-multi-line`.
- * @param secondaryOptions - `ignoreAtRules` and `ignoreSelectors`.
+ * @param primary - The primary option.
+ * @param secondaryOptions - The secondary options.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line` | `always-multi-line` | `never-multi-line`, secondaryOptions: {
-	ignoreAtRules?: string | RegExp | (string | RegExp)[],
-	ignoreSelectors?: string | RegExp | (string | RegExp)[],
-}): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, secondaryOptions: SecondaryOptions): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
 
 	return (root, result) => {

@@ -216,17 +216,20 @@ function getNeverFixability (syntax: Syntax, read: {
 	return { isOpeningFixable, isClosingFixable }
 }
 
+/** `always` a newline inside the parentheses; `always-multi-line` asks it, and `never-multi-line` refuses whitespace there, in a multi-line function only. */
+export type PrimaryOption = `always` | `always-multi-line` | `never-multi-line`
+
 /**
  * Requires a newline or disallows whitespace on the inside of the parentheses of functions.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `always`, `always-multi-line` or `never-multi-line`.
+ * @param primary - The primary option.
  * @param _secondaryOptions - Unused.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, _secondaryOptions: unknown): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, _secondaryOptions: unknown): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,

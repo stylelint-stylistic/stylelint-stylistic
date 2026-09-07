@@ -52,21 +52,33 @@ function measureLine (lineText: string, excludedSpans: Array<[number, number]>, 
 	return column - excluded
 }
 
+/** The most characters allowed on a line. */
+export type PrimaryOption = number
+
+/** The secondary options. */
+export type SecondaryOptions = {
+
+	/** `non-comments` limits the lines of comments only, `comments` the lines outside them only. */
+	ignore?: (`non-comments` | `comments`) | (`non-comments` | `comments`)[],
+
+	/** Lines passed over, by pattern. */
+	ignorePattern?: string | RegExp | (string | RegExp)[],
+
+	/** The width a tab reaches the next stop of; one character otherwise. */
+	tabSize?: number,
+}
+
 /**
  * Limits the length of a line.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The maximum length.
- * @param secondaryOptions - `ignore`, `ignorePattern` and `tabSize`.
+ * @param primary - The primary option.
+ * @param secondaryOptions - The secondary options.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: number, secondaryOptions: {
-	ignore?: (`non-comments` | `comments`) | (`non-comments` | `comments`)[],
-	ignorePattern?: string | RegExp | (string | RegExp)[],
-	tabSize?: number,
-}): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, secondaryOptions: SecondaryOptions): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,

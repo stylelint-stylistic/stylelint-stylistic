@@ -24,17 +24,20 @@ export let meta = {
 	fixable: true,
 }
 
+/** `always`, a newline after the semicolon. */
+export type PrimaryOption = `always`
+
 /**
  * Requires a newline after the semicolon of at-rules.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `always`.
+ * @param primary - The primary option.
  * @param _secondary - Unused.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always`, _secondary: unknown): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, _secondary: unknown): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
 
 	return (root, result) => {

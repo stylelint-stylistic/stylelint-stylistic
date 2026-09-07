@@ -22,16 +22,19 @@ export let meta = {
 	url: getRuleDocUrl(shortName),
 }
 
+/** `always` a single space before the semicolon, `never` no whitespace. */
+export type PrimaryOption = `always` | `never`
+
 /**
  * Requires or disallows whitespace before the semicolons of at-rules.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `always` or `never`.
+ * @param primary - The primary option.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
 
 	return (root, result) => {

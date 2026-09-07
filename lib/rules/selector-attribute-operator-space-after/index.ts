@@ -22,16 +22,19 @@ export let meta = {
 	fixable: true,
 }
 
+/** `always` a single space after the operator, `never` no whitespace. */
+export type PrimaryOption = `always` | `never`
+
 /**
  * Requires or forbids a space after an attribute operator.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - The option.
+ * @param primary - The primary option.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
 	return (root, result) => {
 		let checker = whitespaceChecker(`space`, primary, messages)
 		let validOptions = validateOptions(result, ruleName, {

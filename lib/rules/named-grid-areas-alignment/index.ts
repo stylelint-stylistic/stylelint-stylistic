@@ -105,6 +105,22 @@ function columnPadding (lines: GridTableLine[], textOf: (span: { start: number, 
 	return writes
 }
 
+/** `true`; the rule has no other setting. */
+export type PrimaryOption = true
+
+/** The secondary options. */
+export type SecondaryOptions = {
+
+	/** The spaces between the cells of a row; `1` by default. */
+	gap?: number,
+
+	/** Whether the closing quotes are aligned; `false` by default. */
+	alignQuotes?: boolean,
+
+	/** Whether the line names and the sizes beside the rows are laid out as columns; `false` by default. */
+	alignColumns?: boolean,
+}
+
 /**
  * Aligns the cells of the rows of `grid-template-areas`, `grid-template` and `grid`.
  *
@@ -113,15 +129,11 @@ function columnPadding (lines: GridTableLine[], textOf: (span: { start: number, 
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `true`.
- * @param secondaryOptions - `gap`, `alignQuotes` and `alignColumns`.
+ * @param primary - The primary option.
+ * @param secondaryOptions - The secondary options.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: true, secondaryOptions: {
-	gap?: number,
-	alignQuotes?: boolean,
-	alignColumns?: boolean,
-} = {}): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, secondaryOptions: SecondaryOptions = {}): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,

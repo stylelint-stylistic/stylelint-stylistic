@@ -21,17 +21,20 @@ export let meta = {
 	fixable: true,
 }
 
+/** `true`; the rule has no other setting. */
+export type PrimaryOption = true
+
 /**
  * Disallows missing end-of-source newlines.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `true`.
+ * @param primary - The primary option.
  * @param _secondaryOptions - Unused.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: true, _secondaryOptions: unknown): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, _secondaryOptions: unknown): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, { actual: primary })
 

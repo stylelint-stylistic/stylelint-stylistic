@@ -33,16 +33,19 @@ export let meta = {
 	fixable: true,
 }
 
+/** `always` a single space before the closing brace, `never` no whitespace; the `-single-line` and `-multi-line` forms in a block of that shape only. */
+export type PrimaryOption = `always` | `never` | `always-single-line` | `never-single-line` | `always-multi-line` | `never-multi-line`
+
 /**
  * Requires or disallows whitespace before the closing brace of blocks.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `always`, `never`, `always-single-line`, `never-single-line`, `always-multi-line` or `never-multi-line`.
+ * @param primary - The primary option.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line` | `always-multi-line` | `never-multi-line`): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
 
 	return (root, result) => {

@@ -26,16 +26,26 @@ export let meta = {
 	fixable: true,
 }
 
+/** The most empty lines allowed in a row. */
+export type PrimaryOption = number
+
+/** The secondary options. */
+export type SecondaryOptions = {
+
+	/** `comments` passes the empty lines inside comments over. */
+	ignore?: `comments` | `comments`[],
+}
+
 /**
  * Limits the number of adjacent empty lines.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
- * @param primary - The maximum.
- * @param secondaryOptions - `ignore`.
+ * @param primary - The primary option.
+ * @param secondaryOptions - The secondary options.
  * @returns The check.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: number, secondaryOptions: { ignore?: `comments` | `comments`[] }): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, secondaryOptions: SecondaryOptions): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,

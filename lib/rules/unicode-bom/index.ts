@@ -20,15 +20,18 @@ export let meta = {
 	url: getRuleDocUrl(shortName),
 }
 
+/** `always` a byte order mark at the start of the file, `never` none. */
+export type PrimaryOption = `always` | `never`
+
 /**
  * Requires or disallows Unicode BOM.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
- * @param primary - `always` or `never`.
+ * @param primary - The primary option.
  * @returns The check.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,

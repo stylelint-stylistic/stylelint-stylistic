@@ -29,17 +29,27 @@ export let meta = {
 const SINGLE_QUOTE = `'`
 const DOUBLE_QUOTE = `"`
 
+/** `single` or `double`, the quotes a string is wrapped in. */
+export type PrimaryOption = `single` | `double`
+
+/** The secondary options. */
+export type SecondaryOptions = {
+
+	/** Whether a string holding the configured quote may keep the other one; `true` by default. */
+	avoidEscape?: boolean,
+}
+
 /**
  * Specifies single or double quotes around strings.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `single` or `double`.
- * @param secondaryOptions - `avoidEscape`.
+ * @param primary - The primary option.
+ * @param secondaryOptions - The secondary options.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `single` | `double`, secondaryOptions: { avoidEscape?: boolean }): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, secondaryOptions: SecondaryOptions): RuleCheck {
 	let correctQuote: typeof SINGLE_QUOTE | typeof DOUBLE_QUOTE = primary === `single` ? SINGLE_QUOTE : DOUBLE_QUOTE
 
 	let erroneousQuote: typeof SINGLE_QUOTE | typeof DOUBLE_QUOTE = primary === `single` ? DOUBLE_QUOTE : SINGLE_QUOTE

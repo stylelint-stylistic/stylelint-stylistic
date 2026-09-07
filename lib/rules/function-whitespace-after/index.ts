@@ -27,16 +27,19 @@ export let meta = {
 
 const ACCEPTABLE_AFTER_CLOSING_PAREN = new Set([`)`, `,`, `}`, `:`, `/`, undefined])
 
+/** `always` whitespace after a function, `never` none. */
+export type PrimaryOption = `always` | `never`
+
 /**
  * Requires or disallows whitespace after functions.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `always` or `never`.
+ * @param primary - The primary option.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never`): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,

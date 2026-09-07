@@ -30,16 +30,26 @@ export let meta = {
 	fixable: true,
 }
 
+/** `always` a single space after the opening brace, `never` no whitespace; the `-single-line` and `-multi-line` forms in a block of that shape only. */
+export type PrimaryOption = `always` | `never` | `always-single-line` | `never-single-line` | `always-multi-line` | `never-multi-line`
+
+/** The secondary options. */
+export type SecondaryOptions = {
+
+	/** `at-rules` passes the opening brace of an at-rule over. */
+	ignore?: `at-rules` | `at-rules`[],
+}
+
 /**
  * Requires or disallows whitespace after the opening brace of blocks.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
- * @param primary - `always`, `never`, or a `-single-line` or `-multi-line` form of either.
- * @param secondaryOptions - `ignore`.
+ * @param primary - The primary option.
+ * @param secondaryOptions - The secondary options.
  * @returns The check.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: `always` | `never` | `always-single-line` | `never-single-line` | `always-multi-line` | `never-multi-line`, secondaryOptions: { ignore?: `at-rules` | `at-rules`[] }): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, secondaryOptions: SecondaryOptions): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
 
 	return (root, result) => {

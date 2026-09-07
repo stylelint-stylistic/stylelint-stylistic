@@ -50,17 +50,27 @@ function fixWouldCommentOutTheBlock (syntax: Syntax, statement: Rule | AtRule, n
 	return false
 }
 
+/** `always` a newline after the opening brace; `always-multi-line` asks it, and `never-multi-line` refuses whitespace there, in a multi-line block only. */
+export type PrimaryOption = `always` | `always-multi-line` | `never-multi-line`
+
+/** The secondary options. */
+export type SecondaryOptions = {
+
+	/** `rules` passes the opening brace of a rule over. */
+	ignore?: `rules` | `rules`[],
+}
+
 /**
  * Requires a newline after the opening brace of blocks.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
- * @param primary - `always`, `always-multi-line` or `never-multi-line`.
- * @param secondaryOptions - `ignore`.
+ * @param primary - The primary option.
+ * @param secondaryOptions - The secondary options.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `always-multi-line` | `never-multi-line`, secondaryOptions: { ignore?: `rules` | `rules`[] }): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, secondaryOptions: SecondaryOptions): RuleCheck {
 	let checker = whitespaceChecker(`newline`, primary, messages)
 
 	return (root, result) => {

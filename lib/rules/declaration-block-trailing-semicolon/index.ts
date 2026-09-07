@@ -142,7 +142,7 @@ function takeTheTrailingSemicolonsAway (syntax: Syntax, node: AtRule | Declarati
  * Under `always`, no for a node with a block (`postcss-scss` drops a Sass nested property's semicolon) and where an inline comment ending the node would swallow the semicolon. Under `never`, no for the semicolon PostCSS writes regardless of the flag and the one Less requires behind a bodiless at-rule. The warning then stands over code the fix leaves alone.
  * @param syntax - The syntax the rule is built over.
  * @param node - The node the semicolon stands behind.
- * @param primary - `always` or `never`.
+ * @param primary - The primary option.
  * @param spelledBetween - The run between the node and an `always` write, where that write misses the node's trailing whitespace.
  * @param result - The Stylelint result.
  * @returns True where the fix may be written.
@@ -153,6 +153,16 @@ function isFixable (syntax: Syntax, node: ChildNode, primary: `always` | `never`
 	return !hasBlock(node) && !syntax.writesIntoInlineComment(node, result, spelledBetween)
 }
 
+/** `always` a semicolon behind the last declaration, `never` none. */
+export type PrimaryOption = `always` | `never`
+
+/** The secondary options. */
+export type SecondaryOptions = {
+
+	/** `single-declaration` passes a block holding one node other than a comment over. */
+	ignore?: `single-declaration` | `single-declaration`[],
+}
+
 /**
  * Requires or disallows a trailing semicolon within declaration blocks.
  * @param scope - What the namespace hands the rule.
@@ -160,10 +170,10 @@ function isFixable (syntax: Syntax, node: ChildNode, primary: `always` | `never`
  * @param scope.messages - The messages, closing with that name.
  * @param scope.syntax - The syntax the rule is built over.
  * @param primary - `always` or `never`.
- * @param secondaryOptions - The secondary options: `ignore`.
+ * @param secondaryOptions - The secondary options.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `always` | `never`, secondaryOptions: { ignore?: `single-declaration` | `single-declaration`[] }): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, secondaryOptions: SecondaryOptions): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,
