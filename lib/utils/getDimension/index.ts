@@ -67,8 +67,11 @@ export function getDimension (syntax: Syntax, node?: Partial<Node>): {
 		positions.splice(start, length)
 	}
 
+	// A syntax that ends a unit at an escape — Less, which reads what an escape spells as a value of its own — ends it at the first one whatever it spells, a hack among them: `10P\9X` is the dimension `10P` and the keyword `\9X` to Less, so nothing is taken out of the copy under such a syntax, and the cut below falls on the escape (#527)
+	let endsAtEscape = syntax.endsUnitAtEscape()
+
 	// The `\0` and `\9` a stylesheet ends a value with to hide it from one browser or another are no part of the unit, and are taken off the copy wherever they stand. Only an escape the file spells is one: `10PX\\0` is a unit ending in an escaped backslash and a digit, as the tokenizer reads it, and taking two characters out of the middle of it would leave every escape behind that point read from the wrong side (#414). The whitespace closing such an escape is left in the copy where the file writes one: `10px\9 2PX` is one dimension to the grammar, and the hack taken out of it leaves `10px 2PX`, whose unit ends at the space the way any unit ends at a character that is no code point of an identifier — so `px` is the unit, and what stands behind the hack is off it, however many hacks the word carries (#526)
-	let hackRuns = spelledRuns(value).filter((run) => run.escape && HACK_UNITS.some((hack) => run.text === hack || (run.text.startsWith(hack) && HEX_ESCAPE_TERMINATOR.test(run.text.slice(hack.length)))))
+	let hackRuns = endsAtEscape ? [] : spelledRuns(value).filter((run) => run.escape && HACK_UNITS.some((hack) => run.text === hack || (run.text.startsWith(hack) && HEX_ESCAPE_TERMINATOR.test(run.text.slice(hack.length)))))
 
 	// Taken from the end, so that the place of each run still counts in the copy the next one is taken out of
 	for (let hackRun of hackRuns.toReversed()) take(hackRun.index, 2)
@@ -83,8 +86,8 @@ export function getDimension (syntax: Syntax, node?: Partial<Node>): {
 		}
 	}
 
-	// `valueParser.unit` calls everything written behind the number a unit, and a unit is an identifier: it ends at the first character that is no code point of one, an escape aside. That is the reading every tokenizer takes — `10px#fff` is the dimension `10px` and the hash `#fff` (#426), `10PX$VAR` the dimension `10PX` and the name `VAR` behind a delimiter, `1px!important` the dimension and the flag — and it is the reading an escape needs, since a character escaped into a name is a character of the unit and ends nothing: `10px\#fff` is one dimension with the unit `px\#fff`, as is `10PX\*2REM` with the unit `PX\*2REM` (#414). What stands behind the unit is left in the copy and off the unit, so the caller measures the run it underlines through `positions` and writes into nothing else
-	let unitEnd = spelledRuns(parsedUnit.unit).find((run) => !run.escape && !IDENTIFIER_CODE_POINT.test(run.text))?.index
+	// `valueParser.unit` calls everything written behind the number a unit, and a unit is an identifier: it ends at the first character that is no code point of one, an escape aside. That is the reading every tokenizer takes — `10px#fff` is the dimension `10px` and the hash `#fff` (#426), `10PX$VAR` the dimension `10PX` and the name `VAR` behind a delimiter, `1px!important` the dimension and the flag — and it is the reading an escape needs, since a character escaped into a name is a character of the unit and ends nothing: `10px\#fff` is one dimension with the unit `px\#fff`, as is `10PX\*2REM` with the unit `PX\*2REM` (#414). Under a syntax that ends a unit at an escape the same word is the dimension `10px` and a value of its own behind it, so there the escape ends the unit as a delimiter would (#527). What stands behind the unit is left in the copy and off the unit, so the caller measures the run it underlines through `positions` and writes into nothing else
+	let unitEnd = spelledRuns(parsedUnit.unit).find((run) => (run.escape ? endsAtEscape : !IDENTIFIER_CODE_POINT.test(run.text)))?.index
 	let unit = unitEnd === undefined ? parsedUnit.unit : parsedUnit.unit.slice(0, unitEnd)
 	// A hexadecimal escape closing the unit may have taken the whitespace behind it, and that whitespace is the escape's rather than the unit's: `10PX\61 $VAR` is the dimension `10PX\61 ` to the tokenizer, and the unit named is `PX\61`, which is what the file spells of it and what the escape spells with or without its closing character. Between the letters of a unit such whitespace stays where it is, `P\61 X` being one identifier — and so does the whitespace an escape spells rather than closes on, `10PX\ ` being a unit ending in an escaped space, which is no closing character of anything
 	let last = spelledRuns(unit).at(-1)

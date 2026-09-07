@@ -27,6 +27,8 @@ export let less: Syntax = {
 	readsAtRuleAsVariable: (atRule: AtRule) => `variable` in atRule,
 	// Less divides only inside parentheses under its default `math` mode — measured against Less 4.9.1, `@a/2` prints `4/2` and `2/@a` prints `2/4` while `(4/2)` prints `2` — and a parenthesised group is a nameless call the rules pass over. Under `math: always` it divides everywhere, and whether whitespace stands beside the solidus changes nothing to it. So a solidus outside parentheses is the separator it is to the core
 	readsSlashAsOperator: () => false,
+	// Less reads a unit as ASCII letters and underscores and a backslash as the first character of a keyword, so `10px\#fff` is a dimension and an escaped value to it, printed `10px \#fff` — measured against Less 4.9.1 in every place it reads an expression, while a declaration whose value spells none of `. # @ $ + / ' " * ` ( { } -` and closes on a semicolon it stores unread and prints whole. Answered for the whole namespace rather than probed node by node, as the solidus above is: the reading only shortens a unit, so the one thing it can cost is a warning about characters the core would have named, never a write (#527)
+	endsUnitAtEscape: () => true,
 	// The core writes every copy PostCSS and `postcss-scss` keep; a Less variable holds one more, the `value` its stringifier prints, and it is kept in step here
 	write (node: AtRule | Declaration | PostcssRule, text: string): void {
 		css.write(node, text)

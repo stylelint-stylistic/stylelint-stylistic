@@ -2,6 +2,7 @@ import valueParser from "postcss-value-parser"
 import { expect, it } from "vitest"
 
 import { css } from "../../syntaxes/css/index.ts"
+import type { Syntax } from "../../syntaxes/index.ts"
 
 import { getDimension } from "./index.ts"
 
@@ -227,4 +228,41 @@ it(`getDimension positions`, () => {
 	expect(getDimension(css, valueParser(`$variable`).nodes[0]).positions).toBe(null)
 	expect(getDimension(css, valueParser(`"100px"`).nodes[0]).positions).toBe(null)
 	expect(getDimension(css, valueParser(`word`).nodes[0]).positions).toBe(null)
+})
+
+it(`getDimension under a syntax that ends a unit at an escape`, () => {
+	// The contract's answer is what the reading turns on, so the core's syntax is asked with that one answer changed (#527)
+	let partingSyntax: Syntax = { ...css, endsUnitAtEscape: () => true }
+
+	// The unit ends in front of the first escape whatever it spells, and the escaped text is left in the copy and off the unit
+	expect(getDimension(partingSyntax, valueParser(`10px\\#fff`).nodes[0]).unit).toBe(`px`)
+	expect(getDimension(css, valueParser(`10px\\#fff`).nodes[0]).unit).toBe(`px\\#fff`)
+	expect(getDimension(partingSyntax, valueParser(`10PX\\@VAR`).nodes[0]).unit).toBe(`PX`)
+	expect(getDimension(partingSyntax, valueParser(`10PX\\!important`).nodes[0]).unit).toBe(`PX`)
+	expect(getDimension(partingSyntax, valueParser(`10PX\\*2REM`).nodes[0]).unit).toBe(`PX`)
+	expect(getDimension(css, valueParser(`10PX\\*2REM`).nodes[0]).unit).toBe(`PX\\*2REM`)
+
+	// A hexadecimal escape between the letters of a unit ends it as any escape does, where the core reads the letter it spells as one of the unit's. The value parser parts such a word at the escape's whitespace and the rule welds it back before asking, so the node is built whole here
+	let weldedLetter = { type: `word`, value: `10P\\61 X`, sourceIndex: 0, sourceEndIndex: 8 } as const
+
+	expect(getDimension(partingSyntax, weldedLetter).unit).toBe(`P`)
+	expect(getDimension(css, weldedLetter).unit).toBe(`P\\61 X`)
+
+	// A hack unit is an escape too: nothing is taken out of the copy, and the unit ends in front of it wherever it stands, so the map is the identity
+	let weldedHack = { type: `word`, value: `10PX\\9 2PX`, sourceIndex: 0, sourceEndIndex: 10 } as const
+
+	expect(getDimension(partingSyntax, valueParser(`10P\\9X`).nodes[0]).unit).toBe(`P`)
+	expect(getDimension(css, valueParser(`10P\\9X`).nodes[0]).unit).toBe(`PX`)
+	expect(getDimension(partingSyntax, valueParser(`10PX\\9`).nodes[0]).unit).toBe(`PX`)
+	expect(getDimension(partingSyntax, weldedHack).unit).toBe(`PX`)
+	expect(getDimension(css, weldedHack).unit).toBe(`PX`)
+	expect(getDimension(partingSyntax, valueParser(`1PX\\9!important`).nodes[0]).positions).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+
+	// An escape standing right behind the number leaves no unit at all
+	expect(getDimension(partingSyntax, valueParser(`10\\#fff`).nodes[0]).unit).toBe(``)
+	expect(getDimension(css, valueParser(`10\\#fff`).nodes[0]).unit).toBe(`\\#fff`)
+
+	// A character that is no code point of an identifier ends the unit under either answer
+	expect(getDimension(partingSyntax, valueParser(`10px#fff`).nodes[0]).unit).toBe(`px`)
+	expect(getDimension(partingSyntax, valueParser(`1px!important`).nodes[0]).unit).toBe(`px`)
 })

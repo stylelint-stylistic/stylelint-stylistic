@@ -236,6 +236,14 @@ export type Syntax = {
 	readsSlashAsOperator (left: ValueParserNode | undefined, right: ValueParserNode | undefined): boolean,
 
 	/**
+	 * Asks whether the syntax ends the unit of a dimension at an escape, reading what the escape spells as a value of its own rather than as characters of the unit.
+	 *
+	 * To the grammar of CSS an escape is a code point of the identifier it stands in, so `10px\#fff` is one dimension whose unit is `px#fff`: `@csstools/css-tokenizer` reads it so, and Sass and `lightningcss` both print the word whole. Less parts the word there. Its reader of an expression takes a unit as ASCII letters and underscores alone and a backslash as the first character of a keyword, so the same value prints as `10px \#fff`, a dimension and an escaped value it carries through as it stands — measured against Less 4.9.1 in a variable's value, in media parameters, in the arguments of a call, in a custom property and in a declaration whose value spells any of `. # @ $ + / ' " * ` ( { } -`; a declaration whose value spells none of those and closes on a semicolon it stores without reading, and prints whole. In no reading of its is the escape part of the unit, so a rule recasing the whole of that identifier under Less recases a value of the file's (#527).
+	 * @returns True where the unit ends in front of the first escape, whatever the escape spells.
+	 */
+	endsUnitAtEscape (): boolean,
+
+	/**
 	 * Finds the spans the interpolations of a preprocessor occupy in a text — a stretch written in a language of its own, which no rule reads code beside.
 	 * @param text - The text, with its comments blanked where a brace inside one must not close an interpolation.
 	 * @param node - The node the text belongs to, whose own syntax says which spellings interpolate at all.

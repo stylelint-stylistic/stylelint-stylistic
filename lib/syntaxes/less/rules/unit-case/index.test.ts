@@ -190,15 +190,123 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/414
-			// Less multiplies the unescaped twin and does not multiply this one, parting it instead into the dimension and an escaped value it prints as it stands: `a { b: 10PX \\*2REM; }`. The unit read here is the whole of `PX\\*2REM`, which is plain CSS's reading and the one this namespace inherits; the text the fix leaves is the text the base left, and what Less carries through to the stylesheet it writes is [#527](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527).
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527
+			// Less multiplies the unescaped twin and does not multiply this one, parting it instead into the dimension and an escaped value it prints as it stands: `a { b: 10PX \\*2REM; }`. The unit is `PX` here, where the core reads the whole of `PX\\*2REM`, so the escaped value keeps its case.
 			description: `an upper-case unit welded by an escaped star to a second one, which Less does not multiply`,
 			code: `a { b: 10PX\\*2REM; }`,
-			fixed: `a { b: 10px\\*2rem; }`,
+			fixed: `a { b: 10px\\*2REM; }`,
 			line: 1,
 			column: 10,
 			endLine: 1,
-			endColumn: 18,
-			message: messages.expected(`PX\\*2REM`, `px\\*2rem`),
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527
+			// Less parts the word at the escape and prints `a { b: 10PX \\@VAR; }`, the escaped name a value of its own, so the unit ends in front of the backslash and the name keeps its case.
+			description: `an upper-case unit with an escaped at-sign and a name in capitals welded to it, which Less reads as a value of its own`,
+			code: `a { b: 10PX\\@VAR; }`,
+			fixed: `a { b: 10px\\@VAR; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527
+			// A declaration whose value spells no operator Less stores unread and prints whole, so this one compiles to `a { b: 10PX\\!important; }`; in a variable's value or a call's arguments it reads an expression and prints `10PX \\!important`. In neither reading is the flag part of the unit, and the core's fix, which recased the flag along with the unit, used to leave `10px\\!important`.
+			description: `an upper-case unit with an escaped bang flag welded to it, in a declaration Less prints as it stands`,
+			code: `a { b: 10PX\\!important; }`,
+			fixed: `a { b: 10px\\!important; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527
+			// To the tokenizer the escape spells the letter `a` and the unit is `PaX`. Less stores this declaration unread and prints it whole, and wherever it reads an expression — a variable's value, a call's arguments, the last declaration of a block written without a semicolon — it reads a unit as ASCII letters alone and prints `10P \\61 X`; in neither reading is the escape part of the unit, so it ends at `P` and the letter behind the escape keeps its case.
+			description: `a unit whose middle letter a hexadecimal escape spells, which Less parts at the escape`,
+			code: `a { b: 10P\\61 X; }`,
+			fixed: `a { b: 10p\\61 X; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expected(`P`, `p`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527
+			// The core takes the hack out of the copy it reads the unit in and names `PX`. Less stores this declaration unread and prints it whole, and wherever it reads an expression it parts the word at the hack as at any escape, `10P \\9X` in a variable's value; the letter behind the hack is no letter of the unit in either reading.
+			description: `a unit with a hack unit between its letters, which Less parts at the hack`,
+			code: `a { b: 10P\\9X; }`,
+			fixed: `a { b: 10p\\9X; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expected(`P`, `p`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527
+			// An escaped backslash and a digit, no hack: the core reads the unit `PX\\\\9` whole, as the tokenizer does, and Less reads `10PX \\\\9` in a variable's value, so the unit ends in front of the escape here. The write is the base's, since the escape spells no letter; the name is not.
+			description: `an upper-case unit closing on an escaped backslash and a digit, which is no hack unit`,
+			code: `a { b: 10PX\\\\9; }`,
+			fixed: `a { b: 10px\\\\9; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527
+			// An escaped space is a code point of the unit to the tokenizer, which reads `PX\\ 2REM` as one identifier; Less reads `10PX \\ 2REM` in a variable's value, and the unit ends in front of the escape here, so the second run of digits and letters keeps its case.
+			description: `an upper-case unit an escaped space welds to a second one`,
+			code: `a { b: 10PX\\ 2REM; }`,
+			fixed: `a { b: 10px\\ 2REM; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527
+			// The hack's whitespace welds the second run of digits and letters onto the word, and the unit ends in front of the hack under this syntax as under the core: the same `PX`, the same write.
+			description: `an upper-case unit whose hack unit's escape swallows the whitespace in front of a second run of digits and letters, which is off the unit under either reading`,
+			code: `a { b: 10PX\\9 2PX; }`,
+			fixed: `a { b: 10px\\9 2PX; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527
+			// Less reads a variable's value as an expression whatever it spells, and prints `10PX \\#fff` for this one.
+			description: `an upper-case unit with an escaped hash welded to it, in the value of a Less at-variable`,
+			code: `@v: 10PX\\#fff;`,
+			fixed: `@v: 10px\\#fff;`,
+			line: 1,
+			column: 7,
+			endLine: 1,
+			endColumn: 9,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527
+			description: `the same word in a set of media parameters, which Less reads as an expression too`,
+			code: `@media (min-width: 10PX\\#fff) { a { b: c } }`,
+			fixed: `@media (min-width: 10px\\#fff) { a { b: c } }`,
+			line: 1,
+			column: 22,
+			endLine: 1,
+			endColumn: 24,
+			message: messages.expected(`PX`, `px`),
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
@@ -225,15 +333,15 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
-			// The dimension token is `10PX\*ns`, and the guard that turns a reading through a Sass module away is asked about that token rather than about the whole word, so the unit is named where the rule used to say nothing; Less refuses the line, and `lightningcss` prints it as it stands.
+			// The dimension token is `10PX\*ns`, and the guard that turns a reading through a Sass module away is asked about that token rather than about the whole word, so the unit is named where the rule used to say nothing; Less refuses the line, and `lightningcss` prints it as it stands. The unit ends in front of the escape under this namespace, so `PX` is named where the core names `PX\*ns` (#527).
 			description: `an upper-case unit an escaped star welds to a reading through a Sass module`,
 			code: `a { b: 10PX\\*ns.$V; }`,
 			fixed: `a { b: 10px\\*ns.$V; }`,
 			line: 1,
 			column: 10,
 			endLine: 1,
-			endColumn: 16,
-			message: messages.expected(`PX\\*ns`, `px\\*ns`),
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526
@@ -265,6 +373,18 @@ testRule({
 	config: [`upper`],
 
 	accept: [
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527
+			// Less compiles this to `a { width: 10PX \\#fff; }`: the dimension, and beside it an escaped value printed exactly as written. The unit is `PX` and nothing of the hash, where the core names `PX\\#fff` and asks for `PX\\#FFF`.
+			description: `an upper-case unit with an escaped hash in lower case welded to it, which Less reads as a value of its own`,
+			code: `a { width: 10PX\\#fff; }`,
+		},
+		{
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527
+			// A number and an escaped value to Less, `10 \\#fff`; the core reads a dimension whose whole unit is the escaped hash, and asked for `\\#FFF` here.
+			description: `a number with an escaped hash welded to it, which leaves no unit to read`,
+			code: `a { width: 10\\#fff; }`,
+		},
 		{
 			description: `a unit inside an end-of-line comment, which the rule does not read`,
 			code: `a { width: 1EM; \n// width: 10px\n }`,
@@ -432,15 +552,16 @@ testRule({
 		},
 		{
 			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/414
-			// The hash opens no interpolation and is a code point of the unit to the tokenizer, to Sass and to `lightningcss`; Less parts the word here too, and what it makes of the recased half is [#527](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527).
-			description: `a lower-case unit with an escaped hash welded to it`,
+			// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527
+			// The hash opens no interpolation and is a code point of the unit to the tokenizer, to Sass and to `lightningcss`, and the core names `px\\#fff`; Less parts the word at the escape and compiles the line to `a { width: 10px \\#fff; }`, the escaped value printed as it stands, so the unit is `px` here and the fix leaves the hash's case alone — it used to write `10PX\\#FFF`.
+			description: `a lower-case unit with an escaped hash welded to it, which Less reads as a value of its own`,
 			code: `a { b: 10px\\#fff; }`,
-			fixed: `a { b: 10PX\\#FFF; }`,
+			fixed: `a { b: 10PX\\#fff; }`,
 			line: 1,
 			column: 10,
 			endLine: 1,
-			endColumn: 17,
-			message: messages.expected(`px\\#fff`, `PX\\#FFF`),
+			endColumn: 12,
+			message: messages.expected(`px`, `PX`),
 		},
 	],
 })
