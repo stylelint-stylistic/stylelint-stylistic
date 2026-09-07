@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest"
 
 import { declarationColonSource } from "../../utils/declarationColonSource/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
+import { declarationThroughValue } from "../../utils/declarationThroughValue/index.ts"
 import { moveDeclarationValueHeadIntoBetween } from "../../utils/moveDeclarationValueHeadIntoBetween/index.ts"
 
 import { scss } from "./index.ts"
@@ -30,6 +31,10 @@ describe(`the shared utils over the adapter's pair`, () => {
 
 	it(`declarationString prints the spelled copy with the bang behind it`, () => {
 		expect(declarationString(scss, firstDecl(`a { margin: 0 // c\n  1px !important }`))).toBe(`margin: 0 // c\n  1px !important`)
+	})
+
+	it(`declarationThroughValue prints the spelled copy and stops in front of the bang`, () => {
+		expect(declarationThroughValue(scss, firstDecl(`a { margin: 0 // c\n  1px !important }`))).toBe(`margin: 0 // c\n  1px`)
 	})
 
 	it(`moveDeclarationValueHeadIntoBetween takes the whitespace in front of an inline comment, the comment staying in the value`, () => {
