@@ -33,6 +33,9 @@ export function defineMessages<M extends RuleMessages> (messages: M): M {
 	return messages
 }
 
+/** What `defineRule` returns: the rule under a syntax's namespace, with the options its function is written for in the type arguments, where `defineStylistic` reads them ([#624](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/624)). */
+export type RuleFactory<P, S, M extends RuleMessages> = (syntax: Syntax) => Rule<P, S, M>
+
 /** The roots refused already: one warning per stylesheet, not one per rule. */
 let refused: WeakSet<Root> = new WeakSet()
 
@@ -41,7 +44,7 @@ let refused: WeakSet<Root> = new WeakSet()
  * @param definition - The rule's definition.
  * @returns The factory, whose result `createPlugin` takes.
  */
-export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefinition<P, S, M>): (syntax: Syntax) => Rule<P, S, M> {
+export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefinition<P, S, M>): RuleFactory<P, S, M> {
 	let { shortName, meta, messages, rule, defersToRunEnd: readsEveryLine } = definition
 
 	return (syntax) => {
