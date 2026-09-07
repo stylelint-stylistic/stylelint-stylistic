@@ -278,6 +278,77 @@ testRule({
 	],
 })
 
+// A block comment behind a break is off the colon's line, and the space this rule writes over the break puts it on that line, where the newline rule reads the run behind the comment rather than the head run (#590).
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-colon-newline-after": `always-multi-line` },
+
+	reject: [
+		{
+			description: `a break behind the colon in front of a comment on a line of its own, with the value's word on the line after: the space is written, and the newline rule is content with the break behind the comment`,
+			code: `
+				a { b:
+				/*c*/
+				x; }
+			`,
+			fixed: `
+				a { b: /*c*/
+				x; }
+			`,
+			line: 1,
+			column: 7,
+			endLine: 1,
+			endColumn: 8,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `the same shape on a custom property whose value is the comment alone, with the break inside the comment`,
+			code: `
+				a { --b:
+				/*c
+				*/ ; }
+			`,
+			fixed: `
+				a { --b: /*c
+				*/
+				 ; }
+			`,
+			line: 1,
+			column: 9,
+			endLine: 1,
+			endColumn: 10,
+			message: messages.expectedAfter(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never`],
+	extraRules: { "@stylistic/declaration-colon-newline-after": `always-multi-line` },
+
+	reject: [
+		{
+			description: `the same break in front of a comment on its own line, which is taken away and leaves the comment on the colon's line`,
+			code: `
+				a { b:
+				/*c*/
+				x; }
+			`,
+			fixed: `
+				a { b:/*c*/
+				x; }
+			`,
+			line: 1,
+			column: 7,
+			endLine: 1,
+			endColumn: 8,
+			message: messages.rejectedAfter(),
+		},
+	],
+})
+
 // A neighbour whose fix the configuration turned off reports the run and cannot rewrite it, so this rule writes past it instead of deferring (#485).
 testRule({
 	ruleName,

@@ -73,6 +73,27 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { --b: }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `never` }, COLON_NEWLINE)).toBe(false)
 	})
 
+	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/590
+	it(`a block comment behind a head run holding a break, which a space or nothing written over the run puts on the colon's line, where the newline rule reads the run behind the comment instead`, () => {
+		expect(ask(`a { b:\n/*c*/\nx; }`, { [COLON_SPACE]: `always`, [COLON_NEWLINE]: `always-multi-line` }, COLON_SPACE)).toBe(true)
+		expect(ask(`a { b:\n/*c*/\nx; }`, { [COLON_SPACE]: `never`, [COLON_NEWLINE]: `always-multi-line` }, COLON_SPACE)).toBe(true)
+		expect(ask(`a { b:\n/*c*/\nx; }`, { [COLON_SPACE]: `always`, [COLON_NEWLINE]: `always` }, COLON_SPACE)).toBe(true)
+		expect(ask(`a { --b:\n/*c\n*/ ; }`, { [COLON_SPACE]: `always`, [COLON_NEWLINE]: `always-multi-line` }, COLON_SPACE)).toBe(true)
+	})
+
+	// https://github.com/stylelint-stylistic/stylelint-stylistic/issues/590
+	it(`the same comment where the asking rule's check waits for the run's end and the newline rule ahead was content with the break, which the write takes off the head run — the break the newline rule then writes behind the comment is its own, on the run after`, () => {
+		expect(ask(`a { b:\n/*c*/ x; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `always-single-line` }, COLON_SPACE)).toBe(true)
+	})
+
+	it(`a break the newline rule writes over that run, which leaves the comment off the colon's line and the space rule behind a reader of the run`, () => {
+		expect(ask(`a { b:\n/*c*/\nx; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `always` }, COLON_NEWLINE)).toBe(false)
+	})
+
+	it(`a value over several lines with no comment behind the head run, which the two colon rules contradict each other over`, () => {
+		expect(ask(`a { b:\nx\ny; }`, { [COLON_SPACE]: `always`, [COLON_NEWLINE]: `always-multi-line` }, COLON_SPACE)).toBe(false)
+	})
+
 	it(`the run behind a comment on the colon's line, which the newline rule of the colon reads and the space rule does not`, () => {
 		expect(ask(`a { b: /*c*/ ; }`, { [COLON_NEWLINE]: `always`, [SEMICOLON_SPACE]: `never` }, COLON_NEWLINE)).toBe(false)
 		expect(ask(`a { b: /*c*/ ; }`, { [COLON_NEWLINE]: `always`, [SEMICOLON_SPACE]: `never` }, SEMICOLON_SPACE)).toBe(true)

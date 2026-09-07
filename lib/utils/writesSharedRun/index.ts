@@ -56,12 +56,15 @@ type SharedRuns = {
 	head: Set<Participant>,
 	semicolon: Set<Participant>,
 	semicolonRun: string,
+	commentBehindHead: boolean,
 }
 
 /**
  * Finds the runs of a declaration that more than one rule is asked about, and the rules reading each.
  *
  * The run at the head of the text behind the colon is read by both `declaration-colon-space-after` and `declaration-colon-newline-after` on every standard declaration — a word, a flag or an inline comment further along parts them from the semicolon's run, never from each other's — save two shapes, one for each rule. Behind a block comment standing right on the colon, the newline rule asks about the run behind that comment instead, and the head run is the space rule's alone. Where that run is the text the stylesheet ends on, the space rule passes the declaration over — no spelling of its options keeps the break a closed last line ends on — and the head run is the newline rule's alone (#546).
+ *
+ * Whether the head run is the newline rule's to read depends on the run itself, and a write changes it: a block comment standing behind a head run that holds a break is off the colon's line until a colon rule writes a space or nothing over that run, and on it from then on, so the newline rule reads the head run before such a write and the run behind the comment after it. `commentBehindHead` says that a closing block comment stands behind the head run, as the newline rule finds one, and `writesSharedRun` reads the head's readers through it as the write it asks about leaves them (#590).
  *
  * The run in front of the semicolon is the two `declaration-block-semicolon-*-before` rules', and the colon rules join them only where their own run reaches it: where the text behind the colon down to the end of the printed value is nothing but whitespace, the one run is every one of the four's; where it is a block comment with nothing but whitespace behind, that tail is the newline rule's and the semicolon rules'. A flag parts the runs whatever the value holds, since the semicolon's run is then the end of the flag's raw; and a declaration the semicolon rules pass over — the last of its block where the file writes no semicolon behind it, or one standing outside a block and an inline style attribute — keeps its semicolon run to itself, whatever the value holds.
  * @param syntax - The syntax the rule is built over.
@@ -70,7 +73,7 @@ type SharedRuns = {
  * @returns The two runs with their readers.
  */
 function sharedRunsOf (syntax: Syntax, decl: Declaration, result: PostcssResult): SharedRuns {
-	let runs: SharedRuns = { head: new Set(), semicolon: new Set(), semicolonRun: `` }
+	let runs: SharedRuns = { head: new Set(), semicolon: new Set(), semicolonRun: ``, commentBehindHead: false }
 
 	if (!syntax.isStandardDeclaration(decl)) return runs
 
@@ -113,6 +116,10 @@ function sharedRunsOf (syntax: Syntax, decl: Declaration, result: PostcssResult)
 		}
 	}
 
+	// The text behind the head run, which a write of the space rule leaves on the colon's line: a block comment opening it and closing is one the newline rule then reads the run behind, exactly as it finds one standing on the colon's line before any write
+	let behindHead = text.replace(LEADING_CSS_WHITESPACE, ``)
+
+	runs.commentBehindHead = OPENS_WITH_BLOCK_COMMENT.test(behindHead) && behindHead.indexOf(`*/`, behindHead.indexOf(`/*`) + 2) !== -1
 	runs.head.add(`colonSpace`).add(`colonNewline`)
 
 	return runs
@@ -167,6 +174,8 @@ function breaksOf (text: string): number {
  * What a rule writes is what the file is left with only where no rule listed behind it writes otherwise, since those run after it and rewrite what they are not content with. So a rule writes the run only where every rule listed behind it that speaks of the declaration and has its fix to write with either shares with it a spelling of the run both are content with, or writes what silences it — one whose fix the configuration turned off rewrites nothing and gates nothing, reporting whatever the run comes to; otherwise it reports the run and leaves it alone, so the file rests on what the rules behind it write and the warning of the rule the configuration contradicted stands. The rules ahead of a rule taking its turn where the configuration lists it need no asking: a rule ahead that was discontent has written its spelling or warned, and the asking rule either writes a spelling both are content with or is rewritten the run after. A rule whose check waits for the run's end (#355) runs after every rule ahead of it as well, and those have had their say already — so it also writes only where each of them accepts what the write leaves, freed by one that has warned already, whose warning stands over whatever the write makes, and by one the write itself silences; a turned-off fix exempts nothing there, since a rule that was silently content stays silently violated. The settings are read through `neighbourSettings`, under the names of the asking rule's namespace and in the order the run makes them.
  *
  * Whether a `-single-line` or `-multi-line` option speaks of the declaration is decided the way each rule decides it — over the declaration's own value for the colon rules, over the block for the semicolon rules — and as either text will stand when the option reads it. The rules behind are asked about the text as the asking rule's write leaves it within the pass, since that is what they run over: a break written anywhere into a block on one line is what wakes `never-multi-line` up, while the value of a custom property gains a break only from a semicolon rule, which writes into the value itself — one a colon rule writes stands in `raws.between` until the file is parsed again, so the other colon rule still reads the value as it was and acts on it. And the asking rule is asked about the text as a rule behind it leaves it for the run after, when the file has been parsed again and a break stands in the value whichever rule wrote it: where that write is what silences it — a break written into the block a `-single-line` option speaks of, or into the value of a custom property one reads — what it writes costs the file nothing, and it writes as it always did.
+ *
+ * The rules asked are the readers of the run as the write leaves it. Behind a head run holding a break, a block comment stands off the colon's line, and the newline rule reads the head run like its neighbour; a space, or nothing, written over that run puts the comment on the colon's line, where the newline rule asks about the run behind the comment instead (#400) — a run the asking rule does not write — so it is no reader of the head run after such a write and gates nothing, ahead or behind. `a { b:` with a break, a comment and another break in front of the word `x` under `declaration-colon-space-after: always` and `declaration-colon-newline-after: always-multi-line` used to be called a contradiction, and the space rule reported it on every run of `--fix` while the file it would have written — the comment on the colon's line behind a single space, the break behind it — answers both (#590).
  * @param syntax - The syntax the asking rule is built over.
  * @param decl - The declaration.
  * @param result - The Stylelint result, which holds the configuration.
@@ -178,7 +187,7 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 
 	if (!asking) return true
 
-	let { head, semicolon, semicolonRun } = sharedRunsOf(syntax, decl, result)
+	let { head, semicolon, semicolonRun, commentBehindHead } = sharedRunsOf(syntax, decl, result)
 	// The semicolon's group holds the colon rules only where the head run reaches the semicolon, so wherever the asking rule stands in it, that group is the head's readers too
 	let readers = semicolon.has(asking) ? semicolon : head
 	let run = semicolonRun
@@ -242,10 +251,12 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 	let writes = writtenBy(participant, option)
 	let accepted = accepts(participant, option, decl)
 	let asksFromTheSemicolon = FROM_THE_SEMICOLON.includes(participant)
+	// The readers of the run as the write leaves it rather than as it stands: a space, or nothing, written over a head run that a block comment stands behind puts that comment on the colon's line, and the newline rule then asks about the run behind the comment — which the asking rule does not write — rather than about the head run (#590). A break written there leaves the comment where it is, and so does any write where no comment stands behind the run
+	let readersAfterTheWrite = readers === head && writes !== `newline` && commentBehindHead ? new Set([...head].filter((reader) => reader !== `colonNewline`)) : readers
 
 	let restsBehind = settings.slice(position + 1).every(([behind, behindOption, behindFixTurnedOff]) => {
 		// A rule whose fix the configuration turned off speaks of the run and reports it, but cannot write: it will not rewrite what the asking rule leaves, and its warning stands over a violation whichever way the run is spelled, so it gates nothing — deferring to it left the run unwritten with two warnings where the configuration asked for a report and one write (#485)
-		if (behindFixTurnedOff || !readers.has(behind) || !speaksAfter(behind, behindOption, writes, asksFromTheSemicolon)) return true
+		if (behindFixTurnedOff || !readersAfterTheWrite.has(behind) || !speaksAfter(behind, behindOption, writes, asksFromTheSemicolon)) return true
 
 		let behindAccepts = accepts(behind, behindOption, decl)
 
@@ -258,7 +269,7 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 
 	// A lineness-conditioned asker runs after every rule ahead of it as well (#355), and those have had their say already: a write one of them would not accept leaves the file violating a rule that reported nothing, and the next run rewriting — the swing of #416 across runs. So a rule ahead gates the write unless it accepts what the write leaves, judged over the file as it rests — reparsed, a break in the value whoever wrote it. Two things free it: a rule ahead that has warned already — it spoke of the run as it stands and did not accept it, so its warning stands over whatever the write makes and nothing is silent — and one the write itself silences. A turned-off fix exempts nothing here, unlike behind: a rule behind still speaks after the write and reports what it sees, while a rule ahead judged the run before the write and stands silent over what the write made of it
 	let restsAhead = !defersToRunEnd(option) || settings.slice(0, position).every(([ahead, aheadOption]) => {
-		if (!readers.has(ahead)) return true
+		if (!readersAfterTheWrite.has(ahead)) return true
 
 		let aheadAccepts = accepts(ahead, aheadOption, decl)
 
