@@ -39,6 +39,12 @@ testRule({
 		{
 			description: `a variable beside a declaration, which the parser files as a declaration too`,
 			code: `a { $x: 1; color: pink; }`,
+			fixed: `
+				a {
+				$x: 1;
+				color: pink;
+				}
+			`,
 			line: 1,
 			column: 3,
 			endLine: 1,
@@ -48,6 +54,12 @@ testRule({
 		{
 			description: `a placeholder's single-line block holding two declarations`,
 			code: `%p { color: pink; top: 3px; }`,
+			fixed: `
+				%p {
+				color: pink;
+				top: 3px;
+				}
+			`,
 			line: 1,
 			column: 4,
 			endLine: 1,
@@ -57,6 +69,12 @@ testRule({
 		{
 			description: `a nested property's single-line block holding two declarations, which the parser files as a rule`,
 			code: `a { font: { family: x; size: 1px; } }`,
+			fixed: `
+				a { font: {
+				family: x;
+				size: 1px;
+				} }
+			`,
 			line: 1,
 			column: 11,
 			endLine: 1,
@@ -67,6 +85,12 @@ testRule({
 		{
 			description: `a mixin inclusion's single-line content block holding two declarations`,
 			code: `@include m { color: pink; top: 0; }`,
+			fixed: `
+				@include m {
+				color: pink;
+				top: 0;
+				}
+			`,
 			line: 1,
 			column: 12,
 			endLine: 1,
@@ -76,6 +100,12 @@ testRule({
 		{
 			description: `a mixin definition's single-line block holding two declarations`,
 			code: `@mixin m($a) { color: pink; top: 0; }`,
+			fixed: `
+				@mixin m($a) {
+				color: pink;
+				top: 0;
+				}
+			`,
 			line: 1,
 			column: 14,
 			endLine: 1,
@@ -85,10 +115,33 @@ testRule({
 		{
 			description: `a mixin inclusion's content block nested in a rule, whose warning stands on the nested block`,
 			code: `a { @include m { color: pink; top: 0; } }`,
+			fixed: `
+				a { @include m {
+				color: pink;
+				top: 0;
+				} }
+			`,
 			line: 1,
 			column: 16,
 			endLine: 1,
 			endColumn: 40,
+			message: messages.expected(1),
+		},
+		// #641
+		{
+			description: `a mixin inclusion closing the block, an at-rule without a block, which the fix puts on a line of its own too`,
+			code: `a { color: pink; top: 3px; @include m; }`,
+			fixed: `
+				a {
+				color: pink;
+				top: 3px;
+				@include m;
+				}
+			`,
+			line: 1,
+			column: 3,
+			endLine: 1,
+			endColumn: 41,
 			message: messages.expected(1),
 		},
 	],
