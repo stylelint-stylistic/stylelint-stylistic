@@ -27,8 +27,8 @@ export let less: Syntax = {
 	readsAtRuleAsVariable: (atRule: AtRule) => `variable` in atRule,
 	// Under its default `math` mode Less divides only inside parentheses (`@a/2` prints `4/2`), a nameless call the rules pass over, so a solidus outside is the separator it is to the core
 	readsSlashAsOperator: () => false,
-	// Less reads a unit as ASCII letters and underscores, so `10px\#fff` is a dimension and an escaped value. Answered for the whole namespace, since the reading only shortens a unit and costs at most a warning, never a write (#527)
-	endsUnitAtEscape: () => true,
+	// Less reads a unit as ASCII letters and underscores, so `10px\#fff` is a dimension and an escaped value (#527) and `10PX-2REM` two dimensions it subtracts (#633). Answered for the whole namespace, since the units it reads are substrings of the one the core reads, on the same positions, so the reading costs at most a warning, never a character the core would not have written
+	readsUnitAsIdentifier: () => false,
 	// A Less variable keeps one copy more than the core writes, the `value` its stringifier prints
 	write (node: AtRule | Declaration | PostcssRule, text: string): void {
 		css.write(node, text)

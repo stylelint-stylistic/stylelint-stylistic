@@ -41,6 +41,12 @@ type Problem = {
 	edit: Edit,
 }
 
+/** One dimension read out of a word: how far into it the number and the unit reach, and the warning where that unit is miscased. */
+type Reading = {
+	end: number,
+	problem: Problem | null,
+}
+
 /** The case, `lower` or `upper`. */
 export type PrimaryOption = `lower` | `upper`
 
@@ -80,40 +86,82 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			/**
 			 * Reads the dimension a value node holds and names its unit where it is miscased.
 			 * @param valueNode - The value parser node.
-			 * @returns The problem, or `null` where the case is right.
+			 * @returns How far the dimension reaches, and the problem where the case is wrong.
 			 */
-			function readMiscasedUnit (valueNode: Node): Problem | null {
+			function readMiscasedUnit (valueNode: Node): Reading {
+				let whole: Reading = { end: valueNode.value.length, problem: null }
 				let dimension = getDimension(syntax, valueNode)
 
-				if (!dimension.number || !dimension.unit) return null
+				// A unit of no length is no unit and is never named, but the number it stands behind was read, and what follows it is a word of its own: `10--2REM` is `10` less `-2REM` to Less (#633)
+				if (!dimension.number) return whole
 
 				let { number, unit, positions } = dimension
-
-				let expectedUnit = primary === `lower` ? unit.toLowerCase() : unit.toUpperCase()
-
-				if (unit === expectedUnit) return null
-
-				let index = getIndex(node)
 				// The warning covers the unit alone. `positions` maps a length in the hack-free copy to a place in the file's text, so a `\9` between the letters keeps its place.
 				let unitStart = positions[number.length]
 				let unitLast = positions[number.length + unit.length - 1]
 
-				if (unitStart === undefined || unitLast === undefined) return null
+				if (unitStart === undefined || unitLast === undefined) return whole
 
 				let unitEnd = unitLast + 1
+				let expectedUnit = primary === `lower` ? unit.toLowerCase() : unit.toUpperCase()
+
+				if (unit === expectedUnit) return { end: unitEnd, problem: null }
+
+				let index = getIndex(node)
 				// Recased in the file's text, not printed from the tree: `postcss-value-parser` prints `/*/` as `/**/`, and a hack unit between the letters keeps its place
 				let run = valueNode.value.slice(unitStart, unitEnd)
 
 				return {
-					index: index + valueNode.sourceIndex + unitStart,
-					endIndex: index + valueNode.sourceIndex + unitEnd,
-					message: messages.expected,
-					messageArgs: [unit, expectedUnit],
-					edit: {
-						start: valueNode.sourceIndex + unitStart,
-						end: valueNode.sourceIndex + unitEnd,
-						text: primary === `lower` ? run.toLowerCase() : run.toUpperCase(),
+					end: unitEnd,
+					problem: {
+						index: index + valueNode.sourceIndex + unitStart,
+						endIndex: index + valueNode.sourceIndex + unitEnd,
+						message: messages.expected,
+						messageArgs: [unit, expectedUnit],
+						edit: {
+							start: valueNode.sourceIndex + unitStart,
+							end: valueNode.sourceIndex + unitEnd,
+							text: primary === `lower` ? run.toLowerCase() : run.toUpperCase(),
+						},
 					},
+				}
+			}
+
+			/**
+			 * Reads a word dimension by dimension and names every miscased unit it holds.
+			 *
+			 * The parser hands over one word where the grammar reads several: `10PX*2REM`, `10PX%2REM`, `10PX.2REM` and `10PX+2REM` are each two dimensions (#526), so the tokenizer reads the word, each dimension through a node standing where its token does. Escapes are the tokenizer's: `10PX\*2REM` is one dimension with unit `PX\*2REM` (#414), `10PX\\*2REM` two. Each unit carries its own edit, so nothing outside a unit is written (#413, #425).
+			 * @param valueNode - The value parser node the word belongs to.
+			 * @param text - The word, or what a parted dimension left of it.
+			 * @param index - Where the text stands in the word.
+			 */
+			function readDimensions (valueNode: Node, text: string, index: number): void {
+				// What a parted dimension leaves behind is read like a word of its own, in turn rather than one call deep, so a word of many parts costs no stack
+				let words = [{ text, index }]
+
+				for (let word of words) {
+					for (let token of tokenize({ css: word.text })) {
+						if (token[0] !== TokenType.Dimension) continue
+
+						let start = word.index + token[2]
+						let end = word.index + token[3] + 1
+						let dimensionNode = {
+							...valueNode,
+							sourceIndex: valueNode.sourceIndex + start,
+							sourceEndIndex: valueNode.sourceIndex + end,
+							value: valueNode.value.slice(start, end),
+						}
+						let reading = readMiscasedUnit(dimensionNode)
+
+						if (reading.problem) problems.push(reading.problem)
+
+						// What the unit leaves inside the dimension is a word of its own to a syntax reading a unit shorter than the identifier: `10PX-2REM` is two dimensions to Less, as `10PX*2REM` is to the core, and `10PX-A` a dimension and a keyword. Under the core what it leaves is the rest of that same identifier — the escape of a hack taken out of the copy the unit was read in — and no word to read (#633)
+						let rest = syntax.readsUnitAsIdentifier() ? `` : dimensionNode.value.slice(reading.end)
+						// A hyphen ending a unit is Less's operator and no character of the operand, which carries a sign of its own: `10PX--2REM` is `10PX` less `-2REM`, `12PX` compiled, while a third hyphen leaves the keyword `--2REM` and no dimension at all. An escape ends a unit without being an operator, and opens the word standing behind it.
+						let operator = rest.startsWith(`-`) ? 1 : 0
+
+						if (rest.length > operator) words.push({ text: rest.slice(operator), index: start + reading.end + operator })
+					}
 				}
 			}
 
@@ -137,19 +185,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (valueNode.type !== `word`) return
 
-				// The parser hands over one word where the grammar reads several: `10PX*2REM`, `10PX%2REM`, `10PX.2REM` and `10PX+2REM` are each two dimensions (#526), so the tokenizer reads the word, each dimension through a node standing where its token does. Escapes are the tokenizer's: `10PX\*2REM` is one dimension with unit `PX\*2REM` (#414), `10PX\\*2REM` two. Each unit carries its own edit, so nothing outside a unit is written (#413, #425)
-				for (let token of tokenize({ css: value })) {
-					if (token[0] !== TokenType.Dimension) continue
-
-					let problem = readMiscasedUnit({
-						...valueNode,
-						sourceIndex: valueNode.sourceIndex + token[2],
-						sourceEndIndex: valueNode.sourceIndex + token[3] + 1,
-						value: value.slice(token[2], token[3] + 1),
-					})
-
-					if (problem) problems.push(problem)
-				}
+				readDimensions(valueNode, value, 0)
 			})
 
 			/** Records that a fix was asked for. */
@@ -158,7 +194,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			}
 
 			if (problems.length > 0) {
-				for (let err of problems) {
+				// A word read part by part names the parts out of order, and a warning belongs where the file spells it
+				for (let err of problems.toSorted((one, other) => one.index - other.index)) {
 					report({
 						index: err.index,
 						endIndex: err.endIndex,

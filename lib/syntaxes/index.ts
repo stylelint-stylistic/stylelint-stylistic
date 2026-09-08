@@ -224,12 +224,12 @@ export type Syntax = {
 	readsSlashAsOperator (left: ValueParserNode | undefined, right: ValueParserNode | undefined): boolean,
 
 	/**
-	 * Asks whether the syntax ends a dimension's unit at an escape.
+	 * Asks whether the syntax reads a dimension's unit as the whole identifier behind the number.
 	 *
-	 * To CSS an escape is a code point of the identifier, so `10px\#fff` is one dimension with the unit `px#fff`. Less reads a backslash as the start of a keyword, so recasing the whole identifier under Less would recase a value ([#527](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527)).
-	 * @returns True where the unit ends at the first escape.
+	 * To CSS an escape and a hyphen are both code points of an identifier, so `10px\#fff` is one dimension with the unit `px#fff` and `10PX-2REM` one with the unit `PX-2REM`. Less reads a unit as ASCII letters and underscores, taking a backslash as the start of a keyword ([#527](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527)) and a hyphen as the sign of the operand behind it ([#633](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/633)), so recasing the whole identifier under Less would recase a value.
+	 * @returns True where the unit runs to the end of the identifier, false where it ends in front of the first escape or hyphen.
 	 */
-	endsUnitAtEscape (): boolean,
+	readsUnitAsIdentifier (): boolean,
 
 	/**
 	 * Finds the spans of a preprocessor's interpolations in a text; no rule reads code beside one.

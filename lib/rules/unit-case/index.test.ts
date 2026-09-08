@@ -874,6 +874,28 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
+			// A hyphen is a code point of an identifier, so the tokenizer reads one dimension whose unit is `PX-A` and `lightningcss` prints the word whole; the `@stylistic/less/` namespace reads it otherwise, Less parting the word there. See #633
+			description: `an upper-case unit a hyphen welds a word to, which is one identifier to the core`,
+			code: `a { width: 10PX-A; }`,
+			fixed: `a { width: 10px-a; }`,
+			line: 1,
+			column: 14,
+			endLine: 1,
+			endColumn: 18,
+			message: messages.expected(`PX-A`, `px-a`),
+		},
+		{
+			// Sass subtracts the two and refuses the line for the units being incompatible, while the tokenizer and `lightningcss` read one dimension; in either reading both halves want the same case, so the one name the core draws is the answer. See #633
+			description: `two upper-case units in one word, a hyphen between them, which is one identifier to the core`,
+			code: `a { width: 10PX-2REM; }`,
+			fixed: `a { width: 10px-2rem; }`,
+			line: 1,
+			column: 14,
+			endLine: 1,
+			endColumn: 21,
+			message: messages.expected(`PX-2REM`, `px-2rem`),
+		},
+		{
 			// A percent sign is no code point of an identifier, so it ends the unit without parting the word the value parser hands over: `@csstools/css-tokenizer` reads the dimension `10PX`, a delimiter and the dimension `2REM`, and `lightningcss` recases both, printing `10px%2rem`. The rule used to read the word as one dimension and never reach the second. See #526
 			description: `two upper-case units in one word, a percent sign between them`,
 			code: `a { width: 10PX%2REM; }`,

@@ -350,6 +350,273 @@ testRule({
 				},
 			],
 		},
+		{
+			// Less reads a unit as ASCII letters and underscores, so the hyphen opens an operand of its own and it compiles the line to `a { b: 10PX A; }`, printing the keyword exactly as written; the core reads the hyphen as a code point of the identifier and names `PX-A`. See #633
+			description: `an upper-case unit a hyphen welds a word to, which Less reads as a keyword of its own`,
+			code: `a { b: 10PX-A; }`,
+			fixed: `a { b: 10px-A; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// Less subtracts the two and compiles the line to `a { b: 8PX; }`, so both are units to name, as they are in the word `10PX*2REM` the core parts. See #633
+			description: `two upper-case units in one word, a hyphen between them, which Less subtracts`,
+			code: `a { b: 10PX-2REM; }`,
+			fixed: `a { b: 10px-2rem; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 17,
+					message: messages.expected(`REM`, `rem`),
+				},
+			],
+		},
+		{
+			// See #633
+			description: `three upper-case units in one word, a hyphen between each pair, which Less subtracts down to one dimension`,
+			code: `a { b: 10PX-2REM-3EM; }`,
+			fixed: `a { b: 10px-2rem-3em; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 17,
+					message: messages.expected(`REM`, `rem`),
+				},
+				{
+					line: 1,
+					column: 19,
+					endLine: 1,
+					endColumn: 21,
+					message: messages.expected(`EM`, `em`),
+				},
+			],
+		},
+		{
+			// A keyword of Less holds hyphens of its own, so it reads `A-2REM` whole and compiles the line to `a { b: 10PX A-2REM; }`: only the hyphen behind the unit parts the word, and the digits behind the second one are no dimension. See #633
+			description: `an upper-case unit a hyphen welds a keyword to, the keyword holding a hyphen and digits of its own`,
+			code: `a { b: 10PX-A-2REM; }`,
+			fixed: `a { b: 10px-A-2REM; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// See #633
+			description: `the same word with a keyword of two letters behind the unit`,
+			code: `a { b: 10PX-A-B; }`,
+			fixed: `a { b: 10px-A-B; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// The second hyphen is the sign of the keyword, which Less prints as `a { b: 10PX -A; }`. See #633
+			description: `an upper-case unit two hyphens weld a word to`,
+			code: `a { b: 10PX--A; }`,
+			fixed: `a { b: 10px--A; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// The first hyphen is Less's operator and the second the sign of the operand, so it subtracts the two and compiles the line to `a { b: 12PX; }`: `REM` is a unit here as it is behind one hyphen. See #633
+			description: `two upper-case units two hyphens weld together, which Less subtracts`,
+			code: `a { b: 10PX--2REM; }`,
+			fixed: `a { b: 10px--2rem; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 15,
+					endLine: 1,
+					endColumn: 18,
+					message: messages.expected(`REM`, `rem`),
+				},
+			],
+		},
+		{
+			// A keyword of Less opens on hyphens of its own, so behind the operator stands `--2REM` whole and no dimension: it compiles the line to `a { b: 10PX --2REM; }`, and the second run of digits and letters keeps its case. See #633
+			description: `the same pair three hyphens weld together, which Less leaves a keyword`,
+			code: `a { b: 10PX---2REM; }`,
+			fixed: `a { b: 10px---2REM; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// The hyphens stand right behind the number, so the unit is empty and only the operand carries one; Less subtracts and compiles the line to `a { b: 12REM; }`. See #633
+			description: `a word whose two hyphens leave no unit in front of them and a dimension behind`,
+			code: `a { b: 10--2REM; }`,
+			fixed: `a { b: 10--2rem; }`,
+			line: 1,
+			column: 13,
+			endLine: 1,
+			endColumn: 16,
+			message: messages.expected(`REM`, `rem`),
+		},
+		{
+			// The star parts the word before the hyphen does, so the second unit is named after the third and the warnings are put back into the order the file spells them. Less compiles the line to `a { b: 4PX; }`. See #633
+			description: `three upper-case units in one word, a hyphen between the first pair and a star between the second`,
+			code: `a { b: 10PX-2REM*3EM; }`,
+			fixed: `a { b: 10px-2rem*3em; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 17,
+					message: messages.expected(`REM`, `rem`),
+				},
+				{
+					line: 1,
+					column: 19,
+					endLine: 1,
+					endColumn: 21,
+					message: messages.expected(`EM`, `em`),
+				},
+			],
+		},
+		{
+			// The unit in front already stands in the case asked for, and the word is read on past it. See #633
+			description: `a miscased unit behind a hyphen whose unit in front needs no change`,
+			code: `a { b: 10px-2REM; }`,
+			fixed: `a { b: 10px-2rem; }`,
+			line: 1,
+			column: 14,
+			endLine: 1,
+			endColumn: 17,
+			message: messages.expected(`REM`, `rem`),
+		},
+		{
+			// Less compiles the line to `a { b: 10PX; }`, the hyphen leaving no operand behind it. See #633
+			description: `an upper-case unit closing on a hyphen`,
+			code: `a { b: 10PX-; }`,
+			fixed: `a { b: 10px-; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// The hyphen stands right behind the number, so the unit is empty and `PX` is a keyword Less prints as it stands, `a { b: 10 PX 2REM; }`; the second dimension holds the fixer, since an accept case never runs it. See #633
+			description: `a word whose hyphen leaves no unit at all beside a dimension of its own`,
+			code: `a { b: 10-PX 2REM; }`,
+			fixed: `a { b: 10-PX 2rem; }`,
+			line: 1,
+			column: 15,
+			endLine: 1,
+			endColumn: 18,
+			message: messages.expected(`REM`, `rem`),
+		},
+		{
+			// Less reads a variable's value as an expression whatever it spells, and prints `10PX A` for this one. See #633
+			description: `an upper-case unit a hyphen welds a word to, in the value of a Less at-variable`,
+			code: `@v: 10PX-A;`,
+			fixed: `@v: 10px-A;`,
+			line: 1,
+			column: 7,
+			endLine: 1,
+			endColumn: 9,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// See #633
+			description: `the same word in a set of media parameters, which Less reads as an expression too`,
+			code: `@media (min-width: 10PX-A) { a { b: c } }`,
+			fixed: `@media (min-width: 10px-A) { a { b: c } }`,
+			line: 1,
+			column: 22,
+			endLine: 1,
+			endColumn: 24,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// Less prints `10PX -A` here, the sign kept and the keyword as it stands. See #633
+			description: `the same word in the value of a custom property`,
+			code: `a { --x: 10PX-A; }`,
+			fixed: `a { --x: 10px-A; }`,
+			line: 1,
+			column: 12,
+			endLine: 1,
+			endColumn: 14,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// Inside a calculation Less prints the subtraction back without spaces, `calc(10PX-2REM)`, and it is two dimensions there as everywhere else. See #633
+			description: `two upper-case units a hyphen welds together inside a calculation`,
+			code: `a { b: calc(10PX-2REM); }`,
+			fixed: `a { b: calc(10px-2rem); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 15,
+					endLine: 1,
+					endColumn: 17,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 19,
+					endLine: 1,
+					endColumn: 22,
+					message: messages.expected(`REM`, `rem`),
+				},
+			],
+		},
+		{
+			// The escape ends the unit in front of the hyphen it covers, which is the same place, and Less prints `10PX \-A`. See #527 and #633
+			description: `an upper-case unit an escaped hyphen welds a word to`,
+			code: `a { b: 10PX\\-A; }`,
+			fixed: `a { b: 10px\\-A; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
+		},
 	],
 })
 testRule({
@@ -411,6 +678,11 @@ testRule({
 				a { b: 1PX // url(
 					2px); }
 			`,
+		},
+		{
+			// Less compiles this to `a { b: 10PX a; }`: the dimension, and beside it a keyword printed exactly as written. The unit is `PX` and nothing of the keyword, where the core names `PX-a` and asks for `PX-A`. See #633
+			description: `an upper-case unit a hyphen welds a lower-case word to, which Less reads as a keyword of its own`,
+			code: `a { b: 10PX-a; }`,
 		},
 	],
 
@@ -544,6 +816,28 @@ testRule({
 			endLine: 1,
 			endColumn: 12,
 			message: messages.expected(`px`, `PX`),
+		},
+		{
+			// The keyword the hyphen welds on keeps its case where the fix used to write `10PX-A`; the second dimension holds the fixer to that. See #633
+			description: `a lower-case unit a hyphen welds a word to, beside a dimension of its own`,
+			code: `a { b: 10px-a 2rem; }`,
+			fixed: `a { b: 10PX-a 2REM; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.expected(`px`, `PX`),
+				},
+				{
+					line: 1,
+					column: 16,
+					endLine: 1,
+					endColumn: 19,
+					message: messages.expected(`rem`, `REM`),
+				},
+			],
 		},
 	],
 })

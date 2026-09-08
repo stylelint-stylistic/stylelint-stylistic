@@ -230,9 +230,9 @@ it(`getDimension positions`, () => {
 	expect(getDimension(css, valueParser(`word`).nodes[0]).positions).toBe(null)
 })
 
-it(`getDimension under a syntax that ends a unit at an escape`, () => {
-	// The contract's answer is what the reading turns on, so the core's syntax is asked with that one answer changed (#527)
-	let partingSyntax: Syntax = { ...css, endsUnitAtEscape: () => true }
+it(`getDimension under a syntax that reads a unit shorter than the identifier`, () => {
+	// The contract's answer is what the reading turns on, so the core's syntax is asked with that one answer changed (#527, #633)
+	let partingSyntax: Syntax = { ...css, readsUnitAsIdentifier: () => false }
 
 	// The unit ends in front of the first escape whatever it spells, and the escaped text is left in the copy and off the unit
 	expect(getDimension(partingSyntax, valueParser(`10px\\#fff`).nodes[0]).unit).toBe(`px`)
@@ -265,4 +265,20 @@ it(`getDimension under a syntax that ends a unit at an escape`, () => {
 	// A character that is no code point of an identifier ends the unit under either answer
 	expect(getDimension(partingSyntax, valueParser(`10px#fff`).nodes[0]).unit).toBe(`px`)
 	expect(getDimension(partingSyntax, valueParser(`1px!important`).nodes[0]).unit).toBe(`px`)
+
+	// A hyphen ends the unit as an escape does, since Less reads it as the sign of the operand behind it (#633)
+	expect(getDimension(partingSyntax, valueParser(`10PX-A`).nodes[0]).unit).toBe(`PX`)
+	expect(getDimension(css, valueParser(`10PX-A`).nodes[0]).unit).toBe(`PX-A`)
+	expect(getDimension(partingSyntax, valueParser(`10PX-2REM`).nodes[0]).unit).toBe(`PX`)
+	expect(getDimension(css, valueParser(`10PX-2REM`).nodes[0]).unit).toBe(`PX-2REM`)
+	expect(getDimension(partingSyntax, valueParser(`10PX-`).nodes[0]).unit).toBe(`PX`)
+	expect(getDimension(partingSyntax, valueParser(`-2REM`).nodes[0]).unit).toBe(`REM`)
+
+	// An escaped hyphen ends it as an escape, which is the same place
+	expect(getDimension(partingSyntax, valueParser(`10PX\\-A`).nodes[0]).unit).toBe(`PX`)
+	expect(getDimension(css, valueParser(`10PX\\-A`).nodes[0]).unit).toBe(`PX\\-A`)
+
+	// A hyphen standing right behind the number leaves no unit at all, and Less reads a keyword there: `10-PX-2REM` is `10` and `PX-2REM`
+	expect(getDimension(partingSyntax, valueParser(`10-PX`).nodes[0]).unit).toBe(``)
+	expect(getDimension(css, valueParser(`10-PX`).nodes[0]).unit).toBe(`-PX`)
 })
