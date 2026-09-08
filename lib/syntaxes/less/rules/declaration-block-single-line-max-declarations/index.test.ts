@@ -30,6 +30,14 @@ testRule({
 				 top: 3px; }
 			`,
 		},
+		{
+			description: `a detached ruleset's call beside the one declaration, which is an at-rule without a block`,
+			code: `a { @detached(); color: pink; }`,
+		},
+		{
+			description: `a mixin call beside the one declaration in the block of an at-rule`,
+			code: `@media (x) { .m(); color: pink; }`,
+		},
 	],
 
 	reject: [
@@ -49,6 +57,16 @@ testRule({
 			column: 3,
 			endLine: 1,
 			endColumn: 46,
+			message: messages.expected(1),
+		},
+		// #640
+		{
+			description: `a detached ruleset's single-line block holding two declarations, which the parser files as an at-rule`,
+			code: `@detached: { color: pink; top: 0; }`,
+			line: 1,
+			column: 12,
+			endLine: 1,
+			endColumn: 36,
 			message: messages.expected(1),
 		},
 	],

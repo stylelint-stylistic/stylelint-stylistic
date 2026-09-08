@@ -26,6 +26,13 @@ testRule({
 			description: `an extension beside the one declaration, which is an at-rule and no declaration`,
 			code: `a { color: pink; @extend %p; }`,
 		},
+		{
+			description: `a block of an at-rule whose inline comment is closed by a line break, so the block spans two lines`,
+			code: `
+				@font-face { font-family: x; // c
+				 src: y; }
+			`,
+		},
 	],
 
 	reject: [
@@ -54,6 +61,34 @@ testRule({
 			column: 11,
 			endLine: 1,
 			endColumn: 36,
+			message: messages.expected(1),
+		},
+		// #640
+		{
+			description: `a mixin inclusion's single-line content block holding two declarations`,
+			code: `@include m { color: pink; top: 0; }`,
+			line: 1,
+			column: 12,
+			endLine: 1,
+			endColumn: 36,
+			message: messages.expected(1),
+		},
+		{
+			description: `a mixin definition's single-line block holding two declarations`,
+			code: `@mixin m($a) { color: pink; top: 0; }`,
+			line: 1,
+			column: 14,
+			endLine: 1,
+			endColumn: 38,
+			message: messages.expected(1),
+		},
+		{
+			description: `a mixin inclusion's content block nested in a rule, whose warning stands on the nested block`,
+			code: `a { @include m { color: pink; top: 0; } }`,
+			line: 1,
+			column: 16,
+			endLine: 1,
+			endColumn: 40,
 			message: messages.expected(1),
 		},
 	],

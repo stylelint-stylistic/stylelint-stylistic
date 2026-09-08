@@ -70,12 +70,27 @@ testRule({
 			code: `a { color: pink; & b { top: 0; } }`,
 		},
 		{
-			description: `a nested at-rule beside the one declaration, which is no declaration`,
+			description: `a nested at-rule beside the one declaration, which is no declaration and whose own declaration counts to its own block`,
 			code: `a { color: pink; @media (x) { top: 0; } }`,
 		},
 		{
-			description: `two declarations in the single-line block of an at-rule, which the rule does not read`,
-			code: `@font-face { font-family: x; src: y; }`,
+			description: `a single-line block of an at-rule holding one declaration`,
+			code: `@font-face { src: y; }`,
+		},
+		{
+			description: `a single-line at-rule holding a rule and no declaration of its own`,
+			code: `@media screen { a { color: pink; } }`,
+		},
+		{
+			description: `an at-rule without a block`,
+			code: `@import "x";`,
+		},
+		{
+			description: `a block of an at-rule broken between its two declarations`,
+			code: `
+				@font-face { font-family: x;
+				 src: y; }
+			`,
 		},
 	],
 
@@ -168,6 +183,100 @@ testRule({
 			endColumn: 42,
 			message: messages.expected(1),
 		},
+		// #640
+		{
+			description: `a single-line block of an at-rule holding two declarations`,
+			code: `@font-face { font-family: x; src: y; }`,
+			line: 1,
+			column: 12,
+			endLine: 1,
+			endColumn: 39,
+			message: messages.expected(1),
+		},
+		{
+			description: `a single-line block of a page at-rule holding two declarations`,
+			code: `@page { margin: 0; size: A4; }`,
+			line: 1,
+			column: 7,
+			endLine: 1,
+			endColumn: 31,
+			message: messages.expected(1),
+		},
+		{
+			description: `a single-line block of an at-rule with parameters holding three declarations`,
+			code: `@property --x { syntax: "<length>"; inherits: false; initial-value: 0; }`,
+			line: 1,
+			column: 15,
+			endLine: 1,
+			endColumn: 73,
+			message: messages.expected(1),
+		},
+		{
+			description: `a single-line media at-rule holding two declarations of its own`,
+			code: `@media screen { color: pink; top: 0; }`,
+			line: 1,
+			column: 15,
+			endLine: 1,
+			endColumn: 39,
+			message: messages.expected(1),
+		},
+		{
+			description: `a nested at-rule holding two declarations on one line, whose warning stands on the nested block`,
+			code: `a { @media (x) { color: pink; top: 0; } }`,
+			line: 1,
+			column: 16,
+			endLine: 1,
+			endColumn: 40,
+			message: messages.expected(1),
+		},
+		{
+			description: `an at-rule nested in a single-line at-rule, whose warning stands on the inner block`,
+			code: `@media screen { @font-face { font-family: x; src: y; } }`,
+			line: 1,
+			column: 28,
+			endLine: 1,
+			endColumn: 55,
+			message: messages.expected(1),
+		},
+		{
+			description: `a comment between the at-rule's name and its block, which the warning's column reaches past`,
+			code: `@font-face /* c */ { font-family: x; src: y; }`,
+			line: 1,
+			column: 20,
+			endLine: 1,
+			endColumn: 47,
+			message: messages.expected(1),
+		},
+		{
+			description: `a block of an at-rule written without spaces`,
+			code: `@font-face{font-family:x;src:y}`,
+			line: 1,
+			column: 11,
+			endLine: 1,
+			endColumn: 32,
+			message: messages.expected(1),
+		},
+		{
+			description: `a semicolon behind the block of an at-rule, which stands outside the span`,
+			code: `@font-face { font-family: x; src: y; };`,
+			line: 1,
+			column: 12,
+			endLine: 1,
+			endColumn: 39,
+			message: messages.expected(1),
+		},
+		{
+			description: `a single-line block of an at-rule inside a multi-line at-rule`,
+			code: `
+				@media screen {
+				@font-face { font-family: x; src: y; }}
+			`,
+			line: 2,
+			column: 12,
+			endLine: 2,
+			endColumn: 39,
+			message: messages.expected(1),
+		},
 	],
 })
 
@@ -209,6 +318,17 @@ testRule({
 			code: `a {}`,
 		},
 		{
+			description: `an empty block of an at-rule`,
+			code: `@font-face {}`,
+		},
+		{
+			description: `a single-line at-rule holding a rule on its own line and no declaration of its own`,
+			code: `
+				@media screen { a {
+				 color: pink; } }
+			`,
+		},
+		{
 			description: `a block holding one declaration on a line of its own`,
 			code: `
 				a {
@@ -226,6 +346,15 @@ testRule({
 			column: 3,
 			endLine: 1,
 			endColumn: 19,
+			message: messages.expected(0),
+		},
+		{
+			description: `a single-line block of an at-rule holding one declaration`,
+			code: `@font-face { src: y; }`,
+			line: 1,
+			column: 12,
+			endLine: 1,
+			endColumn: 23,
 			message: messages.expected(0),
 		},
 	],

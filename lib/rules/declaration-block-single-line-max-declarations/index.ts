@@ -1,3 +1,4 @@
+import type { AtRule, Rule } from "postcss"
 import stylelint from "stylelint"
 
 import { css } from "../../syntaxes/css/index.ts"
@@ -5,6 +6,7 @@ import { beforeBlockString } from "../../utils/beforeBlockString/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isDeclaration } from "../../utils/typeGuards/index.ts"
@@ -43,31 +45,41 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: Prim
 
 		if (!validOptions) return
 
-		root.walkRules((ruleNode) => {
+		// A block of declarations is what is counted, whichever keyword opens it, so an at-rule's block is read as a rule's (#640)
+		root.walkRules(check)
+		root.walkAtRules(check)
+
+		/**
+		 * Counts the declarations of one statement's block.
+		 * @param statement - The rule or at-rule.
+		 */
+		function check (statement: Rule | AtRule): void {
+			// A bodiless at-rule, a Less variable or a mixin call among them, has nothing to count
+			if (!hasBlock(statement)) return
+
 			// Printed by the file's syntax, since PostCSS prints a Less mixin call and an inline comment unlike the file
-			let block = blockString(ruleNode, result)
+			let block = blockString(statement, result)
 
 			if (!isSingleLineString(block)) return
-			if (!ruleNode.nodes) return
 
 			// What the parser filed as a declaration, as Stylelint's own rule counted: a nested rule, an at-rule and a comment are none
-			let declarations = ruleNode.nodes.filter(isDeclaration)
+			let declarations = statement.nodes.filter(isDeclaration)
 
 			if (declarations.length <= primary) return
 
-			// Counted from the rule's own start, as `report` reads an index
-			let index = beforeBlockString(ruleNode, result, { noRawBefore: true }).length
+			// Counted from the statement's own start, as `report` reads an index
+			let index = beforeBlockString(statement, result, { noRawBefore: true }).length
 
 			report({
 				message: messages.expected,
 				messageArgs: [primary],
-				node: ruleNode,
+				node: statement,
 				index,
 				endIndex: index + block.length,
 				result,
 				ruleName,
 			})
-		})
+		}
 	}
 }
 

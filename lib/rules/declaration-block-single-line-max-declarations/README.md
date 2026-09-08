@@ -8,9 +8,9 @@ a { color: pink; top: 0; }
  * The number of these declarations */
 ```
 
-This is the one stylistic rule Stylelint 16 kept when it removed the others, and Stylelint 18 removes it in its turn; under the `@stylistic/` prefix it reads and reports as it did there, with the same option (see [#639](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/639)).
+This is the one stylistic rule Stylelint 16 kept when it removed the others, and Stylelint 18 removes it in its turn; under the `@stylistic/` prefix it reports as it did there, with the same option (see [#639](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/639)).
 
-A block is single-line where nothing between its braces breaks a line. What is counted is what the parser files as a declaration: a custom property counts, while a nested rule, a nested at-rule and a comment do not, and the declarations of a nested rule count to that rule's own block. The block of an at-rule, `@font-face` for one, is not read.
+A block is single-line where nothing between its braces breaks a line. What is counted is what the parser files as a declaration: a custom property counts, while a nested rule, a nested at-rule and a comment do not, and the declarations of a nested rule count to that rule's own block. The block of an at-rule, `@font-face` for one, is read as a rule's is, unlike in Stylelint's rule (see [#640](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/640)); an at-rule holding rules and no declaration of its own, `@media screen { a { color: pink; } }`, is a block of no declarations, and an at-rule without a block is nothing to count.
 
 Under `--fix` this rule takes its turn after the rules that write line breaks, so it reports the blocks the fixed file holds on one line.
 
@@ -33,6 +33,10 @@ a,
 b { color: pink; top: 3px; }
 ```
 
+```css
+@font-face { font-family: x; src: y; }
+```
+
 The following patterns are _not_ considered problems:
 
 ```css
@@ -49,4 +53,8 @@ a {
   color: pink;
   top: 3px;
 }
+```
+
+```css
+@media screen { a { color: pink; } }
 ```

@@ -27,5 +27,15 @@ testRule({
 			endColumn: 48,
 			message: messages.expected(1),
 		},
+		// #640
+		{
+			description: `a single-line block of an at-rule holding two declarations inside a template`,
+			code: `const A = styled.div\`@media (x) { color: pink; top: 0; }\``,
+			line: 1,
+			column: 33,
+			endLine: 1,
+			endColumn: 57,
+			message: messages.expected(1),
+		},
 	],
 })
