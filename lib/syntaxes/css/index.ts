@@ -81,6 +81,8 @@ export let css: Syntax = {
 	spellsOwnArithmetic: readsInlineComments,
 	// Plain CSS divides inside a math function alone, whose arguments the separator rules pass over
 	readsSlashAsOperator: () => false,
+	// An exponent belongs to a CSS number: `1E5PX` is one dimension whose number is `1E5`
+	readsNumberWithExponent: () => true,
 	// An escape and a hyphen are both code points of an identifier: `10PX\*2REM` has the unit `PX\*2REM` (#414) and `10PX-2REM` the unit `PX-2REM`
 	readsUnitAsIdentifier: () => true,
 	// A preprocessor's interpolations are read over plain CSS too, since a rule reading the inside of a `#{…}` as CSS would rewrite it (#298)

@@ -141,7 +141,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				for (let word of words) {
 					for (let token of tokenize({ css: word.text })) {
-						if (token[0] !== TokenType.Dimension) continue
+						// A syntax reading no exponent holds a unit where the tokenizer reads a number or a percentage, the letter of the exponent being that unit: `1E5` is `1E` and `5` to Less, `1E5%` is `1E` and `5%` (#646)
+						if (token[0] !== TokenType.Dimension && (syntax.readsNumberWithExponent() || (token[0] !== TokenType.Number && token[0] !== TokenType.Percentage))) continue
 
 						let start = word.index + token[2]
 						let end = word.index + token[3] + 1
@@ -155,8 +156,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 						if (reading.problem) problems.push(reading.problem)
 
-						// What the unit leaves inside the dimension is a word of its own to a syntax reading a unit shorter than the identifier: `10PX-2REM` is two dimensions to Less, as `10PX*2REM` is to the core, and `10PX-A` a dimension and a keyword. Under the core what it leaves is the rest of that same identifier — the escape of a hack taken out of the copy the unit was read in — and no word to read (#633)
-						let rest = syntax.readsUnitAsIdentifier() ? `` : dimensionNode.value.slice(reading.end)
+						// What the dimension leaves inside the token is a word of its own to a syntax reading a dimension shorter than the tokenizer does: `10PX-2REM` is two dimensions to Less, as `10PX*2REM` is to the core, `10PX-A` a dimension and a keyword, and `1E5PX` the dimension `1E` beside the dimension `5PX` (#646). Under the core what it leaves is the rest of that same identifier — the escape of a hack taken out of the copy the unit was read in — and no word to read (#633)
+						let rest = syntax.readsNumberWithExponent() && syntax.readsUnitAsIdentifier() ? `` : dimensionNode.value.slice(reading.end)
 						// A hyphen ending a unit is Less's operator and no character of the operand, which carries a sign of its own: `10PX--2REM` is `10PX` less `-2REM`, `12PX` compiled, while a third hyphen leaves the keyword `--2REM` and no dimension at all. An escape ends a unit without being an operator, and opens the word standing behind it.
 						let operator = rest.startsWith(`-`) ? 1 : 0
 

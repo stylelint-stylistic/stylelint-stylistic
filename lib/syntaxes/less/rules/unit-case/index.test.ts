@@ -617,6 +617,416 @@ testRule({
 			endColumn: 12,
 			message: messages.expected(`PX`, `px`),
 		},
+		{
+			// Less reads a number as digits and at most one period, so a use of this variable compiles to `a { width: 1E 5PX; }` — the dimension `1E`, whose unit is `E`, beside the dimension `5PX`. That the `E` is a unit is what the arithmetic says: `1E+5PX` compiles to `6E`. The core reads one dimension whose number is `1E5` and named `PX` alone. See #646
+			description: `an upper-case unit behind an exponent, in the value of a Less at-variable`,
+			code: `@v: 1E5PX;`,
+			fixed: `@v: 1e5px;`,
+			warnings: [
+				{
+					line: 1,
+					column: 6,
+					endLine: 1,
+					endColumn: 7,
+					message: messages.expected(`E`, `e`),
+				},
+				{
+					line: 1,
+					column: 8,
+					endLine: 1,
+					endColumn: 10,
+					message: messages.expected(`PX`, `px`),
+				},
+			],
+		},
+		{
+			// See #646
+			description: `the same word in a set of media parameters, which Less reads as an expression too`,
+			code: `@media (min-width: 1E5PX) { a { b: c } }`,
+			fixed: `@media (min-width: 1e5px) { a { b: c } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 21,
+					endLine: 1,
+					endColumn: 22,
+					message: messages.expected(`E`, `e`),
+				},
+				{
+					line: 1,
+					column: 23,
+					endLine: 1,
+					endColumn: 25,
+					message: messages.expected(`PX`, `px`),
+				},
+			],
+		},
+		{
+			// Less prints `1E 5PX` here as well. See #646
+			description: `the same word in the value of a custom property`,
+			code: `a { --x: 1E5PX; }`,
+			fixed: `a { --x: 1e5px; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 11,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.expected(`E`, `e`),
+				},
+				{
+					line: 1,
+					column: 13,
+					endLine: 1,
+					endColumn: 15,
+					message: messages.expected(`PX`, `px`),
+				},
+			],
+		},
+		{
+			// See #646
+			description: `the same word inside a calculation`,
+			code: `a { b: calc(1E5PX); }`,
+			fixed: `a { b: calc(1e5px); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 15,
+					message: messages.expected(`E`, `e`),
+				},
+				{
+					line: 1,
+					column: 16,
+					endLine: 1,
+					endColumn: 18,
+					message: messages.expected(`PX`, `px`),
+				},
+			],
+		},
+		{
+			// See #646
+			description: `the same word inside a call of another name`,
+			code: `a { b: max(1E5PX, 1px); }`,
+			fixed: `a { b: max(1e5px, 1px); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 13,
+					endLine: 1,
+					endColumn: 14,
+					message: messages.expected(`E`, `e`),
+				},
+				{
+					line: 1,
+					column: 15,
+					endLine: 1,
+					endColumn: 17,
+					message: messages.expected(`PX`, `px`),
+				},
+			],
+		},
+		{
+			// See #646
+			description: `the same word in the last declaration of a block, written without a semicolon`,
+			code: `a { width: 1E5PX }`,
+			fixed: `a { width: 1e5px }`,
+			warnings: [
+				{
+					line: 1,
+					column: 13,
+					endLine: 1,
+					endColumn: 14,
+					message: messages.expected(`E`, `e`),
+				},
+				{
+					line: 1,
+					column: 15,
+					endLine: 1,
+					endColumn: 17,
+					message: messages.expected(`PX`, `px`),
+				},
+			],
+		},
+		{
+			// The value spells none of the characters that make Less read a declaration's value, so it is stored unread and printed whole, and what reaches the browser is the CSS dimension `1E5PX` whose unit is `PX`. The write is right under that reading too: the case of an exponent is nothing to CSS, and `lightningcss` compiles both spellings to `width: 100000px`. See #646
+			description: `the same word in a declaration closing on a semicolon, whose value Less stores unread`,
+			code: `a { width: 1E5PX; }`,
+			fixed: `a { width: 1e5px; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 13,
+					endLine: 1,
+					endColumn: 14,
+					message: messages.expected(`E`, `e`),
+				},
+				{
+					line: 1,
+					column: 15,
+					endLine: 1,
+					endColumn: 17,
+					message: messages.expected(`PX`, `px`),
+				},
+			],
+		},
+		{
+			// The tokenizer reads the whole word as a number and the core finds no unit in it at all; Less prints `1E 5`. See #646
+			description: `an exponent in a word the tokenizer reads as a number`,
+			code: `@v: 1E5;`,
+			fixed: `@v: 1e5;`,
+			line: 1,
+			column: 6,
+			endLine: 1,
+			endColumn: 7,
+			message: messages.expected(`E`, `e`),
+		},
+		{
+			// Less prints `1E 5%`. See #646
+			description: `the same exponent in a word the tokenizer reads as a percentage`,
+			code: `@v: 1E5%;`,
+			fixed: `@v: 1e5%;`,
+			line: 1,
+			column: 6,
+			endLine: 1,
+			endColumn: 7,
+			message: messages.expected(`E`, `e`),
+		},
+		{
+			// Less prints `1E 5PX 9`, the digit ending the unit and opening a number of its own. See #646
+			description: `an exponent and an upper-case unit a digit closes`,
+			code: `@v: 1E5PX9;`,
+			fixed: `@v: 1e5px9;`,
+			warnings: [
+				{
+					line: 1,
+					column: 6,
+					endLine: 1,
+					endColumn: 7,
+					message: messages.expected(`E`, `e`),
+				},
+				{
+					line: 1,
+					column: 8,
+					endLine: 1,
+					endColumn: 10,
+					message: messages.expected(`PX`, `px`),
+				},
+			],
+		},
+		{
+			// Less prints `1E 5E 5PX`, so the word holds three dimensions; the core reads one whose unit is `E5PX`. See #646
+			description: `a word of two exponents and an upper-case unit`,
+			code: `@v: 1E5E5PX;`,
+			fixed: `@v: 1e5e5px;`,
+			warnings: [
+				{
+					line: 1,
+					column: 6,
+					endLine: 1,
+					endColumn: 7,
+					message: messages.expected(`E`, `e`),
+				},
+				{
+					line: 1,
+					column: 8,
+					endLine: 1,
+					endColumn: 9,
+					message: messages.expected(`E`, `e`),
+				},
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.expected(`PX`, `px`),
+				},
+			],
+		},
+		{
+			// The period belongs to the number, so Less prints `1.5E 3PX`. See #646
+			description: `an exponent behind a number holding a period`,
+			code: `@v: 1.5E3PX;`,
+			fixed: `@v: 1.5e3px;`,
+			warnings: [
+				{
+					line: 1,
+					column: 8,
+					endLine: 1,
+					endColumn: 9,
+					message: messages.expected(`E`, `e`),
+				},
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.expected(`PX`, `px`),
+				},
+			],
+		},
+		{
+			// See #646
+			description: `the same number written without its leading zero`,
+			code: `@v: .5E3PX;`,
+			fixed: `@v: .5e3px;`,
+			warnings: [
+				{
+					line: 1,
+					column: 7,
+					endLine: 1,
+					endColumn: 8,
+					message: messages.expected(`E`, `e`),
+				},
+				{
+					line: 1,
+					column: 9,
+					endLine: 1,
+					endColumn: 11,
+					message: messages.expected(`PX`, `px`),
+				},
+			],
+		},
+		{
+			// The hyphen is the operator Less subtracts at, and it compiles the use of this variable to `a { width: -4E; }`, the unit of the left operand carried through. See #633 and #646
+			description: `an exponent whose sign is a hyphen`,
+			code: `@v: 1E-5PX;`,
+			fixed: `@v: 1e-5px;`,
+			warnings: [
+				{
+					line: 1,
+					column: 6,
+					endLine: 1,
+					endColumn: 7,
+					message: messages.expected(`E`, `e`),
+				},
+				{
+					line: 1,
+					column: 9,
+					endLine: 1,
+					endColumn: 11,
+					message: messages.expected(`PX`, `px`),
+				},
+			],
+		},
+		{
+			// Less adds the two and prints `6E`. See #646
+			description: `the same exponent with a plus in place of the hyphen`,
+			code: `@v: 1E+5PX;`,
+			fixed: `@v: 1e+5px;`,
+			warnings: [
+				{
+					line: 1,
+					column: 6,
+					endLine: 1,
+					endColumn: 7,
+					message: messages.expected(`E`, `e`),
+				},
+				{
+					line: 1,
+					column: 9,
+					endLine: 1,
+					endColumn: 11,
+					message: messages.expected(`PX`, `px`),
+				},
+			],
+		},
+		{
+			// Less prints `10PX 9`, the digit opening a number of its own, and the rule named `PX9` for a unit Less calls `PX`. A digit has no case, so the fix writes the same bytes either way. See #646
+			description: `an upper-case unit a digit closes`,
+			code: `@v: 10PX9;`,
+			fixed: `@v: 10px9;`,
+			line: 1,
+			column: 7,
+			endLine: 1,
+			endColumn: 9,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// Less prints `10PX 9PX`, two dimensions where the core reads the unit `PX9PX`. See #646
+			description: `two upper-case units a digit welds together`,
+			code: `@v: 10PX9PX;`,
+			fixed: `@v: 10px9px;`,
+			warnings: [
+				{
+					line: 1,
+					column: 7,
+					endLine: 1,
+					endColumn: 9,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.expected(`PX`, `px`),
+				},
+			],
+		},
+		{
+			// An underscore is a code point of the unit Less reads, so it prints `1_ 5PX`: the unit of the first dimension is the underscore alone, which has no case. See #646
+			description: `an underscore unit a digit welds an upper-case one to`,
+			code: `@v: 1_5PX;`,
+			fixed: `@v: 1_5px;`,
+			line: 1,
+			column: 8,
+			endLine: 1,
+			endColumn: 10,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// Less prints `1E 3PX`, the third dimension subtracted from the second. See #633 and #646
+			description: `an exponent in front of a subtraction`,
+			code: `@v: 1E5PX-2REM;`,
+			fixed: `@v: 1e5px-2rem;`,
+			warnings: [
+				{
+					line: 1,
+					column: 6,
+					endLine: 1,
+					endColumn: 7,
+					message: messages.expected(`E`, `e`),
+				},
+				{
+					line: 1,
+					column: 8,
+					endLine: 1,
+					endColumn: 10,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 12,
+					endLine: 1,
+					endColumn: 15,
+					message: messages.expected(`REM`, `rem`),
+				},
+			],
+		},
+		{
+			// Less can open no entity on a code point outside ASCII and compiles the use of this variable to the word unparted, so the unit is the whole identifier here as it is to the core. See #646
+			description: `an upper-case unit closing on a code point outside ASCII, which Less parts the word at nowhere`,
+			code: `@v: 10PX\u00C4;`,
+			fixed: `@v: 10px\u00E4;`,
+			line: 1,
+			column: 7,
+			endLine: 1,
+			endColumn: 10,
+			message: messages.expected(`PX\u00C4`, `px\u00E4`),
+		},
+		{
+			// No digit stands behind the letter, so the letters run to the end of the word and Less prints `1EPX`. See #646
+			description: `a letter of an exponent with no digit behind it`,
+			code: `@v: 1EPX;`,
+			fixed: `@v: 1epx;`,
+			line: 1,
+			column: 6,
+			endLine: 1,
+			endColumn: 9,
+			message: messages.expected(`EPX`, `epx`),
+		},
 	],
 })
 testRule({
@@ -683,6 +1093,11 @@ testRule({
 			// Less compiles this to `a { b: 10PX a; }`: the dimension, and beside it a keyword printed exactly as written. The unit is `PX` and nothing of the keyword, where the core names `PX-a` and asks for `PX-A`. See #633
 			description: `an upper-case unit a hyphen welds a lower-case word to, which Less reads as a keyword of its own`,
 			code: `a { b: 10PX-a; }`,
+		},
+		{
+			// Both units of `1E 5PX` already stand in the case asked for. See #646
+			description: `an exponent and the unit behind it, both in upper case`,
+			code: `@v: 1E5PX;`,
 		},
 	],
 
@@ -816,6 +1231,39 @@ testRule({
 			endLine: 1,
 			endColumn: 12,
 			message: messages.expected(`px`, `PX`),
+		},
+		{
+			// Less prints `1e 5px`, two dimensions, and the core reads one whose number is `1e5` and named `px` alone. See #646
+			description: `a lower-case unit behind an exponent, in the value of a Less at-variable`,
+			code: `@v: 1e5px;`,
+			fixed: `@v: 1E5PX;`,
+			warnings: [
+				{
+					line: 1,
+					column: 6,
+					endLine: 1,
+					endColumn: 7,
+					message: messages.expected(`e`, `E`),
+				},
+				{
+					line: 1,
+					column: 8,
+					endLine: 1,
+					endColumn: 10,
+					message: messages.expected(`px`, `PX`),
+				},
+			],
+		},
+		{
+			// The tokenizer reads the whole word as a number and the core finds no unit in it at all; Less prints `1e 5`. See #646
+			description: `an exponent in a word the tokenizer reads as a number`,
+			code: `@v: 1e5;`,
+			fixed: `@v: 1E5;`,
+			line: 1,
+			column: 6,
+			endLine: 1,
+			endColumn: 7,
+			message: messages.expected(`e`, `E`),
 		},
 		{
 			// The keyword the hyphen welds on keeps its case where the fix used to write `10PX-A`; the second dimension holds the fixer to that. See #633

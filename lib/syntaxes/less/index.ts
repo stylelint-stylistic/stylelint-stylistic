@@ -27,7 +27,9 @@ export let less: Syntax = {
 	readsAtRuleAsVariable: (atRule: AtRule) => `variable` in atRule,
 	// Under its default `math` mode Less divides only inside parentheses (`@a/2` prints `4/2`), a nameless call the rules pass over, so a solidus outside is the separator it is to the core
 	readsSlashAsOperator: () => false,
-	// Less reads a unit as ASCII letters and underscores, so `10px\#fff` is a dimension and an escaped value (#527) and `10PX-2REM` two dimensions it subtracts (#633). Answered for the whole namespace, since the units it reads are substrings of the one the core reads, on the same positions, so the reading costs at most a warning, never a character the core would not have written
+	// Less reads a number as digits and at most one period, so `1E5PX` is the dimension `1E` beside the dimension `5PX` (#646). Answered for the whole namespace: the letter of an exponent is the one character this reading adds to what the fix writes, and its case is nothing to CSS either
+	readsNumberWithExponent: () => false,
+	// Less reads a unit as `%` or a run of ASCII letters and underscores, so `10px\#fff` is a dimension and an escaped value (#527), `10PX-2REM` two dimensions it subtracts (#633) and `10PX9` a dimension and a number (#646). Answered for the whole namespace, since the units it reads are substrings of the one the core reads, on the same positions, so this half of the reading costs at most a warning
 	readsUnitAsIdentifier: () => false,
 	// A Less variable keeps one copy more than the core writes, the `value` its stringifier prints
 	write (node: AtRule | Declaration | PostcssRule, text: string): void {

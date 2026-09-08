@@ -224,10 +224,18 @@ export type Syntax = {
 	readsSlashAsOperator (left: ValueParserNode | undefined, right: ValueParserNode | undefined): boolean,
 
 	/**
+	 * Asks whether the syntax reads an exponent as part of a number.
+	 *
+	 * To CSS `1E5PX` is one dimension whose number is `1E5`; Less reads a number as digits and at most one period, so the same word is the dimension `1E` beside the dimension `5PX` ([#646](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/646)). Where the answer is no, a number and a percentage hold a unit as well: `1E5` is `1E` and `5`.
+	 * @returns True where an exponent belongs to the number, false where the number is a sign, digits and at most one period.
+	 */
+	readsNumberWithExponent (): boolean,
+
+	/**
 	 * Asks whether the syntax reads a dimension's unit as the whole identifier behind the number.
 	 *
-	 * To CSS an escape and a hyphen are both code points of an identifier, so `10px\#fff` is one dimension with the unit `px#fff` and `10PX-2REM` one with the unit `PX-2REM`. Less reads a unit as ASCII letters and underscores, taking a backslash as the start of a keyword ([#527](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527)) and a hyphen as the sign of the operand behind it ([#633](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/633)), so recasing the whole identifier under Less would recase a value.
-	 * @returns True where the unit runs to the end of the identifier, false where it ends in front of the first escape or hyphen.
+	 * To CSS an escape and a hyphen are both code points of an identifier, so `10px\#fff` is one dimension with the unit `px#fff` and `10PX-2REM` one with the unit `PX-2REM`. Less takes a run of ASCII letters and underscores as the unit and opens an entity of its own behind it — a keyword at a backslash ([#527](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527)), the signed operand of a subtraction at a hyphen ([#633](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/633)), a dimension at a digit ([#646](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/646)) — so recasing the whole identifier under Less would recase a value. A character it can open no entity with ends nothing: it compiles `10PXÄ` back unparted.
+	 * @returns True where the unit runs to the end of the identifier, false where it ends in front of the first escape, hyphen or digit.
 	 */
 	readsUnitAsIdentifier (): boolean,
 

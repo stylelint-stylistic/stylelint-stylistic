@@ -22,6 +22,9 @@ export const CRLF_RUN = /(?:\r\n)+/u
 /** A break to the grammar, asking whether a backslash opens an escape: line feed, carriage return or form feed; a backslash before any is a delimiter, so `10PX\` and a break is the dimension `10PX`. */
 export const CSS_LINE_BREAK = /[\n\r\f]/u
 
+/** One decimal digit. */
+export const DIGIT = /\d/u
+
 /** Two breaks with only horizontal whitespace between them. */
 export const EMPTY_LINE = /\r?\n[\t ]*\r?\n/u
 
@@ -150,6 +153,9 @@ export const LEADING_LINE_BREAK_RUN = /^(?:\r?\n)+/u
 
 /** A text opening on non-whitespace. */
 export const LEADING_NON_WHITESPACE = /^\S/u
+
+/** The leading number Less reads: a sign, digits and at most one period, no exponent ([#646](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/646)). */
+export const LEADING_NUMBER_WITHOUT_EXPONENT = /^[+-]?\d*\.?\d+/u
 
 /** A leading arithmetic operator, as in `-$variable`. */
 export const LEADING_OPERATOR = /^[-+*/]/u

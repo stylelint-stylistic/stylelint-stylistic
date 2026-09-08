@@ -281,4 +281,53 @@ it(`getDimension under a syntax that reads a unit shorter than the identifier`, 
 	// A hyphen standing right behind the number leaves no unit at all, and Less reads a keyword there: `10-PX-2REM` is `10` and `PX-2REM`
 	expect(getDimension(partingSyntax, valueParser(`10-PX`).nodes[0]).unit).toBe(``)
 	expect(getDimension(css, valueParser(`10-PX`).nodes[0]).unit).toBe(`-PX`)
+
+	// A digit ends the unit as a hyphen does, Less opening another dimension there: `10PX9` is `10PX` and the number `9`, `10PX9PX` two dimensions (#646)
+	expect(getDimension(partingSyntax, valueParser(`10PX9`).nodes[0]).unit).toBe(`PX`)
+	expect(getDimension(css, valueParser(`10PX9`).nodes[0]).unit).toBe(`PX9`)
+	expect(getDimension(partingSyntax, valueParser(`10PX9PX`).nodes[0]).unit).toBe(`PX`)
+	expect(getDimension(css, valueParser(`10PX9PX`).nodes[0]).unit).toBe(`PX9PX`)
+
+	// An underscore is a code point of the unit Less reads, so the unit of `1_5PX` is the underscore alone
+	expect(getDimension(partingSyntax, valueParser(`1_5PX`).nodes[0]).unit).toBe(`_`)
+	expect(getDimension(css, valueParser(`1_5PX`).nodes[0]).unit).toBe(`_5PX`)
+
+	// A code point outside ASCII is none of the three: Less can open no entity with it and compiles `10PXÄ` back unparted, so the identifier's reading holds
+	expect(getDimension(partingSyntax, valueParser(`10PX\u00C4`).nodes[0]).unit).toBe(`PX\u00C4`)
+})
+
+it(`getDimension under a syntax that reads no exponent`, () => {
+	// The two questions are asked apart: this one moves where the number ends and the unit opens, the other where the unit ends (#646)
+	let exponentSyntax: Syntax = { ...css, readsNumberWithExponent: () => false }
+	let lessSyntax: Syntax = { ...css, readsNumberWithExponent: () => false, readsUnitAsIdentifier: () => false }
+
+	// The number ends at the first character that is no digit and no period, and the unit opens there
+	expect(getDimension(exponentSyntax, valueParser(`1E5PX`).nodes[0]).number).toBe(`1`)
+	expect(getDimension(css, valueParser(`1E5PX`).nodes[0]).number).toBe(`1E5`)
+	expect(getDimension(exponentSyntax, valueParser(`1.5E3PX`).nodes[0]).number).toBe(`1.5`)
+	expect(getDimension(exponentSyntax, valueParser(`.5E3PX`).nodes[0]).number).toBe(`.5`)
+	expect(getDimension(exponentSyntax, valueParser(`+1E5PX`).nodes[0]).number).toBe(`+1`)
+	expect(getDimension(exponentSyntax, valueParser(`1E-5PX`).nodes[0]).number).toBe(`1`)
+	expect(getDimension(exponentSyntax, valueParser(`1E5`).nodes[0]).number).toBe(`1`)
+	expect(getDimension(css, valueParser(`1E5`).nodes[0]).number).toBe(`1E5`)
+
+	// A number spelling no exponent is read alike under both answers
+	expect(getDimension(exponentSyntax, valueParser(`10PX`).nodes[0]).number).toBe(`10`)
+	expect(getDimension(exponentSyntax, valueParser(`-1.100PX`).nodes[0]).number).toBe(`-1.100`)
+	expect(getDimension(exponentSyntax, valueParser(`2E`).nodes[0]).number).toBe(`2`)
+	expect(getDimension(exponentSyntax, valueParser(`2E`).nodes[0]).unit).toBe(`E`)
+
+	// Where the unit still runs to the end of the identifier, everything behind the number is one unit
+	expect(getDimension(exponentSyntax, valueParser(`1E5PX`).nodes[0]).unit).toBe(`E5PX`)
+	expect(getDimension(exponentSyntax, valueParser(`1E5`).nodes[0]).unit).toBe(`E5`)
+
+	// Under both answers, as Less reads the word: the unit is the letter of the exponent and the rest is a dimension of its own the caller reads again
+	expect(getDimension(lessSyntax, valueParser(`1E5PX`).nodes[0]).unit).toBe(`E`)
+	expect(getDimension(lessSyntax, valueParser(`1E5`).nodes[0]).unit).toBe(`E`)
+	expect(getDimension(lessSyntax, valueParser(`1E5E5PX`).nodes[0]).unit).toBe(`E`)
+	expect(getDimension(lessSyntax, valueParser(`1.5E3PX`).nodes[0]).unit).toBe(`E`)
+	expect(getDimension(lessSyntax, valueParser(`6e-2px`).nodes[0]).unit).toBe(`e`)
+	// The letters run to the end of the word, so the whole of it is the unit under either answer
+	expect(getDimension(lessSyntax, valueParser(`1EPX`).nodes[0]).unit).toBe(`EPX`)
+	expect(getDimension(css, valueParser(`1EPX`).nodes[0]).unit).toBe(`EPX`)
 })

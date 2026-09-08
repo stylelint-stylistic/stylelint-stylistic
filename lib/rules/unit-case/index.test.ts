@@ -896,6 +896,28 @@ testRule({
 			message: messages.expected(`PX-2REM`, `px-2rem`),
 		},
 		{
+			// A digit is a code point of an identifier, so the tokenizer reads one dimension whose unit is `PX9`; `lightningcss` recases the units it knows and prints this word as it stands. See #646
+			description: `an upper-case unit closing on a digit, which is one identifier to the core`,
+			code: `a { width: 10PX9; }`,
+			fixed: `a { width: 10px9; }`,
+			line: 1,
+			column: 14,
+			endLine: 1,
+			endColumn: 17,
+			message: messages.expected(`PX9`, `px9`),
+		},
+		{
+			// The whole word is a number to the tokenizer and holds no unit at all, the neighbour carrying the fixer; Less reads the dimension `1E` there. See #646
+			description: `a word of digits and an exponent beside an upper-case unit`,
+			code: `a { width: 1E5 2PX; }`,
+			fixed: `a { width: 1E5 2px; }`,
+			line: 1,
+			column: 17,
+			endLine: 1,
+			endColumn: 19,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
 			// A percent sign is no code point of an identifier, so it ends the unit without parting the word the value parser hands over: `@csstools/css-tokenizer` reads the dimension `10PX`, a delimiter and the dimension `2REM`, and `lightningcss` recases both, printing `10px%2rem`. The rule used to read the word as one dimension and never reach the second. See #526
 			description: `two upper-case units in one word, a percent sign between them`,
 			code: `a { width: 10PX%2REM; }`,
