@@ -12,6 +12,8 @@ Lines that exceed the maximum length but contain no whitespace (other than a
 
 When evaluating the line length, the address a `url()` holds is excluded from the calculation, because typically you have no control over its length. A `url()` written without quotation marks holds nothing else, so what its parentheses hold comes off the line, the whitespace at the edges aside; a `url()` written with them is a function whose arguments are yours to break, so only the quoted address itself comes off, and anything written behind it — a second argument, a comment, the `format(…)` of an `@font-face` — is counted. A `url(` written inside a comment or inside a string opens no call at all, and neither does a call whose name merely ends in those three letters, `image-url()` for one. An address is never taken to reach past the end of its line: a `url()` token holds no whitespace whatever and a quoted one is a string, so a run holding a line break is no address, whatever unbalanced parenthesis put it there.
 
+The string an `@import` names is an address too, and comes off the line the same way. It is the string standing behind the name, whatever the two have between them — whitespace, a comment, or nothing at all — and an `@import` written inside a comment or inside a string names none.
+
 The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
 
 ## Options

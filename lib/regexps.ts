@@ -52,9 +52,6 @@ export const EVERY_ESCAPE_STRING_OR_BLOCK_COMMENT = /\\.|"[^"\\]*(?:\\.[^"\\]*)*
 /** {@link EVERY_ESCAPE_STRING_OR_BLOCK_COMMENT} plus `//`. */
 export const EVERY_ESCAPE_STRING_OR_COMMENT = /\\.|\/\/|"[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'|\/\*.*?\*\//gsu
 
-/** Every `@import` address, captured. */
-export const EVERY_IMPORT_ADDRESS = /@import\s+(['"].*['"])/gui
-
 /** {@link SCSS_INTERPOLATION}, {@link LESS_INTERPOLATION} and {@link PSV_INTERPOLATION} in one; only the Sass one crosses a break. {@link TPL_INTERPOLATION} is left out: bare braces in a value are likelier a string or a comment. */
 export const EVERY_INTERPOLATION = /#\{[\s\S]+?\}|@\{.+?\}|\$\(.+?\)/gu
 

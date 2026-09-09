@@ -1,7 +1,7 @@
 import styleSearch, { type StyleSearchMatch } from "style-search"
 import stylelint from "stylelint"
 
-import { EVERY_IMPORT_ADDRESS, LEADING_WHITESPACE_RUN } from "../../regexps.ts"
+import { LEADING_WHITESPACE_RUN } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findAddressSpans } from "../../utils/findCommentSpans/index.ts"
@@ -22,13 +22,10 @@ export let meta = {
 	url: getRuleDocUrl(shortName),
 }
 
-/** Spans not counted besides `url()` addresses. */
-const EXCLUDED_PATTERNS = [EVERY_IMPORT_ADDRESS]
-
 /**
  * Measures a line in columns, a tab reaching the next tab stop, less the excluded spans.
  *
- * One pointer walks the spans beside the line, since asking every span about every character is quadratic; a character two spans hold is counted off once ([#552](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/552)).
+ * One pointer walks the spans beside the line, since asking every span about every character is quadratic.
  * @param lineText - The text of the line measured.
  * @param excludedSpans - The excluded spans, sorted by start.
  * @param tabSize - The columns of a tab.
@@ -106,23 +103,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let ignoreComments = optionsMatches(secondaryOptions, `ignore`, `comments`)
 		let tabSize = secondaryOptions?.tabSize ?? 1
 		let rootString = root.source.input.css
-		// The spans left out of the count
-		let skippedSubStrings: Array<[number, number]> = []
+		// The spans left out of the count, in the source order the line queue reads them in; the comment-finding walk alone can say where an address closes and whether the text around it is code (#427, #552)
+		let skippedSubStrings: Array<[number, number]> = findAddressSpans(rootString, syntax.inlineComments(root, result).spells).map(({ start, end }) => [start, end])
 		let skippedSubStringsIndex = 0
-
-		// From the comment-finding walk: a `url(` inside a comment or string opens no address, and each letter of `url` may be an escape (#427)
-		for (let { start, end } of findAddressSpans(rootString, syntax.inlineComments(root, result).spells)) skippedSubStrings.push([start, end])
-
-		for (let pattern of EXCLUDED_PATTERNS) {
-			for (let match of rootString.matchAll(pattern)) {
-				let subMatch = match[1] || ``
-				let startOfSubString = (match.index || 0) + (match[0] || ``).indexOf(subMatch)
-
-				skippedSubStrings.push([startOfSubString, startOfSubString + subMatch.length])
-			}
-		}
-
-		skippedSubStrings = skippedSubStrings.toSorted((a, b) => a[0] - b[0])
 
 		// Check first line
 		checkNewline({ endIndex: 0 })
@@ -154,7 +137,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		function popSubStrings (start: number, end: number): Array<[number, number]> {
 			let spans: Array<[number, number]> = []
 
-			// No span reaches past the line's end: the `@import` capture stops at a break, an address holds none
+			// No span reaches past the line's end: an address carrying a break is recorded as none
 			for (let next = skippedSubStrings[skippedSubStringsIndex]; next && next[0] < end; next = skippedSubStrings[skippedSubStringsIndex]) {
 				let [startSubString, endSubString] = next
 

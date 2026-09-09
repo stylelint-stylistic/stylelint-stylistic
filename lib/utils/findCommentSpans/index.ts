@@ -19,6 +19,30 @@ function findLineBreak (text: string, openIndex: number): number {
 }
 
 /**
+ * Skips the name of an `@import`, whose letters may be escapes as a `url(`'s are: `@\69 mport` and `@IMPORT` name the same at-rule, `@imports` another word. Nothing in front is asked about, since `@` is no identifier code point and ends whatever name stands there.
+ * @param text - The text the name is read out of.
+ * @param openIndex - The `@`.
+ * @returns Behind the name, or `openIndex`.
+ */
+function skipImportName (text: string, openIndex: number): number {
+	let index = openIndex + 1
+
+	for (let letter of `import`) {
+		let { character, end } = readIdentifierCharacter(text, index)
+
+		if (character?.toLowerCase() !== letter) return openIndex
+
+		index = end
+	}
+
+	let next = text[index]
+
+	if (next === `\\` || (next !== undefined && IDENTIFIER_CODE_POINT.test(next))) return openIndex
+
+	return index
+}
+
+/**
  * Skips a `url(`; each letter may be an escape, so three identifier characters go to {@link namesAnAddress}.
  * @param text - The text the name is read out of.
  * @param openIndex - Where it would open.
@@ -150,6 +174,17 @@ function pushAddress (text: string, openIndex: number, closeIndex: number, addre
 	if (start < end && !LINE_BREAK.test(text.slice(start, end))) addresses.push({ start, end })
 }
 
+/**
+ * Records the address of an `@import`: the string standing behind the name, its quotation marks part of the span as they are in a quoted `url()` ({@link pushAddress}). A string closed by no mark is none, and so is one holding a break the caller counts a line by, which reaches past that line.
+ * @param text - The text holding the string.
+ * @param openIndex - The opening quotation mark.
+ * @param end - Behind the closing one, as {@link skipString} read it.
+ * @param addresses - This one is added.
+ */
+function pushImportAddress (text: string, openIndex: number, end: number, addresses: AddressSpan[]): void {
+	if (end <= text.length && !LINE_BREAK.test(text.slice(openIndex, end))) addresses.push({ start: openIndex, end })
+}
+
 /** The span a `url()` address occupies. */
 export type AddressSpan = {
 	start: number,
@@ -164,7 +199,9 @@ export type CommentSpan = {
 }
 
 /**
- * Walks a text once for its comments and `url()` addresses, each the other's exception: a protocol's `//` opens no comment, a `url(` inside a comment no address ([#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427)). A block comment's span holds its delimiters, a `//` comment's stops at the break.
+ * Walks a text once for its comments and addresses, each the other's exception: a protocol's `//` opens no comment, a `url(` inside a comment no address ([#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427)). A block comment's span holds its delimiters, a `//` comment's stops at the break.
+ *
+ * The address of an `@import` is the string standing behind the name, which only the walk can find: a pattern over the text cannot say where that string closes, nor whether the `@import` it matched is code rather than the text of a comment or of another string ([#552](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/552)). Whitespace and comments stand between the name and the string; anything else ends the wait.
  * @param text - The value, selector or params walked.
  * @param spellsInlineComments - False where the syntax spells none ({@link readsInlineComments}).
  * @returns The spans of both.
@@ -175,6 +212,8 @@ function scan (text: string, spellsInlineComments: boolean): { comments: Comment
 	let index = 0
 	// Whether the run just stepped over is part of a name
 	let behindIdentifier = false
+	// Whether an `@import` name has been read and its address not yet
+	let awaitsImportAddress = false
 
 	while (index < text.length) {
 		let character = text.charAt(index)
@@ -194,10 +233,17 @@ function scan (text: string, spellsInlineComments: boolean): { comments: Comment
 				index = behindUrl
 				behindIdentifier = false
 			}
+
+			awaitsImportAddress = false
 		}
 		else if (character === `"` || character === `'`) {
-			index = skipString(text, index)
+			let end = skipString(text, index)
+
+			if (awaitsImportAddress) pushImportAddress(text, index, end, addresses)
+
+			index = end
 			behindIdentifier = false
+			awaitsImportAddress = false
 		}
 		else if (character === `u` || character === `U`) {
 			let behindUrl = skipUrl(text, index, behindIdentifier, spans, addresses)
@@ -210,6 +256,15 @@ function scan (text: string, spellsInlineComments: boolean): { comments: Comment
 				index = behindUrl
 				behindIdentifier = false
 			}
+
+			awaitsImportAddress = false
+		}
+		else if (character === `@`) {
+			let behindName = skipImportName(text, index)
+
+			awaitsImportAddress = behindName !== index
+			index = awaitsImportAddress ? behindName : index + 1
+			behindIdentifier = false
 		}
 		else if (character === `/` && next === `*`) {
 			let closeIndex = text.indexOf(`*/`, index + 2)
@@ -231,6 +286,8 @@ function scan (text: string, spellsInlineComments: boolean): { comments: Comment
 			// `@{prefix}url(` spells a name, so `}` counts as one
 			behindIdentifier = character === `}` || IDENTIFIER_CODE_POINT.test(character)
 			index += 1
+
+			if (!WHITESPACE_ONLY.test(character)) awaitsImportAddress = false
 		}
 	}
 
@@ -248,7 +305,7 @@ export function findCommentSpans (text: string, spellsInlineComments: boolean = 
 }
 
 /**
- * Finds the spans of a text's `url()` addresses, as {@link pushAddress} measures them. The comment walk finds them, since a `url(` inside a comment opens none and each letter may be an escape ([#344](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/344), [#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427)).
+ * Finds the spans of a text's addresses — a `url()`'s as {@link pushAddress} measures it, an `@import`'s as {@link pushImportAddress} does. The comment walk finds them, since one inside a comment is no address and each letter of a name may be an escape ([#344](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/344), [#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427), [#552](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/552)).
  * @param text - The raw walked for addresses.
  * @param spellsInlineComments - False where the syntax spells none ({@link readsInlineComments}).
  * @returns The spans, in source order.

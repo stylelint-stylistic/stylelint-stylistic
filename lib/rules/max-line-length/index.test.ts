@@ -839,8 +839,8 @@ testRule({
 			code: `@import "aaaaaaaaaaaaaaa";a{b:url(bbbbbbbbbbbbbbbb)}`,
 		},
 		{
-			description: `the import string holding an address comes off whole: 36 - 16 = 20`,
-			code: `@import "aaaaa" url("bb") screen, a;`,
+			description: `an import address and the address of a call behind it, each off the line once: 31 - 7 - 4 = 20`,
+			code: `@import "aaaaa" url("bb") aaaa;`,
 		},
 	],
 
@@ -860,10 +860,10 @@ testRule({
 			],
 		},
 		{
-			description: `the address standing inside the import string is not taken off twice: 37 - 16 = 21`,
-			code: `@import "aaaaa" url("bb") screen, ab;`,
+			description: `the same line one character longer than the two addresses leave room for: 32 - 7 - 4 = 21`,
+			code: `@import "aaaaa" url("bb") aaaaa;`,
 			line: 1,
-			column: 37,
+			column: 32,
 			message: messages.expected(20),
 		},
 	],
@@ -903,6 +903,52 @@ testRule({
 			line: 1,
 			column: 45,
 			message: messages.expected(30),
+		},
+	],
+})
+
+// See #552
+// The address of an `@import` comes off a line, found by the same walk; the pattern it replaced ran to the last quotation mark of the line, and read an `@import` written inside a comment or inside a string as an at-rule of the stylesheet.
+testRule({
+	ruleName,
+	config: [20],
+
+	accept: [
+		{
+			description: `an address behind a name the grammar asks no whitespace after: 22 - 7 = 15`,
+			code: `@import"a.css"; a{b:1}`,
+		},
+		{
+			description: `an address behind a comment, which stands between the name and the address without ending the wait for it: 27 - 7 = 20`,
+			code: `@import /* c */ "a.css";a{}`,
+		},
+		{
+			description: `an address behind a name carrying an escape, which lightningcss 1.33.0 reads as the same import: 25 - 10 = 15`,
+			code: `@i\\6dport "aaaaaaaa"; a{}`,
+		},
+	],
+
+	reject: [
+		{
+			description: `a quotation mark behind the address, up to which the line used to be counted off: 30 - 7 = 23`,
+			code: `@import "a.css"; a { b: "x"; }`,
+			line: 1,
+			column: 30,
+			message: messages.expected(20),
+		},
+		{
+			description: `an import written inside a block comment, which is the text of the comment and names no address`,
+			code: `/* @import "a.css"; */ a{}`,
+			line: 1,
+			column: 26,
+			message: messages.expected(20),
+		},
+		{
+			description: `an import written inside the value of a declaration, which is the text of a string and names no address`,
+			code: `a { b: "@import 'x.css'; c" }`,
+			line: 1,
+			column: 29,
+			message: messages.expected(20),
 		},
 	],
 })

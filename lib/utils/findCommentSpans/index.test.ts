@@ -288,6 +288,61 @@ describe(`findAddressSpans`, () => {
 	it(`a quotation mark inside a bare address, which opens no argument of anything`, () => {
 		expect(findAddressSpans(`url(a"b c)`)).toEqual([{ start: 4, end: 9 }])
 	})
+
+	// See #552
+	it(`the address an import names, which is the string standing behind the name, quotation marks and all`, () => {
+		expect(findAddressSpans(`@import "a.css";`)).toEqual([{ start: 8, end: 15 }])
+		expect(findAddressSpans(`@import "a.css" screen, tv`)).toEqual([{ start: 8, end: 15 }])
+	})
+
+	it(`the same address with no whitespace in front of it, which the grammar asks for none of`, () => {
+		expect(findAddressSpans(`@import"a.css"`)).toEqual([{ start: 7, end: 14 }])
+	})
+
+	it(`an import name written in upper case or with an escape, both of which name the same at-rule`, () => {
+		expect(findAddressSpans(`@IMPORT "a.css"`)).toEqual([{ start: 8, end: 15 }])
+		expect(findAddressSpans(`@\\69 mport "a.css"`)).toEqual([{ start: 11, end: 18 }])
+	})
+
+	it(`a name merely opening with the six letters of an import, which names no address`, () => {
+		expect(findAddressSpans(`@imports "a.css"`)).toEqual([])
+		expect(findAddressSpans(`@import "a.css"`)).toEqual([{ start: 8, end: 15 }])
+	})
+
+	it(`the same six letters running into the name of a call, which is one name and opens no address either`, () => {
+		expect(findAddressSpans(`@importurl(a.css)`)).toEqual([])
+		expect(findAddressSpans(`@import url(a.css)`)).toEqual([{ start: 12, end: 17 }])
+	})
+
+	it(`a comment or a break between the name and the address, neither of which ends the wait for it`, () => {
+		expect(findAddressSpans(`@import /* c */ "a.css"`)).toEqual([{ start: 16, end: 23 }])
+		expect(findAddressSpans(`@import // c\n"a.css"`)).toEqual([{ start: 13, end: 20 }])
+		expect(findAddressSpans(`@import\n"a.css"`)).toEqual([{ start: 8, end: 15 }])
+	})
+
+	it(`the same double slash in a syntax that spells no comment with one, where the wait ends on the first slash`, () => {
+		expect(findAddressSpans(`@import // c\n"a.css"`, false)).toEqual([])
+	})
+
+	it(`anything else between the name and a string, which ends the wait`, () => {
+		expect(findAddressSpans(`@import a "b.css"`)).toEqual([])
+		expect(findAddressSpans(`@import "a.css" "b.css"`)).toEqual([{ start: 8, end: 15 }])
+	})
+
+	it(`an import naming a url, whose address is the one the parentheses hold`, () => {
+		expect(findAddressSpans(`@import url("a.css")`)).toEqual([{ start: 12, end: 19 }])
+	})
+
+	it(`an import written inside a comment or a string, which names none`, () => {
+		expect(findAddressSpans(`/* @import "a.css" */`)).toEqual([])
+		expect(findAddressSpans(`"@import 'a.css'"`)).toEqual([])
+		expect(findAddressSpans(`// @import "a.css"`)).toEqual([])
+	})
+
+	it(`a string closed by no mark, and one carrying an escaped break and so reaching past its line, neither of which is an address`, () => {
+		expect(findAddressSpans(`@import "a.css`)).toEqual([])
+		expect(findAddressSpans(`@import "a\\\nb.css"`)).toEqual([])
+	})
 })
 
 describe(`findCommentSpanAt`, () => {
