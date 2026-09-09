@@ -131,6 +131,18 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`b: url( "a" // c`, LESS)).toBe(true)
 	})
 
+	// All three parsers cut such a comment out of the declaration's value, so the double slashes inside it are its text. See #665
+	it(`a double slash inside a block comment whose opening solidus a backslash stands in front of`, () => {
+		expect(endsWithInlineComment(`b: red \\/*x // c*/ `, LESS)).toBe(false)
+		expect(endsWithInlineComment(`b: red \\/*x // c`, LESS)).toBe(false)
+		expect(endsWithInlineComment(`b: url( a\\/* ) // c */ ) `, LESS)).toBe(false)
+	})
+
+	// See #665
+	it(`a double slash standing behind such a comment, which the comment's own delimiter closed`, () => {
+		expect(endsWithInlineComment(`b: red \\/*x*/ // c`, LESS)).toBe(true)
+	})
+
 	// The double slashes stand in the text of a block comment PostCSS reads there, so the parenthesis closing the address stands behind that comment rather than inside it. See #660
 	it(`a double slash inside a block comment the tokenizer's whitespace parts from the parenthesis of an address`, () => {
 		expect(endsWithInlineComment(`b: url( a /* ) // c */ ) 1px; `, LESS)).toBe(false)

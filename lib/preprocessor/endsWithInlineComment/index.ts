@@ -1,7 +1,7 @@
 import { IDENTIFIER_CODE_POINT, LINE_BREAK } from "../../regexps.ts"
 import { namesAnAddress } from "../../utils/namesAnAddress/index.ts"
 import { readAddress } from "../../utils/readAddress/index.ts"
-import { readIdentifierCharacter } from "../../utils/readIdentifierCharacter/index.ts"
+import { readEscapedCharacter } from "../../utils/readEscapedCharacter/index.ts"
 import type { InlineCommentReading } from "../readsInlineComments/index.ts"
 
 /** Where a scan stands; every state returning to code resets `wordStart`. */
@@ -68,7 +68,7 @@ function readInsideCode (text: string, scan: Scan): void {
 
 	if (char === `\\`) {
 		// The whole escape is one character; a backslash spelling nothing leaves its break to the next step
-		let escaped = readIdentifierCharacter(text, scan.index)
+		let escaped = readEscapedCharacter(text, scan.index)
 
 		scan.index = escaped.end - 1
 	}

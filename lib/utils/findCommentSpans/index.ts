@@ -4,6 +4,7 @@ import { IDENTIFIER_CODE_POINT, LEADING_CSS_WHITESPACE, LINE_BREAK, TRAILING_CSS
 import { isOnlyWhitespace } from "../isOnlyWhitespace/index.ts"
 import { namesAnAddress } from "../namesAnAddress/index.ts"
 import { type Address, readAddress } from "../readAddress/index.ts"
+import { readEscapedCharacter } from "../readEscapedCharacter/index.ts"
 import { readIdentifierCharacter } from "../readIdentifierCharacter/index.ts"
 
 /**
@@ -221,7 +222,7 @@ function scan (text: string, spellsInlineComments: boolean): { comments: Comment
 			let behindUrl = skipUrl(text, index, behindIdentifier, spans, addresses)
 
 			if (behindUrl === index) {
-				let escaped = readIdentifierCharacter(text, index)
+				let escaped = readEscapedCharacter(text, index)
 
 				index = escaped.end
 				behindIdentifier = escaped.character !== undefined

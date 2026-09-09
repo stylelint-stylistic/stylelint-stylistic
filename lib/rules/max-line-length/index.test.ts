@@ -982,6 +982,14 @@ testRule({
 
 	reject: [
 		{
+			// See #665
+			description: `the same comment with a backslash standing in front of its opening solidus, which escapes it for the grammar and for no parser`,
+			code: `a { b: url( aaaaaaaaaaaaaaaa\\/*c*/ ) }`,
+			line: 1,
+			column: 38,
+			message: messages.expected(20),
+		},
+		{
 			// See #660
 			description: `a comment inside an address the tokenizer's whitespace parts from its parenthesis, which is no part of the address and comes off no line`,
 			code: `a { b: url( aaaaaaaaaaaaaaaaaaaaaaaaaa.png /* c */ ) }`,

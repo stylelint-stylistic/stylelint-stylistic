@@ -47,6 +47,15 @@ describe(`readAddress`, () => {
 		expect(readAddress(`url(\na /* ) */ ) 1px`, 4)).toEqual({ isQuoted: false, index: 15, comments: [{ start: 7, end: 14, isInline: false }] })
 	})
 
+	// See #665
+	it(`such a comment whose opening solidus a backslash stands in front of, which the backslash covers for the grammar and for no parser`, () => {
+		expect(readAddress(`url( a\\/* ) */ ) 1px`, 4)).toEqual({ isQuoted: false, index: 15, comments: [{ start: 7, end: 14, isInline: false }] })
+	})
+
+	it(`the same address with the parenthesis standing against it, which the parsers take as one token`, () => {
+		expect(readAddress(`url(a\\/* ) */ ) 1px`, 4)).toEqual({ isQuoted: false, index: 9, comments: [] })
+	})
+
 	it(`such a comment the text closes with no delimiter, which runs to that text's end and takes every parenthesis with it`, () => {
 		expect(readAddress(`url( a /* c ) 1px`, 4)).toEqual({ isQuoted: false, index: 17, comments: [{ start: 7, end: 17, isInline: false }] })
 	})

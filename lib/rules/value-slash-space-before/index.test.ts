@@ -79,6 +79,24 @@ testRule({
 
 	reject: [
 		{
+			// See #665
+			description: `a solidus standing in the text of a block comment whose own opening solidus a backslash stands in front of, beside one of a value`,
+			code: `a { b: 1/2 red \\/*x*/ 1px; }`,
+			fixed: `a { b: 1 /2 red \\/*x*/ 1px; }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedBefore(),
+		},
+		{
+			// See #665
+			description: `the same comment written inside an address, whose closing parenthesis stands in its text`,
+			code: `a { b: 1/2 url( a\\/* ) */ ) }`,
+			fixed: `a { b: 1 /2 url( a\\/* ) */ ) }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedBefore(),
+		},
+		{
 			// See #660
 			description: `a solidus standing in the text of a block comment the tokenizer's whitespace parts from the parenthesis of an address, beside one of a value`,
 			code: `a { b: 1/2 url( a /* ) */ ) }`,

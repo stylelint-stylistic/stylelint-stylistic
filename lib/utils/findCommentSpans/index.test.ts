@@ -120,8 +120,14 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`a\\//b 1px`)).toEqual([])
 	})
 
-	it(`a slash an escape spells in front of a star`, () => {
-		expect(findCommentSpans(`a\\/*c*/ 1px`)).toEqual([])
+	// The grammar reads the escape and PostCSS's tokenizer lets none cover a solidus, so all three parsers hand back the declaration with the comment cut out of its value. See #665
+	it(`a slash an escape spells in front of a star, which the parsers read as a comment all the same`, () => {
+		expect(findCommentSpans(`a\\/*c*/ 1px`)).toEqual([{ start: 2, end: 7, isInline: false }])
+	})
+
+	it(`the same delimiter behind an even run of backslashes and behind an escape spelling the solidus, neither of which ever covered it`, () => {
+		expect(findCommentSpans(`a\\\\/*c*/ 1px`)).toEqual([{ start: 3, end: 8, isInline: false }])
+		expect(findCommentSpans(`a\\2f/*c*/ 1px`)).toEqual([{ start: 4, end: 9, isInline: false }])
 	})
 
 	it(`a double slash behind an escape of the backslash itself`, () => {
@@ -325,6 +331,15 @@ describe(`findAddressSpans`, () => {
 		expect(findAddressSpans(`url( a /* c */ )`)).toEqual([{ start: 5, end: 6 }])
 		expect(findAddressSpans(`url( /* c */ a.png )`)).toEqual([{ start: 13, end: 18 }])
 		expect(findAddressSpans(`url( /* c */ a /* d */ b )`)).toEqual([{ start: 13, end: 14 }])
+	})
+
+	// The room ends where the comment opens, as it does for a comment no backslash stands in front of. See #665
+	it(`a comment inside an address whose opening solidus a backslash stands in front of, which parts that room as any other comment does`, () => {
+		expect(findAddressSpans(`url( a\\/*c*/ )`)).toEqual([{ start: 5, end: 7 }])
+	})
+
+	it(`the same address with the parenthesis standing against it, which the parsers read whole`, () => {
+		expect(findAddressSpans(`url(a\\/*c*/ )`)).toEqual([{ start: 4, end: 11 }])
 	})
 
 	it(`the same whitespace with no comment behind it, and the same comment with no whitespace in front of it, neither of which parts anything`, () => {

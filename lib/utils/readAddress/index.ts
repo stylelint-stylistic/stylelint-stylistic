@@ -1,6 +1,7 @@
 import { OPENS_WITH_QUOTE } from "../../regexps.ts"
 import type { CommentSpan } from "../findCommentSpans/index.ts"
 import { isWhitespace } from "../isWhitespace/index.ts"
+import { readEscapedCharacter } from "../readEscapedCharacter/index.ts"
 
 /** The address a `url()`'s parentheses hold. */
 export type Address = {
@@ -38,7 +39,7 @@ export function readAddress (text: string, openIndex: number): Address {
 
 	while (index < text.length && text[index] !== `)`) {
 		if (text[index] === `\\`) {
-			index += 2
+			index = readEscapedCharacter(text, index).end
 		}
 		else if (readsComments && text[index] === `/` && text[index + 1] === `*`) {
 			let closeIndex = text.indexOf(`*/`, index + 2)

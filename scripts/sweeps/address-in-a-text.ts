@@ -49,6 +49,8 @@ const ADDRESSES: Record<string, string> = {
 	spacedQuotedThenBlockComment: ` "a" /* c */ `,
 	spacedBareParenthesis: ` a(b)c.png `,
 	spacedBareBlockComment: ` a /* c */ `,
+	spacedBareEscapedBlockComment: ` a\\/* c */ `,
+	spacedBareEscapedSlashes: ` a\\// c `,
 	spacedBareBlockCommentHoldingParenthesis: ` a /* ) */ `,
 	spacedBareBlockCommentFirst: ` /* c */ a.png `,
 	quotedThenArgument: `"a", format("woff2")`,
