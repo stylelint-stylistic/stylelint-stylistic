@@ -298,6 +298,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					complain(messages.rejectedOpeningMultiLine, openingIndex)
 				}
 
+				// A pair holding no node encloses one run of whitespace, which the parser hands back whole as `before` and never as `after`, so the closing question is the opening one, already asked: asking it again reported a half the opening fix had settled and wrote another break every run ([#329](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/329)). `splitSpaceNodesAtWords` has run, so a node here means the tokenizer's whitespace; under `never-multi-line` the closing check was dead on such a pair already, `checkAfter` being empty.
+				if (valueNode.nodes.length === 0) return
+
 				// Check closing ...
 				if (primary === `always` && !LINE_BREAK.test(checkAfter)) {
 					fix = fixWith(() => fixAfterForAlways(valueNode, getLineBreak(syntax, root, result)))
@@ -320,7 +323,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			/**
 			 * Wraps a write as a fix for `report` that adds its spans to the edit list.
 			 *
-			 * Two writes can name one span, as both halves of `always` do in an empty function; `addEdit` folds the second into the first.
+			 * Two writes can name one span, as the `never-multi-line` fixes do over the whitespace between two comments, which both walks measure; `addEdit` folds the second into the first.
 			 * @param write - The spans the write changes, and what goes in each.
 			 * @returns The fix.
 			 */

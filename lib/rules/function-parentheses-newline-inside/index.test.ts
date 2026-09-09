@@ -74,6 +74,11 @@ testRule({
 			description: `a comment behind the opening parenthesis, with the break behind the comment`,
 			code: `a { transform: translate( /*comment*/\n1,\n  1\n); }`,
 		},
+		{
+			// See #329
+			description: `a break inside a call holding nothing else, which is the whole run the parentheses enclose and answers both halves of the option`,
+			code: `a { b: f(\n); }`,
+		},
 	],
 
 	reject: [
@@ -320,6 +325,28 @@ testRule({
 			column: 10,
 			message: messages.expectedClosing,
 		},
+		{
+			// See #329
+			description: `a call holding nothing at all, whose one run is what both halves of the option are about`,
+			code: `a { b: f(); }`,
+			fixed: `a { b: f(\n); }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expectedOpening,
+		},
+		{
+			// See #329
+			description: `a space inside such a call, which the break is written in front of`,
+			code: `a { b: f( ); }`,
+			fixed: `a { b: f(\n ); }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expectedOpening,
+		},
 	],
 })
 
@@ -404,6 +431,11 @@ testRule({
 				1,1 /*comment*/
 				); }
 			`,
+		},
+		{
+			// See #329
+			description: `a break inside a call holding nothing else, the one thing that makes such a call multi-line and the run that answers both halves of the option`,
+			code: `a { b: f(\n); }`,
 		},
 	],
 
@@ -610,6 +642,17 @@ testRule({
 	],
 
 	reject: [
+		{
+			// See #329
+			description: `a break inside a call holding nothing else, the one run the parentheses enclose, which the option is asked of once`,
+			code: `a { b: f(\n); }`,
+			fixed: `a { b: f(); }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.rejectedOpeningMultiLine,
+		},
 		{
 			description: `a break behind the opening parenthesis of a multi-line call`,
 			code: `

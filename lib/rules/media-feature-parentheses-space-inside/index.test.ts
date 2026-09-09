@@ -1,8 +1,3 @@
-import stylelint from "stylelint"
-import { describe, expect, it } from "vitest"
-
-import plugins from "../../index.ts"
-
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -35,6 +30,11 @@ testRule({
 		{
 			description: `a comment standing where the value would be, the spaces still in place`,
 			code: `@media ( max-width: /*comment*/ ) {}`,
+		},
+		{
+			// See #329
+			description: `one space inside a feature holding nothing else, which is the whole run the parentheses enclose and answers for both halves of the option`,
+			code: `@media ( ) { a { b: c; } }`,
 		},
 	],
 
@@ -142,6 +142,40 @@ testRule({
 					line: 1,
 					column: 36,
 					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
+			// See #329
+			description: `a feature holding nothing at all, whose one run is what both halves of the option are about`,
+			code: `@media () { a { b: c; } }`,
+			fixed: `@media ( ) { a { b: c; } }`,
+			line: 1,
+			column: 9,
+			endLine: 1,
+			endColumn: 10,
+			message: messages.expectedOpening,
+		},
+		{
+			// See #329
+			description: `a call holding nothing at all standing as a feature's value, read the same way as the feature itself`,
+			code: `@media (min-width: calc()) { a { b: c; } }`,
+			fixed: `@media ( min-width: calc( ) ) { a { b: c; } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 25,
+					message: messages.expectedClosing,
+				},
+				{
+					line: 1,
+					column: 21,
+					message: messages.expectedOpening,
 				},
 			],
 		},
@@ -400,19 +434,4 @@ testRule({
 			message: messages.rejectedClosing,
 		},
 	],
-})
-
-// A feature holding no node is the one shape where the whitespace behind the opening parenthesis and in front of the closing one are the same empty span. No `testRule` case can stand here: the parser hands the whole run back as `before` on the next parse, so the closing half is reported again and the testing library fails a fixture whose warning survives its own fix (#329, older than this).
-//
-// The case holds the output, not the fold that writes it: both halves of `always` put the same one space at the same index, so one edit and two come to the same text, and only the contract of `applyEditsFromEnd` tells them apart.
-describe(`${ruleName} on a feature holding no node at all`, () => {
-	it(`writes both halves of always into the one span such a feature encloses`, async () => {
-		let { code } = await stylelint.lint({
-			code: `@media () { a { color: pink; } }`,
-			config: { plugins, rules: { [ruleName]: `always` } },
-			fix: true,
-		})
-
-		expect(code).toBe(`@media (  ) { a { color: pink; } }`)
-	})
 })

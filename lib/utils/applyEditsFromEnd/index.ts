@@ -24,7 +24,7 @@ export function applyEditsFromEnd (text: string, edits: Edit[]): string {
 /**
  * Adds an edit to a list, appending its text to an edit on the same span.
  *
- * In an empty function the span behind `(` is the span in front of `)`, and an `always` option writes into both, while {@link applyEditsFromEnd} takes no two edits at one index. An overlapping pair is the caller's bug.
+ * Two fixes of one rule can name one span, as the `never-multi-line` fixes of `function-parentheses-newline-inside` do over the whitespace between two comments, while {@link applyEditsFromEnd} takes no two edits at one index. An overlapping pair is the caller's bug.
  * @param edits - The list, edited in place.
  * @param edit - The edit to add, joined to one on its span.
  */

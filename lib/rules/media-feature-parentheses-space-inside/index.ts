@@ -99,7 +99,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				fix?: () => void,
 			}> = []
 
-			// Edits at positions, since the value parser prints `/*/` as `/**/`; an empty feature under `always` writes both halves at one index, which `addEdit` folds
+			// Edits at positions, since the value parser prints `/*/` as `/**/`; an unclosed feature under `always` writes both halves at one index, which `addEdit` folds
 			let edits: Edit[] = []
 
 			// Quotes in comments are masked (#508)
@@ -109,6 +109,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (node.type === `function`) {
 					let closingIndex = closingParenthesisIndex(node, params) - 1
+					// A closed pair holding no node encloses one run of what the value parser calls whitespace, every C0 control included, and it hands that run back whole as `before` and never as `after`: the closing question is the opening one, and asking it again reported a half the opening fix had settled and wrote another space every run ([#329](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/329)). An unclosed feature has no pair, and what a fix writes at the end of its params is [#575](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/575). Under `never` no guard is wanted, since an empty `after` is whitespace to nobody.
+					let enclosesOneRun = !node.unclosed && node.nodes.length === 0
 
 					if (primary === `never`) {
 						if (SPACE_OR_TAB.test(node.before)) {
@@ -139,7 +141,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 							})
 						}
 
-						if (node.after === ``) {
+						if (node.after === `` && !enclosesOneRun) {
 							problems.push({
 								message: messages.expectedClosing,
 								index: closingIndex + indexBoost,
