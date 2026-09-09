@@ -283,6 +283,22 @@ testRule({
 			column: 4,
 			message: messages.expectedAfter(),
 		},
+		{
+			description: `the same trailing space in front of a comment holding the break, which the fix trims on the node that break was carried onto`,
+			code: `a { \n/* 1 */ color: pink; }`,
+			fixed: `a { \n/* 1 */\ncolor: pink; }`,
+			line: 1,
+			column: 4,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `the same comment behind a carriage return`,
+			code: `a { \r\n/* 1 */ color: pink; }`,
+			fixed: `a { \r\n/* 1 */\r\ncolor: pink; }`,
+			line: 1,
+			column: 4,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
@@ -716,7 +732,6 @@ describe(`${ruleName} on the whitespace it carries past a comment`, () => {
 		expect(await fixQuietly(code, `always`)).toEqual({ code, warnings: 0 })
 	})
 
-	// A block holding nothing but comments reaches neither restore of the map, so the two fixtures below are the shapes of such a block where nothing is carried in the first place; one where something is carried comes back rewritten, which is #410
 	it(`carries nothing onto a comment that stands behind a bare carriage return and a form feed, which are whitespace and no break`, async () => {
 		let code = `a {\r/*c*/\f/*tail*/}`
 
@@ -725,6 +740,21 @@ describe(`${ruleName} on the whitespace it carries past a comment`, () => {
 
 	it(`carries nothing past a comment the block ends with`, async () => {
 		let code = `a {\n/* c */\n}`
+
+		expect(await fixQuietly(code, `always`)).toEqual({ code, warnings: 0 })
+	})
+
+	// See #410
+	it(`puts it back inside a block holding nothing but comments, where the check ends before there is a node to check`, async () => {
+		let code = `a {\n/*1*/ /*2*/ /*3*/}`
+
+		expect(await fixQuietly(code, `always`)).toEqual({ code, warnings: 0 })
+		expect(await fixQuietly(code, `always-multi-line`)).toEqual({ code, warnings: 0 })
+		expect(await fixQuietly(code, `never-multi-line`)).toEqual({ code, warnings: 0 })
+	})
+
+	it(`puts it back inside such a block of an at-rule`, async () => {
+		let code = `@media print {\n/*1*/ /*2*/}`
 
 		expect(await fixQuietly(code, `always`)).toEqual({ code, warnings: 0 })
 	})

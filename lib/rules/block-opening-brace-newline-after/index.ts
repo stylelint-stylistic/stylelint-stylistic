@@ -108,7 +108,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			/**
 			 * Carries the line break in front of a comment onto the node behind it.
 			 *
-			 * A comment at the head of the block may hold the break the option asks for, so its break is moved onto the next node, and the whitespace it replaces is filed in a map the fix reads back and the check restores from; a block of comments alone reaches neither restore, and the carried break stays written ([#410](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/410)). Over a run of comments the move chains.
+			 * A comment at the head of the block may hold the break the option asks for, so its break is moved onto the next node, and the whitespace it replaces is filed in a map the fix reads back and every return behind the carry restores from, the one over a block holding nothing but comments included ([#410](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/410)). Over a run of comments the move chains.
 			 * @param comment - The comment stepped over.
 			 * @param nextNode - The node behind it.
 			 */
@@ -122,10 +122,21 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				nextNode.raws.before = comment.raws.before
 			}
 
+			/** Puts back the whitespace the carry wrote over. */
+			function restoreCarriedBreaks (): void {
+				for (let [node, before] of backupCommentNextBefores.entries()) node.raws.before = before
+
+				backupCommentNextBefores.clear()
+			}
+
 			// Allow an end-of-line comment
 			let nodeToCheck = nextNonCommentNode(statement.first, carryBreakPastComment)
 
-			if (!nodeToCheck) return
+			if (!nodeToCheck) {
+				restoreCarriedBreaks()
+
+				return
+			}
 
 			let problemIndex = beforeBlockString(statement, result, { noRawBefore: true }).length + 1
 			// Taking away the break closing an inline comment would put the rest of the block inside it, so the `never-multi-line` warning stands unfixed there. The `always` options never report such a block; the short-circuit mirrors `declaration-block-semicolon-newline-after`, where it is reached and pinned
@@ -161,10 +172,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								}
 
 								if (primary === `never-multi-line`) {
-									// Restore the carried breaks
-									for (let [node, before] of backupCommentNextBefores.entries()) node.raws.before = before
-
-									backupCommentNextBefores.clear()
+									restoreCarriedBreaks()
 
 									let fixTarget = statement.first
 
@@ -188,8 +196,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				},
 			})
 
-			// Restore the carried breaks
-			for (let [node, before] of backupCommentNextBefores.entries()) node.raws.before = before
+			restoreCarriedBreaks()
 		}
 	}
 }
