@@ -346,6 +346,35 @@ testRule({
 
 	reject: [
 		{
+			// See #303 and #557
+			description: `an address whose parentheses open on a double slash, which is text of the address rather than a comment, standing beside a call the option does speak of`,
+			code: `
+				a {
+					t: f( 1px
+						) url(// c(
+						2px);
+				}
+			`,
+			fixed: `
+				a {
+					t: f(1px) url(// c(
+						2px);
+				}
+			`,
+			warnings: [
+				{
+					line: 2,
+					column: 7,
+					message: messages.rejectedOpeningMultiLine,
+				},
+				{
+					line: 3,
+					column: 2,
+					message: messages.rejectedClosingMultiLine,
+				},
+			],
+		},
+		{
 			// See #271
 			description: `a call a line below an inline comment, gathered by one the parser opened inside that comment's text: the gathering call is left alone and the one it gathered is closed up where it stands`,
 			code: `
@@ -392,25 +421,6 @@ testRule({
 				a {
 					t: foo(// c(
 						1px));
-				}
-			`,
-			line: 2,
-			column: 9,
-			message: messages.rejectedOpeningMultiLine,
-		},
-		{
-			// See #303
-			description: `an unbalanced parenthesis in the text of a comment standing inside an address, which leaves the scan reading no address there and the parser handing the whole of what follows back as one word`,
-			code: `
-				a {
-					t: url(// c(
-						2px);
-				}
-			`,
-			fixed: `
-				a {
-					t: url(// c(
-						2px);
 				}
 			`,
 			line: 2,

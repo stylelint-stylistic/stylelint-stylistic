@@ -251,29 +251,22 @@ testRule({
 			message: messages.expected(`single`),
 		},
 		{
-			description: `an address brings parentheses of its own, and the URL ends at the one that matches`,
-			code: `a { background: url(e(@x)//y.png), "z"; }`,
-			fixed: `a { background: url(e(@x)//y.png), 'z'; }`,
+			// See #557
+			description: `a parenthesis inside a bare address, which closes it and leaves the double slashes behind it opening a comment that holds the rest of the line`,
+			code: `a { background: "y", url(e(@x)//y.png), "z"; }`,
+			fixed: `a { background: 'y', url(e(@x)//y.png), "z"; }`,
 			line: 1,
-			column: 36,
+			column: 17,
 			message: messages.expected(`single`),
 		},
 		{
-			description: `a quoted address opens no comment either, and the URL still ends at its own parenthesis`,
+			// See #557
+			description: `a double slash beside a quoted address, which opens a comment holding every mark behind it`,
 			code: `a { background: url("a" //b) "z"; }`,
-			fixed: `a { background: url('a' //b) 'z'; }`,
-			warnings: [
-				{
-					line: 1,
-					column: 21,
-					message: messages.expected(`single`),
-				},
-				{
-					line: 1,
-					column: 30,
-					message: messages.expected(`single`),
-				},
-			],
+			fixed: `a { background: url('a' //b) "z"; }`,
+			line: 1,
+			column: 21,
+			message: messages.expected(`single`),
 		},
 		{
 			description: `a parenthesis inside a quoted address closes the URL no more than a bare one does`,

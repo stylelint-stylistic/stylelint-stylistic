@@ -993,14 +993,20 @@ testRule({
 			description: `an address written across a form feed, which is whitespace to the tokenizer and no line of its own, so the whole of it still comes off`,
 			code: `a { background: url(qqqqqqqqqqqq\fqqqqqqqqqqqq.png) qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq }`,
 		},
+		{
+			// See #557
+			description: `a stray parenthesis inside a bare address, which closes it, so that what stands in front of that parenthesis comes off the line`,
+			code: `a { background: url(a(b.png) qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq }\n.c { d: e) }`,
+		},
 	],
 
 	reject: [
 		{
-			description: `a stray parenthesis inside a bare address, whose parentheses close on a line below and which is therefore no address at all`,
-			code: `a { background: url(a(b.png) qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq }\n.c { d: e) }`,
+			// See #557
+			description: `a parenthesis inside a bare address the file closes on its own line, which takes off it only what stands in front of that parenthesis`,
+			code: `a { b: url(a(b)c.png) qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq }`,
 			line: 1,
-			column: 65,
+			column: 66,
 			message: messages.expected(60),
 		},
 	],

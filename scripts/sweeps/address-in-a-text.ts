@@ -32,7 +32,7 @@ const NAMES: Record<string, string> = {
 	backslashThenFormFeedInside: `u\\\frl`,
 }
 
-/** Bare, quoted, and either behind whitespace, each with characters a reader may misread. */
+/** Bare, quoted, and either behind whitespace, each with characters a reader may misread; the two spellings a quotation mark and a parenthesis behind whitespace make are the divergence [#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557) closed. */
 const ADDRESSES: Record<string, string> = {
 	bareProtocol: `http://a/b.png`,
 	bareSlashStar: `a/*b.png`,
@@ -45,6 +45,8 @@ const ADDRESSES: Record<string, string> = {
 	spacedQuotedThenSlashes: ` "a" // c `,
 	spacedQuotedThenSlashesBroken: ` "a" // c\n`,
 	quotedThenBlockComment: `"a" /* c */`,
+	spacedQuotedThenBlockComment: ` "a" /* c */ `,
+	spacedBareParenthesis: ` a(b)c.png `,
 	quotedThenArgument: `"a", format("woff2")`,
 	spacedBareProtocol: ` http://a/b.png `,
 	spacedQuotedProtocol: ` "http://a/b.png" `,
@@ -72,7 +74,7 @@ const corpus: Sweep[`corpus`] = multiply({ place: keysOf(PLACES), name: NAMES, a
 	return wrap(`${spelledName}(${address})`)
 })
 
-/** Every rule reading the inline-comment guard, and `max-line-length` at a maximum on either side of these lines' width. */
+/** Every rule reading the inline-comment guard, the four writers reading the comment spans that move over these forms, and `max-line-length` at a maximum on either side of these lines' width. */
 const configs: Sweep[`configs`] = ([
 	[`block-closing-brace-newline-before`, [`always`, `never-multi-line`]],
 	[`block-closing-brace-space-before`, [`always`, `never`]],
@@ -89,9 +91,13 @@ const configs: Sweep[`configs`] = ([
 	[`function-comma-space-before`, [`always`, `never`]],
 	[`function-parentheses-newline-inside`, [`always`, `never-multi-line`]],
 	[`function-parentheses-space-inside`, [`always`, `never`]],
+	[`function-whitespace-after`, [`always`, `never`]],
 	[`indentation`, [`tab`]],
 	[`media-feature-parentheses-space-inside`, [`always`, `never`]],
 	[`media-query-list-comma-space-before`, [`always`, `never`]],
+	[`unit-case`, [`lower`, `upper`]],
+	[`value-list-comma-newline-after`, [`always`, `never-multi-line`]],
+	[`value-list-comma-space-after`, [`always`, `never`]],
 	[`value-list-comma-space-before`, [`always`, `never`]],
 	[`max-line-length`, [20, 40]],
 ] as [string, unknown[]][]).flatMap(([rule, primaries]) => primaries.map((primary) => ({ rule, primary })))

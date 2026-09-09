@@ -2,6 +2,7 @@ import type { Node } from "postcss-value-parser"
 
 import { IDENTIFIER_CODE_POINT, LEADING_CSS_WHITESPACE, LINE_BREAK, TRAILING_CSS_WHITESPACE, TRAILING_HEX_ESCAPE, WHITESPACE_ONLY } from "../../regexps.ts"
 import { namesAnAddress } from "../namesAnAddress/index.ts"
+import { readAddress } from "../readAddress/index.ts"
 import { readIdentifierCharacter } from "../readIdentifierCharacter/index.ts"
 
 /**
@@ -59,60 +60,35 @@ function skipUrlName (text: string, openIndex: number): number {
 }
 
 /**
- * Skips a `url()` token, whose address carries `//` as ordinary characters.
+ * Skips a `url()` token, whose bare address carries `//` and `/*` as ordinary characters.
  *
- * The name must stand alone, since `image-url(` is a call. Parentheses are counted, an escaped one or one in a string not. `/*` is text inside a bare address and a comment beside a quoted one ([#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378)); the first `)` closes the token where whitespace follows the `(` ([#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557)); a quotation mark in a bare address is a character of it ([#504](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504)). `\61 \75 rl(` is a call.
+ * The name must stand alone, since `image-url(` is a call. What the parentheses hold is {@link readAddress}'s reading: a quoted address leaves the rest of them code, so the walk reads on from behind the string and finds every comment written there ([#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378), [#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557)); a bare one runs to the first `)` no escape holds, a quotation mark inside it a character of it ([#504](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504)). `\61 \75 rl(` is a call.
  * @param text - The text walked for comments and addresses.
  * @param openIndex - Where it would start.
  * @param behindIdentifier - True behind a name: a {@link IDENTIFIER_CODE_POINT} code point, a `}` or an escape.
- * @param spans - Comments beside a quoted address are added.
  * @param addresses - This one is added.
- * @returns Behind the `)`, or `openIndex`.
+ * @returns Where the walk reads on — behind the string of a quoted address, behind the `)` of a bare one — or `openIndex`.
  */
-function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, spans: CommentSpan[], addresses: AddressSpan[]): number {
+function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, addresses: AddressSpan[]): number {
 	if (behindIdentifier) return openIndex
 
 	let behindName = skipUrlName(text, openIndex)
 
 	if (behindName === openIndex) return openIndex
 
-	let opening = text.charAt(behindName)
-	let isQuoted = opening === `"` || opening === `'`
-	let isBare = !isQuoted && !WHITESPACE_ONLY.test(opening)
-	let found: CommentSpan[] = []
-	let depth = 1
-	let index = behindName
+	let address = readAddress(text, behindName)
 
-	while (index < text.length && depth > 0) {
-		let character = text.charAt(index)
+	if (address.isQuoted) {
+		let end = skipString(text, address.index)
 
-		if (character === `\\`) {
-			index += 2
-		}
-		else if (!isBare && (character === `"` || character === `'`)) {
-			index = skipString(text, index)
-		}
-		else if (isQuoted && character === `/` && text[index + 1] === `*`) {
-			let closeIndex = text.indexOf(`*/`, index + 2)
-			let end = closeIndex === -1 ? text.length : closeIndex + 2
+		pushQuotedAddress(text, address.index, end, addresses)
 
-			found.push({ start: index, end, isInline: false })
-			index = end
-		}
-		else {
-			if (character === `(`) depth += 1
-			else if (character === `)`) depth -= 1
-
-			index += 1
-		}
+		return end
 	}
 
-	if (depth > 0) return openIndex
+	pushBareAddress(text, behindName, address.index, addresses)
 
-	spans.push(...found)
-	pushAddress(text, behindName, index - 1, addresses)
-
-	return index
+	return address.index + 1
 }
 
 /**
@@ -157,31 +133,28 @@ function trailingWhitespaceLength (text: string): number {
 }
 
 /**
- * Records the address a `url()` holds: the string behind a quotation mark, else the whole text. A no-break space is part of it ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)); a run reaching past a line, whose `)` may be lines below, is none; empty parentheses hold none.
+ * Records the bare address a `url()` holds: everything its parentheses hold, whitespace off. A no-break space is part of it ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)); a run reaching past a line, whose `)` may be lines below, is none; empty parentheses hold none.
  * @param text - The text holding the `url()` token.
  * @param openIndex - Behind the `(`.
  * @param closeIndex - The `)`.
  * @param addresses - This one is added.
  */
-function pushAddress (text: string, openIndex: number, closeIndex: number, addresses: AddressSpan[]): void {
+function pushBareAddress (text: string, openIndex: number, closeIndex: number, addresses: AddressSpan[]): void {
 	let held = text.slice(openIndex, closeIndex)
 	let start = openIndex + (held.match(LEADING_CSS_WHITESPACE)?.[0].length ?? 0)
-	let opening = text.charAt(start)
-	let end = opening === `"` || opening === `'`
-		? skipString(text, start)
-		: closeIndex - trailingWhitespaceLength(held)
+	let end = closeIndex - trailingWhitespaceLength(held)
 
 	if (start < end && !LINE_BREAK.test(text.slice(start, end))) addresses.push({ start, end })
 }
 
 /**
- * Records the address of an `@import`: the string standing behind the name, its quotation marks part of the span as they are in a quoted `url()` ({@link pushAddress}). A string closed by no mark is none, and so is one holding a break the caller counts a line by, which reaches past that line.
+ * Records a quoted address, its quotation marks part of the span: the string behind an `@import`'s name, and the one a `url()`'s parentheses open on. A string closed by no mark is none, and so is one holding a break the caller counts a line by, which reaches past that line.
  * @param text - The text holding the string.
  * @param openIndex - The opening quotation mark.
  * @param end - Behind the closing one, as {@link skipString} read it.
  * @param addresses - This one is added.
  */
-function pushImportAddress (text: string, openIndex: number, end: number, addresses: AddressSpan[]): void {
+function pushQuotedAddress (text: string, openIndex: number, end: number, addresses: AddressSpan[]): void {
 	if (end <= text.length && !LINE_BREAK.test(text.slice(openIndex, end))) addresses.push({ start: openIndex, end })
 }
 
@@ -221,7 +194,7 @@ function scan (text: string, spellsInlineComments: boolean): { comments: Comment
 
 		if (character === `\\`) {
 			// A backslash makes the next character ordinary: `a\//b` opens no comment. An escape can spell a letter of `url`, so an address is looked for first.
-			let behindUrl = skipUrl(text, index, behindIdentifier, spans, addresses)
+			let behindUrl = skipUrl(text, index, behindIdentifier, addresses)
 
 			if (behindUrl === index) {
 				let escaped = readIdentifierCharacter(text, index)
@@ -239,14 +212,14 @@ function scan (text: string, spellsInlineComments: boolean): { comments: Comment
 		else if (character === `"` || character === `'`) {
 			let end = skipString(text, index)
 
-			if (awaitsImportAddress) pushImportAddress(text, index, end, addresses)
+			if (awaitsImportAddress) pushQuotedAddress(text, index, end, addresses)
 
 			index = end
 			behindIdentifier = false
 			awaitsImportAddress = false
 		}
 		else if (character === `u` || character === `U`) {
-			let behindUrl = skipUrl(text, index, behindIdentifier, spans, addresses)
+			let behindUrl = skipUrl(text, index, behindIdentifier, addresses)
 
 			if (behindUrl === index) {
 				index += 1
@@ -305,7 +278,7 @@ export function findCommentSpans (text: string, spellsInlineComments: boolean = 
 }
 
 /**
- * Finds the spans of a text's addresses — a `url()`'s as {@link pushAddress} measures it, an `@import`'s as {@link pushImportAddress} does. The comment walk finds them, since one inside a comment is no address and each letter of a name may be an escape ([#344](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/344), [#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427), [#552](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/552)).
+ * Finds the spans of a text's addresses — a `url()`'s as {@link pushBareAddress} and {@link pushQuotedAddress} measure it, an `@import`'s as {@link pushQuotedAddress} does. The comment walk finds them, since one inside a comment is no address and each letter of a name may be an escape ([#344](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/344), [#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427), [#552](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/552)).
  * @param text - The raw walked for addresses.
  * @param spellsInlineComments - False where the syntax spells none ({@link readsInlineComments}).
  * @returns The spans, in source order.

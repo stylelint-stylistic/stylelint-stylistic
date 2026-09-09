@@ -71,13 +71,31 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`url("a" /* c */ x) /* d */`)).toEqual([{ start: 8, end: 15, isInline: false }, { start: 19, end: 26, isInline: false }])
 	})
 
-	it(`a double slash beside a quoted address, which is code to PostCSS and to postcss-less, and a file Less refuses`, () => {
-		expect(findCommentSpans(`url("a" // c)`)).toEqual([])
+	// The walk read those slashes as code and the guard over a fix as a comment, which is what Sass reads there. See #557
+	it(`a double slash beside a quoted address, which opens a comment wherever the quotation mark stands`, () => {
+		expect(findCommentSpans(`url("a" // c)`)).toEqual([{ start: 8, end: 13, isInline: true }])
 		expect(findCommentSpans(`url("a" // c)`, false)).toEqual([])
+		expect(findCommentSpans(`url( "a" // c\n) 1px`)).toEqual([{ start: 9, end: 13, isInline: true }])
 	})
 
-	it(`a comment beside a quoted address the token never closes, which is no token and whose comment the scan reads again on its own`, () => {
+	// See #557
+	it(`a block comment beside a quoted address whitespace parts from its parenthesis, which PostCSS reads as a comment and postcss-scss as one bracket token`, () => {
+		expect(findCommentSpans(`url( "a" /* c */ )`)).toEqual([{ start: 9, end: 16, isInline: false }])
+	})
+
+	it(`a comment beside a quoted address whose parentheses the text closes with none, which the walk reads to the end of the string and on in code`, () => {
 		expect(findCommentSpans(`url("a" /* c */ x`)).toEqual([{ start: 8, end: 15, isInline: false }])
+	})
+
+	// The walk read the whole of an unclosed `url(` over again as code and found a comment inside it, where the guard over a fix read the address to the end of the text. See #557
+	it(`a bare address whose parentheses the text closes with none, which runs to that text's end`, () => {
+		expect(findCommentSpans(`url(a//b`)).toEqual([])
+		expect(findCommentSpans(`url(a/*b`)).toEqual([])
+	})
+
+	// Sass compiles the declaration to the address and the comment, where the tokenizers read the no-break space as the first character of a bare address. See #557
+	it(`a comment beside a quoted address a no-break space parts from the parenthesis, which is whitespace to no tokenizer`, () => {
+		expect(findCommentSpans(`url(\u00A0"a" /* c */)`)).toEqual([{ start: 9, end: 16, isInline: false }])
 	})
 
 	it(`a comment inside an address whitespace parts from its parenthesis, which the tokenizers read three ways and none of them hands the scan a span for`, () => {
@@ -280,13 +298,25 @@ describe(`findAddressSpans`, () => {
 	})
 
 	it(`a run reaching past the end of a line, which no address is`, () => {
-		expect(findAddressSpans(`url(a(b.png) c d)`)).toEqual([{ start: 4, end: 16 }])
-		expect(findAddressSpans(`url(a(b.png) c\nd)`)).toEqual([])
+		expect(findAddressSpans(`url(a b.png c\nd)`)).toEqual([])
 		expect(findAddressSpans(`url(a\fb)`)).toEqual([{ start: 4, end: 7 }])
+	})
+
+	// The walk counted parentheses and read the whole of `url(a(b)c)` as one address, where the guard over a fix closed it on the first. See #557
+	it(`a parenthesis inside a bare address, which closes it as the first parenthesis behind the address does`, () => {
+		expect(findAddressSpans(`url(a(b.png) c d)`)).toEqual([{ start: 4, end: 11 }])
+		expect(findAddressSpans(`url(a(b.png) c\nd)`)).toEqual([{ start: 4, end: 11 }])
 	})
 
 	it(`a quotation mark inside a bare address, which opens no argument of anything`, () => {
 		expect(findAddressSpans(`url(a"b c)`)).toEqual([{ start: 4, end: 9 }])
+	})
+
+	// See #557
+	it(`an address whose parentheses the text closes with none, which runs to that text's end`, () => {
+		expect(findAddressSpans(`url(a.png`)).toEqual([{ start: 4, end: 9 }])
+		expect(findAddressSpans(`url("a" /* c */`)).toEqual([{ start: 4, end: 7 }])
+		expect(findAddressSpans(`url("a`)).toEqual([])
 	})
 
 	// See #552

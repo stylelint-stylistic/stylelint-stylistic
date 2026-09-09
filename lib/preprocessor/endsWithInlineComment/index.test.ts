@@ -118,12 +118,12 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`b: \\75 url(http://a/b.png) 1px; `, LESS)).toBe(true)
 	})
 
-	// The address closes on the first parenthesis behind it, where the comment scan counts parentheses and reads the whole of `url(a(b)c//d)` as one address. Neither reading has a compiler behind it (Less and Sass both refuse the text), and this one is the safe half: a fix held back where the other would write.
+	// The address closes on the first parenthesis behind it, which is the reading the comment walk was brought onto: neither reading has a compiler behind it, since Less and Sass both refuse the text, and this one is the safe half, a fix held back where the other would write. See #557
 	it(`a parenthesis inside a bare address, which closes the address for this reading`, () => {
 		expect(endsWithInlineComment(`b: url(a(b)c//d) 1px; `, LESS)).toBe(true)
 	})
 
-	// A quoted argument of `url` leaves a double slash behind it opening the comment Sass reads there: the first of these compiles to `a { b: url("a") 1px; }`. The comment scan reads those slashes as code, the tokenizers' reading and the other half of the same divergence.
+	// A quoted argument of `url` leaves a double slash behind it opening the comment Sass reads there: the first of these compiles to `a { b: url("a") 1px; }`. The comment walk read those slashes as code until the two readings were made one. See #557
 	it(`a double slash beside a quoted address, which opens the comment Sass reads there`, () => {
 		expect(endsWithInlineComment(`b: url("a" // c\n) 1px; `, LESS)).toBe(false)
 		expect(endsWithInlineComment(`b: url("a" // c`, LESS)).toBe(true)

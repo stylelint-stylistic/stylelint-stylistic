@@ -1,11 +1,12 @@
-import { IDENTIFIER_CODE_POINT, LINE_BREAK, OPENS_WITH_QUOTE } from "../../regexps.ts"
+import { IDENTIFIER_CODE_POINT, LINE_BREAK } from "../../regexps.ts"
 import { namesAnAddress } from "../../utils/namesAnAddress/index.ts"
+import { readAddress } from "../../utils/readAddress/index.ts"
 import { readIdentifierCharacter } from "../../utils/readIdentifierCharacter/index.ts"
 import type { InlineCommentReading } from "../readsInlineComments/index.ts"
 
 /** Where a scan stands; every state returning to code resets `wordStart`. */
 export type Scan = {
-	state: `blockComment` | `code` | `inlineComment` | `string` | `url`,
+	state: `blockComment` | `code` | `inlineComment` | `string`,
 	index: number,
 	openingQuote: string,
 	wordStart: number,
@@ -55,21 +56,6 @@ function readInsideString (text: string, scan: Scan): void {
 }
 
 /**
- * Reads one character of an unquoted `url()`.
- * @param text - The raw scanned, standing inside a bare address.
- * @param scan - The scan, moved on.
- */
-function readInsideUrl (text: string, scan: Scan): void {
-	let char = text[scan.index]
-
-	if (char === `\\`) scan.index += 1
-	else if (char === `)`) {
-		scan.state = `code`
-		scan.wordStart = scan.index + 1
-	}
-}
-
-/**
  * Reads one character of the code, where every other state opens.
  *
  * A `(` opens an address where {@link namesAnAddress} says so of the name just read: {@link IDENTIFIER_CODE_POINT} code points, an interpolation's closing brace and escapes, since an ASCII pattern took `éurl(` for `url(` ([#398](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/398)). Read forward, since an escape spells one character with several.
@@ -98,9 +84,13 @@ function readInsideCode (text: string, scan: Scan): void {
 		scan.state = `inlineComment`
 		scan.index += 1
 	}
-	// An unquoted address carries a protocol's `//`; a quoted one is the string state's
-	else if (char === `(` && namesAnAddress(text.slice(scan.wordStart, scan.index)) && !OPENS_WITH_QUOTE.test(text.slice(scan.index + 1))) {
-		scan.state = `url`
+	// A bare address carries a protocol's `//` and is stepped over whole; a quoted one leaves its marks to the string state and what stands behind it to this one
+	else if (char === `(` && namesAnAddress(text.slice(scan.wordStart, scan.index))) {
+		let address = readAddress(text, scan.index + 1)
+
+		if (!address.isQuoted) scan.index = address.index
+
+		scan.wordStart = scan.index + 1
 	}
 	else if (!(char === `}` || IDENTIFIER_CODE_POINT.test(char))) {
 		scan.wordStart = scan.index + 1
@@ -113,7 +103,6 @@ const READ_INSIDE = {
 	code: readInsideCode,
 	inlineComment: readInsideInlineComment,
 	string: readInsideString,
-	url: readInsideUrl,
 }
 
 /** The default reading: a syntax that spells such a comment. */
