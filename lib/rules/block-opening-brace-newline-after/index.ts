@@ -108,7 +108,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			/**
 			 * Carries the line break in front of a comment onto the node behind it.
 			 *
-			 * A comment at the head of the block may hold the break the option asks for, so its break is moved onto the next node, and the whitespace it replaces is filed in a map the fix reads back and every return behind the carry restores from, the one over a block holding nothing but comments included ([#410](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/410)). Over a run of comments the move chains.
+			 * A comment at the head of the block may hold the break the option asks for, so its break is moved onto the next node, and the whitespace it replaces is filed in a map the fix reads back and the check restores from before it returns ([#410](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/410)). Over a run of comments the move chains.
 			 * @param comment - The comment stepped over.
 			 * @param nextNode - The node behind it.
 			 */
@@ -129,21 +129,31 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				backupCommentNextBefores.clear()
 			}
 
-			// Allow an end-of-line comment
-			let nodeToCheck = nextNonCommentNode(statement.first, carryBreakPastComment)
+			/**
+			 * The run the closing brace of a block holding nothing but comments stands behind.
+			 *
+			 * Such a block has that brace where the checked node would stand, so the carry chains onto it: the block's own trailing raw takes the break in front of it exactly as a node's `raws.before` would ([#672](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/672)).
+			 * @returns The trailing raw, or the run carried past the last comment.
+			 */
+			function runInFrontOfTheClosingBrace (): string {
+				let after = statement.raws.after ?? ``
+				let lastBefore = statement.last?.raws.before ?? ``
 
-			if (!nodeToCheck) {
-				restoreCarriedBreaks()
-
-				return
+				return (!LINE_BREAK.test(after) && LINE_BREAK.test(lastBefore)) ? lastBefore : after
 			}
 
+			// Allow an end-of-line comment
+			let nodeToCheck = nextNonCommentNode(statement.first, carryBreakPastComment)
 			let problemIndex = beforeBlockString(statement, result, { noRawBefore: true }).length + 1
 			// Taking away the break closing an inline comment would put the rest of the block inside it, so the `never-multi-line` warning stands unfixed there. The `always` options never report such a block; the short-circuit mirrors `declaration-block-semicolon-newline-after`, where it is reached and pinned
-			let isFixable = primary.startsWith(`always`) || !fixWouldCommentOutTheBlock(syntax, statement, nodeToCheck, result)
+			// Over a block holding nothing but comments the run the check reads is the block's trailing raw, and the three `block-closing-brace-*-before` rules write that one, so nothing is written there and the warning stands (#672); making this rule a reader of that run is #676
+			let fix = nodeToCheck !== null && (primary.startsWith(`always`) || !fixWouldCommentOutTheBlock(syntax, statement, nodeToCheck, result))
+				? fixTheCheckedRun(nodeToCheck)
+				: undefined
 
 			checker.afterOneOnly({
-				source: rawNodeString(nodeToCheck, result),
+				// A block closes on `}` in every syntax the plugin reads, and all the check asks of that character is that it is not whitespace
+				source: nodeToCheck ? rawNodeString(nodeToCheck, result) : `${runInFrontOfTheClosingBrace()}}`,
 				index: -1,
 				lineCheckStr: blockString(statement, result),
 				err: (m) => {
@@ -154,49 +164,56 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						endIndex: problemIndex,
 						result,
 						ruleName,
-						...(isFixable && {
-							fix: (): void => {
-								let nodeToCheckRaws = nodeToCheck.raws
-
-								if (typeof nodeToCheckRaws.before !== `string`) return
-
-								if (primary.startsWith(`always`)) {
-									// Trim to the break already there, or add one
-									let index = nodeToCheckRaws.before.search(LINE_BREAK)
-
-									nodeToCheckRaws.before = index >= 0 ? nodeToCheckRaws.before.slice(index) : getLineBreak(syntax, root, result) + nodeToCheckRaws.before
-
-									backupCommentNextBefores.delete(nodeToCheck)
-
-									return
-								}
-
-								if (primary === `never-multi-line`) {
-									restoreCarriedBreaks()
-
-									let fixTarget = statement.first
-
-									while (fixTarget) {
-										let fixTargetRaws = fixTarget.raws
-
-										if (typeof fixTargetRaws.before !== `string`) continue
-
-										if (LINE_BREAK.test(fixTargetRaws.before || ``)) fixTargetRaws.before = fixTargetRaws.before.replaceAll(EVERY_LINE_BREAK, ``)
-
-										if (fixTarget.type !== `comment`) break
-
-										fixTarget = fixTarget.next()
-									}
-
-									nodeToCheckRaws.before = ``
-								}
-							},
-						}),
+						...(fix && { fix }),
 					})
 				},
 			})
 
 			restoreCarriedBreaks()
+
+			/**
+			 * Builds the fix that spells the run in front of the checked node.
+			 * @param nodeToFix - The first non-comment node of the block.
+			 * @returns The fix.
+			 */
+			function fixTheCheckedRun (nodeToFix: Node): () => void {
+				return (): void => {
+					let nodeToFixRaws = nodeToFix.raws
+
+					if (typeof nodeToFixRaws.before !== `string`) return
+
+					if (primary.startsWith(`always`)) {
+						// Trim to the break already there, or add one
+						let index = nodeToFixRaws.before.search(LINE_BREAK)
+
+						nodeToFixRaws.before = index >= 0 ? nodeToFixRaws.before.slice(index) : getLineBreak(syntax, root, result) + nodeToFixRaws.before
+
+						backupCommentNextBefores.delete(nodeToFix)
+
+						return
+					}
+
+					if (primary === `never-multi-line`) {
+						restoreCarriedBreaks()
+
+						let fixTarget = statement.first
+
+						while (fixTarget) {
+							let fixTargetRaws = fixTarget.raws
+
+							if (typeof fixTargetRaws.before !== `string`) continue
+
+							if (LINE_BREAK.test(fixTargetRaws.before || ``)) fixTargetRaws.before = fixTargetRaws.before.replaceAll(EVERY_LINE_BREAK, ``)
+
+							if (fixTarget.type !== `comment`) break
+
+							fixTarget = fixTarget.next()
+						}
+
+						nodeToFixRaws.before = ``
+					}
+				}
+			}
 		}
 	}
 }

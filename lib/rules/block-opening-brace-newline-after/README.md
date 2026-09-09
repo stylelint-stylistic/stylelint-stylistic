@@ -17,7 +17,7 @@ a { /* end-of-line comment */
 }
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule. It does not fix a block holding nothing but comments: the run the rule reads there is the whitespace in front of the closing brace, which the `block-closing-brace-*-before` rules write.
 
 ## Options
 

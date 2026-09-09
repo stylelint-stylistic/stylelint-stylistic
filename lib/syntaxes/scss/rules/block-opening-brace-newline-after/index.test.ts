@@ -84,6 +84,17 @@ testRule({
 			column: 4,
 			message: messages.rejectedAfterMultiLine(),
 		},
+		{
+			// See #672
+			description: `an inline comment alone in a block, which the fix would have to reach inside to spell the head as the option asks`,
+			code: `a {// c
+			}`,
+			fixed: `a {// c
+			}`,
+			line: 1,
+			column: 4,
+			message: messages.rejectedAfterMultiLine(),
+		},
 	],
 })
 testRule({

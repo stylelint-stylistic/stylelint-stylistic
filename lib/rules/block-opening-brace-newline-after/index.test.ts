@@ -9,6 +9,9 @@ import { messages, ruleName } from "./index.ts"
 /** The length of a run of comments the walk of this rule used to overflow the stack on: the threshold sits around eight thousand on Node 26, and this many throws every time. */
 const COMMENT_RUN_LENGTH = 20_000
 
+/** A space no editor leaves at the end of a line. */
+const S = ` `
+
 let testRule = createTestRule({ ruleName })
 
 testRule({
@@ -167,6 +170,35 @@ testRule({
 			description: `the same comment behind more indentation`,
 			code: `@media print {\r\n      /*.test2*/\r\n .a {\r\n color: pink;\r\n }\r\n }`,
 		},
+		{
+			// See #672
+			description: `a block holding nothing but a comment, broken behind the brace`,
+			code: `
+				a {
+				/*c*/}
+			`,
+		},
+		{
+			description: `the same block with the break behind the comment, which the block's own trailing raw holds`,
+			code: `
+				a {/*c*/
+				}
+			`,
+		},
+		{
+			description: `the same block with a space in front of that comment`,
+			code: `
+				a { /*c*/
+				}
+			`,
+		},
+		{
+			description: `a run of comments alone in a block, broken between them`,
+			code: `
+				a {/*1*/
+				/*2*/}
+			`,
+		},
 	],
 
 	reject: [
@@ -299,6 +331,61 @@ testRule({
 			column: 4,
 			message: messages.expectedAfter(),
 		},
+		{
+			// See #672
+			description: `a block holding nothing but a comment, with no break anywhere in its head`,
+			code: `a {/*c*/}`,
+			fixed: `a {/*c*/}`,
+			line: 1,
+			column: 4,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a run of comments alone in a block, with no break anywhere in its head`,
+			code: `a {/*1*/ /*2*/}`,
+			fixed: `a {/*1*/ /*2*/}`,
+			line: 1,
+			column: 4,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a space in front of the break of such a block, which is the character the check reads`,
+			code: `
+				a {${S}
+				/*c*/}
+			`,
+			fixed: `
+				a {${S}
+				/*c*/}
+			`,
+			line: 1,
+			column: 4,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `an at-rule whose block holds nothing but a comment`,
+			code: `@media print {/*c*/}`,
+			fixed: `@media print {/*c*/}`,
+			line: 1,
+			column: 15,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a break in front of the last comment of such a block, which the trailing run behind it does not carry`,
+			code: `
+				a {/*1*/
+				/*2*/${S}
+				}
+			`,
+			fixed: `
+				a {/*1*/
+				/*2*/${S}
+				}
+			`,
+			line: 1,
+			column: 4,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
@@ -392,6 +479,15 @@ testRule({
 			description: `a comment abutting the selector of a single-line nested block`,
 			code: `.a {/*.b*/.c { color: pink; } }`,
 		},
+		{
+			// See #672
+			description: `a block holding nothing but a comment, on one line, which the option passes over`,
+			code: `a {/*c*/}`,
+		},
+		{
+			description: `a run of comments alone on the one line of a block`,
+			code: `a {/*1*/ /*2*/}`,
+		},
 	],
 
 	reject: [
@@ -477,6 +573,35 @@ testRule({
 			column: 4,
 			message: messages.expectedAfterMultiLine(),
 		},
+		{
+			// See #672
+			description: `a space in front of the break of a block holding nothing but a comment`,
+			code: `
+				a {${S}
+				/*c*/}
+			`,
+			fixed: `
+				a {${S}
+				/*c*/}
+			`,
+			line: 1,
+			column: 4,
+			message: messages.expectedAfterMultiLine(),
+		},
+		{
+			description: `the same block with that space in front of the closing brace instead`,
+			code: `
+				a {/*c*/${S}
+				}
+			`,
+			fixed: `
+				a {/*c*/${S}
+				}
+			`,
+			line: 1,
+			column: 4,
+			message: messages.expectedAfterMultiLine(),
+		},
 	],
 })
 
@@ -524,6 +649,22 @@ testRule({
 		{
 			description: `nested single-line blocks with tabs behind their braces`,
 			code: `@media print {\ta {\tcolor: pink; } }`,
+		},
+		{
+			// See #672
+			description: `a block holding nothing but a comment, on one line, which the option passes over`,
+			code: `a {/*c*/}`,
+		},
+		{
+			description: `a run of comments alone on the one line of a block`,
+			code: `a {/*1*/ /*2*/}`,
+		},
+		{
+			description: `a block whose one comment is multi-line itself, with no whitespace anywhere in the block around it`,
+			code: `
+				a {/*a
+				b*/}
+			`,
 		},
 	],
 
@@ -628,6 +769,65 @@ testRule({
 			column: 4,
 			message: messages.rejectedAfterMultiLine(),
 		},
+		{
+			// See #672
+			description: `a block holding nothing but a comment, broken behind the brace`,
+			code: `
+				a {
+				/*c*/}
+			`,
+			fixed: `
+				a {
+				/*c*/}
+			`,
+			line: 1,
+			column: 4,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		{
+			description: `the same block broken in front of the closing brace instead`,
+			code: `
+				a {/*c*/
+				}
+			`,
+			fixed: `
+				a {/*c*/
+				}
+			`,
+			line: 1,
+			column: 4,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		{
+			description: `the same block broken on both sides of its comment`,
+			code: `
+				a {
+				/*c*/
+				}
+			`,
+			fixed: `
+				a {
+				/*c*/
+				}
+			`,
+			line: 1,
+			column: 4,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		{
+			description: `a space in front of the closing brace of a block whose one comment is multi-line itself`,
+			code: `
+				a {/*a
+				b*/ }
+			`,
+			fixed: `
+				a {/*a
+				b*/ }
+			`,
+			line: 1,
+			column: 4,
+			message: messages.rejectedAfterMultiLine(),
+		},
 	],
 })
 
@@ -703,7 +903,7 @@ describe(`${ruleName} on a run of comments longer than the stack is deep`, () =>
 })
 
 /**
- * Runs the fix over a stylesheet the rule reports nothing about.
+ * Runs the fix over a stylesheet, and counts what a run without it reports.
  * @param code - The stylesheet.
  * @param option - The primary option to run under.
  * @returns What the fix wrote and how many warnings a run without it raised.
@@ -735,7 +935,7 @@ describe(`${ruleName} on the whitespace it carries past a comment`, () => {
 	it(`carries nothing onto a comment that stands behind a bare carriage return and a form feed, which are whitespace and no break`, async () => {
 		let code = `a {\r/*c*/\f/*tail*/}`
 
-		expect(await fixQuietly(code, `always`)).toEqual({ code, warnings: 0 })
+		expect(await fixQuietly(code, `always`)).toEqual({ code, warnings: 1 })
 	})
 
 	it(`carries nothing past a comment the block ends with`, async () => {
@@ -745,12 +945,12 @@ describe(`${ruleName} on the whitespace it carries past a comment`, () => {
 	})
 
 	// See #410
-	it(`puts it back inside a block holding nothing but comments, where the check ends before there is a node to check`, async () => {
+	it(`puts it back inside a block holding nothing but comments, which the carry runs through and out onto the closing brace`, async () => {
 		let code = `a {\n/*1*/ /*2*/ /*3*/}`
 
 		expect(await fixQuietly(code, `always`)).toEqual({ code, warnings: 0 })
 		expect(await fixQuietly(code, `always-multi-line`)).toEqual({ code, warnings: 0 })
-		expect(await fixQuietly(code, `never-multi-line`)).toEqual({ code, warnings: 0 })
+		expect(await fixQuietly(code, `never-multi-line`)).toEqual({ code, warnings: 1 })
 	})
 
 	it(`puts it back inside such a block of an at-rule`, async () => {
