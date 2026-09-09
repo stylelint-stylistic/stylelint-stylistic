@@ -8,6 +8,11 @@ testRule({
 
 	accept: [
 		{
+			// See #533
+			description: `a bare address, whose parentheses are the address's and no call's`,
+			code: `a { b: url(a); }`,
+		},
+		{
 			// See #378
 			description: `a call the value parser closed on a parenthesis standing inside a comment opening with a solidus, a star and a solidus, which is no parenthesis the file writes, so the call is left alone as one closed inside an end-of-line comment is`,
 			code: `a { b: f(1 /*/ ) */\n); }`,
@@ -17,7 +22,7 @@ testRule({
 			code: `a::before { content: "(a) ( a)"; }`,
 		},
 		{
-			description: `the same parentheses spelled inside a url()`,
+			description: `the same parentheses spelled inside a url(), whose parentheses are the address's and no call's`,
 			code: `
 				a::before { background: url(
 				'asdf( Vcxvsd)ASD'
@@ -82,6 +87,24 @@ testRule({
 	],
 
 	reject: [
+		{
+			// See #533
+			description: `a call standing beside a bare address, which gets the breaks while the address is left as the file spells it`,
+			code: `a { b: url(a) f(1); }`,
+			fixed: `a { b: url(a) f(\n1\n); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 17,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 17,
+					message: messages.expectedClosing,
+				},
+			],
+		},
 		{
 			description: `a first argument abutting the opening parenthesis`,
 			code: `a { transform: translate(1, 1\n); }`,
@@ -356,11 +379,16 @@ testRule({
 
 	accept: [
 		{
+			// See #533
+			description: `a bare address broken across lines, whose parentheses are the address's and no call's`,
+			code: `a { b: url(a\nb); }`,
+		},
+		{
 			description: `parentheses spelled inside a string, which open no call`,
 			code: `a::before { content: "(a) ( a)"; }`,
 		},
 		{
-			description: `the same parentheses spelled inside a url()`,
+			description: `the same parentheses spelled inside a url(), whose parentheses are the address's and no call's`,
 			code: `
 				a::before { background: url(
 				'asdf( Vcxvsd)ASD'
@@ -599,7 +627,7 @@ testRule({
 			code: `a::before { content: "(a) ( a)"; }`,
 		},
 		{
-			description: `the same parentheses spelled inside a url(), broken across lines`,
+			description: `the same parentheses spelled inside a url() broken across lines, whose parentheses are the address's and no call's`,
 			code: `a::before { background: url('asdf(Vcxv\nsd\n)ASD'); }`,
 		},
 		{
@@ -642,6 +670,24 @@ testRule({
 	],
 
 	reject: [
+		{
+			// See #533
+			description: `a call standing beside a bare address, whose breaks are closed up while the address is left as the file spells it`,
+			code: `a { b: url(\na\n) f(\n1\n); }`,
+			fixed: `a { b: url(\na\n) f(1); }`,
+			warnings: [
+				{
+					line: 3,
+					column: 5,
+					message: messages.rejectedOpeningMultiLine,
+				},
+				{
+					line: 4,
+					column: 2,
+					message: messages.rejectedClosingMultiLine,
+				},
+			],
+		},
 		{
 			// See #329
 			description: `a break inside a call holding nothing else, the one run the parentheses enclose, which the option is asked of once`,

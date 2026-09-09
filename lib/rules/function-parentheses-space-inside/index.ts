@@ -10,6 +10,7 @@ import { type CommentSpan, findCommentSpanAt, findCommentSpanHolding } from "../
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
+import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -157,8 +158,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Masks quotation marks a comment leaves open, so the parser pairs them right (#508)
 			let parsedValue = valueParser(hideQuotesInComments(declValue, comments))
 
-			parsedValue.walk((valueNode) => {
+			parsedValue.walk((valueNode, at, siblings) => {
 				if (valueNode.type !== `function`) return
+
+				// A call opening an address holds no arguments of the value: what stands inside is the address, and a space or a break written behind the `(` parts it from the parenthesis, which is what a tokenizer reads one token by ([#533](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/533)). Passed over whole, and the walk goes no further in, as it does in the four rules that ask this question of a node they would otherwise read inside; the two utilities asking it walk on, having nothing to say about what an address holds. The name is the file's spelling rather than the parser's, which is wider than what a parser takes a url token by ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)).
+				if (opensAnAddress(valueNode, at, siblings)) return false
 
 				// A narrowing here is not carried into a nested function
 				let functionNode = valueNode

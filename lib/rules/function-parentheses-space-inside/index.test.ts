@@ -8,6 +8,11 @@ testRule({
 
 	accept: [
 		{
+			// See #533
+			description: `a bare address holding a quotation mark, which a space behind the parenthesis would part from it and leave a file the parser refuses`,
+			code: `a { b: url(a"b); }`,
+		},
+		{
 			description: `ignore function without parameters`,
 			code: `a { filter: grayscale(); }`,
 		},
@@ -20,7 +25,7 @@ testRule({
 			code: `a::before { content: "(a) ( a )"; }`,
 		},
 		{
-			description: `the same parentheses spelled inside a url()`,
+			description: `the same parentheses spelled inside a url(), whose parentheses are the address's and no call's`,
 			code: `a::before { background: url( 'asdf(Vcxvsd)ASD' ); }`,
 		},
 		{
@@ -42,6 +47,42 @@ testRule({
 	],
 
 	reject: [
+		{
+			// See #533
+			description: `a call standing beside an address written in capitals, whose parentheses are spaced out while the address is left as the file spells it`,
+			code: `a { b: URL(a) f(1); }`,
+			fixed: `a { b: URL(a) f( 1 ); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 17,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 17,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
+			// See #344, #533 and #669
+			description: `a call whose name a hexadecimal escape welds to the word in front of it, which names no address and is spaced out like any other call, though the parser this plugin runs on reads the parentheses as an address's`,
+			code: `a { b: \\61 url(1px); }`,
+			fixed: `a { b: \\61 url( 1px ); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 16,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 18,
+					message: messages.expectedClosing,
+				},
+			],
+		},
 		{
 			description: `a first argument abutting the opening parenthesis`,
 			code: `a { transform: translate(1, 1 ); }`,
@@ -239,6 +280,11 @@ testRule({
 
 	accept: [
 		{
+			// See #533
+			description: `a bare address, whose parentheses are the address's and no call's`,
+			code: `a { b: url(a); }`,
+		},
+		{
 			description: `ignore function without parameters`,
 			code: `a { filter: grayscale(); }`,
 		},
@@ -251,7 +297,7 @@ testRule({
 			code: `a::before { content: "(a) ( a )"; }`,
 		},
 		{
-			description: `the same parentheses spelled inside a url()`,
+			description: `the same parentheses spelled inside a url(), whose parentheses are the address's and no call's`,
 			code: `a::before { background: url( 'asdf(Vcxvsd)ASD' ); }`,
 		},
 		{
@@ -433,6 +479,11 @@ testRule({
 
 	accept: [
 		{
+			// See #533
+			description: `a call nested inside a quoted address's parentheses, which the walk does not reach`,
+			code: `a { b: url( "a", format( "woff2" ) ); }`,
+		},
+		{
 			// See #378
 			description: `a call the value parser closed on a parenthesis standing inside a comment opening with a solidus, a star and a solidus, which is no parenthesis the file writes, so the call is left alone as one closed inside an end-of-line comment is`,
 			code: `a { b: f(1 /*/ ) */ ); }`,
@@ -450,7 +501,7 @@ testRule({
 			code: `a::before { content: "(a) ( a )"; }`,
 		},
 		{
-			description: `the same parentheses spelled inside a url()`,
+			description: `the same parentheses spelled inside a url(), whose parentheses are the address's and no call's`,
 			code: `a::before { background: url('asdf( Vcxvsd )ASD'); }`,
 		},
 		{
@@ -468,6 +519,42 @@ testRule({
 	],
 
 	reject: [
+		{
+			// See #533
+			description: `an address standing beside the call that names its format, which is spaced out while the address is left as the file spells it`,
+			code: `@font-face { src: url( "a.woff2" ) format( "woff2" ); }`,
+			fixed: `@font-face { src: url( "a.woff2" ) format("woff2"); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 43,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 51,
+					message: messages.rejectedClosing,
+				},
+			],
+		},
+		{
+			// See #533
+			description: `a call standing beside a bare address, whose parentheses are closed up while the address is left as the file spells it`,
+			code: `a { b: url( a ) f( 1 ); }`,
+			fixed: `a { b: url( a ) f(1); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 19,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 21,
+					message: messages.rejectedClosing,
+				},
+			],
+		},
 		{
 			description: `a space behind the opening parenthesis`,
 			code: `a { transform: translate( 1, 1); }`,
@@ -721,6 +808,11 @@ testRule({
 
 	accept: [
 		{
+			// See #533
+			description: `a bare address, whose parentheses are the address's and no call's`,
+			code: `a { b: url( a ); }`,
+		},
+		{
 			description: `ignore function without parameters`,
 			code: `a { filter: grayscale(); }`,
 		},
@@ -733,7 +825,7 @@ testRule({
 			code: `a::before { content: "(a) ( a )"; }`,
 		},
 		{
-			description: `the same parentheses spelled inside a url()`,
+			description: `the same parentheses spelled inside a url(), whose parentheses are the address's and no call's`,
 			code: `a::before { background: url('asdf( Vcxvsd )ASD'); }`,
 		},
 		{

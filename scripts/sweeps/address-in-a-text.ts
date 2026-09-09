@@ -32,13 +32,15 @@ const NAMES: Record<string, string> = {
 	backslashThenFormFeedInside: `u\\\frl`,
 }
 
-/** Bare, quoted, and either behind whitespace, each with characters a reader may misread; the two spellings a quotation mark and a parenthesis behind whitespace make are the divergence [#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557) closed, and the three block comments behind whitespace the one [#660](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/660) closed; `bareSlashStar` and `bareBlockComment` are their control, the same delimiters with no whitespace in front of them. */
+/** Bare, quoted, and either behind whitespace, each with characters a reader may misread; the two spellings a quotation mark and a parenthesis behind whitespace make are the divergence [#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557) closed, and the three block comments behind whitespace the one [#660](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/660) closed; a parenthesis nothing closes, bare and inside a string, is what parts the writes [#533](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/533) refused from the writes it kept; `bareSlashStar` and `bareBlockComment` are their control, the same delimiters with no whitespace in front of them. */
 const ADDRESSES: Record<string, string> = {
 	bareProtocol: `http://a/b.png`,
 	bareSlashStar: `a/*b.png`,
 	bareBlockComment: `a /* c */ `,
 	bareParenthesis: `a(b)c.png`,
 	bareQuote: `a"b.png`,
+	bareOpenParenthesis: `a(b.png`,
+	quotedOpenParenthesis: `"a(b.png"`,
 	bareOneCharacter: `a`,
 	quotedProtocol: `"http://a/b.png"`,
 	quotedThenSlashes: `"a" // c`,

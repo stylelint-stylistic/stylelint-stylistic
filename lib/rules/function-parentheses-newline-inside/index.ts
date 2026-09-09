@@ -13,6 +13,7 @@ import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
+import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { splitSpaceNodesAtWords } from "../../utils/splitSpaceNodesAtWords/index.ts"
 
@@ -256,8 +257,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// The value parser calls a vertical tab whitespace where the tokenizer calls it a word
 			splitSpaceNodesAtWords(parsedValue.nodes)
 
-			parsedValue.walk((valueNode) => {
+			parsedValue.walk((valueNode, at, siblings) => {
 				if (valueNode.type !== `function`) return
+
+				// A call opening an address holds no arguments of the value: what stands inside is the address, and a space or a break written behind the `(` parts it from the parenthesis, which is what a tokenizer reads one token by ([#533](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/533)). Passed over whole, and the walk goes no further in, as it does in the four rules that ask this question of a node they would otherwise read inside; the two utilities asking it walk on, having nothing to say about what an address holds. The name is the file's spelling rather than the parser's, which is wider than what a parser takes a url token by ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)).
+				if (opensAnAddress(valueNode, at, siblings)) return false
 
 				if (areSpansStale) {
 					comments = findCommentSpansAfterEdits(syntax, decl, declValue, edits, result)
