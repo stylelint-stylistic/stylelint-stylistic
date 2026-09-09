@@ -275,6 +275,11 @@ testRule({
 			code: `a { @includes foo }`,
 		},
 		{
+			// See #630
+			description: `the same at-rule with no parameters, which the parser hands over with no source end`,
+			code: `a { @content }`,
+		},
+		{
 			description: `an at-rule holding a block whose declaration carries no semicolon`,
 			code: `a { @foo { color: pink } }`,
 		},

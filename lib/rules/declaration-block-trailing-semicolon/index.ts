@@ -41,18 +41,25 @@ type HeldRaw = {
 
 /**
  * Returns a node's start and end offsets.
+ *
+ * Where a closing brace ends an at-rule, PostCSS ends it on the last of its parameter tokens that is not whitespace, and a bodiless at-rule with nothing but whitespace in front of that brace has no such token, so it is handed over with `source.end` unset ([#630](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/630)). The end is taken from the node's printed text there, since it holds that whitespace as its own trailing run wherever the `always` fix of a neighbouring namespace has moved the run to.
  * @param node - The node whose source is read.
+ * @param result - The Stylelint result, whose syntax prints a node the parser gave no end.
  * @returns The offsets.
  */
-function offsetsOf (node: Node): {
+function offsetsOf (node: Node, result?: PostcssResult): {
 	start: number,
 	end: number,
 } {
 	let { source } = node
 
-	if (!source?.start || !source.end) throw new Error(`The node must carry a source with both of its ends`)
+	if (!source?.start) throw new Error(`The node must carry a source with a start`)
 
-	return { start: source.start.offset, end: source.end.offset }
+	let start = source.start.offset
+
+	if (source.end) return { start, end: source.end.offset }
+
+	return { start, end: start + nodeString(node, result).replace(TRAILING_CSS_WHITESPACE, ``).length }
 }
 
 /**
@@ -104,10 +111,11 @@ function rawsBehind (node: ChildNode): HeldRaw[] {
  *
  * `raws.semicolon` covers only the semicolon right behind the node; further ones sit in a following comment's `raws.before` or the block's `raws.after`. The index is counted in the file, as `report` reads it, so it may reach past the node's end; a raw another rule rewrote in the same `--fix` pass shifts it ([#356](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/356)).
  * @param node - The node closing the block.
+ * @param result - The Stylelint result, which {@link offsetsOf} reads the syntax from.
  * @returns The index from the node's start, or undefined without a semicolon.
  */
-function trailingSemicolonIndex (node: ChildNode): number | undefined {
-	let { start, end } = offsetsOf(node)
+function trailingSemicolonIndex (node: ChildNode, result: PostcssResult): number | undefined {
+	let { start, end } = offsetsOf(node, result)
 	let holder = rawsBehind(node).findLast((raw) => raw.text.includes(`;`))
 
 	if (holder) return holder.start + holder.text.lastIndexOf(`;`) - start
@@ -216,7 +224,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let hasSemicolon = parent.raws.semicolon
 			// `never` asks for the semicolon's place, since the block can end on one the flag does not cover
-			let trailingSemicolon = primary === `never` ? trailingSemicolonIndex(node) : undefined
+			let trailingSemicolon = primary === `never` ? trailingSemicolonIndex(node, result) : undefined
 			let ignoreSingleDeclaration = optionsMatches(
 				secondaryOptions,
 				`ignore`,

@@ -206,6 +206,16 @@ testRule({
 			description: `a Less variable standing on the root of the file, which this syntax reads as an at-rule and the walk over at-rules has always let stand`,
 			code: `@var: pink;`,
 		},
+		{
+			// See #630
+			description: `a Less variable closing a block with no value and no semicolon, which the parser hands over with no source end`,
+			code: `a { @v: }`,
+		},
+		{
+			// See #630
+			description: `the same name with no colon behind it, which the parser reads as an at-rule of that name`,
+			code: `a { @v }`,
+		},
 	],
 
 	reject: [

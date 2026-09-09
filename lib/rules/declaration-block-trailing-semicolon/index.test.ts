@@ -317,6 +317,20 @@ testRule({
 			description: `a declaration standing on the root of the file, whose semicolon closes no block either`,
 			code: `color: pink;`,
 		},
+		{
+			// See #630
+			description: `a bodiless at-rule closing the block with nothing but whitespace behind it, which PostCSS hands over with no source end`,
+			code: `a { @content }`,
+		},
+		{
+			// See #630
+			description: `the same at-rule with a line break in that whitespace`,
+			code: `
+				a {
+					@content
+				}
+			`,
+		},
 	],
 
 	reject: [
