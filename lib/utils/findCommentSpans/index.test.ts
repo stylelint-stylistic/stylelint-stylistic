@@ -98,13 +98,21 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`url(\u00A0"a" /* c */)`)).toEqual([{ start: 9, end: 16, isInline: false }])
 	})
 
-	it(`a comment inside an address whitespace parts from its parenthesis, which the tokenizers read three ways and none of them hands the scan a span for`, () => {
-		expect(findCommentSpans(`url( a /* c */ )`)).toEqual([])
+	// The tokenizer takes one token of the parentheses wherever the `(` is met by anything but its own whitespace, and where it does not, the comment written there is a comment to it. See #660
+	it(`a comment inside an address the tokenizer's whitespace parts from its parenthesis, which the parenthesis closing the address then stands outside of`, () => {
+		expect(findCommentSpans(`url( a /* c */ )`)).toEqual([{ start: 7, end: 14, isInline: false }])
+		expect(findCommentSpans(`url( a /* ) */ ) 1PX`)).toEqual([{ start: 7, end: 14, isInline: false }])
+		expect(findCommentSpans(`url(\na /* c */ )`)).toEqual([{ start: 7, end: 14, isInline: false }])
 	})
 
-	it(`a slash and a star inside such an address whose closing delimiter lies past the parenthesis, a text only postcss-scss hands over and reads as one bracket token closed on that parenthesis`, () => {
-		expect(findCommentSpans(`url( a/* x) 1PX /* c */ 3PX`)).toEqual([{ start: 16, end: 23, isInline: false }])
-		expect(findCommentSpans(`url( a/* x) 1PX // c`)).toEqual([{ start: 16, end: 20, isInline: true }])
+	// See #660
+	it(`the same comment behind a no-break space, which is no whitespace to the tokenizer and leaves the parentheses one token of it`, () => {
+		expect(findCommentSpans(`url(\u00A0a /* ) */ ) 1PX`)).toEqual([])
+	})
+
+	it(`a slash and a star inside such an address whose closing delimiter lies past the parenthesis, which the tokenizer reads to that delimiter and past the parenthesis with it`, () => {
+		expect(findCommentSpans(`url( a/* x) 1PX /* c */ 3PX`)).toEqual([{ start: 6, end: 23, isInline: false }])
+		expect(findCommentSpans(`url( a/* x) 1PX // c`)).toEqual([{ start: 6, end: 20, isInline: false }])
 	})
 
 	// Every case below stands on an escape, which the scan used to read as an ordinary character everywhere but inside an address or a quoted string. See #321
@@ -310,6 +318,18 @@ describe(`findAddressSpans`, () => {
 
 	it(`a quotation mark inside a bare address, which opens no argument of anything`, () => {
 		expect(findAddressSpans(`url(a"b c)`)).toEqual([{ start: 4, end: 9 }])
+	})
+
+	// An address is one span, and a comment inside the parentheses parts the code they hold, so the room is the first run of it. See #660
+	it(`a comment inside an address the tokenizer's whitespace parts from its parenthesis, which parts the room the address stands in`, () => {
+		expect(findAddressSpans(`url( a /* c */ )`)).toEqual([{ start: 5, end: 6 }])
+		expect(findAddressSpans(`url( /* c */ a.png )`)).toEqual([{ start: 13, end: 18 }])
+		expect(findAddressSpans(`url( /* c */ a /* d */ b )`)).toEqual([{ start: 13, end: 14 }])
+	})
+
+	it(`the same whitespace with no comment behind it, and the same comment with no whitespace in front of it, neither of which parts anything`, () => {
+		expect(findAddressSpans(`url( http://a/b.png )`)).toEqual([{ start: 5, end: 19 }])
+		expect(findAddressSpans(`url(a /* c */ )`)).toEqual([{ start: 4, end: 13 }])
 	})
 
 	// See #557

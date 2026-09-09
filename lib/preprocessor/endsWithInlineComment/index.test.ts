@@ -131,6 +131,18 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`b: url( "a" // c`, LESS)).toBe(true)
 	})
 
+	// The double slashes stand in the text of a block comment PostCSS reads there, so the parenthesis closing the address stands behind that comment rather than inside it. See #660
+	it(`a double slash inside a block comment the tokenizer's whitespace parts from the parenthesis of an address`, () => {
+		expect(endsWithInlineComment(`b: url( a /* ) // c */ ) 1px; `, LESS)).toBe(false)
+		expect(endsWithInlineComment(`b: url( a /* ) // c */ `, LESS)).toBe(false)
+		expect(endsWithInlineComment(`b: url( a /* ) // c `, LESS)).toBe(false)
+	})
+
+	// See #660
+	it(`the same text with the parenthesis standing against the address, which leaves the comment's delimiters characters of it`, () => {
+		expect(endsWithInlineComment(`b: url(a /* ) // c */ ) 1px; `, LESS)).toBe(true)
+	})
+
 	// The text is a prefix of what the file spells, so a `url(` left open is one the file closes behind it: the address runs to the end, and the protocol's double slashes open nothing.
 	it(`an address the text is cut short inside, which the file closes behind it`, () => {
 		expect(endsWithInlineComment(`( c: url( http://a/b.png `, LESS)).toBe(false)

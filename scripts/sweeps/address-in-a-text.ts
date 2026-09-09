@@ -32,10 +32,11 @@ const NAMES: Record<string, string> = {
 	backslashThenFormFeedInside: `u\\\frl`,
 }
 
-/** Bare, quoted, and either behind whitespace, each with characters a reader may misread; the two spellings a quotation mark and a parenthesis behind whitespace make are the divergence [#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557) closed. */
+/** Bare, quoted, and either behind whitespace, each with characters a reader may misread; the two spellings a quotation mark and a parenthesis behind whitespace make are the divergence [#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557) closed, and the three block comments behind whitespace the one [#660](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/660) closed; `bareSlashStar` and `bareBlockComment` are their control, the same delimiters with no whitespace in front of them. */
 const ADDRESSES: Record<string, string> = {
 	bareProtocol: `http://a/b.png`,
 	bareSlashStar: `a/*b.png`,
+	bareBlockComment: `a /* c */ `,
 	bareParenthesis: `a(b)c.png`,
 	bareQuote: `a"b.png`,
 	bareOneCharacter: `a`,
@@ -47,6 +48,9 @@ const ADDRESSES: Record<string, string> = {
 	quotedThenBlockComment: `"a" /* c */`,
 	spacedQuotedThenBlockComment: ` "a" /* c */ `,
 	spacedBareParenthesis: ` a(b)c.png `,
+	spacedBareBlockComment: ` a /* c */ `,
+	spacedBareBlockCommentHoldingParenthesis: ` a /* ) */ `,
+	spacedBareBlockCommentFirst: ` /* c */ a.png `,
 	quotedThenArgument: `"a", format("woff2")`,
 	spacedBareProtocol: ` http://a/b.png `,
 	spacedQuotedProtocol: ` "http://a/b.png" `,
@@ -99,6 +103,8 @@ const configs: Sweep[`configs`] = ([
 	[`value-list-comma-newline-after`, [`always`, `never-multi-line`]],
 	[`value-list-comma-space-after`, [`always`, `never`]],
 	[`value-list-comma-space-before`, [`always`, `never`]],
+	[`value-slash-space-after`, [`always`, `never`]],
+	[`value-slash-space-before`, [`always`, `never`]],
 	[`max-line-length`, [20, 40]],
 ] as [string, unknown[]][]).flatMap(([rule, primaries]) => primaries.map((primary) => ({ rule, primary })))
 

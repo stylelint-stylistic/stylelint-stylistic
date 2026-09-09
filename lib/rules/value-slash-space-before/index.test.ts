@@ -79,6 +79,15 @@ testRule({
 
 	reject: [
 		{
+			// See #660
+			description: `a solidus standing in the text of a block comment the tokenizer's whitespace parts from the parenthesis of an address, beside one of a value`,
+			code: `a { b: 1/2 url( a /* ) */ ) }`,
+			fixed: `a { b: 1 /2 url( a /* ) */ ) }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `no space in front of the solidus`,
 			code: `a { grid-area: 1/2; }`,
 			fixed: `a { grid-area: 1 /2; }`,

@@ -972,8 +972,23 @@ testRule({
 testRule({
 	ruleName,
 	config: [20],
+	accept: [
+		{
+			// See #660
+			description: `the same address with no comment beside it, which comes off the line whole`,
+			code: `a { b: url( aaaaaaaaaaaaaaaaaaaaaaaaaa.png ) }`,
+		},
+	],
 
 	reject: [
+		{
+			// See #660
+			description: `a comment inside an address the tokenizer's whitespace parts from its parenthesis, which is no part of the address and comes off no line`,
+			code: `a { b: url( aaaaaaaaaaaaaaaaaaaaaaaaaa.png /* c */ ) }`,
+			line: 1,
+			column: 54,
+			message: messages.expected(20),
+		},
 		{
 			description: `a rule whose selector wraps an address in parentheses of its own, which the address does not reach into`,
 			code: `.m(url(a,b)) { c: 2px; }`,

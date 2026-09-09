@@ -1,8 +1,9 @@
 import type { Node } from "postcss-value-parser"
 
 import { IDENTIFIER_CODE_POINT, LEADING_CSS_WHITESPACE, LINE_BREAK, TRAILING_CSS_WHITESPACE, TRAILING_HEX_ESCAPE, WHITESPACE_ONLY } from "../../regexps.ts"
+import { isOnlyWhitespace } from "../isOnlyWhitespace/index.ts"
 import { namesAnAddress } from "../namesAnAddress/index.ts"
-import { readAddress } from "../readAddress/index.ts"
+import { type Address, readAddress } from "../readAddress/index.ts"
 import { readIdentifierCharacter } from "../readIdentifierCharacter/index.ts"
 
 /**
@@ -62,14 +63,15 @@ function skipUrlName (text: string, openIndex: number): number {
 /**
  * Skips a `url()` token, whose bare address carries `//` and `/*` as ordinary characters.
  *
- * The name must stand alone, since `image-url(` is a call. What the parentheses hold is {@link readAddress}'s reading: a quoted address leaves the rest of them code, so the walk reads on from behind the string and finds every comment written there ([#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378), [#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557)); a bare one runs to the first `)` no escape holds, a quotation mark inside it a character of it ([#504](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504)). `\61 \75 rl(` is a call.
+ * The name must stand alone, since `image-url(` is a call. What the parentheses hold is {@link readAddress}'s reading: a quoted address leaves the rest of them code, so the walk reads on from behind the string and finds every comment written there ([#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378), [#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557)); a bare one runs to the first `)` no escape holds and no comment covers, a quotation mark inside it a character of it ([#504](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504)). A comment inside such an address ends the room the address had, an address being one span ([#660](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/660)). `\61 \75 rl(` is a call.
  * @param text - The text walked for comments and addresses.
  * @param openIndex - Where it would start.
  * @param behindIdentifier - True behind a name: a {@link IDENTIFIER_CODE_POINT} code point, a `}` or an escape.
+ * @param spans - The comments the parentheses hold are added.
  * @param addresses - This one is added.
  * @returns Where the walk reads on — behind the string of a quoted address, behind the `)` of a bare one — or `openIndex`.
  */
-function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, addresses: AddressSpan[]): number {
+function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, spans: CommentSpan[], addresses: AddressSpan[]): number {
 	if (behindIdentifier) return openIndex
 
 	let behindName = skipUrlName(text, openIndex)
@@ -86,9 +88,31 @@ function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, ad
 		return end
 	}
 
-	pushBareAddress(text, behindName, address.index, addresses)
+	let [start, end] = bareAddressRoom(text, behindName, address)
+
+	spans.push(...address.comments)
+	pushBareAddress(text, start, end, addresses)
 
 	return address.index + 1
+}
+
+/**
+ * Finds the room a bare address stands in: the first run of code the parentheses hold that is not whitespace alone, since an address is one span and a comment inside them parts what they hold ([#660](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/660)).
+ * @param text - The text holding the `url()` token.
+ * @param openIndex - Behind the `(`.
+ * @param address - What {@link readAddress} read of the parentheses.
+ * @returns The room, from behind the `(` or from behind a comment.
+ */
+function bareAddressRoom (text: string, openIndex: number, address: Address): [number, number] {
+	let start = openIndex
+
+	for (let comment of address.comments) {
+		if (!isOnlyWhitespace(text.slice(start, comment.start))) return [start, comment.start]
+
+		start = comment.end
+	}
+
+	return [start, address.index]
 }
 
 /**
@@ -133,10 +157,10 @@ function trailingWhitespaceLength (text: string): number {
 }
 
 /**
- * Records the bare address a `url()` holds: everything its parentheses hold, whitespace off. A no-break space is part of it ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)); a run reaching past a line, whose `)` may be lines below, is none; empty parentheses hold none.
+ * Records the bare address a `url()` holds: the code its parentheses open on, whitespace off. A no-break space is part of it ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)); a run reaching past a line, whose `)` may be lines below, is none; empty parentheses hold none.
  * @param text - The text holding the `url()` token.
  * @param openIndex - Behind the `(`.
- * @param closeIndex - The `)`.
+ * @param closeIndex - The `)`, or where the comment ending the address's room opens.
  * @param addresses - This one is added.
  */
 function pushBareAddress (text: string, openIndex: number, closeIndex: number, addresses: AddressSpan[]): void {
@@ -194,7 +218,7 @@ function scan (text: string, spellsInlineComments: boolean): { comments: Comment
 
 		if (character === `\\`) {
 			// A backslash makes the next character ordinary: `a\//b` opens no comment. An escape can spell a letter of `url`, so an address is looked for first.
-			let behindUrl = skipUrl(text, index, behindIdentifier, addresses)
+			let behindUrl = skipUrl(text, index, behindIdentifier, spans, addresses)
 
 			if (behindUrl === index) {
 				let escaped = readIdentifierCharacter(text, index)
@@ -219,7 +243,7 @@ function scan (text: string, spellsInlineComments: boolean): { comments: Comment
 			awaitsImportAddress = false
 		}
 		else if (character === `u` || character === `U`) {
-			let behindUrl = skipUrl(text, index, behindIdentifier, addresses)
+			let behindUrl = skipUrl(text, index, behindIdentifier, spans, addresses)
 
 			if (behindUrl === index) {
 				index += 1
