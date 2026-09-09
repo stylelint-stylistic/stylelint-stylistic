@@ -45,6 +45,41 @@ testRule({
 			description: `a lower-case unit whose hack unit's escape swallows the whitespace in front of a second run of digits and letters`,
 			code: `a { b: 10px\\9 2PX; }`,
 		},
+		{
+			// See #577
+			description: `a lower-case unit in the value of a Less at-variable declared with a space in front of its colon`,
+			code: `@v : 10px;`,
+		},
+		{
+			// The params are walked, and the parser hands the escaped text over as one string node, which the rule passes over as it passes over every node that is no word: a unit standing beside such a string is named. See #577
+			description: `an upper-case unit inside an escaped string in such a declaration`,
+			code: `@v : ~"10PX";`,
+		},
+		{
+			// See #577
+			description: `an upper-case unit inside an address in such a declaration`,
+			code: `@v : url(10PX);`,
+		},
+		{
+			// The answer is the shape of the node, and these parameters do not open on a colon, so they stay a set of parameters no rule of a value reads. See #577
+			description: `an upper-case unit inside the parameters of a feature query`,
+			code: `@supports (width: 10PX) { a { b: c } }`,
+		},
+		{
+			// `postcss-less` hands a mixin call over as an at-rule whose parameters are the arguments and whose name is the class without its dot, which it keeps in `raws.identifier`; those parameters open on no colon. See #577
+			description: `an upper-case unit inside the arguments of a mixin call`,
+			code: `.m(10PX);`,
+		},
+		{
+			// Where no whitespace stands in front of the colon the parser welds the first word behind it into the name, and what is left in the params is the tail of the value at best: the declaration is passed over whole, as it was. See #577 and #649
+			description: `two upper-case units in a declaration whose colon the parser welded into the name`,
+			code: `@v:10PX 1PX;`,
+		},
+		{
+			// The parser welds the name of the address into the at-rule's name and leaves a nameless group for the params, `v:url` and `(10PX)`, where nothing says an address opens: reading those params would recase the text of one, which Less prints as it stands. See #649
+			description: `an upper-case unit inside an address in a declaration whose colon the parser welded into the name`,
+			code: `@v:url(10PX);`,
+		},
 	],
 
 	reject: [
@@ -160,6 +195,150 @@ testRule({
 			endLine: 1,
 			endColumn: 16,
 			message: messages.expected(`Px`, `px`),
+		},
+		{
+			// `postcss-less` marks a declaration `variable` only where the colon closed the name, and the rule read that mark; Less declares `@v` on every spelling of the whitespace around the colon and gives a use of it `10PX` in each. The params of an unmarked one open on the colon, which the value parser reads as a divider. See #577
+			description: `an upper-case unit in the value of a Less at-variable declared with a space in front of its colon`,
+			code: `@v : 10PX;`,
+			fixed: `@v : 10px;`,
+			line: 1,
+			column: 8,
+			endLine: 1,
+			endColumn: 10,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// See #577
+			description: `the same declaration with no space behind the colon`,
+			code: `@v :10PX;`,
+			fixed: `@v :10px;`,
+			line: 1,
+			column: 7,
+			endLine: 1,
+			endColumn: 9,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// See #577
+			description: `the same declaration with two spaces on either side of the colon`,
+			code: `@v  :  10PX;`,
+			fixed: `@v  :  10px;`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// See #577
+			description: `the same declaration with a tab in front of the colon`,
+			code: `@v\t: 10PX;`,
+			fixed: `@v\t: 10px;`,
+			line: 1,
+			column: 8,
+			endLine: 1,
+			endColumn: 10,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// See #577
+			description: `the same declaration with a line break in front of the colon`,
+			code: `
+				@v
+				: 10PX;
+			`,
+			fixed: `
+				@v
+				: 10px;
+			`,
+			line: 2,
+			column: 5,
+			endLine: 2,
+			endColumn: 7,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// See #577
+			description: `the same declaration standing inside a block`,
+			code: `a { @v : 10PX; c: @v }`,
+			fixed: `a { @v : 10px; c: @v }`,
+			line: 1,
+			column: 12,
+			endLine: 1,
+			endColumn: 14,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// See #577
+			description: `the same declaration whose value holds a second dimension already in the case asked for`,
+			code: `@v : 10PX 1px;`,
+			fixed: `@v : 10px 1px;`,
+			line: 1,
+			column: 8,
+			endLine: 1,
+			endColumn: 10,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// See #577
+			description: `the same declaration with a bang flag behind the value`,
+			code: `@v : 10PX !important;`,
+			fixed: `@v : 10px !important;`,
+			line: 1,
+			column: 8,
+			endLine: 1,
+			endColumn: 10,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// The parser keeps the comment in the raw beside the params and the fix is written to that raw, so the comment survives. See #577
+			description: `the same declaration with a comment between the colon and the value`,
+			code: `@v : /* c */ 10PX;`,
+			fixed: `@v : /* c */ 10px;`,
+			line: 1,
+			column: 16,
+			endLine: 1,
+			endColumn: 18,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// The escaped text is one string node to the value parser and the unit beside it a word like any other, so the declaration is read and the string left alone. See #577
+			description: `an upper-case unit standing beside an escaped string in such a declaration`,
+			code: `@v : ~"a" 10PX;`,
+			fixed: `@v : ~"a" 10px;`,
+			line: 1,
+			column: 13,
+			endLine: 1,
+			endColumn: 15,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// See #577
+			description: `the same declaration whose value an end-of-line comment closes`,
+			code: `
+				@v : 10PX // c
+				;
+			`,
+			fixed: `
+				@v : 10px // c
+				;
+			`,
+			line: 1,
+			column: 8,
+			endLine: 1,
+			endColumn: 10,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// Where the text behind the colon parses as no expression Less falls back to a directive, and the guard answers those as variables too; the unit is a unit of CSS in either reading, and Less prints the line as it stands. See #577 and #394
+			description: `an upper-case unit inside the parameters of a directive whose colon opens them`,
+			code: `@custom-media :x (min-width: 10PX);`,
+			fixed: `@custom-media :x (min-width: 10px);`,
+			line: 1,
+			column: 32,
+			endLine: 1,
+			endColumn: 34,
+			message: messages.expected(`PX`, `px`),
 		},
 		{
 			// See #426
@@ -1099,6 +1278,16 @@ testRule({
 			description: `an exponent and the unit behind it, both in upper case`,
 			code: `@v: 1E5PX;`,
 		},
+		{
+			// See #577
+			description: `an upper-case unit in the value of a Less at-variable declared with a space in front of its colon`,
+			code: `@v : 10PX;`,
+		},
+		{
+			// See #577 and #649
+			description: `a lower-case unit in a declaration whose colon the parser welded into the name`,
+			code: `@v:10PX 1px;`,
+		},
 	],
 
 	reject: [
@@ -1253,6 +1442,17 @@ testRule({
 					message: messages.expected(`px`, `PX`),
 				},
 			],
+		},
+		{
+			// See #577
+			description: `a lower-case unit in the value of a Less at-variable declared with a space in front of its colon`,
+			code: `@v : 10px;`,
+			fixed: `@v : 10PX;`,
+			line: 1,
+			column: 8,
+			endLine: 1,
+			endColumn: 10,
+			message: messages.expected(`px`, `PX`),
 		},
 		{
 			// The tokenizer reads the whole word as a number and the core finds no unit in it at all; Less prints `1e 5`. See #646

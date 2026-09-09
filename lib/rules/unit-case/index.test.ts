@@ -144,6 +144,16 @@ testRule({
 			code: `@import 'foo.css'`,
 		},
 		{
+			// No at-rule is a variable to plain CSS, so the parameters of an unknown one are read by no rule of a value; the `@stylistic/less/` namespace reads the same text, parsed by `postcss-less`, as a declaration of `@v`. See #577
+			description: `an upper-case unit in the parameters of an unknown at-rule spelled as a Less variable`,
+			code: `@v: 10PX;`,
+		},
+		{
+			// See #577
+			description: `the same at-rule written with a space in front of its colon`,
+			code: `@v : 10PX;`,
+		},
+		{
 			// See #234
 			description: `a lower-case unit in front of each of two bang flags, one of them spelled in capitals`,
 			code: `a { b: 1px!IMPORTANT 2px!important; }`,

@@ -256,9 +256,11 @@ export type Syntax = {
 	readsRuleParams (rule: PostcssRule): boolean,
 
 	/**
-	 * Asks whether an at-rule is a variable, `@foo: bar;` under Less, whose params are walked as a value.
+	 * Asks whether an at-rule carries the value of a variable in its params, `@foo: bar;` under Less, to be walked as a value.
+	 *
+	 * Where whitespace stands in front of the colon the parser leaves it out of `raws.afterName`, so the params open on it — the value parser reads that colon as a divider and no rule of a value names it. Where none does, the first word behind the colon is welded into the name and what is left in the params is no value of its own, so such a node is passed over. Under Less the answer is yes for the directive Less falls back to where the text behind the colon parses as no expression as well ([#577](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/577)).
 	 * @param atRule - The at-rule.
-	 * @returns True where it is.
+	 * @returns True where the params hold that value.
 	 */
 	readsAtRuleAsVariable (atRule: AtRule): boolean,
 }
