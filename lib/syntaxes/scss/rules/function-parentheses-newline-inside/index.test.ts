@@ -5,6 +5,8 @@ let { ruleName, messages } = createRule(scss)
 
 let testRule = createTestRule({ ruleName })
 
+const VERTICAL_TAB = String.fromCodePoint(0x0b)
+
 testRule({
 	ruleName,
 	config: [`never-multi-line`],
@@ -62,6 +64,51 @@ testRule({
 			column: 9,
 			message: messages.rejectedOpeningMultiLine,
 		},
+		{
+			// See #505
+			description: `an end-of-line comment standing behind two block comments, whose whitespace is read on both sides of it: the run behind it is the break that closes it, which no fix may take, so nothing is written and the problem is reported`,
+			code: `a { b: f(/** c */ /** e */ // d\n 2); }`,
+			fixed: `a { b: f(/** c */ /** e */ // d\n 2); }`,
+			line: 1,
+			column: 10,
+			message: messages.rejectedOpeningMultiLine,
+		},
+		{
+			// See #505 and #496
+			description: `a vertical tab standing between the two comments, which the value parser calls whitespace and the tokenizer a word: the run in front of it is emptied and the character itself is left where it stands`,
+			code: `a { b: f(/*b*/ ${VERTICAL_TAB} //c\n ); }`,
+			fixed: `a { b: f(/*b*/${VERTICAL_TAB} //c\n ); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					message: messages.rejectedOpeningMultiLine,
+				},
+				{
+					line: 2,
+					column: 1,
+					message: messages.rejectedClosingMultiLine,
+				},
+			],
+		},
+		{
+			// See #505
+			description: `a call holding a block comment and an end-of-line comment behind it: the run between the two is emptied, while the run in front of the closing parenthesis is the break that closes the comment and stays`,
+			code: `a { b: f(/*b*/ //c\n ); }`,
+			fixed: `a { b: f(/*b*///c\n ); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					message: messages.rejectedOpeningMultiLine,
+				},
+				{
+					line: 2,
+					column: 1,
+					message: messages.rejectedClosingMultiLine,
+				},
+			],
+		},
 	],
 })
 testRule({
@@ -93,6 +140,21 @@ testRule({
 			// See #320
 			description: `the same two parentheses with ordinary code behind the comment rather than a block comment: Sass compiles the value to one call reaching over the break, and the break the option would write would close the comment and make two calls of it`,
 			code: `a { b: f(1px // c) h(2px\n2px); }`,
+		},
+		{
+			// See #505
+			description: `an end-of-line comment standing behind a block comment, the break that closes it standing where the option asks for one`,
+			code: `a { b: f(/** c */ // d\n 2\n); }`,
+		},
+		{
+			// See #505
+			description: `two end-of-line comments in a row, the break that closes the first standing where the option asks for one`,
+			code: `a { b: f(// a\n // b\n 2\n); }`,
+		},
+		{
+			// See #505
+			description: `the same two comments with a space in front of the first one's break, which puts the start of the second one's node inside the first one's text: the node is placed by that start, and the run behind the comment it reaches past is the value's`,
+			code: `a { b: f(//c \n //d\n 2\n); }`,
 		},
 	],
 
@@ -127,6 +189,33 @@ testRule({
 				},
 			],
 		},
+		{
+			// See #505
+			description: `a call holding nothing but a block comment and an end-of-line comment behind it, where the break goes into the run in front of the second one so that the first keeps its line`,
+			code: `a { b: f(/*b*/ //c\n); }`,
+			fixed: `a { b: f(/*b*/\n //c\n); }`,
+			line: 1,
+			column: 10,
+			message: messages.expectedOpening,
+		},
+		{
+			// See #505 and #496
+			description: `a vertical tab standing between the two comments, which the value parser calls whitespace and the tokenizer a word: the run beside the parenthesis ends at that character and holds no break, so the option asks for one`,
+			code: `a { b: f(/*b*/ ${VERTICAL_TAB} //c\n 2\n); }`,
+			fixed: `a { b: f(/*b*/\n ${VERTICAL_TAB} //c\n 2\n); }`,
+			line: 1,
+			column: 10,
+			message: messages.expectedOpening,
+		},
+		{
+			// See #505
+			description: `a division sign of the value standing behind an end-of-line comment that ends on a space: the node it opens begins inside the comment's text, so the break behind that comment is read and the opening parenthesis is left alone`,
+			code: `a { b: f(//c \n /); }`,
+			fixed: `a { b: f(//c \n /\n); }`,
+			line: 2,
+			column: 2,
+			message: messages.expectedClosing,
+		},
 	],
 })
 testRule({
@@ -154,6 +243,11 @@ testRule({
 				 ,2px
 				); }
 			`,
+		},
+		{
+			// See #505
+			description: `an end-of-line comment standing behind a block comment in a multi-line call, the break that closes it standing where the option asks for one`,
+			code: `a { b: f(/** c */ // d\n 2\n); }`,
 		},
 	],
 })

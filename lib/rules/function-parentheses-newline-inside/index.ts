@@ -407,6 +407,27 @@ function getCheckBefore (valueNode: FunctionNode, openingIndex: number, declValu
 			continue
 		}
 
+		if (node.type === `div`) {
+			// The parser hangs the whitespace in front of a `/`, `:` or `,` on the node, so a div opens in front of its own text: the first slash of a `//` comment standing behind another comment opens one whose `sourceIndex` is the run in front of the span ([#505](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/505)). That run is the value's, and the comment is walked past like any other. The run is whitespace to the parser and a span opens on a `/`, so the span opens where the div's text does.
+			let textSpan = findCommentSpanAt(node.sourceIndex + node.before.length, comments)
+
+			if (textSpan) {
+				// The parser calls every character below the space whitespace where the tokenizer calls most of them words, and `splitSpaceNodesAtWords` rewrites the space nodes alone, never a div's own run (#496)
+				let whitespace = (node.before.match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0]
+
+				before += whitespace
+				measured.push([node.sourceIndex, node.sourceIndex + whitespace.length])
+
+				// A word behind that whitespace is the first significant thing, as it is behind the whitespace a node overruns its comment with
+				if (whitespace.length !== node.before.length) {
+					firstIndex = node.sourceIndex + whitespace.length
+					break
+				}
+
+				continue
+			}
+		}
+
 		firstIndex = node.sourceIndex
 		break
 	}
@@ -418,6 +439,8 @@ function getCheckBefore (valueNode: FunctionNode, openingIndex: number, declValu
  * Reads the whitespace in front of a function's closing `)`: the node's `after` and every whitespace node behind the last significant one.
  *
  * The mirror of {@link getCheckBefore}: a node held by a block comment is read the same way, since the closing slash of `/*\/` is a division sign to the parser and the whitespace behind it is the value's ([#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378)). An inline comment ends the walk, since no fix may take the break closing it. The stretches come back for the `never` fix.
+ *
+ * A div opening in front of its own text is asked nothing here ([#505](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/505)): the run the parser hung on it stands in front of the comment rather than beside the `)`, and the only span that opens where such a div's text does is an inline comment's, which ends this walk exactly as an unplaced div does.
  * @param valueNode - The function.
  * @param declValue - The value the positions count in.
  * @param comments - The comment spans of the value, both kinds.

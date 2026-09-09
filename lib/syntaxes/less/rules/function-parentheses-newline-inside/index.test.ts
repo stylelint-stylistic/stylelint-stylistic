@@ -256,6 +256,11 @@ testRule({
 				2px); }
 			`,
 		},
+		{
+			// See #505
+			description: `an end-of-line comment standing behind a block comment, the break that closes it standing where the option asks for one`,
+			code: `a { b: f(/** c */ // d\n 2\n); }`,
+		},
 	],
 })
 testRule({
@@ -425,6 +430,15 @@ testRule({
 			`,
 			line: 2,
 			column: 9,
+			message: messages.rejectedOpeningMultiLine,
+		},
+		{
+			// See #505
+			description: `an end-of-line comment standing behind two block comments, whose whitespace is read on both sides of it: the run behind it is the break that closes it, which no fix may take, so nothing is written and the problem is reported`,
+			code: `a { b: f(/** c */ /** e */ // d\n 2); }`,
+			fixed: `a { b: f(/** c */ /** e */ // d\n 2); }`,
+			line: 1,
+			column: 10,
 			message: messages.rejectedOpeningMultiLine,
 		},
 	],
