@@ -132,14 +132,14 @@ testRule({
 		},
 		{
 			// See #545
-			description: `a semicolon abutting the params of an at-rule closing its block, which the block does spell, whose column stands two past the mark, displaced by the leading raw of the at-rule`,
+			description: `a semicolon abutting the params of an at-rule indented inside a block, which the block does spell`,
 			code: `
 				a {
 					@import "styles/mystyle";
 				}
 			`,
 			line: 2,
-			column: 27,
+			column: 25,
 			message: messages.expectedBefore(),
 		},
 		{
@@ -151,7 +151,26 @@ testRule({
 				}
 			`,
 			line: 2,
-			column: 27,
+			column: 25,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `the same at-rule with a blank line in front of it, whose leading raw is wide enough to carry a position onto the line below`,
+			code: `
+				a {
+
+					@import "styles/mystyle";
+				}
+			`,
+			line: 3,
+			column: 25,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `the same at-rule behind a carriage-return pair, whose leading raw is a character wider than a line feed`,
+			code: `@import "a" ;\r\n@import "b";`,
+			line: 2,
+			column: 11,
 			message: messages.expectedBefore(),
 		},
 	],
@@ -279,14 +298,26 @@ testRule({
 		},
 		{
 			// See #545
-			description: `a space in front of the semicolon of an at-rule closing its block, which the block does spell, whose column stands two past the mark, displaced by the leading raw of the at-rule`,
+			description: `a space in front of the semicolon of an at-rule indented inside a block, which the block does spell`,
 			code: `
 				a {
 					@import "styles/mystyle" ;
 				}
 			`,
 			line: 2,
-			column: 28,
+			column: 26,
+			message: messages.rejectedBefore(),
+		},
+		{
+			description: `the same at-rule with a blank line in front of it, whose leading raw is wide enough to carry a position onto the line below`,
+			code: `
+				a {
+
+					@import "styles/mystyle" ;
+				}
+			`,
+			line: 3,
+			column: 26,
 			message: messages.rejectedBefore(),
 		},
 	],
@@ -323,10 +354,10 @@ testRule({
 		},
 		{
 			// See #545
-			description: `a style block whose at-rule abuts the semicolon the declaration block does spell, whose warning falls on the line of the closing brace, displaced by the at-rule's leading raw`,
+			description: `a style block whose at-rule abuts the semicolon the declaration block does spell`,
 			code: `<style>\n\ta {\n\t\t@import "x";\n\t}\n</style>`,
-			line: 4,
-			column: 1,
+			line: 3,
+			column: 13,
 			message: messages.expectedBefore(),
 		},
 	],
@@ -359,10 +390,10 @@ testRule({
 		},
 		{
 			// See #545
-			description: `a style block with a space in front of the semicolon the declaration block does spell, whose warning falls on the line of the closing brace, displaced by the at-rule's leading raw`,
+			description: `a style block with a space in front of the semicolon the declaration block does spell`,
 			code: `<style>\n\ta {\n\t\t@import "x" ;\n\t}\n</style>`,
-			line: 4,
-			column: 1,
+			line: 3,
+			column: 14,
 			message: messages.rejectedBefore(),
 		},
 	],

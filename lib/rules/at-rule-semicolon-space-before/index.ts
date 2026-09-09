@@ -5,7 +5,7 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
-import { rawNodeString } from "../../utils/rawNodeString/index.ts"
+import { nodeString } from "../../utils/nodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
@@ -53,7 +53,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// The check asks about the position one past the at-rule, as though a semicolon stood there; where the file spells none the at-rule runs to its container's `}` or the end of the file, and the position is somebody else's (#395)
 			if (isLastNodeWithoutSemicolon(atRule)) return
 
-			let atRuleString = rawNodeString(atRule, result)
+			// `report` counts an index from the node's own start, so the raw whitespace in front of the at-rule stays out of the text the position is measured in (#545)
+			let atRuleString = nodeString(atRule, result)
 			let problemIndex = atRuleString.length - 1
 
 			checker.before({

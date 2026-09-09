@@ -26,5 +26,24 @@ testRule({
 			column: 5,
 			message: messages.rejectedBefore(),
 		},
+		{
+			// See #545
+			description: `the same at-rule indented inside a declaration block, whose leading raw carries a break`,
+			code: `
+				a {
+					@import "a" // c
+						"b" ;
+				}
+			`,
+			fixed: `
+				a {
+					@import "a" // c
+						"b" ;
+				}
+			`,
+			line: 3,
+			column: 6,
+			message: messages.rejectedBefore(),
+		},
 	],
 })
