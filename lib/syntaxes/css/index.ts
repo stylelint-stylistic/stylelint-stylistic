@@ -77,7 +77,8 @@ export let css: Syntax = {
 	requiresTrailingSemicolon: () => false,
 	// Both marks are `postcss-less`'s, read by the less namespace
 	readsRuleParams: () => false,
-	readsAtRuleAsVariable: () => false,
+	// No at-rule of plain CSS declares a variable, so none carries a value to walk
+	atRuleVariableValue: () => null,
 	spellsOwnArithmetic: readsInlineComments,
 	// Plain CSS divides inside a math function alone, whose arguments the separator rules pass over
 	readsSlashAsOperator: () => false,

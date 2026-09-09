@@ -72,9 +72,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		 * Checks a node for miscased units.
 		 * @param node - The at-rule or declaration whose text is checked.
 		 * @param checkedValue - The params or value text the units are read from.
-		 * @param getIndex - Where the value starts in the node.
+		 * @param valueIndex - Where that text opens in the node.
+		 * @param write - Puts the fixed text back where the parser keeps it, the edits telling it where each copy ends.
 		 */
-		function check<T extends AtRule | Declaration> (node: T, checkedValue: string, getIndex: (node: T) => number): void {
+		function check (node: AtRule | Declaration, checkedValue: string, valueIndex: number, write: (fixed: string, edits: Edit[]) => void): void {
 			let problems: Problem[] = []
 			let hasFixed = false
 
@@ -107,15 +108,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (unit === expectedUnit) return { end: unitEnd, problem: null }
 
-				let index = getIndex(node)
 				// Recased in the file's text, not printed from the tree: `postcss-value-parser` prints `/*/` as `/**/`, and a hack unit between the letters keeps its place
 				let run = valueNode.value.slice(unitStart, unitEnd)
 
 				return {
 					end: unitEnd,
 					problem: {
-						index: index + valueNode.sourceIndex + unitStart,
-						endIndex: index + valueNode.sourceIndex + unitEnd,
+						index: valueIndex + valueNode.sourceIndex + unitStart,
+						endIndex: valueIndex + valueNode.sourceIndex + unitEnd,
 						message: messages.expected,
 						messageArgs: [unit, expectedUnit],
 						edit: {
@@ -211,19 +211,21 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				// One write with every unit the walk named, once the whole list is reported
 				if (hasFixed) {
-					let fixedValue = applyEditsFromEnd(checkedValue, problems.map((problem) => problem.edit))
+					let edits = problems.map((problem) => problem.edit)
 
-					syntax.write(node, fixedValue)
+					write(applyEditsFromEnd(checkedValue, edits), edits)
 				}
 			}
 		}
 
 		root.walkAtRules((atRule) => {
-			if (!MEDIA_AT_RULE.test(atRule.name) && !syntax.readsAtRuleAsVariable(atRule)) return
+			// A variable's value is the syntax's to find: `postcss-less` splits one over the name, the raw behind it and the params (#649)
+			let variable = syntax.atRuleVariableValue(atRule)
 
-			check(atRule, syntax.read(atRule), atRuleParamIndex)
+			if (variable) check(atRule, variable.text, variable.index, variable.write)
+			else if (MEDIA_AT_RULE.test(atRule.name)) check(atRule, syntax.read(atRule), atRuleParamIndex(atRule), (fixed) => syntax.write(atRule, fixed))
 		})
-		root.walkDecls((decl) => check(decl, syntax.read(decl), declarationValueIndex))
+		root.walkDecls((decl) => check(decl, syntax.read(decl), declarationValueIndex(decl), (fixed) => syntax.write(decl, fixed)))
 	}
 }
 

@@ -5,6 +5,7 @@ import type { PostcssResult } from "stylelint"
 
 import type { InlineComment } from "../preprocessor/findSelectorInlineComments/index.ts"
 import type { InlineCommentReading } from "../preprocessor/readsInlineComments/index.ts"
+import type { Edit } from "../utils/applyEditsFromEnd/index.ts"
 import type { CommentSpan } from "../utils/findCommentSpans/index.ts"
 import type { InterpolationSpan } from "../utils/findInterpolationSpans/index.ts"
 
@@ -256,13 +257,32 @@ export type Syntax = {
 	readsRuleParams (rule: PostcssRule): boolean,
 
 	/**
-	 * Asks whether an at-rule carries the value of a variable in its params, `@foo: bar;` under Less, to be walked as a value.
+	 * Finds the value of an at-rule the syntax declares a variable with, `@foo: bar;` under Less, to be walked as a declaration's.
 	 *
-	 * Where whitespace stands in front of the colon the parser leaves it out of `raws.afterName`, so the params open on it — the value parser reads that colon as a divider and no rule of a value names it. Where none does, the first word behind the colon is welded into the name and what is left in the params is no value of its own, so such a node is passed over. Under Less the answer is yes for the directive Less falls back to where the text behind the colon parses as no expression as well ([#577](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/577)).
+	 * Where the name ended in front of the colon the parser keeps the whole value in the params, opening them on that colon, which the value parser reads as a divider no rule of a value names ([#577](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/577)). Where the at-word ran on past it, the word behind the colon is welded into the name, so the text is gathered from both and written back to both ([#649](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/649)). Under Less the answer is a value for the directive Less falls back to where the text behind the colon parses as no expression as well.
 	 * @param atRule - The at-rule.
-	 * @returns True where the params hold that value.
+	 * @returns The value, or `null` where the syntax declares no variable with this at-rule.
 	 */
-	readsAtRuleAsVariable (atRule: AtRule): boolean,
+	atRuleVariableValue (atRule: AtRule): AtRuleVariableValue | null,
+}
+
+/** An at-rule's value as the syntax that declares a variable with it keeps one: see {@link Syntax#atRuleVariableValue}. */
+export type AtRuleVariableValue = {
+
+	/** The value as the file spells it, comments and all. */
+	text: string,
+
+	/** Where that text opens in the at-rule. */
+	index: number,
+
+	/**
+	 * Writes the text back into the copies the parser split it over.
+	 *
+	 * A value welded into the name is written to the name and the params both, and the raw standing between them is left as the file spells it: that run is whitespace and comments, which no rule of a value writes into, so no edit spans it. Where a copy ends is read off the edits rather than off the text, since recasing a run does not always keep its length — `ß` uppercases to `SS`.
+	 * @param fixed - The value as the fix leaves it.
+	 * @param edits - The edits that made it, indexed in the text as it was read.
+	 */
+	write (fixed: string, edits: Edit[]): void,
 }
 
 /** A rule's selector opened for parsing: see {@link Syntax#selectorCopies}. */

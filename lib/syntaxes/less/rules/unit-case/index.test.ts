@@ -71,14 +71,24 @@ testRule({
 			code: `.m(10PX);`,
 		},
 		{
-			// Where no whitespace stands in front of the colon the parser welds the first word behind it into the name, and what is left in the params is the tail of the value at best: the declaration is passed over whole, as it was. See #577 and #649
-			description: `two upper-case units in a declaration whose colon the parser welded into the name`,
-			code: `@v:10PX 1PX;`,
-		},
-		{
-			// The parser welds the name of the address into the at-rule's name and leaves a nameless group for the params, `v:url` and `(10PX)`, where nothing says an address opens: reading those params would recase the text of one, which Less prints as it stands. See #649
+			// The value is gathered from the name, the raw behind it and the params, so the address is one call again and is passed over as every address is; reading the params alone would have left the nameless group `(10PX)`, where nothing says an address opens, and recased the text of one. See #649
 			description: `an upper-case unit inside an address in a declaration whose colon the parser welded into the name`,
 			code: `@v:url(10PX);`,
+		},
+		{
+			// Neither of the next two would have been written into by a reading of the params alone — a string holds no word and a nameless group holding one holds no dimension — but they are the shapes the address stands among. See #649
+			description: `the same declaration with an escaped string in place of the address`,
+			code: `@v:~"10PX";`,
+		},
+		{
+			// A block shuts the reading of an unmarked node: this is an at-rule of CSS whatever its name spells, and Less compiles it to `@page :10PX { … }` rather than declaring anything. See #649
+			description: `an upper-case unit in the name of a page at-rule carrying a block`,
+			code: `@page:10PX { margin: 0 }`,
+		},
+		{
+			// See #649
+			description: `the same declaration with a call whose argument is a string`,
+			code: `@v:e("10PX");`,
 		},
 	],
 
@@ -299,6 +309,249 @@ testRule({
 			column: 16,
 			endLine: 1,
 			endColumn: 18,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// The at-word runs on past the colon here, so the word behind it is welded into the name: this node comes back named `v:10PX` with `1px` for params, and the value is gathered from both. Less declares `@v` all the same and gives a use of it `10PX 1px`. See #649
+			description: `an upper-case unit the parser welded into the name of the at-rule`,
+			code: `@v:10PX 1px;`,
+			fixed: `@v:10px 1px;`,
+			line: 1,
+			column: 6,
+			endLine: 1,
+			endColumn: 8,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// The whole value stands in the name, the params coming back empty. See #649
+			description: `the same declaration with nothing behind that unit`,
+			code: `@v:10PX;`,
+			fixed: `@v:10px;`,
+			line: 1,
+			column: 6,
+			endLine: 1,
+			endColumn: 8,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// One unit in the name and one in the params. See #649
+			description: `the same declaration with a second upper-case unit behind the first`,
+			code: `@v:10PX 1px 2EM;`,
+			fixed: `@v:10px 1px 2em;`,
+			warnings: [
+				{
+					line: 1,
+					column: 6,
+					endLine: 1,
+					endColumn: 8,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 16,
+					message: messages.expected(`EM`, `em`),
+				},
+			],
+		},
+		{
+			// The comment stands in the raw between the name and the params, which the write leaves as the file spells it. See #649
+			description: `the same declaration with a comment between the two`,
+			code: `@v:10PX /* c */ 1px;`,
+			fixed: `@v:10px /* c */ 1px;`,
+			line: 1,
+			column: 6,
+			endLine: 1,
+			endColumn: 8,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// This comment stands inside the params, in the raw the parser keeps beside them, and the write goes to that raw. See #649
+			description: `the same declaration with a comment inside the params`,
+			code: `@v:10PX 1px /* c */ 2EM;`,
+			fixed: `@v:10px 1px /* c */ 2em;`,
+			warnings: [
+				{
+					line: 1,
+					column: 6,
+					endLine: 1,
+					endColumn: 8,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 22,
+					endLine: 1,
+					endColumn: 24,
+					message: messages.expected(`EM`, `em`),
+				},
+			],
+		},
+		{
+			// See #649
+			description: `the same declaration whose params are an end-of-line comment`,
+			code: `
+				@v:10PX// c
+				;
+			`,
+			fixed: `
+				@v:10px// c
+				;
+			`,
+			line: 1,
+			column: 6,
+			endLine: 1,
+			endColumn: 8,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// A bang does not end the at-word, so the flag is welded into the name with the unit; Less compiles a use of this to `10PX !important`. See #649
+			description: `the same declaration with a bang flag welded to the unit`,
+			code: `@v:10PX!important;`,
+			fixed: `@v:10px!important;`,
+			line: 1,
+			column: 6,
+			endLine: 1,
+			endColumn: 8,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// The name holds `v::10PX`, and the value the reading gathers opens on the second colon, which the value parser reads as a divider. Less compiles a use of this to `:10PX`. See #649
+			description: `the same declaration with a second colon in front of the value`,
+			code: `@v::10PX;`,
+			fixed: `@v::10px;`,
+			line: 1,
+			column: 7,
+			endLine: 1,
+			endColumn: 9,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// Less subtracts inside the name as readily as anywhere else, compiling a use of this to `8PX 1px`. See #633 and #649
+			description: `two upper-case units a hyphen welds together inside the name`,
+			code: `@v:10PX-2REM 1px;`,
+			fixed: `@v:10px-2rem 1px;`,
+			warnings: [
+				{
+					line: 1,
+					column: 6,
+					endLine: 1,
+					endColumn: 8,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 13,
+					message: messages.expected(`REM`, `rem`),
+				},
+			],
+		},
+		{
+			// Less reads no exponent inside the name either, compiling a use of this to `1E 5PX`. See #646 and #649
+			description: `an exponent and the unit behind it inside the name`,
+			code: `@v:1E5PX;`,
+			fixed: `@v:1e5px;`,
+			warnings: [
+				{
+					line: 1,
+					column: 5,
+					endLine: 1,
+					endColumn: 6,
+					message: messages.expected(`E`, `e`),
+				},
+				{
+					line: 1,
+					column: 7,
+					endLine: 1,
+					endColumn: 9,
+					message: messages.expected(`PX`, `px`),
+				},
+			],
+		},
+		{
+			// See #649
+			description: `the same declaration standing inside a block`,
+			code: `a { @v:10PX 1px; c: @v }`,
+			fixed: `a { @v:10px 1px; c: @v }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// The name of the variable stands in front of the colon and the write never reaches it. See #649
+			description: `an upper-case unit in such a declaration whose variable is named in capitals`,
+			code: `@V:10PX;`,
+			fixed: `@V:10px;`,
+			line: 1,
+			column: 6,
+			endLine: 1,
+			endColumn: 8,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// Less reads `@page` as a variable here and compiles a use of it to `10PX`; the at-rule of CSS by that name carries a block, which the reading answers no for. See #649
+			description: `an upper-case unit in a bodiless at-rule named for one of CSS`,
+			code: `@page:10PX;`,
+			fixed: `@page:10px;`,
+			line: 1,
+			column: 9,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// See #649
+			description: `the same declaration with a tab between the name and the params`,
+			code: `@v:10PX\t1px;`,
+			fixed: `@v:10px\t1px;`,
+			line: 1,
+			column: 6,
+			endLine: 1,
+			endColumn: 8,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// See #649
+			description: `the same declaration with a line break there`,
+			code: `
+				@v:10PX
+				1px;
+			`,
+			fixed: `
+				@v:10px
+				1px;
+			`,
+			line: 1,
+			column: 6,
+			endLine: 1,
+			endColumn: 8,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// The reading gathers the value whole, so the reference is one word and the unit behind it another. See #649
+			description: `an upper-case unit behind a variable reference in such a declaration`,
+			code: `@v:@a 10PX;`,
+			fixed: `@v:@a 10px;`,
+			line: 1,
+			column: 9,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// The at-rule of CSS carries a block, so its name is no value: only the declaration inside it is read. See #649
+			description: `an upper-case unit inside a page at-rule whose name spells a colon`,
+			code: `@page:first { a: 10PX }`,
+			fixed: `@page:first { a: 10px }`,
+			line: 1,
+			column: 20,
+			endLine: 1,
+			endColumn: 22,
 			message: messages.expected(`PX`, `px`),
 		},
 		{
@@ -1283,11 +1536,6 @@ testRule({
 			description: `an upper-case unit in the value of a Less at-variable declared with a space in front of its colon`,
 			code: `@v : 10PX;`,
 		},
-		{
-			// See #577 and #649
-			description: `a lower-case unit in a declaration whose colon the parser welded into the name`,
-			code: `@v:10PX 1px;`,
-		},
 	],
 
 	reject: [
@@ -1452,6 +1700,72 @@ testRule({
 			column: 8,
 			endLine: 1,
 			endColumn: 10,
+			message: messages.expected(`px`, `PX`),
+		},
+		{
+			// Recasing a run does not always keep its length — `\u00DF` uppercases to `SS` — so where the head ends in the fixed text is read off the edits rather than off the text it was read from. Both spellings are units Less and `lightningcss` print as they stand, so this recase is the one the rule makes of any unit; that it changes the unit rather than its case is #653. See #649
+			description: `a unit in such a declaration whose upper case is one character longer`,
+			code: `@v:10A\u00DF 1px;`,
+			fixed: `@v:10ASS 1PX;`,
+			warnings: [
+				{
+					line: 1,
+					column: 6,
+					endLine: 1,
+					endColumn: 8,
+					message: messages.expected(`A\u00DF`, `ASS`),
+				},
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.expected(`px`, `PX`),
+				},
+			],
+		},
+		{
+			// The head of the value is written back into the name and the tail into the params, the raw between them left as the file spells it. See #649
+			description: `a lower-case unit in a declaration whose colon the parser welded into the name`,
+			code: `@v:10PX 1px;`,
+			fixed: `@v:10PX 1PX;`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`px`, `PX`),
+		},
+		{
+			// See #649
+			description: `both units of such a declaration in lower case`,
+			code: `@v:10px 1px;`,
+			fixed: `@v:10PX 1PX;`,
+			warnings: [
+				{
+					line: 1,
+					column: 6,
+					endLine: 1,
+					endColumn: 8,
+					message: messages.expected(`px`, `PX`),
+				},
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.expected(`px`, `PX`),
+				},
+			],
+		},
+		{
+			// See #649
+			description: `an address in such a declaration, whose text the fix leaves alone`,
+			code: `@v:url(10px) 1px;`,
+			fixed: `@v:url(10px) 1PX;`,
+			line: 1,
+			column: 15,
+			endLine: 1,
+			endColumn: 17,
 			message: messages.expected(`px`, `PX`),
 		},
 		{

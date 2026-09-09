@@ -7,6 +7,7 @@ import { isAtRule } from "../../utils/typeGuards/index.ts"
 import { css } from "../css/index.ts"
 import type { Syntax } from "../index.ts"
 
+import { atRuleVariableValue } from "./atRuleVariableValue/index.ts"
 import { isStandardLessAtRule, isStandardLessDeclaration, isStandardLessProperty, isStandardLessRule, isStandardLessSelector, isStandardLessValue } from "./guards/index.ts"
 import { requiresTrailingSemicolon } from "./requiresTrailingSemicolon/index.ts"
 import { syncLessVariableValue } from "./syncLessVariableValue/index.ts"
@@ -24,8 +25,7 @@ export let less: Syntax = {
 	isStandardComment: isStandardPreprocessorComment,
 	requiresTrailingSemicolon,
 	readsRuleParams: (rule: PostcssRule) => `params` in rule && Boolean(rule.params),
-	// The mark `postcss-less` sets stands only where the colon closed the name, and Less declares the variable on every spelling of the whitespace around that colon, so a node carrying no block whose params open on the colon is one too (#577). Where neither whitespace nor a comment stands in front of the colon the parser welds the first word behind it into the name — the mark catching every other spelling — and what is left in the params is no value of its own, `@v:url(10PX)` coming back named `v:url` with a nameless group for params, so such a node is passed over as it was (#649)
-	readsAtRuleAsVariable: (atRule: AtRule) => (`variable` in atRule && Boolean(atRule.variable)) || (!atRule.nodes && atRule.params.startsWith(`:`)),
+	atRuleVariableValue,
 	// Under its default `math` mode Less divides only inside parentheses (`@a/2` prints `4/2`), a nameless call the rules pass over, so a solidus outside is the separator it is to the core
 	readsSlashAsOperator: () => false,
 	// Less reads a number as digits and at most one period, so `1E5PX` is the dimension `1E` beside the dimension `5PX` (#646). Answered for the whole namespace: the letter of an exponent is the one character this reading adds to what the fix writes, and its case is nothing to CSS either
