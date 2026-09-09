@@ -39,7 +39,7 @@ testRule({
 			endColumn: 57,
 			message: messages.expected(1),
 		},
-		// #641; the span ends two columns short of the brace, as the base reports it (#644)
+		// #641
 		{
 			description: `a single-line block holding an interpolated declaration beside another inside a template, whose runs the fix writes as in a stylesheet`,
 			code: `const A = styled.div\`a { color: \${c}; top: 0; }\``,
@@ -48,6 +48,17 @@ testRule({
 			column: 24,
 			endLine: 1,
 			endColumn: 48,
+			message: messages.expected(1),
+		},
+		// #644; interpolations of unequal length, so the span's end moves where either is counted short
+		{
+			description: `a single-line block holding two interpolated declarations inside a template`,
+			code: `const A = styled.div\`a { color: \${c}; top: \${dd}; }\``,
+			fixed: `const A = styled.div\`a {\ncolor: \${c};\ntop: \${dd};\n}\``,
+			line: 1,
+			column: 24,
+			endLine: 1,
+			endColumn: 52,
 			message: messages.expected(1),
 		},
 	],
