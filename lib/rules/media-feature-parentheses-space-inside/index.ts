@@ -6,7 +6,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { addEdit, applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
+import { findCommentSpanAt, findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -108,6 +108,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (findCommentSpanHolding(node, comments)) return
 
 				if (node.type === `function`) {
+					// The `)` the parser closed the feature on may be one the file writes inside a comment: it knows nothing of a `//` comment and closes a `/*\/` one on its own star, so either kind can hand it a parenthesis of a comment's text and the fixes then write inside that text ([#347](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/347)). The whole feature goes, as it does in both `function-parentheses-*-inside` rules, the parenthesis the file does spell being one the parser never returned. Behind `unclosed`, since such a node's end index is not its own `)` but a nested call's or one past the text, and what a fix writes at the end of its params is #575.
+					if (!node.unclosed && findCommentSpanAt(node.sourceEndIndex - 1, comments)) return
+
 					let closingIndex = closingParenthesisIndex(node, params) - 1
 					// A closed pair holding no node encloses one run of what the value parser calls whitespace, every C0 control included, and it hands that run back whole as `before` and never as `after`: the closing question is the opening one, and asking it again reported a half the opening fix had settled and wrote another space every run ([#329](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/329)). An unclosed feature has no pair, and what a fix writes at the end of its params is [#575](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/575). Under `never` no guard is wanted, since an empty `after` is whitespace to nobody.
 					let enclosesOneRun = !node.unclosed && node.nodes.length === 0

@@ -36,9 +36,32 @@ testRule({
 			description: `one space inside a feature holding nothing else, which is the whole run the parentheses enclose and answers for both halves of the option`,
 			code: `@media ( ) { a { b: c; } }`,
 		},
+		{
+			// See #347
+			description: `a parenthesis written in the text of a comment opened by a solidus, a star and a solidus, which closes the feature to the parser, so neither space this option asks for is written into that text`,
+			code: `@media (a: 1 /*/ ) */ ) { a { b: c; } }`,
+		},
 	],
 
 	reject: [
+		{
+			// See #347
+			description: `such a feature standing beside one the file does spell, whose parentheses are spaced out while the text of the comment is left as it stands`,
+			code: `@media (a: 1) and (b: 2 /*/ ) */ ) { a { b: c; } }`,
+			fixed: `@media ( a: 1 ) and (b: 2 /*/ ) */ ) { a { b: c; } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 12,
+					message: messages.expectedClosing,
+				},
+			],
+		},
 		{
 			description: `no space after the opening parenthesis`,
 			code: `@media (max-width: 300px ) {}`,
@@ -211,9 +234,37 @@ testRule({
 			description: `two features joined by and, with no spaces inside their parentheses`,
 			code: `@media (grid) and (max-width: 15em) {}`,
 		},
+		{
+			// See #347, #506 and #508
+			description: `a comment leaving a quotation mark open in front of a parenthesis it also holds: taking the mark away hands the parser that parenthesis, and the feature it closes is one the file never spells, so the whole of it is passed over and the space in front of the parenthesis the file does spell goes unreported with it`,
+			code: `@media ( b: 2 /*/ " ) */ ) and (c: d) { a { b: c; } }`,
+		},
+		{
+			// See #347
+			description: `a parenthesis written in the text of a comment opened by a solidus, a star and a solidus, which closes the feature to the parser`,
+			code: `@media (a: 1 /*/ ) */ ) { a { b: c; } }`,
+		},
 	],
 
 	reject: [
+		{
+			// See #347
+			description: `such a feature standing beside one the file does spell, whose whitespace is taken away while the text of the comment is left as it stands`,
+			code: `@media ( a: 1 ) and (b: 2 /*/ ) */ ) { a { b: c; } }`,
+			fixed: `@media (a: 1) and (b: 2 /*/ ) */ ) { a { b: c; } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 14,
+					message: messages.rejectedClosing,
+				},
+			],
+		},
 		{
 			description: `two spaces after the opening parenthesis`,
 			code: `@media (  min-width: 700px) {}`,
@@ -402,24 +453,6 @@ testRule({
 				{
 					line: 1,
 					column: 14,
-					message: messages.rejectedClosing,
-				},
-			],
-		},
-		{
-			// See #347, #506 and #508
-			description: `a comment leaving a quotation mark open in front of a parenthesis it also holds: taking the mark away hands the parser that parenthesis, which closes the feature inside the comment, and this rule asks nothing about where the parenthesis it writes at stands`,
-			code: `@media ( b: 2 /*/ " ) */ ) and (c: d) { a { b: c; } }`,
-			fixed: `@media (b: 2 /*/ ") */ ) and (c: d) { a { b: c; } }`,
-			warnings: [
-				{
-					line: 1,
-					column: 9,
-					message: messages.rejectedOpening,
-				},
-				{
-					line: 1,
-					column: 20,
 					message: messages.rejectedClosing,
 				},
 			],
