@@ -71,6 +71,19 @@ function runInFrontOfTheClosingBrace (statement: Rule | AtRule): string {
 }
 
 /**
+ * Takes the line breaks out of the run in front of a node.
+ *
+ * The check reads a missing raw as the empty run, through `rawNodeString`. PostCSS prints a run of its own in front of a node carrying none — what its neighbours carry, and a line break where they carry nothing — so the fix writes the empty run there rather than leaving the raw alone ([#411](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/411)).
+ * @param node - The node whose leading run loses its breaks.
+ */
+function unbreakTheRunInFrontOf (node: Node): void {
+	let { before } = node.raws
+
+	if (typeof before !== `string`) node.raws.before = ``
+	else if (LINE_BREAK.test(before)) node.raws.before = before.replaceAll(EVERY_LINE_BREAK, ``)
+}
+
+/**
  * Writes the run in front of the closing brace of a block holding nothing but comments, and takes the breaks out of the comments' own whitespace where the option refuses them, the last of them being the one carried onto that brace.
  * @param statement - The rule or at-rule whose block holds nothing but comments.
  * @param nodes - The comments it holds.
@@ -79,11 +92,7 @@ function runInFrontOfTheClosingBrace (statement: Rule | AtRule): string {
  */
 function writeTheTrailingRun (statement: Rule | AtRule, nodes: ChildNode[], written: string, takeTheBreaksOut: boolean): void {
 	if (takeTheBreaksOut) {
-		for (let node of nodes) {
-			let before = node.raws.before
-
-			if (typeof before === `string`) node.raws.before = before.replaceAll(EVERY_LINE_BREAK, ``)
-		}
+		for (let node of nodes) unbreakTheRunInFrontOf(node)
 	}
 
 	setBlockAfter(statement, written)
@@ -253,11 +262,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						let fixTarget = statement.first
 
 						while (fixTarget) {
-							let fixTargetRaws = fixTarget.raws
-
-							if (typeof fixTargetRaws.before !== `string`) continue
-
-							if (LINE_BREAK.test(fixTargetRaws.before || ``)) fixTargetRaws.before = fixTargetRaws.before.replaceAll(EVERY_LINE_BREAK, ``)
+							unbreakTheRunInFrontOf(fixTarget)
 
 							if (fixTarget.type !== `comment`) break
 
