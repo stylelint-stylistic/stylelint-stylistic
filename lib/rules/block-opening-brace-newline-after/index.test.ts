@@ -335,7 +335,10 @@ testRule({
 			// See #672
 			description: `a block holding nothing but a comment, with no break anywhere in its head`,
 			code: `a {/*c*/}`,
-			fixed: `a {/*c*/}`,
+			fixed: `
+				a {/*c*/
+				}
+			`,
 			line: 1,
 			column: 4,
 			message: messages.expectedAfter(),
@@ -343,7 +346,10 @@ testRule({
 		{
 			description: `a run of comments alone in a block, with no break anywhere in its head`,
 			code: `a {/*1*/ /*2*/}`,
-			fixed: `a {/*1*/ /*2*/}`,
+			fixed: `
+				a {/*1*/ /*2*/
+				}
+			`,
 			line: 1,
 			column: 4,
 			message: messages.expectedAfter(),
@@ -356,7 +362,8 @@ testRule({
 			`,
 			fixed: `
 				a {${S}
-				/*c*/}
+				/*c*/
+				}
 			`,
 			line: 1,
 			column: 4,
@@ -365,9 +372,20 @@ testRule({
 		{
 			description: `an at-rule whose block holds nothing but a comment`,
 			code: `@media print {/*c*/}`,
-			fixed: `@media print {/*c*/}`,
+			fixed: `
+				@media print {/*c*/
+				}
+			`,
 			line: 1,
 			column: 15,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a stray semicolon standing in the run in front of the closing brace of such a block, which no write may drop`,
+			code: `a {/*c*/;}`,
+			fixed: `a {/*c*/;}`,
+			line: 1,
+			column: 4,
 			message: messages.expectedAfter(),
 		},
 		{
@@ -379,7 +397,7 @@ testRule({
 			`,
 			fixed: `
 				a {/*1*/
-				/*2*/${S}
+				/*2*/
 				}
 			`,
 			line: 1,
@@ -582,7 +600,8 @@ testRule({
 			`,
 			fixed: `
 				a {${S}
-				/*c*/}
+				/*c*/
+				}
 			`,
 			line: 1,
 			column: 4,
@@ -595,7 +614,7 @@ testRule({
 				}
 			`,
 			fixed: `
-				a {/*c*/${S}
+				a {/*c*/
 				}
 			`,
 			line: 1,
@@ -776,10 +795,7 @@ testRule({
 				a {
 				/*c*/}
 			`,
-			fixed: `
-				a {
-				/*c*/}
-			`,
+			fixed: `a {/*c*/}`,
 			line: 1,
 			column: 4,
 			message: messages.rejectedAfterMultiLine(),
@@ -790,10 +806,7 @@ testRule({
 				a {/*c*/
 				}
 			`,
-			fixed: `
-				a {/*c*/
-				}
-			`,
+			fixed: `a {/*c*/}`,
 			line: 1,
 			column: 4,
 			message: messages.rejectedAfterMultiLine(),
@@ -805,9 +818,21 @@ testRule({
 				/*c*/
 				}
 			`,
+			fixed: `a {/*c*/}`,
+			line: 1,
+			column: 4,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		{
+			description: `a stray semicolon standing among the whitespace of that run, which no write may drop`,
+			code: `
+				a {
+				/*c*/${S};${S}
+				}
+			`,
 			fixed: `
 				a {
-				/*c*/
+				/*c*/${S};${S}
 				}
 			`,
 			line: 1,
@@ -822,7 +847,7 @@ testRule({
 			`,
 			fixed: `
 				a {/*a
-				b*/ }
+				b*/}
 			`,
 			line: 1,
 			column: 4,
@@ -935,7 +960,7 @@ describe(`${ruleName} on the whitespace it carries past a comment`, () => {
 	it(`carries nothing onto a comment that stands behind a bare carriage return and a form feed, which are whitespace and no break`, async () => {
 		let code = `a {\r/*c*/\f/*tail*/}`
 
-		expect(await fixQuietly(code, `always`)).toEqual({ code, warnings: 1 })
+		expect(await fixQuietly(code, `always`)).toEqual({ code: `a {\r/*c*/\f/*tail*/\n}`, warnings: 1 })
 	})
 
 	it(`carries nothing past a comment the block ends with`, async () => {
@@ -950,12 +975,101 @@ describe(`${ruleName} on the whitespace it carries past a comment`, () => {
 
 		expect(await fixQuietly(code, `always`)).toEqual({ code, warnings: 0 })
 		expect(await fixQuietly(code, `always-multi-line`)).toEqual({ code, warnings: 0 })
-		expect(await fixQuietly(code, `never-multi-line`)).toEqual({ code, warnings: 1 })
+		expect(await fixQuietly(code, `never-multi-line`)).toEqual({ code: `a {/*1*/ /*2*/ /*3*/}`, warnings: 1 })
 	})
 
 	it(`puts it back inside such a block of an at-rule`, async () => {
 		let code = `@media print {\n/*1*/ /*2*/}`
 
 		expect(await fixQuietly(code, `always`)).toEqual({ code, warnings: 0 })
+	})
+})
+
+/**
+ * Fixes a stylesheet under two rules, once in each order the configuration can list them, and reports what is left.
+ * @param code - The stylesheet.
+ * @param option - This rule's primary option.
+ * @param neighbour - The other rule's configured name.
+ * @param setting - The other rule's configured value.
+ * @returns What each order wrote, and the warnings the first order left over its own output.
+ */
+async function race (code: string, option: string, neighbour: string, setting: unknown): Promise<{
+	ours: string | undefined,
+	theirs: string | undefined,
+	left: string[],
+}> {
+	let ours = await stylelint.lint({ code, config: { plugins, rules: { [ruleName]: option, [neighbour]: setting } }, fix: true })
+	let theirs = await stylelint.lint({ code, config: { plugins, rules: { [neighbour]: setting, [ruleName]: option } }, fix: true })
+	let again = await stylelint.lint({ code: ours.code ?? code, config: { plugins, rules: { [ruleName]: option, [neighbour]: setting } } })
+
+	return { ours: ours.code, theirs: theirs.code, left: pick(again.results).warnings.map((warning) => warning.text) }
+}
+
+// See #676
+describe(`${ruleName} beside the rules that write the same run`, () => {
+	let closingNewline = `@stylistic/block-closing-brace-newline-before`
+	let closingSpace = `@stylistic/block-closing-brace-space-before`
+	let closingEmptyLine = `@stylistic/block-closing-brace-empty-line-before`
+
+	it(`writes the run where the rule about the closing brace asks for the same break`, async () => {
+		expect(await race(`a {/*c*/}`, `always`, closingNewline, `always`)).toEqual({ ours: `a {/*c*/\n}`, theirs: `a {/*c*/\n}`, left: [] })
+	})
+
+	it(`leaves it where that rule's never-multi-line would take the break straight back out`, async () => {
+		expect(await race(`a {/*c*/}`, `always`, closingNewline, `never-multi-line`)).toEqual({ ours: `a {/*c*/}`, theirs: `a {/*c*/}`, left: [messages.expectedAfter()] })
+	})
+
+	it(`leaves it where the rule about a space in front of that brace asks for one`, async () => {
+		expect(await race(`a {/*c*/}`, `always`, closingSpace, `always`)).toEqual({ ours: `a {/*c*/ }`, theirs: `a {/*c*/ }`, left: [messages.expectedAfter()] })
+	})
+
+	it(`writes it where that rule says nothing of the block the write leaves, which is multi-line`, async () => {
+		expect(await race(`a {/*c*/}`, `always`, closingSpace, `always-single-line`)).toEqual({ ours: `a {/*c*/\n}`, theirs: `a {/*c*/\n}`, left: [] })
+	})
+
+	it(`writes it where the rule about an empty line in front of that brace doubles the break behind it`, async () => {
+		expect(await race(`a {/*c*/}`, `always`, closingEmptyLine, `always-multi-line`)).toEqual({ ours: `a {/*c*/\n\n}`, theirs: `a {/*c*/\n\n}`, left: [] })
+	})
+
+	it(`leaves it where that rule wants the empty line the never-multi-line write takes out`, async () => {
+		let code = `a {/*a\nb*/\n}`
+
+		expect(await race(code, `never-multi-line`, closingEmptyLine, [`never`, { except: [`after-closing-brace`] }])).toEqual({
+			ours: `a {/*a\nb*/\n\n}`,
+			theirs: `a {/*a\nb*/\n\n}`,
+			left: [messages.rejectedAfterMultiLine()],
+		})
+	})
+
+	it(`writes it under never-multi-line where the emptied run leaves the block on one line, which takes that rule's always-multi-line out of the conversation`, async () => {
+		expect(await race(`a {\n/*c*/\n}`, `never-multi-line`, closingEmptyLine, `always-multi-line`)).toEqual({ ours: `a {/*c*/}`, theirs: `a {/*c*/}`, left: [] })
+	})
+
+	it(`leaves it under never-multi-line where a comment of its own keeps the block multi-line and that rule still wants its empty line`, async () => {
+		let code = `a {/*a\nb*/\n}`
+
+		expect(await race(code, `never-multi-line`, closingEmptyLine, `always-multi-line`)).toEqual({
+			ours: `a {/*a\nb*/\n\n}`,
+			theirs: `a {/*a\nb*/\n\n}`,
+			left: [messages.rejectedAfterMultiLine()],
+		})
+	})
+
+	it(`leaves it where one comment of a run keeps the block multi-line while the rest of them are single-line`, async () => {
+		let code = `a {/*1*/\n/*a\nb*/\n}`
+
+		expect(await race(code, `never-multi-line`, closingEmptyLine, `always-multi-line`)).toEqual({
+			ours: `a {/*1*/\n/*a\nb*/\n\n}`,
+			theirs: `a {/*1*/\n/*a\nb*/\n\n}`,
+			left: [messages.rejectedAfterMultiLine()],
+		})
+	})
+
+	it(`writes it where that rule's fix is turned off, since a fix that rewrites nothing gates nothing`, async () => {
+		expect(await race(`a {/*c*/}`, `always`, closingNewline, [`never-multi-line`, { disableFix: true }])).toEqual({
+			ours: `a {/*c*/\n}`,
+			theirs: `a {/*c*/\n}`,
+			left: [`Unexpected whitespace before "}" of a multi-line block (${closingNewline})`],
+		})
 	})
 })

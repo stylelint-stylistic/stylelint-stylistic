@@ -17,7 +17,7 @@ a { /* end-of-line comment */
 }
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule. It does not fix a block holding nothing but comments: the run the rule reads there is the whitespace in front of the closing brace, which the `block-closing-brace-*-before` rules write.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule. Over a block holding nothing but comments the run it reads is the whitespace in front of the closing brace, which the `block-closing-brace-newline-before`, `block-closing-brace-space-before` and `block-closing-brace-empty-line-before` rules write too, so it writes there only where each of those that speaks of the block the write leaves, and whose fix you have not turned off, asks for a run this rule accepts as well; otherwise the warning stands for you to answer by hand. Nor does it write over a run holding anything the plugin does not read as whitespace, a stray semicolon for one, which those rules read differently from one another.
 
 ## Options
 
