@@ -17,8 +17,8 @@ import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { nextNonCommentNode } from "../../utils/nextNonCommentNode/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
-import { rawNodeString } from "../../utils/rawNodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesBlockAfter } from "../../utils/writesBlockAfter/index.ts"
@@ -59,13 +59,13 @@ function fixWouldCommentOutTheBlock (syntax: Syntax, statement: Rule | AtRule, n
 /**
  * The run the closing brace of a block holding nothing but comments stands behind.
  *
- * Such a block has that brace where the checked node would stand, so the carry chains onto it: the block's own trailing raw takes the break in front of it exactly as a node's `raws.before` would ([#672](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/672)).
+ * Such a block has that brace where the checked node would stand, so the carry chains onto it: the block's own trailing raw takes the break in front of it exactly as a node's `raws.before` would ([#672](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/672)). The last comment's run is read the way every other is, so a comment carrying no raw is the run PostCSS prints in front of it ([#680](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/680)).
  * @param statement - The rule or at-rule whose block holds nothing but comments.
  * @returns The trailing raw, or the run carried past the last comment.
  */
 function runInFrontOfTheClosingBrace (statement: Rule | AtRule): string {
 	let after = getBlockAfter(statement) ?? ``
-	let lastBefore = statement.last?.raws.before ?? ``
+	let lastBefore = statement.last ? runInFrontOf(statement.last) : ``
 
 	return (!LINE_BREAK.test(after) && LINE_BREAK.test(lastBefore)) ? lastBefore : after
 }
@@ -73,7 +73,7 @@ function runInFrontOfTheClosingBrace (statement: Rule | AtRule): string {
 /**
  * Takes the line breaks out of the run in front of a node.
  *
- * The check reads a missing raw as the empty run, through `rawNodeString`. PostCSS prints a run of its own in front of a node carrying none — what its neighbours carry, and a line break where they carry nothing — so the fix writes the empty run there rather than leaving the raw alone ([#411](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/411)).
+ * A node carrying no raw is written the empty run rather than left alone, since PostCSS prints a run of its own in front of one and `never-multi-line`, the only option that asks for this, wants no whitespace there at all ([#411](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/411)).
  * @param node - The node whose leading run loses its breaks.
  */
 function unbreakTheRunInFrontOf (node: Node): void {
@@ -164,16 +164,21 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			function carryBreakPastComment (comment: Node, nextNode: Node | undefined): void {
 				if (!nextNode) return
 
+				let carried = runInFrontOf(comment)
+
 				// PostCSS reads a line feed as a break, with or without a carriage return in front
-				if (!LINE_BREAK.test(comment.raws.before || ``) || LINE_BREAK.test(nextNode.raws.before || ``)) return
+				if (!LINE_BREAK.test(carried) || LINE_BREAK.test(runInFrontOf(nextNode))) return
 
 				backupCommentNextBefores.set(nextNode, nextNode.raws.before)
-				nextNode.raws.before = comment.raws.before
+				nextNode.raws.before = carried
 			}
 
-			/** Puts back the whitespace the carry wrote over. */
+			/** Puts back the whitespace the carry wrote over, a missing raw missing, so that the check leaves the tree as it found it. */
 			function restoreCarriedBreaks (): void {
-				for (let [node, before] of backupCommentNextBefores.entries()) node.raws.before = before
+				for (let [node, before] of backupCommentNextBefores.entries()) {
+					if (before === undefined) delete node.raws.before
+					else node.raws.before = before
+				}
 
 				backupCommentNextBefores.clear()
 			}
@@ -188,7 +193,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			checker.afterOneOnly({
 				// A block closes on `}` in every syntax the plugin reads, and all the check asks of that character is that it is not whitespace
-				source: nodeToCheck ? rawNodeString(nodeToCheck, result) : `${runInFrontOfTheClosingBrace(statement)}}`,
+				source: nodeToCheck ? runInFrontOf(nodeToCheck) + nodeString(nodeToCheck, result) : `${runInFrontOfTheClosingBrace(statement)}}`,
 				index: -1,
 				lineCheckStr: blockString(statement, result),
 				err: (m) => {
@@ -236,6 +241,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			/**
 			 * Builds the fix that spells the run in front of the checked node.
+			 *
+			 * The run the fix reads is the one the check read, so a node carrying no raw is written the run PostCSS would have printed in front of it, trimmed or opened as the option asks ([#680](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/680)).
 			 * @param nodeToFix - The first non-comment node of the block.
 			 * @returns The fix.
 			 */
@@ -243,13 +250,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				return (): void => {
 					let nodeToFixRaws = nodeToFix.raws
 
-					if (typeof nodeToFixRaws.before !== `string`) return
-
 					if (primary.startsWith(`always`)) {
+						let standing = runInFrontOf(nodeToFix)
 						// Trim to the break already there, or add one
-						let index = nodeToFixRaws.before.search(LINE_BREAK)
+						let index = standing.search(LINE_BREAK)
 
-						nodeToFixRaws.before = index >= 0 ? nodeToFixRaws.before.slice(index) : getLineBreak(syntax, root, result) + nodeToFixRaws.before
+						nodeToFixRaws.before = index >= 0 ? standing.slice(index) : getLineBreak(syntax, root, result) + standing
 
 						backupCommentNextBefores.delete(nodeToFix)
 
