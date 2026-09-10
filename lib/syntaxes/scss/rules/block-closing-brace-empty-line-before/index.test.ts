@@ -5,9 +5,6 @@ let { ruleName, messages } = createRule(scss)
 
 let testRule = createTestRule({ ruleName })
 
-// A space no editor trims from the end of a line.
-const S = ` `
-
 testRule({
 	ruleName,
 	config: [`always-multi-line`],
@@ -34,9 +31,9 @@ testRule({
 			`,
 			fixed: `
 				a { b: 1px // c
-					2px;${S}
+					2px;
 
-				}
+				 }
 			`,
 			line: 2,
 			column: 7,

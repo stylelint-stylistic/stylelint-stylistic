@@ -176,6 +176,24 @@ testRule({
 			message: messages.expected,
 		},
 		{
+			// See #678
+			description: `a space in front of the brace of a block broken open, the empty line belonging in front of that space rather than behind it`,
+			code: `a {\ncolor: pink; }`,
+			fixed: `a {\ncolor: pink;\n\n }`,
+			line: 2,
+			column: 14,
+			message: messages.expected,
+		},
+		{
+			// See #678
+			description: `a stray semicolon and a space in front of that brace, the empty line belonging between the two`,
+			code: `a {\ncolor: pink;; }`,
+			fixed: `a {\ncolor: pink;;\n\n }`,
+			line: 2,
+			column: 15,
+			message: messages.expected,
+		},
+		{
 			description: `a block broken open, with no empty line to close it`,
 			code: `
 				a {
@@ -716,6 +734,15 @@ testRule({
 			line: 4,
 			column: 1,
 			message: messages.rejected,
+		},
+		{
+			// See #678
+			description: `a space in front of the brace of a block holding nothing but a comment, which the reversed option gives an empty line`,
+			code: `a {/*c*/ }`,
+			fixed: `a {/*c*/\n\n }`,
+			line: 1,
+			column: 10,
+			message: messages.expected,
 		},
 		{
 			description: `a brace following a closing brace with no empty line in front of it`,

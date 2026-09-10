@@ -31,13 +31,21 @@ describe(`addEmptyLineAfter`, () => {
 		expect(run(`a {  \r\n\t}`)).toBe(`a {  \r\n\r\n\t}`)
 	})
 
-	it(`a bare carriage return or a form feed in front of the closing brace, which is whitespace and no break, so that a line is written behind it`, () => {
-		expect(run(`a {\r}`)).toBe(`a {\r\n\n}`)
-		expect(run(`a {\f\t}`)).toBe(`a {\f\t\n\n}`)
+	it(`a bare carriage return or a form feed in front of the closing brace, which is whitespace and no break, so that a line is written in front of it`, () => {
+		expect(run(`a {\r}`)).toBe(`a {\n\n\r}`)
+		expect(run(`a {\f\t}`)).toBe(`a {\n\n\f\t}`)
 	})
 
-	it(`adds two newlines if there aren't any existing newlines`, () => {
-		expect(run(`a {  }`)).toBe(`a {  \n\n}`)
+	// See #678
+	it(`adds two newlines in front of a run holding none, the run being the brace's own indentation`, () => {
+		expect(run(`a {  }`)).toBe(`a {\n\n  }`)
+	})
+
+	// See #678
+	it(`writes them where a stray semicolon stands in front of the run's first whitespace character, so a rule taking that semicolon out leaves one file in either order`, () => {
+		expect(run(`a {color: pink;; }`)).toBe(`a {color: pink;;\n\n }`)
+		expect(run(`a {color: pink; ; }`)).toBe(`a {color: pink;\n\n ; }`)
+		expect(run(`a {color: pink;;}`)).toBe(`a {color: pink;;\n\n}`)
 	})
 
 	it(`adds two newlines if there aren't any newlines after semicolon`, () => {
