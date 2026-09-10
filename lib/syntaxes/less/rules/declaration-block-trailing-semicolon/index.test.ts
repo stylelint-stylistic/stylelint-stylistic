@@ -407,6 +407,51 @@ testRule({
 			column: 8,
 			message: messages.rejected,
 		},
+		{
+			// See #358
+			description: `a declaration spelling no value, which Less reads to its semicolon as it reads a bodiless at-rule, so the problem is reported and the file left alone`,
+			code: `a { color:; }`,
+			fixed: `a { color:; }`,
+			line: 1,
+			column: 11,
+			message: messages.rejected,
+		},
+		{
+			// See #358
+			description: `the same declaration with a block comment behind the colon, which is no more of a value to Less than the whitespace is`,
+			code: `a { color: /* c */; }`,
+			fixed: `a { color: /* c */; }`,
+			line: 1,
+			column: 19,
+			message: messages.rejected,
+		},
+		{
+			// See #358
+			description: `a declaration spelling nothing but an important flag, which Less reads no value in either`,
+			code: `a { color: !important; }`,
+			fixed: `a { color: !important; }`,
+			line: 1,
+			column: 22,
+			message: messages.rejected,
+		},
+		{
+			// See #358
+			description: `a custom property spelling no value, which this syntax hands over the same way and Less asks the semicolon of just as readily`,
+			code: `a { --x:; }`,
+			fixed: `a { --x:; }`,
+			line: 1,
+			column: 9,
+			message: messages.rejected,
+		},
+		{
+			// See #358
+			description: `a custom property spelling nothing but that flag, which such a property takes literally as its value, so the semicolon goes`,
+			code: `a { --x: !important; }`,
+			fixed: `a { --x: !important }`,
+			line: 1,
+			column: 20,
+			message: messages.rejected,
+		},
 	],
 })
 testRule({

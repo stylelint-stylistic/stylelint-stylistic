@@ -147,7 +147,7 @@ function takeTheTrailingSemicolonsAway (syntax: Syntax, node: AtRule | Declarati
 /**
  * Asks whether the warning over a node can carry a fix.
  *
- * Under `always`, no for a node with a block (`postcss-scss` drops a Sass nested property's semicolon) and where an inline comment ending the node would swallow the semicolon. Under `never`, no for the semicolon PostCSS writes regardless of the flag and the one Less requires behind a bodiless at-rule. The warning then stands over code the fix leaves alone.
+ * Under `always`, no for a node with a block (`postcss-scss` drops a Sass nested property's semicolon) and where an inline comment ending the node would swallow the semicolon. Under `never`, no for the semicolon PostCSS writes regardless of the flag and the ones the syntax requires, which under Less are the semicolon behind a bodiless at-rule and the one behind a declaration it reads no value in. The warning then stands over code the fix leaves alone.
  * @param syntax - The syntax the rule is built over.
  * @param node - The node the semicolon stands behind.
  * @param primary - The primary option.

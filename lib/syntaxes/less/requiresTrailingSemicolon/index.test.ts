@@ -156,5 +156,53 @@ describe(`requiresTrailingSemicolon`, () => {
 		it(`a declaration, whose semicolon Less parts with`, () => {
 			expect(closingALessBlock(`color: pink`)).toBe(false)
 		})
+
+		it(`a declaration spelling no value, which Less reads to the semicolon exactly as it reads a bodiless at-rule`, () => {
+			expect(closingALessBlock(`color:`)).toBe(true)
+		})
+
+		it(`the same declaration with a space behind the colon`, () => {
+			expect(closingALessBlock(`color: `)).toBe(true)
+		})
+
+		it(`the same declaration with a block comment behind the colon, which is no value either`, () => {
+			expect(closingALessBlock(`color: /* c */`)).toBe(true)
+		})
+
+		it(`the same declaration with an inline comment behind the colon, which this syntax keeps inside the value`, () => {
+			expect(closingALessBlock(`color: // c`)).toBe(true)
+		})
+
+		it(`a declaration spelling nothing but an important flag, which is no value to Less`, () => {
+			expect(closingALessBlock(`color: !important`)).toBe(true)
+		})
+
+		it(`the same flag behind a value, which the value answers for`, () => {
+			expect(closingALessBlock(`color: pink !important`)).toBe(false)
+		})
+
+		it(`a custom property spelling no value`, () => {
+			expect(closingALessBlock(`--x:`)).toBe(true)
+		})
+
+		it(`the same custom property with a space behind the colon`, () => {
+			expect(closingALessBlock(`--x: `)).toBe(true)
+		})
+
+		it(`the same custom property with a block comment behind the colon`, () => {
+			expect(closingALessBlock(`--x: /* c */`)).toBe(true)
+		})
+
+		it(`the same custom property with an inline comment behind the colon, which is a comment to Less here as anywhere`, () => {
+			expect(closingALessBlock(`--x: // c`)).toBe(true)
+		})
+
+		it(`a custom property spelling nothing but an important flag, which such a property takes literally as its value`, () => {
+			expect(closingALessBlock(`--x: !important`)).toBe(false)
+		})
+
+		it(`a custom property carrying a value`, () => {
+			expect(closingALessBlock(`--x: pink`)).toBe(false)
+		})
 	})
 })
