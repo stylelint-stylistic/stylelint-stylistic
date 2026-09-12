@@ -1,6 +1,7 @@
 import stylelint from "stylelint"
 
 import { css } from "../../syntaxes/css/index.ts"
+import { declaresTheEncoding } from "../../utils/declaresTheEncoding/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -43,6 +44,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		root.walkAtRules((atRule) => {
 			if (!syntax.isStandardAtRule(atRule)) return
+
+			// The lower-case name of an encoding declaration is the specification's, not a style (#703)
+			if (declaresTheEncoding(atRule)) return
 
 			let name = atRule.name
 

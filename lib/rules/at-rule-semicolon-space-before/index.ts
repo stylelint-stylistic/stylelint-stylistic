@@ -1,6 +1,7 @@
 import stylelint from "stylelint"
 
 import { css } from "../../syntaxes/css/index.ts"
+import { declaresTheEncoding } from "../../utils/declaresTheEncoding/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
@@ -49,6 +50,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (hasBlock(atRule)) return
 
 			if (!syntax.isStandardAtRule(atRule)) return
+
+			// The semicolon of an encoding declaration follows its closing quotation mark directly, as the specification reads it (#703)
+			if (declaresTheEncoding(atRule)) return
 
 			// The check asks about the position one past the at-rule, as though a semicolon stood there; where the file spells none the at-rule runs to its container's `}` or the end of the file, and the position is somebody else's (#395)
 			if (isLastNodeWithoutSemicolon(atRule)) return

@@ -183,6 +183,11 @@ testRule({
 	config: [`upper`],
 
 	accept: [
+		// See #703
+		{
+			description: `an encoding declaration, whose lower-case name the specification asks for`,
+			code: `@charset "UTF-8";`,
+		},
 		{
 			description: `a name already in upper case`,
 			code: `@CHARSET 'UTF-8';`,
@@ -259,9 +264,18 @@ testRule({
 			message: messages.expected(`cHaRsEt`, `CHARSET`),
 		},
 		{
-			description: `the whole name in lower case`,
+			description: `the whole name in lower case, on a charset rule whose single quotes declare no encoding`,
 			code: `@charset 'UTF-8';`,
 			fixed: `@CHARSET 'UTF-8';`,
+			line: 1,
+			column: 1,
+			message: messages.expected(`charset`, `CHARSET`),
+		},
+		// See #703
+		{
+			description: `the same name on a charset rule spelled with two spaces, which declares none either`,
+			code: `@charset  "UTF-8";`,
+			fixed: `@CHARSET  "UTF-8";`,
 			line: 1,
 			column: 1,
 			message: messages.expected(`charset`, `CHARSET`),

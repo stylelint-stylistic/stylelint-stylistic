@@ -9,6 +9,8 @@ Require a newline after at-rule names.
  * The newline after this at-rule name */
 ```
 
+The rule passes over an encoding declaration spelled as the specification reads it — `@charset "utf-8";` at the very start of the file, with one space and double quotes — since no other spelling of it declares an encoding at all.
+
 ## Options
 
 `string`: `"always"|"always-multi-line"`
@@ -20,7 +22,7 @@ There _must always_ be a newline after at-rule names.
 The following patterns are considered problems:
 
 ```css
-@charset "UTF-8";
+@import "x.css";
 ```
 
 ```css
@@ -31,8 +33,8 @@ The following patterns are considered problems:
 The following patterns are _not_ considered problems:
 
 ```css
-@charset
-  "UTF-8";
+@import
+  "x.css";
 ```
 
 ```css
@@ -71,12 +73,12 @@ The following patterns are considered problems:
 The following patterns are _not_ considered problems:
 
 ```css
-@charset "UTF-8";
+@import "x.css";
 ```
 
 ```css
-@charset
-  "UTF-8";
+@import
+  "x.css";
 ```
 
 ```css

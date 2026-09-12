@@ -136,6 +136,9 @@ export const LEADING_CSS_WHITESPACE = /^[ \t\n\r\f]*/u
 /** The leading word, up to the first tokenizer whitespace, the complement of {@link LEADING_CSS_WHITESPACE}, for cutting a run `postcss-value-parser` read too wide ([#496](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496)). */
 export const LEADING_CSS_WORD = /^[^ \t\n\r\f]*/u
 
+/** The encoding declaration as the fallback-encoding step of css-syntax-3 reads it out of the byte stream: at the very start, one space, the label in double quotes, a semicolon. Any other spelling declares no encoding ([#703](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/703)). */
+export const LEADING_ENCODING_DECLARATION = /^@charset "[^"]*";/u
+
 /** A leading hexadecimal escape with its one closing whitespace character; a Windows pair counts as one. */
 export const LEADING_HEX_ESCAPE = /^\\[\da-f]{1,6}(?:\r\n|[ \t\n\r\f])?/iu
 

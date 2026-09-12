@@ -7,6 +7,15 @@ testRule({
 	config: [`always`],
 
 	accept: [
+		// See #703
+		{
+			description: `an encoding declaration, whose single space the specification asks for`,
+			code: `@charset "UTF-8";`,
+		},
+		{
+			description: `an encoding declaration behind which the stylesheet goes on`,
+			code: `@charset "UTF-8";\na { color: pink; }`,
+		},
 		{
 			description: `a line feed behind the name`,
 			code: `@charset\n"UTF-8";`,
@@ -141,13 +150,6 @@ testRule({
 			line: 1,
 			column: 6,
 			message: messages.expectedAfter(`@layer`),
-		},
-		{
-			description: `a space where the break belongs`,
-			code: `@charset "UTF-8";`,
-			line: 1,
-			column: 8,
-			message: messages.expectedAfter(`@charset`),
 		},
 		{
 			description: `nothing at all where the break belongs`,

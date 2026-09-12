@@ -10,6 +10,8 @@ Require a single space or disallow whitespace before the semicolons of at-r
 
 Nothing is asked of an at-rule the file spells no semicolon behind — one running to the brace that closes its container, or to the end of the file. There is no semicolon there for whitespace to stand in front of, and the whitespace that does stand there is the closing brace's or the file's own.
 
+The rule passes over an encoding declaration spelled as the specification reads it — `@charset "utf-8";` at the very start of the file, with one space and double quotes — since no other spelling of it declares an encoding at all.
+
 ## Options
 
 `string`: `"always"|"never"`

@@ -2,6 +2,7 @@ import type { AtRule, Root } from "postcss"
 import stylelint, { type PostcssResult } from "stylelint"
 
 import type { Syntax } from "../../syntaxes/index.ts"
+import { declaresTheEncoding } from "../declaresTheEncoding/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -24,6 +25,9 @@ export function atRuleNameSpaceChecker (options: {
 }): void {
 	options.root.walkAtRules((atRule) => {
 		if (!options.syntax.isStandardAtRule(atRule)) return
+
+		// The one space of an encoding declaration is the specification's, not a style (#703)
+		if (declaresTheEncoding(atRule)) return
 
 		checkColon(
 			`@${atRule.name}${atRule.raws.afterName || ``}${atRule.params}`,

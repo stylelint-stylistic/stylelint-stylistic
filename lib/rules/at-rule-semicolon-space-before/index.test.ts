@@ -7,6 +7,11 @@ testRule({
 	config: [`always`],
 
 	accept: [
+		// See #703
+		{
+			description: `an encoding declaration, whose semicolon the specification puts on the closing quotation mark`,
+			code: `@charset "UTF-8";`,
+		},
 		{
 			description: `a space in front of the semicolon`,
 			code: `@import "styles/mystyle" ;`,
@@ -80,6 +85,21 @@ testRule({
 	],
 
 	reject: [
+		// See #703
+		{
+			description: `a charset rule whose single quotes declare no encoding, so nothing holds the rule off it`,
+			code: `@charset 'UTF-8';`,
+			line: 1,
+			column: 16,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `the same rule spelled with two spaces, which declares none either`,
+			code: `@charset  "UTF-8";`,
+			line: 1,
+			column: 17,
+			message: messages.expectedBefore(),
+		},
 		{
 			// See #357
 			description: `an at-rule spelled without a space in front of its options, which the parser gives the shape of a call to a Less detached ruleset`,
