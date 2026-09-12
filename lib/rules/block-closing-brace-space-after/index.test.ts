@@ -49,6 +49,7 @@ testRule({
 		{
 			description: `a second block abutting the brace`,
 			code: `a { color: pink; }b { color: red; }`,
+			fixed: `a { color: pink; } b { color: red; }`,
 			line: 1,
 			column: 19,
 			message: messages.expectedAfter(),
@@ -56,6 +57,7 @@ testRule({
 		{
 			description: `two spaces where one belongs`,
 			code: `a { color: pink; }  b { color: red; }`,
+			fixed: `a { color: pink; } b { color: red; }`,
 			line: 1,
 			column: 19,
 			message: messages.expectedAfter(),
@@ -63,6 +65,7 @@ testRule({
 		{
 			description: `a break where the space belongs`,
 			code: `a { color: pink; }\nb { color: red; }`,
+			fixed: `a { color: pink; } b { color: red; }`,
 			line: 1,
 			column: 19,
 			message: messages.expectedAfter(),
@@ -70,6 +73,7 @@ testRule({
 		{
 			description: `the same break spelled with a carriage return`,
 			code: `a { color: pink; }\r\nb { color: red; }`,
+			fixed: `a { color: pink; } b { color: red; }`,
 			line: 1,
 			column: 19,
 			message: messages.expectedAfter(),
@@ -77,6 +81,7 @@ testRule({
 		{
 			description: `a tab where the space belongs`,
 			code: `a { color: pink; }\tb { color: red; }`,
+			fixed: `a { color: pink; } b { color: red; }`,
 			line: 1,
 			column: 19,
 			message: messages.expectedAfter(),
@@ -84,6 +89,7 @@ testRule({
 		{
 			description: `two nested blocks abutting one another`,
 			code: `@media print { a { color: pink; }b { color: red; }}`,
+			fixed: `@media print { a { color: pink; } b { color: red; }}`,
 			line: 1,
 			column: 34,
 			message: messages.expectedAfter(),
@@ -91,8 +97,50 @@ testRule({
 		{
 			description: `two at-rules abutting one another`,
 			code: `@media print { a { color: pink; }}@media screen { b { color: red; }}`,
+			fixed: `@media print { a { color: pink; }} @media screen { b { color: red; }}`,
 			line: 1,
 			column: 35,
+			message: messages.expectedAfter(),
+		},
+		{
+			// See #698
+			description: `a stray semicolon behind the brace, behind which the space goes`,
+			code: `a {};b {}`,
+			fixed: `a {}; b {}`,
+			line: 1,
+			column: 6,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `the same semicolon with a space of its own in front of it, which is none of this rule's business`,
+			code: `a {} ;b {}`,
+			fixed: `a {} ; b {}`,
+			line: 1,
+			column: 7,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `two stray semicolons, the second of which the parser keeps in the next node's leading raw`,
+			code: `a{};;b{}`,
+			fixed: `a{};; b{}`,
+			line: 1,
+			column: 6,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `three of them, where the run the rule speaks of opens on a semicolon and the fix leaves it to the rule about those`,
+			code: `a{};;;b{}`,
+			fixed: `a{};;;b{}`,
+			line: 1,
+			column: 6,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a comment standing where the next node would`,
+			code: `a {}/* c */b {}`,
+			fixed: `a {} /* c */b {}`,
+			line: 1,
+			column: 5,
 			message: messages.expectedAfter(),
 		},
 	],
@@ -129,6 +177,7 @@ testRule({
 		{
 			description: `a space between two blocks`,
 			code: `a { color: pink; } b { color: red; }`,
+			fixed: `a { color: pink; }b { color: red; }`,
 			line: 1,
 			column: 19,
 			message: messages.rejectedAfter(),
@@ -136,6 +185,7 @@ testRule({
 		{
 			description: `two spaces between two blocks`,
 			code: `a { color: pink; }  b { color: red; }`,
+			fixed: `a { color: pink; }b { color: red; }`,
 			line: 1,
 			column: 19,
 			message: messages.rejectedAfter(),
@@ -143,6 +193,7 @@ testRule({
 		{
 			description: `a break between two blocks`,
 			code: `a { color: pink; }\nb { color: red; }`,
+			fixed: `a { color: pink; }b { color: red; }`,
 			line: 1,
 			column: 19,
 			message: messages.rejectedAfter(),
@@ -150,6 +201,7 @@ testRule({
 		{
 			description: `the same break spelled with a carriage return`,
 			code: `a { color: pink; }\r\nb { color: red; }`,
+			fixed: `a { color: pink; }b { color: red; }`,
 			line: 1,
 			column: 19,
 			message: messages.rejectedAfter(),
@@ -157,6 +209,7 @@ testRule({
 		{
 			description: `a tab between two blocks`,
 			code: `a { color: pink; }\tb { color: red; }`,
+			fixed: `a { color: pink; }b { color: red; }`,
 			line: 1,
 			column: 19,
 			message: messages.rejectedAfter(),
@@ -164,6 +217,7 @@ testRule({
 		{
 			description: `a space between two nested blocks`,
 			code: `@media print { a { color: pink; } b { color: red; }}`,
+			fixed: `@media print { a { color: pink; }b { color: red; }}`,
 			line: 1,
 			column: 34,
 			message: messages.rejectedAfter(),
@@ -171,8 +225,34 @@ testRule({
 		{
 			description: `a space between two at-rules`,
 			code: `@media print { a { color: pink; }} @media screen { b { color: red; }}`,
+			fixed: `@media print { a { color: pink; }}@media screen { b { color: red; }}`,
 			line: 1,
 			column: 35,
+			message: messages.rejectedAfter(),
+		},
+		{
+			// See #698
+			description: `a space behind a stray semicolon, which the fix takes away and leaves the semicolon`,
+			code: `a {}; b {}`,
+			fixed: `a {};b {}`,
+			line: 1,
+			column: 6,
+			message: messages.rejectedAfter(),
+		},
+		{
+			description: `the same semicolon with a space of its own in front of it, which stays`,
+			code: `a {} ; b {}`,
+			fixed: `a {} ;b {}`,
+			line: 1,
+			column: 7,
+			message: messages.rejectedAfter(),
+		},
+		{
+			description: `a space in front of a comment standing where the next node would`,
+			code: `a {} /* c */ b {}`,
+			fixed: `a {}/* c */ b {}`,
+			line: 1,
+			column: 5,
 			message: messages.rejectedAfter(),
 		},
 	],
@@ -233,6 +313,7 @@ testRule({
 		{
 			description: `a single-line block abutting the block behind it`,
 			code: `a { color: pink; background: orange;}b { color: red; }`,
+			fixed: `a { color: pink; background: orange;} b { color: red; }`,
 			line: 1,
 			column: 38,
 			message: messages.expectedAfterSingleLine(),
@@ -240,6 +321,7 @@ testRule({
 		{
 			description: `two spaces behind a single-line block`,
 			code: `a { color: pink; background: orange;}  b { color: red; }`,
+			fixed: `a { color: pink; background: orange;} b { color: red; }`,
 			line: 1,
 			column: 38,
 			message: messages.expectedAfterSingleLine(),
@@ -247,6 +329,7 @@ testRule({
 		{
 			description: `a tab behind a single-line block`,
 			code: `a { color: pink; background: orange;}\tb { color: red; }`,
+			fixed: `a { color: pink; background: orange;} b { color: red; }`,
 			line: 1,
 			column: 38,
 			message: messages.expectedAfterSingleLine(),
@@ -254,6 +337,7 @@ testRule({
 		{
 			description: `two nested single-line blocks abutting one another`,
 			code: `@media print { a { color: pink; }b { color: red; }}`,
+			fixed: `@media print { a { color: pink; } b { color: red; }}`,
 			line: 1,
 			column: 34,
 			message: messages.expectedAfterSingleLine(),
@@ -261,6 +345,7 @@ testRule({
 		{
 			description: `two at-rules holding single-line blocks, abutting one another`,
 			code: `@media print { a { color: pink; }}@media screen { b { color: red; }}`,
+			fixed: `@media print { a { color: pink; }} @media screen { b { color: red; }}`,
 			line: 1,
 			column: 35,
 			message: messages.expectedAfterSingleLine(),
@@ -323,6 +408,7 @@ testRule({
 		{
 			description: `a space behind a single-line block`,
 			code: `a { color: pink; background: orange;} b { color: red; }`,
+			fixed: `a { color: pink; background: orange;}b { color: red; }`,
 			line: 1,
 			column: 38,
 			message: messages.rejectedAfterSingleLine(),
@@ -330,6 +416,7 @@ testRule({
 		{
 			description: `two spaces behind a single-line block`,
 			code: `a { color: pink; background: orange;}  b { color: red; }`,
+			fixed: `a { color: pink; background: orange;}b { color: red; }`,
 			line: 1,
 			column: 38,
 			message: messages.rejectedAfterSingleLine(),
@@ -337,6 +424,7 @@ testRule({
 		{
 			description: `a tab behind a single-line block`,
 			code: `a { color: pink; background: orange;}\tb { color: red; }`,
+			fixed: `a { color: pink; background: orange;}b { color: red; }`,
 			line: 1,
 			column: 38,
 			message: messages.rejectedAfterSingleLine(),
@@ -344,6 +432,7 @@ testRule({
 		{
 			description: `a space between two nested single-line blocks`,
 			code: `@media print { a { color: pink; } b { color: red; }}`,
+			fixed: `@media print { a { color: pink; }b { color: red; }}`,
 			line: 1,
 			column: 34,
 			message: messages.rejectedAfterSingleLine(),
@@ -351,6 +440,7 @@ testRule({
 		{
 			description: `a space between two at-rules holding single-line blocks`,
 			code: `@media print { a { color: pink; }} @media screen { b { color: red; }}`,
+			fixed: `@media print { a { color: pink; }}@media screen { b { color: red; }}`,
 			line: 1,
 			column: 35,
 			message: messages.rejectedAfterSingleLine(),
@@ -409,6 +499,7 @@ testRule({
 		{
 			description: `a multi-line block abutting the block behind it`,
 			code: `a { color: pink;\nbackground: orange;}b { color: red; }`,
+			fixed: `a { color: pink;\nbackground: orange;} b { color: red; }`,
 			line: 2,
 			column: 21,
 			message: messages.expectedAfterMultiLine(),
@@ -416,6 +507,7 @@ testRule({
 		{
 			description: `two spaces behind a multi-line block`,
 			code: `a { color: pink;\nbackground: orange;}  b { color: red; }`,
+			fixed: `a { color: pink;\nbackground: orange;} b { color: red; }`,
 			line: 2,
 			column: 21,
 			message: messages.expectedAfterMultiLine(),
@@ -427,6 +519,10 @@ testRule({
 				background: orange;}
 				b { color: red; }
 			`,
+			fixed: `
+				a { color: pink;
+				background: orange;} b { color: red; }
+			`,
 			line: 2,
 			column: 21,
 			message: messages.expectedAfterMultiLine(),
@@ -434,6 +530,7 @@ testRule({
 		{
 			description: `the same break spelled with a carriage return`,
 			code: `a { color: pink;\r\nbackground: orange;}\r\nb { color: red; }`,
+			fixed: `a { color: pink;\r\nbackground: orange;} b { color: red; }`,
 			line: 2,
 			column: 21,
 			message: messages.expectedAfterMultiLine(),
@@ -441,6 +538,7 @@ testRule({
 		{
 			description: `a tab behind a multi-line block`,
 			code: `a { color: pink;\nbackground: orange;}\tb { color: red; }`,
+			fixed: `a { color: pink;\nbackground: orange;} b { color: red; }`,
 			line: 2,
 			column: 21,
 			message: messages.expectedAfterMultiLine(),
@@ -448,6 +546,7 @@ testRule({
 		{
 			description: `two nested blocks abutting one another, the first multi-line`,
 			code: `@media print { a {\ncolor: pink; }b { color: red; }}`,
+			fixed: `@media print { a {\ncolor: pink; } b { color: red; }}`,
 			line: 2,
 			column: 15,
 			message: messages.expectedAfterMultiLine(),
@@ -457,6 +556,11 @@ testRule({
 			code: `
 				@media print { a {
 				color: pink; }}@media screen { b {
+				color: red; }}
+			`,
+			fixed: `
+				@media print { a {
+				color: pink; }} @media screen { b {
 				color: red; }}
 			`,
 			line: 2,
@@ -517,6 +621,7 @@ testRule({
 		{
 			description: `a space behind a multi-line block`,
 			code: `a { color: pink;\nbackground: orange;} b { color: red; }`,
+			fixed: `a { color: pink;\nbackground: orange;}b { color: red; }`,
 			line: 2,
 			column: 21,
 			message: messages.rejectedAfterMultiLine(),
@@ -524,6 +629,7 @@ testRule({
 		{
 			description: `two spaces behind a multi-line block`,
 			code: `a { color: pink;\nbackground: orange;}  b { color: red; }`,
+			fixed: `a { color: pink;\nbackground: orange;}b { color: red; }`,
 			line: 2,
 			column: 21,
 			message: messages.rejectedAfterMultiLine(),
@@ -535,6 +641,10 @@ testRule({
 				background: orange;}
 				b { color: red; }
 			`,
+			fixed: `
+				a { color: pink;
+				background: orange;}b { color: red; }
+			`,
 			line: 2,
 			column: 21,
 			message: messages.rejectedAfterMultiLine(),
@@ -542,6 +652,7 @@ testRule({
 		{
 			description: `a tab behind a multi-line block`,
 			code: `a { color: pink;\nbackground: orange;}\tb { color: red; }`,
+			fixed: `a { color: pink;\nbackground: orange;}b { color: red; }`,
 			line: 2,
 			column: 21,
 			message: messages.rejectedAfterMultiLine(),
@@ -549,6 +660,7 @@ testRule({
 		{
 			description: `a space between two nested blocks, the first multi-line`,
 			code: `@media print { a {\ncolor: pink; } b { color: red; }}`,
+			fixed: `@media print { a {\ncolor: pink; }b { color: red; }}`,
 			line: 2,
 			column: 15,
 			message: messages.rejectedAfterMultiLine(),
@@ -560,6 +672,11 @@ testRule({
 				color: pink; }} @media screen { b {
 				color: red; }}
 			`,
+			fixed: `
+				@media print { a {
+				color: pink; }}@media screen { b {
+				color: red; }}
+			`,
 			line: 2,
 			column: 16,
 			message: messages.rejectedAfterMultiLine(),
@@ -567,6 +684,7 @@ testRule({
 		{
 			description: `the same pair spelled with carriage returns`,
 			code: `@media print { a {\r\ncolor: pink; }} @media screen { b {\r\ncolor: red; }}`,
+			fixed: `@media print { a {\r\ncolor: pink; }}@media screen { b {\r\ncolor: red; }}`,
 			line: 2,
 			column: 16,
 			message: messages.rejectedAfterMultiLine(),

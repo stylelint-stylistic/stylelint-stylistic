@@ -1,7 +1,7 @@
 import type { AtRule, Rule } from "postcss"
 import stylelint from "stylelint"
 
-import { LINE_BREAK, NON_SPACE } from "../../regexps.ts"
+import { LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -10,10 +10,12 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
+import { pastEndOfLineComment } from "../../utils/pastEndOfLineComment/index.ts"
 import { rawNodeString } from "../../utils/rawNodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isString } from "../../utils/validateTypes/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { writesRunBehindBrace } from "../../utils/writesRunBehindBrace/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -98,9 +100,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (!nextNode) return
 
 			// An end-of-line comment behind the brace is allowed
-			let nextNodeIsSingleLineComment = nextNode.type === `comment` && !NON_SPACE.test(nextNode.raws.before || ``) && !LINE_BREAK.test(nextNode.toString())
-
-			let nodeToCheck = nextNodeIsSingleLineComment ? nextNode.next() : nextNode
+			let nodeToCheck = pastEndOfLineComment(nextNode)
 
 			if (!nodeToCheck) return
 
@@ -112,6 +112,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				source = source.slice(1)
 				reportIndex += 1
 			}
+
+			// The space twin writes this raw too, and where the two accept no spelling in common only the one that runs last may write it (#698)
+			let isFixable = writesRunBehindBrace(syntax, statement, result, ruleName)
 
 			// One character only; the rest is `indentation`'s
 			checker.afterOneOnly({
@@ -126,19 +129,21 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						endIndex: reportIndex,
 						result,
 						ruleName,
-						fix () {
-							let nodeToCheckRaws = nodeToCheck.raws
+						...(isFixable && {
+							fix (): void {
+								let nodeToCheckRaws = nodeToCheck.raws
 
-							if (typeof nodeToCheckRaws.before !== `string`) return
+								if (typeof nodeToCheckRaws.before !== `string`) return
 
-							if (primary.startsWith(`always`)) {
-								// Keep an existing break, add one where none is
-								let index = nodeToCheckRaws.before.search(LINE_BREAK)
+								if (primary.startsWith(`always`)) {
+									// Keep an existing break, add one where none is
+									let index = nodeToCheckRaws.before.search(LINE_BREAK)
 
-								nodeToCheckRaws.before = index >= 0 ? nodeToCheckRaws.before.slice(index) : getLineBreak(syntax, root, result) + nodeToCheckRaws.before
-							}
-							else if (primary.startsWith(`never`)) nodeToCheckRaws.before = ``
-						},
+									nodeToCheckRaws.before = index >= 0 ? nodeToCheckRaws.before.slice(index) : getLineBreak(syntax, root, result) + nodeToCheckRaws.before
+								}
+								else if (primary.startsWith(`never`)) nodeToCheckRaws.before = ``
+							},
+						}),
 					})
 				},
 			})
