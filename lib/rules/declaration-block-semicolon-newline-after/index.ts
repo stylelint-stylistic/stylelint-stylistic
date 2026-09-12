@@ -11,8 +11,8 @@ import { isInlineStyleAttribute } from "../../utils/isInlineStyleAttribute/index
 import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
 import { nextNonCommentNode } from "../../utils/nextNonCommentNode/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
-import { rawNodeString } from "../../utils/rawNodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
@@ -78,7 +78,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let isFixable = primary.startsWith(`always`) || !syntax.writesIntoInlineComment(previousNode, result, previousNode === decl ? `;` : ``)
 
 			checker.afterOneOnly({
-				source: rawNodeString(nodeToCheck, result),
+				source: runInFrontOf(nodeToCheck) + nodeString(nodeToCheck, result),
 				index: -1,
 				lineCheckStr: blockString(parentRule, result),
 				err: (m) => {
@@ -92,10 +92,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						...(isFixable && {
 							fix: (): void => {
 								if (primary.startsWith(`always`)) {
-									// Trim up to the break already there, and add one only where none is
-									let index = nodeToCheck.raws.before.search(LINE_BREAK)
+									// Trim up to the break already there, and add one only where none is; a node carrying no raw is written the run PostCSS would have printed in front of it, trimmed or opened as the option asks (#693)
+									let standing = runInFrontOf(nodeToCheck)
+									let index = standing.search(LINE_BREAK)
 
-									nodeToCheck.raws.before = index >= 0 ? nodeToCheck.raws.before.slice(index) : getLineBreak(syntax, root, result) + nodeToCheck.raws.before
+									nodeToCheck.raws.before = index >= 0 ? standing.slice(index) : getLineBreak(syntax, root, result) + standing
 
 									return
 								}
