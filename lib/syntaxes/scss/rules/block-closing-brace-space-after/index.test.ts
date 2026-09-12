@@ -20,7 +20,7 @@ testRule({
 			`,
 			fixed: `
 				@media (min-width: 100px // c
-					) { a { color: red; } }b { color: red; }
+					) { a { color: red; } } b { color: red; }
 			`,
 			line: 2,
 			column: 25,
