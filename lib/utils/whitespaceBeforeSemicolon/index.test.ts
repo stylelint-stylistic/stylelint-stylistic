@@ -1,4 +1,5 @@
 import { type AtRule, type Declaration, parse, type Rule } from "postcss"
+import postcssScss, { parse as parseScss } from "postcss-scss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
@@ -105,14 +106,23 @@ describe(`whitespaceBeforeSemicolon`, () => {
 		expect(askAtRule(`a { @foo bar }`, { [AT_RULE_SPACE_BEFORE]: `always` }, refusing)).toBe(``)
 	})
 
-	it(`the rules of the asking rule's own namespace, and not the core's, which refuse the file the namespace reads`, () => {
+	// See #710
+	it(`the rules of every namespace in a plain CSS file, which each of them reads`, () => {
 		let scss: Syntax = { ...css, namespace: `scss` }
 
-		expect(ask(SINGLE_LINE, { [SPACE_BEFORE]: `always` }, scss)).toBe(``)
+		expect(ask(SINGLE_LINE, { [SPACE_BEFORE]: `always` }, scss)).toBe(` `)
 		expect(ask(SINGLE_LINE, { "@stylistic/scss/declaration-block-semicolon-space-before": `always` }, scss)).toBe(` `)
-		expect(ask(SINGLE_LINE, { "@stylistic/scss/declaration-block-semicolon-newline-before": `always` })).toBe(``)
+		expect(ask(SINGLE_LINE, { "@stylistic/scss/declaration-block-semicolon-newline-before": `always` })).toBe(`\n`)
 		expect(askAtRule(`a { @foo bar }`, { "@stylistic/scss/at-rule-semicolon-space-before": `always` }, scss)).toBe(` `)
-		expect(askAtRule(`a { @foo bar }`, { [AT_RULE_SPACE_BEFORE]: `always` }, scss)).toBe(``)
+		expect(askAtRule(`a { @foo bar }`, { [AT_RULE_SPACE_BEFORE]: `always` }, scss)).toBe(` `)
+	})
+
+	it(`the rules of the asking rule's own namespace, and not the core's, which refuse the file the namespace reads`, () => {
+		let scss: Syntax = { ...css, namespace: `scss` }
+		let decl = (parseScss(SINGLE_LINE).first as Rule).last as Declaration
+
+		expect(whitespaceBeforeSemicolon(scss, decl, resultOfScss({ [SPACE_BEFORE]: `always` }))).toBe(``)
+		expect(whitespaceBeforeSemicolon(scss, decl, resultOfScss({ "@stylistic/scss/declaration-block-semicolon-space-before": `always` }))).toBe(` `)
 	})
 })
 
@@ -206,4 +216,13 @@ function lastAtRuleOf (code: string): AtRule {
  */
 function result (rules: Record<string, unknown>): PostcssResult {
 	return { stylelint: { config: { rules } } } as unknown as PostcssResult
+}
+
+/**
+ * Builds the least of a Stylelint result for a file parsed with `postcss-scss`.
+ * @param rules - The rules the configuration lists.
+ * @returns The result.
+ */
+function resultOfScss (rules: Record<string, unknown>): PostcssResult {
+	return { opts: { syntax: postcssScss }, stylelint: { config: { customSyntax: `postcss-scss`, rules } } } as unknown as PostcssResult
 }

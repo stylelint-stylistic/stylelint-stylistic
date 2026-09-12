@@ -245,12 +245,23 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { b: !important ; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: [`always`, { disableFix: true }] }, COLON_NEWLINE)).toBe(true)
 	})
 
-	it(`the rules of the asking rule's own namespace, and not the core's`, () => {
+	it(`the rules of the asking rule's own namespace`, () => {
 		let scss: Syntax = { ...css, namespace: `scss` }
 
-		expect(ask(`a { b: ; }`, { [COLON_SPACE]: `always`, [SEMICOLON_SPACE]: `never` }, `@stylistic/scss/declaration-colon-space-after`, scss)).toBe(true)
 		expect(ask(`a { b: ; }`, { "@stylistic/scss/declaration-colon-space-after": `always`, "@stylistic/scss/declaration-block-semicolon-space-before": `never` }, `@stylistic/scss/declaration-colon-space-after`, scss)).toBe(false)
-		expect(ask(`a { b: ; }`, { "@stylistic/scss/declaration-colon-space-after": `always`, "@stylistic/scss/declaration-block-semicolon-space-before": `never` }, COLON_SPACE)).toBe(true)
+	})
+
+	// See #710
+	it(`a rule listed under another namespace that reads the same plain CSS root, the asking rule's own copy included`, () => {
+		let scss: Syntax = { ...css, namespace: `scss` }
+		let scssSemicolonSpace = `@stylistic/scss/declaration-block-semicolon-space-before`
+		let scssColonSpace = `@stylistic/scss/declaration-colon-space-after`
+
+		expect(ask(`a { b: ; }`, { [COLON_SPACE]: `always`, [scssSemicolonSpace]: `never` }, COLON_SPACE)).toBe(false)
+		expect(ask(`a { b: ; }`, { [COLON_SPACE]: `always`, [scssSemicolonSpace]: `never` }, scssSemicolonSpace, scss)).toBe(true)
+		expect(ask(`a { b: ; }`, { [COLON_SPACE]: `always`, [scssColonSpace]: `never` }, COLON_SPACE)).toBe(false)
+		expect(ask(`a { b: ; }`, { [COLON_SPACE]: `always`, [scssColonSpace]: `never` }, scssColonSpace, scss)).toBe(true)
+		expect(ask(`a { b:; }`, { [COLON_SPACE]: `always`, [scssColonSpace]: `always` }, COLON_SPACE)).toBe(true)
 	})
 })
 

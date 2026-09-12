@@ -206,8 +206,8 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 
 	if (!readers.has(asking)) return true
 
-	let settings = neighbourSettings(syntax, result, PARTICIPANTS)
-	let position = settings.findIndex(([participant]) => participant === asking)
+	let settings = neighbourSettings(decl, result, PARTICIPANTS)
+	let position = settings.findIndex(([, , , name]) => name === ruleName)
 
 	if (position === -1) return true
 
@@ -259,7 +259,7 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 		})
 	}
 
-	let [participant, option] = settings[position] as [Participant, string, boolean]
+	let [participant, option] = settings[position] as [Participant, string, boolean, string]
 	let writes = writtenBy(participant, option)
 	let accepted = accepts(participant, option, decl, runIsTheText)
 	let asksFromTheSemicolon = FROM_THE_SEMICOLON.includes(participant)

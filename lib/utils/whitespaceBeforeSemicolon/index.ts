@@ -33,7 +33,7 @@ const RULES_OF_WHITESPACE: Record<`decl` | `atrule`, Partial<Record<Whitespace, 
  * The whitespace the rules about it ask for in front of a semicolon a fix adds behind a declaration or bodiless at-rule.
  *
  * Stylelint runs each rule once, so a bare semicolon written behind `declaration-block-semicolon-newline-before` or `-space-before` waits for the next `--fix` ([#354](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/354)), as does one written behind `at-rule-semicolon-space-before` ([#477](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/477)). `whitespaceAsked` picks the later-listed live rule; lineness is asked of the block at the write ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)).
- * @param syntax - The syntax, whose namespace names the rules.
+ * @param syntax - The asking rule's syntax.
  * @param node - The declaration or bodiless at-rule.
  * @param result - The Stylelint result.
  * @returns A break, a space, or nothing.

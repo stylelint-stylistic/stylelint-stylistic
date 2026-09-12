@@ -11,9 +11,9 @@ export type Whitespace = `newline` | `space`
 /**
  * Returns the whitespace the rules about one run ask for, so that a fix spells the run as they would rather than leaving it to a rule already run ([#354](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/354)).
  *
- * The settings come through `neighbourSettings`, under the asking rule's namespace. Of two speaking rules the later-listed one with its fix on wins, its write being the file's last; a rule whose fix is off wins only where no live one speaks, and the caller still writes its whitespace ([#485](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/485)).
- * @param syntax - The asking rule's, whose namespace names the rules.
- * @param node - Written into, and read for the line break.
+ * The settings come through `neighbourSettings`, under every namespace reading the node's root. Of two speaking rules the later-listed one with its fix on wins, its write being the file's last; a rule whose fix is off wins only where no live one speaks, and the caller still writes its whitespace ([#485](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/485)).
+ * @param syntax - The asking rule's, which reads the line break.
+ * @param node - Written into; its root names the namespaces read, and it is read for the line break.
  * @param result - Holds the configuration.
  * @param rules - By the whitespace each writes.
  * @param isSingleLine - Whether the counted text is one line, asked only where an option needs it.
@@ -26,7 +26,7 @@ export function whitespaceAsked (syntax: Syntax, node: Node, result: PostcssResu
 	let askedByTurnedOff: Whitespace | undefined
 	let aFixSpeaks = false
 
-	for (let [kind, option, fixTurnedOff] of neighbourSettings(syntax, result, rules)) {
+	for (let [kind, option, fixTurnedOff] of neighbourSettings(node, result, rules)) {
 		if (!speaksOf(option, isSingleLine)) continue
 
 		spoke = true

@@ -166,3 +166,23 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`never`],
+	extraRules: { "@stylistic/scss/declaration-colon-space-after": `always` },
+
+	reject: [
+		{
+			// See #710
+			description: `a value that is nothing but a space, with the neighbour listed under the namespace of another syntax, which reads the same plain CSS file and so is listed last all the same`,
+			code: `a { color: ; }`,
+			fixed: `a { color: ; }`,
+			line: 1,
+			column: 11,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.rejectedBefore(),
+		},
+	],
+})
