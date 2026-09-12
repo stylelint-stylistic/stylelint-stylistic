@@ -9,7 +9,7 @@ Require a newline after at-rule names.
  * The newline after this at-rule name */
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule. It writes no break behind the name of a `@charset`, whatever its head is spelled like: a rule respelling that head can make it the encoding declaration within the same run, and a break there is never the spelling the specification reads. The warning stands.
 
 The rule passes over an encoding declaration spelled as the specification reads it — `@charset "utf-8";` at the very start of the file, with one space and double quotes — since no other spelling of it declares an encoding at all.
 

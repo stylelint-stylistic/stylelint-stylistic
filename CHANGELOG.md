@@ -58,7 +58,7 @@ The plugin now reads a line break the way PostCSS and Stylelint do: a line 
 
 #### New autofixes
 
-- The [`at-rule-name-newline-after`](https://stylelint-stylistic.github.io/rules/at-rule-name-newline-after) rule is now autofixable (see [#696](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/696)). Expect `--fix` to write the newlines the rule used to only ask for. Where your configuration also lists `at-rule-name-space-after` under `always`, the two now ask for different things in the same place and the order they are listed in decides which one wins.
+- The [`at-rule-name-newline-after`](https://stylelint-stylistic.github.io/rules/at-rule-name-newline-after) rule is now autofixable (see [#696](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/696)). Expect `--fix` to write the newlines the rule used to only ask for. Where your configuration also lists `at-rule-name-space-after` under `always`, the two now ask for different things in the same place and the order they are listed in decides which one wins. A `@charset` is reported but left as written, since breaking its head can leave the stylesheet declaring no encoding.
 - The [`at-rule-semicolon-space-before`](https://stylelint-stylistic.github.io/rules/at-rule-semicolon-space-before) rule is now autofixable (see [#697](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/697)). Expect `--fix` to write the whitespace the rule used to only ask for.
 
 #### New features

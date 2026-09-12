@@ -154,18 +154,68 @@ testRule({
 		},
 		{
 			description: `nothing at all where the break belongs`,
+			code: `@import"x.css";`,
+			fixed: `@import\n"x.css";`,
+			line: 1,
+			column: 7,
+			message: messages.expectedAfter(`@import`),
+		},
+		{
+			description: `two spaces where the break belongs`,
+			code: `@import  "x.css";`,
+			fixed: `@import\n  "x.css";`,
+			line: 1,
+			column: 7,
+			message: messages.expectedAfter(`@import`),
+		},
+		// See #708
+		{
+			description: `a charset rule with nothing where the break belongs, which at-rule-name-space-after turns into the declaration`,
 			code: `@charset"UTF-8";`,
-			fixed: `@charset\n"UTF-8";`,
+			fixed: `@charset"UTF-8";`,
 			line: 1,
 			column: 8,
 			message: messages.expectedAfter(`@charset`),
 		},
 		{
-			description: `two spaces where the break belongs`,
+			description: `a charset rule with two spaces where the break belongs, which at-rule-name-space-after turns into the declaration`,
 			code: `@charset  "UTF-8";`,
-			fixed: `@charset\n  "UTF-8";`,
+			fixed: `@charset  "UTF-8";`,
 			line: 1,
 			column: 8,
+			message: messages.expectedAfter(`@charset`),
+		},
+		{
+			description: `a charset rule whose name is spelled in upper case, which at-rule-name-case turns into the declaration`,
+			code: `@CHARSET "UTF-8";`,
+			fixed: `@CHARSET "UTF-8";`,
+			line: 1,
+			column: 8,
+			message: messages.expectedAfter(`@CHARSET`),
+		},
+		{
+			description: `a charset rule whose label is in single quotes, which string-quotes turns into the declaration`,
+			code: `@charset 'UTF-8';`,
+			fixed: `@charset 'UTF-8';`,
+			line: 1,
+			column: 8,
+			message: messages.expectedAfter(`@charset`),
+		},
+		{
+			autoStripIndent: false,
+			description: `a charset rule behind an empty first line, which no-empty-first-line turns into the declaration`,
+			code: `\n@charset "UTF-8";`,
+			fixed: `\n@charset "UTF-8";`,
+			line: 2,
+			column: 8,
+			message: messages.expectedAfter(`@charset`),
+		},
+		{
+			description: `a charset rule nested in a rule, which declares nothing and is left unwritten all the same`,
+			code: `a { @charset "UTF-8"; }`,
+			fixed: `a { @charset "UTF-8"; }`,
+			line: 1,
+			column: 12,
 			message: messages.expectedAfter(`@charset`),
 		},
 		// See #696
@@ -452,6 +502,15 @@ testRule({
 	],
 
 	reject: [
+		// See #708
+		{
+			description: `a charset rule whose params run over two lines, which this option writes no break into either`,
+			code: `@charset "UTF-8"\nscreen;`,
+			fixed: `@charset "UTF-8"\nscreen;`,
+			line: 1,
+			column: 8,
+			message: messages.expectedAfter(`@charset`),
+		},
 		// See #696
 		{
 			description: `a block comment behind the name carrying the head's only break, the params themselves standing on one line`,

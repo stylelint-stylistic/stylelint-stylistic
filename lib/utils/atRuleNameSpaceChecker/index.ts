@@ -8,7 +8,7 @@ let { utils: { report } } = stylelint
 
 /**
  * Checks whitespace around at-rule names.
- * @param options - The root, the checker, the result, the syntax, the rule name and its fix.
+ * @param options - The root, the checker, the result, the syntax, the rule name, its fix and which at-rules the fix may write.
  */
 export function atRuleNameSpaceChecker (options: {
 	root: Root,
@@ -22,6 +22,7 @@ export function atRuleNameSpaceChecker (options: {
 	syntax: Syntax,
 	checkedRuleName: string,
 	fix?: ((atRule: AtRule) => void) | null,
+	isFixable?: (atRule: AtRule) => boolean,
 }): void {
 	options.root.walkAtRules((atRule) => {
 		if (!options.syntax.isStandardAtRule(atRule)) return
@@ -43,7 +44,7 @@ export function atRuleNameSpaceChecker (options: {
 	 * @param node - The at-rule.
 	 */
 	function checkColon (source: string, index: number, node: AtRule): void {
-		let { fix } = options
+		let fix = options.isFixable?.(node) === false ? null : options.fix
 
 		options.locationChecker({
 			source,
