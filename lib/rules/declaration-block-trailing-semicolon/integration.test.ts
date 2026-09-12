@@ -10,7 +10,7 @@ import { messages, ruleName } from "./index.ts"
 
 let testRuleListedFirst = createTestRule({ ruleName })
 
-// A `declaration-block-semicolon-*-before` rule listed ahead of this one formats no semicolon this rule writes (#354), and `at-rule-semicolon-space-before` has no fixer to space the one written behind an at-rule at all (#477). The library lists the block's rule first and its extra rules behind, so every block below names the neighbour and lists this rule as the extra: the order the fix has to answer for, since in the other the neighbour respells whatever this rule wrote; the at-rule blocks keep it for uniformity.
+// A `declaration-block-semicolon-*-before` rule listed ahead of this one formats no semicolon this rule writes (#354), and the same holds of `at-rule-semicolon-space-before` and the one written behind an at-rule (#477). The library lists the block's rule first and its extra rules behind, so every block below names the neighbour and lists this rule as the extra: the order the fix has to answer for, since in the other the neighbour respells whatever this rule wrote; the at-rule blocks keep it for uniformity.
 let testRule = createTestRule({ ruleName, extraRules: { [ruleName]: `always` } })
 
 testRule({
@@ -273,7 +273,7 @@ testRule({
 	reject: [
 		{
 			// See #477
-			description: `a bodiless at-rule closing the block, whose written semicolon gets the space that rule asks for and has no fixer to write`,
+			description: `a bodiless at-rule closing the block, whose written semicolon gets the space that rule asks for`,
 			code: `a { @foo bar }`,
 			fixed: `a { @foo bar ; }`,
 			line: 1,

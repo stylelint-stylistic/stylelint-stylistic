@@ -87,8 +87,17 @@ testRule({
 	reject: [
 		// See #703
 		{
-			description: `a charset rule whose single quotes declare no encoding, so nothing holds the rule off it`,
+			description: `a charset rule whose single quotes declare no encoding, so the warning stands while a neighbour may still make it one`,
 			code: `@charset 'UTF-8';`,
+			fixed: `@charset 'UTF-8';`,
+			line: 1,
+			column: 16,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `the same rule with its name in upper case, which the at-rule name case rule under lower recases in the very same run`,
+			code: `@CHARSET "UTF-8";`,
+			fixed: `@CHARSET "UTF-8";`,
 			line: 1,
 			column: 16,
 			message: messages.expectedBefore(),
@@ -96,6 +105,7 @@ testRule({
 		{
 			description: `the same rule spelled with two spaces, which declares none either`,
 			code: `@charset  "UTF-8";`,
+			fixed: `@charset  "UTF-8";`,
 			line: 1,
 			column: 17,
 			message: messages.expectedBefore(),
@@ -104,13 +114,32 @@ testRule({
 			// See #357
 			description: `an at-rule spelled without a space in front of its options, which the parser gives the shape of a call to a Less detached ruleset`,
 			code: `@layer(l);`,
+			fixed: `@layer(l) ;`,
 			line: 1,
 			column: 9,
 			message: messages.expectedBefore(),
 		},
 		{
+			// See #697
+			description: `a block comment in front of the semicolon, behind which the space goes`,
+			code: `@import "x" /* c */;`,
+			fixed: `@import "x" /* c */ ;`,
+			line: 1,
+			column: 19,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `the same comment abutting the params`,
+			code: `@import "x"/* c */;`,
+			fixed: `@import "x"/* c */ ;`,
+			line: 1,
+			column: 18,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `a semicolon abutting the params`,
 			code: `@import "styles/mystyle";`,
+			fixed: `@import "styles/mystyle" ;`,
 			line: 1,
 			column: 24,
 			message: messages.expectedBefore(),
@@ -118,6 +147,7 @@ testRule({
 		{
 			description: `two spaces where one belongs`,
 			code: `@import "styles/mystyle"  ;`,
+			fixed: `@import "styles/mystyle" ;`,
 			line: 1,
 			column: 26,
 			message: messages.expectedBefore(),
@@ -125,6 +155,7 @@ testRule({
 		{
 			description: `a tab where the space belongs`,
 			code: `@import "styles/mystyle"\t;`,
+			fixed: `@import "styles/mystyle" ;`,
 			line: 1,
 			column: 25,
 			message: messages.expectedBefore(),
@@ -132,6 +163,7 @@ testRule({
 		{
 			description: `a break where the space belongs`,
 			code: `@import "styles/mystyle"\n;`,
+			fixed: `@import "styles/mystyle" ;`,
 			line: 1,
 			column: 25,
 			message: messages.expectedBefore(),
@@ -139,6 +171,7 @@ testRule({
 		{
 			description: `the same break spelled with a carriage return`,
 			code: `@import "styles/mystyle"\r\n;`,
+			fixed: `@import "styles/mystyle" ;`,
 			line: 1,
 			column: 26,
 			message: messages.expectedBefore(),
@@ -146,6 +179,7 @@ testRule({
 		{
 			description: `params broken over three lines, with the semicolon abutting them`,
 			code: `@import\nurl('landscape.css')\nprojection;`,
+			fixed: `@import\nurl('landscape.css')\nprojection ;`,
 			line: 3,
 			column: 10,
 			message: messages.expectedBefore(),
@@ -158,6 +192,11 @@ testRule({
 					@import "styles/mystyle";
 				}
 			`,
+			fixed: `
+				a {
+					@import "styles/mystyle" ;
+				}
+			`,
 			line: 2,
 			column: 25,
 			message: messages.expectedBefore(),
@@ -167,6 +206,12 @@ testRule({
 			code: `
 				a {
 					@import "styles/mystyle";
+					color: pink
+				}
+			`,
+			fixed: `
+				a {
+					@import "styles/mystyle" ;
 					color: pink
 				}
 			`,
@@ -182,6 +227,12 @@ testRule({
 					@import "styles/mystyle";
 				}
 			`,
+			fixed: `
+				a {
+
+					@import "styles/mystyle" ;
+				}
+			`,
 			line: 3,
 			column: 25,
 			message: messages.expectedBefore(),
@@ -189,6 +240,7 @@ testRule({
 		{
 			description: `the same at-rule behind a carriage-return pair, whose leading raw is a character wider than a line feed`,
 			code: `@import "a" ;\r\n@import "b";`,
+			fixed: `@import "a" ;\r\n@import "b" ;`,
 			line: 2,
 			column: 11,
 			message: messages.expectedBefore(),
@@ -277,13 +329,32 @@ testRule({
 		{
 			description: `a space in front of the semicolon`,
 			code: `@import "styles/mystyle" ;`,
+			fixed: `@import "styles/mystyle";`,
 			line: 1,
 			column: 25,
 			message: messages.rejectedBefore(),
 		},
 		{
+			// See #697
+			description: `a space in front of the semicolon of a charset rule, which the specification reads no whitespace in front of either`,
+			code: `@charset "UTF-8" ;`,
+			fixed: `@charset "UTF-8";`,
+			line: 1,
+			column: 17,
+			message: messages.rejectedBefore(),
+		},
+		{
+			description: `a space between a block comment and the semicolon`,
+			code: `@import "x" /* c */ ;`,
+			fixed: `@import "x" /* c */;`,
+			line: 1,
+			column: 20,
+			message: messages.rejectedBefore(),
+		},
+		{
 			description: `two spaces in front of the semicolon`,
 			code: `@import "styles/mystyle"  ;`,
+			fixed: `@import "styles/mystyle";`,
 			line: 1,
 			column: 26,
 			message: messages.rejectedBefore(),
@@ -291,6 +362,7 @@ testRule({
 		{
 			description: `a tab in front of the semicolon`,
 			code: `@import "styles/mystyle"\t;`,
+			fixed: `@import "styles/mystyle";`,
 			line: 1,
 			column: 25,
 			message: messages.rejectedBefore(),
@@ -298,6 +370,7 @@ testRule({
 		{
 			description: `a break in front of the semicolon`,
 			code: `@import "styles/mystyle"\n;`,
+			fixed: `@import "styles/mystyle";`,
 			line: 1,
 			column: 25,
 			message: messages.rejectedBefore(),
@@ -305,6 +378,7 @@ testRule({
 		{
 			description: `the same break spelled with a carriage return`,
 			code: `@import "styles/mystyle"\r\n;`,
+			fixed: `@import "styles/mystyle";`,
 			line: 1,
 			column: 26,
 			message: messages.rejectedBefore(),
@@ -312,6 +386,7 @@ testRule({
 		{
 			description: `params broken over three lines, with a space in front of the semicolon`,
 			code: `@import\nurl('landscape.css')\nprojection ;`,
+			fixed: `@import\nurl('landscape.css')\nprojection;`,
 			line: 3,
 			column: 11,
 			message: messages.rejectedBefore(),
@@ -324,6 +399,11 @@ testRule({
 					@import "styles/mystyle" ;
 				}
 			`,
+			fixed: `
+				a {
+					@import "styles/mystyle";
+				}
+			`,
 			line: 2,
 			column: 26,
 			message: messages.rejectedBefore(),
@@ -334,6 +414,12 @@ testRule({
 				a {
 
 					@import "styles/mystyle" ;
+				}
+			`,
+			fixed: `
+				a {
+
+					@import "styles/mystyle";
 				}
 			`,
 			line: 3,
@@ -368,6 +454,7 @@ testRule({
 		{
 			description: `a style attribute whose at-rule abuts the semicolon it does spell`,
 			code: `<div style="@import 'x';">x</div>`,
+			fixed: `<div style="@import 'x' ;">x</div>`,
 			line: 1,
 			column: 23,
 			message: messages.expectedBefore(),
@@ -376,6 +463,7 @@ testRule({
 			// See #545
 			description: `a style block whose at-rule abuts the semicolon the declaration block does spell`,
 			code: `<style>\n\ta {\n\t\t@import "x";\n\t}\n</style>`,
+			fixed: `<style>\n\ta {\n\t\t@import "x" ;\n\t}\n</style>`,
 			line: 3,
 			column: 13,
 			message: messages.expectedBefore(),
@@ -404,6 +492,7 @@ testRule({
 		{
 			description: `a style attribute with a space in front of the semicolon it does spell`,
 			code: `<div style="@import 'x' ;">x</div>`,
+			fixed: `<div style="@import 'x';">x</div>`,
 			line: 1,
 			column: 24,
 			message: messages.rejectedBefore(),
@@ -412,6 +501,7 @@ testRule({
 			// See #545
 			description: `a style block with a space in front of the semicolon the declaration block does spell`,
 			code: `<style>\n\ta {\n\t\t@import "x" ;\n\t}\n</style>`,
+			fixed: `<style>\n\ta {\n\t\t@import "x";\n\t}\n</style>`,
 			line: 3,
 			column: 14,
 			message: messages.rejectedBefore(),

@@ -20,7 +20,7 @@ testRule({
 			`,
 			fixed: `
 				@import "a" // c
-					"b" ;
+					"b";
 			`,
 			line: 2,
 			column: 5,
@@ -38,12 +38,47 @@ testRule({
 			fixed: `
 				a {
 					@import "a" // c
-						"b" ;
+						"b";
 				}
 			`,
 			line: 3,
 			column: 6,
 			message: messages.rejectedBefore(),
+		},
+		{
+			// See #697
+			description: `an at-rule ending in an inline comment, whose closing break the fix would write over, putting the semicolon inside the comment`,
+			code: `@import "x" // c\n;`,
+			fixed: `@import "x" // c\n;`,
+			line: 1,
+			column: 17,
+			message: messages.rejectedBefore(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	customSyntax: `postcss-scss`,
+
+	reject: [
+		{
+			// See #697
+			description: `an at-rule ending in an inline comment, whose closing break the fix would write over, putting the semicolon inside the comment`,
+			code: `@import "x" // c\n;`,
+			fixed: `@import "x" // c\n;`,
+			line: 1,
+			column: 17,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `a module load the fix does space`,
+			code: `@use "sass:math";`,
+			fixed: `@use "sass:math" ;`,
+			line: 1,
+			column: 16,
+			message: messages.expectedBefore(),
 		},
 	],
 })

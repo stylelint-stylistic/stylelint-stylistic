@@ -122,7 +122,7 @@ Here are `stylelint-stylistic` rules, grouped by the _thing_ they apply to (j
 - [`at-rule-name-newline-after`](../../lib/rules/at-rule-name-newline-after/README.md): Require a newline after at-rule names (Autofixable).
 - [`at-rule-name-space-after`](../../lib/rules/at-rule-name-space-after/README.md): Require a single space after at-rule names (Autofixable).
 - [`at-rule-semicolon-newline-after`](../../lib/rules/at-rule-semicolon-newline-after/README.md): Require a newline after the semicolon of at-rules (Autofixable).
-- [`at-rule-semicolon-space-before`](../../lib/rules/at-rule-semicolon-space-before/README.md): Require a single space or disallow whitespace before the semicolons of at-rules.
+- [`at-rule-semicolon-space-before`](../../lib/rules/at-rule-semicolon-space-before/README.md): Require a single space or disallow whitespace before the semicolons of at-rules (Autofixable).
 
 ## Aspect ratio
 

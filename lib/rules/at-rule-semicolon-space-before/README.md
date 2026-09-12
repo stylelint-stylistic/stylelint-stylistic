@@ -12,6 +12,8 @@ Nothing is asked of an at-rule the file spells no semicolon behind — one r
 
 The rule passes over an encoding declaration spelled as the specification reads it — `@charset "utf-8";` at the very start of the file, with one space and double quotes — since no other spelling of it declares an encoding at all.
 
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule. It writes nothing where a `//` comment runs to the end of the at-rule, since the semicolon would land inside the comment, and `"always"` writes nothing in front of the semicolon of a `@charset`, which the specification reads no whitespace in front of. The warning stands in both.
+
 ## Options
 
 `string`: `"always"|"never"`
