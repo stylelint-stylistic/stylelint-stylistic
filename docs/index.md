@@ -3,6 +3,7 @@
 ## User guide
 
 - [Rules](./user-guide/rules.md)
+- [Typed configuration](./user-guide/typed-configuration.md)
 
 ## Developer guide
 

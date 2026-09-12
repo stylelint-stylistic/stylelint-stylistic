@@ -109,6 +109,8 @@ A second argument holds what several rules take alike, and is written into ev
 
 `defineStylisticOverride` takes `files` besides and returns the whole `overrides` entry: the files, the `customSyntax` the syntax is parsed with, `postcss-scss`, `postcss-less` or `postcss-styled-syntax`, which stay dependencies of your project, and the rules.
 
+Both functions, the shared options and the syntax names in full: [Typed configuration](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/docs/user-guide/typed-configuration.md).
+
 ## Need more?
 
 ESLint deprecates stylistic rules, too. But you can continue to use them thanks to [ESLint Stylistic](https://eslint.style).
@@ -116,6 +118,7 @@ ESLint deprecates stylistic rules, too. But you can continue to use them thank
 ## Important documents
 
 - [Rule list](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/docs/user-guide/rules.md)
+- [Typed configuration](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/docs/user-guide/typed-configuration.md)
 - [Contributing](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/CONTRIBUTING.md)
 
 [license-url]: https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/LICENSE.md
