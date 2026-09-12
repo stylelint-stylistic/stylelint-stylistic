@@ -205,6 +205,14 @@ export type Syntax = {
 	requiresTrailingSemicolon (node: Node, result: PostcssResult): boolean,
 
 	/**
+	 * Asks whether the semicolon the node's block is flagged as closing on is the text of a `//` comment behind the node, which the parser read as code.
+	 * @param node - The node closing the block.
+	 * @param result - The lint result naming the syntax the file was parsed with.
+	 * @returns True where it is.
+	 */
+	semicolonFlagIsCommentText (node: Node, result: PostcssResult): boolean,
+
+	/**
 	 * Asks whether the node's syntax has arithmetic of its own, where whitespace in front of a sign makes it an operator.
 	 *
 	 * The tree cannot tell `foo($a) -2px`, a Sass list, from `foo($a)-2px`, a subtraction, so whether `//` opens a comment is asked instead: Sass and Less have both, plain CSS neither, an unknown syntax is answered yes. Sass reads a plus as an operator whatever stands beside it, so a plus behind a call is left alone under both. The node is asked, not the file: a page may hold a plain `<style>` beside a `<style lang="scss">`.

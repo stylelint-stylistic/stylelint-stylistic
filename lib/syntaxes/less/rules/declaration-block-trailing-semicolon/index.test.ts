@@ -16,9 +16,71 @@ testRule({
 			description: `a Less variable standing on the root of the file, which this syntax reads as an at-rule and the walk over at-rules has always let stand`,
 			code: `@var: pink`,
 		},
+		{
+			// See #359
+			description: `a semicolon in the text of an inline comment behind the value, with a semicolon of code on the line under it, which closes the declaration`,
+			code: `
+				a {
+					color: pink // ;
+					;
+				}
+			`,
+		},
+		{
+			// See #359
+			description: `the same comment behind the parameters of an extend at-rule, which Less reads to the semicolon with a reader that knows no double slash, so the semicolon is code`,
+			code: `
+				a {
+					@extend .b // c;
+				}
+			`,
+		},
+		{
+			// See #359
+			description: `the same comment behind a custom property carrying an important flag, which Less reads the same way`,
+			code: `
+				a {
+					--x: pink !important // ;
+				}
+			`,
+		},
 	],
 
 	reject: [
+		{
+			// See #359
+			description: `a semicolon in the text of an inline comment behind the value, which this syntax reads as the semicolon closing the declaration and Less as the text of the comment: no semicolon closes it, and the comment is left alone`,
+			code: `
+				a {
+					color: pink // ;
+				}
+			`,
+			fixed: `
+				a {
+					color: pink // ;
+				}
+			`,
+			line: 2,
+			column: 15,
+			message: messages.expected,
+		},
+		{
+			// See #359
+			description: `the same comment behind a mixin call, which Less reads with the same reader`,
+			code: `
+				a {
+					.m() // ;
+				}
+			`,
+			fixed: `
+				a {
+					.m() // ;
+				}
+			`,
+			line: 2,
+			column: 8,
+			message: messages.expected,
+		},
 		{
 			// See #232
 			description: `an inline comment behind the value, which this syntax keeps inside it: the semicolon cannot leave the comment's line, so the code is left alone and the warning stands`,
@@ -216,6 +278,60 @@ testRule({
 			description: `the same name with no colon behind it, which the parser reads as an at-rule of that name`,
 			code: `a { @v }`,
 		},
+		{
+			// See #359
+			description: `a semicolon in the text of an inline comment behind the value, which this syntax reads as the semicolon closing the declaration and Less as the text of the comment`,
+			code: `
+				a {
+					color: pink // ;
+				}
+			`,
+		},
+		{
+			// See #359
+			description: `the same comment behind an important flag`,
+			code: `
+				a {
+					color: pink !important // ;
+				}
+			`,
+		},
+		{
+			// See #359
+			description: `the same comment behind a mixin call`,
+			code: `
+				a {
+					.m() // ;
+				}
+			`,
+		},
+		{
+			// See #359
+			description: `the same comment behind a call to a detached ruleset`,
+			code: `
+				a {
+					@dr() // ;
+				}
+			`,
+		},
+		{
+			// See #359
+			description: `a second semicolon in the same comment, which this syntax files in the raw ending the block`,
+			code: `
+				a {
+					color: pink // ;;
+				}
+			`,
+		},
+		{
+			// See #359
+			description: `a block comment and a semicolon behind it in the same comment, which run on to the line break as its text`,
+			code: `
+				a {
+					color: pink // ; /* c */ ;
+				}
+			`,
+		},
 	],
 
 	reject: [
@@ -243,6 +359,15 @@ testRule({
 			`,
 			line: 2,
 			column: 13,
+			message: messages.rejected,
+		},
+		{
+			// Spelled with escapes for the line holding a tab alone, as above. See #359
+			description: `a semicolon of code on the line under an inline comment whose text holds two, which alone is taken away`,
+			code: `a {\n\tcolor: pink // ;;\n\t;\n}\n`,
+			fixed: `a {\n\tcolor: pink // ;;\n\t\n}\n`,
+			line: 3,
+			column: 2,
 			message: messages.rejected,
 		},
 		{

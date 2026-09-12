@@ -94,7 +94,7 @@ function reaches (syntax: Syntax, decl: Declaration, result: PostcssResult, sett
 /**
  * Asks what `declaration-block-trailing-semicolon` leaves behind a declaration: a semicolon under a live `always`, none under a live `never`, nothing where its fix cannot write.
  *
- * `always` writes behind no node with a block and none an inline comment closes; `never` takes no semicolon PostCSS writes regardless or the language requires. The disable line is the declaration's last, where `always` reports.
+ * `always` writes behind no node with a block and none an inline comment closes; `never` takes no semicolon PostCSS writes regardless or the language requires; neither acts on a flag a comment's text set. The disable line is the declaration's last, where `always` reports.
  * @param syntax - The asking rule's syntax.
  * @param decl - The declaration.
  * @param result - The Stylelint result, which holds the configuration.
@@ -104,6 +104,8 @@ export function trailingSemicolonAsked (syntax: Syntax, decl: Declaration, resul
 	let setting = neighbourSetting(syntax, result, TRAILING_SEMICOLON_RULE)
 
 	if (!setting || !reaches(syntax, decl, result, setting)) return undefined
+
+	if (syntax.semicolonFlagIsCommentText(decl, result)) return undefined
 
 	if (setting.option === `always`) return !hasBlock(decl) && !syntax.writesIntoInlineComment(decl, result, whitespaceBeforeSemicolon(syntax, decl, result)) ? true : undefined
 

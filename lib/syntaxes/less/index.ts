@@ -10,6 +10,7 @@ import type { Syntax } from "../index.ts"
 import { atRuleVariableValue } from "./atRuleVariableValue/index.ts"
 import { isStandardLessAtRule, isStandardLessDeclaration, isStandardLessProperty, isStandardLessRule, isStandardLessSelector, isStandardLessValue } from "./guards/index.ts"
 import { requiresTrailingSemicolon } from "./requiresTrailingSemicolon/index.ts"
+import { semicolonFlagIsCommentText } from "./semicolonFlagIsCommentText/index.ts"
 import { syncLessVariableValue } from "./syncLessVariableValue/index.ts"
 
 /** The syntax of the `less` namespace: Less parsed with `postcss-less`. A superset of the core, plain CSS included, so a project holding both configures these rules alone for the Less files. */
@@ -24,6 +25,7 @@ export let less: Syntax = {
 	isStandardValue: isStandardLessValue,
 	isStandardComment: isStandardPreprocessorComment,
 	requiresTrailingSemicolon,
+	semicolonFlagIsCommentText,
 	readsRuleParams: (rule: PostcssRule) => `params` in rule && Boolean(rule.params),
 	atRuleVariableValue,
 	// Under its default `math` mode Less divides only inside parentheses (`@a/2` prints `4/2`), a nameless call the rules pass over, so a solidus outside is the separator it is to the core

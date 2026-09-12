@@ -1,3 +1,7 @@
+import stylelint from "stylelint"
+import { describe, expect, it } from "vitest"
+
+import plugins from "../../../../index.ts"
 import { createRule as createAtRuleSpaceBefore } from "../../../../rules/at-rule-semicolon-space-before/index.ts"
 import { createRule as createNewlineBefore } from "../../../../rules/declaration-block-semicolon-newline-before/index.ts"
 import { createRule as createSpaceBefore } from "../../../../rules/declaration-block-semicolon-space-before/index.ts"
@@ -46,6 +50,18 @@ testRule({
 			message: messages.expected,
 		},
 	],
+})
+
+// The neighbour's fix is off, so the break it asks for could only be this rule's write, and the file and this rule's warning are asserted directly: the neighbour reads the comment's semicolon as well. See #359
+describe(`a semicolon in the text of an inline comment ending the value`, () => {
+	it(`is left in the comment where the namespace's rule asks for a break in front of the semicolon, which would take it out`, async () => {
+		let code = `a {\n\tb: c // ;\n}\n`
+		let rules = { [ruleName]: `always`, [newlineBeforeRuleName]: [`always`, { disableFix: true }] }
+		let result = await stylelint.lint({ code, config: { plugins, rules }, customSyntax: `postcss-less`, fix: true })
+
+		expect(result.code).toBe(code)
+		expect(result.results[0]?.warnings.filter((warning) => warning.rule === ruleName).map((warning) => ({ line: warning.line, column: warning.column, text: warning.text }))).toEqual([{ line: 2, column: 8, text: messages.expected }])
+	})
 })
 
 testRule({
