@@ -1,7 +1,7 @@
 import { createRule } from "../../../../rules/at-rule-name-newline-after/index.ts"
 import { less } from "../../index.ts"
 
-let { ruleName } = createRule(less)
+let { messages, ruleName } = createRule(less)
 
 let testRule = createTestRule({ ruleName })
 
@@ -42,6 +42,18 @@ testRule({
 		{
 			description: `a parent selector, which is no at-rule either`,
 			code: `.button { &-ok {} }`,
+		},
+	],
+
+	reject: [
+		// See #696
+		{
+			description: `a space where the break belongs, in a stylesheet whose variable the fixing run leaves alone`,
+			code: `@nice-blue: #5B83AD;\n@media (min-width: 1px) { a { color: @nice-blue } }`,
+			fixed: `@nice-blue: #5B83AD;\n@media\n (min-width: 1px) { a { color: @nice-blue } }`,
+			line: 2,
+			column: 6,
+			message: messages.expectedAfter(`@media`),
 		},
 	],
 })

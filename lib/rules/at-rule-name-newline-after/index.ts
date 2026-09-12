@@ -1,8 +1,10 @@
 import stylelint from "stylelint"
 
+import { LEADING_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { atRuleNameSpaceChecker } from "../../utils/atRuleNameSpaceChecker/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
@@ -17,6 +19,7 @@ const MESSAGES = defineMessages({
 
 export let meta = {
 	url: getRuleDocUrl(shortName),
+	fixable: true,
 }
 
 /** `always` a newline after the at-rule's name, `always-multi-line` in an at-rule with multi-line params only. */
@@ -48,6 +51,18 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.afterOneOnly,
 			checkedRuleName: ruleName,
+			fix: (atRule) => {
+				let { afterName } = atRule.raws
+
+				if (typeof afterName !== `string`) return
+
+				// The raw holds the comments between the name and the parameters too, so a break inside one is no break behind the name, and cutting the raw at it would open the comment
+				let [leading] = afterName.match(LEADING_WHITESPACE) as RegExpMatchArray
+				let index = leading.search(LINE_BREAK)
+
+				// Keep the break already standing, whatever runs in front of it; the rest of the raw is the new line's indentation, which `indentation` measures
+				atRule.raws.afterName = index >= 0 ? afterName.slice(index) : getLineBreak(syntax, atRule, result) + afterName
+			},
 		})
 	}
 }

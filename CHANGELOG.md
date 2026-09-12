@@ -56,6 +56,10 @@ The plugin now reads a line break the way PostCSS and Stylelint do: a line 
 - The [`max-line-length`](https://stylelint-stylistic.github.io/rules/max-line-length) rule now has an additional `tabSize` option (see [#10](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/10)), which measures a tab to the next tab stop of that width, so a file indented with tabs is as long as the editor's ruler shows.
 - The [`named-grid-areas-alignment`](https://stylelint-stylistic.github.io/rules/named-grid-areas-alignment) rule now has an additional `alignColumns` option (see [#45](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/45)), which lays the line names and the sizes of a `grid-template` or `grid` shorthand out as columns of a table.
 
+#### New autofixes
+
+- The [`at-rule-name-newline-after`](https://stylelint-stylistic.github.io/rules/at-rule-name-newline-after) rule is now autofixable (see [#696](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/696)). Expect `--fix` to write the newlines the rule used to only ask for. Where your configuration also lists `at-rule-name-space-after` under `always`, the two now ask for different things in the same place and the order they are listed in decides which one wins.
+
 #### New features
 
 - The package now exports the [`defineStylistic` and `defineStylisticOverride`](https://stylelint-stylistic.github.io/user-guide/typed-configuration) functions for a JavaScript configuration (see [#624](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/624)). You name the rules by their short names and the syntax once for the whole block: an editor completes the names and the options, and the compiler refuses a rule, an option, a key or a syntax the plugin does not take.

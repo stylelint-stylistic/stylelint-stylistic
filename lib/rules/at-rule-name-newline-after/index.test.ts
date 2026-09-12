@@ -147,6 +147,7 @@ testRule({
 		{
 			description: `an at-rule spelled without a space in front of its options, which the parser gives the shape of a call to a Less detached ruleset`,
 			code: `@layer(l);`,
+			fixed: `@layer\n(l);`,
 			line: 1,
 			column: 6,
 			message: messages.expectedAfter(`@layer`),
@@ -154,6 +155,7 @@ testRule({
 		{
 			description: `nothing at all where the break belongs`,
 			code: `@charset"UTF-8";`,
+			fixed: `@charset\n"UTF-8";`,
 			line: 1,
 			column: 8,
 			message: messages.expectedAfter(`@charset`),
@@ -161,13 +163,72 @@ testRule({
 		{
 			description: `two spaces where the break belongs`,
 			code: `@charset  "UTF-8";`,
+			fixed: `@charset\n  "UTF-8";`,
 			line: 1,
 			column: 8,
 			message: messages.expectedAfter(`@charset`),
 		},
+		// See #696
+		{
+			description: `a block comment between the name and the params, in front of which the break goes`,
+			code: `@media /* c */ (a) { }`,
+			fixed: `@media\n /* c */ (a) { }`,
+			line: 1,
+			column: 6,
+			message: messages.expectedAfter(`@media`),
+		},
+		{
+			description: `the same comment carrying a break of its own, which is no break behind the name`,
+			code: `@media /*\n*/ (a) { }`,
+			fixed: `@media\n /*\n*/ (a) { }`,
+			line: 1,
+			column: 6,
+			message: messages.expectedAfter(`@media`),
+		},
+		{
+			description: `that comment abutting the name on both sides`,
+			code: `@media/*\n*/(a) { }`,
+			fixed: `@media\n/*\n*/(a) { }`,
+			line: 1,
+			column: 6,
+			message: messages.expectedAfter(`@media`),
+		},
+		{
+			description: `a break standing behind two spaces, which is the break the rule asks for once they go`,
+			code: `@media  \n\t(a) { }`,
+			fixed: `@media\n\t(a) { }`,
+			line: 1,
+			column: 6,
+			message: messages.expectedAfter(`@media`),
+		},
+		{
+			description: `the same break spelled with a carriage return, which is kept as it is written`,
+			code: `@media \r\n(a) { }`,
+			fixed: `@media\r\n(a) { }`,
+			line: 1,
+			column: 6,
+			message: messages.expectedAfter(`@media`),
+		},
+		{
+			description: `a tab where the break belongs, which becomes the indentation of the new line`,
+			code: `@media\t(a) { }`,
+			fixed: `@media\n\t(a) { }`,
+			line: 1,
+			column: 6,
+			message: messages.expectedAfter(`@media`),
+		},
+		{
+			description: `a space where the break belongs in a file ending its lines the Windows way`,
+			code: `@media (a) { }\r\nb { }`,
+			fixed: `@media\r\n (a) { }\r\nb { }`,
+			line: 1,
+			column: 6,
+			message: messages.expectedAfter(`@media`),
+		},
 		{
 			description: `a space in front of a range-syntax query`,
 			code: `@media (width <= 100px) { }`,
+			fixed: `@media\n (width <= 100px) { }`,
 			line: 1,
 			column: 6,
 			message: messages.expectedAfter(`@media`),
@@ -175,6 +236,7 @@ testRule({
 		{
 			description: `a range-syntax query abutting the name`,
 			code: `@media(width <= 100px) { }`,
+			fixed: `@media\n(width <= 100px) { }`,
 			line: 1,
 			column: 6,
 			message: messages.expectedAfter(`@media`),
@@ -182,6 +244,7 @@ testRule({
 		{
 			description: `two spaces in front of a range-syntax query`,
 			code: `@media  (width <= 100px) { }`,
+			fixed: `@media\n  (width <= 100px) { }`,
 			line: 1,
 			column: 6,
 			message: messages.expectedAfter(`@media`),
@@ -189,6 +252,7 @@ testRule({
 		{
 			description: `a space in front of the string of an unknown at-rule`,
 			code: `@unknown "ident";`,
+			fixed: `@unknown\n "ident";`,
 			line: 1,
 			column: 8,
 			message: messages.expectedAfter(`@unknown`),
@@ -196,6 +260,7 @@ testRule({
 		{
 			description: `a string abutting the name of an unknown at-rule`,
 			code: `@unknown"ident";`,
+			fixed: `@unknown\n"ident";`,
 			line: 1,
 			column: 8,
 			message: messages.expectedAfter(`@unknown`),
@@ -203,6 +268,7 @@ testRule({
 		{
 			description: `a string abutting that name, with a block behind it`,
 			code: `@unknown"ident" { };`,
+			fixed: `@unknown\n"ident" { };`,
 			line: 1,
 			column: 8,
 			message: messages.expectedAfter(`@unknown`),
@@ -210,6 +276,7 @@ testRule({
 		{
 			description: `a space in front of the identifier of an unknown at-rule`,
 			code: `@unknown ident { };`,
+			fixed: `@unknown\n ident { };`,
 			line: 1,
 			column: 8,
 			message: messages.expectedAfter(`@unknown`),
@@ -217,6 +284,7 @@ testRule({
 		{
 			description: `two spaces in front of that identifier`,
 			code: `@unknown  ident { };`,
+			fixed: `@unknown\n  ident { };`,
 			line: 1,
 			column: 8,
 			message: messages.expectedAfter(`@unknown`),
@@ -224,6 +292,7 @@ testRule({
 		{
 			description: `a space behind a vendor-prefixed name`,
 			code: `@-webkit-keyframes identifier { }`,
+			fixed: `@-webkit-keyframes\n identifier { }`,
 			line: 1,
 			column: 18,
 			message: messages.expectedAfter(`@-webkit-keyframes`),
@@ -383,9 +452,19 @@ testRule({
 	],
 
 	reject: [
+		// See #696
+		{
+			description: `a block comment behind the name carrying the head's only break, the params themselves standing on one line`,
+			code: `@media /*\n*/ (a) and (b) { }`,
+			fixed: `@media\n /*\n*/ (a) and (b) { }`,
+			line: 1,
+			column: 6,
+			message: messages.expectedAfter(`@media`),
+		},
 		{
 			description: `params running over two lines with a space where the break belongs`,
 			code: `@import url("x.css")\nscreen and (orientation:landscape);`,
+			fixed: `@import\n url("x.css")\nscreen and (orientation:landscape);`,
 			line: 1,
 			column: 7,
 			message: messages.expectedAfter(`@import`),
@@ -393,6 +472,7 @@ testRule({
 		{
 			description: `the same params broken with a carriage return`,
 			code: `@import url("x.css")\r\nscreen and (orientation:landscape);`,
+			fixed: `@import\r\n url("x.css")\r\nscreen and (orientation:landscape);`,
 			line: 1,
 			column: 7,
 			message: messages.expectedAfter(`@import`),
@@ -400,6 +480,7 @@ testRule({
 		{
 			description: `a break opening the first feature, which makes the params multi-line`,
 			code: `@media (\nmin-width: 700px) and (orientation: landscape) { }`,
+			fixed: `@media\n (\nmin-width: 700px) and (orientation: landscape) { }`,
 			line: 1,
 			column: 6,
 			message: messages.expectedAfter(`@media`),
@@ -407,6 +488,7 @@ testRule({
 		{
 			description: `the same break spelled with a carriage return`,
 			code: `@media (\r\nmin-width: 700px) and (orientation: landscape) { }`,
+			fixed: `@media\r\n (\r\nmin-width: 700px) and (orientation: landscape) { }`,
 			line: 1,
 			column: 6,
 			message: messages.expectedAfter(`@media`),
@@ -414,6 +496,7 @@ testRule({
 		{
 			description: `a break in front of the closing parenthesis of the first feature`,
 			code: `@media (min-width: 700px\n) and (orientation: landscape) { }`,
+			fixed: `@media\n (min-width: 700px\n) and (orientation: landscape) { }`,
 			line: 1,
 			column: 6,
 			message: messages.expectedAfter(`@media`),
@@ -421,6 +504,7 @@ testRule({
 		{
 			description: `a break in front of the colon of the first feature`,
 			code: `@media (min-width\n: 700px) and (orientation: landscape) { }`,
+			fixed: `@media\n (min-width\n: 700px) and (orientation: landscape) { }`,
 			line: 1,
 			column: 6,
 			message: messages.expectedAfter(`@media`),
@@ -428,6 +512,7 @@ testRule({
 		{
 			description: `a break behind that colon`,
 			code: `@media (min-width:\n700px) and (orientation: landscape) { }`,
+			fixed: `@media\n (min-width:\n700px) and (orientation: landscape) { }`,
 			line: 1,
 			column: 6,
 			message: messages.expectedAfter(`@media`),

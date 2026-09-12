@@ -9,6 +9,8 @@ Require a newline after at-rule names.
  * The newline after this at-rule name */
 ```
 
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+
 The rule passes over an encoding declaration spelled as the specification reads it — `@charset "utf-8";` at the very start of the file, with one space and double quotes — since no other spelling of it declares an encoding at all.
 
 ## Options
