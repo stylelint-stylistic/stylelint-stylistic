@@ -52,7 +52,7 @@ Two shapes specific to this plugin:
 
 A guard that turns a node away costs a false negative by construction, and the run that justifies the guard is built around the harm it removes. One branch counted writes into a comment's text — 460 before, 0 after — and the question the sweep never put was how many *warnings* go: **920**, half of them about a parenthesis the file really spells.
 
-Whenever a change makes a rule report **less**, run a second sweep over the same corpus with `fix: false` and diff the warning lists rather than the outputs. Report the count and the split by message, then argue the trade rather than hiding it, and put one sentence of it in the changelog.
+Whenever a change makes a rule report **less**, run a second sweep over the same corpus with `fix: false` and diff the warning lists rather than the outputs. Report the count and the split by message, then argue the trade rather than hiding it. One sentence of it goes in the commit body and the split itself in the pull request; the changelog gets it only where a user reported the bug.
 
 For a **narrowing**, counting the rows where the warning count fell measures another thing: on one branch that number was 180 while the shape the sentence described stood on 510 rows, and the example given was in the 510. Measure the cost in the output — tokenize both sides' fixed text with `@csstools/css-tokenizer` and count the tokens still wrong by the rule's own contract, then count the rows where the branch has such a token and the base does not. Pair it with the opposite check: over every row, take the names the base's warnings carry that the branch's carry nowhere, and assert that none of them is real.
 

@@ -92,9 +92,11 @@ All of this holds in `*.test.ts` as well, but a comment inside a fixture 
 
 [CHANGELOG.md](CHANGELOG.md) is not a record of the work — it drives the release. `@firefoxic/release-it` reads the `## [Unreleased]` section and derives the bump from the first heading it finds there, in this order: `### Changed` ⇒ major, `### Added` ⇒ minor, `### Fixed` ⇒ patch. So a fix filed under `Changed` ships a major version. An empty `Unreleased` section aborts the release. Releases happen by merging `main` → `release`; a `release-<suffix>` branch publishes a prerelease under that suffix instead.
 
-The entry is written **in the same commit as the change it describes**. A commit that changes what a user of the package sees is not finished without it, and adding it afterwards means amending and rebasing everything stacked on top, where the entries conflict at the same spot in every branch.
+An entry says what the change means for a user of the plugin, in one sentence and at most three: what is now true, what it asks of them, and where they can soften it. The mechanism belongs on the documentation page the entry links to, never in the entry.
 
 A fix for a **false negative** belongs under `Changed`, not `Fixed`: the user meets it as new warnings on code that used to pass, which is a change in behaviour rather than a repair they asked for. Purely internal changes — build tooling, test layout, CI — get no entry at all, since any entry forces a release.
+
+**Until the next release** a fix gets an entry only where a user of the plugin reported the bug, and the entry is written last rather than in the commit that makes the change: the text is prepared, carried in as a fixup after the fixups that correct the fix, and weighed by the maintainer before `git rebase --autosquash` folds it in. The procedure in full, and what a defect found by a tool or an agent gets instead, is in the reference below.
 
 How an entry is worded, with examples, and how the groups inside `Unreleased` are used while a backlog is being cleared: [.agents/docs/changelog-entries.md](.agents/docs/changelog-entries.md).
 
@@ -106,7 +108,9 @@ Prose binds function words to their neighbours with a non-breaking space (`U+
 
 ## Commit messages
 
-The subject line is one imperative sentence, capitalized, with no trailing period and **no conventional-commits prefix** — write `Fix the build target`, never `fix:`, `chore(build):` or the like. Wrap code identifiers in backticks (`` Migrate from `node:test` to `vitest` ``). Explain the why in the body when the subject cannot carry it, in as few sentences as carry it; a body that retells the diff says nothing.
+The subject line is one imperative sentence, capitalized, with no trailing period and **no conventional-commits prefix** — write `Fix the build target`, never `fix:`, `chore(build):` or the like. Wrap code identifiers in backticks (`` Migrate from `node:test` to `vitest` ``).
+
+The body is for a developer, a maintainer or a contributor reading the log later, and it answers **why**, not what or how: what the change is for, and what goes wrong without it. What changed is the diff, and how it works is the code and its comments — neither is retold here. One paragraph is the norm and three the ceiling; where the subject already carries the why, there is no body at all. A measurement goes in only where the reason rests on it, and then as the one number it rests on, never as a census.
 
 Nothing in the body is ever wrapped by hand, exactly as in a comment and in a Markdown file: a paragraph is a single line, as long as the paragraph itself, and a blank line is all that separates one paragraph from the next. No column limit applies, neither 72 nor 80 nor 100. Everything else follows the rules for Markdown files, the prose typography above included.
 
@@ -114,7 +118,7 @@ The message ends with its last paragraph. It carries no trailers whatsoever �
 
 ## Branches, commits and pull requests
 
-A commit is **atomic and self-sufficient**: it passes every check on its own and carries its own changelog entry where the change is user-visible. That requirement is about what the pull request ships, not about every intermediate state of the branch, so only the **first** commit of a fix is written whole. Every correction after it is a fixup — `git commit --fixup <hash of the commit it corrects>`, so that no message has to be invented for it — and nothing is squashed while the branch is still being worked on. When the maintainer gives the go-ahead to open the pull request, `git rebase --autosquash origin/main` folds the fixups into their targets and rebases onto the current `origin/main` in one move; it needs no `-i` and opens no editor, but the flag must be passed, since `rebase.autosquash` is not set. The target of a fixup has to be a commit on the current branch, so a correction to a lower branch of a stack is committed on that branch.
+A commit is **atomic and self-sufficient**: it passes every check on its own and carries its own changelog entry where the change is user-visible — until the next release that entry comes in by a fixup of its own instead, see § Changelog. That requirement is about what the pull request ships, not about every intermediate state of the branch, so only the **first** commit of a fix is written whole. Every correction after it is a fixup — `git commit --fixup <hash of the commit it corrects>`, so that no message has to be invented for it — and nothing is squashed while the branch is still being worked on. When the maintainer gives the go-ahead to open the pull request, `git rebase --autosquash origin/main` folds the fixups into their targets and rebases onto the current `origin/main` in one move; it needs no `-i` and opens no editor, but the flag must be passed, since `rebase.autosquash` is not set. The target of a fixup has to be a commit on the current branch, so a correction to a lower branch of a stack is committed on that branch.
 
 **The branch carries its issue and nothing else.** A tidy-up riding along makes the review about two things at once and leaves the issue no longer describing what the branch does. Propose one only when it is provably neutral, and check that by running the old and the new code over the same input rather than by reading; if it changes any output, take it out and file an issue for it. That holds even for a change the issue's own example needs to come out right — that one got its own issue and its own commit too.
 
