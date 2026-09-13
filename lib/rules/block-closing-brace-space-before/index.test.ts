@@ -26,6 +26,16 @@ testRule({
 			description: `a space in front of the brace of a block an at-rule with neither a block nor a semicolon closes`,
 			code: `a { @extend .b }`,
 		},
+		{
+			// See #562
+			description: `a space in front of the brace of a block a stray semicolon on the next line stands behind, which is no part of the block`,
+			code: `a { b { color: pink }\n\t; }`,
+		},
+		{
+			// See #562
+			description: `a space in front of the brace of a block a stray semicolon abuts`,
+			code: `a { color: pink };`,
+		},
 	],
 
 	reject: [
@@ -151,6 +161,15 @@ testRule({
 			column: 12,
 			message: messages.expectedBefore(),
 		},
+		{
+			// See #562
+			description: `a brace abutting the declaration of a block a stray semicolon stands behind`,
+			code: `a { b { color: pink}; }`,
+			fixed: `a { b { color: pink }; }`,
+			line: 1,
+			column: 19,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 
@@ -175,6 +194,11 @@ testRule({
 			// See #292
 			description: `a brace abutting an at-rule with neither a block nor a semicolon, which closes the block`,
 			code: `a { @extend .b}`,
+		},
+		{
+			// See #562
+			description: `a block with no whitespace in front of its brace and a space in front of the stray semicolon behind it`,
+			code: `a {color: pink} ;`,
 		},
 	],
 
@@ -324,6 +348,15 @@ testRule({
 			column: 12,
 			message: messages.rejectedBefore(),
 		},
+		{
+			// See #562
+			description: `a space in front of the brace of a block a stray semicolon stands behind with a space of its own`,
+			code: `a {b { color: pink } ;}`,
+			fixed: `a {b { color: pink} ;}`,
+			line: 1,
+			column: 19,
+			message: messages.rejectedBefore(),
+		},
 	],
 })
 
@@ -371,6 +404,11 @@ testRule({
 				top: 0;
 				}b { color: red; }
 			`,
+		},
+		{
+			// See #562
+			description: `a space in front of the brace of a single-line block a stray semicolon abuts`,
+			code: `a { color: pink };`,
 		},
 	],
 
@@ -432,6 +470,15 @@ testRule({
 			column: 14,
 			message: messages.expectedBeforeSingleLine(),
 		},
+		{
+			// See #562
+			description: `a brace abutting the declaration of a single-line block a stray semicolon abuts`,
+			code: `a {color: pink};`,
+			fixed: `a {color: pink };`,
+			line: 1,
+			column: 14,
+			message: messages.expectedBeforeSingleLine(),
+		},
 	],
 })
 
@@ -475,6 +522,11 @@ testRule({
 				top: 0;
 				}b { color: red;}
 			`,
+		},
+		{
+			// See #562
+			description: `a single-line block with no whitespace in front of its brace and a space in front of the stray semicolon behind it`,
+			code: `a {color: pink} ;`,
 		},
 	],
 
@@ -544,6 +596,15 @@ testRule({
 			column: 15,
 			message: messages.rejectedBeforeSingleLine(),
 		},
+		{
+			// See #562
+			description: `a space in front of the brace of a single-line block a stray semicolon stands behind with a space of its own`,
+			code: `a {color: pink } ;`,
+			fixed: `a {color: pink} ;`,
+			line: 1,
+			column: 15,
+			message: messages.rejectedBeforeSingleLine(),
+		},
 	],
 })
 
@@ -579,6 +640,16 @@ testRule({
 		{
 			description: `a tab in front of the brace of a single-line block`,
 			code: `a { color: pink;\t}b { color: red; }`,
+		},
+		{
+			// See #562
+			description: `a space in front of the brace of a multi-line block a stray semicolon abuts`,
+			code: `a {\n\tcolor: pink };`,
+		},
+		{
+			// See #562
+			description: `a single-line block a stray semicolon on the next line stands behind, which leaves the block single-line`,
+			code: `a { color: pink }\n;`,
 		},
 	],
 
@@ -647,6 +718,15 @@ testRule({
 			column: 12,
 			message: messages.expectedBeforeMultiLine(),
 		},
+		{
+			// See #562
+			description: `a brace abutting the declaration of a multi-line block a stray semicolon abuts`,
+			code: `a {\n\tcolor: pink};`,
+			fixed: `a {\n\tcolor: pink };`,
+			line: 2,
+			column: 12,
+			message: messages.expectedBeforeMultiLine(),
+		},
 	],
 })
 
@@ -682,6 +762,11 @@ testRule({
 		{
 			description: `a tab in front of the brace of a single-line block`,
 			code: `a { color: pink;\t}b { color: red; }`,
+		},
+		{
+			// See #562
+			description: `a single-line block a stray semicolon on the next line stands behind, which leaves the block single-line`,
+			code: `a { color: pink }\n;`,
 		},
 	],
 
@@ -748,6 +833,15 @@ testRule({
 			`,
 			line: 2,
 			column: 12,
+			message: messages.rejectedBeforeMultiLine(),
+		},
+		{
+			// See #562
+			description: `a space in front of the brace of a multi-line block a stray semicolon stands behind with a space of its own`,
+			code: `a {\n\tcolor: pink } ;`,
+			fixed: `a {\n\tcolor: pink} ;`,
+			line: 2,
+			column: 13,
 			message: messages.rejectedBeforeMultiLine(),
 		},
 	],

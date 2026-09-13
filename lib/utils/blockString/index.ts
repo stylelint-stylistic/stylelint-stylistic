@@ -3,7 +3,7 @@ import type { PostcssResult } from "stylelint"
 
 import { beforeBlockString } from "../beforeBlockString/index.ts"
 import { hasBlock } from "../hasBlock/index.ts"
-import { rawNodeString } from "../rawNodeString/index.ts"
+import { statementString } from "../statementString/index.ts"
 
 /**
  * Returns a statement's block, `{` to `}`, or an empty string where it has none.
@@ -14,5 +14,5 @@ import { rawNodeString } from "../rawNodeString/index.ts"
 export function blockString (statement: Container, result?: PostcssResult): string {
 	if (!hasBlock(statement)) return ``
 
-	return rawNodeString(statement, result).slice(beforeBlockString(statement, result).length)
+	return statementString(statement, result).slice(beforeBlockString(statement, result, { noRawBefore: true }).length)
 }
