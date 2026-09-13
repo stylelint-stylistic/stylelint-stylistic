@@ -31,6 +31,7 @@ The rules below used to pass some code over in silence. They now warn on it
 - The `declaration-colon-space-after` rule now looks for the whitespace after the colon where a custom property whose value holds a comment actually keeps it (see [#109](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/109)) ([@VChet](https://github.com/VChet)).
 - The `indentation` rule now reports every mis-indented line of an at-rule's parameters holding comments, at the line and column the file spells (see [#65](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/65)).
 - The `indentation` rule now corrects every mis-indented line of an at-rule, and not only one of them (see [#64](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/64)).
+- The `max-empty-lines` rule now counts the empty lines inside a Sass nested property written with a value, and puts every warning behind such a property, an end-of-line comment or a Less mixin call's `!important` on the line and column the file spells (see [#583](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/583)).
 
 And also a huge number of false negatives found by tools and agents, which may likewise require you to fix the code.
 

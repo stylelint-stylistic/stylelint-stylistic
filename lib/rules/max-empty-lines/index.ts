@@ -4,10 +4,12 @@ import stylelint, { type PostcssResult } from "stylelint"
 
 import { CRLF, CRLF_RUN, EVERY_CRLF_RUN, EVERY_LF_RUN, LEADING_LINE_BREAK_RUN, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import { blankComments } from "../../utils/blankComments/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
+import { nodeString } from "../../utils/nodeString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
@@ -41,11 +43,12 @@ export type SecondaryOptions = {
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
+ * @param scope.syntax - The syntax, which says where a `//` comment runs.
  * @param primary - The primary option.
  * @param secondaryOptions - The secondary options.
  * @returns The check.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, secondaryOptions: SecondaryOptions): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, secondaryOptions: SecondaryOptions): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,
@@ -107,7 +110,8 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: Prim
 
 		let emptyLines = 0
 		let lastIndex = -1
-		let rootString = root.toString()
+		// Printed by the syntax, since PostCSS's stringifier drops a Sass nested property's block and a Less mixin call's `!important`, and widens a `//` comment (#583); a styled template's root hangs in its document, whose stringifier prints the host code around it
+		let rootString = root.parent ? root.toString() : nodeString(root, result)
 
 		// A file ending on a break counts one empty line more, and spaces and tabs behind the last break are `no-eol-whitespace`'s line, so the end is measured in front of them
 		let endOfFile = rootString.replace(TRAILING_SPACES_AND_TABS, ``).length
@@ -115,7 +119,8 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: Prim
 
 		styleSearch(
 			{
-				source: rootString,
+				// `style-search` skips the break closing a `//` comment, so the inline comment spans the syntax finds are blanked
+				source: ignoreComments ? blankComments(rootString, syntax.commentSpans(rootString, root, result).filter(({ isInline }) => isInline)) : rootString,
 				target: CRLF.test(rootString) ? `\r\n` : `\n`,
 				comments: ignoreComments ? `skip` : `check`,
 			},

@@ -39,15 +39,15 @@ testRule({
 			code: `// one\n\n\n`,
 			fixed: `// one\n\n`,
 			line: 4,
-			column: 3,
+			column: 1,
 			message: messages.expected(2),
 		},
 		{
 			description: `three blank lines between two end-of-line comments`,
 			code: `// one\n\n\n\n// two\n`,
 			fixed: `// one\n\n\n// two\n`,
-			line: 5,
-			column: 2,
+			line: 4,
+			column: 1,
 			message: messages.expected(2),
 		},
 		// See #481
@@ -66,6 +66,42 @@ testRule({
 			line: 6,
 			column: 1,
 			message: messages.expected(2),
+		},
+		// See #583
+		{
+			description: `three blank lines in front of the closing brace of a nested property written with a value, whose block the stringifier of PostCSS leaves out`,
+			code: `a {\n\tfont: 12px {\n\t\tfamily: x;\n\n\n\n\t}\n}\n`,
+			fixed: `a {\n\tfont: 12px {\n\t\tfamily: x;\n\n\n\t}\n}\n`,
+			line: 6,
+			column: 1,
+			message: messages.expected(2),
+		},
+		// See #583
+		{
+			description: `three blank lines behind a nested property written with a value`,
+			code: `a {\n\tfont: 12px {\n\t\tfamily: x;\n\t}\n}\n\n\n\nb {}\n`,
+			fixed: `a {\n\tfont: 12px {\n\t\tfamily: x;\n\t}\n}\n\n\nb {}\n`,
+			line: 8,
+			column: 1,
+			message: messages.expected(2),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [1, { ignore: [`comments`] }],
+	customSyntax: `postcss-scss`,
+
+	reject: [
+		// See #583
+		{
+			description: `two blank lines between two end-of-line comments, whose closing break counts`,
+			code: `// one\n\n\n// two\n`,
+			fixed: `// one\n\n// two\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(1),
 		},
 	],
 })

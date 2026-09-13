@@ -27,5 +27,41 @@ testRule({
 			column: 1,
 			message: messages.expected(1),
 		},
+		// See #583
+		{
+			description: `two blank lines between two end-of-line comments, which the stringifier of PostCSS prints as block ones two characters wider`,
+			code: `// one\n\n\n// two\n`,
+			fixed: `// one\n\n// two\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(1),
+		},
+		// See #583
+		{
+			description: `two blank lines behind a mixin call carrying a flag, which the stringifier of PostCSS leaves out`,
+			code: `a {\n\t.m() !important;\n\n\n\tcolor: pink;\n}\n`,
+			fixed: `a {\n\t.m() !important;\n\n\tcolor: pink;\n}\n`,
+			line: 4,
+			column: 1,
+			message: messages.expected(1),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [1, { ignore: [`comments`] }],
+	customSyntax: `postcss-less`,
+
+	reject: [
+		// See #583
+		{
+			description: `two blank lines between two end-of-line comments, whose closing break counts`,
+			code: `// one\n\n\n// two\n`,
+			fixed: `// one\n\n// two\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(1),
+		},
 	],
 })
