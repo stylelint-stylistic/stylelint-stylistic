@@ -1,4 +1,3 @@
-import type { Document } from "postcss"
 import stylelint from "stylelint"
 
 import { css } from "../../syntaxes/css/index.ts"
@@ -38,11 +37,10 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: Prim
 			possible: [`always`, `never`],
 		})
 
-		// A byte order mark stands at the head of the file, not of a `document` root's stylesheets
+		// A byte order mark stands at the head of the file, which only the result's root stands for; a block of `postcss-html` and a styled template are roots inside a document (#728)
 		let source: EmbeddedSource | undefined = root.source
-		let { document } = root as { document?: Document }
 
-		if (!validOptions || !source || source.inline || source.lang === `object-literal` || document !== undefined) return
+		if (!validOptions || !source || source.inline || source.lang === `object-literal` || result.root !== root) return
 
 		let { hasBOM } = source.input
 
