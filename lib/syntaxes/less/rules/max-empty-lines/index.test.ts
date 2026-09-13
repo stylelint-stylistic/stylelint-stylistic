@@ -45,6 +45,14 @@ testRule({
 			column: 1,
 			message: messages.expected(1),
 		},
+		{
+			description: `two blank lines behind an end-of-line comment holding a quotation mark, which opens no string`,
+			code: `a {} // it's\n\n\nb { c: 'd' }`,
+			fixed: `a {} // it's\n\nb { c: 'd' }`,
+			line: 3,
+			column: 1,
+			message: messages.expected(1),
+		},
 	],
 })
 

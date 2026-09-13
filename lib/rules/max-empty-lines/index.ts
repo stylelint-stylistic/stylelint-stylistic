@@ -6,6 +6,7 @@ import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, LEADING_LINE_BREAK_RU
 import { css } from "../../syntaxes/css/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { type CommentSpan, findStringSpans } from "../../utils/findCommentSpans/index.ts"
 import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
@@ -44,7 +45,7 @@ export type SecondaryOptions = {
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
- * @param scope.syntax - The syntax, which says where a `//` comment runs.
+ * @param scope.syntax - The syntax, which says where a comment runs.
  * @param primary - The primary option.
  * @param secondaryOptions - The secondary options.
  * @returns The check.
@@ -118,13 +119,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let opensTheFile = false
 
 		styleSearch(
-			{
-				// `style-search` skips the break closing a `//` comment, so the inline comment spans the syntax finds are blanked
-				source: ignoreComments ? blankComments(rootString, syntax.commentSpans(rootString, root, result).filter(({ isInline }) => isInline)) : rootString,
-				// A line feed is a break whatever stands in front of it, so a run spelling its breaks both ways is one run, as PostCSS counts it (#586)
-				target: `\n`,
-				comments: ignoreComments ? `skip` : `check`,
-			},
+			searchOptions(rootString, syntax.commentSpans(rootString, root, result), ignoreComments),
 			(match) => {
 				checkMatch(breakStart(rootString, match.startIndex), match.endIndex, root)
 			},
@@ -202,6 +197,26 @@ function carriesABlock (node: ChildNode): node is ChildNode & Container {
  */
 function breakStart (text: string, lineFeedIndex: number): number {
 	return lineFeedIndex > 0 && CRLF.test(text.slice(lineFeedIndex - 1, lineFeedIndex + 1)) ? lineFeedIndex - 1 : lineFeedIndex
+}
+
+/**
+ * Builds what `style-search` is handed. The search reads a string by rules of its own: a quotation mark inside a bare address opens one, one behind an escaped backslash closes none, and none opens inside what it took for a comment; so every string the tokenizer reads is blanked, the breaks inside it included, and the search is told to read none.
+ * @param text - The text the breaks are counted in.
+ * @param comments - The comment spans the syntax finds in it.
+ * @param ignoreComments - Whether the option passes comments over.
+ * @returns The search's options.
+ */
+function searchOptions (text: string, comments: CommentSpan[], ignoreComments: boolean): Parameters<typeof styleSearch>[0] {
+	let strings = findStringSpans(blankComments(text, comments), false)
+
+	return {
+		// `style-search` skips the break closing a `//` comment, so the inline comment spans the syntax finds are blanked
+		source: blankComments(ignoreComments ? blankComments(text, comments.filter(({ isInline }) => isInline)) : text, strings),
+		// A line feed is a break whatever stands in front of it, so a run spelling its breaks both ways is one run, as PostCSS counts it (#586)
+		target: `\n`,
+		comments: ignoreComments ? `skip` : `check`,
+		strings: `check`,
+	}
 }
 
 /**

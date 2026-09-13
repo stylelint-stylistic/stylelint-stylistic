@@ -1,7 +1,7 @@
 import valueParser, { type Node } from "postcss-value-parser"
 import { describe, expect, it } from "vitest"
 
-import { findAddressSpans, findCommentSpanAt, findCommentSpanHolding, findCommentSpans, findCommentSpanTouching } from "./index.ts"
+import { findAddressSpans, findCommentSpanAt, findCommentSpanHolding, findCommentSpans, findCommentSpanTouching, findStringSpans } from "./index.ts"
 
 describe(`findCommentSpans`, () => {
 	it(`no comment`, () => {
@@ -506,5 +506,32 @@ describe(`findCommentSpanTouching`, () => {
 	it(`a string standing behind the star the value parser closed a comment opening with a solidus, a star and a solidus on, which is text of the comment CSS reads`, () => {
 		// The `"a  a"` of `"c c" /*/ "a  a" */ "b b"`, which the parser hands back as a string opening at 10
 		expect(findCommentSpanTouching({ sourceIndex: 10, sourceEndIndex: 16 }, [{ start: 6, end: 19, isInline: false }])).toEqual({ start: 6, end: 19, isInline: false })
+	})
+})
+
+describe(`findStringSpans`, () => {
+	it(`a string of each quotation mark, the marks included`, () => {
+		expect(findStringSpans(`"a" 'b'`)).toEqual([{ start: 0, end: 3 }, { start: 4, end: 7 }])
+	})
+
+	it(`a quotation mark behind an escape, which closes nothing, and one behind an escaped backslash, which closes the string`, () => {
+		expect(findStringSpans(`'a\\'b' "c\\\\" d`)).toEqual([{ start: 0, end: 6 }, { start: 7, end: 12 }])
+	})
+
+	it(`a quotation mark inside a bare address, which is a character of the address`, () => {
+		expect(findStringSpans(`url(x'y) 'z'`)).toEqual([{ start: 9, end: 12 }])
+	})
+
+	it(`a quoted address, whose string is a string`, () => {
+		expect(findStringSpans(`url( "x" )`)).toEqual([{ start: 5, end: 8 }])
+	})
+
+	it(`a quotation mark inside a comment, which opens nothing`, () => {
+		expect(findStringSpans(`/* ' */ a // "\n'b'`)).toEqual([{ start: 15, end: 18 }])
+		expect(findStringSpans(`a // "\n'b'`, false)).toEqual([{ start: 5, end: 10 }])
+	})
+
+	it(`a string the text never closes, which runs to its end`, () => {
+		expect(findStringSpans(`a "b`)).toEqual([{ start: 2, end: 4 }])
 	})
 })

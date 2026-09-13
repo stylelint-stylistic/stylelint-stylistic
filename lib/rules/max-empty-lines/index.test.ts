@@ -188,6 +188,10 @@ testRule({
 			description: `a blank line between two rules whose two breaks are spelled differently, which is still one blank line`,
 			code: `a {}\r\n\nb {}`,
 		},
+		{
+			description: `blank lines inside a string written behind a protocol-relative address on its line, which belong to the string as they do behind no address`,
+			code: `a { b: url(//x.y/z) "c\\\n\n\nd" }`,
+		},
 	],
 
 	reject: [
@@ -535,6 +539,22 @@ testRule({
 					message: messages.expected(1),
 				},
 			],
+		},
+		{
+			description: `two blank lines behind a bare address holding a quotation mark, which is a character of the address and opens no string`,
+			code: `a { b: url(x'y) }\n\n\nc {}`,
+			fixed: `a { b: url(x'y) }\n\nc {}`,
+			line: 3,
+			column: 1,
+			message: messages.expected(1),
+		},
+		{
+			description: `two blank lines behind a string ending in an escaped backslash, whose closing quotation mark no escape holds`,
+			code: `a { b: "a\\\\" }\n\n\nc {}`,
+			fixed: `a { b: "a\\\\" }\n\nc {}`,
+			line: 3,
+			column: 1,
+			message: messages.expected(1),
 		},
 	],
 })
