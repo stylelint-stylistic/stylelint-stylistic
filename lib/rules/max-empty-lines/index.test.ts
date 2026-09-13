@@ -846,6 +846,15 @@ testRule({
 			description: `the same blank lines written with carriage-return line breaks`,
 			code: `a {\r\n display: block;\r\n /*\r\n\r\n\r\n\r\n */\r\n}\r\n\r\n`,
 		},
+		// See #725
+		{
+			description: `blank lines inside a string behind a protocol-relative address, which belong to the string and go uncounted as they do behind no address`,
+			code: `a { b: url(//x.y/z) "c\\\n\n\n\nd" }`,
+		},
+		{
+			description: `blank lines inside a comment behind a bare address holding a quotation mark, which opens no string that could hold the comment`,
+			code: `a { b: url(x'y) }\n/* c\n\n\n\nd */\ne {}`,
+		},
 	],
 
 	reject: [
@@ -886,6 +895,48 @@ testRule({
 				},
 				{
 					line: 12,
+					column: 1,
+					message: messages.expected(2),
+				},
+			],
+		},
+		// See #725
+		{
+			description: `three blank lines behind an address spelling a double slash, which opens no comment in plain CSS`,
+			code: `a { b: url(http://x.y/z) }\n\n\n\nc {}`,
+			fixed: `a { b: url(http://x.y/z) }\n\n\nc {}`,
+			line: 4,
+			column: 1,
+			message: messages.expected(2),
+		},
+		{
+			description: `three blank lines in front of the closing brace behind a protocol-relative address`,
+			code: `a {\n\tb: url(//x.y/z)\n\n\n\n}\n`,
+			fixed: `a {\n\tb: url(//x.y/z)\n\n\n}\n`,
+			line: 5,
+			column: 1,
+			message: messages.expected(2),
+		},
+		{
+			description: `three blank lines behind an unquoted address spelling a slash and an asterisk, which open no comment inside it`,
+			code: `a { b: url(/*x) }\n\n\n\nc {}`,
+			fixed: `a { b: url(/*x) }\n\n\nc {}`,
+			line: 4,
+			column: 1,
+			message: messages.expected(2),
+		},
+		{
+			description: `four blank lines behind two block comments written against each other, whose join spells no third comment`,
+			code: `/* a *//* b */\n\n\n\n\nc {}`,
+			fixed: `/* a *//* b */\n\n\nc {}`,
+			warnings: [
+				{
+					line: 4,
+					column: 1,
+					message: messages.expected(2),
+				},
+				{
+					line: 5,
 					column: 1,
 					message: messages.expected(2),
 				},

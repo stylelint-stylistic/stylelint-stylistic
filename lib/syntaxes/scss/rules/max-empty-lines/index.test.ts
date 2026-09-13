@@ -129,5 +129,14 @@ testRule({
 				},
 			],
 		},
+		// See #725
+		{
+			description: `two blank lines in front of the closing brace behind a protocol-relative address, whose double slash opens no comment`,
+			code: `a {\n\tb: url(//x.y/z);\n\n\n}\n`,
+			fixed: `a {\n\tb: url(//x.y/z);\n\n}\n`,
+			line: 4,
+			column: 1,
+			message: messages.expected(1),
+		},
 	],
 })

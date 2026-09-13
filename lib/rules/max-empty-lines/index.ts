@@ -119,7 +119,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let opensTheFile = false
 
 		styleSearch(
-			searchOptions(rootString, syntax.commentSpans(rootString, root, result), ignoreComments),
+			searchOptions(ignoreComments ? syntax.searchCopy(rootString, root, result).searchString : rootString, syntax.commentSpans(rootString, root, result)),
 			(match) => {
 				checkMatch(breakStart(rootString, match.startIndex), match.endIndex, root)
 			},
@@ -200,21 +200,17 @@ function breakStart (text: string, lineFeedIndex: number): number {
 }
 
 /**
- * Builds what `style-search` is handed. The search reads a string by rules of its own: a quotation mark inside a bare address opens one, one behind an escaped backslash closes none, and none opens inside what it took for a comment; so every string the tokenizer reads is blanked, the breaks inside it included, and the search is told to read none.
- * @param text - The text the breaks are counted in.
- * @param comments - The comment spans the syntax finds in it.
- * @param ignoreComments - Whether the option passes comments over.
+ * Builds what `style-search` is handed. The search reads comments and strings by rules of its own, so it is told to read neither. A comment the option ignores is blanked with its breaks and every other `//` masked in the text handed in, since the search skipping comments of its own swallows the break behind an address's `//` (#725). A string is blanked, the breaks inside it included, since the search opens one at a quotation mark inside a bare address, closes none behind an escaped backslash, and opens none inside what it took for a comment.
+ * @param text - The text the breaks are counted in, or its copy with the ignored comments blanked.
+ * @param comments - The comment spans the syntax finds in the text.
  * @returns The search's options.
  */
-function searchOptions (text: string, comments: CommentSpan[], ignoreComments: boolean): Parameters<typeof styleSearch>[0] {
-	let strings = findStringSpans(blankComments(text, comments), false)
-
+function searchOptions (text: string, comments: CommentSpan[]): Parameters<typeof styleSearch>[0] {
 	return {
-		// `style-search` skips the break closing a `//` comment, so the inline comment spans the syntax finds are blanked
-		source: blankComments(ignoreComments ? blankComments(text, comments.filter(({ isInline }) => isInline)) : text, strings),
+		source: blankComments(text, findStringSpans(blankComments(text, comments), false)),
 		// A line feed is a break whatever stands in front of it, so a run spelling its breaks both ways is one run, as PostCSS counts it (#586)
 		target: `\n`,
-		comments: ignoreComments ? `skip` : `check`,
+		comments: `check`,
 		strings: `check`,
 	}
 }
