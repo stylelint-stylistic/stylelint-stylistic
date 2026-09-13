@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest"
 
 import registry from "../../rules/index.ts"
 
-import { deferCheck, deferFinalCheck, defersToRunEnd, flushDeferredChecks, lastConfiguredPluginRule, LINENESS_RULES, linenessRank, registerPluginRule } from "./index.ts"
+import { deferCheck, deferFinalCheck, deferHeadCheck, defersToRunEnd, flushDeferredChecks, lastConfiguredPluginRule, LINENESS_RULES, linenessRank, registerPluginRule } from "./index.ts"
 
 /**
  * Builds the slice of a Stylelint result the util reads: the normalised rule settings of a configuration.
@@ -81,6 +81,18 @@ describe(`deferCheck and flushDeferredChecks`, () => {
 		deferCheck(root, `1`, () => ran.push(`lineness`))
 		flushDeferredChecks(root)
 		expect(ran).toStrictEqual([`lineness`, `reads-everything`])
+	})
+
+	// #713
+	it(`the head runs ahead of the lineness tier, whatever order the checks were put off in`, () => {
+		let root = parse(`a {}`)
+		let ran: string[] = []
+
+		deferFinalCheck(root, `1`, () => ran.push(`reads-everything`))
+		deferCheck(root, `1`, () => ran.push(`lineness`))
+		deferHeadCheck(root, `1`, () => ran.push(`head`))
+		flushDeferredChecks(root)
+		expect(ran).toStrictEqual([`head`, `lineness`, `reads-everything`])
 	})
 
 	it(`the tier runs in the order of the places the checks were put off under, not the order they were put off in`, () => {

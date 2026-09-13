@@ -1,11 +1,13 @@
-import type { AtRule, ChildNode, Rule } from "postcss"
+import type { AtRule, ChildNode, Root, Rule } from "postcss"
 import stylelint, { type PostcssResult } from "stylelint"
 
 import { LEADING_WHITESPACE, LINE_BREAK, TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { beforeBlockString } from "../../utils/beforeBlockString/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
+import { runsAtTheHead } from "../../utils/defersToRunEnd/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { fixDisabledOnLine } from "../../utils/fixDisabledOnLine/index.ts"
 import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -111,6 +113,26 @@ function runOf (node: ChildNode, result: PostcssResult): Run {
 	return { rules: nested && comments > 1 ? {} : { newline: rules.newline }, isSingleLine }
 }
 
+/**
+ * Asks whether `report` would apply a fix, as Stylelint decides: a run that fixes, no `disableFix`, no disable comment over the line.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @param ruleName - The configured name.
+ * @param line - The line the warning starts on.
+ * @returns True where the fix is applied.
+ */
+function fixApplies (result: PostcssResult, ruleName: string, line: number): boolean {
+	let config = result.stylelint?.config
+
+	if (!config?.fix) return false
+
+	let setting: unknown = config.rules?.[ruleName]
+	let secondary: unknown = Array.isArray(setting) ? setting[1] : undefined
+
+	if (typeof secondary === `object` && secondary !== null && (secondary as { disableFix?: unknown }).disableFix) return false
+
+	return !fixDisabledOnLine(result, ruleName, line)
+}
+
 /** The most declarations a single-line block may hold. */
 export type PrimaryOption = number
 
@@ -124,13 +146,21 @@ export type PrimaryOption = number
  * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
+	// The check runs ahead of the lineness tier and again behind it (#713), so the options are validated once per root
+	let validated: WeakMap<Root, boolean> = new WeakMap()
+
 	return (root, result) => {
-		let validOptions = validateOptions(result, ruleName, {
+		let validOptions = validated.get(root) ?? validateOptions(result, ruleName, {
 			actual: primary,
 			possible: [isNumber],
 		})
 
+		validated.set(root, validOptions)
+
 		if (!validOptions) return
+
+		// Ahead of the tier the check only fixes, since the tier may yet break a block left on one line, and the check behind it reports what stands
+		let fixesOnly = runsAtTheHead(root)
 
 		// A block of declarations is what is counted, whichever keyword opens it, so an at-rule's block is read as a rule's (#640); one walk in document order, since a nested block broken first would make the block around it multi-line before it is read (#641)
 		root.walk((node) => {
@@ -169,6 +199,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let closing = whitespaceAsked(syntax, statement, result, CLOSING_BRACE_BEFORE, isSingleLineAfterTheFix, lineBreak)
 			let isFixable = LINE_BREAK.test(closing) || runs.some(({ whitespace }) => LINE_BREAK.test(whitespace))
 
+			if (fixesOnly && !(isFixable && fixApplies(result, ruleName, statement.rangeBy({ index, endIndex: index + block.length }).start.line))) return
+
 			report({
 				message: messages.expected,
 				messageArgs: [primary],
@@ -190,7 +222,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 	}
 }
 
-// Reads a lineness the run's writers change, so it checks behind them; what it writes, `indentation` indents behind it in the same run, and a neighbour about a run it leaves alone reads the broken block on the run after (#641)
-export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule, defersToRunEnd: true })
+// Breaks a block ahead of the lineness tier, so the tier reads the broken block in the same run (#713), and reads again behind the tier, which may put a block on one line (#641); what it writes, `indentation` indents behind it in the same run
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule, defersToRunEnd: true, checksAheadOfLineness: true })
 
 export let { ruleName, messages } = createRule(css)

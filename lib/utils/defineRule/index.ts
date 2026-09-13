@@ -3,7 +3,7 @@ import stylelint, { type PostcssResult, type Rule, type RuleMessages, type RuleM
 
 import { namespaces, type Syntax } from "../../syntaxes/index.ts"
 import { addNamespace } from "../addNamespace/index.ts"
-import { deferCheck, deferFinalCheck, defersToRunEnd, flushDeferredChecks, lastConfiguredPluginRule, linenessRank, registerPluginRule } from "../defersToRunEnd/index.ts"
+import { deferCheck, deferFinalCheck, deferHeadCheck, defersToRunEnd, flushDeferredChecks, lastConfiguredPluginRule, linenessRank, registerPluginRule } from "../defersToRunEnd/index.ts"
 import type { RuleCheck } from "../ruleCheck/index.ts"
 
 let { utils: { report, ruleMessages } } = stylelint
@@ -15,13 +15,14 @@ export type RuleScope<M extends RuleMessages> = {
 	syntax: Syntax,
 }
 
-/** What a rule module defines once, whichever namespaces it is registered under. `defersToRunEnd` marks a rule that reads what a run's writers leave, so it checks last, behind the lineness-deferred rules: `indentation`, which reads every line ([#353](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/353)), and `declaration-block-single-line-max-declarations`, which reads a block's lineness and breaks the block behind them ([#641](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/641)). */
+/** What a rule module defines once, whichever namespaces it is registered under. `defersToRunEnd` marks a rule that reads what a run's writers leave, so it checks last, behind the lineness-deferred rules: `indentation`, which reads every line ([#353](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/353)), and `declaration-block-single-line-max-declarations`, which reads a block's lineness and breaks the block behind them ([#641](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/641)). `checksAheadOfLineness` has such a rule check at the head of the lineness tier as well, so the tier reads the breaks it writes ([#713](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/713)). */
 export type RuleDefinition<P, S, M extends RuleMessages> = {
 	shortName: string,
 	meta: RuleMeta,
 	messages: M,
 	rule: (scope: RuleScope<M>, primary: P, secondaryOptions: S) => RuleCheck,
 	defersToRunEnd?: true,
+	checksAheadOfLineness?: true,
 }
 
 /**
@@ -45,7 +46,7 @@ let refused: WeakSet<Root> = new WeakSet()
  * @returns The factory, whose result `createPlugin` takes.
  */
 export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefinition<P, S, M>): RuleFactory<P, S, M> {
-	let { shortName, meta, messages, rule, defersToRunEnd: readsEveryLine } = definition
+	let { shortName, meta, messages, rule, defersToRunEnd: readsEveryLine, checksAheadOfLineness } = definition
 
 	return (syntax) => {
 		let ruleName = addNamespace(shortName, syntax.namespace)
@@ -93,7 +94,11 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 				let last = lastConfiguredPluginRule(result)
 
 				// Deferred (#355 lineness, #353 every line) only where a flush is sure to come: under a configuration the plugin cannot read the check runs where it stands. Its place is the plugin's to decide, not the configuration's (#502)
-				if (readsEveryLine && last !== undefined) deferFinalCheck(root, rank, () => guarded(root, result))
+				if (readsEveryLine && last !== undefined) {
+					if (checksAheadOfLineness) deferHeadCheck(root, rank, () => guarded(root, result))
+
+					deferFinalCheck(root, rank, () => guarded(root, result))
+				}
 				else if (defersToRunEnd(primary) && last !== undefined) deferCheck(root, rank, () => guarded(root, result))
 				else guarded(root, result)
 

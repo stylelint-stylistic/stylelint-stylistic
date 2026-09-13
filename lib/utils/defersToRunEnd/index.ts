@@ -84,20 +84,20 @@ function byRank (one: DeferredCheck, other: DeferredCheck): number {
 	return compareRanks(one.rank, other.rank)
 }
 
-/** The deferred checks by root: the lineness tier, then readers of every line. Each root of a document flushes on its own. */
-let deferred: WeakMap<Document | Root, { lineness: DeferredCheck[], reading: DeferredCheck[] }> = new WeakMap()
+/** The deferred checks by root: the breaks written ahead of the lineness tier, the lineness tier, then readers of every line. Each root of a document flushes on its own. */
+let deferred: WeakMap<Document | Root, { head: DeferredCheck[], lineness: DeferredCheck[], reading: DeferredCheck[] }> = new WeakMap()
 
 /**
  * Returns a root's tiers, made on first use.
  * @param root - The root whose checks are queued.
  * @returns The tiers.
  */
-function queuesOf (root: Document | Root): { lineness: DeferredCheck[], reading: DeferredCheck[] } {
+function queuesOf (root: Document | Root): { head: DeferredCheck[], lineness: DeferredCheck[], reading: DeferredCheck[] } {
 	let queues = deferred.get(root)
 
 	if (queues) return queues
 
-	let made = { lineness: [], reading: [] }
+	let made = { head: [], lineness: [], reading: [] }
 
 	deferred.set(root, made)
 
@@ -181,6 +181,28 @@ export function deferCheck (root: Document | Root, rank: string, run: () => void
 	queuesOf(root).lineness.push({ rank, run })
 }
 
+/** The root whose head is running, which a check queued there asks after. */
+let flushingHead: Document | Root | undefined
+
+/**
+ * Asks whether a check runs at the head of a root's flush, ahead of the lineness tier.
+ * @param root - The root the check reads.
+ * @returns True during the head.
+ */
+export function runsAtTheHead (root: Document | Root): boolean {
+	return flushingHead === root
+}
+
+/**
+ * Defers a check ahead of the lineness tier, so that the tier reads the breaks it writes ([#713](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/713)).
+ * @param root - The root whose flush runs the check.
+ * @param rank - From `linenessRank`.
+ * @param run - The check.
+ */
+export function deferHeadCheck (root: Document | Root, rank: string, run: () => void): void {
+	queuesOf(root).head.push({ rank, run })
+}
+
 /**
  * Defers a check behind the lineness tier, which writes breaks too ([#353](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/353)).
  * @param root - The root whose flush runs the check.
@@ -192,7 +214,7 @@ export function deferFinalCheck (root: Document | Root, rank: string, run: () =>
 }
 
 /**
- * Runs this root's deferred checks, the lineness tier first, in rank order ([#502](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/502)); both tiers sort, since a rule under two namespaces reads a plain CSS root twice.
+ * Runs this root's deferred checks, the head first, then the lineness tier, then the reading one, each in rank order ([#502](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/502)); every queue sorts, since a rule under two namespaces reads a plain CSS root twice.
  * @param root - The root whose queued checks run.
  */
 export function flushDeferredChecks (root: Document | Root): void {
@@ -201,6 +223,15 @@ export function flushDeferredChecks (root: Document | Root): void {
 	if (!queues) return
 
 	deferred.delete(root)
+
+	flushingHead = root
+
+	try {
+		for (let { run } of queues.head.toSorted(byRank)) run()
+	}
+	finally {
+		flushingHead = undefined
+	}
 
 	for (let { run } of queues.lineness.toSorted(byRank)) run()
 	for (let { run } of queues.reading.toSorted(byRank)) run()

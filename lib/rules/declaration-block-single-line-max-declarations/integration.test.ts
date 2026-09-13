@@ -43,7 +43,7 @@ testRule({
 	],
 })
 
-// The fix spells each run as the rules about it ask (#641). The rule's check is deferred behind every lineness-conditioned neighbour and its write lands behind every `always` and `never` one, wherever the configuration lists them, so the order the library fixes is the only order there is; a probe over both confirmed it
+// The fix spells each run as the rules about it ask (#641). The rule's write lands ahead of every lineness-conditioned neighbour and behind every `always` and `never` one, wherever the configuration lists them, so the order the library fixes is the only order there is; a probe over both confirmed it
 testRule({
 	ruleName,
 	config: [1],
@@ -566,5 +566,50 @@ describe(`the run in front of a comment`, () => {
 		let relint = await stylelint.lint({ code: written, config: { plugins, rules } })
 
 		expect(relint.results[0]?.warnings).toEqual([])
+	})
+})
+
+// #713
+describe(`the check ahead of the lineness tier`, () => {
+	// The two brace rules contradict each other over a multi-line block, so the relint the library runs over the fixed file would report the loser; the outcome is asserted directly instead
+	it(`breaks the block before the lineness-conditioned rules read it, so the first run reports what it leaves`, async () => {
+		let { code, results } = await stylelint.lint({
+			code: `a { color: pink; top: 0; }b { color: red; left: 0; }\n`,
+			config: {
+				plugins,
+				rules: {
+					"@stylistic/block-closing-brace-space-after": `always`,
+					"@stylistic/block-closing-brace-newline-after": `always-multi-line`,
+					[ruleName]: 1,
+				},
+			},
+			fix: true,
+		})
+
+		expect(code).toBe(`a {\ncolor: pink;\ntop: 0;\n} b {\ncolor: red;\nleft: 0;\n}\n`)
+		expect(results[0]?.warnings.map(({ rule, line, column }) => ({ rule, line, column }))).toEqual([{ rule: `@stylistic/block-closing-brace-newline-after`, line: 1, column: 27 }])
+	})
+
+	it.each([
+		[`with its fix turned off`, [1, { disableFix: true }], true],
+		[`in a run that does not fix`, 1, false],
+	])(`reports a block it leaves on one line once, %s`, async (_run, setting, fix) => {
+		let { results } = await stylelint.lint({ code: `a { color: pink; top: 0; }\n`, config: { plugins, rules: { [ruleName]: setting } }, fix })
+
+		expect(results[0]?.warnings.map(({ rule, line, column }) => ({ rule, line, column }))).toEqual([{ rule: ruleName, line: 1, column: 3 }])
+	})
+
+	it(`reports nothing of a block it leaves on one line where a rule of the tier breaks that block`, async () => {
+		let rules = { "@stylistic/block-closing-brace-newline-after": `always-single-line`, [ruleName]: [1, { disableFix: true }] }
+		let { code, results } = await stylelint.lint({ code: `a { b { x: 1; } c: 1; d: 2; }\n`, config: { plugins, rules }, fix: true })
+
+		expect(code).toBe(`a { b { x: 1; }\n c: 1; d: 2; }\n`)
+		expect(results[0]?.warnings).toEqual([])
+	})
+
+	it(`reports an invalid option once`, async () => {
+		let { results } = await stylelint.lint({ code: `a { color: pink; top: 0; }\n`, config: { plugins, rules: { [ruleName]: `one` } } })
+
+		expect(results[0]?.invalidOptionWarnings).toHaveLength(1)
 	})
 })
