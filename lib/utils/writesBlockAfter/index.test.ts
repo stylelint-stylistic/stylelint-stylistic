@@ -1,7 +1,6 @@
+import { parse } from "postcss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
-
-import { css } from "../../syntaxes/css/index.ts"
 
 import { writesBlockAfter } from "./index.ts"
 
@@ -70,6 +69,21 @@ describe(`writesBlockAfter`, () => {
 		expect(ask(`always`, rules)).toBe(true)
 		expect(ask(`always`, { ...rules, [CLOSING_SPACE]: `never` })).toBe(false)
 	})
+
+	// See #715
+	it(`a neighbour listed under the namespace of another syntax, which reads the same plain CSS file`, () => {
+		expect(ask(`always`, { [`@stylistic/scss/block-closing-brace-newline-before`]: `never-multi-line` })).toBe(false)
+		expect(ask(`always`, { [`@stylistic/less/block-closing-brace-space-before`]: `always` })).toBe(false)
+		expect(ask(`never-multi-line`, { [`@stylistic/scss/block-closing-brace-empty-line-before`]: `always-multi-line` }, false)).toBe(false)
+	})
+
+	// See #715
+	it(`a neighbour listed under two namespaces, where either copy refusing gates the write`, () => {
+		expect(ask(`always`, { [CLOSING_NEWLINE]: `always`, [`@stylistic/scss/block-closing-brace-newline-before`]: `never-multi-line` })).toBe(false)
+		expect(ask(`always`, { [`@stylistic/scss/block-closing-brace-empty-line-before`]: `always-multi-line`, [CLOSING_EMPTY_LINE]: [`never`, { except: [`after-closing-brace`] }] }, true)).toBe(true)
+		expect(ask(`never-multi-line`, { [`@stylistic/scss/block-closing-brace-empty-line-before`]: [`never`, { except: [`after-closing-brace`] }], [CLOSING_EMPTY_LINE]: `never` }, true)).toBe(false)
+		expect(ask(`always`, { [CLOSING_NEWLINE]: `always`, [`@stylistic/scss/block-closing-brace-newline-before`]: [`never-multi-line`, { disableFix: true }] })).toBe(true)
+	})
 })
 
 /**
@@ -82,5 +96,5 @@ describe(`writesBlockAfter`, () => {
 function ask (primary: string, rules: Record<string, unknown>, isSingleLine: boolean = false): boolean {
 	let result = { stylelint: { config: { rules } } } as unknown as PostcssResult
 
-	return writesBlockAfter(css, result, primary, isSingleLine)
+	return writesBlockAfter(parse(`a {}`), result, primary, isSingleLine)
 }

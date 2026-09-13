@@ -7,6 +7,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { closedBySemicolon, trailingSemicolonAsked, valueAsClosed } from "./index.ts"
 
 const TRAILING = `@stylistic/declaration-block-trailing-semicolon`
+const SCSS_TRAILING = `@stylistic/scss/declaration-block-trailing-semicolon`
 
 describe(`trailingSemicolonAsked`, () => {
 	it(`a configuration listing the rule under neither of its options, or not at all`, () => {
@@ -31,10 +32,10 @@ describe(`trailingSemicolonAsked`, () => {
 	})
 
 	it(`a rule a disable comment silences over the declaration, whose fix Stylelint then declines, and one the configuration reads past such comments`, () => {
-		expect(trailingSemicolonAsked(css, declarationOf(`a { b: }`, -1), disabled({ [TRAILING]: `always` }, { [TRAILING]: [{ start: 1 }] }))).toBeUndefined()
-		expect(trailingSemicolonAsked(css, declarationOf(`a { b: }`, -1), disabled({ [TRAILING]: `always` }, { all: [{ start: 1, end: 1 }] }))).toBeUndefined()
-		expect(trailingSemicolonAsked(css, declarationOf(`a { b: }`, -1), disabled({ [TRAILING]: `always` }, { [TRAILING]: [{ start: 2 }] }))).toBe(true)
-		expect(trailingSemicolonAsked(css, declarationOf(`a { b: }`, -1), disabled({ [TRAILING]: `always` }, { [TRAILING]: [{ start: 1 }] }, true))).toBe(true)
+		expect(trailingSemicolonAsked(declarationOf(`a { b: }`, -1), disabled({ [TRAILING]: `always` }, { [TRAILING]: [{ start: 1 }] }))).toBeUndefined()
+		expect(trailingSemicolonAsked(declarationOf(`a { b: }`, -1), disabled({ [TRAILING]: `always` }, { all: [{ start: 1, end: 1 }] }))).toBeUndefined()
+		expect(trailingSemicolonAsked(declarationOf(`a { b: }`, -1), disabled({ [TRAILING]: `always` }, { [TRAILING]: [{ start: 2 }] }))).toBe(true)
+		expect(trailingSemicolonAsked(declarationOf(`a { b: }`, -1), disabled({ [TRAILING]: `always` }, { [TRAILING]: [{ start: 1 }] }, true))).toBe(true)
 	})
 
 	it(`a secondary option the rule refuses, under which it runs no check at all`, () => {
@@ -53,12 +54,33 @@ describe(`trailingSemicolonAsked`, () => {
 	})
 
 	it(`a declaration standing at the top level of a stylesheet, which ends no declaration block`, () => {
-		expect(trailingSemicolonAsked(css, parse(`b: `).first as Declaration, result({ [TRAILING]: `always` }))).toBeUndefined()
+		expect(trailingSemicolonAsked(parse(`b: `).first as Declaration, result({ [TRAILING]: `always` }))).toBeUndefined()
 	})
 
 	it(`a custom property a comment stands behind, whose semicolon PostCSS writes whatever the flag says, so never takes nothing away`, () => {
 		expect(asked(`a { --b: ; /*c*/ }`, { [TRAILING]: `never` })).toBeUndefined()
 		expect(asked(`a { --b: ; }`, { [TRAILING]: `never` })).toBe(false)
+	})
+
+	// See #715
+	it(`the rule listed under the namespace of another syntax, which reads the same plain CSS file`, () => {
+		expect(asked(`a { b: }`, { [SCSS_TRAILING]: `always` })).toBe(true)
+		expect(asked(`a { b: ; }`, { [SCSS_TRAILING]: `never` })).toBe(false)
+	})
+
+	// See #715
+	it(`the rule listed under two namespaces, where the copy writing last in run order decides`, () => {
+		expect(asked(`a { b: }`, { [TRAILING]: `always`, [SCSS_TRAILING]: `never` })).toBe(false)
+		expect(asked(`a { b: }`, { [SCSS_TRAILING]: `never`, [TRAILING]: `always` })).toBe(true)
+		expect(asked(`a { b: }`, { [TRAILING]: `always`, [SCSS_TRAILING]: [`never`, { disableFix: true }] })).toBe(true)
+	})
+
+	// See #715
+	it(`a disable comment silencing one copy of two, read under that copy's name`, () => {
+		let rules = { [TRAILING]: `always`, [SCSS_TRAILING]: `never` }
+
+		expect(trailingSemicolonAsked(declarationOf(`a { b: }`, -1), disabled(rules, { [SCSS_TRAILING]: [{ start: 1 }] }))).toBe(true)
+		expect(trailingSemicolonAsked(declarationOf(`a { b: }`, -1), disabled(rules, { [TRAILING]: [{ start: 1 }] }))).toBe(false)
 	})
 })
 
@@ -95,6 +117,13 @@ describe(`valueAsClosed`, () => {
 	it(`a flag behind the value, whose raw is what never trims and the value stays as it is`, () => {
 		expect(value(`a { b: x !important ; }`, { [TRAILING]: `never` })).toBe(`x`)
 	})
+
+	// See #715
+	it(`the run a never listed under another namespace takes away, a later always copy writing back the semicolon alone`, () => {
+		expect(value(`a { b: ; }`, { [SCSS_TRAILING]: `never` })).toBe(``)
+		expect(value(`a { b: ; }`, { [SCSS_TRAILING]: `never`, [TRAILING]: `always` })).toBe(``)
+		expect(value(`a { b: ; }`, { [SCSS_TRAILING]: [`never`, { disableFix: true }], [TRAILING]: `always` })).toBe(` `)
+	})
 })
 
 /**
@@ -105,7 +134,7 @@ describe(`valueAsClosed`, () => {
  * @returns What `trailingSemicolonAsked` answers.
  */
 function asked (code: string, rules: Record<string, unknown>, index: number = -1): boolean | undefined {
-	return trailingSemicolonAsked(css, declarationOf(code, index), result(rules))
+	return trailingSemicolonAsked(declarationOf(code, index), result(rules))
 }
 
 /**
@@ -115,7 +144,7 @@ function asked (code: string, rules: Record<string, unknown>, index: number = -1
  * @returns What `closedBySemicolon` answers.
  */
 function closed (code: string, rules: Record<string, unknown>): boolean {
-	return closedBySemicolon(css, declarationOf(code, -1), result(rules))
+	return closedBySemicolon(declarationOf(code, -1), result(rules))
 }
 
 /**

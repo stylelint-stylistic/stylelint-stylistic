@@ -83,7 +83,7 @@ function sharedRunsOf (syntax: Syntax, decl: Declaration, result: PostcssResult)
 
 	let { parent } = decl
 	// Read as `declaration-block-trailing-semicolon` will leave them (#536)
-	let readBySemicolonRules = !decl.important && parent !== undefined && (isAtRule(parent) || isRule(parent) || isInlineStyleAttribute(parent)) && closedBySemicolon(syntax, decl, result)
+	let readBySemicolonRules = !decl.important && parent !== undefined && (isAtRule(parent) || isRule(parent) || isInlineStyleAttribute(parent)) && closedBySemicolon(decl, result)
 	let text = between.slice(colonIndex + 1) + valueAsClosed(syntax, decl, result)
 
 	if (WHITESPACE_OR_NOTHING.test(text)) {

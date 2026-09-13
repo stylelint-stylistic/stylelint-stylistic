@@ -29,7 +29,7 @@ function runOf (syntax: Syntax, decl: Declaration, result: PostcssResult): {
 
 	if (colonIndexInBetween(syntax, decl, result) === -1 || betweenTailAfterColon(syntax, decl, result) !== ``) return undefined
 
-	if (closedBySemicolon(syntax, decl, result)) return undefined
+	if (closedBySemicolon(decl, result)) return undefined
 
 	let next = decl.next()
 	let run = next ? next.raws.before : parent.raws.after

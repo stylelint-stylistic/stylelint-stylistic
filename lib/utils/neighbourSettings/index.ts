@@ -14,29 +14,32 @@ export type NeighbourRule = {
 
 /**
  * Reads the primary option out of a setting.
- * @param setting - A rule's configured value: a keyword, or an array opening with one.
- * @returns The option, where it is a keyword.
+ * @param setting - A rule's configured value: a keyword or `true`, or an array opening with one.
+ * @returns The option, where it is a keyword or `true`.
  */
-function primaryOf (setting: unknown): string | undefined {
-	let option = Array.isArray(setting) ? setting[0] : setting
+function primaryOf (setting: unknown): string | true | undefined {
+	let option: unknown = Array.isArray(setting) ? setting[0] : setting
 
-	return typeof option === `string` ? option : undefined
+	return typeof option === `string` || option === true ? option : undefined
 }
 
+/** A neighbour's copy as the configuration lists it: the caller's key, the option, the setting whole, the configured name and the syntax of its namespace. */
+type Listed<Key extends string, Option extends string | true> = { key: Key, option: Option, setting: unknown, name: string, syntax: Syntax }
+
 /**
- * Reads some neighbours' settings in run order: configuration order, then the lineness-conditioned rules, which wait for the run's writers ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)) in the plugin's order ([#502](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/502)).
+ * Lists the copies of some neighbours the configuration holds, in run order: configuration order, then the lineness-conditioned rules, which wait for the run's writers ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)) in the plugin's order ([#502](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/502)).
  *
- * Stylelint runs rules in configuration order, so the key order of `result.stylelint.config` is the run's. A neighbour is listed under any namespace that reads the node's root, since every namespace reads plain CSS and a copy under another one writes the same file ([#710](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/710)); so one key may come more than once, told apart by the name. A neighbour refusing its option is passed over; whether its fix is off travels with the option ([#485](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/485)).
+ * Stylelint runs rules in configuration order, so the key order of `result.stylelint.config` is the run's. A neighbour is listed under any namespace that reads the node's root, since every namespace reads plain CSS and a copy under another one writes the same file ([#710](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/710)); so one key may come more than once, told apart by the name. A copy refusing its option is passed over.
  * @param node - A node of the root the rules read.
  * @param result - The PostCSS result carrying the configuration.
  * @param rules - The neighbours by the caller's keys; a key may stand empty.
- * @returns Key, option, whether the fix is off and the configured name, per neighbour, in run order.
+ * @returns The copies in run order.
  */
-export function neighbourSettings<Key extends string> (node: Node, result: PostcssResult, rules: Partial<Record<Key, NeighbourRule>>): [Key, string, boolean, string][] {
+function listedInRunOrder<Key extends string, Option extends string | true> (node: Node, result: PostcssResult, rules: Partial<Record<Key, { name: string, options: Option[] }>>): Listed<Key, Option>[] {
 	let settings: Record<string, unknown> = result.stylelint?.config?.rules ?? {}
 	let names = namesOf(rules)
 	let root = node.root()
-	let found: { setting: [Key, string, boolean, string], rank: string }[] = []
+	let found: Listed<Key, Option>[] = []
 
 	for (let name of Object.keys(settings)) {
 		let match = names.get(name)
@@ -47,20 +50,40 @@ export function neighbourSettings<Key extends string> (node: Node, result: Postc
 		let setting = settings[name]
 		let option = primaryOf(setting)
 
-		if (option === undefined || !rule.options.includes(option) || !syntax.accepts(root, result)) continue
+		if (option === undefined || !rule.options.includes(option as Option) || !syntax.accepts(root, result)) continue
 
-		found.push({ setting: [key, option, fixDisabledBy(setting), name], rank: linenessRank(rule.name, syntax.namespace, option) })
+		found.push({ key, option: option as Option, setting, name, syntax })
+	}
+
+	/**
+	 * Ranks a deferred copy among the others.
+	 * @param copy - The copy.
+	 * @returns The rank.
+	 */
+	function rankOf (copy: Listed<Key, Option>): string {
+		return linenessRank((rules[copy.key] as { name: string }).name, copy.syntax.namespace, copy.option as string)
 	}
 
 	// The deferred go behind every other (#355), in the plugin's order (#502)
-	let undeferred = found.filter(({ setting: [, option] }) => !defersToRunEnd(option))
-	let deferred = found.filter(({ setting: [, option] }) => defersToRunEnd(option)).toSorted((one, other) => compareRanks(one.rank, other.rank))
+	let undeferred = found.filter(({ option }) => !defersToRunEnd(option))
+	let deferred = found.filter(({ option }) => defersToRunEnd(option)).toSorted((one, other) => compareRanks(rankOf(one), rankOf(other)))
 
-	return [...undeferred, ...deferred].map(({ setting }) => setting)
+	return [...undeferred, ...deferred]
+}
+
+/**
+ * Reads some neighbours' settings in run order, as {@link listedInRunOrder} lists them; whether a copy's fix is off travels with its option ([#485](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/485)).
+ * @param node - A node of the root the rules read.
+ * @param result - The PostCSS result carrying the configuration.
+ * @param rules - The neighbours by the caller's keys; a key may stand empty.
+ * @returns Key, option, whether the fix is off and the configured name, per neighbour, in run order.
+ */
+export function neighbourSettings<Key extends string> (node: Node, result: PostcssResult, rules: Partial<Record<Key, NeighbourRule>>): [Key, string, boolean, string][] {
+	return listedInRunOrder(node, result, rules).map(({ key, option, setting, name }) => [key, option, fixDisabledBy(setting), name])
 }
 
 /** A neighbour as a configured name registers it: the caller's key, the rule and the syntax of its namespace. */
-type NeighbourName<Key extends string> = { key: Key, rule: NeighbourRule, syntax: Syntax }
+type NeighbourName<Key extends string> = { key: Key, rule: { name: string, options: (string | true)[] }, syntax: Syntax }
 
 /** The names each table of neighbours is configured under, built once per table. */
 let namesByTable: WeakMap<object, Map<string, NeighbourName<string>>> = new WeakMap()
@@ -70,7 +93,7 @@ let namesByTable: WeakMap<object, Map<string, NeighbourName<string>>> = new Weak
  * @param rules - The neighbours by the caller's keys.
  * @returns The map.
  */
-function namesOf<Key extends string> (rules: Partial<Record<Key, NeighbourRule>>): Map<string, NeighbourName<Key>> {
+function namesOf<Key extends string> (rules: Partial<Record<Key, { name: string, options: (string | true)[] }>>): Map<string, NeighbourName<Key>> {
 	let names = namesByTable.get(rules) as Map<string, NeighbourName<Key>> | undefined
 
 	if (names) return names
@@ -78,7 +101,7 @@ function namesOf<Key extends string> (rules: Partial<Record<Key, NeighbourRule>>
 	let made: Map<string, NeighbourName<Key>> = new Map()
 
 	for (let syntax of [css, ...namespaces]) {
-		for (let [key, rule] of Object.entries(rules) as [Key, NeighbourRule][]) made.set(addNamespace(rule.name, syntax.namespace), { key, rule, syntax })
+		for (let [key, rule] of Object.entries(rules) as [Key, { name: string, options: (string | true)[] }][]) made.set(addNamespace(rule.name, syntax.namespace), { key, rule, syntax })
 	}
 
 	namesByTable.set(rules, made)
@@ -119,21 +142,36 @@ export type NeighbourRuleSetting = {
 	options: (string | true)[],
 }
 
+/** One copy of a neighbour, read whole: its option, whether its fix is off, its secondaries, the name it is configured under and the syntax of that name's namespace. */
+export type NeighbourCopy = {
+	option: string | true,
+	fixDisabled: boolean,
+	secondary: Record<string, unknown>,
+	name: string,
+	syntax: Syntax,
+}
+
+/** The one-key table each neighbour is looked up through, so the names it is configured under are built once. */
+let tablesByRule: WeakMap<NeighbourRuleSetting, { copy: NeighbourRuleSetting }> = new WeakMap()
+
 /**
- * Reads one neighbour's setting whole, secondaries included: `no-multiple-whitespaces` asks `named-grid-areas-alignment` whether it lays a shorthand out as a table ([#45](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/45)).
- * @param syntax - The asking rule's syntax, whose namespace names the neighbour.
+ * Reads every copy of one neighbour whole, secondaries included, in run order and under every namespace that reads the root, as {@link neighbourSettings} finds them ([#715](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/715)); which copy counts is each caller's to decide.
+ * @param node - A node of the root the rules read.
  * @param result - The PostCSS result carrying the configuration.
  * @param rule - The neighbour and the primaries it accepts.
- * @returns The setting, or nothing where the neighbour is unlisted or refuses its primary.
+ * @returns The copies, none where the neighbour is unlisted, refuses its primary, or is listed only under namespaces refusing the root.
  */
-export function neighbourSetting (syntax: Syntax, result: PostcssResult, rule: NeighbourRuleSetting): { option: string | true, fixDisabled: boolean, secondary: Record<string, unknown> } | undefined {
-	let settings: Record<string, unknown> = result.stylelint?.config?.rules ?? {}
-	let setting = settings[addNamespace(rule.name, syntax.namespace)]
-	let option: unknown = Array.isArray(setting) ? setting[0] : setting
+export function neighbourCopies (node: Node, result: PostcssResult, rule: NeighbourRuleSetting): NeighbourCopy[] {
+	let table = tablesByRule.get(rule)
 
-	if ((typeof option !== `string` && option !== true) || !rule.options.includes(option)) return
+	if (!table) {
+		table = { copy: rule }
+		tablesByRule.set(rule, table)
+	}
 
-	let secondary: unknown = Array.isArray(setting) ? setting[1] : undefined
+	return listedInRunOrder(node, result, table).map(({ option, setting, name, syntax }) => {
+		let secondary: unknown = Array.isArray(setting) ? setting[1] : undefined
 
-	return { option, fixDisabled: fixDisabledBy(setting), secondary: typeof secondary === `object` && secondary !== null ? secondary as Record<string, unknown> : {} }
+		return { option, fixDisabled: fixDisabledBy(setting), secondary: typeof secondary === `object` && secondary !== null ? secondary as Record<string, unknown> : {}, name, syntax }
+	})
 }

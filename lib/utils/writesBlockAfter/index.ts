@@ -1,7 +1,7 @@
+import type { Node } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import type { Syntax } from "../../syntaxes/index.ts"
-import { type NeighbourRuleSetting, neighbourSetting, speaksOf } from "../neighbourSettings/index.ts"
+import { neighbourCopies, type NeighbourRuleSetting, speaksOf } from "../neighbourSettings/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
 
 /** A spelling of the whitespace run in front of a closing brace. */
@@ -61,19 +61,15 @@ function acceptedByEmptyLine (option: string, secondary: Record<string, unknown>
 }
 
 /**
- * Reads a neighbour's setting, where it is listed with an option it accepts and a fix that would rewrite the run.
- * @param syntax - The asking rule's syntax, whose namespace names the neighbour.
+ * Reads the copies of a neighbour that are listed with an option they accept and a fix that would rewrite the run.
+ * @param node - A node of the root the rules read.
  * @param result - The Stylelint result, which holds the configuration.
  * @param rule - The neighbour and the primaries it accepts.
- * @returns The primary and the secondaries, or nothing where the neighbour gates nothing.
+ * @returns The primary and the secondaries per writing copy, none where the neighbour gates nothing.
  */
-function writingNeighbour (syntax: Syntax, result: PostcssResult, rule: NeighbourRuleSetting): { option: string, secondary: Record<string, unknown> } | undefined {
-	let setting = neighbourSetting(syntax, result, rule)
-
+function writingCopies (node: Node, result: PostcssResult, rule: NeighbourRuleSetting): { option: string, secondary: Record<string, unknown> }[] {
 	// A turned-off fix rewrites nothing, so it gates nothing (#485)
-	if (!setting || setting.fixDisabled || typeof setting.option !== `string`) return
-
-	return { option: setting.option, secondary: setting.secondary }
+	return neighbourCopies(node, result, rule).flatMap(({ option, fixDisabled, secondary }) => !fixDisabled && typeof option === `string` ? [{ option, secondary }] : [])
 }
 
 /**
@@ -81,18 +77,15 @@ function writingNeighbour (syntax: Syntax, result: PostcssResult, rule: Neighbou
  *
  * It writes only where every one of the three that speaks of the block as the write leaves it accepts a spelling it accepts too; otherwise the run would be taken straight back out, and the two rules would take it in turns for as long as `--fix` ran. Sharing a spelling rather than accepting the written one is what lets `block-closing-brace-empty-line-before` double the break this rule writes ([#416](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/416)).
  *
- * Run order is not asked: one rule asks and the three write whatever the configuration lists, so no order changes the answer.
- * @param syntax - The asking rule's syntax, whose namespace names the neighbours.
+ * Run order is not asked: one rule asks and the three write whatever the configuration lists, so no order changes the answer. Every copy of the three under a namespace reading the root writes the same run, so each is asked ([#715](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/715)).
+ * @param node - A node of the root the rules read.
  * @param result - The Stylelint result, which holds the configuration.
  * @param primary - The asking rule's primary option.
  * @param isSingleLine - Whether the block is one line as the write leaves it.
  * @returns True where the asking rule writes the run.
  */
-export function writesBlockAfter (syntax: Syntax, result: PostcssResult, primary: string, isSingleLine: boolean): boolean {
+export function writesBlockAfter (node: Node, result: PostcssResult, primary: string, isSingleLine: boolean): boolean {
 	let accepted = acceptedByWhitespace(primary, true)
-	let newline = writingNeighbour(syntax, result, CLOSING_NEWLINE)
-	let space = writingNeighbour(syntax, result, CLOSING_SPACE)
-	let emptyLine = writingNeighbour(syntax, result, CLOSING_EMPTY_LINE)
 
 	/**
 	 * Asks whether a neighbour leaves the asking rule a spelling they both accept.
@@ -103,9 +96,9 @@ export function writesBlockAfter (syntax: Syntax, result: PostcssResult, primary
 		return neighbourAccepts.some((run) => accepted.includes(run))
 	}
 
-	if (newline && speaksOf(newline.option, () => isSingleLine) && !agrees(acceptedByWhitespace(newline.option, true))) return false
+	if (writingCopies(node, result, CLOSING_NEWLINE).some(({ option }) => speaksOf(option, () => isSingleLine) && !agrees(acceptedByWhitespace(option, true)))) return false
 
-	if (space && speaksOf(space.option, () => isSingleLine) && !agrees(acceptedByWhitespace(space.option, false))) return false
+	if (writingCopies(node, result, CLOSING_SPACE).some(({ option }) => speaksOf(option, () => isSingleLine) && !agrees(acceptedByWhitespace(option, false)))) return false
 
-	return !emptyLine || agrees(acceptedByEmptyLine(emptyLine.option, emptyLine.secondary, isSingleLine))
+	return writingCopies(node, result, CLOSING_EMPTY_LINE).every(({ option, secondary }) => agrees(acceptedByEmptyLine(option, secondary, isSingleLine)))
 }

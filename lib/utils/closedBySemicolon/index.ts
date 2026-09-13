@@ -3,14 +3,13 @@ import type { PostcssResult } from "stylelint"
 
 import { TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
-import { addNamespace } from "../addNamespace/index.ts"
 import { fixDisabledOnLine } from "../fixDisabledOnLine/index.ts"
 import { hasBlock } from "../hasBlock/index.ts"
 import { isCustomProperty } from "../isCustomProperty/index.ts"
 import { isInlineStyleAttribute } from "../isInlineStyleAttribute/index.ts"
 import { isLastNodeWithoutSemicolon } from "../isLastNodeWithoutSemicolon/index.ts"
 import { lastNonCommentNode } from "../lastNonCommentNode/index.ts"
-import { neighbourSetting } from "../neighbourSettings/index.ts"
+import { neighbourCopies, type NeighbourCopy } from "../neighbourSettings/index.ts"
 import { nextNonCommentNode } from "../nextNonCommentNode/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
 import { isAtRule, isDeclaration, isRoot } from "../typeGuards/index.ts"
@@ -70,15 +69,14 @@ export function semicolonOutlivesTheFlag (node: Node): boolean {
 }
 
 /**
- * Asks whether `declaration-block-trailing-semicolon` can fix a declaration: fix on, secondaries it takes, no disable on the line, closing a block, not alone under `ignore: single-declaration`.
- * @param syntax - The asking rule's syntax.
+ * Asks whether a copy of `declaration-block-trailing-semicolon` can fix a declaration: fix on, secondaries it takes, no disable on the line under its name, closing a block, not alone under `ignore: single-declaration`.
+ * @param copy - The copy, as `neighbourCopies` reads it.
  * @param decl - The declaration.
  * @param result - The Stylelint result, whose disable ranges are read.
- * @param setting - The rule's setting, as `neighbourSetting` reads it.
  * @returns True where the fix reaches the declaration.
  */
-function reaches (syntax: Syntax, decl: Declaration, result: PostcssResult, setting: { fixDisabled: boolean, secondary: Record<string, unknown> }): boolean {
-	if (setting.fixDisabled || !takesSecondary(setting.secondary)) return false
+function reaches (copy: NeighbourCopy, decl: Declaration, result: PostcssResult): boolean {
+	if (copy.fixDisabled || !takesSecondary(copy.secondary)) return false
 
 	let { parent } = decl
 
@@ -86,58 +84,94 @@ function reaches (syntax: Syntax, decl: Declaration, result: PostcssResult, sett
 
 	let line = decl.source?.end?.line ?? decl.source?.start?.line
 
-	if (line !== undefined && fixDisabledOnLine(result, addNamespace(TRAILING_SEMICOLON_RULE.name, syntax.namespace), line)) return false
+	if (line !== undefined && fixDisabledOnLine(result, copy.name, line)) return false
 
-	return !(optionsMatches(setting.secondary, `ignore`, `single-declaration`) && nextNonCommentNode(parent.first) === decl)
+	return !(optionsMatches(copy.secondary, `ignore`, `single-declaration`) && nextNonCommentNode(parent.first) === decl)
 }
 
 /**
- * Asks what `declaration-block-trailing-semicolon` leaves behind a declaration: a semicolon under a live `always`, none under a live `never`, nothing where its fix cannot write.
+ * Asks what one copy of `declaration-block-trailing-semicolon` writes behind a declaration, reading it through the syntax of its own namespace: a semicolon under a live `always`, none under a live `never`, nothing where its fix cannot write.
  *
  * `always` writes behind no node with a block and none an inline comment closes; `never` takes no semicolon PostCSS writes regardless or the language requires; neither acts on a flag a comment's text set. The disable line is the declaration's last, where `always` reports.
- * @param syntax - The asking rule's syntax.
+ * @param copy - The copy.
+ * @param decl - The declaration.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns True for a semicolon, false for none, nothing where the copy leaves it.
+ */
+function writtenBy (copy: NeighbourCopy, decl: Declaration, result: PostcssResult): boolean | undefined {
+	let { syntax } = copy
+
+	if (!reaches(copy, decl, result) || syntax.semicolonFlagIsCommentText(decl, result)) return undefined
+
+	if (copy.option === `always`) return !hasBlock(decl) && !syntax.writesIntoInlineComment(decl, result, whitespaceBeforeSemicolon(syntax, decl, result)) ? true : undefined
+
+	return !semicolonOutlivesTheFlag(decl) && !syntax.requiresTrailingSemicolon(decl, result) ? false : undefined
+}
+
+/**
+ * Reads what the last copy of `declaration-block-trailing-semicolon` to write behind a declaration leaves there, and the syntax that copy reads through.
+ *
+ * Every copy under a namespace reading the root writes the same file, so the one writing last in run order decides whether a semicolon stands ([#715](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/715)); a later copy whose fix cannot write leaves an earlier one's write standing.
+ * @param decl - The declaration.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns The semicolon and the syntax, or nothing where no copy writes.
+ */
+function lastWrite (decl: Declaration, result: PostcssResult): { semicolon: boolean, syntax: Syntax } | undefined {
+	let last: { semicolon: boolean, syntax: Syntax } | undefined
+
+	for (let copy of neighbourCopies(decl, result, TRAILING_SEMICOLON_RULE)) {
+		let semicolon = writtenBy(copy, decl, result)
+
+		if (semicolon !== undefined) last = { semicolon, syntax: copy.syntax }
+	}
+
+	return last
+}
+
+/**
+ * Asks what `declaration-block-trailing-semicolon` leaves behind a declaration, as its last writing copy leaves it.
  * @param decl - The declaration.
  * @param result - The Stylelint result, which holds the configuration.
  * @returns True for a semicolon, false for none, nothing where the rule leaves it.
  */
-export function trailingSemicolonAsked (syntax: Syntax, decl: Declaration, result: PostcssResult): boolean | undefined {
-	let setting = neighbourSetting(syntax, result, TRAILING_SEMICOLON_RULE)
-
-	if (!setting || !reaches(syntax, decl, result, setting)) return undefined
-
-	if (syntax.semicolonFlagIsCommentText(decl, result)) return undefined
-
-	if (setting.option === `always`) return !hasBlock(decl) && !syntax.writesIntoInlineComment(decl, result, whitespaceBeforeSemicolon(syntax, decl, result)) ? true : undefined
-
-	return !semicolonOutlivesTheFlag(decl) && !syntax.requiresTrailingSemicolon(decl, result) ? false : undefined
+export function trailingSemicolonAsked (decl: Declaration, result: PostcssResult): boolean | undefined {
+	return lastWrite(decl, result)?.semicolon
 }
 
 /**
  * Asks whether a semicolon closes a declaration once `declaration-block-trailing-semicolon` has run.
  *
  * Without the semicolon the run behind the colon is the next node's raw ([#387](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387)); reading the boundary as the rule will leave it frees a reader from configuration order ([#536](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/536)).
- * @param syntax - The asking rule's syntax.
  * @param decl - The declaration.
  * @param result - The Stylelint result, which holds the configuration.
  * @returns True where a semicolon closes the declaration, or will.
  */
-export function closedBySemicolon (syntax: Syntax, decl: Declaration, result: PostcssResult): boolean {
-	return trailingSemicolonAsked(syntax, decl, result) ?? !isLastNodeWithoutSemicolon(decl)
+export function closedBySemicolon (decl: Declaration, result: PostcssResult): boolean {
+	return trailingSemicolonAsked(decl, result) ?? !isLastNodeWithoutSemicolon(decl)
 }
 
 /**
  * Reads a declaration's printed value as `declaration-block-trailing-semicolon` will leave it.
  *
- * Its `never` takes the whitespace in front of the semicolon too ([#479](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/479)) where no flag or inline comment closes the declaration.
- * @param syntax - The asking rule's syntax.
+ * Its `never` takes the whitespace in front of the semicolon too ([#479](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/479)) where no flag or inline comment closes the declaration. The copies write in run order, so a `never` copy finding a semicolon takes the run even where a later `always` copy writes the semicolon back ([#715](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/715)).
+ * @param syntax - The asking rule's syntax, which reads the value.
  * @param decl - The declaration.
  * @param result - The Stylelint result, which holds the configuration.
- * @returns The printed value, less the run `never` takes.
+ * @returns The printed value, less the run a `never` copy takes.
  */
 export function valueAsClosed (syntax: Syntax, decl: Declaration, result: PostcssResult): string {
 	let value = syntax.read(decl)
 
-	if (decl.important || !decl.parent?.raws.semicolon || trailingSemicolonAsked(syntax, decl, result) !== false || syntax.writesIntoInlineComment(decl, result)) return value
+	if (decl.important) return value
 
-	return value.replace(TRAILING_CSS_WHITESPACE, ``)
+	let semicolon = Boolean(decl.parent?.raws.semicolon)
+
+	for (let copy of neighbourCopies(decl, result, TRAILING_SEMICOLON_RULE)) {
+		let written = writtenBy(copy, decl, result)
+
+		if (written === false && semicolon && !copy.syntax.writesIntoInlineComment(decl, result)) return value.replace(TRAILING_CSS_WHITESPACE, ``)
+		if (written !== undefined) semicolon = written
+	}
+
+	return value
 }

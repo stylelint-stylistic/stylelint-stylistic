@@ -230,7 +230,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// The `always` write opens the run with a break; the `never-multi-line` one takes every break out of the block's whitespace, so only a comment's own text can leave the block multi-line
 				let isSingleLine = primary === `never-multi-line` && nodes.every((node) => isSingleLineString(nodeString(node, result)))
 
-				if (!writesBlockAfter(syntax, result, primary, isSingleLine)) return
+				if (!writesBlockAfter(statement, result, primary, isSingleLine)) return
 
 				return (): void => {
 					if (primary === `never-multi-line`) restoreCarriedBreaks()

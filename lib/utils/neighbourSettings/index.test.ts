@@ -3,7 +3,9 @@ import postcssScss, { parse as parseScss } from "postcss-scss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
-import { neighbourSettings, speaksOf } from "./index.ts"
+import { css } from "../../syntaxes/css/index.ts"
+
+import { neighbourCopies, neighbourSettings, speaksOf } from "./index.ts"
 
 /** A plain CSS root, which every namespace reads. */
 const NODE = parse(`a {}`)
@@ -94,6 +96,35 @@ describe(`neighbourSettings`, () => {
 			"@stylistic/declaration-block-semicolon-space-after": `never-single-line`,
 			"@stylistic/declaration-block-semicolon-newline-before": `always-multi-line`,
 		}), neighbours)).toEqual(expected)
+	})
+})
+
+describe(`neighbourCopies`, () => {
+	let grid = { name: `named-grid-areas-alignment`, options: [true] as (string | true)[] }
+	let trailing = { name: `declaration-block-trailing-semicolon`, options: [`always`, `never`] }
+
+	it(`nothing where the neighbour is unlisted, or listed with a primary it refuses`, () => {
+		expect(neighbourCopies(NODE, result({}), grid)).toEqual([])
+		expect(neighbourCopies(NODE, result({ "@stylistic/named-grid-areas-alignment": false }), grid)).toEqual([])
+		expect(neighbourCopies(NODE, result({ "@stylistic/declaration-block-trailing-semicolon": `sometimes` }), trailing)).toEqual([])
+	})
+
+	it(`a copy read whole, true as its primary, its secondaries and whether its fix is off`, () => {
+		expect(neighbourCopies(NODE, result({ "@stylistic/named-grid-areas-alignment": [true, { alignColumns: true, disableFix: true }] }), grid)).toMatchObject([{ option: true, fixDisabled: true, secondary: { alignColumns: true, disableFix: true }, name: `@stylistic/named-grid-areas-alignment`, syntax: css }])
+		expect(neighbourCopies(NODE, result({ "@stylistic/declaration-block-trailing-semicolon": `never` }), trailing)).toMatchObject([{ option: `never`, fixDisabled: false, secondary: {} }])
+	})
+
+	// See #715
+	it(`a copy under every namespace reading the root, in the order the configuration lists them, each with its namespace's syntax`, () => {
+		let copies = neighbourCopies(NODE, result({ "@stylistic/scss/declaration-block-trailing-semicolon": `never`, "@stylistic/declaration-block-trailing-semicolon": `always` }), trailing)
+
+		expect(copies.map(({ option, name, syntax }) => [option, name, syntax.namespace])).toEqual([[`never`, `@stylistic/scss/declaration-block-trailing-semicolon`, `scss`], [`always`, `@stylistic/declaration-block-trailing-semicolon`, undefined]])
+	})
+
+	it(`no copy under a namespace refusing the root`, () => {
+		let scssResult = { opts: { syntax: postcssScss }, stylelint: { config: { customSyntax: `postcss-scss`, rules: { "@stylistic/less/declaration-block-trailing-semicolon": `always`, "@stylistic/scss/declaration-block-trailing-semicolon": `never` } } } } as unknown as PostcssResult
+
+		expect(neighbourCopies(parseScss(`a {}`), scssResult, trailing).map(({ name }) => name)).toEqual([`@stylistic/scss/declaration-block-trailing-semicolon`])
 	})
 })
 

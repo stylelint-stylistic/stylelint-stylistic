@@ -1065,6 +1065,11 @@ describe(`${ruleName} beside the rules that write the same run`, () => {
 		})
 	})
 
+	// See #715
+	it(`leaves it where that rule's never-multi-line is listed under the namespace of another syntax, which reads the same plain CSS file`, async () => {
+		expect(await race(`a { /* c */ }`, `always`, `@stylistic/scss/block-closing-brace-newline-before`, `never-multi-line`)).toEqual({ ours: `a { /* c */ }`, theirs: `a { /* c */ }`, left: [messages.expectedAfter()] })
+	})
+
 	it(`writes it where that rule's fix is turned off, since a fix that rewrites nothing gates nothing`, async () => {
 		expect(await race(`a {/*c*/}`, `always`, closingNewline, [`never-multi-line`, { disableFix: true }])).toEqual({
 			ours: `a {/*c*/\n}`,
