@@ -1,4 +1,4 @@
-import type { ChildNode, Container, Document, Root } from "postcss"
+import { type ChildNode, type Container, type Document, type Root, stringify } from "postcss"
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
@@ -10,6 +10,7 @@ import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
+import { nodeSyntax } from "../../utils/nodeSyntax/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
@@ -110,8 +111,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		let emptyLines = 0
 		let lastIndex = -1
-		// Printed by the syntax, since PostCSS's stringifier drops a Sass nested property's block and a Less mixin call's `!important`, and widens a `//` comment (#583); a styled template's root hangs in its document, whose stringifier prints the host code around it
-		let rootString = root.parent ? root.toString() : nodeString(root, result)
+		let rootString = countedText(root, result)
 
 		// A file ending on a break counts one empty line more, and spaces and tabs behind the last break are `no-eol-whitespace`'s line, so the end is measured in front of them
 		let endOfFile = rootString.replace(TRAILING_SPACES_AND_TABS, ``).length
@@ -191,6 +191,26 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
  */
 function carriesABlock (node: ChildNode): node is ChildNode & Container {
 	return hasBlock(node)
+}
+
+/**
+ * Prints the text the breaks are counted in, as the file the warnings are placed in holds it.
+ * @param root - The root checked.
+ * @param result - The Stylelint result, which holds the file's syntax and tells a standalone root from a block of a document.
+ * @returns The root's text.
+ */
+function countedText (root: Root, result: PostcssResult): string {
+	// A block embedded in a document is placed in the document's text, which keeps a byte-order mark; a styled template's root hangs in its document, whose stringifier prints the host code around it
+	if (result.root !== root) return root.parent ? root.toString() : nodeString(root, result)
+
+	let text = ``
+
+	// Printed by the syntax, since PostCSS's stringifier drops a Sass nested property's block and a Less mixin call's `!important`, and widens a `//` comment (#583); without the root's opening piece, which is the byte-order mark PostCSS's stringifier prints and `input.css`, which the indices are resolved in, leaves out, while `sugarss` prints none (#601)
+	;(nodeSyntax(root, result)?.stringify ?? stringify)(root, (piece, node, type) => {
+		if (node !== root || type !== `start`) text += piece
+	})
+
+	return text
 }
 
 /**

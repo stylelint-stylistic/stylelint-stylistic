@@ -92,6 +92,24 @@ testRule({
 			column: 1,
 			message: messages.expected(0),
 		},
+		// See #601
+		{
+			description: `two blank lines opening a stylesheet behind a byte-order mark, which is no character of the text the positions are counted in`,
+			code: `\uFEFF\n\na {}`,
+			fixed: `\uFEFFa {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 1,
+					message: messages.expected(0),
+				},
+				{
+					line: 2,
+					column: 1,
+					message: messages.expected(0),
+				},
+			],
+		},
 	],
 })
 
@@ -362,6 +380,32 @@ testRule({
 			column: 1,
 			message: messages.expected(1),
 		},
+		// See #601
+		{
+			description: `two blank lines opening a stylesheet behind a byte-order mark, which is no character of the text the positions are counted in`,
+			code: `\uFEFF\n\na {}`,
+			fixed: `\uFEFF\na {}`,
+			line: 2,
+			column: 1,
+			message: messages.expected(1),
+		},
+		{
+			description: `two blank lines closing a stylesheet behind a byte-order mark`,
+			code: `\uFEFFa {}\n\n\n`,
+			fixed: `\uFEFFa {}\n`,
+			warnings: [
+				{
+					line: 3,
+					column: 1,
+					message: messages.expected(1),
+				},
+				{
+					line: 4,
+					column: 1,
+					message: messages.expected(1),
+				},
+			],
+		},
 	],
 })
 
@@ -490,6 +534,15 @@ a {}
 			code: `<style>\na {\n\tb: c;\n\n\n}\n</style>\n`,
 			fixed: `<style>\na {\n\tb: c;\n\n}\n</style>\n`,
 			line: 5,
+			column: 1,
+			message: messages.expected(1),
+		},
+		// See #601
+		{
+			description: `two blank lines between two rules of an embedded stylesheet opening with a byte-order mark, which is a character of the document the lines are placed in`,
+			code: `<style>\uFEFFa {}\n\n\nb {}</style>`,
+			fixed: `<style>\uFEFFa {}\n\nb {}</style>`,
+			line: 3,
 			column: 1,
 			message: messages.expected(1),
 		},
