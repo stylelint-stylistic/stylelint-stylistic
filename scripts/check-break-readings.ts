@@ -52,7 +52,7 @@ const ALLOWED: Record<string, string[]> = {
 const DEBT: Record<string, string[]> = {
 	"lib/rules/block-closing-brace-empty-line-before/index.ts": [`if (statementString[index - 1] === \`\\r\`) index -= 1`],
 	"lib/rules/block-closing-brace-newline-before/index.ts": [`if (statementString[index - 1] === \`\\r\`) index -= 1`],
-	"lib/rules/block-closing-brace-space-before/index.ts": [`if (statementString[index - 1] === \`\\r\`) index -= 1`],
+	"lib/rules/block-closing-brace-space-before/index.ts": [`if (text[index - 1] === \`\\r\`) index -= 1`],
 	"lib/rules/block-opening-brace-newline-before/index.ts": [`if (beforeBraceNoRaw[index - 1] === \`\\r\`) index -= 1`],
 	"lib/rules/block-opening-brace-space-before/index.ts": [`if (beforeBraceNoRaw[index - 1] === \`\\r\`) index -= 1`],
 	"lib/rules/function-max-empty-lines/index.ts": [

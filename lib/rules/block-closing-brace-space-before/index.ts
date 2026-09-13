@@ -10,9 +10,9 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
 import { lastNodeHoldsTheBlockAfter } from "../../utils/lastNodeHoldsTheBlockAfter/index.ts"
-import { nodeString } from "../../utils/nodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
+import { statementString } from "../../utils/statementString/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -76,12 +76,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 
 			let source = blockString(statement, result)
-			let statementString = nodeString(statement, result)
+			let text = statementString(statement, result)
 			let blockAfter = getBlockAfter(statement) || ``
 
-			let index = statementString.length - 2
+			let index = text.length - 2
 
-			if (statementString[index - 1] === `\r`) index -= 1
+			if (text[index - 1] === `\r`) index -= 1
 
 			// The fix writes over only the whitespace ending the block's final raw, so the guard is asked about the whole surviving run: a break anywhere in it closes a `//` comment the last node left open; where none survives the brace would land in the comment, and the warning stands unfixed. Where the last node has swallowed the final raw the write lands on its own trailing whitespace, which the guard reads when told nothing of the run
 			let { last } = statement

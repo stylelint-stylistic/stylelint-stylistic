@@ -288,6 +288,11 @@ testRule({
 				}
 			`,
 		},
+		{
+			// See #562
+			description: `a single-line block a stray semicolon on the next line stands behind, which leaves the block single-line`,
+			code: `a { color: pink}\n;`,
+		},
 	],
 
 	reject: [

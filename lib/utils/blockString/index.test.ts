@@ -33,6 +33,12 @@ describe(`blockString`, () => {
 		expect(postcssCheck(`a {\n\tcolor: pink;\n\t// c\n}`, less)).toBe(`{\n\tcolor: pink;\n\t// c\n}`)
 	})
 
+	it(`a block a stray semicolon stands behind, which PostCSS prints behind the brace`, () => {
+		expect(postcssCheck(`a { color: pink }\n\t;\n`)).toBe(`{ color: pink }`)
+		expect(postcssCheck(`a { color: pink };\n`, scss)).toBe(`{ color: pink }`)
+		expect(postcssCheck(`a { color: pink } ;\n`, less)).toBe(`{ color: pink }`)
+	})
+
 	it(`a block ending in a Less mixin call, whose leading dot the syntax keeps in a raw`, () => {
 		expect(postcssCheck(`a { .m(); }`, less)).toBe(`{ .m(); }`)
 	})
