@@ -55,7 +55,7 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 
 	return (node, text, textIndex, lineCheckStr, readsGroups) => {
 		let reading = syntax.inlineComments(node, result)
-		let written = writes ? (whitespace === `newline` ? getLineBreak(syntax, node, result) : ` `) : ``
+		let written = writes ? (whitespace === `newline` ? getLineBreak(node, result) : ` `) : ``
 		let edits: Edit[] = []
 
 		for (let slashIndex of findSeparatorSlashes(text, syntax, node, result, { readsGroups, ignoreFunctions: opts.ignoreFunctions })) {

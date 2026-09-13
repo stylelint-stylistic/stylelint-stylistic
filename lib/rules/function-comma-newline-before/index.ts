@@ -81,7 +81,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				functionNode,
 				expectation: primary,
 				position: `before`,
-				symb: getLineBreak(syntax, root, result),
+				symb: getLineBreak(root, result),
 			}),
 		})
 	}

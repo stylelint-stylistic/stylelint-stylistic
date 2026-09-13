@@ -91,7 +91,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						...(isFixable && {
 							fix: (): void => {
 								if (primary.startsWith(`always`)) {
-									writeWhitespaceBeforeSemicolon(syntax, decl, getLineBreak(syntax, root, result))
+									writeWhitespaceBeforeSemicolon(syntax, decl, getLineBreak(root, result))
 
 									return
 								}

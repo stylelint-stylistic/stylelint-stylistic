@@ -225,7 +225,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let index = standing.search(LINE_BREAK)
 				// Trim to the break already there, or add one, as `block-closing-brace-newline-before` spells the same raw
 				let written = primary.startsWith(`always`)
-					? (index >= 0 ? standing.slice(index) : getLineBreak(syntax, root, result) + standing)
+					? (index >= 0 ? standing.slice(index) : getLineBreak(root, result) + standing)
 					: ``
 				// The `always` write opens the run with a break; the `never-multi-line` one takes every break out of the block's whitespace, so only a comment's own text can leave the block multi-line
 				let isSingleLine = primary === `never-multi-line` && nodes.every((node) => isSingleLineString(nodeString(node, result)))
@@ -255,7 +255,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						// Trim to the break already there, or add one
 						let index = standing.search(LINE_BREAK)
 
-						nodeToFixRaws.before = index >= 0 ? standing.slice(index) : getLineBreak(syntax, root, result) + standing
+						nodeToFixRaws.before = index >= 0 ? standing.slice(index) : getLineBreak(root, result) + standing
 
 						backupCommentNextBefores.delete(nodeToFix)
 

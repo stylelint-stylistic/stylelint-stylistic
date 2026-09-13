@@ -288,12 +288,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				// Check opening ...
 				if (primary === `always` && !LINE_BREAK.test(checkBefore)) {
-					fix = fixWith(() => fixBeforeForAlways(measuredBefore, declValue, getLineBreak(syntax, root, result)))
+					fix = fixWith(() => fixBeforeForAlways(measuredBefore, declValue, getLineBreak(root, result)))
 					complain(messages.expectedOpening, openingIndex)
 				}
 
 				if (isMultiLine && primary === `always-multi-line` && !LINE_BREAK.test(checkBefore)) {
-					fix = fixWith(() => fixBeforeForAlways(measuredBefore, declValue, getLineBreak(syntax, root, result)))
+					fix = fixWith(() => fixBeforeForAlways(measuredBefore, declValue, getLineBreak(root, result)))
 					complain(messages.expectedOpeningMultiLine, openingIndex)
 				}
 
@@ -307,12 +307,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				// Check closing ...
 				if (primary === `always` && !LINE_BREAK.test(checkAfter)) {
-					fix = fixWith(() => fixAfterForAlways(valueNode, getLineBreak(syntax, root, result)))
+					fix = fixWith(() => fixAfterForAlways(valueNode, getLineBreak(root, result)))
 					complain(messages.expectedClosing, closingIndex)
 				}
 
 				if (isMultiLine && primary === `always-multi-line` && !LINE_BREAK.test(checkAfter)) {
-					fix = fixWith(() => fixAfterForAlways(valueNode, getLineBreak(syntax, root, result)))
+					fix = fixWith(() => fixAfterForAlways(valueNode, getLineBreak(root, result)))
 					complain(messages.expectedClosingMultiLine, closingIndex)
 				}
 

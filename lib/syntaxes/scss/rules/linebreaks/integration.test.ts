@@ -1,4 +1,5 @@
 import { createRule as createWriter } from "../../../../rules/declaration-block-semicolon-newline-before/index.ts"
+import { messages as colonNewlineAfterMessages } from "../../../../rules/declaration-colon-newline-after/index.ts"
 import { createRule } from "../../../../rules/linebreaks/index.ts"
 import { scss } from "../../index.ts"
 
@@ -41,6 +42,28 @@ testRule({
 					message: writerMessages.expectedBefore(),
 				},
 			],
+		},
+	],
+})
+
+// A namespace reads plain CSS, so a writer listed under the core's name writes into the file this rule respells, and the writer used to look this rule up under its own name alone (#716).
+let plainTestRule = createTestRule({ ruleName, autoStripIndent: false, extraRules: { "@stylistic/declaration-colon-newline-after": `always` } })
+
+plainTestRule({
+	ruleName,
+	config: [`windows`],
+
+	reject: [
+		{
+			// See #716
+			description: `a plain CSS file on one line, with a writer of breaks listed under the core's name`,
+			code: `a { color: red; }`,
+			fixed: `a { color:\r\n red; }`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 11,
+			message: colonNewlineAfterMessages.expectedAfter(),
 		},
 	],
 })

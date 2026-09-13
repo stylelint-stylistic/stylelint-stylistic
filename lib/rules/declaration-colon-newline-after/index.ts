@@ -110,7 +110,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 								if (runPast !== undefined) {
 									// Trim to an existing break, or add one
-									writeRunPastDeclaration(decl, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(runPast) ? runPast.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : getLineBreak(syntax, root, result) + runPast)
+									writeRunPastDeclaration(decl, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(runPast) ? runPast.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : getLineBreak(root, result) + runPast)
 
 									return
 								}
@@ -129,7 +129,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 									let betweenAfter = between.slice(sliceIndex)
 
 									// Trim to an existing break, or add one
-									decl.raws.between = OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(betweenAfter) ? betweenBefore + betweenAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : betweenBefore + getLineBreak(syntax, root, result) + betweenAfter
+									decl.raws.between = OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(betweenAfter) ? betweenBefore + betweenAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : betweenBefore + getLineBreak(root, result) + betweenAfter
 
 									finishTheRun()
 
@@ -142,7 +142,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								let valueAfter = syntax.read(decl)
 
 								if (OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(valueAfter)) syntax.write(decl, valueAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``))
-								else decl.raws.between += getLineBreak(syntax, root, result)
+								else decl.raws.between += getLineBreak(root, result)
 
 								finishTheRun()
 							},

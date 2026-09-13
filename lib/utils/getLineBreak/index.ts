@@ -2,11 +2,10 @@ import type { Input, Node } from "postcss"
 import type { PostcssResult } from "stylelint"
 
 import { CAPTURED_LINE_BREAK } from "../../regexps.ts"
-import type { Syntax } from "../../syntaxes/index.ts"
-import { addNamespace } from "../addNamespace/index.ts"
+import { neighbourCopies } from "../neighbourSettings/index.ts"
 
-/** The rule about the spelling of a break, under its bare name; configured under a namespace. */
-const LINEBREAKS_RULE = `linebreaks`
+/** The rule about the spelling of a break and the options it accepts. */
+const LINEBREAKS_RULE = { name: `linebreaks`, options: [`unix`, `windows`] }
 
 /** The break each of that rule's options asks for. */
 const BREAK_OF_OPTION = { unix: `\n`, windows: `\r\n` }
@@ -37,17 +36,16 @@ function lineBreakOfFile (node: Node): string | undefined {
 /**
  * The line break a fix writes where none stood.
  *
- * In order: what `linebreaks` asks for where configured, or a break written the other way would never be respelled ([#352](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/352)); the file's; a line feed. Never the machine's, which `context.newline` falls back on. The setting is read out of `result.stylelint.config` under the asking rule's namespace; under the core's name alone it was never found ([#478](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/478)).
- * @param syntax - The syntax naming the `linebreaks` rule's namespace.
+ * In order: what `linebreaks` asks for where configured, or a break written the other way would never be respelled ([#352](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/352)); the file's; a line feed. Never the machine's, which `context.newline` falls back on. The rule is read under every namespace reading the root, since a copy under another one respells the same file ([#716](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/716)); of the copies, the last with its fix on respells it last, and a copy whose fix is off is heard only where none is on, as it still reports the other break ([#485](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/485)).
  * @param node - A node of the file.
  * @param result - The result, with the configuration.
  * @returns The break to write.
  */
-export function getLineBreak (syntax: Syntax, node: Node, result: PostcssResult): string {
-	let setting = result.stylelint?.config?.rules?.[addNamespace(LINEBREAKS_RULE, syntax.namespace)]
-	let option = Array.isArray(setting) ? setting[0] : setting
+export function getLineBreak (node: Node, result: PostcssResult): string {
+	let copies = neighbourCopies(node, result, LINEBREAKS_RULE)
+	let option = (copies.findLast(({ fixDisabled }) => !fixDisabled) ?? copies.at(-1))?.option
 
-	if (typeof option === `string` && option in BREAK_OF_OPTION) return BREAK_OF_OPTION[(option as keyof typeof BREAK_OF_OPTION)]
+	if (option !== undefined) return BREAK_OF_OPTION[option as keyof typeof BREAK_OF_OPTION]
 
 	return lineBreakOfFile(node) ?? `\n`
 }

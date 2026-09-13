@@ -141,11 +141,10 @@ export type PrimaryOption = number
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
- * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The maximum.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
 	// The check runs ahead of the lineness tier and again behind it (#713), so the options are validated once per root
 	let validated: WeakMap<Root, boolean> = new WeakMap()
 
@@ -189,14 +188,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let index = beforeBlockString(statement, result, { noRawBefore: true }).length
 
 			// The fix breaks the block over lines: the run in front of every node and the one in front of the closing brace, each spelled as the rules about it ask (#641), a break where none speaks. A comment keeps its run unless a space rule reads it, so it stays on the line of what it follows, as every newline rule allows. Where no run gets a break the block would stay on one line, so the warning stands unfixed
-			let lineBreak = getLineBreak(syntax, statement, result)
+			let lineBreak = getLineBreak(statement, result)
 			let runs = statement.nodes.map((node) => {
 				let { rules, isSingleLine } = runOf(node, result)
 				let standing = (node.raws.before ?? ``).match(LEADING_WHITESPACE)?.[0] ?? ``
 
-				return { node, whitespace: whitespaceAsked(syntax, node, result, rules, isSingleLine, isComment(node) ? standing : lineBreak) }
+				return { node, whitespace: whitespaceAsked(node, result, rules, isSingleLine, isComment(node) ? standing : lineBreak) }
 			})
-			let closing = whitespaceAsked(syntax, statement, result, CLOSING_BRACE_BEFORE, isSingleLineAfterTheFix, lineBreak)
+			let closing = whitespaceAsked(statement, result, CLOSING_BRACE_BEFORE, isSingleLineAfterTheFix, lineBreak)
 			let isFixable = LINE_BREAK.test(closing) || runs.some(({ whitespace }) => LINE_BREAK.test(whitespace))
 
 			if (fixesOnly && !(isFixable && fixApplies(result, ruleName, statement.rangeBy({ index, endIndex: index + block.length }).start.line))) return

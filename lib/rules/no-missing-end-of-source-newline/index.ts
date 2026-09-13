@@ -29,11 +29,10 @@ export type PrimaryOption = true
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
- * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option.
  * @returns The check.
  */
-function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
+function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, { actual: primary })
 
@@ -70,7 +69,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let endsTheLine = TRAILING_LINE_BREAK.test(ended) && TRAILING_LINE_BREAK.test(endedInFile)
 
 				// The break is the one `linebreaks` asks for, or the file's own
-				root.raws.after = endsTheLine ? ended : after + getLineBreak(syntax, root, result)
+				root.raws.after = endsTheLine ? ended : after + getLineBreak(root, result)
 			},
 		})
 	}

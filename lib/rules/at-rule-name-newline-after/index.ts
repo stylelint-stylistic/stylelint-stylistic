@@ -63,7 +63,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let index = leading.search(LINE_BREAK)
 
 				// Keep the break already standing, whatever runs in front of it; the rest of the raw is the new line's indentation, which `indentation` measures
-				atRule.raws.afterName = index >= 0 ? afterName.slice(index) : getLineBreak(syntax, atRule, result) + afterName
+				atRule.raws.afterName = index >= 0 ? afterName.slice(index) : getLineBreak(atRule, result) + afterName
 			},
 		})
 	}

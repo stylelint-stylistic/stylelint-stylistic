@@ -60,7 +60,7 @@ export function whitespaceBeforeSemicolon (syntax: Syntax, node: AtRule | Declar
 		return singleLine
 	}
 
-	return whitespaceAsked(syntax, node, result, RULES_OF_WHITESPACE[node.type], isSingleLine)
+	return whitespaceAsked(node, result, RULES_OF_WHITESPACE[node.type], isSingleLine)
 }
 
 /**

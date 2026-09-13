@@ -181,8 +181,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// Each side: its rule's whitespace, the later-listed rule where two speak, else the fallback
 			if (writesHeight && !height) {
-				let before = whitespaceAsked(syntax, node, result, neighbours.before, neighbours.isSingleLine, SOLIDUS_WHITESPACE_FALLBACK)
-				let after = whitespaceAsked(syntax, node, result, neighbours.after, neighbours.isSingleLine, SOLIDUS_WHITESPACE_FALLBACK)
+				let before = whitespaceAsked(node, result, neighbours.before, neighbours.isSingleLine, SOLIDUS_WHITESPACE_FALLBACK)
+				let after = whitespaceAsked(node, result, neighbours.after, neighbours.isSingleLine, SOLIDUS_WHITESPACE_FALLBACK)
 
 				edits.push({ start: width.sourceEndIndex, end: width.sourceEndIndex, text: `${before}/${after}${expectedHeight}` })
 			}

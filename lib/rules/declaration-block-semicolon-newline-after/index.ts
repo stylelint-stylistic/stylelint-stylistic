@@ -96,7 +96,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 									let standing = runInFrontOf(nodeToCheck)
 									let index = standing.search(LINE_BREAK)
 
-									nodeToCheck.raws.before = index >= 0 ? standing.slice(index) : getLineBreak(syntax, root, result) + standing
+									nodeToCheck.raws.before = index >= 0 ? standing.slice(index) : getLineBreak(root, result) + standing
 
 									return
 								}

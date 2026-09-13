@@ -2,7 +2,6 @@ import { type Declaration, parse, type Rule } from "postcss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
-import { css } from "../../syntaxes/css/index.ts"
 import type { NeighbourRule } from "../neighbourSettings/index.ts"
 
 import { type Whitespace, whitespaceAsked } from "./index.ts"
@@ -70,5 +69,5 @@ function ask (rules: Record<string, unknown>, fallback: string = ``, code: strin
 	let decl = (parse(code).first as Rule).last as Declaration
 	let result = { stylelint: { config: { rules } } } as unknown as PostcssResult
 
-	return whitespaceAsked(css, decl, result, RULES, () => true, fallback)
+	return whitespaceAsked(decl, result, RULES, () => true, fallback)
 }

@@ -139,7 +139,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 									// Keep an existing break, add one where none is
 									let index = nodeToCheckRaws.before.search(LINE_BREAK)
 
-									nodeToCheckRaws.before = index >= 0 ? nodeToCheckRaws.before.slice(index) : getLineBreak(syntax, root, result) + nodeToCheckRaws.before
+									nodeToCheckRaws.before = index >= 0 ? nodeToCheckRaws.before.slice(index) : getLineBreak(root, result) + nodeToCheckRaws.before
 								}
 								else if (primary.startsWith(`never`)) nodeToCheckRaws.before = ``
 							},
