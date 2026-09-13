@@ -183,6 +183,11 @@ testRule({
 			description: `the same stylesheet with a run of spaces written behind the break, which ends a line of its own and hides nothing`,
 			code: `\n   `,
 		},
+		// See #586
+		{
+			description: `a blank line between two rules whose two breaks are spelled differently, which is still one blank line`,
+			code: `a {}\r\n\nb {}`,
+		},
 	],
 
 	reject: [
@@ -393,6 +398,131 @@ testRule({
 			description: `two blank lines closing a stylesheet behind a byte-order mark`,
 			code: `\uFEFFa {}\n\n\n`,
 			fixed: `\uFEFFa {}\n`,
+			warnings: [
+				{
+					line: 3,
+					column: 1,
+					message: messages.expected(1),
+				},
+				{
+					line: 4,
+					column: 1,
+					message: messages.expected(1),
+				},
+			],
+		},
+		// See #586
+		{
+			description: `three blank lines in front of the closing brace of a rule, whose breaks take turns between a carriage-return pair and a bare newline`,
+			code: `a {\r\n\tb: c;\r\n\n\r\n\n}\r\n`,
+			fixed: `a {\r\n\tb: c;\r\n\n}\r\n`,
+			warnings: [
+				{
+					line: 4,
+					column: 1,
+					message: messages.expected(1),
+				},
+				{
+					line: 5,
+					column: 1,
+					message: messages.expected(1),
+				},
+			],
+		},
+		{
+			description: `the same blank lines written with bare newlines in a stylesheet otherwise written with carriage-return line breaks`,
+			code: `a {\r\n\tb: c;\n\n\n\n}\r\n`,
+			fixed: `a {\r\n\tb: c;\n\n}\r\n`,
+			warnings: [
+				{
+					line: 4,
+					column: 1,
+					message: messages.expected(1),
+				},
+				{
+					line: 5,
+					column: 1,
+					message: messages.expected(1),
+				},
+			],
+		},
+		{
+			description: `three blank lines of bare newlines behind a line of spaces opened by a carriage-return pair, which stand in the same whitespace as the pair`,
+			code: `a {}\r\n  \n\n\n\nb {}`,
+			fixed: `a {}\r\n  \n\nb {}`,
+			warnings: [
+				{
+					line: 4,
+					column: 1,
+					message: messages.expected(1),
+				},
+				{
+					line: 5,
+					column: 1,
+					message: messages.expected(1),
+				},
+			],
+		},
+		{
+			description: `three blank lines between two rules whose breaks take turns and open with a bare newline`,
+			code: `a {}\n\r\n\n\r\nb {}`,
+			fixed: `a {}\n\r\nb {}`,
+			warnings: [
+				{
+					line: 3,
+					column: 1,
+					message: messages.expected(1),
+				},
+				{
+					line: 4,
+					column: 1,
+					message: messages.expected(1),
+				},
+			],
+		},
+		{
+			description: `three blank lines opening the stylesheet whose breaks take turns`,
+			code: `\n\r\n\na {}`,
+			fixed: `\na {}`,
+			warnings: [
+				{
+					line: 2,
+					column: 1,
+					message: messages.expected(1),
+				},
+				{
+					line: 3,
+					column: 1,
+					message: messages.expected(1),
+				},
+			],
+		},
+		{
+			description: `three blank lines closing the stylesheet whose breaks take turns`,
+			code: `a {}\n\r\n\n\r\n`,
+			fixed: `a {}\n`,
+			warnings: [
+				{
+					line: 3,
+					column: 1,
+					message: messages.expected(1),
+				},
+				{
+					line: 4,
+					column: 1,
+					message: messages.expected(1),
+				},
+				{
+					line: 5,
+					column: 1,
+					message: messages.expected(1),
+				},
+			],
+		},
+		{
+			description: `three blank lines inside a comment whose breaks take turns`,
+			code: `/* horse\n\r\n\n\r\n */\na {}`,
+			fixed: `/* horse\n\r\n */\na {}`,
 			warnings: [
 				{
 					line: 3,
@@ -722,6 +852,24 @@ testRule({
 			line: 4,
 			column: 1,
 			message: messages.expected(2),
+		},
+		// See #586
+		{
+			description: `four blank lines behind a comment whose breaks take turns, which this option counts as the plain one does`,
+			code: `a {}\n\n/*\n\n\n\n\n*/\r\n\n\r\n\n\r\nb {}`,
+			fixed: `a {}\n\n/*\n\n\n\n\n*/\r\n\n\r\nb {}`,
+			warnings: [
+				{
+					line: 11,
+					column: 1,
+					message: messages.expected(2),
+				},
+				{
+					line: 12,
+					column: 1,
+					message: messages.expected(2),
+				},
+			],
 		},
 	],
 })

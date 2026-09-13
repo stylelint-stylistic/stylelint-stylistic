@@ -63,5 +63,23 @@ testRule({
 			column: 1,
 			message: messages.expected(1),
 		},
+		// See #586
+		{
+			description: `three blank lines behind an end-of-line comment whose breaks take turns between a carriage-return pair and a bare newline`,
+			code: `a {} // c\r\n\n\r\n\nb {}`,
+			fixed: `a {} // c\r\n\nb {}`,
+			warnings: [
+				{
+					line: 3,
+					column: 1,
+					message: messages.expected(1),
+				},
+				{
+					line: 4,
+					column: 1,
+					message: messages.expected(1),
+				},
+			],
+		},
 	],
 })

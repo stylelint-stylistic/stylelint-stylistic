@@ -16,9 +16,6 @@ export const CONTAINS_HEX_COLOR = /#[\da-z]+/iu
 /** A Windows break alone; narrow since `max-empty-lines` and `indentation` ask about the pair. */
 export const CRLF = /\r\n/u
 
-/** A run of Windows breaks; narrow as {@link CRLF} is. */
-export const CRLF_RUN = /(?:\r\n)+/u
-
 /** A break to the grammar, asking whether a backslash opens an escape: line feed, carriage return or form feed; a backslash before any is a delimiter, so `10PX\` and a break is the dimension `10PX`. */
 export const CSS_LINE_BREAK = /[\n\r\f]/u
 
@@ -33,9 +30,6 @@ export const EVERY_BACKSLASH_IN_FRONT_OF_A_SLASH = /\\(?=\/)/gu
 
 /** Every block comment delimiter. */
 export const EVERY_COMMENT_DELIMITER = /(\*\/|\/\*)/gu
-
-/** Every run of Windows breaks, captured; narrow as {@link CRLF} is. */
-export const EVERY_CRLF_RUN = /(\r\n)+/gu
 
 /** The properties spelling grid rows as strings, any case ([#614](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/614)). */
 export const GRID_AREAS_PROPERTY = /^(?:grid-template-areas|grid-template|grid)$/iu
@@ -58,8 +52,8 @@ export const EVERY_INTERPOLATION = /#\{[\s\S]+?\}|@\{.+?\}|\$\(.+?\)/gu
 /** A line terminator as `postcss-styled-syntax` counts host lines: a Windows pair as one, a line feed, a bare carriage return or either Unicode separator, no form feed; PostCSS counts line feeds alone. */
 export const EVERY_JS_LINE_TERMINATOR = /\r\n|[\n\r\u2028\u2029]/gu
 
-/** Every run of Unix breaks, captured; narrow as {@link CRLF} is. */
-export const EVERY_LF_RUN = /(\n)+/gu
+/** Every run of breaks as PostCSS reads them, a Windows pair and a line feed alike, nothing between them: what `max-empty-lines` collapses, whichever way each break is spelled ([#586](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/586)). {@link EVERY_LINE_BREAK_RUN} reads a bare carriage return into a run too. */
+export const EVERY_RUN_OF_LINE_BREAKS = /(?:\r?\n)+/gu
 
 /** Every line ending in a break, break included. */
 export const EVERY_LINE_WITH_BREAK = /[^\n]*\n/gu

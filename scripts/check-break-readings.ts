@@ -33,10 +33,6 @@ const ALLOWED: Record<string, string[]> = {
 		`let allowedCRLFNewLinesString = \`\\r\\n\`.repeat(maxAdjacentNewlines)`,
 	],
 	"lib/rules/linebreaks/index.ts": [`if (data) return data.replaceAll(EVERY_LINE_BREAK, shouldHaveCR ? \`\\r\\n\` : \`\\n\`)`],
-	"lib/rules/max-empty-lines/index.ts": [
-		`let emptyLFLines = \`\\n\`.repeat(repeatTimes)`,
-		`let emptyCRLFLines = \`\\r\\n\`.repeat(repeatTimes)`,
-	],
 	"lib/rules/selector-max-empty-lines/index.ts": [
 		`let allowedLFNewLinesString = \`\\n\`.repeat(maxAdjacentNewlines)`,
 		`let allowedCRLFNewLinesString = \`\\r\\n\`.repeat(maxAdjacentNewlines)`,
@@ -68,7 +64,7 @@ const DEBT: Record<string, string[]> = {
 		`if (source.slice(index, index + 2) === \`\\r\\n\`) return`,
 	],
 	"lib/rules/indentation/index.ts": [`target: \`\\n\`,`],
-	"lib/rules/max-empty-lines/index.ts": [`target: CRLF.test(rootString) ? \`\\r\\n\` : \`\\n\`,`],
+	"lib/rules/max-empty-lines/index.ts": [`target: \`\\n\`,`],
 	"lib/preprocessor/findRewrittenCommentSpans/index.ts": [
 		`let lineBreakIndex = spelled.indexOf(\`\\n\`, spelledIndex)`,
 		`let rewrittenLineBreakIndex = rewritten.indexOf(\`\\n\`, rewrittenIndex)`,

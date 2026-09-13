@@ -2,7 +2,7 @@ import { type ChildNode, type Container, type Document, type Root, stringify } f
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { CRLF, CRLF_RUN, EVERY_CRLF_RUN, EVERY_LF_RUN, LEADING_LINE_BREAK_RUN, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
+import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, LEADING_LINE_BREAK_RUN, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -121,11 +121,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			{
 				// `style-search` skips the break closing a `//` comment, so the inline comment spans the syntax finds are blanked
 				source: ignoreComments ? blankComments(rootString, syntax.commentSpans(rootString, root, result).filter(({ isInline }) => isInline)) : rootString,
-				target: CRLF.test(rootString) ? `\r\n` : `\n`,
+				// A line feed is a break whatever stands in front of it, so a run spelling its breaks both ways is one run, as PostCSS counts it (#586)
+				target: `\n`,
 				comments: ignoreComments ? `skip` : `check`,
 			},
 			(match) => {
-				checkMatch(match.startIndex, match.endIndex, root)
+				checkMatch(breakStart(rootString, match.startIndex), match.endIndex, root)
 			},
 		)
 
@@ -194,6 +195,16 @@ function carriesABlock (node: ChildNode): node is ChildNode & Container {
 }
 
 /**
+ * Finds where the break of a line feed opens.
+ * @param text - The text searched.
+ * @param lineFeedIndex - The line feed's index.
+ * @returns The index of the carriage return of a Windows pair, or the line feed's own.
+ */
+function breakStart (text: string, lineFeedIndex: number): number {
+	return lineFeedIndex > 0 && CRLF.test(text.slice(lineFeedIndex - 1, lineFeedIndex + 1)) ? lineFeedIndex - 1 : lineFeedIndex
+}
+
+/**
  * Prints the text the breaks are counted in, as the file the warnings are placed in holds it.
  * @param root - The root checked.
  * @param result - The Stylelint result, which holds the file's syntax and tells a standalone root from a block of a document.
@@ -214,7 +225,7 @@ function countedText (root: Root, result: PostcssResult): string {
 }
 
 /**
- * Collapses runs of empty lines to the maximum.
+ * Collapses runs of empty lines to the maximum, keeping the first breaks of a run as they are spelled.
  * @param maxLines - The maximum.
  * @param str - The string.
  * @param isSpecialCase - Whether at the end of file.
@@ -225,20 +236,7 @@ function replaceEmptyLines (maxLines: number, str: unknown, isSpecialCase: boole
 
 	if (repeatTimes === 0 || typeof str !== `string`) return ``
 
-	let emptyLFLines = `\n`.repeat(repeatTimes)
-	let emptyCRLFLines = `\r\n`.repeat(repeatTimes)
-
-	return CRLF_RUN.test(str)
-		? str.replaceAll(EVERY_CRLF_RUN, ($1) => {
-			if ($1.length / 2 > repeatTimes) return emptyCRLFLines
-
-			return $1
-		})
-		: str.replaceAll(EVERY_LF_RUN, ($1) => {
-			if ($1.length > repeatTimes) return emptyLFLines
-
-			return $1
-		})
+	return str.replaceAll(EVERY_RUN_OF_LINE_BREAKS, (run) => run.match(EVERY_LINE_BREAK)?.slice(0, repeatTimes).join(``) ?? run)
 }
 
 /**
