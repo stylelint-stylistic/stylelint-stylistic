@@ -4,6 +4,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { declaresTheEncoding } from "../../utils/declaresTheEncoding/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { recaseAscii } from "../../utils/recaseAscii/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -50,7 +51,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let name = atRule.name
 
-			let expectedName = expectation === `lower` ? name.toLowerCase() : name.toUpperCase()
+			// The ASCII letters alone: an at-rule name is ASCII case-insensitive, so any other code point recased is another name, and `ß` has no upper case of its own length
+			let expectedName = recaseAscii(name, expectation)
 
 			if (name === expectedName) return
 

@@ -4,6 +4,7 @@ import { LEVEL_ONE_AND_TWO_PSEUDO_ELEMENTS } from "../../reference/selectors.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { recaseAscii } from "../../utils/recaseAscii/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { transformSelector } from "../../utils/transformSelector/index.ts"
 
@@ -56,7 +57,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 					if (!pseudoElement.includes(`::`) && !LEVEL_ONE_AND_TWO_PSEUDO_ELEMENTS.has(pseudoElement.toLowerCase().slice(1))) return
 
-					let expectedPseudoElement = primary === `lower` ? pseudoElement.toLowerCase() : pseudoElement.toUpperCase()
+					// The ASCII letters alone: a pseudo-element name is ASCII case-insensitive, so any other code point recased is another name, and `ß` has no upper case of its own length
+					let expectedPseudoElement = recaseAscii(pseudoElement, primary)
 
 					if (pseudoElement === expectedPseudoElement) return
 

@@ -51,6 +51,11 @@ testRule({
 			description: `a hash standing in a comment, which spells no colour`,
 			code: `a { color: white /* #FFF */; }`,
 		},
+		{
+			// A name is ASCII case-insensitive, so a code point outside ASCII is part of it as it stands; recasing it made another name
+			description: `a hash whose one hex digit is lower-case already, the capital I with a dot behind it having no lower case of one code point; no colour, but read as one past its digit`,
+			code: `a { color: #f\u0130; }`,
+		},
 	],
 
 	reject: [
@@ -104,6 +109,15 @@ testRule({
 			column: 8,
 			message: messages.expected(`#FFF`, `#fff`),
 		},
+		{
+			// The ASCII letter alone has a case of the same name, so it alone is asked for and written
+			description: `an upper-case digit in front of a capital I with a dot, which alone is asked for`,
+			code: `a { color: #F\u0130; }`,
+			fixed: `a { color: #f\u0130; }`,
+			line: 1,
+			column: 12,
+			message: messages.expected(`#F\u0130`, `#f\u0130`),
+		},
 	],
 })
 
@@ -156,6 +170,11 @@ testRule({
 			description: `a hash standing in a comment, which spells no colour`,
 			code: `a { color: white /* #fff */; }`,
 		},
+		{
+			// A name is ASCII case-insensitive, so a code point outside ASCII is part of it as it stands; recasing it made another name
+			description: `a hash whose one hex digit is upper-case already, the sharp s behind it having no upper case of its own length; no colour, but read as one past its digit`,
+			code: `a { color: #F\u00DF; }`,
+		},
 	],
 
 	reject: [
@@ -199,6 +218,15 @@ testRule({
 			line: 1,
 			column: 16,
 			message: messages.expected(`#aabbcc`, `#AABBCC`),
+		},
+		{
+			// The ASCII letter alone has a case of the same name, so it alone is asked for and written
+			description: `a lower-case digit in front of a sharp s, which alone is asked for`,
+			code: `a { color: #f\u00DF; }`,
+			fixed: `a { color: #F\u00DF; }`,
+			line: 1,
+			column: 12,
+			message: messages.expected(`#f\u00DF`, `#F\u00DF`),
 		},
 	],
 })

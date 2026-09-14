@@ -63,6 +63,11 @@ testRule({
 			description: `an at-rule nested in a block that is not a rule`,
 			code: `@font-feature-values Font One { @styleset { nice-style: 12; } }`,
 		},
+		{
+			// A name is ASCII case-insensitive, so a code point outside ASCII is part of it as it stands; recasing it made another name
+			description: `an at-rule whose one ASCII letter is lower-case already, the capital I with a dot behind it having no lower case of one code point`,
+			code: `@f\u0130 screen { }`,
+		},
 	],
 
 	reject: [
@@ -175,6 +180,15 @@ testRule({
 			column: 8,
 			message: messages.expected(`IMPORT`, `import`),
 		},
+		{
+			// The ASCII letter alone has a case of the same name, so it alone is asked for and written
+			description: `an upper-case letter in front of a capital I with a dot, which alone is asked for`,
+			code: `@F\u0130 screen { }`,
+			fixed: `@f\u0130 screen { }`,
+			line: 1,
+			column: 1,
+			message: messages.expected(`F\u0130`, `f\u0130`),
+		},
 	],
 })
 
@@ -243,6 +257,11 @@ testRule({
 		{
 			description: `an at-rule nested in a block that is not a rule`,
 			code: `@FONT-FEATURE-VALUES Font One { @STYLESET { nice-style: 12; } }`,
+		},
+		{
+			// A name is ASCII case-insensitive, so a code point outside ASCII is part of it as it stands; recasing it made another name
+			description: `an at-rule whose one ASCII letter is upper-case already, the sharp s behind it having no upper case of its own length`,
+			code: `@F\u00DF screen { }`,
 		},
 	],
 
@@ -346,6 +365,15 @@ testRule({
 			line: 1,
 			column: 1,
 			message: messages.expected(`-webkit-keyframes`, `-WEBKIT-KEYFRAMES`),
+		},
+		{
+			// The ASCII letter alone has a case of the same name, so it alone is asked for and written
+			description: `a lower-case letter in front of a sharp s, which alone is asked for`,
+			code: `@f\u00DF screen { }`,
+			fixed: `@F\u00DF screen { }`,
+			line: 1,
+			column: 1,
+			message: messages.expected(`f\u00DF`, `F\u00DF`),
 		},
 	],
 })

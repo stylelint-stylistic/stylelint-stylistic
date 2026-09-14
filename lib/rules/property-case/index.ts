@@ -5,6 +5,7 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
+import { recaseAscii } from "../../utils/recaseAscii/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isRule } from "../../utils/typeGuards/index.ts"
 import { isRegExp, isString } from "../../utils/validateTypes/index.ts"
@@ -79,7 +80,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (selector && optionsMatches(secondaryOptions, `ignoreSelectors`, selector)) return
 			}
 
-			let expectedProp = primary === `lower` ? prop.toLowerCase() : prop.toUpperCase()
+			// The ASCII letters alone: a property name is ASCII case-insensitive, so any other code point recased is another name, and `ß` has no upper case of its own length
+			let expectedProp = recaseAscii(prop, primary)
 
 			if (prop === expectedProp) return
 

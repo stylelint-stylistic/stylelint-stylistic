@@ -135,6 +135,11 @@ testRule({
 			description: `a custom property set under a type selector`,
 			code: `html { --custom-property-set: {} }`,
 		},
+		{
+			// A name is ASCII case-insensitive, so a code point outside ASCII is part of it as it stands; recasing it made another name
+			description: `a pseudo-class whose one ASCII letter is lower-case already, the capital I with a dot behind it having no lower case of one code point`,
+			code: `a:f\u0130 { color: pink; }`,
+		},
 	],
 
 	reject: [
@@ -437,6 +442,15 @@ testRule({
 				},
 			],
 		},
+		{
+			// The ASCII letter alone has a case of the same name, so it alone is asked for and written
+			description: `an upper-case letter in front of a capital I with a dot, which alone is asked for`,
+			code: `a:F\u0130 { color: pink; }`,
+			fixed: `a:f\u0130 { color: pink; }`,
+			line: 1,
+			column: 2,
+			message: messages.expected(`:F\u0130`, `:f\u0130`),
+		},
 	],
 })
 
@@ -556,6 +570,11 @@ testRule({
 		{
 			description: `a vendor-prefixed pseudo-class`,
 			code: `:-MS-INPUT-PLACEHOLDER { }`,
+		},
+		{
+			// A name is ASCII case-insensitive, so a code point outside ASCII is part of it as it stands; recasing it made another name
+			description: `a pseudo-class whose one ASCII letter is upper-case already, the sharp s behind it having no upper case of its own length`,
+			code: `a:F\u00DF { color: pink; }`,
 		},
 	],
 
@@ -735,6 +754,15 @@ testRule({
 			line: 1,
 			column: 1,
 			message: messages.expected(`:-ms-input-placeholder`, `:-MS-INPUT-PLACEHOLDER`),
+		},
+		{
+			// The ASCII letter alone has a case of the same name, so it alone is asked for and written
+			description: `a lower-case letter in front of a sharp s, which alone is asked for`,
+			code: `a:f\u00DF { color: pink; }`,
+			fixed: `a:F\u00DF { color: pink; }`,
+			line: 1,
+			column: 2,
+			message: messages.expected(`:f\u00DF`, `:F\u00DF`),
 		},
 	],
 })

@@ -81,6 +81,11 @@ testRule({
 			description: `a set of parameters ending inside a block nested in the one the parameters open`,
 			code: `@media ((a {}`,
 		},
+		{
+			// A name is ASCII case-insensitive, so a code point outside ASCII is part of it as it stands; recasing it made another name
+			description: `a feature name whose one ASCII letter is lower-case already, the capital I with a dot behind it having no lower case of one code point`,
+			code: `@media (f\u0130: 1px) { }`,
+		},
 	],
 
 	reject: [
@@ -268,6 +273,17 @@ testRule({
 			endColumn: 10,
 			message: messages.expected(`A`, `a`),
 		},
+		{
+			// The ASCII letter alone has a case of the same name, so it alone is asked for and written
+			description: `an upper-case letter in front of a capital I with a dot, which alone is asked for`,
+			code: `@media (F\u0130: 1px) { }`,
+			fixed: `@media (f\u0130: 1px) { }`,
+			line: 1,
+			column: 9,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expected(`F\u0130`, `f\u0130`),
+		},
 	],
 })
 
@@ -323,6 +339,11 @@ testRule({
 		{
 			description: `an upper-case custom media query, left alone for the same reason`,
 			code: `@media (--VIEWPORT-MEDIUM) { }`,
+		},
+		{
+			// A name is ASCII case-insensitive, so a code point outside ASCII is part of it as it stands; recasing it made another name
+			description: `a feature name whose one ASCII letter is upper-case already, the sharp s behind it having no upper case of its own length`,
+			code: `@media (F\u00DF: 1px) { }`,
 		},
 	],
 
@@ -401,6 +422,17 @@ testRule({
 				`-webkit-min-device-pixel-ration`,
 				`-WEBKIT-MIN-DEVICE-PIXEL-RATION`,
 			),
+		},
+		{
+			// The ASCII letter alone has a case of the same name, so it alone is asked for and written
+			description: `a lower-case letter in front of a sharp s, which alone is asked for`,
+			code: `@media (f\u00DF: 1px) { }`,
+			fixed: `@media (F\u00DF: 1px) { }`,
+			line: 1,
+			column: 9,
+			endLine: 1,
+			endColumn: 11,
+			message: messages.expected(`f\u00DF`, `F\u00DF`),
 		},
 	],
 })

@@ -8,6 +8,7 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { findMediaFeatureNames } from "../../utils/findMediaFeatureNames/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isCustomMediaQuery } from "../../utils/isCustomMediaQuery/index.ts"
+import { recaseAscii } from "../../utils/recaseAscii/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -54,7 +55,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (isCustomMediaQuery(featureName)) return
 
-				let expectedFeatureName = primary === `lower` ? featureName.toLowerCase() : featureName.toUpperCase()
+				// The ASCII letters alone: a feature name is ASCII case-insensitive, so any other code point recased is another name, and `ß` has no upper case of its own length
+				let expectedFeatureName = recaseAscii(featureName, primary)
 
 				if (featureName === expectedFeatureName) return
 

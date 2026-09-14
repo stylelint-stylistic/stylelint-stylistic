@@ -10,6 +10,7 @@ import { findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
+import { recaseAscii } from "../../utils/recaseAscii/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -68,7 +69,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (!isHexColor(node)) return
 
-				let expected = primary === `lower` ? value.toLowerCase() : value.toUpperCase()
+				// The ASCII letters alone: `ß` has no upper case of its own length, and a hash spelling such a code point is no colour to recase past its digits
+				let expected = recaseAscii(value, primary)
 
 				if (value === expected) return
 

@@ -5,6 +5,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
+import { recaseAscii } from "../../utils/recaseAscii/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -62,7 +63,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (pseudo.includes(`::`) || LEVEL_ONE_AND_TWO_PSEUDO_ELEMENTS.has(pseudo.toLowerCase().slice(1))) return
 
-				let expectedPseudo = primary === `lower` ? pseudo.toLowerCase() : pseudo.toUpperCase()
+				// The ASCII letters alone: a pseudo-class name is ASCII case-insensitive, so any other code point recased is another name, and `ß` has no upper case of its own length
+				let expectedPseudo = recaseAscii(pseudo, primary)
 
 				if (pseudo === expectedPseudo) return
 

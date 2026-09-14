@@ -63,6 +63,11 @@ testRule({
 			description: `a property no specification knows, measured by its case all the same`,
 			code: `a { property: value; }`,
 		},
+		{
+			// A name is ASCII case-insensitive, so a code point outside ASCII is part of it as it stands; recasing it made another name
+			description: `a property whose one ASCII letter is lower-case already, the capital I with a dot behind it having no lower case of one code point`,
+			code: `a { f\u0130: 1px; }`,
+		},
 	],
 
 	reject: [
@@ -226,6 +231,17 @@ testRule({
 			endColumn: 13,
 			message: messages.expected(`Property`, `property`),
 		},
+		{
+			// The ASCII letter alone has a case of the same name, so it alone is asked for and written
+			description: `an upper-case letter in front of a capital I with a dot, which alone is asked for`,
+			code: `a { F\u0130: 1px; }`,
+			fixed: `a { f\u0130: 1px; }`,
+			line: 1,
+			column: 5,
+			endLine: 1,
+			endColumn: 7,
+			message: messages.expected(`F\u0130`, `f\u0130`),
+		},
 	],
 })
 
@@ -289,6 +305,11 @@ testRule({
 		{
 			description: `a property no specification knows, measured by its case all the same`,
 			code: `a { PROPERTY: value; }`,
+		},
+		{
+			// A name is ASCII case-insensitive, so a code point outside ASCII is part of it as it stands; recasing it made another name
+			description: `a property whose one ASCII letter is upper-case already, the sharp s behind it having no upper case of its own length`,
+			code: `a { F\u00DF: 1px; }`,
 		},
 	],
 
@@ -452,6 +473,17 @@ testRule({
 			endLine: 1,
 			endColumn: 13,
 			message: messages.expected(`Property`, `PROPERTY`),
+		},
+		{
+			// The ASCII letter alone has a case of the same name, so it alone is asked for and written
+			description: `a lower-case letter in front of a sharp s, which alone is asked for`,
+			code: `a { f\u00DF: 1px; }`,
+			fixed: `a { F\u00DF: 1px; }`,
+			line: 1,
+			column: 5,
+			endLine: 1,
+			endColumn: 7,
+			message: messages.expected(`f\u00DF`, `F\u00DF`),
 		},
 	],
 })
