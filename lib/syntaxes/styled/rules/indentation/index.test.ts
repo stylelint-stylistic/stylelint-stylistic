@@ -737,6 +737,39 @@ testRule({
 				}
 			`,
 		},
+		{
+			// See #516
+			description: `an interpolation in front of the first node of a single-line template, which is host code on the line and no indentation of the stylesheet`,
+			code: `
+				function f () {
+					const a = styled.div\`\${x}; color: red;\`;
+				}
+			`,
+		},
+		{
+			description: `an interpolation opening a line at its level, a node behind it on the same line`,
+			code: `
+				function f () {
+					const a = styled.div\`
+						\${x}; color: red;
+					\`;
+				}
+			`,
+		},
+		{
+			description: `the same line behind a declaration and inside a nested rule, where the interpolation is not the template's first thing`,
+			code: `
+				function f () {
+					const a = styled.div\`
+						color: red;
+						\${x}; top: 0;
+						a {
+							\${y} color: red;
+						}
+					\`;
+				}
+			`,
+		},
 	],
 
 	reject: [
@@ -787,6 +820,27 @@ testRule({
 			line: 2,
 			column: 25,
 			message: messages.expected(`0 tabs`),
+		},
+		{
+			// See #516
+			description: `an interpolation opening a line a level too deep, whose run in front of it the fix writes, leaving the interpolation and the node behind it on their line`,
+			code: `
+				function f () {
+					const a = styled.div\`
+							\${x}; color: red;
+					\`;
+				}
+			`,
+			fixed: `
+				function f () {
+					const a = styled.div\`
+						\${x}; color: red;
+					\`;
+				}
+			`,
+			line: 3,
+			column: 10,
+			message: messages.expected(`1 tab`),
 		},
 	],
 })

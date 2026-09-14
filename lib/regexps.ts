@@ -268,9 +268,6 @@ export const TRAILING_SPACES = / *$/u
 /** The trailing spaces and tabs, where there are any. */
 export const TRAILING_SPACES_AND_TABS = /[ \t]+$/u
 
-/** The star or underscore of an old property hack, at the end. */
-export const TRAILING_STAR_OR_UNDERSCORE = /[*_]$/u
-
 /** The trailing whitespace, the empty run included, so a replacement always lands. */
 export const TRAILING_WHITESPACE = /\s*$/u
 

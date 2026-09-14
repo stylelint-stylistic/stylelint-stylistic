@@ -2,7 +2,7 @@ import type { AtRule, Declaration, Document, Node, Root, Rule, Source } from "po
 import styleSearch from "style-search"
 import stylelint from "stylelint"
 
-import { CRLF, EVERY_LINE_BREAK, EVERY_LINE_BREAK_AND_INDENT, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, TRAILING_LINE_BREAK, TRAILING_STAR_OR_UNDERSCORE, TRAILING_WHITESPACE, WHITESPACE_WITHOUT_BREAK_BEFORE_CONTENT } from "../../regexps.ts"
+import { CRLF, EVERY_LINE_BREAK, EVERY_LINE_BREAK_AND_INDENT, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_CSS_WHITESPACE, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, TRAILING_LINE_BREAK, TRAILING_WHITESPACE, WHITESPACE_WITHOUT_BREAK_BEFORE_CONTENT } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
@@ -116,17 +116,16 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let nodeLevel = indentationLevel(node)
 			let { hostLevel, embeddedLevel } = embeddingLevel(syntax, node, indentChar)
 
-			// The `*` and `_` hacks are not indentation
-			let before = (node.raws.before || ``).replace(TRAILING_STAR_OR_UNDERSCORE, ``)
+			let before = node.raws.before || ``
 			let parent = node.parent
 
 			if (!parent) throw new Error(`A parent node must be present`)
 
 			// Only the root's first node, or one behind a break, has indentation to check
 			let isFirstChild = parent.type === `root` && parent.first === node
-			// The last line of `before` is the indentation, a form feed or bare carriage return as much as a space; the writers below read the same run (#452)
+			// The indentation is the whitespace opening the last line of `before`, a form feed or bare carriage return as much as a space; the writers below read the same run (#452). What stands behind it is on the line, not in front of it: a `*` or `_` hack, a stray semicolon, or a styled template's interpolation (#516)
 			let beforeLines = before.split(EVERY_LINE_BREAK)
-			let indentationBefore = beforeLines.at(-1)
+			let indentationBefore = lastLineIndentation(beforeLines)
 
 			// A first node with no break in front stands on the stylesheet's opening line and is asked to be empty, not for the host line's tabs (#453). A bare carriage return ends a JavaScript line and none of the stylesheet's, so a node behind one still stands there
 			let opensTheStylesheetsLine = isFirstChild && beforeLines.length === 1
@@ -681,6 +680,15 @@ function inferRootIndentLevel (syntax: Syntax, root: Root, baseIndentLevel: numb
  */
 function fixIndentation (str: string, whitespace: string): string {
 	return str.replaceAll(EVERY_LINE_BREAK_AND_INDENT, `$1${whitespace}`)
+}
+
+/**
+ * Reads the indentation of a text's last line.
+ * @param lines - The text, split at its breaks.
+ * @returns The tokenizer whitespace opening the last line.
+ */
+function lastLineIndentation (lines: string[]): string {
+	return lines.at(-1)?.match(LEADING_CSS_WHITESPACE)?.[0] ?? ``
 }
 
 /**

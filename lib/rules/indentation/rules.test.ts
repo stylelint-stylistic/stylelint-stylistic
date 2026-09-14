@@ -113,6 +113,11 @@ testRule({
 			`,
 		},
 		{
+			// See #516
+			description: `a stray semicolon in front of a declaration on its line, which stands on the line and is no indentation`,
+			code: `a {\n  color: pink;\n  ; top: 1px;\n}`,
+		},
+		{
 			description: `a universal selector on one line`,
 			code: `* { top: 0; }`,
 		},
@@ -220,6 +225,15 @@ testRule({
 			line: 1,
 			column: 2,
 			message: messages.expected(`0 spaces`),
+		},
+		{
+			// See #516
+			description: `a stray semicolon in front of a declaration on a line indented a level too deep, whose run in front of the semicolon the fix writes`,
+			code: `a {\n  color: pink;\n    ; top: 1px;\n}`,
+			fixed: `a {\n  color: pink;\n  ; top: 1px;\n}`,
+			line: 3,
+			column: 7,
+			message: messages.expected(`2 spaces`),
 		},
 		{
 			description: `a closing brace indented one level`,
