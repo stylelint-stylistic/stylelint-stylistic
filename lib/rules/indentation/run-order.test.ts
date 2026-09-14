@@ -1,5 +1,6 @@
 import { messages as openingNewlineAfterMessages } from "../block-opening-brace-newline-after/index.ts"
 import { messages as semicolonNewlineAfterMessages } from "../declaration-block-semicolon-newline-after/index.ts"
+import { messages as semicolonNewlineBeforeMessages } from "../declaration-block-semicolon-newline-before/index.ts"
 import { messages as trailingSemicolonMessages } from "../declaration-block-trailing-semicolon/index.ts"
 
 import { messages, ruleName } from "./index.ts"
@@ -185,6 +186,30 @@ testRule({
 					endLine: 3,
 					endColumn: 4,
 					message: messages.expected(`0 tabs`),
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`tab`],
+	extraRules: { "@stylistic/declaration-block-semicolon-newline-before": `always` },
+
+	reject: [
+		{
+			// See #569
+			description: `a semicolon the neighbour carries onto a line of its own with a bare break: that line gets its indent in the same run`,
+			code: `a {\n\tcolor: pink;\n}\n`,
+			fixed: `a {\n\tcolor: pink\n\t;\n}\n`,
+			warnings: [
+				{
+					line: 2,
+					column: 12,
+					endLine: 2,
+					endColumn: 13,
+					message: semicolonNewlineBeforeMessages.expectedBefore(),
 				},
 			],
 		},

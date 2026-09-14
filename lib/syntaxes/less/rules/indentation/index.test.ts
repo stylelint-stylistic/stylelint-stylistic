@@ -719,3 +719,49 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`tab`],
+	customSyntax: `postcss-less`,
+
+	accept: [
+		{
+			// See #569
+			description: `a semicolon alone on its line behind a mixin call, at the call's level`,
+			code: `a {\n\t.m()\n\t;\n}\n`,
+		},
+		{
+			description: `the same line behind a mixin call carrying \`!important\`, which the parser files between the two halves of the run and the rule leaves alone`,
+			code: `a {\n\t.m() !important\n\t\t\t;\n}\n`,
+		},
+	],
+
+	reject: [
+		{
+			// See #569
+			description: `a semicolon alone on its line, indented two levels past the mixin call it closes`,
+			code: `a {\n\t.m()\n\t\t\t;\n}\n`,
+			fixed: `a {\n\t.m()\n\t;\n}\n`,
+			line: 3,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `the same line behind a variable declaration, which Less reads as an at-rule`,
+			code: `a {\n\t@v: 1\n;\n}\n`,
+			fixed: `a {\n\t@v: 1\n\t;\n}\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `the same line behind a detached ruleset call`,
+			code: `a {\n\t@r()\n\t\t\t;\n}\n`,
+			fixed: `a {\n\t@r()\n\t;\n}\n`,
+			line: 3,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
+	],
+})

@@ -2,7 +2,7 @@ import type { AtRule, Declaration, Document, Node, Root, Rule, Source } from "po
 import styleSearch from "style-search"
 import stylelint from "stylelint"
 
-import { CRLF, EVERY_LINE_BREAK, EVERY_LINE_BREAK_AND_INDENT, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_CSS_WHITESPACE, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, TRAILING_LINE_BREAK, TRAILING_WHITESPACE, WHITESPACE_WITHOUT_BREAK_BEFORE_CONTENT } from "../../regexps.ts"
+import { CRLF, EVERY_LINE_BREAK, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, TRAILING_LINE_BREAK, TRAILING_WHITESPACE, WHITESPACE_WITHOUT_BREAK_BEFORE_CONTENT } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
@@ -11,10 +11,12 @@ import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
+import { fixIndentation, lastLineIndentation } from "../../utils/lineIndentation/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { rootLevelIndents } from "../../utils/rootLevelIndents/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { semicolonLineChecker } from "../../utils/semicolonLineChecker/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { isAtRule, isDeclaration, isRoot, isRule } from "../../utils/typeGuards/index.ts"
 import { assertString, isBoolean, isNumber, isString } from "../../utils/validateTypes/index.ts"
@@ -176,6 +178,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (isRule(node)) checkSelector(node, nodeLevel)
 
 			if (isAtRule(node)) checkAtRuleParams(node, nodeLevel)
+
+			// The line a statement's semicolon opens closes the statement, so it stands at the statement's own level, as a closing brace stands at its block's (#569)
+			semicolonLineChecker({ node, syntax, result, checkedRuleName: ruleName, message: messages.expected, expectedIndentation: indentChar.repeat(nodeLevel), expectation: legibleExpectation(nodeLevel - hostLevel) })
 		})
 
 		/**
@@ -670,25 +675,6 @@ function inferRootIndentLevel (syntax: Syntax, root: Root, baseIndentLevel: numb
 	if (indents.length > 0) return Math.max(...indents.map((indent) => getIndentLevel(indent))) + newBaseIndentLevel
 
 	return newBaseIndentLevel
-}
-
-/**
- * Writes the indentation behind every break of a text.
- * @param str - The text.
- * @param whitespace - The indentation.
- * @returns The text.
- */
-function fixIndentation (str: string, whitespace: string): string {
-	return str.replaceAll(EVERY_LINE_BREAK_AND_INDENT, `$1${whitespace}`)
-}
-
-/**
- * Reads the indentation of a text's last line.
- * @param lines - The text, split at its breaks.
- * @returns The tokenizer whitespace opening the last line.
- */
-function lastLineIndentation (lines: string[]): string {
-	return lines.at(-1)?.match(LEADING_CSS_WHITESPACE)?.[0] ?? ``
 }
 
 /**

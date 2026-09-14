@@ -1145,3 +1145,65 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`tab`],
+
+	accept: [
+		{
+			// See #569
+			description: `a semicolon standing alone on the line behind a bodiless at-rule, at the at-rule's level`,
+			code: `a {\n\t@extend .b\n\t;\n}\n`,
+		},
+		{
+			description: `the same semicolon behind an at-rule of the root, in the first column`,
+			code: `@import 'x'\n;\na {}\n`,
+		},
+	],
+
+	reject: [
+		{
+			// See #569
+			description: `a semicolon alone on its line, indented two levels past the bodiless at-rule it closes, whose whitespace raw keeps the run`,
+			code: `a {\n\t@extend .b\n\t\t\t;\n}\n`,
+			fixed: `a {\n\t@extend .b\n\t;\n}\n`,
+			line: 3,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `the same line closing an at-rule in the middle of the block`,
+			code: `a {\n\t@extend .b\n;\n\ttop: 0;\n}\n`,
+			fixed: `a {\n\t@extend .b\n\t;\n\ttop: 0;\n}\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `the same line behind an at-rule of the root, asked for the first column`,
+			code: `@import 'x'\n\t;\na {}\n`,
+			fixed: `@import 'x'\n;\na {}\n`,
+			line: 2,
+			column: 2,
+			message: messages.expected(`0 tabs`),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [2, { ignore: [`param`] }],
+
+	reject: [
+		{
+			// See #569
+			description: `a semicolon alone on its line behind parameters the option does not measure: the semicolon's line is no line of the parameters, and is measured`,
+			code: `@import\n'x'\n  ;\na {}\n`,
+			fixed: `@import\n'x'\n;\na {}\n`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`0 spaces`),
+		},
+	],
+})

@@ -732,3 +732,30 @@ b: c;
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`tab`],
+	customSyntax: `postcss-html`,
+	autoStripIndent: false,
+
+	reject: [
+		{
+			// See #569
+			description: `a semicolon alone on its line inside a style element, asked for the declaration's level`,
+			code: `<style>\n\ta {\n\t\tcolor: pink\n\t\t\t\t;\n\t}\n</style>`,
+			fixed: `<style>\n\ta {\n\t\tcolor: pink\n\t\t;\n\t}\n</style>`,
+			line: 4,
+			column: 5,
+			message: messages.expected(`2 tabs`),
+		},
+		{
+			description: `the same line inside a style attribute, whose declarations stand at the first column`,
+			code: `<a style="color: pink\n\t\t;"></a>`,
+			fixed: `<a style="color: pink\n;"></a>`,
+			line: 2,
+			column: 3,
+			message: messages.expected(`0 tabs`),
+		},
+	],
+})

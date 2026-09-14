@@ -969,3 +969,167 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`tab`],
+
+	accept: [
+		{
+			// See #569
+			description: `a semicolon standing alone on the line behind the value, at the declaration's level`,
+			code: `a {\n\tcolor: pink\n\t;\n}\n`,
+		},
+		{
+			description: `the same semicolon behind an empty line, which is not this rule's`,
+			code: `a {\n\tcolor: pink\n\n\t;\n}\n`,
+		},
+		{
+			description: `a vertical tab in front of the semicolon, a word of the value standing on a line of the value`,
+			code: `a {\n\tcolor: pink\n\t\t\v;\n}\n`,
+		},
+	],
+
+	reject: [
+		{
+			// See #569
+			description: `a semicolon alone on its line, indented two levels past the declaration it closes: the line is the declaration's, asked for the declaration's level`,
+			code: `a {\n\tcolor: pink\n\t\t\t;\n}\n`,
+			fixed: `a {\n\tcolor: pink\n\t;\n}\n`,
+			line: 3,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `the same line behind a custom property, whose value keeps the run`,
+			code: `a {\n\t--x: pink\n\t\t\t;\n}\n`,
+			fixed: `a {\n\t--x: pink\n\t;\n}\n`,
+			line: 3,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `the same line behind a bang, whose raw keeps the run, with no indentation at all`,
+			code: `a {\n\tcolor: pink !important\n;\n}\n`,
+			fixed: `a {\n\tcolor: pink !important\n\t;\n}\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `the same line closing a declaration in the middle of the block`,
+			code: `a {\n\tcolor: pink\n;\n\ttop: 0;\n}\n`,
+			fixed: `a {\n\tcolor: pink\n\t;\n\ttop: 0;\n}\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `the same line in a nested rule, asked for that rule's level`,
+			code: `a {\n\tb {\n\t\tcolor: pink\n\t;\n\t}\n}\n`,
+			fixed: `a {\n\tb {\n\t\tcolor: pink\n\t\t;\n\t}\n}\n`,
+			line: 4,
+			column: 2,
+			message: messages.expected(`2 tabs`),
+		},
+		{
+			description: `a whitespace-only line in front of the semicolon's, left as it stands while the semicolon's line is written`,
+			code: `a {\n\tcolor: pink\n\t\t\t\n\t\t\t;\n}\n`,
+			fixed: `a {\n\tcolor: pink\n\t\t\t\n\t;\n}\n`,
+			line: 4,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `a value broken over lines, whose own line stands a level deeper while the semicolon's line stands at the declaration's level`,
+			code: `a {\n\tcolor:\n\t\tpink\n\t\t;\n}\n`,
+			fixed: `a {\n\tcolor:\n\t\tpink\n\t;\n}\n`,
+			line: 4,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `the same line behind a Windows break, which the fix keeps`,
+			code: `a {\r\n\tcolor: pink\r\n\t\t\t;\r\n}\r\n`,
+			fixed: `a {\r\n\tcolor: pink\r\n\t;\r\n}\r\n`,
+			line: 3,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `a bare carriage return opening the semicolon's line, read as indentation and written over`,
+			code: `a {\n\tcolor: pink\n\r\t;\n}\n`,
+			fixed: `a {\n\tcolor: pink\n\t;\n}\n`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `a form feed opening the semicolon's line, read the same way`,
+			code: `a {\n\tcolor: pink\n\f\t;\n}\n`,
+			fixed: `a {\n\tcolor: pink\n\t;\n}\n`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `the same line behind a custom property of the root, asked for the first column`,
+			code: `--x: 1\n\t;\na {}\n`,
+			fixed: `--x: 1\n;\na {}\n`,
+			line: 2,
+			column: 2,
+			message: messages.expected(`0 tabs`),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [2],
+
+	reject: [
+		{
+			// See #569
+			description: `a semicolon alone on its line, indented by a tab where the declaration stands at two spaces`,
+			code: `a {\n  color: pink\n\t;\n}\n`,
+			fixed: `a {\n  color: pink\n  ;\n}\n`,
+			line: 3,
+			column: 2,
+			message: messages.expected(`2 spaces`),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [2, { except: [`value`] }],
+
+	reject: [
+		{
+			// See #569
+			description: `a semicolon alone on its line behind a value the option leaves at the declaration's level: the semicolon's line is asked for that level too`,
+			code: `a {\n  color:\n  pink\n    ;\n}\n`,
+			fixed: `a {\n  color:\n  pink\n  ;\n}\n`,
+			line: 4,
+			column: 5,
+			message: messages.expected(`2 spaces`),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [2, { ignore: [`value`] }],
+
+	reject: [
+		{
+			// See #569
+			description: `a semicolon alone on its line behind a value the option does not measure: the semicolon's line is no line of the value, and is measured`,
+			code: `a {\n  color:\n      pink\n    ;\n}\n`,
+			fixed: `a {\n  color:\n      pink\n  ;\n}\n`,
+			line: 4,
+			column: 5,
+			message: messages.expected(`2 spaces`),
+		},
+	],
+})

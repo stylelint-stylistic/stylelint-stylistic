@@ -646,3 +646,37 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`tab`],
+	customSyntax: `postcss-scss`,
+
+	reject: [
+		{
+			// See #569
+			description: `a semicolon alone on its line behind a value closed by a \`//\` comment, whose run the parser keeps in its own copy of the value: the line is written through the syntax and the comment is kept`,
+			code: `a {\n\tcolor: pink // c\n\t\t\t;\n}\n`,
+			fixed: `a {\n\tcolor: pink // c\n\t;\n}\n`,
+			line: 3,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `the same line behind a variable declaration`,
+			code: `a {\n\t$v: 1\n\t\t\t;\n}\n`,
+			fixed: `a {\n\t$v: 1\n\t;\n}\n`,
+			line: 3,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `the same line behind a mixin inclusion`,
+			code: `a {\n\t@include m\n;\n}\n`,
+			fixed: `a {\n\t@include m\n\t;\n}\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`1 tab`),
+		},
+	],
+})

@@ -844,3 +844,21 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	customSyntax: `postcss-styled-syntax`,
+	ruleName,
+	config: [`tab`],
+
+	reject: [
+		{
+			// See #569
+			description: `a semicolon alone on its line inside a template broken over lines, asked for the declaration's level`,
+			code: `const A = styled.div\`\n\tcolor: pink\n\t\t\t;\n\`;\n`,
+			fixed: `const A = styled.div\`\n\tcolor: pink\n\t;\n\`;\n`,
+			line: 3,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
+	],
+})
