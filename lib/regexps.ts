@@ -121,11 +121,11 @@ export const LAST_LINE = /[^\r\n]+$/u
 /** A leading block comment, breaks aside, its content captured. */
 export const LEADING_BLOCK_COMMENT = /^[^\S\n]*\/\*([\s\S]*?)\*\//u
 
-/** A leading `}`, spaces and tabs aside. */
-export const LEADING_CLOSING_BRACE = /^[ \t]*\}/u
+/** A leading `}`, whitespace short of a break aside, as {@link LEADING_INDENT_AND_CONTENT} reads a line's indentation. */
+export const LEADING_CLOSING_BRACE = /^[ \t\r\f]*\}/u
 
-/** A leading `)`, spaces and tabs aside. */
-export const LEADING_CLOSING_PARENTHESIS = /^[ \t]*\)/u
+/** A leading `)`, whitespace short of a break aside, as {@link LEADING_INDENT_AND_CONTENT} reads a line's indentation. */
+export const LEADING_CLOSING_PARENTHESIS = /^[ \t\r\f]*\)/u
 
 /** A leading colon and the tokenizer whitespace behind it ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). */
 export const LEADING_COLON_AND_WHITESPACE = /^:[ \t\n\r\f]*/u
@@ -142,8 +142,8 @@ export const LEADING_ENCODING_DECLARATION = /^@charset "[^"]*";/u
 /** A leading hexadecimal escape with its one closing whitespace character; a Windows pair counts as one. */
 export const LEADING_HEX_ESCAPE = /^\\[\da-f]{1,6}(?:\r\n|[ \t\n\r\f])?/iu
 
-/** The leading indentation, captured, and the first content character. */
-export const LEADING_INDENT_AND_CONTENT = /^([ \t]*)\S/u
+/** The leading indentation, captured, and the first content character. Both are read as the tokenizer reads them: a form feed or bare carriage return is indentation, and a line whose run held one went unmeasured ([#513](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/513)); a vertical tab, a no-break space or any other character `\s` spells beyond those five is content. */
+export const LEADING_INDENT_AND_CONTENT = /^([ \t\r\f]*)[^ \t\n\r\f]/u
 
 /** A leading break with nothing in front, where {@link OPENS_WITH_LINE_BREAK} says yes too often. */
 export const LEADING_LINE_BREAK = /^\r?\n/u
