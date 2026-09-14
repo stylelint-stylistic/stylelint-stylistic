@@ -12,6 +12,9 @@ const COLON_SPACE = `@stylistic/declaration-colon-space-after`
 const COLON_NEWLINE = `@stylistic/declaration-colon-newline-after`
 const SEMICOLON_SPACE = `@stylistic/declaration-block-semicolon-space-before`
 const SEMICOLON_NEWLINE = `@stylistic/declaration-block-semicolon-newline-before`
+const BRACE_SPACE = `@stylistic/block-closing-brace-space-before`
+const BRACE_NEWLINE = `@stylistic/block-closing-brace-newline-before`
+const TRAILING_SEMICOLON = `@stylistic/declaration-block-trailing-semicolon`
 
 describe(`writesSharedRun`, () => {
 	it(`a declaration whose value has a word of its own, whose two runs are two`, () => {
@@ -263,6 +266,52 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { b: ; }`, { [COLON_SPACE]: `always`, [scssColonSpace]: `never` }, scssColonSpace, scss)).toBe(true)
 		expect(ask(`a { b:; }`, { [COLON_SPACE]: `always`, [scssColonSpace]: `always` }, COLON_SPACE)).toBe(true)
 	})
+
+	// See 1789420319
+	it(`a wordless declaration the brace alone closes, whose run behind the colon is the run in front of the brace, which the later-listed rule writes where the two ask for different things`, () => {
+		for (let code of [`a {\n\tx:\n}`, `a {\n\t--x:\n}`, `a { x: }`, `a { --x:}`]) {
+			expect(ask(code, { [COLON_SPACE]: `always`, [BRACE_NEWLINE]: `always` }, COLON_SPACE)).toBe(false)
+			expect(ask(code, { [COLON_SPACE]: `always`, [BRACE_NEWLINE]: `always` }, BRACE_NEWLINE)).toBe(true)
+			expect(ask(code, { [BRACE_NEWLINE]: `always`, [COLON_SPACE]: `always` }, COLON_SPACE)).toBe(true)
+			expect(ask(code, { [BRACE_NEWLINE]: `always`, [COLON_SPACE]: `always` }, BRACE_NEWLINE)).toBe(false)
+			expect(ask(code, { [COLON_NEWLINE]: `always`, [BRACE_SPACE]: `never` }, COLON_NEWLINE)).toBe(false)
+			expect(ask(code, { [COLON_NEWLINE]: `always`, [BRACE_SPACE]: `never` }, BRACE_SPACE)).toBe(true)
+		}
+	})
+
+	it(`the same declaration where the two ask for the same thing, so both write`, () => {
+		expect(ask(`a {\n\tx:\n}`, { [COLON_SPACE]: `always`, [BRACE_SPACE]: `always` }, COLON_SPACE)).toBe(true)
+		expect(ask(`a {\n\tx:\n}`, { [COLON_SPACE]: `always`, [BRACE_SPACE]: `always` }, BRACE_SPACE)).toBe(true)
+		expect(ask(`a {\n\t--x: }`, { [COLON_NEWLINE]: `always`, [BRACE_NEWLINE]: `always` }, COLON_NEWLINE)).toBe(true)
+		expect(ask(`a {\n\t--x: }`, { [COLON_NEWLINE]: `always`, [BRACE_NEWLINE]: `always` }, BRACE_NEWLINE)).toBe(true)
+	})
+
+	it(`a rule deferred to the run's end, which the colon rule ahead of it in run order gates where it accepts the run as it stands and not what the deferred rule writes`, () => {
+		expect(ask(`a {\n\tx: }`, { [COLON_SPACE]: `always`, [BRACE_NEWLINE]: `always-multi-line` }, BRACE_NEWLINE)).toBe(false)
+		expect(ask(`a {\n\tx: }`, { [COLON_SPACE]: `always`, [BRACE_NEWLINE]: `always-multi-line` }, COLON_SPACE)).toBe(false)
+		expect(ask(`a {\n\tx:\n}`, { [COLON_NEWLINE]: `always`, [BRACE_SPACE]: `never-multi-line` }, BRACE_SPACE)).toBe(false)
+	})
+
+	it(`a space in front of the break, which is a break to the semicolon newline rule and none to the colon's and the brace's, so a deferred colon rule behind the brace rule is freed by the brace rule's warning`, () => {
+		expect(ask(`a {\n\tx: \n}`, { [COLON_SPACE]: `always-single-line`, [BRACE_NEWLINE]: `always` }, COLON_SPACE)).toBe(true)
+		expect(ask(`a {\n\tx: \n}`, { [BRACE_NEWLINE]: `always`, [COLON_SPACE]: `always-single-line` }, COLON_SPACE)).toBe(true)
+		expect(ask(`a {\n\tx: \n}`, { [COLON_NEWLINE]: `always`, [BRACE_SPACE]: `never-multi-line` }, BRACE_SPACE)).toBe(true)
+		expect(ask(`a {\n\tx: \n;\n}`, { [SEMICOLON_NEWLINE]: `always`, [COLON_SPACE]: `always-single-line` }, COLON_SPACE)).toBe(false)
+	})
+
+	it(`the tail behind a comment on the colon's line of a custom property closing the block, which the newline rule of the colon shares with the brace rules and the space rule does not`, () => {
+		expect(ask(`a {\n\t--x: /*c*/\n}`, { [COLON_NEWLINE]: `always`, [BRACE_SPACE]: `always` }, COLON_NEWLINE)).toBe(false)
+		expect(ask(`a {\n\t--x: /*c*/\n}`, { [COLON_NEWLINE]: `always`, [BRACE_SPACE]: `always` }, BRACE_SPACE)).toBe(true)
+		expect(ask(`a {\n\t--x: /*c*/\n}`, { [COLON_SPACE]: `never`, [BRACE_SPACE]: `always` }, COLON_SPACE)).toBe(true)
+	})
+
+	it(`a run that is not the brace's: a worded value, a semicolon standing or to come, a comment behind a plain property, which the parser makes a sibling`, () => {
+		expect(ask(`a {\n\t--x: pink\n}`, { [COLON_SPACE]: `never`, [BRACE_NEWLINE]: `always` }, COLON_SPACE)).toBe(true)
+		expect(ask(`a {\n\tx:\n;\n}`, { [COLON_SPACE]: `always`, [BRACE_NEWLINE]: `always` }, COLON_SPACE)).toBe(true)
+		expect(ask(`a {\n\tx:\n}`, { [TRAILING_SEMICOLON]: `always`, [COLON_SPACE]: `always`, [BRACE_NEWLINE]: `always` }, COLON_SPACE)).toBe(true)
+		expect(ask(`a {\n\tx:\n}`, { [TRAILING_SEMICOLON]: `always`, [COLON_SPACE]: `always`, [BRACE_NEWLINE]: `always` }, BRACE_NEWLINE)).toBe(true)
+		expect(ask(`a {\n\tx: /*c*/\n}`, { [COLON_NEWLINE]: `always`, [BRACE_SPACE]: `always` }, COLON_NEWLINE)).toBe(true)
+	})
 })
 
 describe(`sharesRunWithSemicolon`, () => {
@@ -314,14 +363,14 @@ function ask (code: string, rules: Record<string, unknown>, ruleName: string, sy
 }
 
 /**
- * Parses a stylesheet and picks the last declaration of its first node, or that node where it is a top-level declaration.
+ * Parses a stylesheet and picks the last declaration of its first node, behind any comment, or that node where it is a top-level declaration.
  * @param code - The stylesheet.
  * @returns The declaration.
  */
 function lastDeclarationOf (code: string): Declaration {
 	let first = parse(code).first as Rule | Declaration
 
-	return isDeclaration(first) ? first : first.last as Declaration
+	return isDeclaration(first) ? first : first.nodes.findLast(isDeclaration) as Declaration
 }
 
 /**

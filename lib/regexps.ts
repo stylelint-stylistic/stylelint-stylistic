@@ -148,6 +148,9 @@ export const LEADING_INDENT_AND_CONTENT = /^([ \t\r\f]*)[^ \t\n\r\f]/u
 /** A leading break with nothing in front, where {@link OPENS_WITH_LINE_BREAK} says yes too often. */
 export const LEADING_LINE_BREAK = /^\r?\n/u
 
+/** A break closing a run, indentation allowed behind it, as `declaration-block-semicolon-newline-before` reads the run in front of a semicolon. */
+export const TRAILING_LINE_BREAK_AND_INDENTATION = /\r?\n[ \t]*$/u
+
 /** The leading breaks, nothing between them: what `max-empty-lines` counts from the start of a file and writes where it has no node ([#404](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/404)). */
 export const LEADING_LINE_BREAK_RUN = /^(?:\r?\n)+/u
 

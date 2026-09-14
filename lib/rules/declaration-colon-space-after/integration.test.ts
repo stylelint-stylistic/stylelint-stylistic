@@ -562,3 +562,49 @@ describe(`a value that is nothing, beside the neighbour listed under two names w
 		expect([first.code, second.code]).toEqual([`a { color: ; }`, `a { color: ; }`])
 	})
 })
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/block-closing-brace-newline-before": `always` },
+
+	reject: [
+		{
+			// See 1789420319
+			description: `a wordless declaration the brace alone closes, whose run behind the colon is the run in front of the brace: the neighbour is listed last and asks for the break that stands, so the space is not written and the warning stands`,
+			code: `
+				a {
+					x:
+				}
+			`,
+			fixed: `
+				a {
+					x:
+				}
+			`,
+			line: 2,
+			column: 4,
+			endLine: 2,
+			endColumn: 5,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `the same run kept in the value of a custom property`,
+			code: `
+				a {
+					--x:
+				}
+			`,
+			fixed: `
+				a {
+					--x:
+				}
+			`,
+			line: 2,
+			column: 6,
+			endLine: 2,
+			endColumn: 7,
+			message: messages.expectedAfter(),
+		},
+	],
+})

@@ -15,6 +15,8 @@ import { lastNodeHoldsTheBlockAfter } from "../../utils/lastNodeHoldsTheBlockAft
 import { nodeString } from "../../utils/nodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
+import { isDeclaration } from "../../utils/typeGuards/index.ts"
+import { writesSharedRun } from "../../utils/writesSharedRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -84,6 +86,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (!last) throw new Error(`The block must hold a node`)
 
 			let isFixable = primary.startsWith(`always`) || !syntax.writesIntoInlineComment(last, result, lastNodeHoldsTheBlockAfter(statement) ? undefined : blockAfter.replaceAll(EVERY_WHITESPACE, ``))
+
+			// Behind a wordless declaration the brace alone closes, the run is the colon rules' head run too, and the rules asked settle who writes (#416)
+			if (isFixable && isDeclaration(last)) isFixable = writesSharedRun(syntax, last, result, ruleName)
 
 			// The question is whether a break *starts* the final run (`LEADING_LINE_BREAK`); the whitespace behind it is `indentation`'s.
 			if (!LEADING_LINE_BREAK.test(after)) {
