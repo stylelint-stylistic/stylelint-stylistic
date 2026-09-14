@@ -544,6 +544,22 @@ testRule({
 			endColumn: 29,
 			message: messages.expected(1),
 		},
+		{
+			// See #538
+			description: `a single-line block holding two custom properties, the last with no semicolon, whose value the parser keeps the run in front of the brace in rather than the block`,
+			code: `a { --b: red; --c: blue }`,
+			fixed: `
+				a {
+				--b: red;
+				--c: blue
+				}
+			`,
+			line: 1,
+			column: 3,
+			endLine: 1,
+			endColumn: 26,
+			message: messages.expected(1),
+		},
 	],
 })
 

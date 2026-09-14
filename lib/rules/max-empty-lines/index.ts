@@ -84,9 +84,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (node.raws.before) node.raws.before = getChars(node.raws.before)
 
 				if (carriesABlock(node)) {
-					let blockAfter = getBlockAfter(node)
+					let blockAfter = getBlockAfter(syntax, node)
 
-					if (typeof blockAfter === `string`) setBlockAfter(node, getChars(blockAfter))
+					if (typeof blockAfter === `string`) setBlockAfter(syntax, node, getChars(blockAfter))
 				}
 			})
 

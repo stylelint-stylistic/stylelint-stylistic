@@ -31,8 +31,35 @@ describe(`lastNodeHoldsTheBlockAfter`, () => {
 		expect(run(`a {\n\t@dr: { b: c; }\n}`, less)).toBe(false)
 	})
 
-	it(`turns away a block closed by anything but an at-rule`, () => {
+	// See #538
+	it(`answers for a custom property with no semicolon, whose value keeps the run`, () => {
+		expect(run(`a {\n\t--b: red\n}`)).toBe(true)
+		expect(run(`a { --b: red }`)).toBe(true)
+		expect(run(`a { --b: red}`)).toBe(true)
+		expect(run(`a { --b: }`)).toBe(true)
+	})
+
+	it(`answers for such a property carrying an important flag, whose raw keeps the run instead`, () => {
+		expect(run(`a { --b: red !important }`)).toBe(true)
+		expect(run(`a { --b: red !important}`)).toBe(true)
+	})
+
+	it(`answers for such a property under either custom syntax`, () => {
+		expect(run(`a {\n\t--b: red\n}`, scss)).toBe(true)
+		expect(run(`a {\n\t--b: red\n}`, less)).toBe(true)
+	})
+
+	it(`turns away a custom property the block's semicolon closes, whose whitespace is the block's own`, () => {
+		expect(run(`a {\n\t--b: red;\n}`)).toBe(false)
+		expect(run(`a { --b: red ; }`)).toBe(false)
+	})
+
+	it(`turns away a plain declaration, whose trailing whitespace the parser hands back to the block`, () => {
 		expect(run(`a {\n\tcolor: pink\n}`)).toBe(false)
+		expect(run(`a { color: pink }`)).toBe(false)
+	})
+
+	it(`turns away a block closed by a nested rule or a comment`, () => {
 		expect(run(`a {\n\tb { c: d }\n}`)).toBe(false)
 		expect(run(`a {\n\t@extend .b;\n\t/* c */\n}`)).toBe(false)
 	})

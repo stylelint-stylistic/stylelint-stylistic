@@ -60,11 +60,12 @@ function fixWouldCommentOutTheBlock (syntax: Syntax, statement: Rule | AtRule, n
  * The run the closing brace of a block holding nothing but comments stands behind.
  *
  * Such a block has that brace where the checked node would stand, so the carry chains onto it: the block's own trailing raw takes the break in front of it exactly as a node's `raws.before` would ([#672](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/672)). The last comment's run is read the way every other is, so a comment carrying no raw is the run PostCSS prints in front of it ([#680](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/680)).
+ * @param syntax - The syntax the rule is built over, which the raw is read through.
  * @param statement - The rule or at-rule whose block holds nothing but comments.
  * @returns The trailing raw, or the run carried past the last comment.
  */
-function runInFrontOfTheClosingBrace (statement: Rule | AtRule): string {
-	let after = getBlockAfter(statement) ?? ``
+function runInFrontOfTheClosingBrace (syntax: Syntax, statement: Rule | AtRule): string {
+	let after = getBlockAfter(syntax, statement) ?? ``
 	let lastBefore = statement.last ? runInFrontOf(statement.last) : ``
 
 	return (!LINE_BREAK.test(after) && LINE_BREAK.test(lastBefore)) ? lastBefore : after
@@ -85,17 +86,18 @@ function unbreakTheRunInFrontOf (node: Node): void {
 
 /**
  * Writes the run in front of the closing brace of a block holding nothing but comments, and takes the breaks out of the comments' own whitespace where the option refuses them, the last of them being the one carried onto that brace.
+ * @param syntax - The syntax the rule is built over, which the raw is written through.
  * @param statement - The rule or at-rule whose block holds nothing but comments.
  * @param nodes - The comments it holds.
  * @param written - The run to write.
  * @param takeTheBreaksOut - Whether the comments' whitespace loses its breaks too.
  */
-function writeTheTrailingRun (statement: Rule | AtRule, nodes: ChildNode[], written: string, takeTheBreaksOut: boolean): void {
+function writeTheTrailingRun (syntax: Syntax, statement: Rule | AtRule, nodes: ChildNode[], written: string, takeTheBreaksOut: boolean): void {
 	if (takeTheBreaksOut) {
 		for (let node of nodes) unbreakTheRunInFrontOf(node)
 	}
 
-	setBlockAfter(statement, written)
+	setBlockAfter(syntax, statement, written)
 }
 
 /** `always` a newline after the opening brace; `always-multi-line` asks it, and `never-multi-line` refuses whitespace there, in a multi-line block only. */
@@ -193,7 +195,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			checker.afterOneOnly({
 				// A block closes on `}` in every syntax the plugin reads, and all the check asks of that character is that it is not whitespace
-				source: nodeToCheck ? runInFrontOf(nodeToCheck) + nodeString(nodeToCheck, result) : `${runInFrontOfTheClosingBrace(statement)}}`,
+				source: nodeToCheck ? runInFrontOf(nodeToCheck) + nodeString(nodeToCheck, result) : `${runInFrontOfTheClosingBrace(syntax, statement)}}`,
 				index: -1,
 				lineCheckStr: blockString(statement, result),
 				err: (m) => {
@@ -218,7 +220,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			 * @returns The fix, or nothing where the run is not this rule's to write.
 			 */
 			function fixTheTrailingRun (): (() => void) | undefined {
-				let standing = getBlockAfter(statement)
+				let standing = getBlockAfter(syntax, statement)
 
 				if (typeof standing !== `string` || !isOnlyWhitespace(standing)) return
 
@@ -235,7 +237,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				return (): void => {
 					if (primary === `never-multi-line`) restoreCarriedBreaks()
 
-					writeTheTrailingRun(statement, nodes, written, primary === `never-multi-line`)
+					writeTheTrailingRun(syntax, statement, nodes, written, primary === `never-multi-line`)
 				}
 			}
 

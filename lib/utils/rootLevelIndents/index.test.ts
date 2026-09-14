@@ -2,6 +2,8 @@ import { parse, type Parser, type Root } from "postcss"
 import postcssHtml from "postcss-html"
 import { describe, expect, it } from "vitest"
 
+import { css as core } from "../../syntaxes/css/index.ts"
+
 import { rootLevelIndents } from "./index.ts"
 
 let html = postcssHtml as { parse: Parser }
@@ -55,5 +57,5 @@ describe(`rootLevelIndents`, () => {
 function run (css: string, syntax?: { parse: Parser }, closingBraceIndented: boolean = false): ReturnType<typeof rootLevelIndents> {
 	let root = syntax ? syntax.parse(css) : parse(css)
 
-	return rootLevelIndents((syntax ? root.first : root) as Root, closingBraceIndented)
+	return rootLevelIndents(core, (syntax ? root.first : root) as Root, closingBraceIndented)
 }

@@ -77,7 +77,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let source = blockString(statement, result)
 			let text = statementString(statement, result)
-			let blockAfter = getBlockAfter(statement) || ``
+			let blockAfter = getBlockAfter(syntax, statement) || ``
 
 			let index = text.length - 2
 
@@ -103,12 +103,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						ruleName,
 						...(isFixable && {
 							fix: (): void => {
-								let raw = getBlockAfter(statement)
+								let raw = getBlockAfter(syntax, statement)
 
 								if (typeof raw !== `string`) return
 
-								if (primary.startsWith(`always`)) setBlockAfter(statement, raw.replace(TRAILING_WHITESPACE, ` `))
-								else if (primary.startsWith(`never`)) setBlockAfter(statement, raw.replace(TRAILING_WHITESPACE, ``))
+								if (primary.startsWith(`always`)) setBlockAfter(syntax, statement, raw.replace(TRAILING_WHITESPACE, ` `))
+								else if (primary.startsWith(`never`)) setBlockAfter(syntax, statement, raw.replace(TRAILING_WHITESPACE, ``))
 							},
 						}),
 					})

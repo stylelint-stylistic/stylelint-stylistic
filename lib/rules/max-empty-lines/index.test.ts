@@ -110,6 +110,15 @@ testRule({
 				},
 			],
 		},
+		{
+			// See #538
+			description: `a blank line in front of the closing brace of a rule a custom property with no semicolon closes, which the parser keeps in that property's value rather than in the block`,
+			code: `a {\n\t--b: red\n\n}\n`,
+			fixed: `a {\n\t--b: red\n}\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(0),
+		},
 	],
 })
 

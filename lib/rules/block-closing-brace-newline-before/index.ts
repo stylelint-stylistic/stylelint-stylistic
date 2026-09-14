@@ -64,7 +64,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Blockless or empty: nothing to check
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 
-			let blockAfter = getBlockAfter(statement) || ``
+			let blockAfter = getBlockAfter(syntax, statement) || ``
 
 			// Ignore extra semicolon
 			let after = blockAfter.replace(SEMICOLON_RUN, ``)
@@ -107,7 +107,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					endIndex: index,
 					...(isFixable && {
 						fix: (): void => {
-							let raw = getBlockAfter(statement)
+							let raw = getBlockAfter(syntax, statement)
 
 							if (typeof raw !== `string`) return
 
@@ -117,9 +117,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								let newlineAfter = firstWhitespaceIndex >= 0 ? raw.slice(firstWhitespaceIndex) : ``
 								let newlineIndex = newlineAfter.search(LINE_BREAK)
 
-								setBlockAfter(statement, newlineIndex >= 0 ? newlineBefore + newlineAfter.slice(newlineIndex) : newlineBefore + getLineBreak(root, result) + newlineAfter)
+								setBlockAfter(syntax, statement, newlineIndex >= 0 ? newlineBefore + newlineAfter.slice(newlineIndex) : newlineBefore + getLineBreak(root, result) + newlineAfter)
 							}
-							else if (primary === `never-multi-line`) setBlockAfter(statement, raw.replaceAll(EVERY_WHITESPACE, ``))
+							else if (primary === `never-multi-line`) setBlockAfter(syntax, statement, raw.replaceAll(EVERY_WHITESPACE, ``))
 						},
 					}),
 				})

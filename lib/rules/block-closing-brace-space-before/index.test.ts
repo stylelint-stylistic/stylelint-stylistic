@@ -170,6 +170,30 @@ testRule({
 			column: 19,
 			message: messages.expectedBefore(),
 		},
+		{
+			// See #538
+			description: `two spaces in front of the brace of a block a custom property with no semicolon closes, which the parser keeps in that property's value rather than in the block`,
+			code: `a { --b: red  }`,
+			fixed: `a { --b: red }`,
+			line: 1,
+			column: 14,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `a break in front of the brace of such a block`,
+			code: `
+				a {
+					--b: red
+				}
+			`,
+			fixed: `
+				a {
+					--b: red }
+			`,
+			line: 2,
+			column: 10,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 
@@ -355,6 +379,31 @@ testRule({
 			fixed: `a {b { color: pink} ;}`,
 			line: 1,
 			column: 19,
+			message: messages.rejectedBefore(),
+		},
+		{
+			// See #538
+			description: `a space in front of the brace of a block a custom property with no semicolon closes, which the parser keeps in that property's value rather than in the block`,
+			code: `a { --b: red }`,
+			fixed: `a { --b: red}`,
+			line: 1,
+			column: 13,
+			message: messages.rejectedBefore(),
+		},
+		{
+			description: `such a block with an important flag, whose raw holds the run`,
+			code: `a { --b: red !important }`,
+			fixed: `a { --b: red !important}`,
+			line: 1,
+			column: 24,
+			message: messages.rejectedBefore(),
+		},
+		{
+			description: `such a block with a comment inside the value, which keeps its place`,
+			code: `a { --b: red /* c */ }`,
+			fixed: `a { --b: red /* c */}`,
+			line: 1,
+			column: 21,
 			message: messages.rejectedBefore(),
 		},
 	],

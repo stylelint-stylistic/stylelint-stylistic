@@ -141,10 +141,11 @@ export type PrimaryOption = number
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The maximum.
  * @returns The check.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
 	// The check runs ahead of the lineness tier and again behind it (#713), so the options are validated once per root
 	let validated: WeakMap<Root, boolean> = new WeakMap()
 
@@ -213,7 +214,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: Prim
 						// A free semicolon in a raw keeps its place, behind the run in front of a node and in front of the run before the brace, which is the side each raw's readers read from; the closing run is read and written wherever the parser filed it
 						for (let { node, whitespace } of runs) node.raws.before = whitespace + (node.raws.before ?? ``).replace(LEADING_WHITESPACE, ``)
 
-						setBlockAfter(statement, (getBlockAfter(statement) ?? ``).replace(TRAILING_WHITESPACE, ``) + closing)
+						setBlockAfter(syntax, statement, (getBlockAfter(syntax, statement) ?? ``).replace(TRAILING_WHITESPACE, ``) + closing)
 					},
 				}),
 			})

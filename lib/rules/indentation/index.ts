@@ -152,7 +152,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let closingBraceLevel = indentClosingBrace ? nodeLevel + 1 : nodeLevel
 			let expectedClosingBraceIndentation = indentChar.repeat(closingBraceLevel)
 			// Read wherever the parser filed the run: behind an at-rule with neither block nor semicolon it is in `raws.between`, trimmed by `checkAtRuleParams`, so nobody measured the brace's line (#509)
-			let blockAfter = isRule(node) || isAtRule(node) ? getBlockAfter(node) ?? `` : ``
+			let blockAfter = isRule(node) || isAtRule(node) ? getBlockAfter(syntax, node) ?? `` : ``
 			let afterLines = blockAfter.split(EVERY_LINE_BREAK)
 
 			if ((isRule(node) || isAtRule(node)) && hasBlock(node) && afterLines.length > 1 && afterLines.at(-1) !== expectedClosingBraceIndentation) {
@@ -167,7 +167,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					result,
 					ruleName,
 					fix () {
-						setBlockAfter(node, fixIndentation(blockAfter, expectedClosingBraceIndentation))
+						setBlockAfter(syntax, node, fixIndentation(blockAfter, expectedClosingBraceIndentation))
 					},
 				})
 			}
@@ -190,7 +190,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let calculatedLevel = level + embeddingLevel(syntax, node, indentChar).embeddedLevel
 
-			if (isRoot(node.parent)) return calculatedLevel + getRootBaseIndentLevel(node.parent, baseIndentLevel, primary, indentClosingBrace)
+			if (isRoot(node.parent)) return calculatedLevel + getRootBaseIndentLevel(syntax, node.parent, baseIndentLevel, primary, indentClosingBrace)
 
 			// One level per ancestor
 			calculatedLevel = indentationLevel(node.parent, calculatedLevel + 1)
@@ -474,13 +474,14 @@ function writeAtRuleIndentation (atRule: AtRule, fixPositions: FixPosition[], sy
 
 /**
  * The base level of a root, cached on its source.
+ * @param syntax - The syntax the rule is built over.
  * @param root - The root whose source caches the level.
  * @param baseIndentLevel - The `baseIndentLevel` option.
  * @param space - The primary option.
  * @param indentClosingBrace - The `indentClosingBrace` option.
  * @returns The base level.
  */
-function getRootBaseIndentLevel (root: Root, baseIndentLevel: number | `auto` | undefined, space: number | `tab`, indentClosingBrace: boolean | undefined): number {
+function getRootBaseIndentLevel (syntax: Syntax, root: Root, baseIndentLevel: number | `auto` | undefined, space: number | `tab`, indentClosingBrace: boolean | undefined): number {
 	let document = getDocument(root)
 
 	if (!document) return 0
@@ -493,7 +494,7 @@ function getRootBaseIndentLevel (root: Root, baseIndentLevel: number | `auto` | 
 
 	if (isNumber(indentLevel) && Number.isSafeInteger(indentLevel)) return indentLevel
 
-	let newIndentLevel = inferRootIndentLevel(root, baseIndentLevel, () => inferDocIndentSize(document, space), indentClosingBrace)
+	let newIndentLevel = inferRootIndentLevel(syntax, root, baseIndentLevel, () => inferDocIndentSize(document, space), indentClosingBrace)
 
 	source.baseIndentLevel = newIndentLevel
 
@@ -579,13 +580,14 @@ function inferDocIndentSize (document: Document, space: number | `tab`): number 
 
 /**
  * Infers a root's base level.
+ * @param syntax - The syntax the rule is built over.
  * @param root - The root whose own lines are read.
  * @param baseIndentLevel - The `baseIndentLevel` option.
  * @param indentSize - Returns the indent size.
  * @param indentClosingBrace - The `indentClosingBrace` option.
  * @returns The level.
  */
-function inferRootIndentLevel (root: Root, baseIndentLevel: number | `auto` | undefined, indentSize: () => number, indentClosingBrace: boolean | undefined): number {
+function inferRootIndentLevel (syntax: Syntax, root: Root, baseIndentLevel: number | `auto` | undefined, indentSize: () => number, indentClosingBrace: boolean | undefined): number {
 	/**
 	 * The level of an indentation string.
 	 * @param indent - The indentation.
@@ -604,7 +606,7 @@ function inferRootIndentLevel (root: Root, baseIndentLevel: number | `auto` | un
 	let newBaseIndentLevel
 
 	if (!isNumber(baseIndentLevel) || !Number.isSafeInteger(baseIndentLevel)) {
-		let { own, tagLine } = rootLevelIndents(root, indentClosingBrace ?? false)
+		let { own, tagLine } = rootLevelIndents(syntax, root, indentClosingBrace ?? false)
 
 		// Read off the root's own lines, the ones statements open and blocks close on; a line inside a statement or nested block is measured against this level and rose a level every `--fix` (#594). A brace under `indentClosingBrace` is left out too; the tag's line stands in only where the sheet has no line of its own
 		let indents = own.length > 0 ? own : tagLine

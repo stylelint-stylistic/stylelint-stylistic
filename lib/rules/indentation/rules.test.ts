@@ -706,6 +706,23 @@ testRule({
 			column: 1,
 			message: messages.expected(`1 tab`),
 		},
+		{
+			// See #538
+			description: `a closing brace indented by spaces, standing behind a custom property with no semicolon, whose value the parser keeps that indentation in rather than the block`,
+			code: `
+				a {
+					--b: red
+				  }
+			`,
+			fixed: `
+				a {
+					--b: red
+				}
+			`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`0 tabs`),
+		},
 	],
 })
 

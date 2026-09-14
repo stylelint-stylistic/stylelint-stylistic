@@ -326,6 +326,24 @@ testRule({
 			column: 1,
 			message: messages.expected,
 		},
+		{
+			// See #538
+			description: `a single break in front of the brace of a block a custom property with no semicolon closes, which the parser keeps in that property's value rather than in the block`,
+			code: `
+				a {
+					--b: red
+				}
+			`,
+			fixed: `
+				a {
+					--b: red
+
+				}
+			`,
+			line: 3,
+			column: 1,
+			message: messages.expected,
+		},
 	],
 })
 
@@ -617,6 +635,24 @@ testRule({
 				}
 			`,
 			line: 5,
+			column: 1,
+			message: messages.rejected,
+		},
+		{
+			// See #538
+			description: `an empty line in front of the brace of a block a custom property with no semicolon closes, which the parser keeps in that property's value rather than in the block`,
+			code: `
+				a {
+					--b: red
+
+				}
+			`,
+			fixed: `
+				a {
+					--b: red
+				}
+			`,
+			line: 4,
 			column: 1,
 			message: messages.rejected,
 		},

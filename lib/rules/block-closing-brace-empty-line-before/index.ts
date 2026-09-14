@@ -46,11 +46,12 @@ export type SecondaryOptions = {
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option.
  * @param secondaryOptions - The secondary options.
  * @returns The check.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, secondaryOptions: SecondaryOptions): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption, secondaryOptions: SecondaryOptions): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(
 			result,
@@ -81,7 +82,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: Prim
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 
 			// Minus a stray semicolon
-			let before = (getBlockAfter(statement) || ``).replace(SEMICOLON_RUN, ``)
+			let before = (getBlockAfter(syntax, statement) || ``).replace(SEMICOLON_RUN, ``)
 
 			let statementString = nodeString(statement, result)
 			let index = statementString.length - 1
@@ -112,12 +113,12 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: Prim
 				endIndex: index,
 				fix () {
 					if (!expectEmptyLineBefore) {
-						removeEmptyLinesAfter(statement)
+						removeEmptyLinesAfter(syntax, statement)
 
 						return
 					}
 
-					addEmptyLineAfter(statement, result)
+					addEmptyLineAfter(syntax, statement, result)
 				},
 			})
 		}
