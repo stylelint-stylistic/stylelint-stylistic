@@ -28,6 +28,12 @@ export const EMPTY_LINE = /\r?\n[\t ]*\r?\n/u
 /** Every backslash before a slash, which escapes nothing to the tokenizer: `\/*` opens a comment. */
 export const EVERY_BACKSLASH_IN_FRONT_OF_A_SLASH = /\\(?=\/)/gu
 
+/** Every run of ASCII lower-case letters, the only letters whose case CSS reads: unit identifiers and keywords are ASCII case-insensitive, so `é` and `É` are two identifiers and `ß` has no upper case that is the same one. */
+export const EVERY_ASCII_LOWER_CASE_RUN = /[a-z]+/gu
+
+/** Every run of ASCII upper-case letters, the counterpart of the one above. */
+export const EVERY_ASCII_UPPER_CASE_RUN = /[A-Z]+/gu
+
 /** Every block comment delimiter. */
 export const EVERY_COMMENT_DELIMITER = /(\*\/|\/\*)/gu
 

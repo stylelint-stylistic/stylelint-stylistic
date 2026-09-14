@@ -1438,15 +1438,15 @@ testRule({
 			],
 		},
 		{
-			// Less can open no entity on a code point outside ASCII and compiles the use of this variable to the word unparted, so the unit is the whole identifier here as it is to the core. See #646
+			// Less can open no entity on a code point outside ASCII and compiles the use of this variable to the word unparted, so the unit is the whole identifier here as it is to the core. That code point stays as it stands, being part of the unit rather than a letter with a case of it (#653). See #646
 			description: `an upper-case unit closing on a code point outside ASCII, which Less parts the word at nowhere`,
 			code: `@v: 10PX\u00C4;`,
-			fixed: `@v: 10px\u00E4;`,
+			fixed: `@v: 10px\u00C4;`,
 			line: 1,
 			column: 7,
 			endLine: 1,
 			endColumn: 10,
-			message: messages.expected(`PX\u00C4`, `px\u00E4`),
+			message: messages.expected(`PX\u00C4`, `px\u00C4`),
 		},
 		{
 			// No digit stands behind the letter, so the letters run to the end of the word and Less prints `1EPX`. See #646
@@ -1703,26 +1703,15 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			// Recasing a run does not always keep its length — `\u00DF` uppercases to `SS` — so where the head ends in the fixed text is read off the edits rather than off the text it was read from. Both spellings are units Less and `lightningcss` print as they stand, so this recase is the one the rule makes of any unit; that it changes the unit rather than its case is #653. See #649
-			description: `a unit in such a declaration whose upper case is one character longer`,
+			// Where the head ends in the fixed text is read off the edits rather than off the text it was read from, since a recase of the whole run did not always keep its length: `\u00DF` uppercases to `SS`. The rule recases ASCII letters alone now (#653), so no edit changes a length any more, and what this case pins is that the head stays as the file spells it while the tail is written. See #649
+			description: `a sharp s behind an upper-case letter in a declaration whose colon the parser welded into the name, in front of a lower-case unit in the params`,
 			code: `@v:10A\u00DF 1px;`,
-			fixed: `@v:10ASS 1PX;`,
-			warnings: [
-				{
-					line: 1,
-					column: 6,
-					endLine: 1,
-					endColumn: 8,
-					message: messages.expected(`A\u00DF`, `ASS`),
-				},
-				{
-					line: 1,
-					column: 10,
-					endLine: 1,
-					endColumn: 12,
-					message: messages.expected(`px`, `PX`),
-				},
-			],
+			fixed: `@v:10A\u00DF 1PX;`,
+			line: 1,
+			column: 10,
+			endLine: 1,
+			endColumn: 12,
+			message: messages.expected(`px`, `PX`),
 		},
 		{
 			// The head of the value is written back into the name and the tail into the params, the raw between them left as the file spells it. See #649

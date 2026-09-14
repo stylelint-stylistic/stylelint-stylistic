@@ -186,6 +186,16 @@ testRule({
 			description: `a chain of three such words, each escape welding the next word onto the one in front of it, so that the whole is one dimension whose unit is the first`,
 			code: `a { width: 10px\\9 2px\\9 3PX; }`,
 		},
+		{
+			// See #653
+			description: `a capital I with a dot, whose lower case is a plain i and a combining dot: no lower case of the same unit, so nothing to ask for`,
+			code: `a { width: 10\u0130; }`,
+		},
+		{
+			// See #653
+			description: `a Kelvin sign behind a lower-case letter, whose lower case is a plain k`,
+			code: `a { width: 10p\u212A; }`,
+		},
 	],
 
 	reject: [
@@ -1148,6 +1158,17 @@ testRule({
 				},
 			],
 		},
+		{
+			// The ASCII letter is the only one with a lower case of the same unit, so it alone is asked for and written; `lightningcss` prints both spellings as they stand. See #653
+			description: `an upper-case letter in front of a capital I with a dot`,
+			code: `a { width: 10P\u0130; }`,
+			fixed: `a { width: 10p\u0130; }`,
+			line: 1,
+			column: 14,
+			endLine: 1,
+			endColumn: 16,
+			message: messages.expected(`P\u0130`, `p\u0130`),
+		},
 	],
 })
 
@@ -1298,6 +1319,16 @@ testRule({
 			// See #426
 			description: `a lower-case hash welded to an upper-case unit, whose letters are no unit and belong to another rule`,
 			code: `a { b: 10PX#fff; }`,
+		},
+		{
+			// See #653
+			description: `a sharp s behind an upper-case letter, whose upper case is two letters: no upper case of the same unit, so nothing to ask for`,
+			code: `a { width: 10A\u00DF; }`,
+		},
+		{
+			// See #653
+			description: `a long s behind an upper-case letter, whose upper case is a plain S`,
+			code: `a { width: 10P\u017F; }`,
 		},
 	],
 
@@ -1716,6 +1747,17 @@ testRule({
 					message: messages.expected(`rem`, `REM`),
 				},
 			],
+		},
+		{
+			// The ASCII letter is the only one with an upper case of the same unit, so it alone is asked for and written; `lightningcss` prints both spellings as they stand, and Less reads a dimension in neither. See #653
+			description: `a lower-case letter in front of a sharp s`,
+			code: `a { width: 10p\u00DF; }`,
+			fixed: `a { width: 10P\u00DF; }`,
+			line: 1,
+			column: 14,
+			endLine: 1,
+			endColumn: 16,
+			message: messages.expected(`p\u00DF`, `P\u00DF`),
 		},
 	],
 })

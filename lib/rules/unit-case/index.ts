@@ -16,6 +16,7 @@ import { getDimension } from "../../utils/getDimension/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
+import { recaseAscii } from "../../utils/recaseAscii/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { weldEscapedWords } from "../../utils/weldEscapedWords/index.ts"
 
@@ -104,7 +105,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (unitStart === undefined || unitLast === undefined) return whole
 
 				let unitEnd = unitLast + 1
-				let expectedUnit = primary === `lower` ? unit.toLowerCase() : unit.toUpperCase()
+				// The ASCII letters alone: a unit identifier is ASCII case-insensitive, so any other code point recased is another unit, and `ß` has no upper case of its own length (#653)
+				let expectedUnit = recaseAscii(unit, primary)
 
 				if (unit === expectedUnit) return { end: unitEnd, problem: null }
 
@@ -121,7 +123,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						edit: {
 							start: valueNode.sourceIndex + unitStart,
 							end: valueNode.sourceIndex + unitEnd,
-							text: primary === `lower` ? run.toLowerCase() : run.toUpperCase(),
+							text: recaseAscii(run, primary),
 						},
 					},
 				}

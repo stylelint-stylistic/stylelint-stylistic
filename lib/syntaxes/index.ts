@@ -286,7 +286,7 @@ export type AtRuleVariableValue = {
 	/**
 	 * Writes the text back into the copies the parser split it over.
 	 *
-	 * A value welded into the name is written to the name and the params both, and the raw standing between them is left as the file spells it: that run is whitespace and comments, which no rule of a value writes into, so no edit spans it. Where a copy ends is read off the edits rather than off the text, since recasing a run does not always keep its length — `ß` uppercases to `SS`.
+	 * A value welded into the name is written to the name and the params both, and the raw standing between them is left as the file spells it: that run is whitespace and comments, which no rule of a value writes into, so no edit spans it. Where a copy ends is read off the edits rather than off the text, so the split assumes nothing about a fixed text keeping the length of the one read (#649).
 	 * @param fixed - The value as the fix leaves it.
 	 * @param edits - The edits that made it, indexed in the text as it was read.
 	 */

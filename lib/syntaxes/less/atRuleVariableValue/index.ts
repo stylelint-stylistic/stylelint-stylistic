@@ -41,7 +41,7 @@ export function atRuleVariableValue (atRule: AtRule): AtRuleVariableValue | null
 		index: colon + 2,
 		text: head + between + printedText(atRule),
 		write (fixed: string, edits: Edit[]): void {
-			// Where the head ends in the fixed text, since recasing a run does not always keep its length: `ß` uppercases to `SS`. No edit spans the raw between the two, which is whitespace and comments
+			// Where the head ends in the fixed text, read off the edits so that nothing here assumes a fixed text keeps the length of the one read (#649). No edit spans the raw between the two, which is whitespace and comments
 			let headEnd = edits.filter((edit) => edit.end <= head.length).reduce((end, edit) => end + edit.text.length - (edit.end - edit.start), head.length)
 
 			atRule.name = atRule.name.slice(0, colon + 1) + fixed.slice(0, headEnd)
