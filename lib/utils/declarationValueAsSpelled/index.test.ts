@@ -6,24 +6,24 @@ import { css } from "../../syntaxes/css/index.ts"
 
 import { declarationValueAsSpelled } from "./index.ts"
 
-/** The least of a Stylelint result, which names no syntax, so that the file is read as plain CSS. */
-const RESULT = {} as unknown as PostcssResult
+const TRAILING = `@stylistic/declaration-block-trailing-semicolon`
 
 /**
- * Parses one declaration out of a block and reads its value as the file spells it.
- * @param block - The block to parse.
+ * Parses one declaration out of a stylesheet and reads its value as the file spells it.
+ * @param code - The stylesheet to parse.
+ * @param rules - The rules the configuration lists; none names no syntax, so the file is read as plain CSS.
  * @returns The value of its first declaration.
  */
-function valueOf (block: string): string {
+function valueOf (code: string, rules: Record<string, unknown> = {}): string {
 	let decl: Declaration | undefined
 
-	parse(block).walkDecls((found) => {
+	parse(code).walkDecls((found) => {
 		decl ??= found
 	})
 
-	if (!decl) throw new Error(`The block holds no declaration`)
+	if (!decl) throw new Error(`The stylesheet holds no declaration`)
 
-	return declarationValueAsSpelled(css, decl, RESULT)
+	return declarationValueAsSpelled(css, decl, { stylelint: { config: { rules } } } as unknown as PostcssResult)
 }
 
 describe(`declarationValueAsSpelled`, () => {
@@ -49,10 +49,26 @@ describe(`declarationValueAsSpelled`, () => {
 		expect(valueOf(`a { b:\n/*c*/; }`)).toBe(`\n/*c*/`)
 	})
 
-	it(`a custom property, whose value is the printed text whole, trailing run and all`, () => {
+	it(`a custom property closed by a semicolon, whose value is the printed text whole, the run in front of the semicolon and all`, () => {
 		expect(valueOf(`a { --b:\n; }`)).toBe(`\n`)
 		expect(valueOf(`a { --b: x\n; }`)).toBe(`x\n`)
 		expect(valueOf(`a { --b:\n  x; }`)).toBe(`x`)
 		expect(valueOf(`a { --b: /*c\n*/; }`)).toBe(` /*c\n*/`)
+	})
+
+	it(`a custom property closed by the brace or the file's end alone, whose run in front of it the parser keeps in the value and which is the block's`, () => {
+		expect(valueOf(`a { --b: x\n}`)).toBe(`x`)
+		expect(valueOf(`a { --b:\n}`)).toBe(``)
+		expect(valueOf(`a { --b: x /*c\n*/\n}`)).toBe(`x /*c\n*/`)
+		expect(valueOf(`--b: x\n`)).toBe(`x`)
+	})
+
+	it(`the same custom property as the trailing-semicolon rule will leave it: closed where its always writes the semicolon behind the run, open where its never takes the semicolon and the run`, () => {
+		expect(valueOf(`a { --b: x\n}`, { [TRAILING]: `always` })).toBe(`x\n`)
+		expect(valueOf(`a { --b: x\n; }`, { [TRAILING]: `never` })).toBe(`x`)
+	})
+
+	it(`the same custom property behind a flag spelled with a space, which leaves the value's trailing run in front of the flag, inside the declaration`, () => {
+		expect(valueOf(`a { --b: x\n! important\n}`)).toBe(`x\n`)
 	})
 })

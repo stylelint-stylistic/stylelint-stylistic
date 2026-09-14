@@ -1027,6 +1027,32 @@ testRule({
 			column: 7,
 			message: messages.expectedAfterSingleLine(),
 		},
+		{
+			// See #689
+			description: `a value abutting the colon of a custom property closing its block with no semicolon, whose break in front of the brace the parser keeps in the value and which is the block's, no line of the declaration`,
+			code: `
+				a {
+					--x:pink
+				}
+			`,
+			fixed: `
+				a {
+					--x: pink
+				}
+			`,
+			line: 2,
+			column: 6,
+			message: messages.expectedAfterSingleLine(),
+		},
+		{
+			autoStripIndent: false,
+			description: `the same custom property standing last at the top level of a stylesheet, whose tail is the break the file ends on`,
+			code: `--x:pink\n`,
+			fixed: `--x: pink\n`,
+			line: 1,
+			column: 5,
+			message: messages.expectedAfterSingleLine(),
+		},
 	],
 })
 

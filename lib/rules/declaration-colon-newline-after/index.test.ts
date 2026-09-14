@@ -437,6 +437,28 @@ testRule({
 			description: `a break behind the value, in front of the semicolon, which is no line of the declaration`,
 			code: `a { color: x\n; }`,
 		},
+		{
+			// See #689
+			description: `a custom property closing its block with no semicolon, whose break in front of the brace the parser keeps in the value and which is the block's, no line of the declaration`,
+			code: `
+				a {
+					--x: pink
+				}
+			`,
+		},
+		{
+			description: `the same custom property ending on a comment, which the parser keeps in the value too`,
+			code: `
+				a {
+					--x: pink /* c */
+				}
+			`,
+		},
+		{
+			autoStripIndent: false,
+			description: `the same custom property standing last at the top level of a stylesheet, whose tail is the break the file ends on`,
+			code: `--x: pink\n`,
+		},
 	],
 
 	reject: [
@@ -503,6 +525,25 @@ testRule({
 			fixed: `a { color: /*c\n*/\n; }`,
 			line: 2,
 			column: 2,
+			message: messages.expectedAfterMultiLine(),
+		},
+		{
+			description: `a custom property closing its block with no semicolon whose value is broken across lines of its own, which the break in front of the brace adds nothing to`,
+			code: `
+				a {
+					--x: pink,
+						red
+				}
+			`,
+			fixed: `
+				a {
+					--x:
+				 pink,
+						red
+				}
+			`,
+			line: 2,
+			column: 5,
 			message: messages.expectedAfterMultiLine(),
 		},
 	],

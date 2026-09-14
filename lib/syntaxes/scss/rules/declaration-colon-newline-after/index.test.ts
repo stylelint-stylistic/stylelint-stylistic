@@ -65,7 +65,17 @@ testRule({
 	config: [`always-multi-line`],
 	customSyntax: `postcss-scss`,
 
-	accept: [],
+	accept: [
+		{
+			// See #689
+			description: `a custom property closing its block with no semicolon, ending on an inline comment, whose closing break the parser keeps in the value and which is the block's, no line of the declaration`,
+			code: `
+				a {
+					--x: pink // c
+				}
+			`,
+		},
+	],
 
 	reject: [
 		{
