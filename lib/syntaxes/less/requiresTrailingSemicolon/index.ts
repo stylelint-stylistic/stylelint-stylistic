@@ -3,7 +3,7 @@ import type { AtRule } from "postcss-less"
 import type { PostcssResult } from "stylelint"
 
 import { printedText } from "../../../preprocessor/printedText/index.ts"
-import { readsInlineComments } from "../../../preprocessor/readsInlineComments/index.ts"
+import { inlineCommentReading } from "../../../preprocessor/readsInlineComments/index.ts"
 import { WHITESPACE_OR_NOTHING } from "../../../regexps.ts"
 import { blankComments } from "../../../utils/blankComments/index.ts"
 import { findCommentSpans } from "../../../utils/findCommentSpans/index.ts"
@@ -80,7 +80,7 @@ function spellsNoValue (decl: Declaration, result: PostcssResult): boolean {
 
 	let value = printedText(decl)
 
-	return WHITESPACE_OR_NOTHING.test(blankComments(value, findCommentSpans(value, readsInlineComments(decl, result))))
+	return WHITESPACE_OR_NOTHING.test(blankComments(value, findCommentSpans(value, inlineCommentReading(decl, result))))
 }
 
 /**

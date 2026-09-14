@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest"
 import { movesEndIntoInlineComment } from "./index.ts"
 
 /** The reading Less has, which leaves such a comment standing in the value a rule reads. */
-const LESS = { spells: true, keeps: true, answered: true }
+const LESS = { spells: true, keeps: true, answered: true, tokenizes: false }
 
 /** The reading plain CSS has, which spells no comment with a double slash at all. */
-const PLAIN_CSS = { spells: false, keeps: false, answered: true }
+const PLAIN_CSS = { spells: false, keeps: false, answered: true, tokenizes: false }
 
 describe(`movesEndIntoInlineComment`, () => {
 	it(`a line break the fix takes away, which is what closed the comment in front of the character`, () => {

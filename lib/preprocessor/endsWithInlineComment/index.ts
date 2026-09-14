@@ -61,8 +61,9 @@ function readInsideString (text: string, scan: Scan): void {
  * A `(` opens an address where {@link namesAnAddress} says so of the name just read: {@link IDENTIFIER_CODE_POINT} code points, an interpolation's closing brace and escapes, since an ASCII pattern took `éurl(` for `url(` ([#398](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/398)). Read forward, since an escape spells one character with several.
  * @param text - The raw scanned, standing in code.
  * @param scan - The scan, moved on.
+ * @param reading - The syntax's reading, which says what the parentheses of an address hold.
  */
-function readInsideCode (text: string, scan: Scan): void {
+function readInsideCode (text: string, scan: Scan, reading: InlineCommentReading): void {
 	let char = text.charAt(scan.index)
 	let nextChar = text[scan.index + 1]
 
@@ -86,9 +87,13 @@ function readInsideCode (text: string, scan: Scan): void {
 	}
 	// A bare address carries a protocol's `//` and is stepped over whole; a quoted one leaves its marks to the string state and what stands behind it to this one
 	else if (char === `(` && namesAnAddress(text.slice(scan.wordStart, scan.index))) {
-		let address = readAddress(text, scan.index + 1)
+		let address = readAddress(text, scan.index + 1, reading)
+		let last = address.comments.at(-1)
 
 		if (!address.isQuoted) scan.index = address.index
+
+		// A comment the parentheses hold that runs to the text's end is where the scan ends
+		if (!address.isQuoted && last?.end === text.length) scan.state = last.isInline ? `inlineComment` : `blockComment`
 
 		scan.wordStart = scan.index + 1
 	}
@@ -106,18 +111,19 @@ const READ_INSIDE = {
 }
 
 /** The default reading: a syntax that spells such a comment. */
-const NOTHING_SAID = { spells: true, keeps: false, answered: false }
+const NOTHING_SAID = { spells: true, keeps: false, answered: false, tokenizes: false }
 
 /**
  * Scans a text to its end.
  * @param text - The text, trailing whitespace off.
+ * @param reading - The syntax's reading.
  * @returns True if the scan ends inside a `//` comment.
  */
-function scanEndsInsideInlineComment (text: string): boolean {
+function scanEndsInsideInlineComment (text: string, reading: InlineCommentReading): boolean {
 	let scan: Scan = { state: `code`, index: 0, openingQuote: ``, wordStart: 0 }
 
 	while (scan.index < text.length) {
-		READ_INSIDE[scan.state](text, scan)
+		READ_INSIDE[scan.state](text, scan, reading)
 
 		scan.index += 1
 	}
@@ -139,5 +145,5 @@ export function endsWithInlineComment (source: string, reading: InlineCommentRea
 	// The trailing whitespace is where a fixer writes, so it closes nothing
 	let text = source.trimEnd()
 
-	return scanEndsInsideInlineComment(text)
+	return scanEndsInsideInlineComment(text, reading)
 }

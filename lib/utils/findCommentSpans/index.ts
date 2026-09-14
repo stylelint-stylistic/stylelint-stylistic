@@ -1,25 +1,12 @@
 import type { Node } from "postcss-value-parser"
 
 import { IDENTIFIER_CODE_POINT, LEADING_CSS_WHITESPACE, LINE_BREAK, TRAILING_CSS_WHITESPACE, TRAILING_HEX_ESCAPE, WHITESPACE_ONLY } from "../../regexps.ts"
+import { findInlineCommentEnd } from "../findInlineCommentEnd/index.ts"
 import { isOnlyWhitespace } from "../isOnlyWhitespace/index.ts"
 import { namesAnAddress } from "../namesAnAddress/index.ts"
 import { type Address, readAddress } from "../readAddress/index.ts"
 import { readEscapedCharacter } from "../readEscapedCharacter/index.ts"
 import { readIdentifierCharacter } from "../readIdentifierCharacter/index.ts"
-
-/**
- * Finds the break closing a `//` comment: the line feed, or the `\r` in front of it.
- * @param text - The text the comment opened in.
- * @param openIndex - Where the comment opens.
- * @returns The break, or the text's length.
- */
-function findLineBreak (text: string, openIndex: number): number {
-	let index = text.indexOf(`\n`, openIndex)
-
-	if (index === -1) return text.length
-
-	return text[index - 1] === `\r` ? index - 1 : index
-}
 
 /**
  * Skips the name of an `@import`, whose letters may be escapes as a `url(`'s are: `@\69 mport` and `@IMPORT` name the same at-rule, `@imports` another word. Nothing in front is asked about, since `@` is no identifier code point and ends whatever name stands there.
@@ -68,19 +55,20 @@ function skipUrlName (text: string, openIndex: number): number {
  * @param text - The text walked for comments and addresses.
  * @param openIndex - Where it would start.
  * @param behindIdentifier - True behind a name: a {@link IDENTIFIER_CODE_POINT} code point, a `}` or an escape.
+ * @param reading - What the syntax makes of a `//` comment.
  * @param spans - The comments the parentheses hold are added.
  * @param addresses - This one is added.
  * @param strings - The string of a quoted address is added.
  * @returns Where the walk reads on — behind the string of a quoted address, behind the `)` of a bare one — or `openIndex`.
  */
-function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, spans: CommentSpan[], addresses: AddressSpan[], strings: StringSpan[]): number {
+function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, reading: CommentReading, spans: CommentSpan[], addresses: AddressSpan[], strings: StringSpan[]): number {
 	if (behindIdentifier) return openIndex
 
 	let behindName = skipUrlName(text, openIndex)
 
 	if (behindName === openIndex) return openIndex
 
-	let address = readAddress(text, behindName)
+	let address = readAddress(text, behindName, reading)
 
 	if (address.isQuoted) {
 		let end = skipString(text, address.index)
@@ -185,6 +173,15 @@ function pushQuotedAddress (text: string, openIndex: number, end: number, addres
 	if (end <= text.length && !LINE_BREAK.test(text.slice(openIndex, end))) addresses.push({ start: openIndex, end })
 }
 
+/** What the syntax makes of a `//` comment, as far as the walk asks: whether one opens, and whether the parser's own tokenizer reads one, which is `postcss-scss` reading Sass. */
+export type CommentReading = {
+	spells: boolean,
+	tokenizes: boolean,
+}
+
+/** A syntax that spells a `//` comment and says nothing more. */
+const SPELLS_INLINE_COMMENTS: CommentReading = { spells: true, tokenizes: false }
+
 /** The span a `url()` address occupies. */
 export type AddressSpan = {
 	start: number,
@@ -209,10 +206,10 @@ export type CommentSpan = {
  *
  * The address of an `@import` is the string standing behind the name, which only the walk can find: a pattern over the text cannot say where that string closes, nor whether the `@import` it matched is code rather than the text of a comment or of another string ([#552](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/552)). Whitespace and comments stand between the name and the string; anything else ends the wait.
  * @param text - The value, selector or params walked.
- * @param spellsInlineComments - False where the syntax spells none ({@link readsInlineComments}).
+ * @param reading - What the syntax makes of a `//` comment ({@link inlineCommentReading}).
  * @returns The spans of both, and of the strings the walk stepped over.
  */
-function scan (text: string, spellsInlineComments: boolean): { comments: CommentSpan[], addresses: AddressSpan[], strings: StringSpan[] } {
+function scan (text: string, reading: CommentReading): { comments: CommentSpan[], addresses: AddressSpan[], strings: StringSpan[] } {
 	let spans: CommentSpan[] = []
 	let addresses: AddressSpan[] = []
 	let strings: StringSpan[] = []
@@ -228,7 +225,7 @@ function scan (text: string, spellsInlineComments: boolean): { comments: Comment
 
 		if (character === `\\`) {
 			// A backslash makes the next character ordinary: `a\//b` opens no comment. An escape can spell a letter of `url`, so an address is looked for first.
-			let behindUrl = skipUrl(text, index, behindIdentifier, spans, addresses, strings)
+			let behindUrl = skipUrl(text, index, behindIdentifier, reading, spans, addresses, strings)
 
 			if (behindUrl === index) {
 				let escaped = readEscapedCharacter(text, index)
@@ -255,7 +252,7 @@ function scan (text: string, spellsInlineComments: boolean): { comments: Comment
 			awaitsImportAddress = false
 		}
 		else if (character === `u` || character === `U`) {
-			let behindUrl = skipUrl(text, index, behindIdentifier, spans, addresses, strings)
+			let behindUrl = skipUrl(text, index, behindIdentifier, reading, spans, addresses, strings)
 
 			if (behindUrl === index) {
 				index += 1
@@ -283,9 +280,9 @@ function scan (text: string, spellsInlineComments: boolean): { comments: Comment
 			index = end
 			behindIdentifier = false
 		}
-		else if (character === `/` && next === `/` && spellsInlineComments) {
+		else if (character === `/` && next === `/` && reading.spells) {
 			// The comment runs to the break PostCSS ends a line on; a bare `\r` and a form feed are text of it (#566).
-			let end = findLineBreak(text, index)
+			let end = findInlineCommentEnd(text, index)
 
 			spans.push({ start: index, end, isInline: true })
 			index = end
@@ -306,31 +303,31 @@ function scan (text: string, spellsInlineComments: boolean): { comments: Comment
 /**
  * Finds a text's comment spans; {@link scan} says what the walk reads.
  * @param text - The raw walked for comments.
- * @param spellsInlineComments - False where the syntax spells none ({@link readsInlineComments}).
+ * @param reading - What the syntax makes of a `//` comment ({@link inlineCommentReading}).
  * @returns The spans.
  */
-export function findCommentSpans (text: string, spellsInlineComments: boolean = true): CommentSpan[] {
-	return scan(text, spellsInlineComments).comments
+export function findCommentSpans (text: string, reading: CommentReading = SPELLS_INLINE_COMMENTS): CommentSpan[] {
+	return scan(text, reading).comments
 }
 
 /**
  * Finds the spans of a text's addresses — a `url()`'s as {@link pushBareAddress} and {@link pushQuotedAddress} measure it, an `@import`'s as {@link pushQuotedAddress} does. The comment walk finds them, since one inside a comment is no address and each letter of a name may be an escape ([#344](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/344), [#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427), [#552](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/552)).
  * @param text - The raw walked for addresses.
- * @param spellsInlineComments - False where the syntax spells none ({@link readsInlineComments}).
+ * @param reading - What the syntax makes of a `//` comment ({@link inlineCommentReading}).
  * @returns The spans, in source order.
  */
-export function findAddressSpans (text: string, spellsInlineComments: boolean = true): AddressSpan[] {
-	return scan(text, spellsInlineComments).addresses
+export function findAddressSpans (text: string, reading: CommentReading = SPELLS_INLINE_COMMENTS): AddressSpan[] {
+	return scan(text, reading).addresses
 }
 
 /**
  * Finds the spans of a text's strings: a quotation mark inside a comment or inside a bare address as {@link skipUrl} reads one opens none, and one behind an escape closes none. PostCSS reads a bare address only behind a lowercase `url(` with no whitespace inside it, so a quotation mark behind `url( ` or `URL(` opens a string to it and none here. A string the text never closes runs to its end.
  * @param text - The raw walked for strings.
- * @param spellsInlineComments - False where the syntax spells none ({@link readsInlineComments}).
+ * @param reading - What the syntax makes of a `//` comment ({@link inlineCommentReading}).
  * @returns The spans, in source order.
  */
-export function findStringSpans (text: string, spellsInlineComments: boolean = true): StringSpan[] {
-	return scan(text, spellsInlineComments).strings
+export function findStringSpans (text: string, reading: CommentReading = SPELLS_INLINE_COMMENTS): StringSpan[] {
+	return scan(text, reading).strings
 }
 
 /**

@@ -39,6 +39,15 @@ testRule({
 
 	reject: [
 		{
+			// See #661
+			description: `a solidus of the value beside one inside a block comment holding a parenthesis, in an address Sass reads as code`,
+			code: `a { b: 1/2 url(a /* ) / b */ ) }`,
+			fixed: `a { b: 1 /2 url(a /* ) / b */ ) }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `a solidus beside a call Sass hands through as plain CSS, which keeps the separator`,
 			code: `a { b: var(--x)/2; }`,
 			fixed: `a { b: var(--x) /2; }`,

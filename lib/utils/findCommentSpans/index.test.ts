@@ -3,6 +3,12 @@ import { describe, expect, it } from "vitest"
 
 import { findAddressSpans, findCommentSpanAt, findCommentSpanHolding, findCommentSpans, findCommentSpanTouching, findStringSpans } from "./index.ts"
 
+/** Plain CSS, which spells no `//` comment. */
+const PLAIN_CSS = { spells: false, tokenizes: false }
+
+/** `postcss-scss`, whose own tokenizer reads a `//` comment, so the parentheses of an address are read as Sass reads them. */
+const SCSS = { spells: true, tokenizes: true }
+
 describe(`findCommentSpans`, () => {
 	it(`no comment`, () => {
 		expect(findCommentSpans(`1px 2px`)).toEqual([])
@@ -74,7 +80,7 @@ describe(`findCommentSpans`, () => {
 	// The walk read those slashes as code and the guard over a fix as a comment, which is what Sass reads there. See #557
 	it(`a double slash beside a quoted address, which opens a comment wherever the quotation mark stands`, () => {
 		expect(findCommentSpans(`url("a" // c)`)).toEqual([{ start: 8, end: 13, isInline: true }])
-		expect(findCommentSpans(`url("a" // c)`, false)).toEqual([])
+		expect(findCommentSpans(`url("a" // c)`, PLAIN_CSS)).toEqual([])
 		expect(findCommentSpans(`url( "a" // c\n) 1px`)).toEqual([{ start: 9, end: 13, isInline: true }])
 	})
 
@@ -108,6 +114,13 @@ describe(`findCommentSpans`, () => {
 	// See #660
 	it(`the same comment behind a no-break space, which is no whitespace to the tokenizer and leaves the parentheses one token of it`, () => {
 		expect(findCommentSpans(`url(\u00A0a /* ) */ ) 1PX`)).toEqual([])
+	})
+
+	// See #661
+	it(`a comment holding a parenthesis inside an address Sass reads as code, which the parser Sass is read by reads as one`, () => {
+		expect(findCommentSpans(`url(a /* ) / b */ ) 1PX`, SCSS)).toEqual([{ start: 6, end: 17, isInline: false }])
+		expect(findCommentSpans(`url(a /* ) / b */ ) 1PX`)).toEqual([])
+		expect(findCommentSpans(`url(a // ) , b\n) 1PX`, SCSS)).toEqual([{ start: 6, end: 14, isInline: true }])
 	})
 
 	it(`a slash and a star inside such an address whose closing delimiter lies past the parenthesis, which the tokenizer reads to that delimiter and past the parenthesis with it`, () => {
@@ -221,16 +234,16 @@ describe(`findCommentSpans`, () => {
 	})
 
 	it(`a syntax spelling no comment with a double slash has none of that kind to find`, () => {
-		expect(findCommentSpans(`1px // c\n2px`, false)).toEqual([])
-		expect(findCommentSpans(`myurl(//a)`, false)).toEqual([])
+		expect(findCommentSpans(`1px // c\n2px`, PLAIN_CSS)).toEqual([])
+		expect(findCommentSpans(`myurl(//a)`, PLAIN_CSS)).toEqual([])
 	})
 
 	it(`the second slash of such a syntax opens a block comment where a star follows it`, () => {
-		expect(findCommentSpans(`1px//*c*/`, false)).toEqual([{ start: 4, end: 9, isInline: false }])
+		expect(findCommentSpans(`1px//*c*/`, PLAIN_CSS)).toEqual([{ start: 4, end: 9, isInline: false }])
 	})
 
 	it(`a block comment of such a syntax is found as it always was`, () => {
-		expect(findCommentSpans(`1px /* c */ 2px`, false)).toEqual([{ start: 4, end: 11, isInline: false }])
+		expect(findCommentSpans(`1px /* c */ 2px`, PLAIN_CSS)).toEqual([{ start: 4, end: 11, isInline: false }])
 	})
 })
 
@@ -275,7 +288,7 @@ describe(`findAddressSpans`, () => {
 	})
 
 	it(`the same double slash in a syntax that spells no comment with one, where the address behind it is an address`, () => {
-		expect(findAddressSpans(`// url(a.png)`, false)).toEqual([{ start: 7, end: 12 }])
+		expect(findAddressSpans(`// url(a.png)`, PLAIN_CSS)).toEqual([{ start: 7, end: 12 }])
 	})
 
 	it(`two addresses on one line, and a call behind an address that is none`, () => {
@@ -347,6 +360,11 @@ describe(`findAddressSpans`, () => {
 		expect(findAddressSpans(`url(a /* c */ )`)).toEqual([{ start: 4, end: 13 }])
 	})
 
+	// See #661
+	it(`the same comment with no whitespace in front of it under the parser Sass is read by, which parts the address as whitespace does`, () => {
+		expect(findAddressSpans(`url(a /* c */ )`, SCSS)).toEqual([{ start: 4, end: 5 }])
+	})
+
 	// See #557
 	it(`an address whose parentheses the text closes with none, which runs to that text's end`, () => {
 		expect(findAddressSpans(`url(a.png`)).toEqual([{ start: 4, end: 9 }])
@@ -386,7 +404,7 @@ describe(`findAddressSpans`, () => {
 	})
 
 	it(`the same double slash in a syntax that spells no comment with one, where the wait ends on the first slash`, () => {
-		expect(findAddressSpans(`@import // c\n"a.css"`, false)).toEqual([])
+		expect(findAddressSpans(`@import // c\n"a.css"`, PLAIN_CSS)).toEqual([])
 	})
 
 	it(`anything else between the name and a string, which ends the wait`, () => {
@@ -528,7 +546,7 @@ describe(`findStringSpans`, () => {
 
 	it(`a quotation mark inside a comment, which opens nothing`, () => {
 		expect(findStringSpans(`/* ' */ a // "\n'b'`)).toEqual([{ start: 15, end: 18 }])
-		expect(findStringSpans(`a // "\n'b'`, false)).toEqual([{ start: 5, end: 10 }])
+		expect(findStringSpans(`a // "\n'b'`, PLAIN_CSS)).toEqual([{ start: 5, end: 10 }])
 	})
 
 	it(`a string the text never closes, which runs to its end`, () => {

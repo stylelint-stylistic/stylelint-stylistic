@@ -43,7 +43,7 @@ export function functionCommaSpaceChecker (opts: {
 		// The value parser reads commas inside a `//` comment; whether `//` opens one the syntax says (in plain CSS `myurl(//a)` is code)
 		let reading = opts.syntax.inlineComments(decl, opts.result)
 		// Block comments too: the value parser closes `/*/` on its own star and returns the rest as nodes, commas among them (#275)
-		let valueCommentSpans = findCommentSpans(declValue, reading.spells)
+		let valueCommentSpans = findCommentSpans(declValue, reading)
 
 		// Edited by position rather than printed from the tree, which gives `/*/` back as `/**/`
 		let edits: Edit[] = []
@@ -69,7 +69,7 @@ export function functionCommaSpaceChecker (opts: {
 			// Remove function name and parens
 			let argumentsRun = valueNode.before + argumentStrings.join(``) + valueNode.after
 			// False `//` openings are masked in the same copy so nothing downstream reads an address as a comment
-			let commentSpans = findCommentSpans(argumentsRun, reading.spells)
+			let commentSpans = findCommentSpans(argumentsRun, reading)
 			let hiddenArguments = hideFalseInlineComments(argumentsRun, commentSpans)
 
 			// Where each argument opens, so the text in front of a comma is found by offset

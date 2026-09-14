@@ -247,6 +247,9 @@ export const SPACES_THEN_BLOCK_COMMENT = /^[ \t]*\/\*/u
 /** A leading `//` comment, spaces and tabs aside. */
 export const SPACES_THEN_INLINE_COMMENT = /^[ \t]*\/\//u
 
+/** A character Sass reads as one of an unquoted `url()`'s own, escapes, interpolations and whitespace aside: every other ASCII one — a control, `"`, `$`, `'`, `(`, `)` — leaves the parentheses code. */
+export const SASS_URL_CODE_POINT = /[!#%&*-~\u0080-\uFFFF]/u
+
 /** Sass's `#{…}`. */
 export const SCSS_INTERPOLATION = /#\{.+?\}/su
 

@@ -3,10 +3,13 @@ import { describe, expect, it } from "vitest"
 import { endsWithInlineComment } from "./index.ts"
 
 /** Less's reading, which leaves such a comment in the value a rule reads. */
-const LESS = { spells: true, keeps: true, answered: true }
+const LESS = { spells: true, keeps: true, answered: true, tokenizes: false }
+
+/** `postcss-scss`'s reading, whose own tokenizer reads such a comment. */
+const SCSS = { spells: true, keeps: false, answered: true, tokenizes: true }
 
 /** Plain CSS's reading, which spells no `//` comment. */
-const PLAIN_CSS = { spells: false, keeps: false, answered: true }
+const PLAIN_CSS = { spells: false, keeps: false, answered: true, tokenizes: false }
 
 describe(`endsWithInlineComment`, () => {
 	it(`empty string`, () => {
@@ -153,6 +156,16 @@ describe(`endsWithInlineComment`, () => {
 	// See #660
 	it(`the same text with the parenthesis standing against the address, which leaves the comment's delimiters characters of it`, () => {
 		expect(endsWithInlineComment(`b: url(a /* ) // c */ ) 1px; `, LESS)).toBe(true)
+	})
+
+	// See #661
+	it(`the same text under the parser Sass is read by, which reads the parentheses as code and the double slash as text of the block comment`, () => {
+		expect(endsWithInlineComment(`b: url(a /* ) // c */ ) 1px; `, SCSS)).toBe(false)
+	})
+
+	it(`a double slash inside parentheses Sass reads as code, whose comment runs past the parenthesis to the end of the text`, () => {
+		expect(endsWithInlineComment(`b: url(a // ) c`, SCSS)).toBe(true)
+		expect(endsWithInlineComment(`b: url(a // ) c`, LESS)).toBe(false)
 	})
 
 	// The text is a prefix of what the file spells, so a `url(` left open is one the file closes behind it: the address runs to the end, and the protocol's double slashes open nothing.

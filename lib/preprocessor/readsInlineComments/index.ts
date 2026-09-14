@@ -1,13 +1,13 @@
 import type { Document, Node, Root } from "postcss"
 import type { PostcssResult } from "stylelint"
 
+import type { CommentReading } from "../../utils/findCommentSpans/index.ts"
 import { nodeSyntax } from "../../utils/nodeSyntax/index.ts"
 import { isSyntax } from "../../utils/typeGuards/index.ts"
 import { isInlineComment } from "../isInlineComment/index.ts"
 
-/** What a syntax makes of a `//` comment: whether it spells one, whether it keeps one in the value a rule reads, and whether it answered for itself rather than getting the default, which reads a comment as a comment; a gate refusing a file on the syntax's own account must not refuse one on the default. Which break closes a comment is PostCSS's question. */
-export type InlineCommentReading = {
-	spells: boolean,
+/** What a syntax makes of a `//` comment: whether it spells one, whether it keeps one in the value a rule reads, whether its own tokenizer reads one, and whether it answered for itself rather than getting the default, which reads a comment as a comment; a gate refusing a file on the syntax's own account must not refuse one on the default. Which break closes a comment is PostCSS's question. */
+export type InlineCommentReading = CommentReading & {
 	keeps: boolean,
 	answered: boolean,
 }
@@ -25,17 +25,17 @@ const INLINE_COMMENT_PROBE = `a {}\n// comment\na { b: 'x', // comment\n  'y'; }
  */
 function probeSyntax (syntax?: unknown): InlineCommentReading {
 	// No syntax is plain CSS, which spells no `//` comment
-	if (!syntax) return { spells: false, keeps: false, answered: true }
+	if (!syntax) return { spells: false, keeps: false, answered: true, tokenizes: false }
 
 	// A syntax that cannot be asked says nothing
-	if (!isSyntax(syntax)) return { spells: true, keeps: false, answered: false }
+	if (!isSyntax(syntax)) return { spells: true, keeps: false, answered: false, tokenizes: false }
 
 	let known = inlineCommentSyntaxes.get(syntax)
 
 	if (known !== undefined) return known
 
 	// The default: nothing said, and a comment read as a comment
-	let reading: InlineCommentReading = { spells: true, keeps: false, answered: false }
+	let reading: InlineCommentReading = { spells: true, keeps: false, answered: false, tokenizes: false }
 
 	try {
 		let probe: Root | Document = syntax.parse(INLINE_COMMENT_PROBE, { from: undefined })
@@ -63,6 +63,8 @@ function probeSyntax (syntax?: unknown): InlineCommentReading {
 	catch {
 		// A syntax that cannot parse the probe has said nothing
 	}
+
+	reading.tokenizes = reading.answered && reading.spells && !reading.keeps
 
 	inlineCommentSyntaxes.set(syntax, reading)
 
@@ -106,9 +108,7 @@ export function syntaxSpellsInlineComments (syntax?: unknown): boolean {
  * @returns True where it does.
  */
 export function syntaxTokenizesInlineComments (syntax?: unknown): boolean {
-	let reading = probeSyntax(syntax)
-
-	return reading.answered && reading.spells && !reading.keeps
+	return probeSyntax(syntax).tokenizes
 }
 
 /**

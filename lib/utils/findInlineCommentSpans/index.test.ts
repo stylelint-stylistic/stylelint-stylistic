@@ -61,7 +61,7 @@ describe(`findInlineCommentSpans`, () => {
 	})
 
 	it(`a syntax spelling no comment with a double slash has none to find`, () => {
-		expect(findInlineCommentSpans(`1px // c\n2px`, false)).toEqual([])
-		expect(findInlineCommentSpans(`myurl(//a) // c`, false)).toEqual([])
+		expect(findInlineCommentSpans(`1px // c\n2px`, { spells: false, tokenizes: false })).toEqual([])
+		expect(findInlineCommentSpans(`myurl(//a) // c`, { spells: false, tokenizes: false })).toEqual([])
 	})
 })

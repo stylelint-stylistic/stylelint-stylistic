@@ -20,6 +20,11 @@ testRule({
 			code: `$list: (value, value2)`,
 		},
 		{
+			// See #661
+			description: `a comma inside an inline comment holding a parenthesis, in an address Sass reads as code`,
+			code: `a { b: fn(url(a // ) , b\n), 1px); }`,
+		},
+		{
 			description: `an inline comment behind the comma, with the break behind the comment`,
 			code: `
 				a {

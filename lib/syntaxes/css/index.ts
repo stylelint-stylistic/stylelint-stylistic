@@ -55,7 +55,7 @@ export let css: Syntax = {
 	write: writePrintedText,
 	inlineComments: inlineCommentReading,
 	colonTokenIndex: (before, text, node, result) => colonTokenIndex(before, text, nodeSyntax(node, result), node.source?.input.file),
-	commentSpans: (text, node, result) => findCommentSpans(text, readsInlineComments(node, result)),
+	commentSpans: (text, node, result) => findCommentSpans(text, inlineCommentReading(node, result)),
 	endsWithInlineComment,
 	movesEndIntoInlineComment,
 	writesIntoInlineComment,
@@ -65,14 +65,15 @@ export let css: Syntax = {
 		let pair = raws && typeof raws.scss === `string` ? { rewritten: raws.raw, spelled: raws.scss } : undefined
 		// The two copies say where each rewritten comment runs; a pair out of step is read as none
 		let inline = pair ? findRewrittenCommentSpans(pair.rewritten, pair.spelled)?.map(({ start, end }) => ({ start, end, isInline: true })) : null
+		let { tokenizes } = inlineCommentReading(node, result)
 
 		// Block comments are found with the inline ones blanked: a double slash left there is code, and a `/*` inside an inline comment opens nothing
-		if (inline) return [...inline, ...findCommentSpans(blankComments(text, inline), false)].toSorted((one, other) => one.start - other.start)
+		if (inline) return [...inline, ...findCommentSpans(blankComments(text, inline), { spells: false, tokenizes })].toSorted((one, other) => one.start - other.start)
 
 		// A double slash of plain CSS is code, and so is one of a syntax marking its comments in a copy of its own, unless that pair is out of step
 		let spellsInlineComments = text.includes(`//`) && (pair !== undefined || syntaxKeepsInlineComments(nodeSyntax(node, result)))
 
-		return findCommentSpans(text, spellsInlineComments)
+		return findCommentSpans(text, { spells: spellsInlineComments, tokenizes })
 	},
 	requiresTrailingSemicolon: () => false,
 	// A parser leaving a `//` comment in a node's text is `postcss-less`, read by the less namespace

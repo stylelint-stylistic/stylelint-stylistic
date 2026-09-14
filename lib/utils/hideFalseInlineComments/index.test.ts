@@ -66,7 +66,7 @@ describe(`hideFalseInlineComments`, () => {
 	})
 
 	it(`an address behind a comment a form feed closes`, () => {
-		expect(hideFalseInlineComments(`url(http://x) // c\furl(http://y)`, findInlineCommentSpans(`url(http://x) // c\furl(http://y)`, true))).toBe(`url(http:/?x) // c\furl(http:/?y)`)
+		expect(hideFalseInlineComments(`url(http://x) // c\furl(http://y)`, findInlineCommentSpans(`url(http://x) // c\furl(http://y)`))).toBe(`url(http:/?x) // c\furl(http:/?y)`)
 	})
 
 	it(`a data URI`, () => {

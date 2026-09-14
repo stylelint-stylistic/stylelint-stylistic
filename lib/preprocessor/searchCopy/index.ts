@@ -4,7 +4,7 @@ import type { PostcssResult } from "stylelint"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { type CommentSpan, findCommentSpans } from "../../utils/findCommentSpans/index.ts"
 import { hideFalseInlineComments } from "../../utils/hideFalseInlineComments/index.ts"
-import { readsInlineComments } from "../readsInlineComments/index.ts"
+import { inlineCommentReading } from "../readsInlineComments/index.ts"
 
 /**
  * Builds the copy of a node's text a scan is handed in place of the text, and returns the comments it was built from.
@@ -19,7 +19,7 @@ export function searchCopy (text: string, node: Node, result: PostcssResult): {
 	searchString: string,
 	commentSpans: CommentSpan[],
 } {
-	let commentSpans = findCommentSpans(text, readsInlineComments(node, result))
+	let commentSpans = findCommentSpans(text, inlineCommentReading(node, result))
 
 	// No spans for the masking: every comment is gone from the copy, so every `//` left in it opens none
 	return {

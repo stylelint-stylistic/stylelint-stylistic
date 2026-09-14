@@ -65,18 +65,18 @@ function read (syntax?: unknown): InlineCommentReading {
 
 describe(`inlineCommentReading`, () => {
 	it(`no syntax at all, which spells no comment with a double slash`, () => {
-		expect(read()).toEqual({ spells: false, keeps: false, answered: true })
+		expect(read()).toEqual({ spells: false, keeps: false, answered: true, tokenizes: false })
 	})
 
 	it(`something that cannot be asked, which is answered as anything that says nothing`, () => {
-		expect(read({})).toEqual({ spells: true, keeps: false, answered: false })
+		expect(read({})).toEqual({ spells: true, keeps: false, answered: false, tokenizes: false })
 	})
 
 	it(`a syntax that rewrites its inline comments out of the value a rule reads`, () => {
-		expect(read(scss)).toEqual({ spells: true, keeps: false, answered: true })
+		expect(read(scss)).toEqual({ spells: true, keeps: false, answered: true, tokenizes: true })
 	})
 
 	it(`a syntax that leaves them standing in the value`, () => {
-		expect(read(less)).toEqual({ spells: true, keeps: true, answered: true })
+		expect(read(less)).toEqual({ spells: true, keeps: true, answered: true, tokenizes: false })
 	})
 })
