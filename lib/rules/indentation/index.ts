@@ -242,8 +242,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let head = `@${atRule.name}${atRule.raws.afterName || ``}${syntax.read(atRule)}`
 
 			// With neither block nor semicolon an at-rule runs to its block's closing brace, and PostCSS puts everything in between into `raws.between`. Such a line is the block's, asked for the at-rule's own level whatever `except` and `ignore` say; measured with the params, `--fix` put a comment there a level deeper (#510). The tree is read as it stands, so a neighbour's semicolon moves the comment at once. The trailing whitespace is the run in front of the brace, `getBlockAfter`'s (#509)
-			// Behind a Less mixin call's flag those lines are in `raws.important`, printed behind `raws.between` (#374); the flag's line is blanked, since it is measured behind a semicolon neither
-			let swallowedLines = !hasBlock(atRule) && isLastNodeWithoutSemicolon(atRule) ? `${atRule.raws.between || ``}${typeof atRule.raws.important === `string` ? atRule.raws.important.replace(LEADING_IMPORTANT_FLAG_LINE, (line) => ` `.repeat(line.length)) : ``}`.replace(TRAILING_WHITESPACE, ``) : ``
+			// Behind a Less mixin call's flag those lines are in `raws.important`, printed behind `raws.between` (#374); the flag's line is blanked, since it is measured behind a semicolon neither. Behind a stylesheet's last at-rule with params and no flag the parser files them into the root's `raws.after`, where no line was measured (#592)
+			let swallowedLines = !hasBlock(atRule) && isLastNodeWithoutSemicolon(atRule) ? `${atRule.raws.between || (!atRule.raws.important && atRule.parent && isRoot(atRule.parent) && atRule.parent.raws.after) || ``}${typeof atRule.raws.important === `string` ? atRule.raws.important.replace(LEADING_IMPORTANT_FLAG_LINE, (line) => ` `.repeat(line.length)) : ``}`.replace(TRAILING_WHITESPACE, ``) : ``
 
 			// `@nest` and `@at-root` params are selectors
 			let paramLevel = optionsMatches(secondaryOptions, `except`, `param`) || atRule.name === `nest` || atRule.name === `at-root` ? ruleLevel : ruleLevel + 1
@@ -440,7 +440,7 @@ type FixPosition = {
 /**
  * Writes an at-rule's indentation, each line into its raw.
  *
- * Positions are counted from the at-rule's start through `raws.afterName`, the params and `raws.between`. A line in `raws.between` is one the at-rule swallowed ([#510](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510)); written onto the end of the params, the file grew a level every run ([#375](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/375)).
+ * Positions are counted from the at-rule's start through `raws.afterName`, the params, `raws.between` and, behind a stylesheet's last at-rule, the root's `raws.after`. A line in `raws.between` is one the at-rule swallowed ([#510](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510)); written onto the end of the params, the file grew a level every run ([#375](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/375)).
  * @param atRule - The at-rule.
  * @param fixPositions - The positions, in reverse order.
  * @param syntax - The syntax that reads and writes the params.
@@ -474,8 +474,9 @@ function writeAtRuleIndentation (atRule: AtRule, fixPositions: FixPosition[], sy
 
 			let betweenIndex = fixPosition.startIndex - paramsEndIndex
 
-			// A Less mixin call's flag and the lines behind it are printed behind `raws.between` (#374)
+			// A Less mixin call's flag and the lines behind it are printed behind `raws.between` (#374); with neither, the lines are the root's `raws.after` (#592)
 			if (betweenIndex >= atRuleBetween.length && typeof atRule.raws.important === `string`) atRule.raws.important = replaceIndentation(atRule.raws.important, fixPosition.currentIndentation, fixPosition.expectedIndentation, betweenIndex - atRuleBetween.length)
+			else if (!atRuleBetween && atRule.parent && isRoot(atRule.parent)) atRule.parent.raws.after = replaceIndentation(atRule.parent.raws.after || ``, fixPosition.currentIndentation, fixPosition.expectedIndentation, betweenIndex)
 			else atRule.raws.between = replaceIndentation(atRuleBetween, fixPosition.currentIndentation, fixPosition.expectedIndentation, betweenIndex)
 		}
 	}

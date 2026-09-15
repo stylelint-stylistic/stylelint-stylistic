@@ -1160,6 +1160,15 @@ testRule({
 			description: `the same semicolon behind an at-rule of the root, in the first column`,
 			code: `@import 'x'\n;\na {}\n`,
 		},
+		{
+			// See #592
+			description: `a comment behind the stylesheet's last at-rule, which has neither a block nor a semicolon, in the first column`,
+			code: `
+				a {}
+				@import 'x'
+				/* c */
+			`,
+		},
 	],
 
 	reject: [
@@ -1188,6 +1197,48 @@ testRule({
 			column: 2,
 			message: messages.expected(`0 tabs`),
 		},
+		{
+			// See #592
+			description: `a comment indented two levels behind the stylesheet's last at-rule, which has neither a block nor a semicolon, so the parser files the comment into the root's trailing whitespace`,
+			code: `
+				a {}
+				@import 'x'
+						/* c */
+			`,
+			fixed: `
+				a {}
+				@import 'x'
+				/* c */
+			`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`0 tabs`),
+		},
+		{
+			description: `the same whitespace holding a comment on the at-rule's line and two indented comments on lines of their own`,
+			code: `
+				@import 'x' /* c */
+					/* d */
+						/* e */
+			`,
+			fixed: `
+				@import 'x' /* c */
+				/* d */
+				/* e */
+			`,
+			warnings: [
+				{ line: 2, column: 2, message: messages.expected(`0 tabs`) },
+				{ line: 3, column: 3, message: messages.expected(`0 tabs`) },
+			],
+		},
+		{
+			description: `the same comment written with carriage-return line breaks`,
+			code: `a {}\r\n@import 'x'\r\n\t/* c */\r\n`,
+			fixed: `a {}\r\n@import 'x'\r\n/* c */\r\n`,
+			line: 3,
+			column: 2,
+			message: messages.expected(`0 tabs`),
+		},
 	],
 })
 
@@ -1201,6 +1252,23 @@ testRule({
 			description: `a semicolon alone on its line behind parameters the option does not measure: the semicolon's line is no line of the parameters, and is measured`,
 			code: `@import\n'x'\n  ;\na {}\n`,
 			fixed: `@import\n'x'\n;\na {}\n`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`0 spaces`),
+		},
+		{
+			// See #592
+			description: `a comment behind the stylesheet's last at-rule, which has neither a block nor a semicolon, indented a level past parameters the option does not measure: the comment's line is no line of the parameters, and is measured`,
+			code: `
+				@import
+				'x'
+				  /* c */
+			`,
+			fixed: `
+				@import
+				'x'
+				/* c */
+			`,
 			line: 3,
 			column: 3,
 			message: messages.expected(`0 spaces`),

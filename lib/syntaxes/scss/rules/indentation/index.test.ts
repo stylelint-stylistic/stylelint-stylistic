@@ -26,6 +26,21 @@ testRule({
 			column: 2,
 			message: messages.expected(`0 tabs`),
 		},
+		{
+			// See #592
+			description: `an inline comment behind the stylesheet's last at-rule, which has neither a block nor a semicolon, indented a level past the at-rule`,
+			code: `
+				@include x
+					// c
+			`,
+			fixed: `
+				@include x
+				// c
+			`,
+			line: 2,
+			column: 2,
+			message: messages.expected(`0 tabs`),
+		},
 	],
 })
 testRule({

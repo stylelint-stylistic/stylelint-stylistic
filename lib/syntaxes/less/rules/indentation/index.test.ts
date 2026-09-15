@@ -778,6 +778,14 @@ testRule({
 			description: `a semicolon alone on its line behind a mixin call, at the call's level`,
 			code: `a {\n\t.m()\n\t;\n}\n`,
 		},
+		{
+			// See #592
+			description: `a comment indented behind the stylesheet's last mixin call carrying a bang flag, which the parser prints in front of the whitespace it files the comment into, so the rule leaves it alone`,
+			code: `
+				.m() !important
+					/* c */
+			`,
+		},
 	],
 
 	reject: [
@@ -814,6 +822,23 @@ testRule({
 			line: 3,
 			column: 4,
 			message: messages.expected(`1 tab`),
+		},
+		{
+			// See #592
+			description: `a comment behind the stylesheet's last mixin call, which has neither a block nor a semicolon, indented a level past the call`,
+			code: `
+				a {}
+				.m()
+					/* c */
+			`,
+			fixed: `
+				a {}
+				.m()
+				/* c */
+			`,
+			line: 3,
+			column: 2,
+			message: messages.expected(`0 tabs`),
 		},
 	],
 })

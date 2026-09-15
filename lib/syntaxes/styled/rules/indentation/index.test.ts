@@ -860,5 +860,24 @@ testRule({
 			column: 4,
 			message: messages.expected(`1 tab`),
 		},
+		{
+			// See #592
+			description: `a comment behind the template's last at-rule, which has neither a block nor a semicolon, indented two levels past the at-rule`,
+			code: `
+				const A = styled.div\`
+					@extend .b
+							/* c */
+				\`;
+			`,
+			fixed: `
+				const A = styled.div\`
+					@extend .b
+					/* c */
+				\`;
+			`,
+			line: 3,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
 	],
 })

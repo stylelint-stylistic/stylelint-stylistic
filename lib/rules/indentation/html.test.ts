@@ -757,5 +757,22 @@ testRule({
 			column: 3,
 			message: messages.expected(`0 tabs`),
 		},
+		{
+			// See #592
+			description: `a comment behind the last at-rule of a style element, which has neither a block nor a semicolon, indented a level past the at-rule`,
+			code: `<style>\n\t@import 'x'\n\t\t/* c */\n</style>`,
+			fixed: `<style>\n\t@import 'x'\n\t/* c */\n</style>`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `the same comment inside a style attribute, whose statements stand at the first column`,
+			code: `<a style="@import 'x'\n\t/* c */"></a>`,
+			fixed: `<a style="@import 'x'\n/* c */"></a>`,
+			line: 2,
+			column: 2,
+			message: messages.expected(`0 tabs`),
+		},
 	],
 })
