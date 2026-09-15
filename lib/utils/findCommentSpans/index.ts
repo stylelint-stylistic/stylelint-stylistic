@@ -214,7 +214,7 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 			let behindUrl = skipUrl(text, index, behindIdentifier, reading, spans, addresses, strings)
 
 			if (behindUrl === index) {
-				let escaped = readEscapedCharacter(text, index)
+				let escaped = readEscapedCharacter(text, index, reading)
 
 				index = escaped.end
 				behindIdentifier = escaped.character !== undefined

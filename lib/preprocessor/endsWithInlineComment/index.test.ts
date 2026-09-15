@@ -141,6 +141,23 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`b: url( a\\/* ) // c */ ) `, LESS)).toBe(false)
 	})
 
+	// `postcss-scss` reads the comment and cuts it out of the value, and the file a fix leaves is read by it again. See #517
+	it(`a double slash a backslash stands in front of, under a syntax whose tokenizer reads such a comment`, () => {
+		expect(endsWithInlineComment(`b: red \\//x`, SCSS)).toBe(true)
+		expect(endsWithInlineComment(`b: red\\//x`, SCSS)).toBe(true)
+	})
+
+	// Less reads the escape, and `postcss-less` keeps the slashes in the value. See #517
+	it(`the same double slash under a syntax whose tokenizer reads no such comment, and under the default reading`, () => {
+		expect(endsWithInlineComment(`b: red \\//x`, LESS)).toBe(false)
+		expect(endsWithInlineComment(`b: red \\//x`)).toBe(false)
+	})
+
+	// See #517
+	it(`the same double slash inside a bare address, which the tokenizer reads whole`, () => {
+		expect(endsWithInlineComment(`b: url(a\\//x) `, SCSS)).toBe(false)
+	})
+
 	// See #665
 	it(`a double slash standing behind such a comment, which the comment's own delimiter closed`, () => {
 		expect(endsWithInlineComment(`b: red \\/*x*/ // c`, LESS)).toBe(true)

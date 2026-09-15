@@ -145,6 +145,11 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`a\\//b 1px`)).toEqual([])
 	})
 
+	// See #517
+	it(`the same double slash under a syntax whose own tokenizer reads such a comment, which lets no backslash cover its solidus`, () => {
+		expect(findCommentSpans(`a\\//b 1px`, SCSS)).toEqual([{ start: 2, end: 9, isInline: true }])
+	})
+
 	// The grammar reads the escape and PostCSS's tokenizer lets none cover a solidus, so all three parsers hand back the declaration with the comment cut out of its value. See #665
 	it(`a slash an escape spells in front of a star, which the parsers read as a comment all the same`, () => {
 		expect(findCommentSpans(`a\\/*c*/ 1px`)).toEqual([{ start: 2, end: 7, isInline: false }])

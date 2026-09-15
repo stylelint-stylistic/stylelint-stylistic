@@ -143,6 +143,7 @@ export function readAddress (text: string, openIndex: number, name: string, read
 
 	while (index < text.length && text[index] !== `)`) {
 		if (text[index] === `\\`) {
+			// Sass decides inside these parentheses, and it reads `\//` as an escape (#517)
 			index = readEscapedCharacter(text, index).end
 		}
 		else if (readsBlockComments && (text[index] === `"` || text[index] === `'`)) {

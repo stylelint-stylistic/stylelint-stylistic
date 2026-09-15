@@ -382,6 +382,15 @@ testRule({
 			message: messages.rejected,
 		},
 		{
+			// See #517
+			description: `a semicolon on the line behind an inline comment a backslash stands against, which this parser reads as a comment: the semicolon goes and the break closing the comment stays`,
+			code: `a { color: pink \\// keep me\n; }`,
+			fixed: `a { color: pink \\// keep me\n }`,
+			line: 2,
+			column: 1,
+			message: messages.rejected,
+		},
+		{
 			// See #326
 			description: `a block standing in front of a Sass variable on the root of the file, whose own trailing semicolon is reported while the variable's is left where it stands`,
 			code: `

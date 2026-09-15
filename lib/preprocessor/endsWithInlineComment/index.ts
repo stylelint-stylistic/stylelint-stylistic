@@ -69,7 +69,7 @@ function readInsideCode (text: string, scan: Scan, reading: InlineCommentReading
 
 	if (char === `\\`) {
 		// The whole escape is one character; a backslash spelling nothing leaves its break to the next step
-		let escaped = readEscapedCharacter(text, scan.index)
+		let escaped = readEscapedCharacter(text, scan.index, reading)
 
 		scan.index = escaped.end - 1
 	}

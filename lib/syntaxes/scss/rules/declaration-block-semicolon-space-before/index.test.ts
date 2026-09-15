@@ -151,6 +151,25 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
+			// See #517
+			description: `the same comment with a backslash standing against its double slash, which this parser reads as a comment all the same`,
+			code: `
+				a {
+					color: red \\// keep me
+					;
+				}
+			`,
+			fixed: `
+				a {
+					color: red \\// keep me
+					;
+				}
+			`,
+			line: 3,
+			column: 1,
+			message: messages.rejectedBefore(),
+		},
+		{
 			// See #117
 			description: `inline comment behind the flag: the semicolon cannot join its line either`,
 			code: `
