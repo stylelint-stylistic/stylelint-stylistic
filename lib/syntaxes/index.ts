@@ -28,6 +28,13 @@ export type Syntax = {
 	accepts (root: Root, result: PostcssResult): boolean,
 
 	/**
+	 * Puts raws the parser merged back where the file spells them, so the root prints as the file and the rules read and write each run where it stands; called in front of every check of an accepted root.
+	 * @param root - The stylesheet accepted.
+	 * @param result - The lint result naming the syntax the file was parsed with.
+	 */
+	restore (root: Root, result: PostcssResult): void,
+
+	/**
 	 * Reads the host code around an embedded stylesheet: the indent of the line the embedding opens on, and whether it is broken over lines, which puts its content a level deeper.
 	 * @param node - A node inside the embedded stylesheet.
 	 * @returns Empty and unbroken for a stylesheet on its own.

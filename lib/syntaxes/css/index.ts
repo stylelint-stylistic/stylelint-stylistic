@@ -38,6 +38,9 @@ export let css: Syntax = {
 
 		return !reading.answered || !reading.spells
 	},
+	restore () {
+		// PostCSS merges no runs a rule would have to part
+	},
 	embedding: () => ({ indent: ``, multiline: false }),
 	valueEmbedsHostCode: () => false,
 	// What the core once turned away was a preprocessor's, and such a file no longer reaches these rules

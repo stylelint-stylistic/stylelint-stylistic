@@ -233,6 +233,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					})
 				}
 
+				// The run behind a Less mixin call's flag, which the `less` namespace hands to the flag's raw (#374)
+				if (isAtRule(node) && typeof node.raws.important === `string`) {
+					fixText(node.raws.important, (fixed) => {
+						node.raws.important = fixed
+					})
+				}
+
 				if (isDeclaration(node)) {
 					fixText(syntax.read(node), (fixed) => {
 						syntax.write(node, fixed)

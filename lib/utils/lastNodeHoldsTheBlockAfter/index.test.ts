@@ -69,7 +69,7 @@ describe(`lastNodeHoldsTheBlockAfter`, () => {
 	})
 
 	// See #374
-	it(`turns away a Less mixin call carrying an important flag, which that syntax prints behind the at-rule's own raw`, () => {
+	it(`turns away a Less mixin call carrying an important flag, whose between raw holds the run in front of the flag as well`, () => {
 		expect(run(`a {\n\t.m() !important\n}`, less)).toBe(false)
 		expect(run(`a {\n\t.m() !important}`, less)).toBe(false)
 	})

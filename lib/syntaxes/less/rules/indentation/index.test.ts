@@ -671,11 +671,22 @@ testRule({
 			`,
 		},
 		{
-			description: `the same call carrying a bang flag, whose whitespace the parser collects from both sides of that flag and the stringifier writes on one, so the run in front of the brace is the block's raw no more than the call's`,
+			// See #374
+			description: `an important flag such a call spells on a line of its own, which is measured no more than with a semicolon behind the call`,
 			code: `
 				a {
-					.m() !important
-						}
+					.m()
+				!important
+				}
+			`,
+		},
+		{
+			description: `the same flag at the call's level with a comment behind it on its line, which is the flag's line as well`,
+			code: `
+				a {
+					.m()
+					!important /* c */
+				}
 			`,
 		},
 	],
@@ -717,6 +728,42 @@ testRule({
 			column: 3,
 			message: messages.expected(`0 tabs`),
 		},
+		{
+			// See #374
+			description: `the same brace behind a call carrying a bang flag, whose whitespace the parser collects from both sides of that flag`,
+			code: `
+				a {
+					.m() !important
+						}
+			`,
+			fixed: `
+				a {
+					.m() !important
+				}
+			`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`0 tabs`),
+		},
+		{
+			// See #374
+			description: `a comment such a call swallowed behind a bang flag, indented a level past the block it is a line of`,
+			code: `
+				a {
+					.m() !important
+						/* c */
+				}
+			`,
+			fixed: `
+				a {
+					.m() !important
+					/* c */
+				}
+			`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
 	],
 })
 
@@ -730,10 +777,6 @@ testRule({
 			// See #569
 			description: `a semicolon alone on its line behind a mixin call, at the call's level`,
 			code: `a {\n\t.m()\n\t;\n}\n`,
-		},
-		{
-			description: `the same line behind a mixin call carrying \`!important\`, which the parser files between the two halves of the run and the rule leaves alone`,
-			code: `a {\n\t.m() !important\n\t\t\t;\n}\n`,
 		},
 	],
 
@@ -759,6 +802,15 @@ testRule({
 			description: `the same line behind a detached ruleset call`,
 			code: `a {\n\t@r()\n\t\t\t;\n}\n`,
 			fixed: `a {\n\t@r()\n\t;\n}\n`,
+			line: 3,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			// See #374
+			description: `the same line behind a mixin call carrying an important flag, whose run the parser gathers in front of the flag`,
+			code: `a {\n\t.m() !important\n\t\t\t;\n}\n`,
+			fixed: `a {\n\t.m() !important\n\t;\n}\n`,
 			line: 3,
 			column: 4,
 			message: messages.expected(`1 tab`),

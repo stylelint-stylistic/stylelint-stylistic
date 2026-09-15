@@ -64,13 +64,24 @@ export function whitespaceBeforeSemicolon (syntax: Syntax, node: AtRule | Declar
 }
 
 /**
+ * The raw a bodiless at-rule ends on: a Less mixin call's flag, where the `less` namespace hands the run behind it ([#374](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/374)), otherwise `raws.between`.
+ * @param atRule - The at-rule.
+ * @returns The raw.
+ */
+function atRuleTail (atRule: AtRule): string {
+	let flag = atRule.raws.important
+
+	return typeof flag === `string` ? flag : atRule.raws.between ?? ``
+}
+
+/**
  * Reads the whitespace in front of a semicolon: the run `writeWhitespaceBeforeSemicolon` writes over, as the tokenizer reads whitespace, since a no-break space or a vertical tab there is a word the value keeps.
  * @param syntax - The syntax reading the value.
  * @param node - The declaration or bodiless at-rule.
  * @returns The run, empty where the node ends in a word.
  */
 export function readWhitespaceBeforeSemicolon (syntax: Syntax, node: AtRule | Declaration): string {
-	let text = isAtRule(node) ? node.raws.between ?? `` : (node.important ? node.raws.important || ` !important` : syntax.read(node))
+	let text = isAtRule(node) ? atRuleTail(node) : (node.important ? node.raws.important || ` !important` : syntax.read(node))
 
 	return text.slice(text.replace(TRAILING_CSS_WHITESPACE, ``).length)
 }
@@ -78,13 +89,14 @@ export function readWhitespaceBeforeSemicolon (syntax: Syntax, node: AtRule | De
 /**
  * Writes the whitespace in front of a semicolon, over the whitespace the node ends with.
  *
- * With `!important` it goes into `raws.important`, kept by PostCSS only for a spelling other than ` !important` and edited so a comment in front of the flag survives; otherwise onto the end of the value, or into a bodiless at-rule's `raws.between`. The two declaration rules and `declaration-block-trailing-semicolon` all write through here.
+ * With `!important` it goes into `raws.important`, kept by PostCSS only for a spelling other than ` !important` and edited so a comment in front of the flag survives; otherwise onto the end of the value, or into a bodiless at-rule's `raws.between` — a Less mixin call's `raws.important` where it has one, since the `less` namespace hands it the run behind the flag ([#374](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/374)). The two declaration rules and `declaration-block-trailing-semicolon` all write through here.
  * @param syntax - The syntax reading and writing the value.
  * @param node - The declaration or bodiless at-rule.
  * @param whitespace - The whitespace to write.
  */
 export function writeWhitespaceBeforeSemicolon (syntax: Syntax, node: AtRule | Declaration, whitespace: string): void {
-	if (isAtRule(node)) node.raws.between = (node.raws.between ?? ``).replace(TRAILING_CSS_WHITESPACE, whitespace)
+	if (isAtRule(node) && typeof node.raws.important === `string`) node.raws.important = node.raws.important.replace(TRAILING_CSS_WHITESPACE, whitespace)
+	else if (isAtRule(node)) node.raws.between = (node.raws.between ?? ``).replace(TRAILING_CSS_WHITESPACE, whitespace)
 	else if (node.important) node.raws.important = (node.raws.important || ` !important`).replace(TRAILING_CSS_WHITESPACE, whitespace)
 	else syntax.write(node, syntax.read(node).replace(TRAILING_CSS_WHITESPACE, whitespace))
 }

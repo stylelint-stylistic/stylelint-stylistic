@@ -46,5 +46,24 @@ testRule({
 			column: 6,
 			message: messages.rejected,
 		},
+		{
+			// See #374
+			description: `a space ending the line behind a mixin call's important flag, with the call's semicolon on the next line`,
+			code: `
+				a {
+					.m() !important${S}
+					;
+				}
+			`,
+			fixed: `
+				a {
+					.m() !important
+					;
+				}
+			`,
+			line: 2,
+			column: 17,
+			message: messages.rejected,
+		},
 	],
 })

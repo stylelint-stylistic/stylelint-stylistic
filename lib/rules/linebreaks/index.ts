@@ -63,6 +63,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					syntax.write(node, fixData(syntax.read(node)))
 
 					if (node.raws.afterName) node.raws.afterName = fixData(node.raws.afterName)
+
+					// A Less mixin call's flag holds the run behind it (#374)
+					if (typeof node.raws.important === `string`) node.raws.important = fixData(node.raws.important)
 				}
 
 				if (isDeclaration(node)) {

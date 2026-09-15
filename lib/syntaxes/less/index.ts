@@ -10,6 +10,7 @@ import type { Syntax } from "../index.ts"
 import { atRuleVariableValue } from "./atRuleVariableValue/index.ts"
 import { isStandardLessAtRule, isStandardLessDeclaration, isStandardLessProperty, isStandardLessRule, isStandardLessSelector, isStandardLessValue } from "./guards/index.ts"
 import { requiresTrailingSemicolon } from "./requiresTrailingSemicolon/index.ts"
+import { restoreMixinFlagRuns } from "./restoreMixinFlagRuns/index.ts"
 import { semicolonFlagIsCommentText } from "./semicolonFlagIsCommentText/index.ts"
 import { syncLessVariableValue } from "./syncLessVariableValue/index.ts"
 
@@ -17,6 +18,7 @@ import { syncLessVariableValue } from "./syncLessVariableValue/index.ts"
 export let less: Syntax = {
 	...css,
 	namespace: `less`,
+	restore: restoreMixinFlagRuns,
 	isStandardAtRule: isStandardLessAtRule,
 	isStandardRule: isStandardLessRule,
 	isStandardSelector: isStandardLessSelector,

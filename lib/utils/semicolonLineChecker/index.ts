@@ -15,7 +15,7 @@ let { utils: { report } } = stylelint
 /**
  * Checks the line a statement's semicolon opens, for `indentation`.
  *
- * The run in front of the semicolon is read where `writeWhitespaceBeforeSemicolon` writes it. Nobody else reads its last line: `checkMultilineBit` passes over a line without content, and `checkAtRuleParams` trims the run off the params ([#569](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/569)). The line closes the statement, so it is asked for the statement's own level, as a closing brace stands at its block's; `except` and `ignore` speak of the lines of a value or of params, and this line holds neither. A whitespace-only line in front of it is `no-eol-whitespace`'s, and the fix writes the last line alone, since `fixIndentation` takes a break's indentation only in front of content or the end. A Less mixin call's `!important` stands between the two halves of the run `raws.between` holds, so such a node is left alone, as it is in front of the closing brace ([#374](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/374)).
+ * The run in front of the semicolon is read where `writeWhitespaceBeforeSemicolon` writes it. Nobody else reads its last line: `checkMultilineBit` passes over a line without content, and `checkAtRuleParams` trims the run off the params ([#569](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/569)). The line closes the statement, so it is asked for the statement's own level, as a closing brace stands at its block's; `except` and `ignore` speak of the lines of a value or of params, and this line holds neither. A whitespace-only line in front of it is `no-eol-whitespace`'s, and the fix writes the last line alone, since `fixIndentation` takes a break's indentation only in front of content or the end. Behind a Less mixin call's `!important` the run is read from the flag's raw, where the `less` namespace hands it wherever it finds the flag in the file ([#374](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/374)).
  * @param options - The node, the syntax, the result, the rule's name and message, the indentation asked for and how the message words it.
  * @param options.node - The node walked; only a declaration or a bodiless at-rule a semicolon closes has such a line.
  * @param options.syntax - The syntax that reads and writes the run.
@@ -35,7 +35,7 @@ export function semicolonLineChecker ({ node, syntax, result, checkedRuleName, m
 	expectation: string,
 }): void {
 	if (!isDeclaration(node) && !isAtRule(node)) return
-	if (hasBlock(node) || isLastNodeWithoutSemicolon(node) || (isAtRule(node) && node.raws.important)) return
+	if (hasBlock(node) || isLastNodeWithoutSemicolon(node)) return
 
 	let run = readWhitespaceBeforeSemicolon(syntax, node)
 	let lines = run.split(EVERY_LINE_BREAK)
@@ -43,7 +43,7 @@ export function semicolonLineChecker ({ node, syntax, result, checkedRuleName, m
 	if (lines.length < 2 || lastLineIndentation(lines) === expectedIndentation) return
 
 	// The semicolon stands behind the statement's text as the file spells it
-	let problemIndex = isDeclaration(node) ? declarationString(syntax, node).length : `@${node.name}${node.raws.afterName || ``}${syntax.read(node)}${node.raws.between || ``}`.length
+	let problemIndex = isDeclaration(node) ? declarationString(syntax, node).length : `@${node.name}${node.raws.afterName || ``}${syntax.read(node)}${node.raws.between || ``}${typeof node.raws.important === `string` ? node.raws.important : ``}`.length
 
 	report({
 		message,

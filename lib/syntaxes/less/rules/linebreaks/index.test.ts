@@ -56,6 +56,15 @@ testRule({
 			column: 25,
 			message: messages.expected(`unix`),
 		},
+		{
+			// See #374
+			description: `a carriage-return line break behind a mixin call's important flag, with a comment on the line below it`,
+			code: `a {\n\t.m() !important\r\n\t/* c */\n}`,
+			fixed: `a {\n\t.m() !important\n\t/* c */\n}`,
+			line: 2,
+			column: 17,
+			message: messages.expected(`unix`),
+		},
 	],
 })
 testRule({

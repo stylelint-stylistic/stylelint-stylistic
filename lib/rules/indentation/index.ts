@@ -2,7 +2,7 @@ import type { AtRule, Declaration, Document, Node, Root, Rule, Source } from "po
 import styleSearch from "style-search"
 import stylelint from "stylelint"
 
-import { CRLF, EVERY_LINE_BREAK, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, TRAILING_LINE_BREAK, TRAILING_WHITESPACE, WHITESPACE_WITHOUT_BREAK_BEFORE_CONTENT } from "../../regexps.ts"
+import { CRLF, EVERY_LINE_BREAK, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_IMPORTANT_FLAG_LINE, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, TRAILING_LINE_BREAK, TRAILING_WHITESPACE, WHITESPACE_WITHOUT_BREAK_BEFORE_CONTENT } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
@@ -242,7 +242,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let head = `@${atRule.name}${atRule.raws.afterName || ``}${syntax.read(atRule)}`
 
 			// With neither block nor semicolon an at-rule runs to its block's closing brace, and PostCSS puts everything in between into `raws.between`. Such a line is the block's, asked for the at-rule's own level whatever `except` and `ignore` say; measured with the params, `--fix` put a comment there a level deeper (#510). The tree is read as it stands, so a neighbour's semicolon moves the comment at once. The trailing whitespace is the run in front of the brace, `getBlockAfter`'s (#509)
-			let swallowedLines = !hasBlock(atRule) && isLastNodeWithoutSemicolon(atRule) ? (atRule.raws.between || ``).replace(TRAILING_WHITESPACE, ``) : ``
+			// Behind a Less mixin call's flag those lines are in `raws.important`, printed behind `raws.between` (#374); the flag's line is blanked, since it is measured behind a semicolon neither
+			let swallowedLines = !hasBlock(atRule) && isLastNodeWithoutSemicolon(atRule) ? `${atRule.raws.between || ``}${typeof atRule.raws.important === `string` ? atRule.raws.important.replace(LEADING_IMPORTANT_FLAG_LINE, (line) => ` `.repeat(line.length)) : ``}`.replace(TRAILING_WHITESPACE, ``) : ``
 
 			// `@nest` and `@at-root` params are selectors
 			let paramLevel = optionsMatches(secondaryOptions, `except`, `param`) || atRule.name === `nest` || atRule.name === `at-root` ? ruleLevel : ruleLevel + 1
@@ -447,7 +448,6 @@ type FixPosition = {
 function writeAtRuleIndentation (atRule: AtRule, fixPositions: FixPosition[], syntax: Syntax): void {
 	let atRuleAfterName = atRule.raws.afterName
 	let atRuleParams = syntax.read(atRule)
-	let atRuleBetween = atRule.raws.between
 
 	if (!isString(atRuleAfterName)) throw new TypeError(`The \`afterName\` property must be a string`)
 
@@ -467,11 +467,16 @@ function writeAtRuleIndentation (atRule: AtRule, fixPositions: FixPosition[], sy
 			syntax.write(atRule, atRuleParams)
 		}
 		else {
+			let atRuleBetween = atRule.raws.between
+
 			// Reached only behind a break the raw holds
 			if (!isString(atRuleBetween)) throw new TypeError(`The \`between\` property must be a string`)
 
-			atRuleBetween = replaceIndentation(atRuleBetween, fixPosition.currentIndentation, fixPosition.expectedIndentation, fixPosition.startIndex - paramsEndIndex)
-			atRule.raws.between = atRuleBetween
+			let betweenIndex = fixPosition.startIndex - paramsEndIndex
+
+			// A Less mixin call's flag and the lines behind it are printed behind `raws.between` (#374)
+			if (betweenIndex >= atRuleBetween.length && typeof atRule.raws.important === `string`) atRule.raws.important = replaceIndentation(atRule.raws.important, fixPosition.currentIndentation, fixPosition.expectedIndentation, betweenIndex - atRuleBetween.length)
+			else atRule.raws.between = replaceIndentation(atRuleBetween, fixPosition.currentIndentation, fixPosition.expectedIndentation, betweenIndex)
 		}
 	}
 }

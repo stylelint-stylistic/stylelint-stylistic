@@ -75,6 +75,7 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 			 */
 			function guarded (root: Root, result: PostcssResult): void {
 				if (syntax.accepts(root, result)) {
+					syntax.restore(root, result)
 					check(root, result)
 
 					return

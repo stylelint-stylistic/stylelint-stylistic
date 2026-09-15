@@ -14,7 +14,7 @@ const A_WRITTEN_CHARACTER = `;`
 /**
  * Returns the text a write behind a node follows.
  *
- * A declaration is its value and its `!important` raw, which may open with the break closing a `//` comment or, under `postcss-less`, be more of one. A bodiless at-rule ends with `raws.between`; a `//` comment runs to its line's end; a closing brace ends every comment.
+ * A declaration is its value and its `!important` raw, which may open with the break closing a `//` comment or, under `postcss-less`, be more of one. A bodiless at-rule ends with `raws.between`, a Less mixin call with its flag's raw behind it, which holds no `//` comment, since the parser keeps one behind the flag in the params; a `//` comment runs to its line's end; a closing brace ends every comment.
  * @param node - The comment, declaration or at-rule a write follows.
  * @returns That text.
  */

@@ -142,6 +142,9 @@ export const LEADING_ENCODING_DECLARATION = /^@charset "[^"]*";/u
 /** A leading hexadecimal escape with its one closing whitespace character; a Windows pair counts as one. */
 export const LEADING_HEX_ESCAPE = /^\\[\da-f]{1,6}(?:\r\n|[ \t\n\r\f])?/iu
 
+/** A Less mixin call's important flag opening its raw, spelled as `postcss-less` reads one (a bang, whitespace, the keyword in any case), with the rest of its line. */
+export const LEADING_IMPORTANT_FLAG_LINE = /^![ \t\n\r\f]*important[^\n]*/iu
+
 /** The leading indentation, captured, and the first content character. Both are read as the tokenizer reads them: a form feed or bare carriage return is indentation, and a line whose run held one went unmeasured ([#513](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/513)); a vertical tab, a no-break space or any other character `\s` spells beyond those five is content. */
 export const LEADING_INDENT_AND_CONTENT = /^([ \t\r\f]*)[^ \t\n\r\f]/u
 

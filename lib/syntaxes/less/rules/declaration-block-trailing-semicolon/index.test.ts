@@ -255,6 +255,23 @@ testRule({
 			column: 10,
 			message: messages.expected,
 		},
+		{
+			// See #374
+			description: `a mixin call carrying an important flag and closing a multi-line block, whose semicolon goes behind the flag with the space in front of the flag and the break in front of the brace left as they stand`,
+			code: `
+				a {
+					.m() !important
+				}
+			`,
+			fixed: `
+				a {
+					.m() !important;
+				}
+			`,
+			line: 2,
+			column: 16,
+			message: messages.expected,
+		},
 	],
 })
 testRule({
@@ -575,6 +592,23 @@ testRule({
 			fixed: `a { --x: !important }`,
 			line: 1,
 			column: 20,
+			message: messages.rejected,
+		},
+		{
+			// See #374
+			description: `a space between a mixin call's important flag and its semicolon, which the parser collects into the call's raw along with the space in front of the flag`,
+			code: `
+				a {
+					.m() !important ;
+				}
+			`,
+			fixed: `
+				a {
+					.m() !important
+				}
+			`,
+			line: 2,
+			column: 18,
 			message: messages.rejected,
 		},
 	],

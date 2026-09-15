@@ -96,6 +96,22 @@ testRule({
 			column: 6,
 			message: messages.rejectedBeforeMultiLine,
 		},
+		{
+			// See #374
+			description: `a line break between a mixin call's important flag and the closing brace, which the parser collects into the call's raw along with the space in front of the flag`,
+			code: `
+				a {
+					.m() !important
+				}
+			`,
+			fixed: `
+				a {
+					.m() !important}
+			`,
+			line: 2,
+			column: 17,
+			message: messages.rejectedBeforeMultiLine,
+		},
 	],
 })
 testRule({
@@ -117,6 +133,22 @@ testRule({
 			`,
 			line: 2,
 			column: 17,
+			message: messages.expectedBefore,
+		},
+		{
+			// See #374
+			description: `a closing brace right behind a mixin call's important flag, where the break this option writes stays behind the flag rather than moving in front of it on the next parse`,
+			code: `
+				a {
+					.m() !important}
+			`,
+			fixed: `
+				a {
+					.m() !important
+				}
+			`,
+			line: 2,
+			column: 16,
 			message: messages.expectedBefore,
 		},
 	],

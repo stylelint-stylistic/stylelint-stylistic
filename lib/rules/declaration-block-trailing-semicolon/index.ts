@@ -196,6 +196,15 @@ function takeTheTrailingSemicolonsAway (syntax: Syntax, node: AtRule | Declarati
 }
 
 /**
+ * The bodiless at-rule that swallowed what follows the node closing a block into `raws.between`, which leaves it no sibling; not behind a Less mixin call's flag, since the `less` namespace hands that run to the block wherever it finds the flag in the file ([#374](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/374)).
+ * @param node - The node closing the block.
+ * @returns The at-rule, or undefined.
+ */
+function swallowingAtRule (node: ChildNode): AtRule | undefined {
+	return isAtRule(node) && !node.next() && !node.raws.important ? node : undefined
+}
+
+/**
  * Asks whether the warning over a node can carry a fix.
  *
  * Under `always`, no for a node with a block (`postcss-scss` drops a Sass nested property's semicolon), where an inline comment ending the node would swallow the semicolon, and where the flag is that comment's text, which a break written in front of the semicolon would take out of it. Under `never`, no for the semicolon PostCSS writes regardless of the flag and the ones the syntax requires, which under Less are the semicolon behind a bodiless at-rule and the one behind a declaration it reads no value in. The warning then stands over code the fix leaves alone.
@@ -297,8 +306,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let problemIndex = trailingSemicolon ?? nodeString(node, result).trim().length - 1
 
 			if (message) {
-				// An unterminated bodiless at-rule swallows what follows into `raws.between`, so it has no sibling
-				let bodilessAtRule = isAtRule(node) && !node.next() ? node : undefined
+				let bodilessAtRule = swallowingAtRule(node)
 				// The whitespace before the closing brace is parsed into the at-rule, not the block
 				let between = typeof bodilessAtRule?.raws.between === `string` ? bodilessAtRule.raws.between : ``
 				let beforeWhitespace = between.replace(TRAILING_CSS_WHITESPACE, ``)
