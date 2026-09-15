@@ -63,6 +63,15 @@ testRule({
 
 	reject: [
 		{
+			// The value parser closes such an address on the string's parenthesis
+			description: `a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, which leaves the string inside the address alone`,
+			code: `a { b: url( a ")" b ) 1px; c: "d" }`,
+			fixed: `a { b: url( a ")" b ) 1px; c: 'd' }`,
+			line: 1,
+			column: 31,
+			message: messages.expected(`single`),
+		},
+		{
 			description: `an attribute value spelling a preprocessor construct, which is text rather than syntax`,
 			code: `[title=":extend(x)"] {}`,
 			fixed: `[title=':extend(x)'] {}`,

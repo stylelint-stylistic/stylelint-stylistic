@@ -8,6 +8,7 @@ import { declarationValueIndex } from "../../utils/declarationValueIndex/index.t
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { type GridColumn, type GridTableLine, gridTableLines, spansLinesOutsideRows } from "../../utils/gridTableLines/index.ts"
+import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isBoolean, isNumber } from "../../utils/validateTypes/index.ts"
 
@@ -162,7 +163,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let declarationValue = syntax.read(declaration)
 			let comments = syntax.commentSpans(declarationValue, declaration, result)
 			// Blanked, not stripped, so every parse index is an index of the value.
-			let parsedValue = valueParser(blankComments(declarationValue, comments))
+			let parsedValue = valueParser(hideParenthesesInUrlStrings(blankComments(declarationValue, comments), comments))
 			// A break inside a row is written over, so it is not counted (#402).
 			let isMultilineDeclaration = spansLinesOutsideRows(declarationValue, parsedValue.nodes)
 

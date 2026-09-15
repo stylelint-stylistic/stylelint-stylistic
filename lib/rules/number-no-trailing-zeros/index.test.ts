@@ -79,6 +79,15 @@ testRule({
 
 	reject: [
 		{
+			// The value parser closes such an address on the string's parenthesis
+			description: `a number inside a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, beside one of the value`,
+			code: `a { b: url( a ") 1.0" ) 1.0px; }`,
+			fixed: `a { b: url( a ") 1.0" ) 1px; }`,
+			line: 1,
+			column: 27,
+			message: messages.rejected,
+		},
+		{
 			description: `a single trailing zero`,
 			code: `a { padding: 1.0px; }`,
 			fixed: `a { padding: 1px; }`,

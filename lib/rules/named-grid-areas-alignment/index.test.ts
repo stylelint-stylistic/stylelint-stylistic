@@ -138,6 +138,17 @@ testRule({
 
 	reject: [
 		{
+			// The value parser closes such an address on the string's parenthesis
+			description: `rows around an address holding a string with a closing parenthesis, whose parenthesis the tokenizer's whitespace parts from it`,
+			code: `a { grid-template-areas: "a  b" url( a ")" b ) "c d"; }`,
+			fixed: `a { grid-template-areas: "a b" url( a ")" b ) "c d"; }`,
+			line: 1,
+			column: 26,
+			endLine: 1,
+			endColumn: 53,
+			message: messages.expected(`grid-template-areas`),
+		},
+		{
 			description: `columns that do not line up`,
 			code: `
 				a {

@@ -79,6 +79,15 @@ testRule({
 
 	reject: [
 		{
+			// The value parser closes such an address on the string's parenthesis
+			description: `a solidus inside a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, beside one of the value`,
+			code: `a { b: url( a ")/b" ) 1px/2px; }`,
+			fixed: `a { b: url( a ")/b" ) 1px/ 2px; }`,
+			line: 1,
+			column: 26,
+			message: messages.expectedAfter(),
+		},
+		{
 			description: `no space behind the solidus`,
 			code: `a { grid-area: 1/2; }`,
 			fixed: `a { grid-area: 1/ 2; }`,

@@ -520,6 +520,24 @@ testRule({
 
 	reject: [
 		{
+			// The value parser closes such an address on the string's parenthesis
+			description: `a call inside a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, beside one of the value`,
+			code: `a { b: url( a ") f( 1 )" ), f( 1 ); }`,
+			fixed: `a { b: url( a ") f( 1 )" ), f(1); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 31,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 33,
+					message: messages.rejectedClosing,
+				},
+			],
+		},
+		{
 			// See #533
 			description: `an address standing beside the call that names its format, which is spaced out while the address is left as the file spells it`,
 			code: `@font-face { src: url( "a.woff2" ) format( "woff2" ); }`,

@@ -32,7 +32,7 @@ const NAMES: Record<string, string> = {
 	backslashThenFormFeedInside: `u\\\frl`,
 }
 
-/** Bare, quoted, and either behind whitespace, each with characters a reader may misread; the two spellings a quotation mark and a parenthesis behind whitespace make are the divergence [#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557) closed, the three block comments behind whitespace the one [#660](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/660) closed, and the three comments holding a parenthesis in parentheses Sass reads as code the one [#661](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/661) closed; a parenthesis nothing closes, bare and inside a string, is what parts the writes [#533](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/533) refused from the writes it kept; `bareSlashStar` and `bareBlockComment` are their control, the same delimiters with no whitespace in front of them, except under `postcss-scss`, where Sass reads `bareBlockComment`'s parentheses as code. */
+/** Bare, quoted, and either behind whitespace, each with characters a reader may misread; the two spellings a quotation mark and a parenthesis behind whitespace make are the divergence [#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557) closed, the three block comments behind whitespace the one [#660](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/660) closed, and the three comments holding a parenthesis in parentheses Sass reads as code the one [#661](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/661) closed; a parenthesis nothing closes, bare and inside a string, is what parts the writes [#533](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/533) refused from the writes it kept; `bareSlashStar` and `bareBlockComment` are their control, the same delimiters with no whitespace in front of them, except under `postcss-scss`, where Sass reads `bareBlockComment`'s parentheses as code; the two strings holding a parenthesis behind whitespace are where `postcss-value-parser` closed the call inside the string, `bareStringHoldingParenthesis` their control. */
 const ADDRESSES: Record<string, string> = {
 	bareProtocol: `http://a/b.png`,
 	bareSlashStar: `a/*b.png`,
@@ -59,6 +59,9 @@ const ADDRESSES: Record<string, string> = {
 	bareBlockCommentHoldingParenthesis: `a /* ) / b */ `,
 	bareInlineCommentHoldingParenthesis: `a // ) , b\n`,
 	variableThenBlockComment: `$a /* ) */`,
+	spacedBareStringHoldingParenthesis: ` a ") / b , .5 1.0 #FFF 1PX f( 1 )" `,
+	spacedBareStringHoldingParenthesisThenComment: ` a ")" /* ) */ b `,
+	bareStringHoldingParenthesis: `a ") / b , .5 1.0 #FFF 1PX f( 1 )" `,
 	spacedBareProtocol: ` http://a/b.png `,
 	spacedQuotedProtocol: ` "http://a/b.png" `,
 	empty: ``,
@@ -85,13 +88,14 @@ const corpus: Sweep[`corpus`] = multiply({ place: keysOf(PLACES), name: NAMES, a
 	return wrap(`${spelledName}(${address})`)
 })
 
-/** Every rule reading the inline-comment guard, the four writers reading the comment spans that move over these forms, and `max-line-length` at a maximum on either side of these lines' width. */
+/** Every rule reading the inline-comment guard, the four writers reading the comment spans that move over these forms, the value-parser readers that wrote into a string holding a parenthesis, and `max-line-length` at a maximum on either side of these lines' width. */
 const configs: Sweep[`configs`] = ([
 	[`block-closing-brace-newline-before`, [`always`, `never-multi-line`]],
 	[`block-closing-brace-space-before`, [`always`, `never`]],
 	[`block-opening-brace-newline-after`, [`always`, `never-multi-line`]],
 	[`block-opening-brace-newline-before`, [`always`, `never-multi-line`]],
 	[`block-opening-brace-space-before`, [`always`, `never`]],
+	[`color-hex-case`, [`lower`, `upper`]],
 	[`declaration-bang-space-before`, [`always`, `never`]],
 	[`declaration-block-semicolon-newline-after`, [`always`, `never-multi-line`]],
 	[`declaration-block-semicolon-newline-before`, [`always`, `never-multi-line`]],
@@ -106,6 +110,9 @@ const configs: Sweep[`configs`] = ([
 	[`indentation`, [`tab`]],
 	[`media-feature-parentheses-space-inside`, [`always`, `never`]],
 	[`media-query-list-comma-space-before`, [`always`, `never`]],
+	[`number-leading-zero`, [`always`, `never`]],
+	[`number-no-trailing-zeros`, [true]],
+	[`string-quotes`, [`single`, `double`]],
 	[`unit-case`, [`lower`, `upper`]],
 	[`value-list-comma-newline-after`, [`always`, `never-multi-line`]],
 	[`value-list-comma-space-after`, [`always`, `never`]],

@@ -5,6 +5,7 @@ import type { PostcssResult } from "stylelint"
 import { isMathFunction } from "../../reference/functions.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blankComments } from "../blankComments/index.ts"
+import { hideParenthesesInUrlStrings } from "../hideParenthesesInUrlStrings/index.ts"
 import { matchesStringOrRegExp } from "../matchesStringOrRegExp/index.ts"
 import { opensAnAddress } from "../opensAnAddress/index.ts"
 
@@ -54,7 +55,8 @@ function bareAddressEnd (text: string, openIndex: number): number {
  */
 export function findSeparatorSlashes (text: string, syntax: Syntax, node: AtRule | Declaration, result: PostcssResult, options: SlashOptions): number[] {
 	let slashes: number[] = []
-	let blanked = blankComments(text, syntax.printedComments(node, text, result))
+	let comments = syntax.printedComments(node, text, result)
+	let blanked = hideParenthesesInUrlStrings(blankComments(text, comments), comments)
 
 	/**
 	 * Walks a list of nodes, into every call that is read.

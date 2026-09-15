@@ -9,6 +9,7 @@ import { declarationValueIndex } from "../../utils/declarationValueIndex/index.t
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -71,7 +72,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let comments = syntax.commentSpans(value, node, result)
 
 			// Quotation marks in comments are masked, so the parser pairs the rest as the file does (#508)
-			valueParser(hideQuotesInComments(value, comments)).walk((valueNode, at, siblings) => {
+			valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(value, comments), comments)).walk((valueNode, at, siblings) => {
 				// An address, not arguments; the name is read as CSS does, so `\75 rl(` counts
 				if (opensAnAddress(valueNode, at, siblings)) return false
 

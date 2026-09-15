@@ -107,6 +107,15 @@ testRule({
 
 	reject: [
 		{
+			// The value parser closes such an address on the string's parenthesis
+			description: `a comma inside a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, beside one of the call`,
+			code: `a { b: f(url( a ") , b" ), c); }`,
+			fixed: `a { b: f(url( a ") , b" ),\nc); }`,
+			line: 1,
+			column: 26,
+			message: messages.expectedAfter(),
+		},
+		{
 			description: `arguments abutting the comma`,
 			code: `a { transform: translate(1,1); }`,
 			fixed: `a { transform: translate(1,\n1); }`,

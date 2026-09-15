@@ -11,6 +11,7 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { type CommentSpan, findCommentSpanAt, findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
@@ -252,7 +253,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// A break this rule writes closes an open `//` comment, so the spans are found again before the next function
 			let areSpansStale = false
 			// Quotation marks a comment leaves open are masked so the parser pairs them as the file does (#508)
-			let parsedValue = valueParser(hideQuotesInComments(declValue, comments))
+			let parsedValue = valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(declValue, comments), comments))
 
 			// The value parser calls a vertical tab whitespace where the tokenizer calls it a word
 			splitSpaceNodesAtWords(parsedValue.nodes)

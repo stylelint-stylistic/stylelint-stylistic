@@ -8,6 +8,7 @@ import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findCommentSpanAt, findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
@@ -103,7 +104,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let edits: Edit[] = []
 
 			// Quotes in comments are masked (#508)
-			valueParser(hideQuotesInComments(params, comments)).walk((node) => {
+			valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(params, comments), comments)).walk((node) => {
 				// A comment's `(` is its own; an unclosed comment holds the rest of the query, so the walk goes on inside
 				if (findCommentSpanHolding(node, comments)) return
 

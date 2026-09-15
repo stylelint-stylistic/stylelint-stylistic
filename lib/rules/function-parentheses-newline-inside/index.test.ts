@@ -88,6 +88,24 @@ testRule({
 
 	reject: [
 		{
+			// The value parser closes such an address on the string's parenthesis
+			description: `a call inside a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, beside one of the value`,
+			code: `a { b: url( a ") f(1)" ), f(1); }`,
+			fixed: `a { b: url( a ") f(1)" ), f(\n1\n); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 29,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 29,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
 			// See #533
 			description: `a call standing beside a bare address, which gets the breaks while the address is left as the file spells it`,
 			code: `a { b: url(a) f(1); }`,

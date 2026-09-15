@@ -7,6 +7,7 @@ import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
 import { findCommentSpans } from "../findCommentSpans/index.ts"
 import { hideFalseInlineComments } from "../hideFalseInlineComments/index.ts"
+import { hideParenthesesInUrlStrings } from "../hideParenthesesInUrlStrings/index.ts"
 import { hideQuotesInComments } from "../hideQuotesInComments/index.ts"
 import { opensAnAddress } from "../opensAnAddress/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
@@ -48,7 +49,7 @@ export function functionCommaSpaceChecker (opts: {
 		// Edited by position rather than printed from the tree, which gives `/*/` back as `/**/`
 		let edits: Edit[] = []
 		// Masked so the parser pairs quotation marks as the file does (#508)
-		let parsedValue = valueParser(hideQuotesInComments(declValue, valueCommentSpans))
+		let parsedValue = valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(declValue, valueCommentSpans), valueCommentSpans))
 
 		parsedValue.walk((valueNode, at, siblings) => {
 			if (!isValueFunction(valueNode)) return

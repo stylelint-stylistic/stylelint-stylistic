@@ -79,6 +79,15 @@ testRule({
 
 	reject: [
 		{
+			// A comment behind such a string, which the walk for comments does not reach
+			description: `a solidus of the value behind an address holding a string with a closing parenthesis and a comment with another`,
+			code: `a { b: url( a ")" /* ) */ b ) 1px/2px; }`,
+			fixed: `a { b: url( a ")" /* ) */ b ) 1px /2px; }`,
+			line: 1,
+			column: 34,
+			message: messages.expectedBefore(),
+		},
+		{
 			// See #665
 			description: `a solidus standing in the text of a block comment whose own opening solidus a backslash stands in front of, beside one of a value`,
 			code: `a { b: 1/2 red \\/*x*/ 1px; }`,

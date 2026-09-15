@@ -60,6 +60,15 @@ testRule({
 
 	reject: [
 		{
+			// The value parser closes such an address on the string's parenthesis
+			description: `a color inside a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, beside one of the value`,
+			code: `a { b: url( a ")#FFF" ) #FFF; }`,
+			fixed: `a { b: url( a ")#FFF" ) #fff; }`,
+			line: 1,
+			column: 25,
+			message: messages.expected(`#FFF`, `#fff`),
+		},
+		{
 			description: `a capital letter in a colour of five digits, which is no valid length but is lowered all the same`,
 			code: `a { color: #Ababa; }`,
 			fixed: `a { color: #ababa; }`,

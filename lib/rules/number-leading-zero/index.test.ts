@@ -103,6 +103,15 @@ testRule({
 
 	reject: [
 		{
+			// The value parser closes such an address on the string's parenthesis
+			description: `a number inside a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, beside one of the value`,
+			code: `a { b: url( a ") .5" ) .5px; }`,
+			fixed: `a { b: url( a ") .5" ) 0.5px; }`,
+			line: 1,
+			column: 24,
+			message: messages.expected,
+		},
+		{
 			description: `a unitless fraction with no leading zero`,
 			code: `a { line-height: .5; }`,
 			fixed: `a { line-height: 0.5; }`,

@@ -8,6 +8,7 @@ import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isAtRule } from "../../utils/typeGuards/index.ts"
@@ -214,7 +215,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (hasValidQuotes || correctQuote === `'`) return
 			}
 
-			valueParser(blankComments(value, commentSpans)).walk((valueNode) => {
+			valueParser(hideParenthesesInUrlStrings(blankComments(value, commentSpans), commentSpans)).walk((valueNode) => {
 				if (valueNode.type === `string` && valueNode.quote === erroneousQuote) {
 					let needsEscape = valueNode.value.includes(correctQuote)
 

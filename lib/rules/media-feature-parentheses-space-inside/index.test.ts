@@ -45,6 +45,24 @@ testRule({
 
 	reject: [
 		{
+			// The value parser closes such an address on the string's parenthesis
+			description: `a feature holding an address with a string with a closing parenthesis, whose parenthesis the tokenizer's whitespace parts from it`,
+			code: `@media (c: url( a ")" b )) {}`,
+			fixed: `@media ( c: url( a ")" b ) ) {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 25,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
 			// See #347
 			description: `such a feature standing beside one the file does spell, whose parentheses are spaced out while the text of the comment is left as it stands`,
 			code: `@media (a: 1) and (b: 2 /*/ ) */ ) { a { b: c; } }`,

@@ -8,6 +8,7 @@ import { declarationValueIndex } from "../../utils/declarationValueIndex/index.t
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { type CommentSpan, findCommentSpanAt, findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
@@ -156,7 +157,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Both kinds: a `//` comment's text comes back as words and calls, a `/*/` comment closes on its own star (#378)
 			let comments = syntax.commentSpans(declValue, decl, result)
 			// Masks quotation marks a comment leaves open, so the parser pairs them right (#508)
-			let parsedValue = valueParser(hideQuotesInComments(declValue, comments))
+			let parsedValue = valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(declValue, comments), comments))
 
 			parsedValue.walk((valueNode, at, siblings) => {
 				if (valueNode.type !== `function`) return

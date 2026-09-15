@@ -14,6 +14,7 @@ import { findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
 import { findInterpolationSpanTouching } from "../../utils/findInterpolationSpans/index.ts"
 import { getDimension } from "../../utils/getDimension/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import { recaseAscii } from "../../utils/recaseAscii/index.ts"
@@ -169,7 +170,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			}
 
 			// Every quotation mark a comment leaves open is masked, so the parser pairs the marks as the file does (#508)
-			let parsed = valueParser(hideQuotesInComments(checkedValue, comments))
+			let parsed = valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(checkedValue, comments), comments))
 
 			// The parser breaks a word at the whitespace closing a hexadecimal escape, so `10px\9 2PX` came back as two; the words are welded back, one inside a comment onto nothing (#526)
 			weldEscapedWords(parsed.nodes, comments)
