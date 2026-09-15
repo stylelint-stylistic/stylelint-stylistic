@@ -286,6 +286,22 @@ testRule({
 				},
 			],
 		},
+		{
+			// See #739
+			description: `a long line behind a bare address holding a quotation mark, which is a character of the address and opens no string`,
+			code: `a { b: url(x'y) }\nc { d: eeeeeeeeeeeeeeeeeeee; }`,
+			line: 2,
+			column: 30,
+			message: messages.expected(20),
+		},
+		{
+			// See #739
+			description: `a long line behind a string ending in an escaped backslash, whose closing quotation mark no escape holds`,
+			code: `a { b: "a\\\\" }\nc { d: eeeeeeeeeeeeeeeeeeee; }`,
+			line: 2,
+			column: 30,
+			message: messages.expected(20),
+		},
 	],
 })
 

@@ -305,6 +305,15 @@ testRule({
 			column: 14,
 			message: messages.expected,
 		},
+		{
+			// See #739
+			description: `a call behind a bare address holding a quotation mark, which is a character of the address and opens no string`,
+			code: `a { b: url(x'y) c(d)e; }`,
+			fixed: `a { b: url(x'y) c(d) e; }`,
+			line: 1,
+			column: 21,
+			message: messages.expected,
+		},
 	],
 })
 
@@ -576,6 +585,15 @@ testRule({
 			fixed: `a { b: url(x)-.5px; }`,
 			line: 1,
 			column: 14,
+			message: messages.rejected,
+		},
+		{
+			// See #739
+			description: `whitespace behind a call and in front of a string, which is no run in front of the sum behind the string`,
+			code: `a { b: c(d) "x" - e; }`,
+			fixed: `a { b: c(d)"x" - e; }`,
+			line: 1,
+			column: 12,
 			message: messages.rejected,
 		},
 	],

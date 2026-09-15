@@ -234,6 +234,15 @@ testRule({
 				},
 			],
 		},
+		{
+			// See #739
+			description: `a colon behind a string ending in an escaped backslash, whose closing quotation mark no escape holds`,
+			code: `@media (a: "b\\\\") and (c:d) { a { b: c; } }`,
+			fixed: `@media (a: "b\\\\") and (c: d) { a { b: c; } }`,
+			line: 1,
+			column: 25,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 

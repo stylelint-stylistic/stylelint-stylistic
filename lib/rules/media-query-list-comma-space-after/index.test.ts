@@ -169,6 +169,15 @@ testRule({
 			column: 40,
 			message: messages.expectedAfter(),
 		},
+		{
+			// See #739
+			description: `a comma behind a string ending in an escaped backslash, whose closing quotation mark no escape holds`,
+			code: `@media (a: "b\\\\"),print { a { b: c; } }`,
+			fixed: `@media (a: "b\\\\"), print { a { b: c; } }`,
+			line: 1,
+			column: 18,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 

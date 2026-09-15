@@ -70,7 +70,7 @@ const DEBT: Record<string, string[]> = {
 		`let rewrittenLineBreakIndex = rewritten.indexOf(\`\\n\`, rewrittenIndex)`,
 	],
 	"lib/rules/max-line-length/index.ts": [
-		`styleSearch({ source: rootString, target: [\`\\n\`], comments: \`check\` }, (match) => checkNewline(match))`,
+		`styleSearch({ source: maskStrings(rootString, syntax.commentSpans(rootString, root, result)), target: [\`\\n\`], comments: \`check\` }, (match) => checkNewline(match))`,
 		`let nextNewlineIndex = rootString.indexOf(\`\\n\`, match.endIndex)`,
 		`if (rootString[nextNewlineIndex - 1] === \`\\r\`) nextNewlineIndex -= 1`,
 	],

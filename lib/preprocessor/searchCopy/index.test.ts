@@ -39,6 +39,11 @@ describe(`searchCopy`, () => {
 		expect(searchCopy(`myurl(//a)red`, cssDecl(`a { b: myurl(//a)red }`), CSS_RESULT).commentSpans).toEqual([])
 	})
 
+	// See #739
+	it(`a string and a quotation mark inside a bare address are masked, so the search opens no string of its own reading`, () => {
+		expect(searchCopy(`url(x'y),"a\\\\",b`, cssDecl(`a { b: url(x'y),"a\\\\",b }`), CSS_RESULT).searchString).toBe(`url(x?y),?????,b`)
+	})
+
 	it(`the copy is as long as the text it was made of, so every position stands where it did`, () => {
 		for (let text of [`myurl(//a)red`, `1px/*x*//*y*/2px`, `1px//*c*/2px`]) {
 			expect(searchCopy(text, cssDecl(`a { b: ${text} }`), CSS_RESULT).searchString).toHaveLength(text.length)

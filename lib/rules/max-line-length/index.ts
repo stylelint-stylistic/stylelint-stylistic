@@ -6,6 +6,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findAddressSpans } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { maskStrings } from "../../utils/maskStrings/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isNumber, isRegExp, isString } from "../../utils/validateTypes/index.ts"
@@ -110,7 +111,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		// Check first line
 		checkNewline({ endIndex: 0 })
 		// Check subsequent lines
-		styleSearch({ source: rootString, target: [`\n`], comments: `check` }, (match) => checkNewline(match))
+		// The search reads a string by rules of its own, so it is handed none (#739)
+		styleSearch({ source: maskStrings(rootString, syntax.commentSpans(rootString, root, result)), target: [`\n`], comments: `check` }, (match) => checkNewline(match))
 
 		/**
 		 * Reports a line over the limit.

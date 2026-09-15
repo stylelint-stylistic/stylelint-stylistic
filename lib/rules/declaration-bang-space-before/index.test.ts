@@ -222,6 +222,15 @@ testRule({
 				},
 			],
 		},
+		{
+			// See #739
+			description: `a bang behind a bare address holding a quotation mark and a string ending in an escaped backslash, neither of which hides it`,
+			code: `a { b: url(x'y), "c\\\\"!important; }`,
+			fixed: `a { b: url(x'y), "c\\\\" !important; }`,
+			line: 1,
+			column: 23,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 

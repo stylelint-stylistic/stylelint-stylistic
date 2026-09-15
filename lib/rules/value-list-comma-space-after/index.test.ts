@@ -202,6 +202,24 @@ testRule({
 			column: 12,
 			message: messages.expectedAfter(),
 		},
+		{
+			// See #739
+			description: `a comma behind a bare address holding a quotation mark, which is a character of the address and opens no string`,
+			code: `a { b: url(x'y),c; }`,
+			fixed: `a { b: url(x'y), c; }`,
+			line: 1,
+			column: 16,
+			message: messages.expectedAfter(),
+		},
+		{
+			// See #739
+			description: `a comma behind a string ending in an escaped backslash, whose closing quotation mark no escape holds`,
+			code: `a { b: "a\\\\",c; }`,
+			fixed: `a { b: "a\\\\", c; }`,
+			line: 1,
+			column: 13,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 

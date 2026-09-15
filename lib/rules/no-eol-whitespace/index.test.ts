@@ -640,6 +640,24 @@ testRule({
 				},
 			],
 		},
+		{
+			// See #739
+			description: `trailing whitespace behind a bare address holding a quotation mark, which is a character of the address and opens no string`,
+			code: `a { b: url(x'y) }\nc {}  \nd {}`,
+			fixed: `a { b: url(x'y) }\nc {}\nd {}`,
+			line: 2,
+			column: 6,
+			message: messages.rejected,
+		},
+		{
+			// See #739
+			description: `trailing whitespace behind a string ending in an escaped backslash, whose closing quotation mark no escape holds`,
+			code: `a { b: "a\\\\" }\nc {}  \nd {}`,
+			fixed: `a { b: "a\\\\" }\nc {}\nd {}`,
+			line: 2,
+			column: 6,
+			message: messages.rejected,
+		},
 	],
 })
 

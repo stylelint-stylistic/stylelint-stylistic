@@ -6,6 +6,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isOnlyWhitespace } from "../../utils/isOnlyWhitespace/index.ts"
+import { maskStrings } from "../../utils/maskStrings/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
@@ -186,7 +187,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			styleSearch(
 				{
-					source: string,
+					// The search reads a string by rules of its own, so it is handed none (#739)
+					source: maskStrings(string, syntax.commentSpans(string, root, result)),
 					target: LINE_BREAK_CHARACTERS,
 					comments: `check`,
 				},
