@@ -181,6 +181,15 @@ testRule({
 				},
 			],
 		},
+		{
+			// Pins the address spans the bang checker passes over
+			description: `no space behind the flag standing behind a bare address holding a bang, which is a character of the address`,
+			code: `a { b: url(x!y) !important; }`,
+			fixed: `a { b: url(x!y) ! important; }`,
+			line: 1,
+			column: 17,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
@@ -208,6 +217,11 @@ testRule({
 		{
 			description: `the same break spelled with a carriage return`,
 			code: `a { color: pink\r\n!important; }`,
+		},
+		{
+			// Pins the address spans the bang checker passes over
+			description: `a bang with a space behind it inside a bare address, whose space is the address's`,
+			code: `a { b: url(x! y) !important; }`,
 		},
 	],
 

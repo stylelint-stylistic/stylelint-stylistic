@@ -40,6 +40,11 @@ testRule({
 			description: `the flag standing behind a bare address, whose double slash opens no comment`,
 			code: `a { b: url(http://x) !important; }`,
 		},
+		{
+			// Pins the address spans the bang checker passes over
+			description: `a bang inside a bare address, which spells no flag`,
+			code: `a { b: url(x!y) !important; }`,
+		},
 	],
 
 	reject: [
@@ -231,6 +236,15 @@ testRule({
 			column: 23,
 			message: messages.expectedBefore(),
 		},
+		{
+			// Pins that only an address is passed over, not the parentheses of any call
+			description: `a bang inside the parentheses of an ordinary call, which are code`,
+			code: `a { b: c(x!y) !important; }`,
+			fixed: `a { b: c(x !y) !important; }`,
+			line: 1,
+			column: 11,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 
@@ -392,6 +406,15 @@ testRule({
 					message: messages.rejectedBefore(),
 				},
 			],
+		},
+		{
+			// Pins the address spans the bang checker passes over
+			description: `a space in front of the flag behind a bare address holding a spaced bang, whose space is the address's`,
+			code: `a { b: url(x !y) !important; }`,
+			fixed: `a { b: url(x !y)!important; }`,
+			line: 1,
+			column: 18,
+			message: messages.rejectedBefore(),
 		},
 	],
 })

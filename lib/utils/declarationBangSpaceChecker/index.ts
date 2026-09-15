@@ -6,6 +6,7 @@ import type { Syntax } from "../../syntaxes/index.ts"
 import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import { declarationString } from "../declarationString/index.ts"
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
+import { findAddressSpans, findCommentSpanAt } from "../findCommentSpans/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -73,6 +74,8 @@ export function declarationBangSpaceChecker (opts: {
 
 		if (!valueString.includes(`!`)) return
 
+		// `searchCopy` leaves a bare address code, and a bang there is a character of the address
+		let addresses = findAddressSpans(declString, opts.syntax.inlineComments(decl, opts.result))
 		let between = decl.raws.between || `:`
 		let value = opts.syntax.read(decl)
 
@@ -87,6 +90,8 @@ export function declarationBangSpaceChecker (opts: {
 
 		styleSearch({ source: valueString, target: `!` }, (match) => {
 			let index = match.startIndex + indexOffset
+
+			if (findCommentSpanAt(index, addresses)) return
 
 			// A rule may know the fix would break the code
 			let isFixable = fix && (!opts.isFixable || opts.isFixable(decl, index))
