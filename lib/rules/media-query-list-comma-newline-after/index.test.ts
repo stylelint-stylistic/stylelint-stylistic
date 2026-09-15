@@ -591,3 +591,22 @@ testRule({
 		},
 	],
 })
+
+// The space twin writes the run behind the comma too, and the library lists it behind this rule, so its write would be the file's last (#704)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/media-query-list-comma-space-after": `always` },
+
+	reject: [
+		{
+			// See #704
+			description: `a space behind the comma, which the twin behind this rule accepts and would take the break back from, so the warning stands and nothing is written`,
+			code: `@media (a), (b) {}`,
+			fixed: `@media (a), (b) {}`,
+			line: 1,
+			column: 11,
+			message: messages.expectedAfter(),
+		},
+	],
+})

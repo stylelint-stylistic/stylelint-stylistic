@@ -73,6 +73,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.beforeAllowingIndentation,
 			checkedRuleName: ruleName,
+			shortName,
 			fixPosition: `before`,
 			ignoreFunctions: secondaryOptions?.ignoreFunctions,
 			fix: (div, index, functionNode) => functionCommaSpaceFix({

@@ -343,3 +343,30 @@ testRule({
 		},
 	],
 })
+
+// The space twin writes the run behind the comma too, and the library lists it behind this rule, so its write would be the file's last (#704)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/value-list-comma-space-after": `always` },
+
+	reject: [
+		{
+			// See #704
+			description: `a space behind the comma, which the twin behind this rule accepts and would take the break back from, so the warning stands and nothing is written`,
+			code: `a { b: c, d }`,
+			fixed: `a { b: c, d }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a comment behind the comma, past which this rule reads while the twin does not, so the two contend for nothing and the break is written`,
+			code: `a { b: c, /* e */ d }`,
+			fixed: `a { b: c, /* e */\n d }`,
+			line: 1,
+			column: 17,
+			message: messages.expectedAfter(),
+		},
+	],
+})

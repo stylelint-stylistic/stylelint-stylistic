@@ -8,6 +8,7 @@ import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { runBehind, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -55,6 +56,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let { selector } = copies
 
 			let fixIndices: number[] = []
+			let checks: { commaIndex: number, checkIndex: number }[] = []
 
 			styleSearch(
 				{
@@ -69,35 +71,46 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					if (WHITESPACE_THEN_INLINE_COMMENT.test(nextChars)) return
 
 					// Behind spaces and a block comment, look after the comment
-					let indextoCheckAfter = WHITESPACE_THEN_BLOCK_COMMENT.test(nextChars) ? selector.indexOf(`*/`, match.endIndex) + 1 : match.startIndex
-
-					checker.afterOneOnly({
-						source: selector,
-						index: indextoCheckAfter,
-						err: (m) => {
-							// A `never` fix may take the break closing an inline comment: reported unfixed. The `always` options take nothing
-							let fixIndex = indextoCheckAfter + 1
-							let runEnd = fixIndex + (selector.slice(fixIndex).length - selector.slice(fixIndex).trimStart().length)
-							let closesInlineComment = primary.startsWith(`never`) && copies.comments.some((inlineComment) => fixIndex <= inlineComment.endIndex && inlineComment.endIndex < runEnd)
-							let sourceIndex = copies.toSourceIndex(match.startIndex)
-
-							report({
-								message: m,
-								node: ruleNode,
-								index: sourceIndex,
-								endIndex: sourceIndex,
-								result,
-								ruleName,
-								...(!closesInlineComment && {
-									fix: (): void => {
-										fixIndices.push(fixIndex)
-									},
-								}),
-							})
-						},
-					})
+					checks.push({ commaIndex: match.startIndex, checkIndex: WHITESPACE_THEN_BLOCK_COMMENT.test(nextChars) ? selector.indexOf(`*/`, match.endIndex) + 1 : match.startIndex })
 				},
 			)
+
+			for (let { commaIndex, checkIndex } of checks) {
+				checker.afterOneOnly({
+					source: selector,
+					index: checkIndex,
+					err: (m) => {
+						// A `never` fix may take the break closing an inline comment: reported unfixed. The `always` options take nothing
+						let fixIndex = checkIndex + 1
+						let runEnd = fixIndex + (selector.slice(fixIndex).length - selector.slice(fixIndex).trimStart().length)
+						let closesInlineComment = primary.startsWith(`never`) && copies.comments.some((inlineComment) => fixIndex <= inlineComment.endIndex && inlineComment.endIndex < runEnd)
+						let sourceIndex = copies.toSourceIndex(commaIndex)
+						// The space twin reads the run right behind the comma, so it writes this one too where no comment moved the check (#704)
+						let isFixable = !closesInlineComment && writesTwinRun(shortName, ruleName, ruleNode, result, {
+							side: `after`,
+							run: runBehind(selector, checkIndex),
+							lineText: selector,
+							runs: () => checks.map((each) => runBehind(selector, each.checkIndex)),
+							line: ruleNode.rangeBy({ index: sourceIndex }).start.line,
+							twinWrites: () => checkIndex === commaIndex,
+						})
+
+						report({
+							message: m,
+							node: ruleNode,
+							index: sourceIndex,
+							endIndex: sourceIndex,
+							result,
+							ruleName,
+							...(isFixable && {
+								fix: (): void => {
+									fixIndices.push(fixIndex)
+								},
+							}),
+						})
+					},
+				})
+			}
 
 			if (fixIndices.length > 0) {
 				let fixedSelector = selector

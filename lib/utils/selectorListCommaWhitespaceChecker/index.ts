@@ -31,8 +31,8 @@ export interface SelectorListCommaWhitespaceCheckerOptions {
 	/** The fix. */
 	fix?: ((rule: Rule, index: number) => void),
 
-	/** Whether a problem can be fixed, since Stylelint counts a fixer as applied whatever it does. */
-	isFixable?: ((selector: string, index: number, inlineComments: InlineComment[]) => boolean),
+	/** Whether a problem can be fixed, since Stylelint counts a fixer as applied whatever it does; the rule, the comma's index in its source and every comma of the list come along. */
+	isFixable?: ((selector: string, index: number, inlineComments: InlineComment[], rule: Rule, sourceIndex: number, commaIndices: number[]) => boolean),
 }
 
 /**
@@ -48,6 +48,8 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 		let copies = opts.syntax.selectorCopies(rule)
 		let { selector } = copies
 
+		let commaIndices: number[] = []
+
 		styleSearch(
 			{
 				source: selector,
@@ -55,9 +57,11 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 				functionArguments: `skip`,
 			},
 			(match) => {
-				checkDelimiter(selector, match.startIndex, rule, copies)
+				commaIndices.push(match.startIndex)
 			},
 		)
+
+		for (let index of commaIndices) checkDelimiter(selector, index, rule, copies, commaIndices)
 	})
 
 	/**
@@ -66,15 +70,16 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 	 * @param index - The delimiter's index.
 	 * @param node - The rule the warning is reported on.
 	 * @param copies - The selector, opened by the syntax.
+	 * @param commaIndices - Every comma of the list.
 	 */
-	function checkDelimiter (source: string, index: number, node: Rule, copies: SelectorCopies): void {
+	function checkDelimiter (source: string, index: number, node: Rule, copies: SelectorCopies, commaIndices: number[]): void {
 		opts.locationChecker({
 			source,
 			index,
 			err: (message) => {
-				// Before the report, since Stylelint counts a fixer as applied whatever it does
-				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, copies.comments))
 				let sourceIndex = copies.toSourceIndex(index)
+				// Before the report, since Stylelint counts a fixer as applied whatever it does
+				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, copies.comments, node, sourceIndex, commaIndices))
 
 				report({
 					message,

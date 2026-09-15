@@ -733,3 +733,40 @@ testRule({
 		},
 	],
 })
+
+// The space twin writes the run behind the comma too, and the library lists it behind this rule, so its write would be the file's last (#704)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/function-comma-space-after": `always` },
+
+	reject: [
+		{
+			// See #704
+			description: `a space behind the comma, which the twin behind this rule accepts and would take the break back from, so the warning stands and nothing is written`,
+			code: `a { b: f(1, 2) }`,
+			fixed: `a { b: f(1, 2) }`,
+			line: 1,
+			column: 11,
+			message: messages.expectedAfter(),
+		},
+	],
+})
+
+// A call the twin's option passes over, itself or around the call, is one it writes nothing in
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/function-comma-space-after": [`always`, { ignoreFunctions: [`g`] }] },
+
+	reject: [
+		{
+			description: `a space behind the comma of a call nested in one the twin passes over, so the break is written`,
+			code: `a { b: g(f(1, 2)) }`,
+			fixed: `a { b: g(f(1,\n2)) }`,
+			line: 1,
+			column: 13,
+			message: messages.expectedAfter(),
+		},
+	],
+})

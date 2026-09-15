@@ -10,6 +10,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { valueListCommaWhitespaceChecker } from "../../utils/valueListCommaWhitespaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { runBehind, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -58,7 +59,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.afterOneOnly,
 			checkedRuleName: ruleName,
 			// Declined here, since Stylelint counts a fixer as applied whatever it does: a comma in the property name is out of reach, one opening the value is not.
-			isFixable: (declNode, index) => index >= declarationValueIndex(declNode),
+			isFixable: (declNode, index, declString, indices) => index >= declarationValueIndex(declNode) && writesTwinRun(shortName, ruleName, declNode, result, {
+				side: `after`,
+				run: runBehind(declString, index),
+				lineText: declString,
+				runs: () => indices.map((each) => runBehind(declString, each)),
+				line: declNode.rangeBy({ index }).start.line,
+				// The space twin reads the run right behind the comma, which is this one where no comment moved the check (#704)
+				twinWrites: () => declString[index] === `,`,
+			}),
 			fix: (declNode, index) => {
 				fixData = fixData || (new Map())
 

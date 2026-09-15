@@ -508,3 +508,30 @@ testRule({
 		},
 	],
 })
+
+// The break twin writes the run behind the comma too, and the library lists it behind this rule, so its write would be the file's last (#704)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/media-query-list-comma-newline-after": `always` },
+
+	reject: [
+		{
+			// See #704
+			description: `a break behind the comma, which the twin behind this rule accepts and would put back, so the warning stands and nothing is written`,
+			code: `@media (a),\n(b) {}`,
+			fixed: `@media (a),\n(b) {}`,
+			line: 1,
+			column: 11,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `two spaces in front of a comment behind the comma, past which the twin reads, so the two contend for nothing and the space is written`,
+			code: `@media (a),  /* c */\n(b) {}`,
+			fixed: `@media (a), /* c */\n(b) {}`,
+			line: 1,
+			column: 11,
+			message: messages.expectedAfter(),
+		},
+	],
+})

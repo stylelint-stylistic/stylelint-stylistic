@@ -31,8 +31,8 @@ export interface ValueListCommaWhitespaceCheckerOptions {
 	/** Fixes the comma at an index. */
 	fix?: ((node: Declaration, index: number) => void),
 
-	/** Whether a problem can be fixed; the printed declaration comes along. */
-	isFixable?: ((node: Declaration, index: number, declString: string) => boolean),
+	/** Whether a problem can be fixed; the printed declaration and the index of every comma checked in it come along. */
+	isFixable?: ((node: Declaration, index: number, declString: string, indices: number[]) => boolean),
 
 	/** Moves the index a comma is checked at, or refuses it with `false`. */
 	determineIndex?: ((declString: string, match: StyleSearchMatch) => number | false),
@@ -51,6 +51,8 @@ export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceC
 		let declString = declarationString(opts.syntax, decl)
 		let { searchString } = opts.syntax.searchCopy(declString, decl, opts.result)
 
+		let indices: number[] = []
+
 		styleSearch(
 			{
 				source: searchString,
@@ -62,9 +64,11 @@ export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceC
 
 				if (indexToCheckAfter === false) return
 
-				checkComma(declString, indexToCheckAfter, decl)
+				indices.push(indexToCheckAfter)
 			},
 		)
+
+		for (let index of indices) checkComma(declString, index, decl, indices)
 	})
 
 	/**
@@ -72,14 +76,15 @@ export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceC
 	 * @param source - The declaration text.
 	 * @param index - The comma's index.
 	 * @param node - The declaration.
+	 * @param indices - The index of every comma checked in it.
 	 */
-	function checkComma (source: string, index: number, node: Declaration): void {
+	function checkComma (source: string, index: number, node: Declaration, indices: number[]): void {
 		opts.locationChecker({
 			source,
 			index,
 			err: (message) => {
 				// Stylelint counts a fixer as applied whatever it does, so the decision is made before the report; here, not before the check, so a clean declaration is not read once per comma.
-				let isFixable = fix && (!opts.isFixable || opts.isFixable(node, index, source))
+				let isFixable = fix && (!opts.isFixable || opts.isFixable(node, index, source, indices))
 
 				report({
 					message,

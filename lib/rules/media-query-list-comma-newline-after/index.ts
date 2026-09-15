@@ -10,6 +10,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { mediaQueryListCommaWhitespaceChecker } from "../../utils/mediaQueryListCommaWhitespaceChecker/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { runBehind, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -59,6 +60,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.afterOneOnly,
 			checkedRuleName: ruleName,
 			allowTrailingComments: primary.startsWith(`always`),
+			// The space twin reads the run right behind the comma, which is this one where no comment moved the check (#704)
+			isFixable: (params, index, atRule, commas) => writesTwinRun(shortName, ruleName, atRule, result, {
+				side: `after`,
+				run: runBehind(params, index),
+				lineText: params,
+				runs: () => commas.map(({ comma, pastComments }) => runBehind(params, primary.startsWith(`always`) ? pastComments : comma)),
+				line: atRule.rangeBy({ index: index + atRuleParamIndex(atRule) }).start.line,
+				twinWrites: () => params[index] === `,`,
+			}),
 			fix: (atRule, index) => {
 				let paramCommaIndex = index - atRuleParamIndex(atRule)
 

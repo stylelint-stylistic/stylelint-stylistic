@@ -1,13 +1,14 @@
 import type { Rule } from "postcss"
 import stylelint from "stylelint"
 
-import { LEADING_CSS_WHITESPACE } from "../../regexps.ts"
+import { LEADING_CSS_WHITESPACE, WHITESPACE_THEN_BLOCK_COMMENT, WHITESPACE_THEN_INLINE_COMMENT } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { selectorListCommaWhitespaceChecker } from "../../utils/selectorListCommaWhitespaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { runBehind, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -56,6 +57,20 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.after,
 			checkedRuleName: ruleName,
+			// The break twin reads the same run unless a comment behind whitespace moves that check, which a write taking the whitespace away undoes (#704)
+			isFixable: (selector, index, _inlineComments, ruleNode, sourceIndex, commaIndices) => {
+				let run = runBehind(selector, index)
+				let behindRun = selector.slice(index + 1 + run.length)
+
+				return writesTwinRun(shortName, ruleName, ruleNode, result, {
+					side: `after`,
+					run,
+					lineText: selector,
+					runs: () => commaIndices.map((each) => runBehind(selector, each)),
+					line: ruleNode.rangeBy({ index: sourceIndex }).start.line,
+					twinWrites: (_option, _secondary, over) => !WHITESPACE_THEN_INLINE_COMMENT.test(over + behindRun) && !WHITESPACE_THEN_BLOCK_COMMENT.test(over + behindRun),
+				})
+			},
 			fix: (ruleNode, index) => {
 				fixData = fixData || (new Map())
 

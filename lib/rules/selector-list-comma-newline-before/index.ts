@@ -9,6 +9,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { selectorListCommaWhitespaceChecker } from "../../utils/selectorListCommaWhitespaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { runInFront, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -57,12 +58,21 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.beforeAllowingIndentation,
 			checkedRuleName: ruleName,
 			// `never-multi-line` may take away the break closing a `//` comment and put the comma into it; report and leave the code. `always` only adds a break.
-			isFixable: (selector, index, inlineComments) => {
-				if (primary !== `never-multi-line`) return true
-
+			isFixable: (selector, index, inlineComments, ruleNode, sourceIndex, commaIndices) => {
 				let runStart = selector.slice(0, index).trimEnd().length
+				let closesInlineComment = inlineComments.some((inlineComment) => runStart <= inlineComment.endIndex && inlineComment.endIndex < index)
 
-				return !inlineComments.some((inlineComment) => runStart <= inlineComment.endIndex && inlineComment.endIndex < index)
+				if (primary === `never-multi-line` && closesInlineComment) return false
+
+				// The space twin writes the same run, save over a comment's closing break (#704)
+				return writesTwinRun(shortName, ruleName, ruleNode, result, {
+					side: `before`,
+					run: runInFront(selector, index),
+					lineText: selector,
+					runs: () => commaIndices.map((each) => runInFront(selector, each)),
+					line: ruleNode.rangeBy({ index: sourceIndex }).start.line,
+					twinWrites: () => !closesInlineComment,
+				})
 			},
 			fix: (ruleNode, index) => {
 				fixData = fixData || (new Map())
