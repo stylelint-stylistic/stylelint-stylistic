@@ -4,10 +4,10 @@ import { describe, expect, it } from "vitest"
 import { findAddressSpans, findCommentSpanAt, findCommentSpanHolding, findCommentSpans, findCommentSpanTouching, findStringSpans } from "./index.ts"
 
 /** Plain CSS, which spells no `//` comment. */
-const PLAIN_CSS = { spells: false, tokenizes: false }
+const PLAIN_CSS = { spells: false, tokenizes: false, endsOnFormFeed: false }
 
 /** `postcss-scss`, whose own tokenizer reads a `//` comment, so the parentheses of an address are read as Sass reads them. */
-const SCSS = { spells: true, tokenizes: true }
+const SCSS = { spells: true, tokenizes: true, endsOnFormFeed: true }
 
 describe(`findCommentSpans`, () => {
 	it(`no comment`, () => {
@@ -248,6 +248,11 @@ describe(`findCommentSpans`, () => {
 	it(`a bare carriage return closing the comment, as Less and Sass read one, and a form feed inside it, which Less reads as its text`, () => {
 		expect(findCommentSpans(`1px // c\r2px`)).toEqual([{ start: 4, end: 8, isInline: true }])
 		expect(findCommentSpans(`1px // c\f2px`)).toEqual([{ start: 4, end: 12, isInline: true }])
+	})
+
+	it(`the same form feed under the syntax that closes a comment on one, which leaves what stands behind it code`, () => {
+		expect(findCommentSpans(`1px // c\f2px`, SCSS)).toEqual([{ start: 4, end: 8, isInline: true }])
+		expect(findCommentSpans(`1px // c\f2px // d`, SCSS)).toEqual([{ start: 4, end: 8, isInline: true }, { start: 13, end: 17, isInline: true }])
 	})
 
 	it(`a syntax spelling no comment with a double slash has none of that kind to find`, () => {

@@ -207,7 +207,7 @@ function breakStart (text: string, lineFeedIndex: number): number {
  */
 function searchOptions (text: string, comments: CommentSpan[]): Parameters<typeof styleSearch>[0] {
 	return {
-		source: blankComments(text, findStringSpans(blankComments(text, comments), { spells: false, tokenizes: false })),
+		source: blankComments(text, findStringSpans(blankComments(text, comments), { spells: false, tokenizes: false, endsOnFormFeed: false })),
 		// A line feed is a break whatever stands in front of it, so a run spelling its breaks both ways is one run, as PostCSS counts it (#586)
 		target: `\n`,
 		comments: `check`,

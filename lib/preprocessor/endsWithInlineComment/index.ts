@@ -1,4 +1,4 @@
-import { IDENTIFIER_CODE_POINT, INLINE_COMMENT_BREAK } from "../../regexps.ts"
+import { IDENTIFIER_CODE_POINT, INLINE_COMMENT_BREAK, INLINE_COMMENT_BREAK_OR_FORM_FEED } from "../../regexps.ts"
 import { namesAnAddress } from "../../utils/namesAnAddress/index.ts"
 import { readAddress } from "../../utils/readAddress/index.ts"
 import { readEscapedCharacter } from "../../utils/readEscapedCharacter/index.ts"
@@ -16,11 +16,12 @@ export type Scan = {
  * Reads one character of a `//` comment.
  * @param text - The raw scanned, standing inside a `//` comment.
  * @param scan - The scan, moved on.
+ * @param reading - The syntax's reading, which says whether a form feed closes the comment.
  */
-function readInsideInlineComment (text: string, scan: Scan): void {
+function readInsideInlineComment (text: string, scan: Scan, reading: InlineCommentReading): void {
 	let char = text.charAt(scan.index)
 
-	if (INLINE_COMMENT_BREAK.test(char)) {
+	if ((reading.endsOnFormFeed ? INLINE_COMMENT_BREAK_OR_FORM_FEED : INLINE_COMMENT_BREAK).test(char)) {
 		scan.state = `code`
 		scan.wordStart = scan.index + 1
 	}
@@ -110,7 +111,7 @@ const READ_INSIDE = {
 }
 
 /** The default reading: a syntax that spells such a comment. */
-const NOTHING_SAID = { spells: true, keeps: false, answered: false, tokenizes: false }
+const NOTHING_SAID = { spells: true, keeps: false, answered: false, tokenizes: false, endsOnFormFeed: false }
 
 /**
  * Scans a text to its end.
@@ -133,7 +134,7 @@ function scanEndsInsideInlineComment (text: string, reading: InlineCommentReadin
 /**
  * Asks whether a raw ends inside a `//` comment, where a fixer writing behind it would write.
  *
- * Scanned rather than matched: the `//` in `url(http://example.com)` or `"//"` opens nothing, and `url` is {@link namesAnAddress}'s reading ([#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427)). A syntax spelling no such comment ends `1px//c` in code; the caller says which. {@link INLINE_COMMENT_BREAK} closes the comment, a bare carriage return included; a form feed is its text.
+ * Scanned rather than matched: the `//` in `url(http://example.com)` or `"//"` opens nothing, and `url` is {@link namesAnAddress}'s reading ([#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427)). A syntax spelling no such comment ends `1px//c` in code; the caller says which. {@link INLINE_COMMENT_BREAK} closes the comment, a bare carriage return included, and {@link INLINE_COMMENT_BREAK_OR_FORM_FEED} where the reading says a form feed closes one too.
  * @param source - A raw or a part of one.
  * @param reading - The syntax's reading of such a comment; defaults to spelling it.
  * @returns True if it ends inside a `//` comment.

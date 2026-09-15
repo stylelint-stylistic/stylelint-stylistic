@@ -64,19 +64,19 @@ function read (syntax?: unknown): InlineCommentReading {
 }
 
 describe(`inlineCommentReading`, () => {
-	it(`no syntax at all, which spells no comment with a double slash`, () => {
-		expect(read()).toEqual({ spells: false, keeps: false, answered: true, tokenizes: false })
+	it(`no syntax at all, which spells no comment with a double slash, so no break closes one`, () => {
+		expect(read()).toEqual({ spells: false, keeps: false, answered: true, tokenizes: false, endsOnFormFeed: false })
 	})
 
 	it(`something that cannot be asked, which is answered as anything that says nothing`, () => {
-		expect(read({})).toEqual({ spells: true, keeps: false, answered: false, tokenizes: false })
+		expect(read({})).toEqual({ spells: true, keeps: false, answered: false, tokenizes: false, endsOnFormFeed: false })
 	})
 
-	it(`a syntax that rewrites its inline comments out of the value a rule reads`, () => {
-		expect(read(scss)).toEqual({ spells: true, keeps: false, answered: true, tokenizes: true })
+	it(`a syntax that rewrites its inline comments out of the value a rule reads, and closes one on a form feed`, () => {
+		expect(read(scss)).toEqual({ spells: true, keeps: false, answered: true, tokenizes: true, endsOnFormFeed: true })
 	})
 
-	it(`a syntax that leaves them standing in the value`, () => {
-		expect(read(less)).toEqual({ spells: true, keeps: true, answered: true, tokenizes: false })
+	it(`a syntax that leaves them standing in the value, and reads a form feed as the comment's text`, () => {
+		expect(read(less)).toEqual({ spells: true, keeps: true, answered: true, tokenizes: false, endsOnFormFeed: false })
 	})
 })

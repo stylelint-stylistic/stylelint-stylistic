@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest"
 import { readAddress } from "./index.ts"
 
 /** A syntax spelling `//` comments whose tokenizer reads none, which is `postcss-less`. */
-const LESS = { spells: true, tokenizes: false }
+const LESS = { spells: true, tokenizes: false, endsOnFormFeed: false }
 
 /** `postcss-scss`, whose own tokenizer reads a `//` comment, so the parentheses are read as Sass reads them. */
-const SCSS = { spells: true, tokenizes: true }
+const SCSS = { spells: true, tokenizes: true, endsOnFormFeed: true }
 
 describe(`readAddress`, () => {
 	it(`a bare address, which the first parenthesis behind it closes`, () => {
@@ -90,7 +90,7 @@ describe(`readAddress`, () => {
 	})
 
 	it(`the same parentheses where the syntax spells no double slash, which leaves that one a character of them`, () => {
-		expect(readAddress(`url(a // ) c\n) 1px`, 4, `url`, { spells: false, tokenizes: true })).toEqual({ isQuoted: false, index: 9, comments: [] })
+		expect(readAddress(`url(a // ) c\n) 1px`, 4, `url`, { spells: false, tokenizes: true, endsOnFormFeed: false })).toEqual({ isQuoted: false, index: 9, comments: [] })
 	})
 
 	it(`parentheses Sass reads as an unquoted address, whose delimiters stay characters of it under that parser too`, () => {

@@ -16,13 +16,13 @@ describe(`readEscapedCharacter`, () => {
 
 	// `postcss-scss` reads the comment and cuts it out of the value; Less and Sass read the escape, and `postcss-less` keeps it in the value. See #517
 	it(`a double slash behind a backslash, which opens a comment under a syntax whose own tokenizer reads one`, () => {
-		expect(readEscapedCharacter(`a\\//b`, 1, { spells: true, tokenizes: true })).toEqual({ character: undefined, end: 2 })
+		expect(readEscapedCharacter(`a\\//b`, 1, { spells: true, tokenizes: true, endsOnFormFeed: true })).toEqual({ character: undefined, end: 2 })
 	})
 
 	// See #517
 	it(`the same double slash under a syntax whose tokenizer reads no such comment, and under one spelling none, where the backslash covers the solidus`, () => {
-		expect(readEscapedCharacter(`a\\//b`, 1, { spells: true, tokenizes: false })).toEqual({ character: `/`, end: 3 })
-		expect(readEscapedCharacter(`a\\//b`, 1, { spells: false, tokenizes: true })).toEqual({ character: `/`, end: 3 })
+		expect(readEscapedCharacter(`a\\//b`, 1, { spells: true, tokenizes: false, endsOnFormFeed: false })).toEqual({ character: `/`, end: 3 })
+		expect(readEscapedCharacter(`a\\//b`, 1, { spells: false, tokenizes: true, endsOnFormFeed: false })).toEqual({ character: `/`, end: 3 })
 	})
 
 	it(`a solidus an escape spells rather than writes, which the tokenizer covers with the digits`, () => {

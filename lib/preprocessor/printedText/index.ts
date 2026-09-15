@@ -1,6 +1,7 @@
 import type { AtRule, Declaration, Rule } from "postcss"
 
 import { TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
+import { findInlineCommentSpans } from "../../utils/findInlineCommentSpans/index.ts"
 import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
 import { rewriteInlineComments } from "../../utils/rewriteInlineComments/index.ts"
 import { isDeclaration, isRule, type SyntaxRaw } from "../../utils/typeGuards/index.ts"
@@ -44,10 +45,13 @@ export function printedText (node: AtRule | Declaration | Rule): string {
 	return syntaxRaw.raw || plainText(node)
 }
 
+/** The reading of the syntax that keeps a `scss` copy beside the raw, which is `postcss-scss` reading Sass: its tokenizer closes a `//` comment on a form feed as well. */
+const SCSS_COPY_READING = { spells: true, tokenizes: true, endsOnFormFeed: true }
+
 /**
  * Writes a node's text into the copy the syntax prints, keeping its other copies in step.
  *
- * Under `postcss-scss` the `scss` copy takes the fix and the raw is rebuilt with its `//` comments rewritten, so a later rule still reads two copies of one text; writing the node's own property would have PostCSS drop both raws.
+ * Under `postcss-scss` the `scss` copy takes the fix and the raw is rebuilt with its `//` comments rewritten, so a later rule still reads two copies of one text; writing the node's own property would have PostCSS drop both raws. The rewriting is the parser's own — the comments are cut where `postcss-scss` cuts them, so the pair comes back the shape it would have parsed as, and a later reader of it is not handed a comment the file does not spell.
  * @param node - The declaration, rule or at-rule.
  * @param text - The text to write.
  */
@@ -57,7 +61,7 @@ export function writePrintedText (node: AtRule | Declaration | Rule, text: strin
 	if (syntaxRaw) {
 		if (typeof syntaxRaw.scss === `string`) {
 			syntaxRaw.scss = text
-			syntaxRaw.raw = rewriteInlineComments(text)
+			syntaxRaw.raw = rewriteInlineComments(text, findInlineCommentSpans(text, SCSS_COPY_READING))
 		}
 		else {
 			syntaxRaw.raw = text

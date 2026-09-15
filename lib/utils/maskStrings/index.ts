@@ -4,7 +4,7 @@ import { type CommentSpan, findAddressSpans, findStringSpans } from "../findComm
 import type { InlineCommentSpan } from "../findInlineCommentSpans/index.ts"
 
 /** The comments are blanked before the walk, so a `//` left in the text is code and opens nothing. */
-const CODE_READING = { spells: false, tokenizes: false }
+const CODE_READING = { spells: false, tokenizes: false, endsOnFormFeed: false }
 
 /**
  * Writes every character of the spans as `?`.

@@ -160,7 +160,7 @@ export function readAddress (text: string, openIndex: number, name: string, read
 			index = end
 		}
 		else if (readsInlineComments && text[index] === `/` && text[index + 1] === `/`) {
-			let end = findInlineCommentEnd(text, index)
+			let end = findInlineCommentEnd(text, index, reading)
 
 			comments.push({ start: index, end, isInline: true })
 			index = end

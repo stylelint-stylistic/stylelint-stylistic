@@ -165,11 +165,15 @@ testRule({
 	config: [`always-single-line`],
 	customSyntax: `postcss-scss`,
 
-	accept: [
+	reject: [
 		{
-			// See #244
-			description: `the same break under the option that would have written a space in its place`,
+			// A form feed closes an inline comment under Sass, and PostCSS counts no line in one, so the call is still single-line
+			description: `a form feed inside an inline comment, which closes it and leaves the run in front of the parenthesis code the fix cannot shorten without moving the parenthesis into the comment`,
 			code: `a { transform: translate( 1px, 2px// keep me\f ); }`,
+			fixed: `a { transform: translate( 1px, 2px// keep me\f ); }`,
+			line: 1,
+			column: 46,
+			message: messages.expectedClosingSingleLine,
 		},
 	],
 })

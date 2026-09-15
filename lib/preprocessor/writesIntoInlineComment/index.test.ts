@@ -52,14 +52,14 @@ describe(`writesIntoInlineComment`, () => {
 		expect(ask(scss, `a {\n\tcolor: red // c\n\t\t!important\n\t;\n}`, (root) => block(root).first)).toBe(false)
 	})
 
-	// See #333
-	it(`a form feed standing in the middle of the value, which is whitespace and closes no comment under either syntax`, () => {
-		expect(ask(scss, `a {\n\tcolor: red // c\f2px\n\t;\n}`, (root) => block(root).first)).toBe(true)
+	// A form feed closes such a comment under Sass and is its text under Less, so `red 2px` is the value to one compiler and `red` to the other
+	it(`a form feed standing in the middle of the value, which closes the comment under the syntax reading a line in it and not under the other`, () => {
+		expect(ask(scss, `a {\n\tcolor: red // c\f2px\n\t;\n}`, (root) => block(root).first)).toBe(false)
 		expect(ask(less, `a {\n\tcolor: red // c\f2px\n\t;\n}`, (root) => block(root).first)).toBe(true)
 	})
 
 	// See #333
-	it(`a form feed the value ends with, which is whitespace the comment holds and the very whitespace the write goes into, under either syntax`, () => {
+	it(`a form feed the value ends with, which is the trailing run a fix writes into under either syntax, so what the text ends inside is the comment in front of it`, () => {
 		expect(ask(scss, `a {\n\tcolor: red // c\f;\n\ttop: 0;\n}`, (root) => block(root).first)).toBe(true)
 		expect(ask(less, `a {\n\tcolor: red // c\f;\n\ttop: 0;\n}`, (root) => block(root).first)).toBe(true)
 	})

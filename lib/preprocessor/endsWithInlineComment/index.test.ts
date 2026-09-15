@@ -3,13 +3,13 @@ import { describe, expect, it } from "vitest"
 import { endsWithInlineComment } from "./index.ts"
 
 /** Less's reading, which leaves such a comment in the value a rule reads. */
-const LESS = { spells: true, keeps: true, answered: true, tokenizes: false }
+const LESS = { spells: true, keeps: true, answered: true, tokenizes: false, endsOnFormFeed: false }
 
 /** `postcss-scss`'s reading, whose own tokenizer reads such a comment. */
-const SCSS = { spells: true, keeps: false, answered: true, tokenizes: true }
+const SCSS = { spells: true, keeps: false, answered: true, tokenizes: true, endsOnFormFeed: true }
 
 /** Plain CSS's reading, which spells no `//` comment. */
-const PLAIN_CSS = { spells: false, keeps: false, answered: true, tokenizes: false }
+const PLAIN_CSS = { spells: false, keeps: false, answered: true, tokenizes: false, endsOnFormFeed: false }
 
 describe(`endsWithInlineComment`, () => {
 	it(`empty string`, () => {
@@ -98,6 +98,13 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(` // one\fcolor`)).toBe(true)
 		expect(endsWithInlineComment(` // one\fcolor`, LESS)).toBe(true)
 		expect(endsWithInlineComment(`// A \f " \n B " // C "`)).toBe(false)
+	})
+
+	it(`the same form feed under the syntax that closes a comment on one, where the text behind it is code and can open a comment of its own`, () => {
+		expect(endsWithInlineComment(` // one\fcolor`, SCSS)).toBe(false)
+		expect(endsWithInlineComment(` // one\fcolor // two`, SCSS)).toBe(true)
+		// The two readings part on this one: under Less the quotation marks are the first comment's text, under Sass they open a string the last mark leaves unclosed
+		expect(endsWithInlineComment(`// A \f " \n B " // C "`, SCSS)).toBe(true)
 	})
 
 	it(`inline comment a carriage return leaves at the end`, () => {

@@ -6,7 +6,7 @@ import { nodeSyntax } from "../../utils/nodeSyntax/index.ts"
 import { isSyntax } from "../../utils/typeGuards/index.ts"
 import { isInlineComment } from "../isInlineComment/index.ts"
 
-/** What a syntax makes of a `//` comment: whether it spells one, whether it keeps one in the value a rule reads, whether its own tokenizer reads one, and whether it answered for itself rather than getting the default, which reads a comment as a comment; a gate refusing a file on the syntax's own account must not refuse one on the default. Which break closes a comment is not asked: `INLINE_COMMENT_BREAK` reads a carriage return as Less and Sass both do, and a form feed as Less does. */
+/** What a syntax makes of a `//` comment: whether it spells one, whether it keeps one in the value a rule reads, whether its own tokenizer reads one, whether a form feed closes one, and whether it answered for itself rather than getting the default, which reads a comment as a comment; a gate refusing a file on the syntax's own account must not refuse one on the default. */
 export type InlineCommentReading = CommentReading & {
 	keeps: boolean,
 	answered: boolean,
@@ -18,24 +18,54 @@ let inlineCommentSyntaxes: WeakMap<object, InlineCommentReading> = new WeakMap()
 /** A stylesheet with an inline comment in both places the answers turn on. */
 const INLINE_COMMENT_PROBE = `a {}\n// comment\na { b: 'x', // comment\n  'y'; }\n`
 
+/** A stylesheet with a form feed in the middle of an inline comment and a rule of its own written behind it. A syntax closing a comment on the character has two rules here; one reading it as the comment's text has one, and the second is that comment's text ([#333](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/333)). */
+const FORM_FEED_PROBE = `a {}\n// c\fb {}\n`
+
 /**
- * Parses the probe with a syntax and reads the answers off the tree.
+ * Asks a syntax whether a form feed closes a `//` comment in it, by handing it one such comment with a rule behind the character.
+ *
+ * It is the one break the two languages disagree about: `postcss-scss` reads a line in it, as dart-sass does, while Less normalises `\r\n?` to `\n` before parsing and reads no line in the character at all, so `postcss-less` keeps it as the comment's text. A syntax that makes nothing of this stylesheet is answered no, which is the reading every syntax got before they were told apart; so is one that made nothing of the first probe, whose answer about a form feed would be the only thing it had said.
+ * @param syntax - What parsed the file.
+ * @returns True where a form feed closes such a comment.
+ */
+function probeFormFeed (syntax: { parse: (css: string, opts: { from: undefined }) => Document | Root }): boolean {
+	try {
+		let probe = syntax.parse(FORM_FEED_PROBE, { from: undefined })
+		let endsOnFormFeed = false
+
+		probe.walk((node) => {
+			// The rule behind the form feed came back a rule, which the syntax can only have done by closing the comment on that character
+			if (node.type === `rule` && node.selector === `b`) endsOnFormFeed = true
+		})
+
+		return endsOnFormFeed
+	}
+	catch {
+		// A syntax that cannot parse this stylesheet has said nothing about the character
+		return false
+	}
+}
+
+/**
+ * Parses the probes with a syntax and reads the answers off the trees.
+ *
+ * The form feed is handed over in a stylesheet of its own under a `try` of its own, so a syntax stumbling over the character says nothing about it rather than unsaying the answers the first probe has already given.
  * @param syntax - What parsed the file: a syntax object, or nothing for plain CSS.
- * @returns What it made of the probe.
+ * @returns What it made of the probes.
  */
 function probeSyntax (syntax?: unknown): InlineCommentReading {
-	// No syntax is plain CSS, which spells no `//` comment
-	if (!syntax) return { spells: false, keeps: false, answered: true, tokenizes: false }
+	// No syntax is plain CSS, which spells no `//` comment, so no break closes one
+	if (!syntax) return { spells: false, keeps: false, answered: true, tokenizes: false, endsOnFormFeed: false }
 
 	// A syntax that cannot be asked says nothing
-	if (!isSyntax(syntax)) return { spells: true, keeps: false, answered: false, tokenizes: false }
+	if (!isSyntax(syntax)) return { spells: true, keeps: false, answered: false, tokenizes: false, endsOnFormFeed: false }
 
 	let known = inlineCommentSyntaxes.get(syntax)
 
 	if (known !== undefined) return known
 
 	// The default: nothing said, and a comment read as a comment
-	let reading: InlineCommentReading = { spells: true, keeps: false, answered: false, tokenizes: false }
+	let reading: InlineCommentReading = { spells: true, keeps: false, answered: false, tokenizes: false, endsOnFormFeed: false }
 
 	try {
 		let probe: Root | Document = syntax.parse(INLINE_COMMENT_PROBE, { from: undefined })
@@ -65,6 +95,7 @@ function probeSyntax (syntax?: unknown): InlineCommentReading {
 	}
 
 	reading.tokenizes = reading.answered && reading.spells && !reading.keeps
+	reading.endsOnFormFeed = reading.answered && reading.spells && probeFormFeed(syntax)
 
 	inlineCommentSyntaxes.set(syntax, reading)
 

@@ -118,8 +118,11 @@ export const IDENTIFIER_CODE_POINT = /[\w\-\u00B7\u00C0-\u00D6\u00D8-\u00F6\u00F
 /** `import`, any case. */
 export const IMPORT_AT_RULE = /^import$/iu
 
-/** A break closing a `//` comment: a line feed or a carriage return, bare or in front of one. Narrower than {@link CSS_LINE_BREAK}, since Less reads a form feed as the comment's text, and wider than {@link LINE_BREAK}: Less rewrites a bare carriage return to a line feed before parsing, and Sass reads one as a newline. */
+/** A break closing a `//` comment where a form feed is the comment's text, which is Less's reading: a line feed or a carriage return, bare or in front of one. Wider than {@link LINE_BREAK}, since Less rewrites a bare carriage return to a line feed before parsing and Sass reads one as a newline; narrower than {@link INLINE_COMMENT_BREAK_OR_FORM_FEED}, which is Sass's. The reading of a syntax that has said nothing, since it is the one standing here before the syntaxes were told apart. */
 export const INLINE_COMMENT_BREAK = /[\n\r]/u
+
+/** A break closing a `//` comment where a form feed closes one too, which is Sass's reading: `postcss-scss` tokenizes a line in the character and dart-sass compiles the code behind it. Spelled as {@link CSS_LINE_BREAK} is, which asks another question of the same three characters. */
+export const INLINE_COMMENT_BREAK_OR_FORM_FEED = /[\n\r\f]/u
 
 /** The last line, its break excluded; nothing where the text ends in one. */
 export const LAST_LINE = /[^\r\n]+$/u

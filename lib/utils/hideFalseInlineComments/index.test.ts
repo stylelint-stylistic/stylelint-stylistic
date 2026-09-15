@@ -65,7 +65,7 @@ describe(`hideFalseInlineComments`, () => {
 		expect(hideFalseInlineComments(`url(http://x) // c\rurl(http://y)`)).toBe(`url(http:/?x) // c\rurl(http:/?y)`)
 	})
 
-	it(`an address behind a comment a form feed closes`, () => {
+	it(`an address behind a form feed inside a comment, which the default reading leaves as the comment's text, so its own double slash is masked like any other standing in one`, () => {
 		expect(hideFalseInlineComments(`url(http://x) // c\furl(http://y)`, findInlineCommentSpans(`url(http://x) // c\furl(http://y)`))).toBe(`url(http:/?x) // c\furl(http:/?y)`)
 	})
 

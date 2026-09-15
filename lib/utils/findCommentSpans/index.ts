@@ -159,14 +159,15 @@ function pushQuotedAddress (text: string, openIndex: number, end: number, addres
 	if (end <= text.length && !LINE_BREAK.test(text.slice(openIndex, end))) addresses.push({ start: openIndex, end })
 }
 
-/** What the syntax makes of a `//` comment, as far as the walk asks: whether one opens, and whether the parser's own tokenizer reads one, which is `postcss-scss` reading Sass. */
+/** What the syntax makes of a `//` comment, as far as the walk asks: whether one opens, whether the parser's own tokenizer reads one, which is `postcss-scss` reading Sass, and whether a form feed closes one, which is the one break the two languages disagree about. */
 export type CommentReading = {
 	spells: boolean,
 	tokenizes: boolean,
+	endsOnFormFeed: boolean,
 }
 
 /** A syntax that spells a `//` comment and says nothing more. */
-const SPELLS_INLINE_COMMENTS: CommentReading = { spells: true, tokenizes: false }
+const SPELLS_INLINE_COMMENTS: CommentReading = { spells: true, tokenizes: false, endsOnFormFeed: false }
 
 /** The span a `url()` address occupies. */
 export type AddressSpan = {
@@ -267,8 +268,8 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 			behindIdentifier = false
 		}
 		else if (character === `/` && next === `/` && reading.spells) {
-			// The comment runs to the break PostCSS ends a line on; a bare `\r` and a form feed are text of it (#566).
-			let end = findInlineCommentEnd(text, index)
+			// The comment runs to the break its own language closes one on; a bare `\r` is one everywhere, a form feed only under Sass (#566).
+			let end = findInlineCommentEnd(text, index, reading)
 
 			spans.push({ start: index, end, isInline: true })
 			index = end
