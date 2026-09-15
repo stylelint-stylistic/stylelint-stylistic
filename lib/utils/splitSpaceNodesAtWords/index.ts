@@ -47,8 +47,16 @@ export function splitSpaceNodesAtWords (nodes: ValueNode[]): void {
 
 		if (beforeRun !== node.before) {
 			let beforeIndex = node.sourceIndex + node.value.length + 1
+			let beforePieces = splitSpaceValue(node.before.slice(beforeRun.length), beforeIndex + beforeRun.length)
+			let lastPiece = beforePieces.at(-1)
 
-			pieces.unshift(...splitSpaceValue(node.before.slice(beforeRun.length), beforeIndex + beforeRun.length))
+			// A closed pair holding no node hands its whole run back as `before`, so the run touching the `)` goes to `after`: a rule reading `after` alone wrote another space in front of it every run
+			if (node.nodes.length === 0 && !node.unclosed && lastPiece?.type === `space`) {
+				beforePieces.pop()
+				node.after = lastPiece.value
+			}
+
+			pieces.unshift(...beforePieces)
 			node.before = beforeRun
 		}
 

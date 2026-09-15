@@ -11,6 +11,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { splitSpaceNodesAtWords } from "../../utils/splitSpaceNodesAtWords/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -104,7 +105,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let edits: Edit[] = []
 
 			// Quotes in comments are masked (#508)
-			valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(params, comments), comments)).walk((node) => {
+			let parsedParams = valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(params, comments), comments))
+
+			// The value parser calls a control character such as a vertical tab whitespace where the tokenizer calls it a word, and both fixes rewrite a whole side
+			splitSpaceNodesAtWords(parsedParams.nodes)
+
+			parsedParams.walk((node) => {
 				// A comment's `(` is its own; an unclosed comment holds the rest of the query, so the walk goes on inside
 				if (findCommentSpanHolding(node, comments)) return
 
@@ -113,7 +119,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					if (!node.unclosed && findCommentSpanAt(node.sourceEndIndex - 1, comments)) return
 
 					let closingIndex = closingParenthesisIndex(node, params) - 1
-					// A closed pair holding no node encloses one run of what the value parser calls whitespace, every C0 control included, and it hands that run back whole as `before` and never as `after`: the closing question is the opening one, and asking it again reported a half the opening fix had settled and wrote another space every run ([#329](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/329)). An unclosed feature has no pair, and what a fix writes at the end of its params is [#575](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/575). Under `never` no guard is wanted, since an empty `after` is whitespace to nobody.
+					// A closed pair holding no node encloses one run of the tokenizer's whitespace, `splitSpaceNodesAtWords` having carried any other control character into a node, and the value parser hands that run back whole as `before` and never as `after`: the closing question is the opening one, and asking it again reported a half the opening fix had settled and wrote another space every run ([#329](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/329)). An unclosed feature has no pair, and what a fix writes at the end of its params is [#575](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/575). Under `never` no guard is wanted, since an empty `after` is whitespace to nobody.
 					let enclosesOneRun = !node.unclosed && node.nodes.length === 0
 
 					if (primary === `never`) {

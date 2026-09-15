@@ -79,4 +79,23 @@ describe(`splitSpaceNodesAtWords`, () => {
 		expect(funcNode.after).toBe(` `)
 		expect(funcNode.nodes.map(({ type }) => type)).toStrictEqual([`word`, `div`, `word`])
 	})
+
+	it(`a closed pair holding no node but a vertical tab, whose whole run the parser hands back as before: the run touching each parenthesis becomes that side's`, () => {
+		let funcNode = splitFirstFunction(`f( \v )`)
+
+		expect(funcNode.before).toBe(` `)
+		expect(funcNode.after).toBe(` `)
+		expect(funcNode.nodes.map(pick)).toStrictEqual([{ type: `word`, value: `\v`, sourceIndex: 3, sourceEndIndex: 4 }])
+		expect(valueParser.stringify(funcNode)).toBe(`f( \v )`)
+	})
+
+	it(`an unclosed pair holding no node keeps its trailing run as a node, having no parenthesis for it to touch`, () => {
+		let funcNode = splitFirstFunction(`f( \v `)
+
+		expect(funcNode.after).toBe(``)
+		expect(funcNode.nodes.map(pick)).toStrictEqual([
+			{ type: `word`, value: `\v`, sourceIndex: 3, sourceEndIndex: 4 },
+			{ type: `space`, value: ` `, sourceIndex: 4, sourceEndIndex: 5 },
+		])
+	})
 })

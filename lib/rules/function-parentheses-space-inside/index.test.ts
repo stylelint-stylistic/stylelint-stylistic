@@ -44,6 +44,11 @@ testRule({
 			description: `Sass list ignored`,
 			code: `$list: (value, value2)`,
 		},
+		{
+			// See #655
+			description: `a vertical tab between single spaces inside a call, which the tokenizer reads as the call's argument, so each parenthesis already has its space`,
+			code: `a { b: f( \v ); }`,
+		},
 	],
 
 	reject: [
@@ -267,6 +272,24 @@ testRule({
 				{
 					line: 1,
 					column: 23,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
+			// See #655
+			description: `vertical tabs abutting both parentheses, which the tokenizer reads as characters of the argument, so each space is written between a parenthesis and a tab`,
+			code: `a { b: f(\vc\v); }`,
+			fixed: `a { b: f( \vc\v ); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 12,
 					message: messages.expectedClosing,
 				},
 			],
@@ -816,6 +839,24 @@ testRule({
 			line: 1,
 			column: 20,
 			message: messages.rejectedClosing,
+		},
+		{
+			// See #655
+			description: `spaces around vertical tabs inside a call, which the tokenizer reads as characters of the argument, so the spaces go and the tabs stay`,
+			code: `a { b: f( \vc\v ); }`,
+			fixed: `a { b: f(\vc\v); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 14,
+					message: messages.rejectedClosing,
+				},
+			],
 		},
 	],
 })

@@ -41,6 +41,11 @@ testRule({
 			description: `a parenthesis written in the text of a comment opened by a solidus, a star and a solidus, which closes the feature to the parser, so neither space this option asks for is written into that text`,
 			code: `@media (a: 1 /*/ ) */ ) { a { b: c; } }`,
 		},
+		{
+			// See #655
+			description: `a vertical tab between single spaces inside a feature, which the tokenizer reads as what the feature holds, so each parenthesis already has its space`,
+			code: `@media ( \v ) { a { b: c; } }`,
+		},
 	],
 
 	reject: [
@@ -217,6 +222,24 @@ testRule({
 					line: 1,
 					column: 21,
 					message: messages.expectedOpening,
+				},
+			],
+		},
+		{
+			// See #655
+			description: `vertical tabs abutting both parentheses of a feature, which the tokenizer reads as characters of the feature, so each space is written between a parenthesis and a tab`,
+			code: `@media (\va\v) { a { b: c; } }`,
+			fixed: `@media ( \va\v ) { a { b: c; } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 11,
+					message: messages.expectedClosing,
 				},
 			],
 		},
@@ -483,6 +506,24 @@ testRule({
 			line: 1,
 			column: 22,
 			message: messages.rejectedClosing,
+		},
+		{
+			// See #655
+			description: `spaces around vertical tabs inside a feature, which the tokenizer reads as characters of the feature, so the spaces go and the tabs stay`,
+			code: `@media ( \va\v ) { a { b: c; } }`,
+			fixed: `@media (\va\v) { a { b: c; } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 13,
+					message: messages.rejectedClosing,
+				},
+			],
 		},
 	],
 })

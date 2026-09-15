@@ -13,6 +13,7 @@ import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { splitSpaceNodesAtWords } from "../../utils/splitSpaceNodesAtWords/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -158,6 +159,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let comments = syntax.commentSpans(declValue, decl, result)
 			// Masks quotation marks a comment leaves open, so the parser pairs them right (#508)
 			let parsedValue = valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(declValue, comments), comments))
+
+			// The value parser calls a control character such as a vertical tab whitespace where the tokenizer calls it a word, and both fixes rewrite a whole side
+			splitSpaceNodesAtWords(parsedValue.nodes)
 
 			parsedValue.walk((valueNode, at, siblings) => {
 				if (valueNode.type !== `function`) return
