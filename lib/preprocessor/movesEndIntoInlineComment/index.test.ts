@@ -21,8 +21,8 @@ describe(`movesEndIntoInlineComment`, () => {
 		expect(movesEndIntoInlineComment(`f(1px // c )`, `f(1px // c)`, LESS)).toBe(false)
 	})
 
-	it(`a bare carriage return or a form feed the fix takes away, which is whitespace and closes nothing, so that the character stands inside the comment on either side of the fix`, () => {
-		expect(movesEndIntoInlineComment(`f(1px // c\r)`, `f(1px // c)`, LESS)).toBe(false)
+	it(`a bare carriage return the fix takes away, which closes the comment, and a form feed, which is its text on either side of the fix`, () => {
+		expect(movesEndIntoInlineComment(`f(1px // c\r)`, `f(1px // c)`, LESS)).toBe(true)
 		expect(movesEndIntoInlineComment(`f(1px // c\f)`, `f(1px // c)`, LESS)).toBe(false)
 	})
 

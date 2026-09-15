@@ -1,4 +1,4 @@
-import { IDENTIFIER_CODE_POINT, LINE_BREAK } from "../../regexps.ts"
+import { IDENTIFIER_CODE_POINT, INLINE_COMMENT_BREAK } from "../../regexps.ts"
 import { namesAnAddress } from "../../utils/namesAnAddress/index.ts"
 import { readAddress } from "../../utils/readAddress/index.ts"
 import { readEscapedCharacter } from "../../utils/readEscapedCharacter/index.ts"
@@ -20,8 +20,7 @@ export type Scan = {
 function readInsideInlineComment (text: string, scan: Scan): void {
 	let char = text.charAt(scan.index)
 
-	// Which characters are breaks is where the two languages part
-	if (LINE_BREAK.test(char)) {
+	if (INLINE_COMMENT_BREAK.test(char)) {
 		scan.state = `code`
 		scan.wordStart = scan.index + 1
 	}
@@ -134,7 +133,7 @@ function scanEndsInsideInlineComment (text: string, reading: InlineCommentReadin
 /**
  * Asks whether a raw ends inside a `//` comment, where a fixer writing behind it would write.
  *
- * Scanned rather than matched: the `//` in `url(http://example.com)` or `"//"` opens nothing, and `url` is {@link namesAnAddress}'s reading ([#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427)). A syntax spelling no such comment ends `1px//c` in code; the caller says which. Only a line feed closes the comment; a bare carriage return or form feed is its text.
+ * Scanned rather than matched: the `//` in `url(http://example.com)` or `"//"` opens nothing, and `url` is {@link namesAnAddress}'s reading ([#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427)). A syntax spelling no such comment ends `1px//c` in code; the caller says which. {@link INLINE_COMMENT_BREAK} closes the comment, a bare carriage return included; a form feed is its text.
  * @param source - A raw or a part of one.
  * @param reading - The syntax's reading of such a comment; defaults to spelling it.
  * @returns True if it ends inside a `//` comment.

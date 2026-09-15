@@ -55,8 +55,8 @@ describe(`findInlineCommentSpans`, () => {
 		expect(findInlineCommentSpans(`1px // c\r\n2px`)).toEqual([{ start: 4, end: 8 }])
 	})
 
-	it(`a bare carriage return or a form feed inside the comment, which is whitespace and closes nothing`, () => {
-		expect(findInlineCommentSpans(`1px // c\r2px`)).toEqual([{ start: 4, end: 12 }])
+	it(`a bare carriage return closing the comment, as Less and Sass read one, and a form feed inside it, which Less reads as its text`, () => {
+		expect(findInlineCommentSpans(`1px // c\r2px`)).toEqual([{ start: 4, end: 8 }])
 		expect(findInlineCommentSpans(`1px // c\f2px`)).toEqual([{ start: 4, end: 12 }])
 	})
 

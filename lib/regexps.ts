@@ -118,6 +118,9 @@ export const IDENTIFIER_CODE_POINT = /[\w\-\u00B7\u00C0-\u00D6\u00D8-\u00F6\u00F
 /** `import`, any case. */
 export const IMPORT_AT_RULE = /^import$/iu
 
+/** A break closing a `//` comment: a line feed or a carriage return, bare or in front of one. Narrower than {@link CSS_LINE_BREAK}, since Less reads a form feed as the comment's text, and wider than {@link LINE_BREAK}: Less rewrites a bare carriage return to a line feed before parsing, and Sass reads one as a newline. */
+export const INLINE_COMMENT_BREAK = /[\n\r]/u
+
 /** The last line, its break excluded; nothing where the text ends in one. */
 export const LAST_LINE = /[^\r\n]+$/u
 

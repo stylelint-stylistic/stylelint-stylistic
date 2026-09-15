@@ -6,7 +6,7 @@ import { nodeSyntax } from "../../utils/nodeSyntax/index.ts"
 import { isSyntax } from "../../utils/typeGuards/index.ts"
 import { isInlineComment } from "../isInlineComment/index.ts"
 
-/** What a syntax makes of a `//` comment: whether it spells one, whether it keeps one in the value a rule reads, whether its own tokenizer reads one, and whether it answered for itself rather than getting the default, which reads a comment as a comment; a gate refusing a file on the syntax's own account must not refuse one on the default. Which break closes a comment is PostCSS's question. */
+/** What a syntax makes of a `//` comment: whether it spells one, whether it keeps one in the value a rule reads, whether its own tokenizer reads one, and whether it answered for itself rather than getting the default, which reads a comment as a comment; a gate refusing a file on the syntax's own account must not refuse one on the default. Which break closes a comment is not asked: `INLINE_COMMENT_BREAK` reads a carriage return as Less and Sass both do, and a form feed as Less does. */
 export type InlineCommentReading = CommentReading & {
 	keeps: boolean,
 	answered: boolean,

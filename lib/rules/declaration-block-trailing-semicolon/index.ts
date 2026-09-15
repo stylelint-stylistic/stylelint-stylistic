@@ -1,7 +1,7 @@
 import type { AtRule, ChildNode, Container, Declaration, Node } from "postcss"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { LINE_BREAK, TRAILING_CSS_WHITESPACE, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
+import { INLINE_COMMENT_BREAK, TRAILING_CSS_WHITESPACE, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { betweenTailAfterColon } from "../../utils/betweenTailAfterColon/index.ts"
@@ -83,7 +83,7 @@ function blockEnd (container: Container): number {
 /**
  * Returns the raws between the node closing the block and the block's end, in file order, with their start offsets.
  *
- * Only comments follow that node, so a `;` here is code, unless the flag's semicolon is the text of a `//` comment: that comment runs on to the first line break behind it, which a comment it meets may hold ([#359](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/359)). A comment's `raws.before` is anchored to the comment's own start, since `postcss-less` ends an inline comment one character short. A missing raw is skipped, since an empty string would override the PostCSS default.
+ * Only comments follow that node, so a `;` here is code, unless the flag's semicolon is the text of a `//` comment: that comment runs on to the first break closing it, which a comment it meets may hold ([#359](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/359)). A comment's `raws.before` is anchored to the comment's own start, since `postcss-less` ends an inline comment one character short. A missing raw is skipped, since an empty string would override the PostCSS default.
  * @param node - The node closing the block.
  * @param result - The Stylelint result.
  * @param flagIsCommentText - Whether the flag's semicolon is the text of such a comment.
@@ -105,7 +105,7 @@ function rawsBehind (node: ChildNode, result: PostcssResult, flagIsCommentText: 
 	function codeOf (text: string): number {
 		if (!inComment) return 0
 
-		let lineBreak = text.search(LINE_BREAK)
+		let lineBreak = text.search(INLINE_COMMENT_BREAK)
 
 		if (lineBreak === -1) return text.length
 
@@ -119,7 +119,7 @@ function rawsBehind (node: ChildNode, result: PostcssResult, flagIsCommentText: 
 
 		if (typeof text === `string`) raws.push({ owner: sibling, key: `before`, start: offsetsOf(sibling).start - text.length, text, code: codeOf(text) })
 
-		if (inComment && LINE_BREAK.test(nodeString(sibling, result))) inComment = false
+		if (inComment && INLINE_COMMENT_BREAK.test(nodeString(sibling, result))) inComment = false
 	}
 
 	let after = container.raws.after

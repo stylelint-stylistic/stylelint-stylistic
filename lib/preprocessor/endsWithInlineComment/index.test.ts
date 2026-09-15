@@ -92,8 +92,9 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`content: "// not a comment"\n`)).toBe(false)
 	})
 
-	it(`a bare carriage return or a form feed inside the comment, which is whitespace and closes nothing, whatever the reading`, () => {
-		expect(endsWithInlineComment(` // one\rcolor`)).toBe(true)
+	it(`a bare carriage return closing the comment, as Less and Sass read one, and a form feed inside it, which Less reads as its text`, () => {
+		expect(endsWithInlineComment(` // one\rcolor`)).toBe(false)
+		expect(endsWithInlineComment(` // one\rcolor`, LESS)).toBe(false)
 		expect(endsWithInlineComment(` // one\fcolor`)).toBe(true)
 		expect(endsWithInlineComment(` // one\fcolor`, LESS)).toBe(true)
 		expect(endsWithInlineComment(`// A \f " \n B " // C "`)).toBe(false)

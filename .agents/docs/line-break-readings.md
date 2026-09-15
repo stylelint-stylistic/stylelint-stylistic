@@ -6,6 +6,6 @@ A name that reads one spelling of a break alone, as `CRLF` does, says which
 
 Asking whether a character or a text is a line break is done through one of those names and never by hand. A comparison is not a regular expression, so a `===` against a break character, an `includes` of one, a `style-search` target and a pattern built out of a template literal all slip past the rule above — which is where #246 stood.
 
-[scripts/check-break-readings.ts](../../scripts/check-break-readings.ts), which `make verify` runs, therefore accounts for **every** line of `lib/` that spells a break rather than looking for the shapes a reading is written in: a line matching neither of its two lists is what it fails on, so no shape can slip. Twenty-nine readings are carried as a named debt list, the way the `overrides` of `.oxlintrc.json` carries its own, and ten lines that only write a break are named beside them.
+[scripts/check-break-readings.ts](../../scripts/check-break-readings.ts), which `make verify` runs, therefore accounts for **every** line of `lib/` that spells a break rather than looking for the shapes a reading is written in: a line matching neither of its two lists is what it fails on, so no shape can slip. Twenty-seven readings are carried as a named debt list, the way the `overrides` of `.oxlintrc.json` carries its own, and ten lines that only write a break are named beside them.
 
 Writing a break is untouched by any of this — a fixer has to be free to put the character the file is spelled with.

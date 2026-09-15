@@ -44,6 +44,16 @@ testRule({
 				}
 			`,
 		},
+		{
+			// See #721
+			description: `a semicolon behind a bare carriage return ending an inline comment, which Less reads as a line feed, so the semicolon is code`,
+			code: `a {\n\tcolor: pink // c\r;\n}\n`,
+		},
+		{
+			// See #721
+			description: `the same break behind a semicolon in the text of the comment, which this syntax reads as the one closing the declaration`,
+			code: `a {\n\tcolor: pink // ;\r\t;\n}\n`,
+		},
 	],
 
 	reject: [
@@ -359,6 +369,24 @@ testRule({
 			fixed: `a {\n\tcolor: pink // keep me\n\t\n}\n`,
 			line: 3,
 			column: 2,
+			message: messages.rejected,
+		},
+		{
+			// See #721
+			description: `a semicolon behind a bare carriage return ending an inline comment, which Less reads as a line feed, so the semicolon is code`,
+			code: `a {\n\tcolor: pink // c\r;\n}\n`,
+			fixed: `a {\n\tcolor: pink // c\r\n}\n`,
+			line: 2,
+			column: 19,
+			message: messages.rejected,
+		},
+		{
+			// See #721
+			description: `the same break behind a semicolon in the text of the comment, which this syntax reads as the one closing the declaration and Less as the text of the comment`,
+			code: `a {\n\tcolor: pink // ;\r\t;\n}\n`,
+			fixed: `a {\n\tcolor: pink // ;\r\t\n}\n`,
+			line: 2,
+			column: 20,
 			message: messages.rejected,
 		},
 		{

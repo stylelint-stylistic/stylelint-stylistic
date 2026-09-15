@@ -88,10 +88,6 @@ const DEBT: Record<string, string[]> = {
 		`let violatedCRLFNewLinesRegex = new RegExp(\`(?:\\r\\n){\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
 		`let violatedLFNewLinesRegex = new RegExp(\`\\n{\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
 	],
-	"lib/utils/findInlineCommentEnd/index.ts": [
-		`let index = text.indexOf(\`\\n\`, openIndex)`,
-		`return text[index - 1] === \`\\r\` ? index - 1 : index`,
-	],
 	"lib/utils/isWhitespace/index.ts": [`return [\` \`, \`\\n\`, \`\\t\`, \`\\r\`, \`\\f\`].includes(char)`],
 	"lib/utils/whitespaceChecker/index.ts": [
 		`return char === \`\\n\``,
