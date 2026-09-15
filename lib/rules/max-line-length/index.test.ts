@@ -998,6 +998,14 @@ testRule({
 			message: messages.expected(20),
 		},
 		{
+			// See #664
+			description: `a comment standing against an address whose name is spelled in upper case, which every parser reads as a comment and which comes off no line`,
+			code: `a { b: URL(aaaaaaaaaaaaaaaaaaaaaaaaaa.png/* cccc */) }`,
+			line: 1,
+			column: 54,
+			message: messages.expected(20),
+		},
+		{
 			description: `a rule whose selector wraps an address in parentheses of its own, which the address does not reach into`,
 			code: `.m(url(a,b)) { c: 2px; }`,
 			line: 1,

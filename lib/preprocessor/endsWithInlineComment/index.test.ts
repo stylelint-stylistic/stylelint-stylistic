@@ -163,6 +163,16 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`b: url(a /* ) // c */ ) 1px; `, SCSS)).toBe(false)
 	})
 
+	// See #664
+	it(`the same text behind a name spelled other than the word itself, whose parentheses every parser reads as code`, () => {
+		expect(endsWithInlineComment(`b: URL(a /* ) // c */ ) 1px; `, LESS)).toBe(false)
+	})
+
+	// See #664
+	it(`a double slash behind such a name under the parser Sass is read by, where Sass reads an address in front of it`, () => {
+		expect(endsWithInlineComment(`b: URL(a/*b) // c */)`, SCSS)).toBe(true)
+	})
+
 	// A string inside parentheses whose comments are read hides the delimiter it holds
 	it(`a double slash behind an address whose string holds the opening delimiter of a block comment`, () => {
 		expect(endsWithInlineComment(`b: url( a "/*") // c`, LESS)).toBe(true)

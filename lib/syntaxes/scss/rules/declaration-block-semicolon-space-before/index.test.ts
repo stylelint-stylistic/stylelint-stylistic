@@ -113,6 +113,25 @@ testRule({
 
 	reject: [
 		{
+			// See #664
+			description: `a comment behind an address whose name is written in upper case and which holds the opening delimiter of a block comment, where Sass reads an address and the double slash behind it`,
+			code: `
+				a {
+					b: URL(a/*b) // c */)
+					;
+				}
+			`,
+			fixed: `
+				a {
+					b: URL(a/*b) // c */)
+					;
+				}
+			`,
+			line: 3,
+			column: 1,
+			message: messages.rejectedBefore(),
+		},
+		{
 			// See #117
 			description: `inline comment before the semicolon: the semicolon cannot join the comment's line, so the code is left alone and the warning stands`,
 			code: `

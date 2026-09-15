@@ -69,7 +69,7 @@ function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, re
 
 	if (behindName === openIndex) return openIndex
 
-	let address = readAddress(text, behindName, reading)
+	let address = readAddress(text, behindName, text.slice(openIndex, behindName - 1), reading)
 
 	if (address.isQuoted) {
 		let end = skipString(text, address.index)

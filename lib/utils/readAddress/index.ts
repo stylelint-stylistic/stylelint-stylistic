@@ -14,7 +14,7 @@ export type Address = {
 	/** The opening quotation mark, or the `)` closing a bare address, outside the comments and strings read inside it — the text's length where no `)` stands. */
 	index: number,
 
-	/** The comments standing inside the parentheses, which only a bare address behind whitespace, or parentheses Sass reads as code, hold. */
+	/** The comments standing inside the parentheses, which only a bare address behind whitespace, one behind a name spelled other than `url` where the parser reads no `//` of its own, or parentheses Sass reads as code, hold. */
 	comments: CommentSpan[],
 }
 
@@ -99,6 +99,18 @@ function readsAsSassAddress (text: string, openIndex: number): boolean {
 }
 
 /**
+ * Asks whether the PostCSS tokenizer, which `postcss-less` reads by too, takes the parentheses as code: behind its own whitespace, and behind any name but the word `url` itself unless the parser reads `//` on its own, where Sass decides.
+ * @param text - The text holding the call.
+ * @param openIndex - Behind the `(`.
+ * @param name - The name in front of the `(`, as the text spells it.
+ * @param reading - What the syntax makes of a `//` comment.
+ * @returns True where a block comment inside them is a comment to that tokenizer.
+ */
+function tokenizesAsCode (text: string, openIndex: number, name: string, reading: CommentReading): boolean {
+	return isWhitespace(text.charAt(openIndex)) || (!reading.tokenizes && name !== `url`)
+}
+
+/**
  * Reads the address a `url()`'s parentheses hold, the one reading the comment walk and the `//`-comment guard both ask ([#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557)).
  *
  * A quotation mark behind the `(`, whitespace aside, makes the parentheses hold code: the string is the address, and a comment written behind it is a comment, which is how Sass reads it and how the plain-CSS tokenizer reads it where the mark stands against the parenthesis. Everything else is a bare address, which the first `)` no escape holds closes, outside the comments and strings read below — `postcss-scss` alone counts parentheses there, and no compiler takes the text it thereby reads.
@@ -107,21 +119,24 @@ function readsAsSassAddress (text: string, openIndex: number): boolean {
  *
  * Whitespace of the tokenizer's own behind the `(` makes a block comment inside the parentheses a comment, which the `)` closing them then stands outside of ([#660](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/660)). PostCSS takes the parentheses of a lower-case `url(` as one token wherever the `(` is met by anything but a quotation mark and that whitespace; where whitespace does stand there it takes one all the same, but only while the text to the first `)` holds no break, quotation mark, parenthesis, solidus or backslash — and the opening delimiter of a comment holds a solidus. So a comment written behind that whitespace is a comment to PostCSS, to `postcss-less`, which reads by the same tokenizer, and to Sass; Less prints it as text of the address, so reading it as a comment is what declines a write under all four.
  *
+ * The same holds behind a name spelled other than `url`, `URL(`, `u\rl(` or `\75 rl(`: the tokenizer asks the word it read last for `url` itself and meets these parentheses as those of any call, which a solidus makes code, so a block comment inside them is a comment to it and a write must not enter it ([#664](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/664)). Under `postcss-scss` Sass decides instead, since the parser's comment read where Sass reads an address hid the `//` comment Sass reads behind the address.
+ *
  * Wherever a comment is read inside the parentheses, a quotation mark the text closes opens a string, whose comment delimiters and `)` are its text: PostCSS and `postcss-less` read the string in `url( a "/*)" b)` so, and Sass reads it so with or without the whitespace, while `postcss-scss`, which takes the parentheses of `url(` as one token, reads no comment inside the string either.
  *
  * Under a parser whose own tokenizer reads `//`, which is `postcss-scss`, the parentheses Sass reads as code rather than as an unquoted address ({@link readsAsSassAddress}) hold comments of both kinds, and the first `)` no comment or string covers closes them ([#661](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/661)). Less reads an address there, and a block comment read where it reads one would hide a `//` comment of its own, so no other syntax reads Sass's way.
  * @param text - The text holding the call.
  * @param openIndex - Behind the `(`.
+ * @param name - The name in front of the `(`, as the text spells it.
  * @param reading - What the syntax makes of a `//` comment.
  * @returns The reading.
  */
-export function readAddress (text: string, openIndex: number, reading: CommentReading): Address {
+export function readAddress (text: string, openIndex: number, name: string, reading: CommentReading): Address {
 	let quoted = text.slice(openIndex).match(OPENS_WITH_QUOTE)?.[0]
 
 	if (quoted !== undefined) return { isQuoted: true, index: openIndex + quoted.length - 1, comments: [] }
 
 	let isSassCode = reading.tokenizes && !readsAsSassAddress(text, openIndex)
-	let readsBlockComments = isSassCode || isWhitespace(text.charAt(openIndex))
+	let readsBlockComments = isSassCode || tokenizesAsCode(text, openIndex, name, reading)
 	let readsInlineComments = isSassCode && reading.spells
 	let comments: CommentSpan[] = []
 	let index = openIndex

@@ -134,6 +134,12 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`url( a/* x) 1PX // c`)).toEqual([{ start: 6, end: 20, isInline: false }])
 	})
 
+	// See #664
+	it(`a comment inside an address whose name is spelled other than the word itself, which every parser reads as one`, () => {
+		expect(findCommentSpans(`URL(a /* ) / b */ ) 1PX`)).toEqual([{ start: 6, end: 17, isInline: false }])
+		expect(findCommentSpans(`u\\rl(a/*c*/) 1PX`)).toEqual([{ start: 6, end: 11, isInline: false }])
+	})
+
 	// Every case below stands on an escape, which the scan used to read as an ordinary character everywhere but inside an address or a quoted string. See #321
 	it(`a double slash whose first character an escape spells`, () => {
 		expect(findCommentSpans(`a\\//b 1px`)).toEqual([])
@@ -369,6 +375,11 @@ describe(`findAddressSpans`, () => {
 	// See #661
 	it(`the same comment with no whitespace in front of it under the parser Sass is read by, which parts the address as whitespace does`, () => {
 		expect(findAddressSpans(`url(a /* c */ )`, SCSS)).toEqual([{ start: 4, end: 5 }])
+	})
+
+	// See #664
+	it(`the same comment behind a name spelled other than the word itself, which parts the address under every parser`, () => {
+		expect(findAddressSpans(`URL(a /* c */ )`)).toEqual([{ start: 4, end: 5 }])
 	})
 
 	// See #557

@@ -87,7 +87,7 @@ function readInsideCode (text: string, scan: Scan, reading: InlineCommentReading
 	}
 	// A bare address carries a protocol's `//` and is stepped over whole; a quoted one leaves its marks to the string state and what stands behind it to this one
 	else if (char === `(` && namesAnAddress(text.slice(scan.wordStart, scan.index))) {
-		let address = readAddress(text, scan.index + 1, reading)
+		let address = readAddress(text, scan.index + 1, text.slice(scan.wordStart, scan.index), reading)
 		let last = address.comments.at(-1)
 
 		if (!address.isQuoted) scan.index = address.index
