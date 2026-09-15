@@ -9,6 +9,7 @@ import type { Syntax } from "../index.ts"
 
 import { atRuleVariableValue } from "./atRuleVariableValue/index.ts"
 import { isStandardLessAtRule, isStandardLessDeclaration, isStandardLessProperty, isStandardLessRule, isStandardLessSelector, isStandardLessValue } from "./guards/index.ts"
+import { readsWhitespaceBehindAtRuleName } from "./readsWhitespaceBehindAtRuleName/index.ts"
 import { requiresTrailingSemicolon } from "./requiresTrailingSemicolon/index.ts"
 import { restoreMixinFlagRuns } from "./restoreMixinFlagRuns/index.ts"
 import { semicolonFlagIsCommentText } from "./semicolonFlagIsCommentText/index.ts"
@@ -36,6 +37,7 @@ export let less: Syntax = {
 	readsNumberWithExponent: () => false,
 	// Less reads a unit as `%` or a run of ASCII letters and underscores, so `10px\#fff` is a dimension and an escaped value (#527), `10PX-2REM` two dimensions it subtracts (#633) and `10PX9` a dimension and a number (#646). Answered for the whole namespace, since the units it reads are substrings of the one the core reads, on the same positions, so this half of the reading costs at most a warning
 	readsUnitAsIdentifier: () => false,
+	readsWhitespaceBehindAtRuleName,
 	// A Less variable keeps one copy more than the core writes, the `value` its stringifier prints
 	write (node: AtRule | Declaration | PostcssRule, text: string): void {
 		css.write(node, text)

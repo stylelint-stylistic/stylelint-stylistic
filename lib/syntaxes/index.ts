@@ -256,6 +256,15 @@ export type Syntax = {
 	readsUnitAsIdentifier (): boolean,
 
 	/**
+	 * Asks whether whitespace written behind an at-rule's name changes what the syntax reads the at-rule as.
+	 *
+	 * To CSS and Sass `@import"x"` and `@import "x"` are one rule. Less takes `@import` and `@plugin` as directives only with whitespace behind the name, so a space written into `@import(reference) "x"` loads a file the stylesheet only printed ([#396](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/396)).
+	 * @param atRule - The at-rule.
+	 * @returns True where a rule writing whitespace behind the name would change the stylesheet's meaning.
+	 */
+	readsWhitespaceBehindAtRuleName (atRule: AtRule): boolean,
+
+	/**
 	 * Finds the spans of a preprocessor's interpolations in a text; no rule reads code beside one.
 	 * @param text - The text, its comments blanked so a brace inside one cannot close an interpolation.
 	 * @param node - The node, whose syntax says which spellings interpolate.

@@ -44,7 +44,8 @@ export function atRuleNameSpaceChecker (options: {
 	 * @param node - The at-rule.
 	 */
 	function checkColon (source: string, index: number, node: AtRule): void {
-		let fix = options.isFixable?.(node) === false ? null : options.fix
+		// Under Less the whitespace behind `@import` and `@plugin` makes them directives, so the warning stands over a file the fix would change the meaning of (#396)
+		let fix = options.isFixable?.(node) === false || options.syntax.readsWhitespaceBehindAtRuleName(node) ? null : options.fix
 
 		options.locationChecker({
 			source,

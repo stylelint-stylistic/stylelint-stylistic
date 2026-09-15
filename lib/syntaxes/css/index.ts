@@ -92,6 +92,8 @@ export let css: Syntax = {
 	readsNumberWithExponent: () => true,
 	// An escape and a hyphen are both code points of an identifier: `10PX\*2REM` has the unit `PX\*2REM` (#414) and `10PX-2REM` the unit `PX-2REM`
 	readsUnitAsIdentifier: () => true,
+	// Whitespace behind an at-rule's name only parts it from the prelude: `@import"x"` is `@import "x"`
+	readsWhitespaceBehindAtRuleName: () => false,
 	// A preprocessor's interpolations are read over plain CSS too, since a rule reading the inside of a `#{…}` as CSS would rewrite it (#298)
 	interpolationSpans: findInterpolationSpans,
 	selectorCopies (rule: PostcssRule): SelectorCopies {
