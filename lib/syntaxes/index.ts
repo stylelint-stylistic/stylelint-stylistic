@@ -49,6 +49,14 @@ export type Syntax = {
 	valueEmbedsHostCode (decl: Declaration): boolean,
 
 	/**
+	 * Finds the spans of host code a raw of a node holds, a styled template's interpolations, whose breaks end no line of the stylesheet.
+	 * @param text - The raw, as the node carries it.
+	 * @param node - The node the raw belongs to.
+	 * @returns The spans, in the raw's coordinates.
+	 */
+	hostCodeSpans (text: string, node: Node): InterpolationSpan[],
+
+	/**
 	 * Asks whether an at-rule is standard CSS, not a preprocessor construct.
 	 * @param atRule - The at-rule.
 	 * @returns True where it is.

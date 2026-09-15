@@ -2,7 +2,7 @@ import type { AtRule, Declaration, Document, Node, Root, Rule, Source } from "po
 import styleSearch from "style-search"
 import stylelint from "stylelint"
 
-import { CRLF, EVERY_LINE_BREAK, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_IMPORTANT_FLAG_LINE, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, TRAILING_LINE_BREAK, TRAILING_WHITESPACE, WHITESPACE_WITHOUT_BREAK_BEFORE_CONTENT } from "../../regexps.ts"
+import { CRLF, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_IMPORTANT_FLAG_LINE, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, TRAILING_LINE_BREAK, TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
@@ -11,7 +11,7 @@ import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
-import { fixIndentation, lastLineIndentation } from "../../utils/lineIndentation/index.ts"
+import { fixIndentation, lastLineIndentation, lastLineStart, writeIndentationBefore } from "../../utils/lineIndentation/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { rootLevelIndents } from "../../utils/rootLevelIndents/index.ts"
@@ -125,16 +125,16 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// Only the root's first node, or one behind a break, has indentation to check
 			let isFirstChild = parent.type === `root` && parent.first === node
-			// The indentation is the whitespace opening the last line of `before`, a form feed or bare carriage return as much as a space; the writers below read the same run (#452). What stands behind it is on the line, not in front of it: a `*` or `_` hack, a stray semicolon, or a styled template's interpolation (#516)
-			let beforeLines = before.split(EVERY_LINE_BREAK)
-			let indentationBefore = lastLineIndentation(beforeLines)
+			// The indentation is the whitespace opening the last line of `before`, a form feed or bare carriage return as much as a space; the writers below read the same run (#452). What stands behind it is on the line, not in front of it: a `*` or `_` hack, a stray semicolon, or a styled template's interpolation (#516), whose own breaks end no line of the stylesheet
+			let beforeSpans = syntax.hostCodeSpans(before, node)
+			let beforeBreaks = lastLineStart(before, beforeSpans) >= 0
 
 			// A first node with no break in front stands on the stylesheet's opening line and is asked to be empty, not for the host line's tabs (#453). A bare carriage return ends a JavaScript line and none of the stylesheet's, so a node behind one still stands there
-			let opensTheStylesheetsLine = isFirstChild && beforeLines.length === 1
+			let opensTheStylesheetsLine = isFirstChild && !beforeBreaks
 			let expectedOpeningBraceLevel = opensTheStylesheetsLine ? nodeLevel - embeddedLevel : nodeLevel
 			let expectedOpeningBraceIndentation = indentChar.repeat(expectedOpeningBraceLevel)
 
-			if ((beforeLines.length > 1 || (isFirstChild && (!getDocument(parent) || (parent.raws.codeBefore && TRAILING_LINE_BREAK.test(parent.raws.codeBefore))))) && indentationBefore !== expectedOpeningBraceIndentation) {
+			if ((beforeBreaks || (isFirstChild && (!getDocument(parent) || (parent.raws.codeBefore && TRAILING_LINE_BREAK.test(parent.raws.codeBefore))))) && lastLineIndentation(before, beforeSpans) !== expectedOpeningBraceIndentation) {
 				report({
 					message: messages.expected,
 					messageArgs: [legibleExpectation(expectedOpeningBraceLevel - (opensTheStylesheetsLine ? 0 : hostLevel))],
@@ -144,7 +144,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					fix () {
 						if (!isString(node.raws.before)) return
 
-						node.raws.before = fixIndentation(isFirstChild ? node.raws.before.replace(WHITESPACE_WITHOUT_BREAK_BEFORE_CONTENT, expectedOpeningBraceIndentation) : node.raws.before, expectedOpeningBraceIndentation)
+						node.raws.before = writeIndentationBefore(node.raws.before, expectedOpeningBraceIndentation, beforeSpans, isFirstChild)
 					},
 				})
 			}
@@ -154,9 +154,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let expectedClosingBraceIndentation = indentChar.repeat(closingBraceLevel)
 			// Read wherever the parser filed the run: behind an at-rule with neither block nor semicolon it is in `raws.between`, trimmed by `checkAtRuleParams`, so nobody measured the brace's line (#509)
 			let blockAfter = isRule(node) || isAtRule(node) ? getBlockAfter(syntax, node) ?? `` : ``
-			let afterLines = blockAfter.split(EVERY_LINE_BREAK)
+			let afterLineStart = lastLineStart(blockAfter, syntax.hostCodeSpans(blockAfter, node))
 
-			if ((isRule(node) || isAtRule(node)) && hasBlock(node) && afterLines.length > 1 && afterLines.at(-1) !== expectedClosingBraceIndentation) {
+			if ((isRule(node) || isAtRule(node)) && hasBlock(node) && afterLineStart >= 0 && blockAfter.slice(afterLineStart) !== expectedClosingBraceIndentation) {
 				let problemIndex = nodeString(node, result).length - 1
 
 				report({
@@ -168,7 +168,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					result,
 					ruleName,
 					fix () {
-						setBlockAfter(syntax, node, fixIndentation(blockAfter, expectedClosingBraceIndentation))
+						setBlockAfter(syntax, node, fixIndentation(blockAfter, expectedClosingBraceIndentation, syntax.hostCodeSpans(blockAfter, node)))
 					},
 				})
 			}

@@ -40,7 +40,7 @@ export function semicolonLineChecker ({ node, syntax, result, checkedRuleName, m
 	let run = readWhitespaceBeforeSemicolon(syntax, node)
 	let lines = run.split(EVERY_LINE_BREAK)
 
-	if (lines.length < 2 || lastLineIndentation(lines) === expectedIndentation) return
+	if (lines.length < 2 || lastLineIndentation(run) === expectedIndentation) return
 
 	// The semicolon stands behind the statement's text as the file spells it
 	let problemIndex = isDeclaration(node) ? declarationString(syntax, node).length : `@${node.name}${node.raws.afterName || ``}${syntax.read(node)}${node.raws.between || ``}${typeof node.raws.important === `string` ? node.raws.important : ``}`.length

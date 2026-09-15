@@ -770,6 +770,11 @@ testRule({
 				}
 			`,
 		},
+		{
+			// An interpolation's own break ends a line of JavaScript, not the one the node stands on
+			description: `an interpolation holding a break in front of a node on a line at its level, the break inside a string of the host`,
+			code: `function f () {\n\tconst a = styled.div\`\n\t\t\${\`\n\`}; color: red;\n\t\`;\n}`,
+		},
 	],
 
 	reject: [
@@ -840,6 +845,69 @@ testRule({
 			`,
 			line: 3,
 			column: 10,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			// The fix writes the run the check read, never behind a break inside an interpolation
+			description: `an interpolation holding a break in front of a node on a line a level too deep, the break inside a string of the host`,
+			code: `function f () {\n\tconst a = styled.div\`\n\t\t\t\${\`\n\`}; color: red;\n\t\`;\n}`,
+			fixed: `function f () {\n\tconst a = styled.div\`\n\t\t\${\`\n\`}; color: red;\n\t\`;\n}`,
+			line: 4,
+			column: 5,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `the same interpolation standing on a line of its own in front of a node a level too deep`,
+			code: `function f () {\n\tconst a = styled.div\`\n\t\tcolor: red;\n\t\t\${\`\n\`}\n\t\t\ttop: 0;\n\t\`;\n}`,
+			fixed: `function f () {\n\tconst a = styled.div\`\n\t\tcolor: red;\n\t\t\${\`\n\`}\n\t\ttop: 0;\n\t\`;\n}`,
+			line: 6,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `the same interpolation standing on a line of its own in front of a closing brace a level too deep`,
+			code: `function f () {\n\tconst a = styled.div\`\n\t\ta {\n\t\t\tcolor: red;\n\t\t\t\${\`\n\`}\n\t\t\t}\n\t\`;\n}`,
+			fixed: `function f () {\n\tconst a = styled.div\`\n\t\ta {\n\t\t\tcolor: red;\n\t\t\${\`\n\`}\n\t\t}\n\t\`;\n}`,
+			line: 7,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			// The interpolations of a file opening with a byte order mark, which PostCSS strips from the text the parser counted in
+			description: `two interpolations on lines of their own in front of a node, all a level too deep, in a file opening with a byte order mark`,
+			code: `\uFEFFfunction f () {\n\tconst a = styled.div\`\n\t\tcolor: red;\n\t\t\t\${\`\n\`}\n\t\t\t\${y}\n\t\t\ttop: 0;\n\t\`;\n}`,
+			fixed: `\uFEFFfunction f () {\n\tconst a = styled.div\`\n\t\tcolor: red;\n\t\t\${\`\n\`}\n\t\t\${y}\n\t\ttop: 0;\n\t\`;\n}`,
+			line: 7,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `spaces in front of an interpolation holding a break on the line of the backtick, the first node behind it on the same line`,
+			code: `function f () {\n\tconst a = styled.div\`  \${\`\n\`} color: red;\n\t\`;\n}`,
+			fixed: `function f () {\n\tconst a = styled.div\`\${\`\n\`} color: red;\n\t\`;\n}`,
+			line: 3,
+			column: 4,
+			message: messages.expected(`0 tabs`),
+		},
+		{
+			// The fix writes the node's line alone, not the line of the backtick in front of it
+			description: `an interpolation on the line of the backtick in front of a first node broken onto the next line a level too deep`,
+			code: `
+				function f () {
+					const a = styled.div\`\${x}
+							color: red;
+					\`;
+				}
+			`,
+			fixed: `
+				function f () {
+					const a = styled.div\`\${x}
+						color: red;
+					\`;
+				}
+			`,
+			line: 3,
+			column: 4,
 			message: messages.expected(`1 tab`),
 		},
 	],

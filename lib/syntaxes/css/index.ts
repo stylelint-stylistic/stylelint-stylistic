@@ -43,6 +43,7 @@ export let css: Syntax = {
 	},
 	embedding: () => ({ indent: ``, multiline: false }),
 	valueEmbedsHostCode: () => false,
+	hostCodeSpans: () => [],
 	// What the core once turned away was a preprocessor's, and such a file no longer reaches these rules
 	isStandardAtRule: () => true,
 	isStandardRule: isStandardSyntaxRule,

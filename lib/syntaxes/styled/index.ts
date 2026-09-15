@@ -5,6 +5,8 @@ import { EVERY_JS_LINE_TERMINATOR, LEADING_SPACES_AND_TABS } from "../../regexps
 import { css } from "../css/index.ts"
 import type { Syntax } from "../index.ts"
 
+import { hostCodeSpans } from "./hostCodeSpans/index.ts"
+
 /** The `styled` namespace: a stylesheet embedded in JavaScript as a styled template, parsed with `postcss-styled-syntax`. A superset of the core, so a project holding both configures these rules alone. */
 export let styled: Syntax = {
 	...css,
@@ -25,6 +27,7 @@ export let styled: Syntax = {
 		}
 	},
 	valueEmbedsHostCode: (decl: Declaration) => isStyledSyntaxDeclaration(decl) && decl.value.includes(`\${`),
+	hostCodeSpans,
 }
 
 /**
