@@ -211,7 +211,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		 * @param declLevel - The indent level the declaration stands at.
 		 */
 		function checkValue (decl: Declaration, declLevel: number): void {
-			if (!LINE_BREAK.test(decl.value)) return
+			// A break in front of the value or of the colon is in `raws.between` (#635)
+			if (!LINE_BREAK.test(decl.value) && !LINE_BREAK.test(decl.raws.between || ``)) return
 
 			if (syntax.valueEmbedsHostCode(decl)) return
 
@@ -391,7 +392,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					for (let fixPosition of fixPositions) {
 						if (fixPosition.startIndex < declProp.length + declBetween.length) {
 							node.raws.between = replaceIndentation(
-								declBetween,
+								node.raws.between || ``,
 								fixPosition.currentIndentation,
 								fixPosition.expectedIndentation,
 								fixPosition.startIndex - declProp.length,

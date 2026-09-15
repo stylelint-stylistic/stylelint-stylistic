@@ -842,3 +842,21 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`tab`],
+	customSyntax: `postcss-less`,
+
+	reject: [
+		{
+			// See #635
+			description: `a value opening on the line behind its colon, read as Less`,
+			code: `a {\n\tb:\n1px;\n}\n`,
+			fixed: `a {\n\tb:\n\t\t1px;\n}\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`2 tabs`),
+		},
+	],
+})

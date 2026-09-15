@@ -49,6 +49,15 @@ a {
 
 	reject: [
 		{
+			// See #635
+			description: `a style attribute whose value opens on the line behind its colon, not indented`,
+			code: `<a style="color:\npink"></a>`,
+			fixed: `<a style="color:\n\tpink"></a>`,
+			line: 2,
+			column: 1,
+			message: messages.expected(`1 tab`),
+		},
+		{
 			// See #594
 			description: `a style attribute closing on an at-rule whose parameters span lines, the continuation line not indented`,
 			code: `<a style="@import url(

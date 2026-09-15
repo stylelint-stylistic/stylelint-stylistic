@@ -695,3 +695,21 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`tab`],
+	customSyntax: `postcss-scss`,
+
+	reject: [
+		{
+			// See #635
+			description: `a variable's value opening on the line behind an inline comment standing after the colon`,
+			code: `a {\n\t$b: // c\n1px;\n}\n`,
+			fixed: `a {\n\t$b: // c\n\t\t1px;\n}\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`2 tabs`),
+		},
+	],
+})

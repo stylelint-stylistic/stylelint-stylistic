@@ -1133,3 +1133,107 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`tab`],
+
+	accept: [
+		{
+			// See #635
+			description: `a value opening on the line behind its colon, a level deeper than the declaration`,
+			code: `a {\n\tcolor:\n\t\tpink;\n}\n`,
+		},
+	],
+
+	reject: [
+		{
+			// See #635
+			description: `a value opening on the line behind its colon with no indentation, the break standing in the declaration's \`raws.between\``,
+			code: `a {\n\tcolor:\n pink;\n}\n`,
+			fixed: `a {\n\tcolor:\n\t\tpink;\n}\n`,
+			line: 3,
+			column: 2,
+			message: messages.expected(`2 tabs`),
+		},
+		{
+			description: `the same line indented a level too deep`,
+			code: `a {\n\tcolor:\n\t\t\tpink;\n}\n`,
+			fixed: `a {\n\tcolor:\n\t\tpink;\n}\n`,
+			line: 3,
+			column: 4,
+			message: messages.expected(`2 tabs`),
+		},
+		{
+			description: `the same line behind a comment standing after the colon`,
+			code: `a {\n\tcolor: /* c */\npink;\n}\n`,
+			fixed: `a {\n\tcolor: /* c */\n\t\tpink;\n}\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`2 tabs`),
+		},
+		{
+			description: `the colon's own line behind a property it is broken from, a line of the declaration measured as the value's`,
+			code: `a {\n\tcolor\n: pink;\n}\n`,
+			fixed: `a {\n\tcolor\n\t\t: pink;\n}\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`2 tabs`),
+		},
+		{
+			description: `the same line behind a custom property, whose value keeps no break of its own`,
+			code: `a {\n\t--x:\npink;\n}\n`,
+			fixed: `a {\n\t--x:\n\t\tpink;\n}\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`2 tabs`),
+		},
+		{
+			description: `two lines standing in \`raws.between\`, a comment's and the value's, both written in one run`,
+			code: `a {\n\tcolor:\n/* c */\npink\n\t\tpink;\n}\n`,
+			fixed: `a {\n\tcolor:\n\t\t/* c */\n\t\tpink\n\t\tpink;\n}\n`,
+			warnings: [
+				{ line: 3, column: 1, message: messages.expected(`2 tabs`) },
+				{ line: 4, column: 1, message: messages.expected(`2 tabs`) },
+			],
+		},
+		{
+			description: `the same line behind a Windows break, which the fix keeps`,
+			code: `a {\r\n\tcolor:\r\npink;\r\n}\r\n`,
+			fixed: `a {\r\n\tcolor:\r\n\t\tpink;\r\n}\r\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`2 tabs`),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`tab`, { except: [`value`] }],
+
+	reject: [
+		{
+			// See #635
+			description: `a value opening on the line behind its colon under the option, asked for the declaration's level`,
+			code: `a {\n\tcolor:\n\t\tpink;\n}\n`,
+			fixed: `a {\n\tcolor:\n\tpink;\n}\n`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`tab`, { ignore: [`value`] }],
+
+	accept: [
+		{
+			// See #635
+			description: `a value opening on the line behind its colon under the option, which does not measure it`,
+			code: `a {\n\tcolor:\npink;\n}\n`,
+		},
+	],
+})
