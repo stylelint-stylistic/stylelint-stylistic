@@ -21,10 +21,15 @@ describe(`hideParenthesesInUrlStrings`, () => {
 		expect(hideParenthesesInUrlStrings(`url( a "\\")" b ) 1px`)).toBe(`url( a "\\"?" b ) 1px`)
 	})
 
-	it(`a comment the walk for comments stops short of, behind such a string`, () => {
+	// The walk for comments steps over the string and finds the comment behind it
+	it(`a comment behind such a string, which the walk for comments finds and the mask leaves to the caller's guards`, () => {
 		let text = `url( a ")" /* ) */ b ) 1px`
 
-		expect(hideParenthesesInUrlStrings(text, findCommentSpans(text))).toBe(`url( a "?" /* ? */ b ) 1px`)
+		expect(hideParenthesesInUrlStrings(text, findCommentSpans(text))).toBe(`url( a "?" /* ) */ b ) 1px`)
+	})
+
+	it(`the same comment where the spans handed in do not hold it, which is read here`, () => {
+		expect(hideParenthesesInUrlStrings(`url( a ")" /* ) */ b ) 1px`, [])).toBe(`url( a "?" /* ? */ b ) 1px`)
 	})
 
 	it(`a comment the caller knows, whose parenthesis is its guards' to answer for`, () => {

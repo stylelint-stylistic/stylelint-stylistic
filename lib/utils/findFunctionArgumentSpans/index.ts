@@ -1,20 +1,6 @@
 import { IDENTIFIER_CODE_POINT, LINE_BREAK, OPENS_NO_IDENTIFIER } from "../../regexps.ts"
 import { readIdentifierCharacter } from "../readIdentifierCharacter/index.ts"
-
-/**
- * Skips a quoted string.
- * @param text - The value the string stands in.
- * @param openIndex - The opening quote.
- * @returns The index behind the closing quote, or the end of the text.
- */
-function skipString (text: string, openIndex: number): number {
-	let quote = text[openIndex]
-	let index = openIndex + 1
-
-	while (index < text.length && text[index] !== quote) index += text[index] === `\\` ? 2 : 1
-
-	return index + 1
-}
+import { skipString } from "../skipString/index.ts"
 
 /**
  * Skips a string, a block comment or a `//` comment standing at an index.

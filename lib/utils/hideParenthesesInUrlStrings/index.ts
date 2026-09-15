@@ -67,7 +67,7 @@ function findHeldParentheses (text: string, spans: (CommentSpan | InlineCommentS
 
 			if (text[index] === `\\`) end = index + 2
 			else if (text[index] === `"` || text[index] === `'`) end = skipString(text, index)
-			// The walk for comments stops at a string's `)` and finds none behind it
+			// A comment the spans handed in do not hold
 			else if (text[index] === `/` && text[index + 1] === `*`) end = skipBlockComment(text, index)
 
 			if (end > closeIndex) {
@@ -86,7 +86,7 @@ function findHeldParentheses (text: string, spans: (CommentSpan | InlineCommentS
 /**
  * Masks the `)` inside a string that the parentheses of a `url( ` hold, so that `postcss-value-parser` closes them where PostCSS does.
  *
- * The parser reads everything behind `url(` to the first `)` as one word wherever no quotation mark opens the parentheses; behind the tokenizer's whitespace PostCSS reads them as code, where a string holds its `)`. Only that trigger is read: a name glued to a sign in front, `,url(`, is code to the tokenizer too. The rules skipping the address read the string's tail as code of the value and wrote into it. A block comment behind such a string is read here as well, since the comment walk stops at the string's `)`; a comment the spans hold is left to the caller's guards.
+ * The parser reads everything behind `url(` to the first `)` as one word wherever no quotation mark opens the parentheses; behind the tokenizer's whitespace PostCSS reads them as code, where a string holds its `)`. Only that trigger is read: a name glued to a sign in front, `,url(`, is code to the tokenizer too. The rules skipping the address read the string's tail as code of the value and wrote into it. A block comment the spans handed in do not hold is read here as well; a comment they hold is left to the caller's guards.
  *
  * The parse is remade after each pass, since the parser reads on to the next `)`, which another string may hold. The mask keeps the width, so parse indexes count in the file's text.
  * @param text - The value or params to mask.

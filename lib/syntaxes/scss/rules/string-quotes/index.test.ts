@@ -248,6 +248,15 @@ testRule({
 			message: messages.expected(`double`),
 		},
 		{
+			// A string inside parentheses Sass reads as code hides the comment delimiter it holds
+			description: `a string holding the opening delimiter of a comment inside the parentheses of an address written in upper case, which Sass reads as code`,
+			code: `a { b: URL(a '/*' b/c) 1px; }`,
+			fixed: `a { b: URL(a "/*" b/c) 1px; }`,
+			line: 1,
+			column: 14,
+			message: messages.expected(`double`),
+		},
+		{
 			description: `the double slash of an interpolated address is no comment here either`,
 			code: `a { background: url(#{map-get($m, a)}//cdn/a.png), url('b.png'); }`,
 			fixed: `a { background: url(#{map-get($m, a)}//cdn/a.png), url("b.png"); }`,

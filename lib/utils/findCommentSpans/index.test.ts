@@ -116,6 +116,12 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`url(\u00A0a /* ) */ ) 1PX`)).toEqual([])
 	})
 
+	// A string inside parentheses whose comments are read hides the delimiter and the parenthesis it holds
+	it(`a string holding a delimiter inside parentheses whose comments are read, and the comment behind the call`, () => {
+		expect(findCommentSpans(`url( a "/*" b/c) /* d */`)).toEqual([{ start: 17, end: 24, isInline: false }])
+		expect(findCommentSpans(`url(a "/*" b/c) // d`, SCSS)).toEqual([{ start: 16, end: 20, isInline: true }])
+	})
+
 	// See #661
 	it(`a comment holding a parenthesis inside an address Sass reads as code, which the parser Sass is read by reads as one`, () => {
 		expect(findCommentSpans(`url(a /* ) / b */ ) 1PX`, SCSS)).toEqual([{ start: 6, end: 17, isInline: false }])

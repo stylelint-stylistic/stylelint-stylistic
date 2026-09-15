@@ -131,6 +131,25 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
+			// A string inside parentheses whose comments are read hides the comment delimiter it holds, so the comment behind the call stays one the semicolon cannot join
+			description: `a comment behind an address whose string holds the opening delimiter of a block comment`,
+			code: `
+				a {
+					b: url( a "/*") // c
+					;
+				}
+			`,
+			fixed: `
+				a {
+					b: url( a "/*") // c
+					;
+				}
+			`,
+			line: 3,
+			column: 1,
+			message: messages.rejectedBefore(),
+		},
+		{
 			// See #211
 			description: `a flag standing in the text of the comment, which Less reads as comment text while the parser reads it as the flag — the value and the flag's raw together show the comment running on to the semicolon`,
 			code: `
