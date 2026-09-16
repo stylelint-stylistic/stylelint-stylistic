@@ -1,5 +1,6 @@
 import { IDENTIFIER_CODE_POINT, INLINE_COMMENT_BREAK, INLINE_COMMENT_BREAK_OR_FORM_FEED } from "../../regexps.ts"
 import { escapeReading, findUrlTokenEnd } from "../../utils/findUrlTokenEnd/index.ts"
+import { lengthensTheName } from "../../utils/lengthensTheName/index.ts"
 import { namesAnAddress } from "../../utils/namesAnAddress/index.ts"
 import { readAddress } from "../../utils/readAddress/index.ts"
 import { readEscapedCharacter } from "../../utils/readEscapedCharacter/index.ts"
@@ -68,7 +69,7 @@ function readInsideString (text: string, scan: Scan): void {
 /**
  * Reads one character of the code, where every other state opens.
  *
- * A `(` opens an address where {@link namesAnAddress} says so of the name just read: {@link IDENTIFIER_CODE_POINT} code points, an interpolation's closing brace and escapes, since an ASCII pattern took `éurl(` for `url(` ([#398](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/398)). Read forward, since an escape spells one character with several.
+ * A `(` opens an address where {@link namesAnAddress} says so of the name just read and no sign in front lengthens it ({@link lengthensTheName}): {@link IDENTIFIER_CODE_POINT} code points, an interpolation's closing brace and escapes, since an ASCII pattern took `éurl(` for `url(` ([#398](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/398)). Read forward, since an escape spells one character with several.
  * @param text - The raw scanned, standing in code.
  * @param scan - The scan, moved on.
  * @param reading - The syntax's reading, which says what the parentheses of an address hold.
@@ -100,7 +101,7 @@ function readInsideCode (text: string, scan: Scan, reading: InlineCommentReading
 		scan.index += 1
 	}
 	// A bare address carries a protocol's `//` and is stepped over whole; a quoted one leaves its marks to the string state and what stands behind it to this one
-	else if (char === `(` && namesAnAddress(text.slice(scan.wordStart, scan.index))) {
+	else if (char === `(` && namesAnAddress(text.slice(scan.wordStart, scan.index)) && !lengthensTheName(text.slice(0, scan.wordStart), reading)) {
 		let address = readAddress(text, scan.index + 1, text.slice(scan.wordStart, scan.index), reading)
 		let last = address.comments.at(-1)
 

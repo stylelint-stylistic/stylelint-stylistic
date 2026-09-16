@@ -77,6 +77,13 @@ describe(`readAddress`, () => {
 		expect(readAddress(`\\75 rl(a/*b*/) 1px`, 7, `\\75 rl`, LESS)).toEqual({ isQuoted: false, index: 13, comments: [{ start: 8, end: 13, isInline: false }] })
 	})
 
+	// The tokenizer glues a solidus or a comma to the name, so the word it reads in front of the parenthesis is no `url`
+	it(`the same block comment behind a name a solidus or a comma is glued to, which is a comment to the tokenizer, and the address Sass reads there under its parser`, () => {
+		expect(readAddress(`x /url(a/* ) */) 1px`, 7, `url`, LESS)).toEqual({ isQuoted: false, index: 15, comments: [{ start: 8, end: 15, isInline: false }] })
+		expect(readAddress(`1,url(a/* ) */) 1px`, 6, `url`, { spells: false, tokenizes: false, endsOnFormFeed: false })).toEqual({ isQuoted: false, index: 14, comments: [{ start: 7, end: 14, isInline: false }] })
+		expect(readAddress(`x /url(a/*b) // c */) 1px`, 7, `url`, SCSS)).toEqual({ isQuoted: false, index: 11, comments: [] })
+	})
+
 	// Sass reads an address there and a double slash behind it, which the parser's comment would hide. See #664
 	it(`the same name under the parser Sass is read by, where Sass reads an address and the parser a comment`, () => {
 		expect(readAddress(`URL(a/*b) // c */) 1px`, 4, `URL`, SCSS)).toEqual({ isQuoted: false, index: 8, comments: [] })

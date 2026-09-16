@@ -233,6 +233,17 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`b: URL(a/*b) // c */)`, SCSS)).toBe(true)
 	})
 
+	// The tokenizer glues a solidus to the name and reads the parentheses as code
+	it(`a double slash inside a block comment within an address whose name a solidus is glued to, and one behind the address Sass reads there under its parser`, () => {
+		expect(endsWithInlineComment(`b: /url(a/* ) // */) 1px`, LESS)).toBe(false)
+		expect(endsWithInlineComment(`b: /url(a/*b) // c */)`, SCSS)).toBe(true)
+	})
+
+	// A sign the value parser keeps in the word too makes a call, as a letter does
+	it(`a double slash inside the parentheses of a call whose name a dollar sign is glued to`, () => {
+		expect(endsWithInlineComment(`b: $url(a // ) 1px`, LESS)).toBe(true)
+	})
+
 	// A string inside parentheses whose comments are read hides the delimiter it holds
 	it(`a double slash behind an address whose string holds the opening delimiter of a block comment`, () => {
 		expect(endsWithInlineComment(`b: url( a "/*") // c`, LESS)).toBe(true)

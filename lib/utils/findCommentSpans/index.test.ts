@@ -140,6 +140,18 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`u\\rl(a/*c*/) 1PX`)).toEqual([{ start: 6, end: 11, isInline: false }])
 	})
 
+	// The tokenizer glues a solidus or a comma to the name and reads the parentheses as code
+	it(`a comment holding a parenthesis inside an address whose name a solidus or a comma is glued to`, () => {
+		expect(findCommentSpans(`x /url(a/* ) / b */) 1PX`)).toEqual([{ start: 8, end: 19, isInline: false }])
+		expect(findCommentSpans(`1,url(a/*)*/) 1PX`, PLAIN_CSS)).toEqual([{ start: 7, end: 12, isInline: false }])
+	})
+
+	// A sign the value parser keeps in the word too makes a call, as a letter does
+	it(`comments of both kinds inside the parentheses of a call whose name a sign other than a solidus or a comma is glued to`, () => {
+		expect(findCommentSpans(`$url(a // ) , b\n) 1PX`)).toEqual([{ start: 7, end: 15, isInline: true }])
+		expect(findCommentSpans(`!url(a/* ) " */) "x" 1PX`, PLAIN_CSS)).toEqual([{ start: 6, end: 15, isInline: false }])
+	})
+
 	// Every case below stands on an escape, which the scan used to read as an ordinary character everywhere but inside an address or a quoted string. See #321
 	it(`a double slash whose first character an escape spells`, () => {
 		expect(findCommentSpans(`a\\//b 1px`)).toEqual([])
@@ -437,6 +449,11 @@ describe(`findAddressSpans`, () => {
 	// See #664
 	it(`the same comment behind a name spelled other than the word itself, which parts the address under every parser`, () => {
 		expect(findAddressSpans(`URL(a /* c */ )`)).toEqual([{ start: 4, end: 5 }])
+	})
+
+	// A sign the value parser keeps in the word too makes a call, as a letter does
+	it(`no address behind a name a dollar sign or a bang is glued to, and one behind a solidus`, () => {
+		expect(findAddressSpans(`$url(a) !url(b) /url(c)`)).toEqual([{ start: 21, end: 22 }])
 	})
 
 	// See #557

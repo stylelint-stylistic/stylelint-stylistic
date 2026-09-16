@@ -378,6 +378,24 @@ testRule({
 			column: 25,
 			message: messages.rejectedAfter(),
 		},
+		{
+			// A solidus glued to the name makes the tokenizer read the parentheses as code, and the quotation mark inside the comment opens no string
+			description: `a space after a comma behind a bare address whose name a solidus is glued to, and a comment inside the parentheses holding a parenthesis and a quotation mark`,
+			code: `a { b: x /url(a/* ) '*/) 1px, 3px; }`,
+			fixed: `a { b: x /url(a/* ) '*/) 1px,3px; }`,
+			line: 1,
+			column: 29,
+			message: messages.rejectedAfter(),
+		},
+		{
+			// A dollar sign glued to the name leaves a call to the tokenizer and to the value parser alike, so the quotation mark inside the parentheses opens a string
+			description: `a space after a comma behind a call whose name a dollar sign is glued to, and a string holding the opening delimiter of a comment and a parenthesis inside its parentheses`,
+			code: `a { b: x $url(a"/*)"b) 1px, 3px; }`,
+			fixed: `a { b: x $url(a"/*)"b) 1px,3px; }`,
+			line: 1,
+			column: 27,
+			message: messages.rejectedAfter(),
+		},
 	],
 })
 

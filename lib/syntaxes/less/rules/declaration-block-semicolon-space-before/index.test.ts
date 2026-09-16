@@ -103,6 +103,24 @@ testRule({
 			column: 20,
 			message: messages.expectedBefore(),
 		},
+		{
+			// A solidus glued to the name makes the tokenizer read the parentheses as code, so the double slash inside the block comment opens nothing
+			description: `a block comment holding a parenthesis and a double slash inside an address whose name a solidus is glued to`,
+			code: `a { b: x /url(a/* ) // */) 1px; }`,
+			fixed: `a { b: x /url(a/* ) // */) 1px ; }`,
+			line: 1,
+			column: 30,
+			message: messages.expectedBefore(),
+		},
+		{
+			// A dollar sign glued to the name leaves a call to the tokenizer and to the value parser alike, as a letter would
+			description: `a double slash inside the parentheses of a call whose name a dollar sign is glued to, which opens a comment running past the semicolon`,
+			code: `a { b: $url(a // ) 1px; }`,
+			fixed: `a { b: $url(a // ) 1px; }`,
+			line: 1,
+			column: 22,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 testRule({

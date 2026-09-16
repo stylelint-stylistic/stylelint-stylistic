@@ -313,6 +313,9 @@ export const TRAILING_WHITESPACE_RUN = /\s+$/u
 /** The trailing whitespace down to the last break, a Windows pair left whole; a bare carriage return and a form feed go with it, a vertical tab and a no-break space are words ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). The twin of {@link LEADING_WHITESPACE_WITHOUT_BREAK}. */
 export const TRAILING_WHITESPACE_WITHOUT_BREAK = /(?:[ \t\f]|\r(?!\n))+$/u
 
+/** A character `postcss-value-parser` ends a word on outside `calc()`: a code point up to the space, a quotation mark, a parenthesis, a comma, a solidus, a colon. Spelled as what it is not, since a control character in a class is refused. */
+export const VALUE_PARSER_WORD_END = /[^!#-&*+\-.\d;-\uFFFF]/u
+
 /** A leading vendor prefix, any case. */
 export const VENDOR_PREFIX = /^-[a-z]+-/iu
 

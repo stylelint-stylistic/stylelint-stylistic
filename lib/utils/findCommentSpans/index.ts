@@ -4,6 +4,7 @@ import { IDENTIFIER_CODE_POINT, LEADING_CSS_WHITESPACE, LINE_BREAK, TRAILING_CSS
 import { findInlineCommentEnd } from "../findInlineCommentEnd/index.ts"
 import { escapeReading, findUrlTokenEnd, skipStringInUrlToken } from "../findUrlTokenEnd/index.ts"
 import { isOnlyWhitespace } from "../isOnlyWhitespace/index.ts"
+import { lengthensTheName } from "../lengthensTheName/index.ts"
 import { namesAnAddress } from "../namesAnAddress/index.ts"
 import { type Address, readAddress } from "../readAddress/index.ts"
 import { readEscapedCharacter } from "../readEscapedCharacter/index.ts"
@@ -53,7 +54,7 @@ function skipUrlName (text: string, openIndex: number): number {
 /**
  * Skips a `url()` token, whose bare address carries `//` and `/*` as ordinary characters.
  *
- * The name must stand alone, since `image-url(` is a call. What the parentheses hold is {@link readAddress}'s reading: a quoted address leaves the rest of them code, so the walk reads on from behind the string and finds every comment written there ([#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378), [#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557)); a bare one runs to the first `)` no escape holds and no comment, string or Sass interpolation covers, a quotation mark inside it a character of it wherever no comment is read there ([#504](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504)). A comment inside such an address ends the room the address had, an address being one span ([#660](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/660)). `\61 \75 rl(` is a call.
+ * The name must stand alone, since `image-url(` is a call, and so is `$url(` ({@link lengthensTheName}). What the parentheses hold is {@link readAddress}'s reading: a quoted address leaves the rest of them code, so the walk reads on from behind the string and finds every comment written there ([#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378), [#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557)); a bare one runs to the first `)` no escape holds and no comment, string or Sass interpolation covers, a quotation mark inside it a character of it wherever no comment is read there ([#504](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504)). A comment inside such an address ends the room the address had, an address being one span ([#660](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/660)). `\61 \75 rl(` is a call.
  * @param text - The text walked for comments and addresses.
  * @param openIndex - Where it would start.
  * @param behindIdentifier - True behind a name: a {@link IDENTIFIER_CODE_POINT} code point, a `}` or an escape.
@@ -64,7 +65,7 @@ function skipUrlName (text: string, openIndex: number): number {
  * @returns Where the walk reads on — behind the string of a quoted address, behind the `)` of a bare one — or `openIndex`.
  */
 function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, reading: CommentReading, spans: CommentSpan[], addresses: AddressSpan[], strings: StringSpan[]): number {
-	if (behindIdentifier) return openIndex
+	if (behindIdentifier || lengthensTheName(text.slice(0, openIndex), reading)) return openIndex
 
 	let behindName = skipUrlName(text, openIndex)
 
