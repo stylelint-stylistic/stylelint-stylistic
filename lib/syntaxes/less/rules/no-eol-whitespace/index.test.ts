@@ -29,6 +29,21 @@ testRule({
 			],
 		},
 		{
+			// A fix anywhere prints the call in front of the whitespace it spells there
+			description: `a space ending a line above the stylesheet's last mixin call, which carries an important flag and no semicolon`,
+			code: `
+				a {}${S}
+				.m() !important
+			`,
+			fixed: `
+				a {}
+				.m() !important
+			`,
+			line: 1,
+			column: 5,
+			message: messages.rejected,
+		},
+		{
 			description: `a Less at-variable keeps the fix written to its params`,
 			code: `
 				@foo: (

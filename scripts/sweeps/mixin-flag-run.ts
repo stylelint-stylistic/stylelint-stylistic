@@ -1,7 +1,7 @@
 /**
  * The runs on both sides of a Less mixin call's `!important`, under the rules reading the run in front of a closing brace or a semicolon.
  *
- * Written for [#374](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/374): `postcss-less` gathers both runs into the call's `raws.between` and prints the flag behind it, so every `--fix` moved a break behind the flag in front of it, and the rules writing the run in front of the brace grew the file. The axes: the run in front of the flag, since that one stays where it is; the flag's spelling; what stands behind the flag, whitespace in the spellings the options tell apart and a block comment; what closes the call; and where it stands, a block's last node, a node with a sibling behind it, which only a semicolon allows, and a nested block for `indentation`.
+ * Written for [#374](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/374): `postcss-less` gathers both runs into the call's `raws.between` and prints the flag behind it, so every `--fix` moved a break behind the flag in front of it, and the rules writing the run in front of the brace grew the file. The axes: the run in front of the flag, since that one stays where it is; the flag's spelling; what stands behind the flag, whitespace in the spellings the options tell apart and a block comment; what closes the call; and where it stands, a block's last node, a node with a sibling behind it, which only a semicolon allows, a nested block for `indentation`, and the stylesheet's last node, with a line behind the call or without one, where with no semicolon the parser files the run in front of the flag into the root's `raws.after`.
  */
 
 import { multiply, place } from "../harness/matrix.ts"
@@ -47,6 +47,8 @@ const corpus: Sweep[`corpus`] = place(multiply({ front: FRONTS, flag: FLAGS, beh
 	block: (call) => `a {\n\t${call}}\n`,
 	sibling: (call) => (call.endsWith(`;`) ? `a {\n\t${call}\n\tcolor: red;\n}\n` : `a {\n\tcolor: red;\n\t${call}}\n`),
 	nested: (call) => `@media all {\n\ta {\n\t\t${call}}\n}\n`,
+	root: (call) => `a {}\n${call}`,
+	rootLine: (call) => `a {}\n${call}\n\t/* c */\n`,
 })
 
 /** The rules writing the run in front of the brace, the one writing the semicolon, and the readers of every line. */

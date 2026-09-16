@@ -779,11 +779,12 @@ testRule({
 			code: `a {\n\t.m()\n\t;\n}\n`,
 		},
 		{
-			// See #592
-			description: `a comment indented behind the stylesheet's last mixin call carrying a bang flag, which the parser prints in front of the whitespace it files the comment into, so the rule leaves it alone`,
+			// The rest of the flag's line is the flag's wherever the parser files it
+			description: `an important flag the stylesheet's last mixin call spells on a line of its own, indented, with a comment behind it`,
 			code: `
-				.m() !important
-					/* c */
+				a {}
+				.m()
+					!important /* c */
 			`,
 		},
 	],
@@ -834,6 +835,23 @@ testRule({
 			fixed: `
 				a {}
 				.m()
+				/* c */
+			`,
+			line: 3,
+			column: 2,
+			message: messages.expected(`0 tabs`),
+		},
+		{
+			// The run in front of the flag is the call's, so the comment's line is where the file has it
+			description: `the same comment behind such a call carrying an important flag`,
+			code: `
+				a {}
+				.m() !important
+					/* c */
+			`,
+			fixed: `
+				a {}
+				.m() !important
 				/* c */
 			`,
 			line: 3,

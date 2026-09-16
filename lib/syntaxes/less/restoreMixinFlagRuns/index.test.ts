@@ -75,6 +75,16 @@ describe(`restoreMixinFlagRuns`, () => {
 		expect(root.toString(less)).toBe(`a {\n\t.m() !important\t;\n\tcolor: red\n}`)
 	})
 
+	it(`hands the run in front of the flag of a stylesheet's last call without a semicolon to the call, and leaves the rest of the file to the root`, () => {
+		let root = restored(`a {}\n.m() !important\n\t/* c */\n`)
+		let call = firstAtRule(root)
+
+		expect(call.raws.between).toBe(` `)
+		expect(call.raws.important).toBe(`!important`)
+		expect(root.raws.after).toBe(`\n\t/* c */\n`)
+		expect(root.toString(less)).toBe(`a {}\n.m() !important\n\t/* c */\n`)
+	})
+
 	it(`leaves a call whose flag stands in front of a double-slash comment the parser filed as params`, () => {
 		let root = restored(`a {\n\t.m() !important // c\n}`)
 		let call = firstAtRule(root)
