@@ -245,6 +245,24 @@ testRule({
 			column: 11,
 			message: messages.expectedBefore(),
 		},
+		{
+			// Pins the refusal of a write turning a delimiter backslash into an escaped space
+			description: `a backslash ending the value in front of a line break, which the space would take the place of as the escaped character, so the warning stands`,
+			code: `a { color: red \\\n!important; }`,
+			fixed: `a { color: red \\\n!important; }`,
+			line: 2,
+			column: 1,
+			message: messages.expectedBefore(),
+		},
+		{
+			// Pins that only a write changing the escaped character is refused
+			description: `a backslash ending the value in front of two spaces, the first of which the write keeps behind it, so the second goes`,
+			code: `a { color: red \\  !important; }`,
+			fixed: `a { color: red \\ !important; }`,
+			line: 1,
+			column: 19,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 
@@ -414,6 +432,24 @@ testRule({
 			fixed: `a { b: url(x !y)!important; }`,
 			line: 1,
 			column: 18,
+			message: messages.rejectedBefore(),
+		},
+		{
+			// Pins the refusal of a write that lets the backslash escape the bang
+			description: `a backslash ending the value in front of a space, which taken away would leave the bang escaped and the flag part of the value, so the warning stands`,
+			code: `a { color: red \\ !important; }`,
+			fixed: `a { color: red \\ !important; }`,
+			line: 1,
+			column: 18,
+			message: messages.rejectedBefore(),
+		},
+		{
+			// Pins that an even run of backslashes escapes nothing
+			description: `an escaped backslash ending the value in front of a space, which escapes nothing, so the space goes`,
+			code: `a { color: red \\\\ !important; }`,
+			fixed: `a { color: red \\\\!important; }`,
+			line: 1,
+			column: 19,
 			message: messages.rejectedBefore(),
 		},
 	],

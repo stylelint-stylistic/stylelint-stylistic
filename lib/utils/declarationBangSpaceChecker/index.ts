@@ -6,6 +6,7 @@ import type { Syntax } from "../../syntaxes/index.ts"
 import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import { declarationString } from "../declarationString/index.ts"
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
+import { editKeepsEscapedCharacter } from "../editKeepsEscapedCharacter/index.ts"
 import { findAddressSpans, findCommentSpanAt } from "../findCommentSpans/index.ts"
 import { rereadsAnAddress } from "../rereadsAnAddress/index.ts"
 
@@ -95,8 +96,8 @@ export function declarationBangSpaceChecker (opts: {
 
 			if (findCommentSpanAt(index, addresses)) return
 
-			// A rule may know the fix would break the code; a write parting the name of a bare address from the bang or joining it to the bang switches how PostCSS reads the parentheses
-			let isFixable = fix && (!opts.isFixable || opts.isFixable(decl, index)) && !fix({ text: declString, index }).some((edit) => rereadsAnAddress(declString, edit, reading))
+			// A rule may know the fix would break the code; a write parting the name of a bare address from the bang or joining it to the bang switches how PostCSS reads the parentheses, and one changing the character behind a backslash is read with it
+			let isFixable = fix && (!opts.isFixable || opts.isFixable(decl, index)) && fix({ text: declString, index }).every((edit) => !rereadsAnAddress(declString, edit, reading) && editKeepsEscapedCharacter(declString, edit))
 
 			opts.locationChecker({
 				source: declString,
