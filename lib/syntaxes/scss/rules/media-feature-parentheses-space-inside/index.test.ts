@@ -16,6 +16,11 @@ testRule({
 			description: `a parenthesis written in the text of an end-of-line comment, which closes the feature to the value parser, so neither space this option asks for is written into that text`,
 			code: `@media (a: 1px // c) and (b: 2px\n2px) { a { b: c; } }`,
 		},
+		{
+			// See #575
+			description: `a feature closed only inside an end-of-line comment that swallows the rest of the line, brace and block included, which the parser takes out of the params, so the feature is unclosed to the value parser and passed over whole`,
+			code: `@media (a: 1 // c) { a { b: c; } }`,
+		},
 	],
 
 	reject: [

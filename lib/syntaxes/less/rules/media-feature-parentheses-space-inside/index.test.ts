@@ -76,6 +76,11 @@ testRule({
 			description: `a parenthesis written in the text of an inline comment, with the whitespace this option refuses standing inside that text, which is left where the file spells it`,
 			code: `@media ( a: 1px // c ) and (b: 2px\n2px) { a { b: c; } }`,
 		},
+		{
+			// See #347 and #575
+			description: `a comment that leaves the feature unclosed at the end of the file, whose end the parser puts inside that comment: such a node ends on no parenthesis, and it is passed over whole`,
+			code: `@media ( a: 1 // c`,
+		},
 	],
 
 	reject: [
@@ -102,15 +107,6 @@ testRule({
 					message: messages.rejectedClosing,
 				},
 			],
-		},
-		{
-			// See #347 and #575
-			description: `a comment that leaves the feature unclosed at the end of the file, whose end the parser puts inside that comment: such a node ends on no parenthesis, and it is read as it always was`,
-			code: `@media ( a: 1 // c`,
-			fixed: `@media (a: 1 // c`,
-			line: 1,
-			column: 9,
-			message: messages.rejectedOpening,
 		},
 		{
 			// See #347

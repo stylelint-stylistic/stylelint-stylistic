@@ -3,7 +3,7 @@ import stylelint from "stylelint"
 
 import { MEDIA_AT_RULE, SPACE_OR_TAB } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
-import { addEdit, applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/index.ts"
+import { applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findCommentSpanAt, findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
@@ -43,26 +43,22 @@ function openingEdit (node: FunctionNode, text: string): Edit {
 }
 
 /**
- * Where a media feature's `)` stands in the params; the fix writes in front of it, the warning a character in front.
- *
- * An unclosed feature ends on the params, where the stringifier prints a fix ([#131](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/131)), by the params length since an unclosed `url()` inside overshoots the node's end by a character. A closed one ends on its `)`, not its printed length, since `/*\/` prints as `/**\/` ([#506](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506)).
+ * Where a media feature's `)` stands in the params; the fix writes in front of it, the warning a character in front. From the node's end, not its printed length, since `/*\/` prints as `/**\/` ([#506](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506)); an unclosed feature, whose end is no `)`, never gets here.
  * @param node - The media feature.
- * @param params - The at-rule's params the feature was parsed out of.
- * @returns The index of the `)`, or the end of the params.
+ * @returns The index of the `)`.
  */
-function closingParenthesisIndex (node: FunctionNode, params: string): number {
-	return node.unclosed ? params.length : node.sourceEndIndex - 1
+function closingParenthesisIndex (node: FunctionNode): number {
+	return node.sourceEndIndex - 1
 }
 
 /**
  * The edit writing the whitespace in front of a media feature's `)`.
  * @param node - The media feature.
  * @param text - The whitespace.
- * @param params - The at-rule's params the edit is placed in.
  * @returns The edit.
  */
-function closingEdit (node: FunctionNode, text: string, params: string): Edit {
-	let end = closingParenthesisIndex(node, params)
+function closingEdit (node: FunctionNode, text: string): Edit {
+	let end = closingParenthesisIndex(node)
 
 	return { start: end - node.after.length, end, text }
 }
@@ -102,7 +98,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				fix?: () => void,
 			}> = []
 
-			// Edits at positions, since the value parser prints `/*/` as `/**/`; an unclosed feature under `always` writes both halves at one index, which `addEdit` folds
+			// Edits at positions, since the value parser prints `/*/` as `/**/`; no two name one span, since a pair holding nothing has an empty `after` and an unclosed feature is passed over
 			let edits: Edit[] = []
 
 			// Quotes in comments are masked (#508)
@@ -119,19 +115,22 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (opensAnAddress(node, at, siblings)) return false
 
 				if (node.type === `function`) {
-					// The `)` the parser closed the feature on may be one the file writes inside a comment: it knows nothing of a `//` comment and closes a `/*\/` one on its own star, so either kind can hand it a parenthesis of a comment's text and the fixes then write inside that text ([#347](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/347)). The whole feature goes, as it does in both `function-parentheses-*-inside` rules, the parenthesis the file does spell being one the parser never returned. Behind `unclosed`, since such a node's end index is not its own `)` but a nested call's or one past the text, and what a fix writes at the end of its params is #575.
-					if (!node.unclosed && findCommentSpanAt(node.sourceEndIndex - 1, comments)) return
+					// A feature the file never closes holds the rest of the params, since PostCSS reads an at-rule's params past every brace while a `(` is open, and its `after` is empty whatever stands there; a fix at its end wrote a space at the end of the file every run ([#575](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/575)). The whole feature goes, as it does in both `function-parentheses-*-inside` rules, and the walk goes on inside, where a closed call ends on a `)` of its own.
+					if (node.unclosed) return
 
-					let closingIndex = closingParenthesisIndex(node, params) - 1
-					// A closed pair holding no node encloses one run of the tokenizer's whitespace, `splitSpaceNodesAtWords` having carried any other control character into a node, and the value parser hands that run back whole as `before` and never as `after`: the closing question is the opening one, and asking it again reported a half the opening fix had settled and wrote another space every run ([#329](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/329)). An unclosed feature has no pair, and what a fix writes at the end of its params is [#575](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/575). Under `never` no guard is wanted, since an empty `after` is whitespace to nobody.
-					let enclosesOneRun = !node.unclosed && node.nodes.length === 0
+					// The `)` the parser closed the feature on may be one the file writes inside a comment: it knows nothing of a `//` comment and closes a `/*\/` one on its own star, so either kind can hand it a parenthesis of a comment's text and the fixes then write inside that text ([#347](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/347)). The whole feature goes, the parenthesis the file does spell being one the parser never returned.
+					if (findCommentSpanAt(node.sourceEndIndex - 1, comments)) return
+
+					let closingIndex = closingParenthesisIndex(node) - 1
+					// A pair holding no node encloses one run of the tokenizer's whitespace, `splitSpaceNodesAtWords` having carried any other control character into a node, and the value parser hands that run back whole as `before` and never as `after`: the closing question is the opening one, and asking it again reported a half the opening fix had settled and wrote another space every run ([#329](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/329)). Under `never` no guard is wanted, since an empty `after` is whitespace to nobody.
+					let enclosesOneRun = node.nodes.length === 0
 
 					if (primary === `never`) {
 						if (SPACE_OR_TAB.test(node.before)) {
 							problems.push({
 								message: messages.rejectedOpening,
 								index: node.sourceIndex + 1 + indexBoost,
-								fix () { addEdit(edits, openingEdit(node, ``)) },
+								fix () { edits.push(openingEdit(node, ``)) },
 							})
 						}
 
@@ -142,7 +141,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 							problems.push({
 								message: messages.rejectedClosing,
 								index: closingIndex + indexBoost,
-								...(isFixable && { fix: (): void => { addEdit(edits, closingEdit(node, ``, params)) } }),
+								...(isFixable && { fix: (): void => { edits.push(closingEdit(node, ``)) } }),
 							})
 						}
 					}
@@ -151,7 +150,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 							problems.push({
 								message: messages.expectedOpening,
 								index: node.sourceIndex + 1 + indexBoost,
-								fix () { addEdit(edits, openingEdit(node, ` `)) },
+								fix () { edits.push(openingEdit(node, ` `)) },
 							})
 						}
 
@@ -159,7 +158,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 							problems.push({
 								message: messages.expectedClosing,
 								index: closingIndex + indexBoost,
-								fix () { addEdit(edits, closingEdit(node, ` `, params)) },
+								fix () { edits.push(closingEdit(node, ` `)) },
 							})
 						}
 					}

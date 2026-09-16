@@ -46,6 +46,16 @@ testRule({
 			description: `a vertical tab between single spaces inside a feature, which the tokenizer reads as what the feature holds, so each parenthesis already has its space`,
 			code: `@media ( \v ) { a { b: c; } }`,
 		},
+		{
+			// See #575
+			description: `a feature the file never closes, which holds the rest of the file to the parser and ends on no parenthesis, so it is passed over whole and nothing is written at the end of the file`,
+			code: `@media (a: 1 { a { b: c; } }`,
+		},
+		{
+			// See #575
+			description: `an unclosed call inside such a feature, which is a second node ending on no parenthesis`,
+			code: `@media (min-width: calc(1px { a { b: c; } }`,
+		},
 	],
 
 	reject: [
@@ -297,6 +307,24 @@ testRule({
 				},
 			],
 		},
+		{
+			// See #575
+			description: `a feature the file does spell beside one it never closes, whose parentheses are spaced out while the unclosed one is left as it stands`,
+			code: `@media (a: 1) and (b: 2 { a { b: c; } }`,
+			fixed: `@media ( a: 1 ) and (b: 2 { a { b: c; } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 12,
+					message: messages.expectedClosing,
+				},
+			],
+		},
 	],
 })
 
@@ -343,6 +371,11 @@ testRule({
 			// The address is named by the spelling the file carries, so an escape inside the name is one a reader of the address resolves
 			description: `a feature holding an address whose name is written with a hexadecimal escape, its whitespace left as it stands`,
 			code: `@media (c: \\75 rl( a b )) { a { b: 1px } }`,
+		},
+		{
+			// See #575
+			description: `a space behind the parenthesis of a feature the file never closes, which ends on no parenthesis and is passed over whole`,
+			code: `@media ( a: 1 { a { b: c; } }`,
 		},
 	],
 
@@ -616,6 +649,24 @@ testRule({
 				{
 					line: 1,
 					column: 29,
+					message: messages.rejectedClosing,
+				},
+			],
+		},
+		{
+			// See #575
+			description: `a feature the file does spell beside one it never closes, whose whitespace goes while the unclosed one is left as it stands`,
+			code: `@media ( a: 1 ) and ( b: 2 { a { b: c; } }`,
+			fixed: `@media (a: 1) and ( b: 2 { a { b: c; } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 14,
 					message: messages.rejectedClosing,
 				},
 			],
