@@ -86,8 +86,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				index: source.length,
 				err: (m) => {
 					let between = typeof statement.raws.between === `string` ? statement.raws.between : ``
-					// `never` would put the brace into a `//` comment ending `between`: no fix
-					let isFixable = !(primary.startsWith(`never`) && syntax.endsWithInlineComment(between, syntax.inlineComments(statement, result)))
+					// `never` would put the brace into a `//` comment ending the head, which the parser may keep in the selector or params: no fix
+					let isFixable = !(primary.startsWith(`never`) && syntax.endsWithInlineComment(`${syntax.read(statement)}${between}`, syntax.inlineComments(statement, result)))
 
 					report({
 						message: m,

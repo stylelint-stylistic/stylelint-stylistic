@@ -120,8 +120,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let between = statement.raws.between ?? ``
 					// Comments in `between` survive
 					let beforeWhitespace = between.replace(TRAILING_WHITESPACE, ``)
-					// Behind an inline comment the brace cannot join its line, so neither option is satisfiable; the warning stands unfixed
-					let isFixable = !syntax.endsWithInlineComment(between, syntax.inlineComments(statement, result))
+					// Behind an inline comment the brace cannot join its line, so neither option is satisfiable; the warning stands unfixed. The parser may keep the comment in the selector or params, so they are asked too
+					let isFixable = !syntax.endsWithInlineComment(`${syntax.read(statement)}${between}`, syntax.inlineComments(statement, result))
 
 					report({
 						message: m,

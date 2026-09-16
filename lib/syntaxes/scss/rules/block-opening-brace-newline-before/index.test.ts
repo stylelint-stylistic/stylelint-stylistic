@@ -40,6 +40,25 @@ testRule({
 			column: 19,
 			message: messages.rejectedBeforeMultiLine(),
 		},
+		{
+			// The parser keeps a comment glued to the selector in the selector, so the brace would join it
+			description: `an inline comment glued to the selector it ends`,
+			code: `
+				a// c
+				{
+				color: pink;
+				}
+			`,
+			fixed: `
+				a// c
+				{
+				color: pink;
+				}
+			`,
+			line: 1,
+			column: 6,
+			message: messages.rejectedBeforeMultiLine(),
+		},
 	],
 })
 testRule({
