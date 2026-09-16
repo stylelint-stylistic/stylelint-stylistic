@@ -2,6 +2,7 @@ import type { Declaration, Root } from "postcss"
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
+import { TRAILING_BACKSLASHES } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import { declarationString } from "../declarationString/index.ts"
@@ -95,6 +96,11 @@ export function declarationBangSpaceChecker (opts: {
 			let index = match.startIndex + indexOffset
 
 			if (findCommentSpanAt(index, addresses)) return
+
+			// A bang behind an odd run of backslashes is a character of a word, and no flag to PostCSS, Less or Sass
+			let head = declString.slice(0, index)
+
+			if ((head.length - head.replace(TRAILING_BACKSLASHES, ``).length) % 2 === 1) return
 
 			// A rule may know the fix would break the code; a write parting the name of a bare address from the bang or joining it to the bang switches how PostCSS reads the parentheses, and one changing the character behind a backslash is read with it
 			let isFixable = fix && (!opts.isFixable || opts.isFixable(decl, index)) && fix({ text: declString, index }).every((edit) => !rereadsAnAddress(declString, edit, reading) && editKeepsEscapedCharacter(declString, edit))

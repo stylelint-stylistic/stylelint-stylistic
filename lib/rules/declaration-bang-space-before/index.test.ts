@@ -45,6 +45,16 @@ testRule({
 			description: `a bang inside a bare address, which spells no flag`,
 			code: `a { b: url(x!y) !important; }`,
 		},
+		{
+			// Pins that a bang behind an odd run of backslashes is a character of a word
+			description: `an escaped bang inside a word and one in front of the word important, neither of which is a flag`,
+			code: `a { b: c\\!d; } a { b: c \\!important; }`,
+		},
+		{
+			// Pins that a run of three backslashes escapes the bang as a run of one does
+			description: `an escaped backslash and an escaped bang inside a word`,
+			code: `a { b: c\\\\\\!d; }`,
+		},
 	],
 
 	reject: [

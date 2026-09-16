@@ -40,6 +40,16 @@ testRule({
 			description: `the flag standing behind a bare address, whose double slash opens no comment`,
 			code: `a { b: url(http://x) ! important; }`,
 		},
+		{
+			// Pins that a bang behind an odd run of backslashes is a character of a word
+			description: `an escaped bang inside a word and one in front of the word important, neither of which is a flag`,
+			code: `a { b: c\\!d; } a { b: c \\!important; }`,
+		},
+		{
+			// Pins that a run of three backslashes escapes the bang as a run of one does
+			description: `an escaped backslash and an escaped bang inside a word`,
+			code: `a { b: c\\\\\\!d; }`,
+		},
 	],
 
 	reject: [
@@ -199,6 +209,15 @@ testRule({
 			column: 9,
 			message: messages.expectedAfter(),
 		},
+		{
+			// Pins that an even run of backslashes escapes only its own backslashes, so the bang behind it is a flag
+			description: `an escaped backslash abutting the bang`,
+			code: `a { color: red\\\\!important; }`,
+			fixed: `a { color: red\\\\! important; }`,
+			line: 1,
+			column: 17,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
@@ -231,6 +250,11 @@ testRule({
 			// Pins the address spans the bang checker passes over
 			description: `a bang with a space behind it inside a bare address, whose space is the address's`,
 			code: `a { b: url(x! y) !important; }`,
+		},
+		{
+			// Pins that a bang behind an odd run of backslashes is a character of a word
+			description: `an escaped bang with a space behind it, which parts two words rather than a flag`,
+			code: `a { b: c\\! d; }`,
 		},
 	],
 
