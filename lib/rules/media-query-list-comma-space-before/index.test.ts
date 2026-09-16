@@ -516,3 +516,22 @@ testRule({
 		},
 	],
 })
+
+// The break twin writes the run in front of the comma too, and the library lists it behind this rule, so its write would be the file's last (#704)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/media-query-list-comma-newline-before": `always` },
+
+	reject: [
+		{
+			// See #704
+			description: `a newline in front of the comma, which the twin behind this rule accepts and would take the space back from, so the warning stands and nothing is written`,
+			code: `@media (a)\n, (b) {}`,
+			fixed: `@media (a)\n, (b) {}`,
+			line: 2,
+			column: 1,
+			message: messages.expectedBefore(),
+		},
+	],
+})

@@ -9,6 +9,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { mediaQueryListCommaWhitespaceChecker } from "../../utils/mediaQueryListCommaWhitespaceChecker/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { runInFront, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -58,7 +59,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
 			// The fix's whitespace ends this text, and its break would close an inline comment standing there, taking the comma into the comment: leave the parameters alone
-			isFixable: (params, index, atRule) => !syntax.endsWithInlineComment(params.slice(0, index), syntax.inlineComments(atRule, result)),
+			isFixable: (params, index, atRule, commas) => !syntax.endsWithInlineComment(params.slice(0, index), syntax.inlineComments(atRule, result)) && writesTwinRun(shortName, ruleName, atRule, result, {
+				// The break twin writes the same run (#704)
+				side: `before`,
+				run: runInFront(params, index),
+				lineText: params,
+				runs: () => commas.map(({ comma }) => runInFront(params, comma)),
+				line: atRule.rangeBy({ index: index + atRuleParamIndex(atRule) }).start.line,
+				twinWrites: () => true,
+			}),
 			fix: (atRule, index) => {
 				let paramCommaIndex = index - atRuleParamIndex(atRule)
 

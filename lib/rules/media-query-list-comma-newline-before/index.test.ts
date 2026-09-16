@@ -82,6 +82,7 @@ testRule({
 		{
 			description: `no newline in front of the comma`,
 			code: `@media screen and (color), projection and (color) {}`,
+			fixed: `@media screen and (color)\n, projection and (color) {}`,
 			line: 1,
 			column: 26,
 			message: messages.expectedBefore(),
@@ -89,6 +90,7 @@ testRule({
 		{
 			description: `no newline in front of the comma, under a mixed-case at-rule name`,
 			code: `@mEdIa screen and (color), projection and (color) {}`,
+			fixed: `@mEdIa screen and (color)\n, projection and (color) {}`,
 			line: 1,
 			column: 26,
 			message: messages.expectedBefore(),
@@ -96,6 +98,7 @@ testRule({
 		{
 			description: `no newline in front of the comma, under an upper-case at-rule name`,
 			code: `@MEDIA screen and (color), projection and (color) {}`,
+			fixed: `@MEDIA screen and (color)\n, projection and (color) {}`,
 			line: 1,
 			column: 26,
 			message: messages.expectedBefore(),
@@ -103,6 +106,7 @@ testRule({
 		{
 			description: `two spaces in front of the comma`,
 			code: `@media screen and (color)  , projection and (color) {}`,
+			fixed: `@media screen and (color)\n  , projection and (color) {}`,
 			line: 1,
 			column: 28,
 			message: messages.expectedBefore(),
@@ -110,6 +114,7 @@ testRule({
 		{
 			description: `a tab in front of the comma`,
 			code: `@media screen and (color)\t, projection and (color) {}`,
+			fixed: `@media screen and (color)\n\t, projection and (color) {}`,
 			line: 1,
 			column: 27,
 			message: messages.expectedBefore(),
@@ -118,9 +123,64 @@ testRule({
 			// See #153
 			description: `a comma behind a bare address, whose double slash opens no comment`,
 			code: `@media (min-width: url(http://x/y.png)),print { a { b: c; } }`,
+			fixed: `@media (min-width: url(http://x/y.png))\n,print { a { b: c; } }`,
 			line: 1,
 			column: 40,
 			message: messages.expectedBefore(),
+		},
+		{
+			description: `a comma opening the parameters, whose whitespace is the at-rule name's and out of the fixer's reach, so the warning stands and nothing is written`,
+			code: `@media ,screen and (color) {}`,
+			fixed: `@media ,screen and (color) {}`,
+			line: 1,
+			column: 8,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `a comment standing right in front of the comma`,
+			code: `@media screen and (color)/*comment*/, projection and (color) {}`,
+			fixed: `@media screen and (color)/*comment*/\n, projection and (color) {}`,
+			line: 1,
+			column: 37,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `a space between a comment and the comma, which becomes the indentation of the comma's line`,
+			code: `@media screen and (color)/*comment*/ , projection and (color) {}`,
+			fixed: `@media screen and (color)/*comment*/\n , projection and (color) {}`,
+			line: 1,
+			column: 38,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `a bare carriage return in front of the comma, which is no line break, so the break goes behind it`,
+			code: `@media screen and (color)\r, projection and (color) {}`,
+			fixed: `@media screen and (color)\r\n, projection and (color) {}`,
+			line: 1,
+			column: 27,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `three commas in a list of media types, none of them with a newline in front`,
+			code: `@media tv,tv,tv,print {}`,
+			fixed: `@media tv\n,tv\n,tv\n,print {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					message: messages.expectedBefore(),
+				},
+				{
+					line: 1,
+					column: 13,
+					message: messages.expectedBefore(),
+				},
+				{
+					line: 1,
+					column: 16,
+					message: messages.expectedBefore(),
+				},
+			],
 		},
 	],
 })
@@ -172,6 +232,7 @@ testRule({
 		{
 			description: `the first comma of a multi-line list, with no newline in front of it`,
 			code: `@media screen and (color),projection and (color)\n, print {}`,
+			fixed: `@media screen and (color)\n,projection and (color)\n, print {}`,
 			line: 1,
 			column: 26,
 			message: messages.expectedBeforeMultiLine(),
@@ -179,6 +240,7 @@ testRule({
 		{
 			description: `the same list under a mixed-case at-rule name`,
 			code: `@mEdIa screen and (color),projection and (color)\n, print {}`,
+			fixed: `@mEdIa screen and (color)\n,projection and (color)\n, print {}`,
 			line: 1,
 			column: 26,
 			message: messages.expectedBeforeMultiLine(),
@@ -186,6 +248,7 @@ testRule({
 		{
 			description: `the same list under an upper-case at-rule name`,
 			code: `@MEDIA screen and (color),projection and (color)\n, print {}`,
+			fixed: `@MEDIA screen and (color)\n,projection and (color)\n, print {}`,
 			line: 1,
 			column: 26,
 			message: messages.expectedBeforeMultiLine(),
@@ -193,6 +256,7 @@ testRule({
 		{
 			description: `the same list written with a carriage-return line break`,
 			code: `@media screen and (color),projection and (color)\r\n, print {}`,
+			fixed: `@media screen and (color)\r\n,projection and (color)\r\n, print {}`,
 			line: 1,
 			column: 26,
 			message: messages.expectedBeforeMultiLine(),
@@ -200,6 +264,7 @@ testRule({
 		{
 			description: `the same list in a multi-line block`,
 			code: `@media screen and (color),projection and (color)\n, print {\n}`,
+			fixed: `@media screen and (color)\n,projection and (color)\n, print {\n}`,
 			line: 1,
 			column: 26,
 			message: messages.expectedBeforeMultiLine(),
@@ -258,6 +323,7 @@ testRule({
 		{
 			description: `a space in front of the first comma of a multi-line list`,
 			code: `@media screen and (color) ,projection and (color),\nprint {}`,
+			fixed: `@media screen and (color),projection and (color),\nprint {}`,
 			line: 1,
 			column: 27,
 			message: messages.rejectedBeforeMultiLine(),
@@ -265,6 +331,7 @@ testRule({
 		{
 			description: `the same list under a mixed-case at-rule name`,
 			code: `@mEdIa screen and (color) ,projection and (color),\nprint {}`,
+			fixed: `@mEdIa screen and (color),projection and (color),\nprint {}`,
 			line: 1,
 			column: 27,
 			message: messages.rejectedBeforeMultiLine(),
@@ -272,6 +339,7 @@ testRule({
 		{
 			description: `the same list under an upper-case at-rule name`,
 			code: `@MEDIA screen and (color) ,projection and (color),\nprint {}`,
+			fixed: `@MEDIA screen and (color),projection and (color),\nprint {}`,
 			line: 1,
 			column: 27,
 			message: messages.rejectedBeforeMultiLine(),
@@ -283,6 +351,11 @@ testRule({
 				print {
 				}
 			`,
+			fixed: `
+				@media screen and (color),projection and (color),
+				print {
+				}
+			`,
 			line: 1,
 			column: 27,
 			message: messages.rejectedBeforeMultiLine(),
@@ -290,9 +363,37 @@ testRule({
 		{
 			description: `the same list and block written with carriage-return line breaks`,
 			code: `@media screen and (color) ,projection and (color),\r\nprint {\r\n}`,
+			fixed: `@media screen and (color),projection and (color),\r\nprint {\r\n}`,
 			line: 1,
 			column: 27,
 			message: messages.rejectedBeforeMultiLine(),
+		},
+		{
+			description: `a newline and indentation in front of the first comma of a multi-line list`,
+			code: `@media screen and (color)\n\t,projection and (color),\nprint {}`,
+			fixed: `@media screen and (color),projection and (color),\nprint {}`,
+			line: 2,
+			column: 2,
+			message: messages.rejectedBeforeMultiLine(),
+		},
+	],
+})
+
+// The space twin writes the run in front of the comma too, and the library lists it behind this rule, so its write would be the file's last (#704)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/media-query-list-comma-space-before": `always` },
+
+	reject: [
+		{
+			// See #704
+			description: `a space in front of the comma, which the twin behind this rule accepts and would take the break back from, so the warning stands and nothing is written`,
+			code: `@media (a) ,(b) {}`,
+			fixed: `@media (a) ,(b) {}`,
+			line: 1,
+			column: 12,
+			message: messages.expectedBefore(),
 		},
 	],
 })
