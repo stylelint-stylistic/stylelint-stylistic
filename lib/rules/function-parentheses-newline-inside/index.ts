@@ -6,6 +6,7 @@ import { LEADING_CSS_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { InlineCommentReading, Syntax } from "../../syntaxes/index.ts"
 import { addEdit, applyEditsFromEnd, type Edit, toIndexBeforeEdits } from "../../utils/applyEditsFromEnd/index.ts"
+import { breakRereadsParentheses } from "../../utils/breakRereadsParentheses/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editsOpenNoComment } from "../../utils/editsOpenNoComment/index.ts"
@@ -15,6 +16,7 @@ import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
+import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -307,6 +309,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let twinRead = { ruleName, decl, result, syntax, valueNode: functionNode, comments, functionString }
 				// The space twin writes the run right behind the `(`, which is the one written here where nothing stands between the `(` and the first significant thing: `always` writes into the last stretch measured, and `never-multi-line` empties them all, the first among them. The twin passes over a call holding nothing ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)).
 				let writesOpeningRun = valueNode.nodes.length === 0 || (primary !== `never-multi-line` && measuredBefore.length > 1) || writesParenthesisRun(twinRead, `after`, openingIndex)
+				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` inside, or a `{` in a custom property's value, is then a group nothing closes: the file stops parsing, so the `always` fixes are refused there and the warnings stand; a multi-line call holds a break inside its parentheses already, so `always-multi-line` never meets the token
+				let breaksAToken = breakRereadsParentheses(declValue, openingIndex - 1, isCustomProperty(decl.prop))
 
 				checkOpening()
 
@@ -318,7 +322,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				/** Reports the whitespace behind the `(`, fixing it where the run is this rule's to write. */
 				function checkOpening (): void {
 					if (primary === `always` && !LINE_BREAK.test(checkBefore)) {
-						fix = writesOpeningRun ? fixWith(() => fixBeforeForAlways(measuredBefore, declValue, getLineBreak(root, result))) : undefined
+						fix = writesOpeningRun && !breaksAToken ? fixWith(() => fixBeforeForAlways(measuredBefore, declValue, getLineBreak(root, result))) : undefined
 						complain(messages.expectedOpening, openingIndex)
 					}
 
@@ -338,7 +342,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let writesClosingRun = writesParenthesisRun(twinRead, `before`, closingIndex + 1)
 
 					if (primary === `always` && !LINE_BREAK.test(checkAfter)) {
-						fix = writesClosingRun ? fixWith(() => fixAfterForAlways(functionNode, getLineBreak(root, result))) : undefined
+						fix = writesClosingRun && !breaksAToken ? fixWith(() => fixAfterForAlways(functionNode, getLineBreak(root, result))) : undefined
 						complain(messages.expectedClosing, closingIndex)
 					}
 

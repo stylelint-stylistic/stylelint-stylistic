@@ -244,6 +244,9 @@ export const OPENS_WITH_QUOTE_OR_CSS_WHITESPACE = /^[\t\n\f\r "']/u
 /** A leading tag, whitespace aside. */
 export const OPENS_WITH_TAG = /^\s*</u
 
+/** Parentheses PostCSS's tokenizer reads as code rather than as one `brackets` token, its `RE_BAD_BRACKET`: a line break, a quotation mark, a `(`, a solidus or a backslash behind the `(`, tested over the text from the `(` to the first `)`. */
+export const PARENTHESES_READ_AS_CODE = /.[\r\n"'(/\\]/u
+
 /** postcss-simple-vars' `$(…)`, a plugin's spelling over plain CSS, read by the core beside the preprocessors' two. */
 export const PSV_INTERPOLATION = /\$\(.+?\)/u
 
