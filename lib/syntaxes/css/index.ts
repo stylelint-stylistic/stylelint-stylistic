@@ -71,11 +71,11 @@ export let css: Syntax = {
 		let inline = pair ? findRewrittenCommentSpans(pair.rewritten, pair.spelled)?.map(({ start, end }) => ({ start, end, isInline: true })) : null
 		let { endsOnFormFeed, tokenizes } = inlineCommentReading(node, result)
 
-		// Block comments are found with the inline ones blanked: a double slash left there is code, and a `/*` inside an inline comment opens nothing
-		if (inline) return [...inline, ...findCommentSpans(blankComments(text, inline), { spells: false, tokenizes, endsOnFormFeed })].toSorted((one, other) => one.start - other.start)
+		// Block comments are found with the inline ones blanked, and a `/*` inside an inline comment opens nothing; a double slash left there is code unless the tokenizer reads such comments, since it leaves some in the text, as inside the parentheses of an address
+		if (inline) return [...inline, ...findCommentSpans(blankComments(text, inline), { spells: tokenizes, tokenizes, endsOnFormFeed })].toSorted((one, other) => one.start - other.start)
 
-		// A double slash of plain CSS is code, and so is one of a syntax marking its comments in a copy of its own, unless that pair is out of step
-		let spellsInlineComments = text.includes(`//`) && (pair !== undefined || syntaxKeepsInlineComments(nodeSyntax(node, result)))
+		// A double slash is code only to a syntax that neither keeps inline comments in the text nor reads them with its tokenizer, as plain CSS, unless a pair out of step says it rewrote one
+		let spellsInlineComments = text.includes(`//`) && (pair !== undefined || tokenizes || syntaxKeepsInlineComments(nodeSyntax(node, result)))
 
 		return findCommentSpans(text, { spells: spellsInlineComments, tokenizes, endsOnFormFeed })
 	},

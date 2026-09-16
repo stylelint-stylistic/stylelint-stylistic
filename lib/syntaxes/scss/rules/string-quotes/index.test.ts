@@ -265,11 +265,12 @@ testRule({
 			message: messages.expected(`double`),
 		},
 		{
-			description: `a double slash this syntax keeps in a value is no comment, since it spells them another way by the time the value is read`,
-			code: `a { background: calc(1px//2) format('woff2'); }`,
-			fixed: `a { background: calc(1px//2) format("woff2"); }`,
-			line: 1,
-			column: 37,
+			// A double slash the tokenizer keeps inside parentheses is still a comment to Sass
+			description: `a string behind an inline comment the syntax keeps inside parentheses, which holds a string of its own`,
+			code: `a { background: foo(1px//2) format('woff2')\n), url('b.png'); }`,
+			fixed: `a { background: foo(1px//2) format('woff2')\n), url("b.png"); }`,
+			line: 2,
+			column: 8,
 			message: messages.expected(`double`),
 		},
 		{
