@@ -8,7 +8,7 @@ import { keysOf, multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** The spellings CSS reads as `url`, the runs that make an ordinary call, a name behind each thing that closes a scan state, a backslash-newline delimiter in front of and inside the name ([#566](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566)), the three signs the tokenizer glues the name to where `postcss-value-parser` parts it, which left the parentheses an address to the parser alone, and a word ending in a digit behind an escaped backslash, which opens no escape to weld the name onto ([#579](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/579)), beside the one backslash that does. */
+/** The spellings CSS reads as `url`, the runs that make an ordinary call, a name behind each thing that closes a scan state, a backslash-newline delimiter in front of and inside the name ([#566](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566)), the three signs the tokenizer glues the name to where `postcss-value-parser` parts it, which left the parentheses an address to the parser alone, a bang glued to the name and parted from it by a space, where a write behind the bang switches how the tokenizer reads the parentheses, and a word ending in a digit behind an escaped backslash, which opens no escape to weld the name onto ([#579](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/579)), beside the one backslash that does. */
 const NAMES: Record<string, string> = {
 	plain: `url`,
 	upper: `URL`,
@@ -23,6 +23,8 @@ const NAMES: Record<string, string> = {
 	hexEscapeInFront: `\\61 url`,
 	behindComma: `1,url`,
 	behindSolidus: `1/url`,
+	behindBang: `1!url`,
+	behindBangAndSpace: `1! url`,
 	behindVerticalTab: `1\vurl`,
 	behindString: `"x"url`,
 	behindBlockComment: `/*c*/url`,
@@ -103,7 +105,7 @@ const corpus: Sweep[`corpus`] = multiply({ place: keysOf(PLACES), name: NAMES, a
 	return wrap(`${spelledName}(${address})`)
 })
 
-/** Every rule reading the inline-comment guard, the four writers reading the comment spans that move over these forms, the value-parser readers that wrote into a string holding a parenthesis, and `max-line-length` at a maximum on either side of these lines' width. */
+/** Every rule reading the inline-comment guard, the four writers reading the comment spans that move over these forms, the bang writer behind which a run switches the reading of the parentheses, the value-parser readers that wrote into a string holding a parenthesis, and `max-line-length` at a maximum on either side of these lines' width. */
 const configs: Sweep[`configs`] = ([
 	[`block-closing-brace-newline-before`, [`always`, `never-multi-line`]],
 	[`block-closing-brace-space-before`, [`always`, `never`]],
@@ -111,6 +113,7 @@ const configs: Sweep[`configs`] = ([
 	[`block-opening-brace-newline-before`, [`always`, `never-multi-line`]],
 	[`block-opening-brace-space-before`, [`always`, `never`]],
 	[`color-hex-case`, [`lower`, `upper`]],
+	[`declaration-bang-space-after`, [`always`, `never`]],
 	[`declaration-bang-space-before`, [`always`, `never`]],
 	[`declaration-block-semicolon-newline-after`, [`always`, `never-multi-line`]],
 	[`declaration-block-semicolon-newline-before`, [`always`, `never-multi-line`]],

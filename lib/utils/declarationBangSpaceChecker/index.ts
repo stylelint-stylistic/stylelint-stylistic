@@ -7,6 +7,7 @@ import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import { declarationString } from "../declarationString/index.ts"
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
 import { findAddressSpans, findCommentSpanAt } from "../findCommentSpans/index.ts"
+import { rereadsAnAddress } from "../rereadsAnAddress/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -75,7 +76,8 @@ export function declarationBangSpaceChecker (opts: {
 		if (!valueString.includes(`!`)) return
 
 		// `searchCopy` leaves a bare address code, and a bang there is a character of the address
-		let addresses = findAddressSpans(declString, opts.syntax.inlineComments(decl, opts.result))
+		let reading = opts.syntax.inlineComments(decl, opts.result)
+		let addresses = findAddressSpans(declString, reading)
 		let between = decl.raws.between || `:`
 		let value = opts.syntax.read(decl)
 
@@ -93,8 +95,8 @@ export function declarationBangSpaceChecker (opts: {
 
 			if (findCommentSpanAt(index, addresses)) return
 
-			// A rule may know the fix would break the code
-			let isFixable = fix && (!opts.isFixable || opts.isFixable(decl, index))
+			// A rule may know the fix would break the code; a write parting the name of a bare address from the bang or joining it to the bang switches how PostCSS reads the parentheses
+			let isFixable = fix && (!opts.isFixable || opts.isFixable(decl, index)) && !fix({ text: declString, index }).some((edit) => rereadsAnAddress(declString, edit, reading))
 
 			opts.locationChecker({
 				source: declString,

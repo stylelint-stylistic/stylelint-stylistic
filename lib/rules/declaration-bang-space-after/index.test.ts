@@ -190,6 +190,15 @@ testRule({
 			column: 17,
 			message: messages.expectedAfter(),
 		},
+		{
+			// Pins the refusal to part the name of a bare address from the bang, which switches how PostCSS reads its parentheses
+			description: `a bang glued to the name of a bare address holding a string with a closing parenthesis, which a written space would make the tokenizer close inside the string`,
+			code: `a { b: 1!url(a ")" b) 2px; }`,
+			fixed: `a { b: 1!url(a ")" b) 2px; }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
@@ -292,6 +301,15 @@ testRule({
 					message: messages.rejectedAfter(),
 				},
 			],
+		},
+		{
+			// Pins the refusal to join the name of a bare address to the bang, which switches how PostCSS reads its parentheses
+			description: `a space between a bang and the name of a bare address holding a quotation mark nothing closes, which taking the space away would make the tokenizer read as a string`,
+			code: `a { b: 1! url(a"b) 2px; }`,
+			fixed: `a { b: 1! url(a"b) 2px; }`,
+			line: 1,
+			column: 9,
+			message: messages.rejectedAfter(),
 		},
 	],
 })
