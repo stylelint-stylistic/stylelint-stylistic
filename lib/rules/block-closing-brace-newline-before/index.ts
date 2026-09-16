@@ -33,6 +33,31 @@ export let meta = {
 	fixable: true,
 }
 
+/**
+ * Spells the run in front of the closing brace as the `always` options ask: whatever stands in front of the run's first whitespace, then the run from its first break, or a break in front of the whole run where it holds none.
+ * @param raw - The run as it stands.
+ * @param lineBreak - The break the file is written with.
+ * @returns The run to write.
+ */
+function spellTheRun (raw: string, lineBreak: string): string {
+	let firstWhitespaceIndex = raw.search(WHITESPACE)
+	let head = firstWhitespaceIndex >= 0 ? raw.slice(0, firstWhitespaceIndex) : raw
+	let tail = firstWhitespaceIndex >= 0 ? raw.slice(firstWhitespaceIndex) : ``
+	let breakIndex = tail.search(LINE_BREAK)
+
+	return breakIndex >= 0 ? head + tail.slice(breakIndex) : head + lineBreak + tail
+}
+
+/**
+ * Asks whether that spelling would leave out anything of the run the rule does not read as whitespace; the whitespace itself is what it is there to trim.
+ * @param raw - The run as it stands.
+ * @param lineBreak - The break the file is written with.
+ * @returns True where the written run does not hold the same non-whitespace characters as the standing one.
+ */
+function writeDropsMoreThanWhitespace (raw: string, lineBreak: string): boolean {
+	return spellTheRun(raw, lineBreak).replaceAll(EVERY_WHITESPACE, ``) !== raw.replaceAll(EVERY_WHITESPACE, ``)
+}
+
 /** `always` a newline before the closing brace; `always-multi-line` asks it, and `never-multi-line` refuses whitespace there, in a multi-line block only. */
 export type PrimaryOption = `always` | `always-multi-line` | `never-multi-line`
 
@@ -90,6 +115,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Behind a wordless declaration the brace alone closes, the run is the colon rules' head run too, and the rules asked settle who writes (#416)
 			if (isFixable && isDeclaration(last)) isFixable = writesSharedRun(syntax, last, result, ruleName)
 
+			// The `always` write takes the run from its first break, keeping only what stands in front of the run's first whitespace, so a stray semicolon standing between the two would go with the whitespace, and no option of the rule speaks of such a semicolon (#687)
+			if (isFixable && primary.startsWith(`always`) && writeDropsMoreThanWhitespace(blockAfter, getLineBreak(root, result))) isFixable = false
+
 			// The question is whether a break *starts* the final run (`LEADING_LINE_BREAK`); the whitespace behind it is `indentation`'s.
 			if (!LEADING_LINE_BREAK.test(after)) {
 				if (primary === `always`) complain(messages.expectedBefore)
@@ -116,14 +144,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 							if (typeof raw !== `string`) return
 
-							if (primary.startsWith(`always`)) {
-								let firstWhitespaceIndex = raw.search(WHITESPACE)
-								let newlineBefore = firstWhitespaceIndex >= 0 ? raw.slice(0, firstWhitespaceIndex) : raw
-								let newlineAfter = firstWhitespaceIndex >= 0 ? raw.slice(firstWhitespaceIndex) : ``
-								let newlineIndex = newlineAfter.search(LINE_BREAK)
-
-								setBlockAfter(syntax, statement, newlineIndex >= 0 ? newlineBefore + newlineAfter.slice(newlineIndex) : newlineBefore + getLineBreak(root, result) + newlineAfter)
-							}
+							if (primary.startsWith(`always`)) setBlockAfter(syntax, statement, spellTheRun(raw, getLineBreak(root, result)))
 							else if (primary === `never-multi-line`) setBlockAfter(syntax, statement, raw.replaceAll(EVERY_WHITESPACE, ``))
 						},
 					}),

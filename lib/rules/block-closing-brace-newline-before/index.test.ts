@@ -132,6 +132,24 @@ testRule({
 			message: messages.expectedBefore,
 		},
 		{
+			// See #687
+			description: `a stray semicolon between that space and the break, which the trim would take with it, so the run is left alone`,
+			code: `a { color: pink; ;\n}`,
+			fixed: `a { color: pink; ;\n}`,
+			line: 1,
+			column: 19,
+			message: messages.expectedBefore,
+		},
+		{
+			// See #687
+			description: `the same semicolon in a run holding no break, which the written break is put in front of, so the fix goes through`,
+			code: `a { color: pink; ; }`,
+			fixed: `a { color: pink;\n ; }`,
+			line: 1,
+			column: 19,
+			message: messages.expectedBefore,
+		},
+		{
 			description: `the same trailing space in front of a carriage return`,
 			code: `a { color: pink; \r\n}`,
 			fixed: `a { color: pink;\r\n}`,
@@ -343,6 +361,15 @@ testRule({
 			fixed: `a { color: pink;;\ntop: 0;;\n}`,
 			line: 2,
 			column: 8,
+			message: messages.expectedBeforeMultiLine,
+		},
+		{
+			// See #687
+			description: `a stray semicolon between a space and the break, which the trim would take with it, so the run is left alone`,
+			code: `a { color: pink;\ntop: 0; ;\n}`,
+			fixed: `a { color: pink;\ntop: 0; ;\n}`,
+			line: 2,
+			column: 10,
 			message: messages.expectedBeforeMultiLine,
 		},
 		{
