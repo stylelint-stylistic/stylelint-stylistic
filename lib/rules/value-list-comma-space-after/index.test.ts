@@ -369,6 +369,15 @@ testRule({
 			column: 9,
 			message: messages.rejectedAfter(),
 		},
+		{
+			// A quotation mark inside a bare address opens no string, so the one behind the address does
+			description: `a space after a comma behind a bare address holding a quotation mark, and a comma inside the string the mark behind the address opens, which is no comma of the list`,
+			code: `a { b: url(/* c */ a ") , b" ) 1px/2px, "; c: "d" }`,
+			fixed: `a { b: url(/* c */ a ") ,b" ) 1px/2px, "; c: "d" }`,
+			line: 1,
+			column: 25,
+			message: messages.rejectedAfter(),
+		},
 	],
 })
 
