@@ -116,6 +116,24 @@ testRule({
 			],
 		},
 		{
+			// The parser hands the divider back inside the word in front of the escape, since the space closing the escape divides the value to it, and the name is read welded across that space
+			description: `an address spelling its name by a hexadecimal escape a space closes, holding a call, with a word and the divider in front of the escape`,
+			code: `a { b: a\\\n\\75 rl(c(d).png) f(1px); }`,
+			fixed: `a { b: a\\\n\\75 rl(c(d).png) f( 1px ); }`,
+			warnings: [
+				{
+					line: 2,
+					column: 20,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 2,
+					column: 22,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
 			// See #533
 			description: `a call standing beside an address written in capitals, whose parentheses are spaced out while the address is left as the file spells it`,
 			code: `a { b: URL(a) f(1); }`,
