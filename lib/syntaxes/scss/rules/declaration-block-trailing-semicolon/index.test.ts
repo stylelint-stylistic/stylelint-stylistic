@@ -330,6 +330,23 @@ testRule({
 
 	reject: [
 		{
+			// Sass reads a double slash inside an interpolation as a comment, so the quotation mark in it opens no string and the comment behind the address is where the semicolon stands
+			description: `a semicolon on the line below a comment behind an address whose interpolation holds a comment with a quotation mark`,
+			code: `
+				a { b: url($a #{c // it's
+				}) // d, e
+				; }
+			`,
+			fixed: `
+				a { b: url($a #{c // it's
+				}) // d, e
+				 }
+			`,
+			line: 3,
+			column: 1,
+			message: messages.rejected,
+		},
+		{
 			description: `a nested at-rule closing behind a semicolon`,
 			code: `a { @includes foo; }`,
 			fixed: `a { @includes foo }`,

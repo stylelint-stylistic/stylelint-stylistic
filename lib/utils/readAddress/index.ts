@@ -18,13 +18,22 @@ export type Address = {
 	comments: CommentSpan[],
 }
 
+/** The comments an interpolation's expression holds, which the walk records of the kinds it reads. */
+type InterpolationComments = {
+	block: boolean,
+	inline: boolean,
+	spans: CommentSpan[],
+}
+
 /**
- * Skips a Sass interpolation, whose expression may hold braces, strings and block comments of its own.
+ * Skips a Sass interpolation, whose expression may hold braces, strings and comments of both kinds of its own.
  * @param text - The text holding the interpolation.
  * @param openIndex - The `#`.
- * @returns Behind its closing brace, or the text's length.
+ * @param reading - What the syntax makes of a `//` comment, which says where one inside the expression ends.
+ * @param comments - Where the comments inside are recorded, of the kinds it asks for.
+ * @returns Behind its closing brace, or nothing where the text never closes it.
  */
-function skipInterpolation (text: string, openIndex: number): number {
+function skipInterpolation (text: string, openIndex: number, reading: CommentReading, comments?: InterpolationComments): number | undefined {
 	let depth = 0
 	let index = openIndex + 1
 
@@ -36,10 +45,15 @@ function skipInterpolation (text: string, openIndex: number): number {
 
 			while (index < text.length && text[index] !== character) index += text[index] === `\\` ? 2 : 1
 		}
-		else if (character === `/` && text[index + 1] === `*`) {
+		else if (character === `/` && (text[index + 1] === `*` || text[index + 1] === `/`)) {
+			let isInline = text[index + 1] === `/`
 			let closeIndex = text.indexOf(`*/`, index + 2)
+			let blockEnd = closeIndex === -1 ? text.length : closeIndex + 2
+			let commentEnd = isInline ? findInlineCommentEnd(text, index, reading) : blockEnd
 
-			index = closeIndex === -1 ? text.length : closeIndex + 1
+			if (comments && (isInline ? comments.inline : comments.block)) comments.spans.push({ start: index, end: commentEnd, isInline })
+
+			index = commentEnd - 1
 		}
 		else if (character === `{`) {
 			depth += 1
@@ -53,16 +67,33 @@ function skipInterpolation (text: string, openIndex: number): number {
 		index += 1
 	}
 
-	return text.length
+	return undefined
+}
+
+/**
+ * Skips what the search for the closing parenthesis reads as one piece: an escape, which Sass reads `\//` as too ([#517](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/517)), and under a parser whose own tokenizer reads `//` an interpolation the text closes, which Sass reads whole, so a `)` of a call inside it closes nothing. An interpolation nothing closes is left to the walk, since Sass refuses such a file and a comment behind the call stays readable to the guards.
+ * @param text - The text holding the call.
+ * @param index - Where the search stands.
+ * @param reading - What the syntax makes of a `//` comment.
+ * @param comments - Where the comments inside an interpolation are recorded.
+ * @returns Behind the piece, or `index` where none opens.
+ */
+function skipWhole (text: string, index: number, reading: CommentReading, comments: InterpolationComments): number {
+	if (text[index] === `\\`) return readEscapedCharacter(text, index).end
+
+	if (reading.tokenizes && text[index] === `#` && text[index + 1] === `{`) return skipInterpolation(text, index, reading, comments) ?? index
+
+	return index
 }
 
 /**
  * Asks whether Sass reads the parentheses of a `url()` as an unquoted address rather than as code: whitespace at either end, and in between nothing but escapes, interpolations and {@link SASS_URL_CODE_POINT} characters up to a `)`.
  * @param text - The text holding the call.
  * @param openIndex - Behind the `(`.
+ * @param reading - What the syntax makes of a `//` comment.
  * @returns True where Sass reads an address.
  */
-function readsAsSassAddress (text: string, openIndex: number): boolean {
+function readsAsSassAddress (text: string, openIndex: number, reading: CommentReading): boolean {
 	let index = openIndex
 
 	while (isWhitespace(text.charAt(index))) index += 1
@@ -79,7 +110,7 @@ function readsAsSassAddress (text: string, openIndex: number): boolean {
 			index = CRLF.test(text.slice(end - 2, end)) ? end - 1 : end
 		}
 		else if (character === `#` && text[index + 1] === `{`) {
-			index = skipInterpolation(text, index)
+			index = skipInterpolation(text, index, reading) ?? text.length
 		}
 		else if (isWhitespace(character)) {
 			while (isWhitespace(text.charAt(index))) index += 1
@@ -113,7 +144,7 @@ function tokenizesAsCode (text: string, openIndex: number, name: string, reading
 /**
  * Reads the address a `url()`'s parentheses hold, the one reading the comment walk and the `//`-comment guard both ask ([#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557)).
  *
- * A quotation mark behind the `(`, whitespace aside, makes the parentheses hold code: the string is the address, and a comment written behind it is a comment, which is how Sass reads it and how the plain-CSS tokenizer reads it where the mark stands against the parenthesis. Everything else is a bare address, which the first `)` no escape holds closes, outside the comments and strings read below — `postcss-scss` alone counts parentheses there, and no compiler takes the text it thereby reads.
+ * A quotation mark behind the `(`, whitespace aside, makes the parentheses hold code: the string is the address, and a comment written behind it is a comment, which is how Sass reads it and how the plain-CSS tokenizer reads it where the mark stands against the parenthesis. Everything else is a bare address, which the first `)` no escape holds closes, outside the comments, strings and interpolations read below — `postcss-scss` alone counts parentheses there, and no compiler takes the text it thereby reads.
  *
  * The whitespace in front of the mark is {@link OPENS_WITH_QUOTE}'s, which is wider than the tokenizer's: a no-break space, a vertical tab and a line separator part the mark from the parenthesis here and not there. That is the declining side of the reading, since both callers pass a comment over, and Sass reads the comment behind all three.
  *
@@ -123,7 +154,7 @@ function tokenizesAsCode (text: string, openIndex: number, name: string, reading
  *
  * Wherever a comment is read inside the parentheses, a quotation mark the text closes opens a string, whose comment delimiters and `)` are its text: PostCSS and `postcss-less` read the string in `url( a "/*)" b)` so, and Sass reads it so with or without the whitespace, while `postcss-scss`, which takes the parentheses of `url(` as one token, reads no comment inside the string either.
  *
- * Under a parser whose own tokenizer reads `//`, which is `postcss-scss`, the parentheses Sass reads as code rather than as an unquoted address ({@link readsAsSassAddress}) hold comments of both kinds, and the first `)` no comment or string covers closes them ([#661](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/661)). Less reads an address there, and a block comment read where it reads one would hide a `//` comment of its own, so no other syntax reads Sass's way.
+ * Under a parser whose own tokenizer reads `//`, which is `postcss-scss`, the parentheses Sass reads as code rather than as an unquoted address ({@link readsAsSassAddress}) hold comments of both kinds, and the first `)` no comment or string covers closes them ([#661](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/661)). Under that parser an interpolation the text closes is read whole in either kind of parentheses, comments inside it included, so a `)` of a call inside it closes nothing. Less reads an address there, and a block comment read where it reads one would hide a `//` comment of its own, so no other syntax reads Sass's way.
  * @param text - The text holding the call.
  * @param openIndex - Behind the `(`.
  * @param name - The name in front of the `(`, as the text spells it.
@@ -135,16 +166,19 @@ export function readAddress (text: string, openIndex: number, name: string, read
 
 	if (quoted !== undefined) return { isQuoted: true, index: openIndex + quoted.length - 1, comments: [] }
 
-	let isSassCode = reading.tokenizes && !readsAsSassAddress(text, openIndex)
+	let isSassCode = reading.tokenizes && !readsAsSassAddress(text, openIndex, reading)
 	let readsBlockComments = isSassCode || tokenizesAsCode(text, openIndex, name, reading)
 	let readsInlineComments = isSassCode && reading.spells
 	let comments: CommentSpan[] = []
+	// A comment inside an interpolation is recorded as one the walk would have met outside it
+	let interpolationComments = { block: readsBlockComments, inline: readsInlineComments, spans: comments }
 	let index = openIndex
 
 	while (index < text.length && text[index] !== `)`) {
-		if (text[index] === `\\`) {
-			// Sass decides inside these parentheses, and it reads `\//` as an escape (#517)
-			index = readEscapedCharacter(text, index).end
+		let behindWhole = skipWhole(text, index, reading, interpolationComments)
+
+		if (behindWhole !== index) {
+			index = behindWhole
 		}
 		else if (readsBlockComments && (text[index] === `"` || text[index] === `'`)) {
 			let end = skipString(text, index)

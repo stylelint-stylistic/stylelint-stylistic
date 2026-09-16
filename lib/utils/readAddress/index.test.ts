@@ -104,6 +104,19 @@ describe(`readAddress`, () => {
 		expect(readAddress(`url(#{a /* } */}/*) 1px`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 18, comments: [] })
 	})
 
+	it(`an interpolation holding a call, whose closing parenthesis Sass reads as the expression's and not as the one closing the parentheses`, () => {
+		expect(readAddress(`url(#{f(a)}//c) 1px`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 14, comments: [] })
+		expect(readAddress(`url($a #{f(b)} // c\n) 1px`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 20, comments: [{ start: 15, end: 19, isInline: true }] })
+	})
+
+	it(`a comment inside an interpolation in parentheses Sass reads as code, which is recorded as one standing outside it would be`, () => {
+		expect(readAddress(`url($a #{c // )\n}) , 1px`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 17, comments: [{ start: 11, end: 15, isInline: true }] })
+	})
+
+	it(`an interpolation the text never closes, whose parenthesis closes the address as it would without the opening`, () => {
+		expect(readAddress(`url(a#{) // d`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 7, comments: [] })
+	})
+
 	it(`a hexadecimal escape closed by a Windows pair, whose line feed Sass reads as whitespace of the parentheses`, () => {
 		expect(readAddress(`url(\\41\r\n/* ) */ ) 1px`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 17, comments: [{ start: 9, end: 16, isInline: false }] })
 	})
