@@ -101,6 +101,11 @@ testRule({
 			code: `a { b: x\\\\9 url(1PX); }`,
 		},
 		{
+			// The parser hands the divider back inside the word in front of the escape, and the name is read welded across the space closing it
+			description: `an address spelling its name by a hexadecimal escape a space closes, behind a colour and a divider glued to it`,
+			code: `a { background: #FFF\\\n\\75 rl(1PX); }`,
+		},
+		{
 			description: `a unit inside a property name`,
 			code: `a { marginPX: 10px; }`,
 		},

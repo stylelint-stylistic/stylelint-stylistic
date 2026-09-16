@@ -95,6 +95,18 @@ describe(`hideParenthesesInUrlStrings`, () => {
 		expect(hideParenthesesInUrlStrings(`a\\\nurl\\\nf(b)`)).toBe(`a\\\nurl\\\nf(b)`)
 	})
 
+	// The parser hands the divider back inside the word in front, since the whitespace closing the hexadecimal escape divides the value to it, and the name is read welded across that whitespace
+	it(`a divider in front of a hexadecimal escape closed by whitespace, which the parser keeps in a word of its own in front of the call`, () => {
+		expect(hideParenthesesInUrlStrings(`\\\n\\75 rl(a(b).png)`)).toBe(`?\n\\75 rl(a(b).png)`)
+		expect(hideParenthesesInUrlStrings(`a\\\n\\75 rl(a(b).png) f(1px)`)).toBe(`a \n\\75 rl(a(b).png) f(1px)`)
+		expect(hideParenthesesInUrlStrings(`#FFF\\\n\\75 rl(1PX)`)).toBe(`#FFF \n\\75 rl(1PX)`)
+	})
+
+	it(`such a divider in front of an escape that spells a name of its own, and one dividing the escapes of a name, behind which the tail spells no address`, () => {
+		expect(hideParenthesesInUrlStrings(`\\\n\\61 rl(a(b).png)`)).toBe(`\\\n\\61 rl(a(b).png)`)
+		expect(hideParenthesesInUrlStrings(`\\\n\\75 \\\n\\72 l(a(b).png)`)).toBe(`\\\n\\75 \\\n\\72 l(a(b).png)`)
+	})
+
 	it(`a divider behind an address whose string holds a parenthesis, which the parser reads as text of that address until the parenthesis is masked`, () => {
 		expect(hideParenthesesInUrlStrings(`url( a ")" b ) \\\nurl(c)`)).toBe(`url( a "?" b ) ?\nurl(c)`)
 	})
