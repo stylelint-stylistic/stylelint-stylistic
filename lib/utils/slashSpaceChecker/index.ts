@@ -89,7 +89,7 @@ function spansAt (text: string, checkIndex: number, position: `before` | `after`
 /**
  * Asks whether a solidus rule may write the span it names; a fixer cannot decline, so the answer is needed before the report.
  *
- * `before` refuses the break closing a `//` comment, `after` refuses closing the solidus up against a comment (`1 /// c` is one).
+ * Both sides refuse the write that moves the character behind the span into a `//` comment: behind the solidus that is closing it up against a comment (`1 /// c` is one), in front of it the solidus itself, which a write emptying the run brings against the solidus ahead of it and so opens the comment it moves into. `before` refuses as well the write landing in a comment the text already stands in, which `movesEndIntoInlineComment` passes over wherever the run holds no break to close that comment.
  * @param syntax - The syntax the rule is built over.
  * @param reading - What the syntax makes of a `//` comment.
  * @param text - The text the solidus stands in.
@@ -99,9 +99,9 @@ function spansAt (text: string, checkIndex: number, position: `before` | `after`
  * @returns True where the fix may be written.
  */
 function writesTheSpan (syntax: Syntax, reading: InlineCommentReading, text: string, span: { start: number, end: number }, written: string, position: `before` | `after`): boolean {
-	return position === `before`
-		? !syntax.endsWithInlineComment(text.slice(0, span.start), reading)
-		: !syntax.movesEndIntoInlineComment(text.slice(0, span.end + 1), text.slice(0, span.start) + written + text.charAt(span.end), reading)
+	if (syntax.movesEndIntoInlineComment(text.slice(0, span.end + 1), text.slice(0, span.start) + written + text.charAt(span.end), reading)) return false
+
+	return position === `after` || !syntax.endsWithInlineComment(text.slice(0, span.start), reading)
 }
 
 /**
@@ -156,21 +156,22 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 
 							if (slash.functionNames.some((name) => optionsMatches(secondary, `ignoreFunctions`, name))) return false
 
-							// In front of the solidus both twins read the very run the other writes
-							if (position === `before`) return true
-
-							// The text this write leaves, the run standing over by what the gate asks about
+							// The text this write leaves, the run standing over by what the gate asks about; in front of the solidus the write moves the solidus itself
 							let twinText = text.slice(0, run.start) + over + text.slice(run.end)
+							let twinIndex = position === `before` ? run.start + over.length : slash.index
 
-							// The space twin reads the run right behind the solidus, which is this one where no comment moved the check (#704)
-							if (whitespace === `newline`) {
-								if (checkIndex !== slash.index) return false
-							}
-							else {
-								// The break twin reads past a block comment behind the solidus and passes over one a `//` comment follows, and a write can move either against the solidus or off it
-								let behind = twinText.slice(slash.index + 1)
+							// In front of the solidus both twins read the very run the other writes; behind it they part over a comment
+							if (position === `after`) {
+								// The space twin reads the run right behind the solidus, which is this one where no comment moved the check (#704)
+								if (whitespace === `newline`) {
+									if (checkIndex !== slash.index) return false
+								}
+								else {
+									// The break twin reads past a block comment behind the solidus and passes over one a `//` comment follows, and a write can move either against the solidus or off it
+									let behind = twinText.slice(slash.index + 1)
 
-								if (SPACES_THEN_INLINE_COMMENT.test(behind) || SPACES_THEN_BLOCK_COMMENT.test(behind)) return false
+									if (SPACES_THEN_INLINE_COMMENT.test(behind) || SPACES_THEN_BLOCK_COMMENT.test(behind)) return false
+								}
 							}
 
 							// A twin whose own guard refuses writes nothing, so it holds nothing (#536): asked over the text this write leaves, since emptying a run brings two solidi together into a `//` comment
@@ -178,7 +179,7 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 							let twinWrites = twinOption.startsWith(`always`)
 							let twinWritten = twinWrites ? (twinWhitespace === `newline` ? getLineBreak(node, result) : ` `) : ``
 
-							return writesTheSpan(syntax, reading, twinText, spansAt(twinText, slash.index, position, twinWhitespace, twinWrites).span, twinWritten, position)
+							return writesTheSpan(syntax, reading, twinText, spansAt(twinText, twinIndex, position, twinWhitespace, twinWrites).span, twinWritten, position)
 						},
 					})
 

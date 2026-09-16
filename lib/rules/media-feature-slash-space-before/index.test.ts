@@ -1,3 +1,10 @@
+import scss from "postcss-scss"
+import stylelint from "stylelint"
+import { describe, expect, it } from "vitest"
+
+import { pick } from "../../../vitest.helpers.ts"
+import plugins from "../../index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -314,4 +321,36 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 	],
+})
+
+// A `never` write emptying the run between two solidi brings them together into a `//` comment, which takes the feature's closing parenthesis with the rest of the line
+describe(`the run in front of a solidus under a syntax that spells a \`//\` comment`, () => {
+	let rule = `@stylistic/scss/media-feature-slash-space-before`
+
+	/**
+	 * Fixes a Sass text under this rule's `never`.
+	 * @param code - The text.
+	 * @returns What the fix left and what a check of it says.
+	 */
+	async function fix (code: string): Promise<{
+		fixed: string | undefined,
+		left: string[],
+	}> {
+		let config = { plugins, rules: { [rule]: `never` }, customSyntax: scss }
+		let ours = await stylelint.lint({ code, config, fix: true })
+		let again = await stylelint.lint({ code: ours.code ?? code, config })
+
+		return { fixed: ours.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column} ${warning.text}`) }
+	}
+
+	it(`leaves the run between two solidi, whose closing would take the rest of the line into a comment`, async () => {
+		expect(await fix(`@media (aspect-ratio: 16/  /9) {}`)).toEqual({
+			fixed: `@media (aspect-ratio: 16/  /9) {}`,
+			left: [`1:28 Unexpected whitespace before "/" (@stylistic/scss/media-feature-slash-space-before)`],
+		})
+	})
+
+	it(`closes the run where the word in front of it opens no comment`, async () => {
+		expect(await fix(`@media (aspect-ratio: 16 /9) {}`)).toEqual({ fixed: `@media (aspect-ratio: 16/9) {}`, left: [] })
+	})
 })

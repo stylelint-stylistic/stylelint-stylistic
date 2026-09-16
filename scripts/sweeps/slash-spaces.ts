@@ -26,7 +26,7 @@ const SPACINGS: Record<string, [string, string]> = {
 	verticalTabs: [`\v`, `\v`],
 }
 
-/** What stands on either side of the solidus. */
+/** What stands on either side of the solidus; the two operands ending and beginning with a solidus of their own put a second solidus across the run, which a write emptying it brings against this one into a `//` comment. */
 const OPERANDS: Record<string, [string, string]> = {
 	numbers: [`1`, `2`],
 	dimensions: [`12px`, `1.5`],
@@ -39,6 +39,8 @@ const OPERANDS: Record<string, [string, string]> = {
 	sassVariable: [`$a`, `4`],
 	lessVariableRight: [`4`, `@a`],
 	string: [`"a"`, `2`],
+	solidusLeft: [`1/`, `2`],
+	solidusRight: [`1`, `/2`],
 }
 
 /** Where the pair stands. */
