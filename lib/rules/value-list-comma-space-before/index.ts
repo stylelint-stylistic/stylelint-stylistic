@@ -9,6 +9,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { valueListCommaWhitespaceChecker } from "../../utils/valueListCommaWhitespaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { runInFront, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -58,7 +59,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
 			// Refused before the report: a comma in front of the value is the property name's, and one behind a `//` comment is closed by the break either option removes
-			isFixable: (declNode, index, declString) => index >= declarationValueIndex(declNode) && !syntax.endsWithInlineComment(declString.slice(0, index), syntax.inlineComments(declNode, result)),
+			isFixable: (declNode, index, declString, indices) => index >= declarationValueIndex(declNode) && !syntax.endsWithInlineComment(declString.slice(0, index), syntax.inlineComments(declNode, result)) && writesTwinRun(shortName, ruleName, declNode, result, {
+				// The break twin writes the same run (#704)
+				side: `before`,
+				run: runInFront(declString, index),
+				lineText: declString,
+				runs: () => indices.map((each) => runInFront(declString, each)),
+				line: declNode.rangeBy({ index }).start.line,
+				twinWrites: () => true,
+			}),
 			fix: (declNode, index) => {
 				fixData = fixData || (new Map())
 

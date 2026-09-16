@@ -1,11 +1,16 @@
+import type { Declaration } from "postcss"
 import stylelint from "stylelint"
 
+import { TRAILING_CSS_WHITESPACE, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { valueListCommaWhitespaceChecker } from "../../utils/valueListCommaWhitespaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { runInFront, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -19,10 +24,23 @@ const MESSAGES = defineMessages({
 
 export let meta = {
 	url: getRuleDocUrl(shortName),
+	fixable: true,
 }
 
 /** `always` a newline before the commas; `always-multi-line` asks it, and `never-multi-line` refuses whitespace there, in a multi-line value list only. */
 export type PrimaryOption = `always` | `always-multi-line` | `never-multi-line`
+
+/**
+ * Puts a break in front of the spaces and tabs ending a text, which become the indentation of the comma's line.
+ * @param text - The text ending in the run in front of a comma.
+ * @param lineBreak - The break to write.
+ * @returns The text with the break in it.
+ */
+function breakInFront (text: string, lineBreak: string): string {
+	let spaceIndex = text.search(TRAILING_SPACES_AND_TABS)
+
+	return spaceIndex >= 0 ? text.slice(0, spaceIndex) + lineBreak + text.slice(spaceIndex) : text + lineBreak
+}
 
 /**
  * Requires a newline or disallows whitespace before the commas of value lists.
@@ -44,13 +62,70 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
+		let fixData: Map<Declaration, number[]> | undefined
+
 		valueListCommaWhitespaceChecker({
 			root,
 			result,
 			syntax,
 			locationChecker: checker.beforeAllowingIndentation,
 			checkedRuleName: ruleName,
+			// Refused before the report: a comma in front of the value is the property name's, and under `never-multi-line` a comma behind a `//` comment keeps the break closing it, while `always` only adds one
+			isFixable: (declNode, index, declString, indices) => {
+				if (index < declarationValueIndex(declNode)) return false
+
+				let closesInlineComment = syntax.endsWithInlineComment(declString.slice(0, index), syntax.inlineComments(declNode, result))
+
+				if (primary === `never-multi-line` && closesInlineComment) return false
+
+				// The space twin writes the same run, save over a comment's closing break (#704)
+				return writesTwinRun(shortName, ruleName, declNode, result, {
+					side: `before`,
+					run: runInFront(declString, index),
+					lineText: declString,
+					runs: () => indices.map((each) => runInFront(declString, each)),
+					line: declNode.rangeBy({ index }).start.line,
+					twinWrites: () => !closesInlineComment,
+				})
+			},
+			fix: (declNode, index) => {
+				fixData = fixData || (new Map())
+
+				let commaIndices = fixData.get(declNode) || []
+
+				commaIndices.push(index)
+				fixData.set(declNode, commaIndices)
+			},
 		})
+
+		if (fixData) {
+			let lineBreak = getLineBreak(root, result)
+
+			for (let [decl, commaIndices] of fixData.entries()) {
+				// Back to front: the comma opening the value moves `declarationValueIndex`, so it is written last
+				for (let index of commaIndices.toSorted((a, b) => b - a)) {
+					let valueIndex = index - declarationValueIndex(decl)
+
+					// Before a comma opening the value the whitespace is `raws.between`'s
+					if (valueIndex === 0) {
+						let between = decl.raws.between || `:`
+
+						decl.raws.between = primary.startsWith(`always`) ? breakInFront(between, lineBreak) : between.replace(TRAILING_CSS_WHITESPACE, ``)
+
+						continue
+					}
+
+					let value = syntax.read(decl)
+					let beforeValue = value.slice(0, valueIndex)
+					let afterValue = value.slice(valueIndex)
+
+					if (primary.startsWith(`always`)) beforeValue = breakInFront(beforeValue, lineBreak)
+					else if (primary === `never-multi-line`) beforeValue = beforeValue.replace(TRAILING_CSS_WHITESPACE, ``)
+
+					syntax.write(decl, beforeValue + afterValue)
+				}
+			}
+		}
 	}
 }
 

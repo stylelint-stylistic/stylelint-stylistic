@@ -9,6 +9,8 @@ Require a newline or disallow whitespace before the commas of value lists.
  * The newline before this comma */
 ```
 
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
+
 ## Options
 
 `string`: `"always"|"always-multi-line"|"never-multi-line"`
