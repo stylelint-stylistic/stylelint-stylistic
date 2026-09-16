@@ -1,13 +1,41 @@
-import { type Declaration, parse, type Rule } from "postcss"
+import { type ChildNode, type Container, type Declaration, parse, type Rule } from "postcss"
+import less from "postcss-less"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
 import { css } from "../../syntaxes/css/index.ts"
+import type { Syntax } from "../../syntaxes/index.ts"
 
-import { closedBySemicolon, trailingSemicolonAsked, valueAsClosed } from "./index.ts"
+import { closedBySemicolon, closesADeclarationBlock, trailingSemicolonAsked, valueAsClosed } from "./index.ts"
+
+/** The core, told that a `//` comment holds code behind a carriage return, as the Less syntax tells it. */
+const CARRIAGE_RETURN_READER: Syntax = {
+	...css,
+	inlineCommentCode: (comment) => {
+		let content = `${comment.raws.left ?? ``}${comment.text}`
+		let index = content.indexOf(`\r`)
+
+		return index === -1 ? null : ` `.repeat(index) + content.slice(index)
+	},
+}
 
 const TRAILING = `@stylistic/declaration-block-trailing-semicolon`
 const SCSS_TRAILING = `@stylistic/scss/declaration-block-trailing-semicolon`
+
+describe(`closesADeclarationBlock`, () => {
+	it(`the last node of a block other than a comment, and one in front of it`, () => {
+		expect(closes(`b: c; d: e; /* x */`, 1)).toBe(true)
+		expect(closes(`b: c; d: e; /* x */`, 0)).toBe(false)
+	})
+
+	it(`a node behind which an inline comment holds code past a bare carriage return, other than semicolons`, () => {
+		expect(closes(`b: c; // x\r d: e;`, 0)).toBe(false)
+		expect(closes(`@extend .b; // x\r .m();`, 0)).toBe(false)
+		expect(closes(`b: c; // x\r ; ;`, 0)).toBe(true)
+		expect(closes(`b: c; // \r d: e;`, 0)).toBe(false)
+		expect(closes(`b: c; // x\r d: e;`, 0, css)).toBe(true)
+	})
+})
 
 describe(`trailingSemicolonAsked`, () => {
 	it(`a configuration listing the rule under neither of its options, or not at all`, () => {
@@ -51,6 +79,11 @@ describe(`trailingSemicolonAsked`, () => {
 
 	it(`a declaration that is not the one its block ends on, whose semicolon the rule is not about`, () => {
 		expect(asked(`a { b: ; c: red }`, { [TRAILING]: `never` }, 0)).toBeUndefined()
+	})
+
+	it(`a declaration behind which a Less inline comment holds a declaration past a bare carriage return, which the rule passes over, and one holding a semicolon there, which it takes away`, () => {
+		expect(askedUnderLess(`a {\n\tcolor: pink; // c\r top: 0;\n}`)).toBeUndefined()
+		expect(askedUnderLess(`a {\n\tcolor: pink; // c\r;\n}`)).toBe(false)
 	})
 
 	it(`a declaration standing at the top level of a stylesheet, which ends no declaration block`, () => {
@@ -188,4 +221,30 @@ function result (rules: Record<string, unknown>): PostcssResult {
  */
 function disabled (rules: Record<string, unknown>, disabledRanges: Record<string, object[]>, ignoreDisables?: boolean): PostcssResult {
 	return { stylelint: { config: { rules, ignoreDisables }, disabledRanges } } as unknown as PostcssResult
+}
+
+/**
+ * Asks whether a node of a Less stylesheet's first rule closes its block.
+ * @param code - The rule's content.
+ * @param index - Which node of the rule to ask about.
+ * @param syntax - The syntax the question is asked under, one reading the code behind a carriage return unless told otherwise.
+ * @returns What `closesADeclarationBlock` answers.
+ */
+function closes (code: string, index: number, syntax: Syntax = CARRIAGE_RETURN_READER): boolean {
+	let rule = less.parse(`a {\n\t${code}\n}`, { from: undefined }).first as Container
+
+	return closesADeclarationBlock(syntax, rule.nodes?.[index] as ChildNode)
+}
+
+/**
+ * Asks what a live `never` of the Less namespace will leave behind the first declaration of a Less stylesheet's first rule.
+ * @param code - The stylesheet.
+ * @returns What `trailingSemicolonAsked` answers.
+ */
+function askedUnderLess (code: string): boolean | undefined {
+	let root = less.parse(code, { from: undefined })
+	let decl = (root.first as Container).nodes?.[0] as Declaration
+	let rules = { "@stylistic/less/declaration-block-trailing-semicolon": `never` }
+
+	return trailingSemicolonAsked(decl, { opts: { syntax: less }, root, stylelint: { config: { customSyntax: `postcss-less`, rules } } } as unknown as PostcssResult)
 }

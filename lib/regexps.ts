@@ -253,6 +253,9 @@ export const RANGE_FEATURE_OPERATOR = /[<>=]/u
 /** A run of semicolons. */
 export const SEMICOLON_RUN = /;+/u
 
+/** Semicolons and tokenizer whitespace only, at least one character. */
+export const SEMICOLONS_OR_WHITESPACE = /^[ \t\n\r\f;]+$/u
+
 /** Spaces and tabs only, at least one. */
 export const SPACES_AND_TABS_ONLY = /^[ \t]+$/u
 

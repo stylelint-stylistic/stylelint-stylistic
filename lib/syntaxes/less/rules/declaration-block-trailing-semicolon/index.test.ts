@@ -54,6 +54,11 @@ testRule({
 			description: `the same break behind a semicolon in the text of the comment, which this syntax reads as the one closing the declaration`,
 			code: `a {\n\tcolor: pink // ;\r\t;\n}\n`,
 		},
+		{
+			// Pins that a semicolon Less reads in the text of a comment behind the one the flag stands for closes the declaration
+			description: `a semicolon in the text of an inline comment behind the value, with a second comment on the line holding a semicolon behind a bare carriage return, which Less reads as the one closing the declaration`,
+			code: `a {\n\tcolor: pink // x; // c\r;\n}\n`,
+		},
 	],
 
 	reject: [
@@ -359,9 +364,79 @@ testRule({
 				}
 			`,
 		},
+		{
+			// Pins that a node Less reads in the text of a comment, not the one PostCSS hangs the flag on, closes the block
+			description: `a declaration behind a bare carriage return in an inline comment behind the semicolon, which this syntax keeps as the text of the comment and Less reads as the declaration closing the block`,
+			code: `a {\n\tcolor: pink; // c\r top: 0;\n}\n`,
+		},
+		{
+			// Pins the same reading for a comment on a line of its own and a declaration with no semicolon behind it
+			description: `the same comment on a line of its own, the declaration behind the carriage return closing the block with no semicolon`,
+			code: `a {\n\tb: c;\n\t// x\r\td: e\n}\n`,
+		},
+		{
+			// Pins the same reading for the walk over at-rules
+			description: `the same comment behind an extend at-rule`,
+			code: `a {\n\t@extend .b; // c\r top: 0;\n}\n`,
+		},
+		{
+			// Pins that a break with nothing in front of it in the comment is read as well
+			description: `the same comment holding no text in front of the carriage return, which this syntax keeps in the raw in front of the text`,
+			code: `a {\n\tcolor: pink; // \r top: 0;\n}\n`,
+		},
+		{
+			// Pins that a comment behind the break does not hide a declaration behind the next break
+			description: `the same comment holding a second inline comment behind the carriage return and a declaration behind a second one`,
+			code: `a {\n\tcolor: pink; // c\r // d\r top: 0;\n}\n`,
+		},
 	],
 
 	reject: [
+		{
+			// Pins that a semicolon Less reads in the text of a comment is taken away with the one behind the declaration
+			description: `a semicolon behind a bare carriage return in an inline comment behind the semicolon closing the declaration, which this syntax keeps as the text of the comment and Less reads as code, so both are taken away`,
+			code: `a {\n\tcolor: pink; // c\r;\n}\n`,
+			fixed: `a {\n\tcolor: pink // c\r\n}\n`,
+			line: 2,
+			column: 20,
+			message: messages.rejected,
+		},
+		{
+			// Pins the same for a comment holding no text in front of the carriage return
+			description: `the same semicolon in a comment holding no text in front of the carriage return`,
+			code: `a {\n\tcolor: pink; // \r;\n}\n`,
+			fixed: `a {\n\tcolor: pink // \r\n}\n`,
+			line: 2,
+			column: 19,
+			message: messages.rejected,
+		},
+		{
+			// Pins that a comment Less reads behind the carriage return is no node closing the block
+			description: `a second inline comment behind the carriage return, which Less reads as a comment, so the declaration closes the block`,
+			code: `a {\n\tcolor: pink; // c\r // d\n}\n`,
+			fixed: `a {\n\tcolor: pink // c\r // d\n}\n`,
+			line: 2,
+			column: 13,
+			message: messages.rejected,
+		},
+		{
+			// Pins that a semicolon in such a comment stays while the one in front of it is taken away
+			description: `a semicolon behind the carriage return with a second inline comment holding one behind it, which alone stays`,
+			code: `a {\n\tcolor: pink; // c\r; // d;\n}\n`,
+			fixed: `a {\n\tcolor: pink // c\r // d;\n}\n`,
+			line: 2,
+			column: 20,
+			message: messages.rejected,
+		},
+		{
+			// Pins that the semicolon behind a flag set by the text of a comment is found in a comment behind it
+			description: `a semicolon in the text of an inline comment behind the value, with a second comment on the line holding a semicolon behind a bare carriage return, which Less reads as the one closing the declaration and alone is taken away`,
+			code: `a {\n\tcolor: pink // x; // c\r;\n}\n`,
+			fixed: `a {\n\tcolor: pink // x; // c\r\n}\n`,
+			line: 2,
+			column: 25,
+			message: messages.rejected,
+		},
 		{
 			// Spelled with escapes because the line the semicolon leaves behind holds a tab and nothing else, which an indented block would leave to whatever trims the file. See #232
 			description: `an inline comment behind the value, with the semicolon on the line under it: this option takes the semicolon away rather than writing one, so it has nowhere to write and the fix goes through`,

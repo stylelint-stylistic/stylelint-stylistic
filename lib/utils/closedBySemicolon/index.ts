@@ -1,7 +1,7 @@
-import type { Declaration, Node } from "postcss"
+import type { ChildNode, Declaration, Node } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
+import { SEMICOLONS_OR_WHITESPACE, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { fixDisabledOnLine } from "../fixDisabledOnLine/index.ts"
 import { hasBlock } from "../hasBlock/index.ts"
@@ -12,7 +12,7 @@ import { lastNonCommentNode } from "../lastNonCommentNode/index.ts"
 import { neighbourCopies, type NeighbourCopy } from "../neighbourSettings/index.ts"
 import { nextNonCommentNode } from "../nextNonCommentNode/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
-import { isAtRule, isDeclaration, isRoot } from "../typeGuards/index.ts"
+import { isAtRule, isComment, isDeclaration, isRoot } from "../typeGuards/index.ts"
 import { whitespaceBeforeSemicolon } from "../whitespaceBeforeSemicolon/index.ts"
 
 /** The trailing-semicolon rule and its primaries. */
@@ -56,6 +56,28 @@ export function standsInADeclarationBlock (node: Node): boolean {
 }
 
 /**
+ * Asks whether the node closes its declaration block: it stands in one, it is the node PostCSS hangs the block's `raws.semicolon` on, and no `//` comment behind it holds code other than semicolons.
+ *
+ * Where the parser kept code in such a comment's text, a node the language reads stands behind this one.
+ * @param syntax - The syntax reading the comments.
+ * @param node - The node asked about.
+ * @returns True where it closes the block.
+ */
+export function closesADeclarationBlock (syntax: Syntax, node: ChildNode): boolean {
+	let { parent } = node
+
+	if (!parent?.nodes || !standsInADeclarationBlock(node) || lastNonCommentNode(parent) !== node) return false
+
+	return parent.nodes.slice(parent.index(node) + 1).every((sibling) => {
+		if (!isComment(sibling)) return true
+
+		let code = syntax.inlineCommentCode(sibling)
+
+		return code === null || SEMICOLONS_OR_WHITESPACE.test(code)
+	})
+}
+
+/**
  * Asks whether PostCSS writes the semicolon behind a node whatever the block's `raws.semicolon` says.
  *
  * `pushBody` writes one behind a childless at-rule and a custom property wherever a sibling follows, so `never` has nothing to take; restated rather than printed per warning, and false under a PostCSS older than 8.5.22.
@@ -80,7 +102,7 @@ function reaches (copy: NeighbourCopy, decl: Declaration, result: PostcssResult)
 
 	let { parent } = decl
 
-	if (!parent || !standsInADeclarationBlock(decl) || lastNonCommentNode(parent) !== decl) return false
+	if (!parent || !closesADeclarationBlock(copy.syntax, decl)) return false
 
 	let line = decl.source?.end?.line ?? decl.source?.start?.line
 

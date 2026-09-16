@@ -9,6 +9,7 @@ import type { Syntax } from "../index.ts"
 
 import { atRuleVariableValue } from "./atRuleVariableValue/index.ts"
 import { isStandardLessAtRule, isStandardLessDeclaration, isStandardLessProperty, isStandardLessRule, isStandardLessSelector, isStandardLessValue } from "./guards/index.ts"
+import { inlineCommentCode } from "./inlineCommentCode/index.ts"
 import { readsWhitespaceBehindAtRuleName } from "./readsWhitespaceBehindAtRuleName/index.ts"
 import { requiresTrailingSemicolon } from "./requiresTrailingSemicolon/index.ts"
 import { restoreMixinFlagRuns } from "./restoreMixinFlagRuns/index.ts"
@@ -29,6 +30,7 @@ export let less: Syntax = {
 	isStandardComment: isStandardPreprocessorComment,
 	requiresTrailingSemicolon,
 	semicolonFlagIsCommentText,
+	inlineCommentCode,
 	readsRuleParams: (rule: PostcssRule) => `params` in rule && Boolean(rule.params),
 	atRuleVariableValue,
 	// Under its default `math` mode Less divides only inside parentheses (`@a/2` prints `4/2`), a nameless call the rules pass over, so a solidus outside is the separator it is to the core

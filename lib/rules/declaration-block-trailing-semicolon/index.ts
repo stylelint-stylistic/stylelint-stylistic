@@ -1,21 +1,20 @@
 import type { AtRule, ChildNode, Container, Declaration, Node } from "postcss"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { INLINE_COMMENT_BREAK, TRAILING_CSS_WHITESPACE, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
+import { EVERY_SEMICOLON, INLINE_COMMENT_BREAK, TRAILING_CSS_WHITESPACE, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { betweenTailAfterColon } from "../../utils/betweenTailAfterColon/index.ts"
-import { semicolonOutlivesTheFlag, standsInADeclarationBlock } from "../../utils/closedBySemicolon/index.ts"
+import { closesADeclarationBlock, semicolonOutlivesTheFlag } from "../../utils/closedBySemicolon/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { lastNodeHoldsTheBlockAfter } from "../../utils/lastNodeHoldsTheBlockAfter/index.ts"
-import { lastNonCommentNode } from "../../utils/lastNonCommentNode/index.ts"
 import { nextNonCommentNode } from "../../utils/nextNonCommentNode/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { isAtRule, isDeclaration, isRoot } from "../../utils/typeGuards/index.ts"
+import { isAtRule, isComment, isDeclaration, isRoot } from "../../utils/typeGuards/index.ts"
 import { keepsEscapedCharacter, readWhitespaceBeforeSemicolon, whitespaceBeforeSemicolon, writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -32,13 +31,13 @@ export let meta = {
 	fixable: true,
 }
 
-/** A raw behind the node closing a block: owner, key, file offset, text, and the index in the text its code opens at. */
+/** A raw behind the node closing a block, or the `raws.left` and text of a `//` comment holding code: owner, key, file offset, text, and a copy of the text as long as it with all but its code blanked. */
 type HeldRaw = {
 	owner: Node,
 	key: string,
 	start: number,
 	text: string,
-	code: number,
+	code: string,
 }
 
 /**
@@ -84,13 +83,14 @@ function blockEnd (container: Container): number {
 /**
  * Returns the raws between the node closing the block and the block's end, in file order, with their start offsets.
  *
- * Only comments follow that node, so a `;` here is code, unless the flag's semicolon is the text of a `//` comment: that comment runs on to the first break closing it, which a comment it meets may hold ([#359](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/359)). A comment's `raws.before` is anchored to the comment's own start, since `postcss-less` ends an inline comment one character short. A missing raw is skipped, since an empty string would override the PostCSS default.
+ * Only comments follow that node, so a `;` here is code, and so is one a `//` comment holds in its text past the break closing it, unless the flag's semicolon is the text of a `//` comment: that comment runs on to the first break closing it, which a comment it meets may hold ([#359](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/359)). A comment's `raws.before` is anchored to the comment's own start, since `postcss-less` ends an inline comment one character short. A missing raw is skipped, since an empty string would override the PostCSS default.
+ * @param syntax - The syntax reading the comments.
  * @param node - The node closing the block.
  * @param result - The Stylelint result.
  * @param flagIsCommentText - Whether the flag's semicolon is the text of such a comment.
  * @returns The raws, each with its owner and key.
  */
-function rawsBehind (node: ChildNode, result: PostcssResult, flagIsCommentText: boolean): HeldRaw[] {
+function rawsBehind (syntax: Syntax, node: ChildNode, result: PostcssResult, flagIsCommentText: boolean): HeldRaw[] {
 	let container = node.parent
 
 	if (!container?.nodes) throw new Error(`The node must stand in a block`)
@@ -99,26 +99,31 @@ function rawsBehind (node: ChildNode, result: PostcssResult, flagIsCommentText: 
 	let inComment = flagIsCommentText
 
 	/**
-	 * Returns where a raw's code opens, closing the comment at its first break.
+	 * Returns a copy of a raw with the comment blanked up to its first break, which closes it.
 	 * @param text - The raw.
-	 * @returns The index.
+	 * @returns The copy.
 	 */
-	function codeOf (text: string): number {
-		if (!inComment) return 0
+	function codeOf (text: string): string {
+		if (!inComment) return text
 
 		let lineBreak = text.search(INLINE_COMMENT_BREAK)
 
-		if (lineBreak === -1) return text.length
+		if (lineBreak === -1) return ` `.repeat(text.length)
 
 		inComment = false
 
-		return lineBreak
+		return ` `.repeat(lineBreak) + text.slice(lineBreak)
 	}
 
 	for (let sibling of container.nodes.slice(container.index(node) + 1)) {
 		let text = sibling.raws.before
 
 		if (typeof text === `string`) raws.push({ owner: sibling, key: `before`, start: offsetsOf(sibling).start - text.length, text, code: codeOf(text) })
+
+		let code = isComment(sibling) ? syntax.inlineCommentCode(sibling) : null
+
+		// The break ends every comment it stands in, so the syntax's copy is the code whatever came in front
+		if (code !== null && isComment(sibling)) raws.push({ owner: sibling, key: `text`, start: offsetsOf(sibling).start + `//`.length, text: `${sibling.raws.left ?? ``}${sibling.text}`, code })
 
 		if (inComment && INLINE_COMMENT_BREAK.test(nodeString(sibling, result))) inComment = false
 	}
@@ -136,7 +141,7 @@ function rawsBehind (node: ChildNode, result: PostcssResult, flagIsCommentText: 
  * @returns True where it does.
  */
 function spellsSemicolon (raw: HeldRaw): boolean {
-	return raw.text.slice(raw.code).includes(`;`)
+	return raw.code.includes(`;`)
 }
 
 /**
@@ -168,7 +173,7 @@ function trailingSemicolonIndex (node: ChildNode, result: PostcssResult, raws: H
 	let { start, end } = offsetsOf(node, result)
 	let holder = raws.findLast((raw) => spellsSemicolon(raw))
 
-	if (holder) return holder.start + holder.text.lastIndexOf(`;`) - start
+	if (holder) return holder.start + holder.code.lastIndexOf(`;`) - start
 
 	// The flag's semicolon is the first behind the node, so it is asked last; the node's span ends on it
 	return node.parent?.raws.semicolon && !flagIsCommentText ? end - 1 - start : undefined
@@ -177,7 +182,7 @@ function trailingSemicolonIndex (node: ChildNode, result: PostcssResult, raws: H
 /**
  * Removes every semicolon behind the node, in the flag and in the raws, and the whitespace in front of the flag's own.
  *
- * Removing the flag's alone left one in a raw, which the next parse read as the flag's. The whitespace outlived the semicolon whenever a `declaration-block-semicolon-*-before` rule was listed first ([#479](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/479)); in front of a semicolon in a raw it is a comment's layout and stays. Behind an inline comment nothing is trimmed, and a semicolon in its text stays.
+ * Removing the flag's alone left one in a raw, which the next parse read as the flag's. The whitespace outlived the semicolon whenever a `declaration-block-semicolon-*-before` rule was listed first ([#479](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/479)); in front of a semicolon in a raw it is a comment's layout and stays. Behind an inline comment nothing is trimmed, and a semicolon in its text or in a comment the code holds stays.
  * @param syntax - The syntax the rule is built over.
  * @param node - The node closing the block.
  * @param result - The Stylelint result.
@@ -193,7 +198,14 @@ function takeTheTrailingSemicolonsAway (syntax: Syntax, node: AtRule | Declarati
 
 	if (!flagIsCommentText) parent.raws.semicolon = false
 
-	for (let raw of raws) raw.owner.raws[raw.key] = raw.text.slice(0, raw.code) + raw.text.slice(raw.code).replaceAll(`;`, ``)
+	for (let raw of raws) {
+		let { code } = raw
+		let text = raw.text.replaceAll(EVERY_SEMICOLON, (semicolon, index: number) => (code[index] === `;` ? `` : semicolon))
+
+		// `raws.left` is whitespace, so every semicolon taken stood in the text
+		if (raw.key === `text` && isComment(raw.owner)) raw.owner.text = text.slice(String(raw.owner.raws.left ?? ``).length)
+		else raw.owner.raws[raw.key] = text
+	}
 }
 
 /**
@@ -300,13 +312,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		root.walkAtRules((atRule) => {
 			if (!atRule.parent) throw new Error(`A parent node must be present`)
-			if (!standsInADeclarationBlock(atRule) || atRule !== lastNonCommentNode(atRule.parent) || hasBlock(atRule)) return
+			if (!closesADeclarationBlock(syntax, atRule) || hasBlock(atRule)) return
 			checkLastNode(atRule)
 		})
 
 		root.walkDecls((decl) => {
 			if (!decl.parent) throw new Error(`A parent node must be present`)
-			if (!standsInADeclarationBlock(decl) || decl !== lastNonCommentNode(decl.parent)) return
+			if (!closesADeclarationBlock(syntax, decl)) return
 			checkLastNode(decl)
 		})
 
@@ -320,7 +332,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (!parent) throw new Error(`A parent node must be present`)
 
 			let flagIsCommentText = syntax.semicolonFlagIsCommentText(node, result)
-			let raws = rawsBehind(node, result, flagIsCommentText)
+			let raws = rawsBehind(syntax, node, result, flagIsCommentText)
 			let hasSemicolon = endsOnSemicolon(node, raws, flagIsCommentText)
 			// `never` asks for the semicolon's place, since the block can end on one the flag does not cover
 			let trailingSemicolon = primary === `never` ? trailingSemicolonIndex(node, result, raws, flagIsCommentText) : undefined
