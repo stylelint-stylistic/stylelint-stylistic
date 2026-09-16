@@ -104,6 +104,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!nodeToCheck) return
 
+			// The run behind a `//` comment holds the break that ends it, which `never` cannot take away, so there is nothing to report
+			if (primary.startsWith(`never`) && nextNode.type === `comment` && nodeToCheck !== nextNode && !syntax.isStandardComment(nextNode)) return
+
 			let reportIndex = nodeString(statement, result).length
 			let source = rawNodeString(nodeToCheck, result)
 

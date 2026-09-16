@@ -1,39 +1,14 @@
 import { createRule } from "../../../../rules/block-closing-brace-newline-after/index.ts"
-import { scss } from "../../index.ts"
+import { less } from "../../index.ts"
 
-let { ruleName, messages } = createRule(scss)
+let { ruleName, messages } = createRule(less)
 
 let testRule = createTestRule({ ruleName })
 
 testRule({
 	ruleName,
-	config: [`always`],
-	customSyntax: `postcss-scss`,
-
-	reject: [
-		{
-			// See #139
-			description: `no newline behind the closing brace of an at-rule whose parameters carry on past an inline comment, which this syntax keeps a second copy of`,
-			code: `
-				@media (min-width: 100px // c
-					) { a { color: red; } }b { color: red; }
-			`,
-			fixed: `
-				@media (min-width: 100px // c
-					) { a { color: red; } }
-				b { color: red; }
-			`,
-			line: 2,
-			column: 25,
-			message: messages.expectedAfter(),
-		},
-	],
-})
-
-testRule({
-	ruleName,
 	config: [`never-multi-line`],
-	customSyntax: `postcss-scss`,
+	customSyntax: `postcss-less`,
 
 	accept: [
 		{
@@ -96,7 +71,7 @@ testRule({
 testRule({
 	ruleName,
 	config: [`never-single-line`],
-	customSyntax: `postcss-scss`,
+	customSyntax: `postcss-less`,
 
 	accept: [
 		{
