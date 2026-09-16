@@ -182,3 +182,39 @@ testRule({
 		},
 	],
 })
+
+// The space twin writes the run in front of the solidus too, and the library lists it behind this rule, so its write would be the file's last (#704)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/value-slash-space-before": `always` },
+
+	reject: [
+		{
+			// The run beside a solidus belongs to one of its two twin rules where their options disagree
+			description: `a space in front of the solidus, which the twin behind this rule accepts and would take the break back from, so the warning stands and nothing is written`,
+			code: `a { b: 1 / 2 }`,
+			fixed: `a { b: 1 / 2 }`,
+			line: 1,
+			column: 10,
+			message: messages.expectedBefore(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/value-slash-space-before": [`always`, { ignoreProperties: [`b`] }] },
+
+	reject: [
+		{
+			description: `a declaration whose property the twin's own \`ignoreProperties\` names, so the twin writes nothing and the break is written`,
+			code: `a { b: 1 / 2 }`,
+			fixed: `a { b: 1\n/ 2 }`,
+			line: 1,
+			column: 10,
+			message: messages.expectedBefore(),
+		},
+	],
+})

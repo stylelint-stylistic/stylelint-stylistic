@@ -1032,3 +1032,50 @@ testRule({
 		},
 	],
 })
+
+// The break twin writes both runs inside the parentheses too, and the library lists it behind this rule, so its write would be the file's last (#704)
+testRule({
+	ruleName,
+	config: [`never`],
+	extraRules: { "@stylistic/function-parentheses-newline-inside": `always` },
+
+	reject: [
+		{
+			// The runs inside the parentheses belong to one of their two twin rules where the options disagree
+			description: `a break inside each parenthesis, which the twin behind this rule asks for and would write back, so both warnings stand and nothing is written here`,
+			code: `a { b: f(\n1\n) }`,
+			fixed: `a { b: f(\n1\n) }`,
+			warnings: [
+				{ line: 1, column: 10, message: messages.rejectedOpening },
+				{ line: 2, column: 2, message: messages.rejectedClosing },
+			],
+		},
+		{
+			description: `a comment behind the opening parenthesis holding the break the twin asks for, so the twin writes that run no longer and the space is taken out of it`,
+			code: `a {\n\tb: f( /* c */\n\t\t1\n\t);\n}`,
+			fixed: `a {\n\tb: f(/* c */\n\t\t1\n\t);\n}`,
+			warnings: [
+				{ line: 2, column: 7, message: messages.rejectedOpening },
+				{ line: 4, column: 1, message: messages.rejectedClosing },
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/function-parentheses-newline-inside": `always` },
+
+	reject: [
+		{
+			description: `a comment in front of the closing parenthesis holding the break the twin asks for, so the twin writes that run no longer and the space goes in`,
+			code: `a {\n\tb: f(\n\t\t1\n\t\t/* c */\n\t);\n}`,
+			fixed: `a {\n\tb: f(\n\t\t1\n\t\t/* c */ );\n}`,
+			warnings: [
+				{ line: 2, column: 7, message: messages.expectedOpening },
+				{ line: 5, column: 1, message: messages.expectedClosing },
+			],
+		},
+	],
+})

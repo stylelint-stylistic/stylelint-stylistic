@@ -42,6 +42,16 @@ function bareAddressEnd (text: string, openIndex: number): number {
 	return index
 }
 
+/** A separator solidus: where it stands, and the calls it stands in, the innermost first. */
+export type SeparatorSlash = {
+
+	/** The solidus's index in the text. */
+	index: number,
+
+	/** The names of the calls around it, which a twin's `ignoreFunctions` passes over ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)); a nameless group names nothing. */
+	functionNames: string[],
+}
+
 /**
  * Finds every solidus separating two parts of a value: a ratio, a font shorthand, a grid area, an alpha.
  *
@@ -51,18 +61,19 @@ function bareAddressEnd (text: string, openIndex: number): number {
  * @param node - The declaration or at-rule.
  * @param result - The Stylelint result.
  * @param options - What is read into and what is skipped.
- * @returns The index of each separator solidus, in order.
+ * @returns Each separator solidus, in order.
  */
-export function findSeparatorSlashes (text: string, syntax: Syntax, node: AtRule | Declaration, result: PostcssResult, options: SlashOptions): number[] {
-	let slashes: number[] = []
+export function findSeparatorSlashes (text: string, syntax: Syntax, node: AtRule | Declaration, result: PostcssResult, options: SlashOptions): SeparatorSlash[] {
+	let slashes: SeparatorSlash[] = []
 	let comments = syntax.printedComments(node, text, result)
 	let blanked = hideParenthesesInUrlStrings(blankComments(text, comments), comments)
 
 	/**
 	 * Walks a list of nodes, into every call that is read.
 	 * @param nodes - The value-parser nodes of one level.
+	 * @param functionNames - The names of the calls around them, the innermost first.
 	 */
-	function walk (nodes: ValueParserNode[]): void {
+	function walk (nodes: ValueParserNode[], functionNames: string[]): void {
 		// The end of a bare address's token; siblings made of its tail are skipped
 		let addressEnd = 0
 
@@ -75,7 +86,7 @@ export function findSeparatorSlashes (text: string, syntax: Syntax, node: AtRule
 				// `//` separates nothing, but the parser returns two dividers for it (#548)
 				let pairsWithANeighbour = blanked.charAt(index - 1) === `/` || blanked.charAt(index + 1) === `/`
 
-				if (valueNode.value === `/` && !pairsWithANeighbour && !syntax.readsSlashAsOperator(nodes[at - 1], nodes[at + 1])) slashes.push(index)
+				if (valueNode.value === `/` && !pairsWithANeighbour && !syntax.readsSlashAsOperator(nodes[at - 1], nodes[at + 1])) slashes.push({ index, functionNames })
 
 				continue
 			}
@@ -83,7 +94,7 @@ export function findSeparatorSlashes (text: string, syntax: Syntax, node: AtRule
 			if (valueNode.type !== `function`) continue
 
 			if (valueNode.value === ``) {
-				if (options.readsGroups) walk(valueNode.nodes)
+				if (options.readsGroups) walk(valueNode.nodes, functionNames)
 
 				continue
 			}
@@ -101,11 +112,11 @@ export function findSeparatorSlashes (text: string, syntax: Syntax, node: AtRule
 
 			if (options.ignoreFunctions !== undefined && matchesStringOrRegExp(valueNode.value, options.ignoreFunctions)) continue
 
-			walk(valueNode.nodes)
+			walk(valueNode.nodes, [valueNode.value, ...functionNames])
 		}
 	}
 
-	walk(valueParser(blanked).nodes)
+	walk(valueParser(blanked).nodes, [])
 
 	return slashes
 }

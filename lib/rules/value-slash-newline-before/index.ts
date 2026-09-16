@@ -74,6 +74,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			result,
 			syntax,
 			checkedRuleName: ruleName,
+			shortName,
 			locationChecker: checker.beforeAllowingIndentation,
 			position: `before`,
 			expectation: primary,

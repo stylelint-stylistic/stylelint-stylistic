@@ -2,13 +2,14 @@ import type { Declaration } from "postcss"
 import valueParser, { type FunctionNode } from "postcss-value-parser"
 import stylelint, { type FixCallback, type PostcssResult } from "stylelint"
 
-import { LEADING_CSS_WHITESPACE, LINE_BREAK, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
+import { LEADING_CSS_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { InlineCommentReading, Syntax } from "../../syntaxes/index.ts"
 import { addEdit, applyEditsFromEnd, type Edit, toIndexBeforeEdits } from "../../utils/applyEditsFromEnd/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { type CommentSpan, findCommentSpanAt, findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
+import { getAfterSpan, parenthesesRuns, readClosingRuns, readOpeningRuns } from "../../utils/functionParenthesesRuns/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
@@ -17,6 +18,7 @@ import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { splitSpaceNodesAtWords } from "../../utils/splitSpaceNodesAtWords/index.ts"
+import { writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -161,22 +163,6 @@ function findFirstCharacterIndex (declValue: string, firstIndex: number): number
 }
 
 /**
- * The span of the whitespace in front of a function's closing parenthesis.
- *
- * An unclosed function never gets here, so the node ends on the parenthesis; the closing warning is placed from the span's end too.
- * @param valueNode - The function.
- * @returns The span, in the value's coordinates.
- */
-function getAfterSpan (valueNode: FunctionNode): {
-	start: number,
-	end: number,
-} {
-	let end = valueNode.sourceEndIndex - 1
-
-	return { start: end - valueNode.after.length, end }
-}
-
-/**
  * Says which of the two `never` fixes of one function may be written.
  *
  * A fix is refused where it carries a character of the function into an inline comment: the opening one asks about the first significant thing, the closing one about the `)`. Where both pass alone, both are asked again over the union of what either empties, since two writes safe apart destroyed the value together ([#312](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/312)); where the union fails, neither is written.
@@ -216,6 +202,34 @@ function getNeverFixability (syntax: Syntax, read: {
 	}
 
 	return { isOpeningFixable, isClosingFixable }
+}
+
+/**
+ * Asks whether the break rule, rather than its space twin, writes a run inside a call's parentheses, which both read and write ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)).
+ * @param read - What the walk read of the call, and what names the rule.
+ * @param side - `after` for the run behind the `(`, `before` for the one in front of the `)`.
+ * @param parenthesisIndex - The parenthesis's index in the value.
+ * @returns True where this rule writes the run.
+ */
+function writesParenthesisRun (read: {
+	ruleName: string,
+	decl: Declaration,
+	result: PostcssResult,
+	syntax: Syntax,
+	valueNode: FunctionNode,
+	comments: CommentSpan[],
+	functionString: string,
+}, side: `after` | `before`, parenthesisIndex: number): boolean {
+	let { ruleName, decl, result, syntax, valueNode, comments, functionString } = read
+
+	return writesTwinRun(shortName, ruleName, decl, result, {
+		side,
+		run: side === `after` ? valueNode.before : valueNode.after,
+		lineText: functionString,
+		runs: () => parenthesesRuns(valueNode, comments, (call) => isFunctionParsedAsWritten(syntax, call, comments)),
+		line: decl.rangeBy({ index: declarationValueIndex(decl) + parenthesisIndex }).start.line,
+		twinWrites: () => true,
+	})
 }
 
 /** `always` a newline inside the parentheses; `always-multi-line` asks it, and `never-multi-line` refuses whitespace there, in a multi-line function only. */
@@ -261,6 +275,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			parsedValue.walk((valueNode, at, siblings) => {
 				if (valueNode.type !== `function`) return
 
+				// A narrowing here is not carried into a nested function
+				let functionNode = valueNode
+
 				// A call opening an address holds no arguments of the value: what stands inside is the address, and a space or a break written behind the `(` parts it from the parenthesis, which is what a tokenizer reads one token by ([#533](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/533)). Passed over whole, and the walk goes no further in, as it does in the four rules that ask this question of a node they would otherwise read inside; the two utilities asking it walk on, having nothing to say about what an address holds. The name is the file's spelling rather than the parser's, which is wider than what a parser takes a url token by ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)).
 				if (opensAnAddress(valueNode, at, siblings)) return false
 
@@ -279,47 +296,60 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				// Both sides are read first: under `never-multi-line` the two fixes are weighed against one another
 				let openingIndex = valueNode.sourceIndex + valueNode.value.length + 1
-				let { before: checkBefore, firstIndex, measured: measuredBefore } = getCheckBefore(valueNode, openingIndex, declValue, comments)
+				let { before: checkBefore, firstIndex, measured: measuredBefore } = readOpeningRuns(valueNode, openingIndex, declValue, comments)
 				// From the node's end, not a printed copy, which the stringifier widens at `/*/` (#506)
 				let closingIndex = getAfterSpan(valueNode).end - 1
-				let { after: checkAfter, measured: measuredAfter } = getCheckAfter(valueNode, declValue, comments)
+				let { after: checkAfter, measured: measuredAfter } = readClosingRuns(valueNode, declValue, comments)
 				let { isOpeningFixable, isClosingFixable } = isMultiLine && primary === `never-multi-line`
 					? getNeverFixability(syntax, { declValue, valueNode, checkBefore, checkAfter, firstIndex, measuredBefore, measuredAfter, comments, reading })
 					: { isOpeningFixable: false, isClosingFixable: false }
+				let twinRead = { ruleName, decl, result, syntax, valueNode: functionNode, comments, functionString }
+				// The space twin writes the run right behind the `(`, which is the one written here where nothing stands between the `(` and the first significant thing: `always` writes into the last stretch measured, and `never-multi-line` empties them all, the first among them. The twin passes over a call holding nothing ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)).
+				let writesOpeningRun = valueNode.nodes.length === 0 || (primary !== `never-multi-line` && measuredBefore.length > 1) || writesParenthesisRun(twinRead, `after`, openingIndex)
 
-				// Check opening ...
-				if (primary === `always` && !LINE_BREAK.test(checkBefore)) {
-					fix = fixWith(() => fixBeforeForAlways(measuredBefore, declValue, getLineBreak(root, result)))
-					complain(messages.expectedOpening, openingIndex)
-				}
-
-				if (isMultiLine && primary === `always-multi-line` && !LINE_BREAK.test(checkBefore)) {
-					fix = fixWith(() => fixBeforeForAlways(measuredBefore, declValue, getLineBreak(root, result)))
-					complain(messages.expectedOpeningMultiLine, openingIndex)
-				}
-
-				if (isMultiLine && primary === `never-multi-line` && checkBefore !== ``) {
-					fix = isOpeningFixable ? fixWith(() => fixBeforeForNever(measuredBefore)) : undefined
-					complain(messages.rejectedOpeningMultiLine, openingIndex)
-				}
+				checkOpening()
 
 				// A pair holding no node encloses one run of whitespace, which the parser hands back whole as `before` and never as `after`, so the closing question is the opening one, already asked: asking it again reported a half the opening fix had settled and wrote another break every run ([#329](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/329)). `splitSpaceNodesAtWords` has run, so a node here means the tokenizer's whitespace; under `never-multi-line` the closing check was dead on such a pair already, `checkAfter` being empty.
 				if (valueNode.nodes.length === 0) return
 
-				// Check closing ...
-				if (primary === `always` && !LINE_BREAK.test(checkAfter)) {
-					fix = fixWith(() => fixAfterForAlways(valueNode, getLineBreak(root, result)))
-					complain(messages.expectedClosing, closingIndex)
+				checkClosing()
+
+				/** Reports the whitespace behind the `(`, fixing it where the run is this rule's to write. */
+				function checkOpening (): void {
+					if (primary === `always` && !LINE_BREAK.test(checkBefore)) {
+						fix = writesOpeningRun ? fixWith(() => fixBeforeForAlways(measuredBefore, declValue, getLineBreak(root, result))) : undefined
+						complain(messages.expectedOpening, openingIndex)
+					}
+
+					if (isMultiLine && primary === `always-multi-line` && !LINE_BREAK.test(checkBefore)) {
+						fix = writesOpeningRun ? fixWith(() => fixBeforeForAlways(measuredBefore, declValue, getLineBreak(root, result))) : undefined
+						complain(messages.expectedOpeningMultiLine, openingIndex)
+					}
+
+					if (isMultiLine && primary === `never-multi-line` && checkBefore !== ``) {
+						fix = isOpeningFixable && writesOpeningRun ? fixWith(() => fixBeforeForNever(measuredBefore)) : undefined
+						complain(messages.rejectedOpeningMultiLine, openingIndex)
+					}
 				}
 
-				if (isMultiLine && primary === `always-multi-line` && !LINE_BREAK.test(checkAfter)) {
-					fix = fixWith(() => fixAfterForAlways(valueNode, getLineBreak(root, result)))
-					complain(messages.expectedClosingMultiLine, closingIndex)
-				}
+				/** Reports the whitespace in front of the `)`; every closing fix writes the `after` span, which is the run the space twin writes, so the run is always shared. */
+				function checkClosing (): void {
+					let writesClosingRun = writesParenthesisRun(twinRead, `before`, closingIndex + 1)
 
-				if (isMultiLine && primary === `never-multi-line` && checkAfter !== ``) {
-					fix = isClosingFixable ? fixWith(() => fixAfterForNever(measuredAfter)) : undefined
-					complain(messages.rejectedClosingMultiLine, closingIndex)
+					if (primary === `always` && !LINE_BREAK.test(checkAfter)) {
+						fix = writesClosingRun ? fixWith(() => fixAfterForAlways(functionNode, getLineBreak(root, result))) : undefined
+						complain(messages.expectedClosing, closingIndex)
+					}
+
+					if (isMultiLine && primary === `always-multi-line` && !LINE_BREAK.test(checkAfter)) {
+						fix = writesClosingRun ? fixWith(() => fixAfterForAlways(functionNode, getLineBreak(root, result))) : undefined
+						complain(messages.expectedClosingMultiLine, closingIndex)
+					}
+
+					if (isMultiLine && primary === `never-multi-line` && checkAfter !== ``) {
+						fix = isClosingFixable && writesClosingRun ? fixWith(() => fixAfterForNever(measuredAfter)) : undefined
+						complain(messages.rejectedClosingMultiLine, closingIndex)
+					}
 				}
 			})
 
@@ -360,138 +390,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			}
 		})
 	}
-}
-
-/**
- * Reads the whitespace before the first significant node of a function, and where that node begins.
- *
- * A comment between the `(` and the break is walked past and the whitespace behind it counted; nodes are placed against the comment spans, since the value parser reads a `//` comment as nodes. In a function of comments and whitespace alone the first significant thing is its closing `)`. The stretches come back for the `never` guard.
- * @param valueNode - The function.
- * @param openingIndex - Where the text behind the `(` begins.
- * @param declValue - The value the positions count in.
- * @param comments - The comment spans of the value, both kinds.
- * @returns The whitespace, where the first significant thing begins, and the stretches measured.
- */
-function getCheckBefore (valueNode: FunctionNode, openingIndex: number, declValue: string, comments: CommentSpan[]): {
-	before: string,
-	firstIndex: number,
-	measured: [number, number][],
-} {
-	let before = valueNode.before
-	let measured: [number, number][] = [[openingIndex, openingIndex + valueNode.before.length]]
-	let firstIndex = valueNode.sourceEndIndex - 1
-
-	for (let node of valueNode.nodes) {
-		if (node.type === `comment`) continue
-
-		let span = findCommentSpanHolding(node, comments)
-
-		if (span) {
-			// A node held by a comment can reach past the span's end, with whitespace the parser hangs behind a `/`, `:` or `,`, or with code read across the break; only the whitespace at the front of the overrun is the value's (#303). A run rather than one break, since the indentation of the next line is the value's too.
-			if (node.sourceEndIndex > span.end) {
-				let overrun = declValue.slice(span.end, node.sourceEndIndex)
-				// The run may be empty, so the pattern matches every text
-				let whitespace = (overrun.match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0]
-
-				before += whitespace
-				measured.push([span.end, span.end + whitespace.length])
-
-				// Code behind that whitespace is the first significant thing, whatever node it is filed under
-				if (whitespace.length !== overrun.length) {
-					firstIndex = span.end + whitespace.length
-					break
-				}
-			}
-
-			continue
-		}
-
-		if (node.type === `space`) {
-			before += node.value
-			measured.push([node.sourceIndex, node.sourceEndIndex])
-			continue
-		}
-
-		if (node.type === `div`) {
-			// The parser hangs the whitespace in front of a `/`, `:` or `,` on the node, so a div opens in front of its own text: the first slash of a `//` comment standing behind another comment opens one whose `sourceIndex` is the run in front of the span ([#505](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/505)). That run is the value's, and the comment is walked past like any other. The run is whitespace to the parser and a span opens on a `/`, so the span opens where the div's text does.
-			let textSpan = findCommentSpanAt(node.sourceIndex + node.before.length, comments)
-
-			if (textSpan) {
-				// The parser calls every character below the space whitespace where the tokenizer calls most of them words, and `splitSpaceNodesAtWords` rewrites the space nodes alone, never a div's own run (#496)
-				let whitespace = (node.before.match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0]
-
-				before += whitespace
-				measured.push([node.sourceIndex, node.sourceIndex + whitespace.length])
-
-				// A word behind that whitespace is the first significant thing, as it is behind the whitespace a node overruns its comment with
-				if (whitespace.length !== node.before.length) {
-					firstIndex = node.sourceIndex + whitespace.length
-					break
-				}
-
-				continue
-			}
-		}
-
-		firstIndex = node.sourceIndex
-		break
-	}
-
-	return { before, firstIndex, measured }
-}
-
-/**
- * Reads the whitespace in front of a function's closing `)`: the node's `after` and every whitespace node behind the last significant one.
- *
- * The mirror of {@link getCheckBefore}: a node held by a block comment is read the same way, since the closing slash of `/*\/` is a division sign to the parser and the whitespace behind it is the value's ([#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378)). An inline comment ends the walk, since no fix may take the break closing it. The stretches come back for the `never` fix.
- *
- * A div opening in front of its own text is asked nothing here ([#505](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/505)): the run the parser hung on it stands in front of the comment rather than beside the `)`, and the only span that opens where such a div's text does is an inline comment's, which ends this walk exactly as an unplaced div does.
- * @param valueNode - The function.
- * @param declValue - The value the positions count in.
- * @param comments - The comment spans of the value, both kinds.
- * @returns The whitespace and the stretches measured, in value order.
- */
-function getCheckAfter (valueNode: FunctionNode, declValue: string, comments: CommentSpan[]): {
-	after: string,
-	measured: [number, number][],
-} {
-	let after = valueNode.after
-	let { start, end } = getAfterSpan(valueNode)
-	let measured: [number, number][] = [[start, end]]
-
-	for (let node of [...valueNode.nodes].toReversed()) {
-		if (node.type === `comment`) continue
-
-		let span = findCommentSpanHolding(node, comments)
-
-		if (span) {
-			if (span.isInline) break
-
-			if (node.sourceEndIndex > span.end) {
-				let overrun = declValue.slice(span.end, node.sourceEndIndex)
-				// The run may be empty, so the pattern matches every text
-				let whitespace = (overrun.match(TRAILING_CSS_WHITESPACE) as RegExpMatchArray)[0]
-
-				after = whitespace + after
-				measured.unshift([node.sourceEndIndex - whitespace.length, node.sourceEndIndex])
-
-				if (whitespace.length !== overrun.length) break
-			}
-
-			continue
-		}
-
-		if (node.type === `space`) {
-			after = node.value + after
-			measured.unshift([node.sourceIndex, node.sourceEndIndex])
-
-			continue
-		}
-
-		break
-	}
-
-	return { after, measured }
 }
 
 /**

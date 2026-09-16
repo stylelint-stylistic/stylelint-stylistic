@@ -984,3 +984,31 @@ testRule({
 		},
 	],
 })
+
+// The space twin writes both runs inside the parentheses too, and the library lists it behind this rule, so its write would be the file's last (#704)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/function-parentheses-space-inside": `always` },
+
+	reject: [
+		{
+			// The runs inside the parentheses belong to one of their two twin rules where the options disagree
+			description: `a space inside each parenthesis, which the twin behind this rule accepts and would take the breaks back from, so both warnings stand and nothing is written`,
+			code: `a { b: f( 1 ) }`,
+			fixed: `a { b: f( 1 ) }`,
+			warnings: [
+				{ line: 1, column: 10, message: messages.expectedOpening },
+				{ line: 1, column: 12, message: messages.expectedClosing },
+			],
+		},
+		{
+			description: `a call holding nothing, which the twin passes over, so the break is written`,
+			code: `a { b: f( ) }`,
+			fixed: `a { b: f(\n ) }`,
+			line: 1,
+			column: 10,
+			message: messages.expectedOpening,
+		},
+	],
+})

@@ -19,6 +19,8 @@ const TWIN_OPTIONS: Record<string, string[]> = {
 	"function-comma-newline-before": [`always`, `always-multi-line`, `never-multi-line`],
 	"function-comma-space-after": [`always`, `never`, `always-single-line`, `never-single-line`],
 	"function-comma-space-before": [`always`, `never`, `always-single-line`, `never-single-line`],
+	"function-parentheses-newline-inside": [`always`, `always-multi-line`, `never-multi-line`],
+	"function-parentheses-space-inside": [`always`, `never`, `always-single-line`, `never-single-line`],
 	"media-query-list-comma-newline-after": [`always`, `always-multi-line`, `never-multi-line`],
 	"media-query-list-comma-space-after": [`always`, `never`, `always-single-line`, `never-single-line`],
 	"selector-list-comma-newline-after": [`always`, `always-multi-line`, `never-multi-line`],
@@ -27,6 +29,10 @@ const TWIN_OPTIONS: Record<string, string[]> = {
 	"selector-list-comma-space-before": [`always`, `never`, `always-single-line`, `never-single-line`],
 	"value-list-comma-newline-after": [`always`, `always-multi-line`, `never-multi-line`],
 	"value-list-comma-space-after": [`always`, `never`, `always-single-line`, `never-single-line`],
+	"value-slash-newline-after": [`always`, `always-multi-line`, `never-multi-line`],
+	"value-slash-newline-before": [`always`, `always-multi-line`, `never-multi-line`],
+	"value-slash-space-after": [`always`, `never`, `always-single-line`, `never-single-line`],
+	"value-slash-space-before": [`always`, `never`, `always-single-line`, `never-single-line`],
 }
 
 /** The twin tables, built once per pair. */
@@ -147,7 +153,7 @@ export function runInFront (text: string, index: number): string {
  *
  * A rule writes only where every twin behind it in run order that would write the very same run accepts a spelling it accepts, or is one the write silences; otherwise that twin's write would be the file's last, and this rule's warning would be dropped as fixed over a run it refuses. A twin ahead ran before the write, so where it was content with the run as it stood and refuses what the write leaves, the write would put the file in breach of a rule that reported nothing ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)).
  *
- * A twin behind that would write nothing gates nothing: its `disableFix`, its disable ranges and its own guards are asked before it is counted in; a twin ahead is asked about its disable ranges and guards alone, a turned-off fix still reporting or staying silent ([#536](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/536)). A `-single-line` or `-multi-line` option is judged over the text as the write leaves it, a written break making it multi-line.
+ * A twin behind that would write nothing gates nothing: its `disableFix` and its disable ranges are asked here, and whatever else keeps it from writing — the secondaries that pass it over, its own fix guards, the run it would rather read — is the caller's to answer in `twinWrites`. A twin ahead is asked the same but for `disableFix`, a turned-off fix still reporting or staying silent ([#536](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/536)). A `-single-line` or `-multi-line` option is judged over the text as the write leaves it, a written break making it multi-line.
  * @param shortName - The asking rule's short name.
  * @param ruleName - The asking rule's configured name.
  * @param node - The node the run stands in.

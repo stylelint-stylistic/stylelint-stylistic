@@ -1,3 +1,10 @@
+import scss from "postcss-scss"
+import stylelint from "stylelint"
+import { describe, expect, it } from "vitest"
+
+import { pick } from "../../../vitest.helpers.ts"
+import plugins from "../../index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -225,4 +232,86 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 	],
+})
+
+// The space twin writes the run behind the solidus too, and the library lists it behind this rule, so its write would be the file's last (#704)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/value-slash-space-after": `always` },
+
+	reject: [
+		{
+			// The run beside a solidus belongs to one of its two twin rules where their options disagree
+			description: `a space behind the solidus, which the twin behind this rule accepts and would take the break back from, so the warning stands and nothing is written`,
+			code: `a { b: 1 / 2 }`,
+			fixed: `a { b: 1 / 2 }`,
+			line: 1,
+			column: 10,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a comment behind the solidus, past which this rule reads while the twin reads the run at the solidus, so the two contend for nothing and the break is written`,
+			code: `a { b: 1 / /* c */ 2 }`,
+			fixed: `a { b: 1 / /* c */\n 2 }`,
+			line: 1,
+			column: 10,
+			message: messages.expectedAfter(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/value-slash-space-after": [`always`, { ignoreFunctions: [`f`] }] },
+
+	reject: [
+		{
+			description: `a solidus inside a call the twin's own \`ignoreFunctions\` names, which the twin never writes, so the break is written`,
+			code: `a { b: f(1 / 2) }`,
+			fixed: `a { b: f(1 /\n 2) }`,
+			line: 1,
+			column: 12,
+			message: messages.expectedAfter(),
+		},
+	],
+})
+
+// See #704
+describe(`the run behind a solidus under a syntax that spells a \`//\` comment`, () => {
+	let rule = `@stylistic/scss/value-slash-newline-after`
+	let twin = `@stylistic/scss/value-slash-space-after`
+
+	/**
+	 * Fixes a Sass text under this rule and its space twin, the twin listed behind it.
+	 * @param code - The text.
+	 * @param option - This rule's primary.
+	 * @param twinOption - The twin's primary.
+	 * @returns What the fix left and what a check of it says.
+	 */
+	async function race (code: string, option: string, twinOption: string): Promise<{
+		fixed: string | undefined,
+		left: string[],
+	}> {
+		let config = { plugins, rules: { [rule]: option, [twin]: twinOption }, customSyntax: scss }
+		let ours = await stylelint.lint({ code, config, fix: true })
+		let again = await stylelint.lint({ code: ours.code ?? code, config })
+
+		return { fixed: ours.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column} ${warning.text}`) }
+	}
+
+	it(`writes the break where the twin's own \`never\` fix is refused, since closing that run would bring the two solidi together into a comment`, async () => {
+		expect(await race(`a { b: 1/  /2 }`, `always`, `never`)).toEqual({
+			fixed: `a { b: 1/\n  /2 }`,
+			left: [`2:3 Expected newline after "/" (@stylistic/scss/value-slash-newline-after)`, `1:9 Unexpected whitespace after "/" (@stylistic/scss/value-slash-space-after)`],
+		})
+	})
+
+	it(`leaves the run where that twin can write it, its \`never\` taking the whole of it out`, async () => {
+		expect(await race(`a { b: 1/  2 }`, `always`, `never`)).toEqual({
+			fixed: `a { b: 1/2 }`,
+			left: [`1:9 Expected newline after "/" (@stylistic/scss/value-slash-newline-after)`],
+		})
+	})
 })
