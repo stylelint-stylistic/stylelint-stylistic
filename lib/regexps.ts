@@ -268,6 +268,9 @@ export const SCSS_INTERPOLATION = /#\{.+?\}/su
 /** A space or a tab. */
 export const SPACE_OR_TAB = /[ \t]/u
 
+/** A character PostCSS's tokenizer ends a word on, less `!` and `#`, which open a word of their own the letters then join, and less the solidus of a `/*`, which ends one only in front of a star and is a comment's opening to ask a comment scan about. */
+export const TOKENIZER_WORD_END = /[\t\n\f\r "'():;@[\\\]{}]/u
+
 /** A template's `{…}`. */
 export const TPL_INTERPOLATION = /\{.+?\}/su
 

@@ -8,7 +8,7 @@ import { keysOf, multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** The spellings CSS reads as `url`, the runs that make an ordinary call, a name behind each thing that closes a scan state, and a backslash-newline delimiter in front of and inside the name ([#566](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566)). */
+/** The spellings CSS reads as `url`, the runs that make an ordinary call, a name behind each thing that closes a scan state, a backslash-newline delimiter in front of and inside the name ([#566](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566)), and the three signs the tokenizer glues the name to where `postcss-value-parser` parts it, which left the parentheses an address to the parser alone. */
 const NAMES: Record<string, string> = {
 	plain: `url`,
 	upper: `URL`,
@@ -21,6 +21,9 @@ const NAMES: Record<string, string> = {
 	lessInterpolationInFront: `@{p}url`,
 	scssInterpolationInFront: `#{$p}url`,
 	hexEscapeInFront: `\\61 url`,
+	behindComma: `1,url`,
+	behindSolidus: `1/url`,
+	behindVerticalTab: `1\vurl`,
 	behindString: `"x"url`,
 	behindBlockComment: `/*c*/url`,
 	behindInlineComment: `//c\nurl`,
@@ -74,6 +77,7 @@ const PLACES: Record<string, (call: string) => string> = {
 	value: (call) => `a { b: ${call} 1px; c: 2px }\n`,
 	blockTail: (call) => `a { b: 1px ${call} }\n`,
 	list: (call) => `a { b: 1px , ${call} , 2px; }\n`,
+	grid: (call) => `a { grid-template-areas: "a b" ${call} "c d"; }\n`,
 	atRule: (call) => `@import ${call} screen;\na { b: 1px; }\n`,
 	media: (call) => `@media ( min-width: 1px ) and ( c: ${call} ) { a { b: 1px; } }\n`,
 	comment: (call) => `/* ${call} */\na { b: 1px; }\n`,
@@ -111,6 +115,7 @@ const configs: Sweep[`configs`] = ([
 	[`function-whitespace-after`, [`always`, `never`]],
 	[`indentation`, [`tab`]],
 	[`media-feature-parentheses-space-inside`, [`always`, `never`]],
+	[`named-grid-areas-alignment`, [true]],
 	[`media-query-list-comma-space-before`, [`always`, `never`]],
 	[`number-leading-zero`, [`always`, `never`]],
 	[`number-no-trailing-zeros`, [true]],

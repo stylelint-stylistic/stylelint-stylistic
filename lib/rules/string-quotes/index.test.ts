@@ -72,6 +72,24 @@ testRule({
 			message: messages.expected(`single`),
 		},
 		{
+			// The tokenizer glues the name to the word in front of it, where the parser takes it for an address of its own
+			description: `a string holding a closing parenthesis inside an address whose name stands behind a comma, which leaves the string inside the address alone`,
+			code: `a { b: 1,url(a ")" b) 1px; c: "d" }`,
+			fixed: `a { b: 1,url(a ")" b) 1px; c: 'd' }`,
+			line: 1,
+			column: 31,
+			message: messages.expected(`single`),
+		},
+		{
+			// A solidus ends a word of the tokenizer's only in front of a star
+			description: `the same address behind a solidus, whose string holds a solidus as well`,
+			code: `a { b: 1/url(a ")/b" c) 2px; c: "d" }`,
+			fixed: `a { b: 1/url(a ")/b" c) 2px; c: 'd' }`,
+			line: 1,
+			column: 33,
+			message: messages.expected(`single`),
+		},
+		{
 			description: `an attribute value spelling a preprocessor construct, which is text rather than syntax`,
 			code: `[title=":extend(x)"] {}`,
 			fixed: `[title=':extend(x)'] {}`,

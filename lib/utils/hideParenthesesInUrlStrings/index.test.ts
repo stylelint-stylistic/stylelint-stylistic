@@ -47,7 +47,41 @@ describe(`hideParenthesesInUrlStrings`, () => {
 	})
 
 	it(`a string behind a vertical tab, which is no whitespace to the tokenizer`, () => {
-		expect(hideParenthesesInUrlStrings(`url(a ")" b) 1px`)).toBe(`url(a ")" b) 1px`)
+		expect(hideParenthesesInUrlStrings(`url(\va ")" b) 1px`)).toBe(`url(\va ")" b) 1px`)
+	})
+
+	it(`a name behind a comma, which the tokenizer glues to the word in front of it`, () => {
+		expect(hideParenthesesInUrlStrings(`1,url(a ")" b) 1px`)).toBe(`1,url(a "?" b) 1px`)
+	})
+
+	it(`a name behind a solidus, which ends a word of the tokenizer's only in front of a star`, () => {
+		expect(hideParenthesesInUrlStrings(`1/url(a ")/b" c) 2px`)).toBe(`1/url(a "?/b" c) 2px`)
+	})
+
+	it(`a name behind a vertical tab, which is whitespace to the parser and a word to the tokenizer`, () => {
+		expect(hideParenthesesInUrlStrings(`1\vurl(a ")" b) 1px`)).toBe(`1\vurl(a "?" b) 1px`)
+	})
+
+	it(`the same name behind whitespace the tokenizer reads, which leaves it a word of its own`, () => {
+		expect(hideParenthesesInUrlStrings(`1, url(a ")" b) 1px`)).toBe(`1, url(a ")" b) 1px`)
+	})
+
+	it(`a name behind a comment, which ends a word of the tokenizer's`, () => {
+		let text = `1/*c*/url(a ")" b) 1px`
+
+		expect(hideParenthesesInUrlStrings(text, findCommentSpans(text))).toBe(text)
+	})
+
+	it(`a name behind a colon, which both readers end a word on`, () => {
+		expect(hideParenthesesInUrlStrings(`1:url(a ")" b) 1px`)).toBe(`1:url(a ")" b) 1px`)
+	})
+
+	it(`a name behind an opening parenthesis, likewise`, () => {
+		expect(hideParenthesesInUrlStrings(`1(url(a ")" b) 1px`)).toBe(`1(url(a ")" b) 1px`)
+	})
+
+	it(`a name behind the closing parenthesis of a call, likewise`, () => {
+		expect(hideParenthesesInUrlStrings(`f(1)url(a ")" b) 1px`)).toBe(`f(1)url(a ")" b) 1px`)
 	})
 
 	it(`a quoted address, which the parser reads as a string`, () => {

@@ -88,6 +88,15 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
+			// A vertical tab is whitespace to the parser and a word to the tokenizer, which glues the name to it
+			description: `the same solidus inside an address whose name stands behind a vertical tab`,
+			code: `a { b: 1\vurl(a ")/b" c) 2px/3px; }`,
+			fixed: `a { b: 1\vurl(a ")/b" c) 2px/ 3px; }`,
+			line: 1,
+			column: 28,
+			message: messages.expectedAfter(),
+		},
+		{
 			description: `no space behind the solidus`,
 			code: `a { grid-area: 1/2; }`,
 			fixed: `a { grid-area: 1/ 2; }`,
