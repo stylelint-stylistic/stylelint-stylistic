@@ -97,7 +97,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// In an embedded block, the whitespace around the first and last nodes is the page's
 			if ((document && document.constructor.name) !== `Document`) {
-				if (first && firstNodeRawsBefore) first.raws.before = getChars(firstNodeRawsBefore, true)
+				// Only the leading run is the file's, the rest written by the walk as any run is, or zero took a free semicolon standing in this raw with the breaks (#598)
+				if (first && firstNodeRawsBefore) first.raws.before = firstNodeRawsBefore.replace(LEADING_LINE_BREAK_RUN, (run) => getChars(run, true))
 
 				if (rootRawsAfter) {
 					// Zero is read as one, a file ending on a break satisfying it. An empty root keeps the whole file here, and its leading run is written as such first, or a break survived every `--fix` (#404)

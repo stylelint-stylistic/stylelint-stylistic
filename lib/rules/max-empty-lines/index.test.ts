@@ -92,6 +92,33 @@ testRule({
 			column: 1,
 			message: messages.expected(0),
 		},
+		{
+			// See #598
+			description: `a blank line opening the stylesheet in front of a free semicolon, which stands in the raw of the first rule and is left where it stood`,
+			code: `\n;a {}`,
+			fixed: `;a {}`,
+			line: 1,
+			column: 1,
+			message: messages.expected(0),
+		},
+		{
+			// See #598
+			description: `a blank line behind a free semicolon opening the stylesheet, whose run is not the file's first and keeps one break as any run does`,
+			code: `;\n\na {}`,
+			fixed: `;\na {}`,
+			line: 2,
+			column: 1,
+			message: messages.expected(0),
+		},
+		{
+			// See #598
+			description: `a blank line opening the stylesheet in front of the indentation of the first rule, which stands in the same raw and is left where it stood`,
+			code: `\n\ta {}`,
+			fixed: `\ta {}`,
+			line: 1,
+			column: 1,
+			message: messages.expected(0),
+		},
 		// See #601
 		{
 			description: `two blank lines opening a stylesheet behind a byte-order mark, which is no character of the text the positions are counted in`,
@@ -364,6 +391,24 @@ testRule({
 			line: 4,
 			column: 1,
 			message: messages.expected(1),
+		},
+		{
+			// See #598
+			description: `three blank lines behind a free semicolon opening the stylesheet, which stand in the raw of the first rule and are cut to one as any run is`,
+			code: `;\n\n\n\na {}`,
+			fixed: `;\n\na {}`,
+			warnings: [
+				{
+					line: 3,
+					column: 1,
+					message: messages.expected(1),
+				},
+				{
+					line: 4,
+					column: 1,
+					message: messages.expected(1),
+				},
+			],
 		},
 		// See #404
 		{
