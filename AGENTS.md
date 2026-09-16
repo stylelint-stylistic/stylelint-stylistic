@@ -18,6 +18,15 @@ Two targets collect results rather than check them: `make oracles` and `make 
 
 CI (`.github/workflows/test.yaml`) runs `pnpm ci` then `make verify`, and so does the `pre-push` hook, which refuses a push that fails it and skips the run where a green one over this very tree is remembered — so proving the branch by hand a moment earlier costs nothing at the push. `.github/workflows/release.yaml` runs `pnpm ci` then `make release` on pushes to `release` and `release-*`. The `pre-commit` hook lints the staged `.ts` files and runs, in one `vitest related` pass, whatever test imports one of them, so a util is answered for by the rules that use it rather than by the directory it sits in.
 
+## The principle
+
+Whatever the question — which reading is right, what a fix may write, where a guard refuses — the answer is the output the user's environment expects: plain CSS, Sass, Less or a CSS-in-JS host, whichever the file is written for. Common behaviour lives in the core; a compiler's own reading lives in its adapter under `lib/syntaxes/` and never in a rule or a util, which read plain CSS; a defect of a dependency parser is worked around in that adapter where possible, and reported or fixed upstream where not, or where that is cheaper. Leaving a user's styles broken, unfixed or falsely warned is never the accepted cost of a change. Plain CSS comes first and gets everything; the custom syntaxes follow, in this order:
+
+1. CSS, with `postcss-html` for plain CSS
+2. SCSS, with `postcss-html` for `lang="scss"`
+3. Less, with `postcss-html` for `lang="less"`
+4. styled, and every other CSS-in-JS
+
 ## Architecture
 
 A Stylelint plugin (`@stylistic/stylelint-plugin`) that restores the stylistic rules Stylelint removed in v16 and adds rules of its own. How many there are is `lib/rules/index.ts`'s to say; no number is written here, since a written one falls behind. Pure ESM. `make build` (`tsc -p tsconfig.build.json`) writes `lib/` to `dist/` — every module beside its `.d.ts`, the tests left out — and `dist/` is what the package publishes and what `exports` points at; it is never committed, and `make release` builds it before publishing.
