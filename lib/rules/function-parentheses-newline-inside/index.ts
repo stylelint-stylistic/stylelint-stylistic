@@ -8,6 +8,7 @@ import type { InlineCommentReading, Syntax } from "../../syntaxes/index.ts"
 import { addEdit, applyEditsFromEnd, type Edit, toIndexBeforeEdits } from "../../utils/applyEditsFromEnd/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { editsOpenNoComment } from "../../utils/editsOpenNoComment/index.ts"
 import { type CommentSpan, findCommentSpanAt, findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
 import { getAfterSpan, parenthesesRuns, readClosingRuns, readOpeningRuns } from "../../utils/functionParenthesesRuns/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
@@ -165,7 +166,7 @@ function findFirstCharacterIndex (declValue: string, firstIndex: number): number
 /**
  * Says which of the two `never` fixes of one function may be written.
  *
- * A fix is refused where it carries a character of the function into an inline comment: the opening one asks about the first significant thing, the closing one about the `)`. Where both pass alone, both are asked again over the union of what either empties, since two writes safe apart destroyed the value together ([#312](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/312)); where the union fails, neither is written.
+ * A fix is refused where it carries a character of the function into an inline comment: the opening one asks about the first significant thing, the closing one about the `)`. Under a parser whose tokenizer reads the parentheses behind `url(` as one token, the opening one is refused too where it opens a comment, as taking away the whitespace in front of a quotation mark there does. Where both pass alone, both are asked again over the union of what either empties, since two writes safe apart destroyed the value together ([#312](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/312)); where the union fails, neither is written.
  * @param syntax - The syntax the rule is built over.
  * @param read - What the walk read of the function, and the value.
  * @returns Whether each fix may be written.
@@ -191,7 +192,7 @@ function getNeverFixability (syntax: Syntax, read: {
 	// Each `never` fix empties the stretches its walk measured, minus one opening on the break closing an inline comment; a fix not reaching every stretch is refused, since Stylelint would call the problem solved while the option stayed violated (#285, #378).
 	let emptiedBefore = checkBefore === `` ? [] : measuredBefore.filter((stretch) => !closesAnInlineComment(stretch, comments))
 	let emptiedAfter = checkAfter === `` ? [] : measuredAfter.filter((stretch) => !closesAnInlineComment(stretch, comments))
-	let isOpeningFixable = checkBefore !== `` && reachesEveryStretch(measuredBefore, emptiedBefore) && !movesIntoComment(syntax, declValue, firstCharacterIndex, emptiedBefore, reading)
+	let isOpeningFixable = checkBefore !== `` && reachesEveryStretch(measuredBefore, emptiedBefore) && !movesIntoComment(syntax, declValue, firstCharacterIndex, emptiedBefore, reading) && (!reading.tokenizes || editsOpenNoComment(declValue, fixBeforeForNever(emptiedBefore), reading))
 	let isClosingFixable = checkAfter !== `` && reachesEveryStretch(measuredAfter, emptiedAfter) && !movesIntoComment(syntax, declValue, closingParenthesisIndex, emptiedAfter, reading)
 
 	if (isOpeningFixable && isClosingFixable) {

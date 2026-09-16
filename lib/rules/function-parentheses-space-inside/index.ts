@@ -8,6 +8,7 @@ import type { InlineCommentReading, Syntax } from "../../syntaxes/index.ts"
 import { applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { editsOpenNoComment } from "../../utils/editsOpenNoComment/index.ts"
 import { type CommentSpan, findCommentSpanAt, findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
 import { parenthesesRuns, readClosingRuns, readOpeningRuns } from "../../utils/functionParenthesesRuns/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -231,30 +232,31 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let openingIndex = valueNode.sourceIndex + valueNode.value.length + 1
 
 				/**
-				 * Asks whether the line break behind the `(` closes a `//` comment, which no option can satisfy without commenting the argument out; the warning then stands unfixed ([#114](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/114)). The break twin writes this run too, and only one of them may (#704).
-				 * @returns True if the argument stays outside a comment and the run is this rule's to write.
+				 * Asks whether the line break behind the `(` closes a `//` comment, which no option can satisfy without commenting the argument out; the warning then stands unfixed ([#114](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/114)). Under a parser whose tokenizer reads the parentheses behind `url(` as one token, a write opening a comment, as taking away the whitespace in front of a quotation mark there does, is refused too; outside it the question is not asked, since a name glued to a sign, `1!url(`, is an address to the walk and a call to the parser, and a refusal there would take away a write the parser reads the same. The break twin writes this run too, and only one of them may (#704).
+				 * @param write - The whitespace the fix writes.
+				 * @returns True if the argument stays outside a comment, no comment opens where that question is asked, and the run is this rule's to write.
 				 */
-				function isOpeningFixable (): boolean {
-					return !movesOpeningIntoComment(syntax, declValue, functionNode, reading) && writesParenthesisRun(twinRead, `after`, openingIndex)
+				function isOpeningFixable (write: string): boolean {
+					return !movesOpeningIntoComment(syntax, declValue, functionNode, reading) && (!reading.tokenizes || editsOpenNoComment(declValue, [openingEdit(functionNode, write)], reading)) && writesParenthesisRun(twinRead, `after`, openingIndex)
 				}
 
 				if (primary === `always` && valueNode.before !== ` `) {
-					fix = fixBehind(isOpeningFixable, () => openingEdit(valueNode, ` `))
+					fix = fixBehind(() => isOpeningFixable(` `), () => openingEdit(valueNode, ` `))
 					complain(messages.expectedOpening, openingIndex)
 				}
 
 				if (primary === `never` && valueNode.before !== ``) {
-					fix = fixBehind(isOpeningFixable, () => openingEdit(valueNode, ``))
+					fix = fixBehind(() => isOpeningFixable(``), () => openingEdit(valueNode, ``))
 					complain(messages.rejectedOpening, openingIndex)
 				}
 
 				if (isSingleLine && primary === `always-single-line` && valueNode.before !== ` `) {
-					fix = fixBehind(isOpeningFixable, () => openingEdit(valueNode, ` `))
+					fix = fixBehind(() => isOpeningFixable(` `), () => openingEdit(valueNode, ` `))
 					complain(messages.expectedOpeningSingleLine, openingIndex)
 				}
 
 				if (isSingleLine && primary === `never-single-line` && valueNode.before !== ``) {
-					fix = fixBehind(isOpeningFixable, () => openingEdit(valueNode, ``))
+					fix = fixBehind(() => isOpeningFixable(``), () => openingEdit(valueNode, ``))
 					complain(messages.rejectedOpeningSingleLine, openingIndex)
 				}
 

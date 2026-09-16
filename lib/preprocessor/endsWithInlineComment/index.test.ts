@@ -178,6 +178,12 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`b: x /*c*/url( a( b ) \\//c ) 1px`, SCSS)).toBe(false)
 	})
 
+	// The tokenizer asks only the character behind the parenthesis, so whitespace in front of the quotation mark keeps the token
+	it(`the same double slash behind a string opening such parentheses after whitespace`, () => {
+		expect(endsWithInlineComment(`b: \\61 url( "a" \\//c ) 1px`, SCSS)).toBe(false)
+		expect(endsWithInlineComment(`b: url( 'a' \\// c`, SCSS)).toBe(false)
+	})
+
 	// The tokenizer reads a word of its own in `aurl` and ends the token on the parenthesis behind a backslash
 	it(`the same double slash where the tokenizer takes no such token, and behind the parenthesis ending one`, () => {
 		expect(endsWithInlineComment(`b: aurl(a\\//c) 1px`, SCSS)).toBe(true)

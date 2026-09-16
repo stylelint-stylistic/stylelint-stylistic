@@ -75,6 +75,24 @@ testRule({
 			column: 1,
 			message: messages.rejectedClosing,
 		},
+		{
+			// Taking the space away puts the quotation mark against the parenthesis, where the tokenizer stops reading one token and the double slash opens a comment swallowing the parenthesis
+			description: `an address behind an escape, whose string stands behind a space and ahead of a double slash a backslash stands in front of`,
+			code: `a { b: \\61 url( 'a' \\// c ) 1px; }`,
+			fixed: `a { b: \\61 url( 'a' \\// c) 1px; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 16,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 26,
+					message: messages.rejectedClosing,
+				},
+			],
+		},
 	],
 })
 testRule({

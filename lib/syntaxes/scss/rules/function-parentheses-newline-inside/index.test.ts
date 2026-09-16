@@ -109,6 +109,24 @@ testRule({
 				},
 			],
 		},
+		{
+			// Taking the break away puts the quotation mark against the parenthesis, where the tokenizer stops reading one token and the double slash opens a comment
+			description: `an address behind an escape, whose string stands on the line below the parenthesis and ahead of a double slash a backslash stands in front of`,
+			code: `a { b: \\61 url(\n'a' \\// c\n) 1px; }`,
+			fixed: `a { b: \\61 url(\n'a' \\// c) 1px; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 16,
+					message: messages.rejectedOpeningMultiLine,
+				},
+				{
+					line: 2,
+					column: 10,
+					message: messages.rejectedClosingMultiLine,
+				},
+			],
+		},
 	],
 })
 testRule({

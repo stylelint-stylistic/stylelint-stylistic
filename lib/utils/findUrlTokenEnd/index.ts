@@ -1,4 +1,3 @@
-import { OPENS_WITH_QUOTE } from "../../regexps.ts"
 import type { CommentReading } from "../findCommentSpans/index.ts"
 import { isWhitespace } from "../isWhitespace/index.ts"
 import { skipString } from "../skipString/index.ts"
@@ -20,17 +19,17 @@ function endsToken (text: string, step: number): boolean {
 /**
  * Finds where the parentheses `postcss-scss`'s tokenizer takes as one token behind the word `url` end: the `)` balancing them, every parenthesis counted as written, since the tokenizer counts one behind a backslash or inside a comment or a string alike. It reads no comment inside, and Sass reads `\/` there as an escape, so a backslash covers the solidus of a `//` up to that end.
  *
- * A quotation mark against the parenthesis opens no such token, and one behind whitespace is read as opening none either: `function-parentheses-space-inside` takes that whitespace away, and the `//` behind the string becomes a comment the fix wrote the file into. Parentheses holding a brace are read as none too, since the word may stand inside an interpolation the tokenizer reads whole, closing past them.
+ * A quotation mark against the parenthesis opens no such token; one behind whitespace does, since the tokenizer asks only the character behind the `(`, and the rules taking that whitespace away refuse where the `//` behind the string would become a comment. Parentheses holding a brace are read as none too, since the word may stand inside an interpolation the tokenizer reads whole, closing past them.
  * @param text - The text walked.
  * @param index - Where the word would open.
  * @param previousStep - Where the walk's step in front of it opened, or less than zero at the text's start: `\61 url(` and `#{$p}url(` hold the word, `aurl(` and `/url(` do not.
  * @param reading - What the syntax makes of a `//` comment; only a parser whose own tokenizer reads one takes such a token here.
- * @returns Behind the balancing `)`, the text's length where none balances, or `index` where no such token opens: another parser, a word that is not `url(` standing on its own, a quotation mark opening the parentheses, whitespace aside, or a brace inside them.
+ * @returns Behind the balancing `)`, the text's length where none balances, or `index` where no such token opens: another parser, a word that is not `url(` standing on its own, a quotation mark against the `(`, or a brace inside them.
  */
 export function findUrlTokenEnd (text: string, index: number, previousStep: number, reading: CommentReading): number {
 	let openIndex = index + 3
 
-	if (!reading.tokenizes || !text.startsWith(`url(`, index) || !endsToken(text, previousStep) || OPENS_WITH_QUOTE.test(text.slice(openIndex + 1))) return index
+	if (!reading.tokenizes || !text.startsWith(`url(`, index) || !endsToken(text, previousStep) || text[openIndex + 1] === `"` || text[openIndex + 1] === `'`) return index
 
 	let depth = 0
 

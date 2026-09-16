@@ -628,6 +628,17 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
+			// The tokenizer asks only the character behind the parenthesis, so a string behind a space keeps the token, and Sass reads the escape there
+			description: `a lower-case unit behind an address whose string stands behind a space and ahead of such a double slash`,
+			code: `a { b: url( 'a' \\// c ) 1px; }`,
+			fixed: `a { b: url( 'a' \\// c ) 1PX; }`,
+			line: 1,
+			column: 26,
+			endLine: 1,
+			endColumn: 28,
+			message: messages.expected(`px`, `PX`),
+		},
+		{
 			// The tokenizer ends a word at a quotation mark and in front of `/*`, so a `url` behind a string or a comment is a word of its own and opens the token
 			description: `a lower-case unit behind such an address standing against a string`,
 			code: `a { b: 'x'url( a( b ) \\//c ) 1px; }`,

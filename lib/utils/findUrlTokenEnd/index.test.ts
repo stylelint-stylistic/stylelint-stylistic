@@ -29,9 +29,10 @@ describe(`findUrlTokenEnd`, () => {
 		expect(findUrlTokenEnd(`url('a' \\//c)`, 0, -1, SCSS)).toBe(0)
 	})
 
-	// The tokenizer takes this one as a token, but a fix taking the whitespace away puts the mark against the parenthesis and turns the double slash into a comment
-	it(`a quotation mark behind whitespace, read as opening no token either`, () => {
-		expect(findUrlTokenEnd(`url( "a" \\//c )`, 0, -1, SCSS)).toBe(0)
+	// The tokenizer asks only the character behind the parenthesis
+	it(`a quotation mark behind whitespace, which the token takes in all the same`, () => {
+		expect(findUrlTokenEnd(`url( "a" \\//c )`, 0, -1, SCSS)).toBe(15)
+		expect(findUrlTokenEnd(`url(\n'a' \\//c\n)`, 0, -1, SCSS)).toBe(15)
 	})
 
 	it(`a word other than the lower-case one, and the word apart from its parenthesis`, () => {

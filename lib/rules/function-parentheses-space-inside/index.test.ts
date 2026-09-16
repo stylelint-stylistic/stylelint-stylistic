@@ -53,6 +53,15 @@ testRule({
 
 	reject: [
 		{
+			// The walk reads an address behind the sign where the parser reads a call and the comment in both spellings, so the space is written
+			description: `a call glued to a sign, named like an address and holding a block comment`,
+			code: `a { b: 1!url(a /* c */ ) 1px; }`,
+			fixed: `a { b: 1!url( a /* c */ ) 1px; }`,
+			line: 1,
+			column: 14,
+			message: messages.expectedOpening,
+		},
+		{
 			// See #588
 			description: `an address whose name a backslash and a break divide from what stands in front, standing beside a call`,
 			code: `a { b: \\\nurl(c.png) f(1px); }`,

@@ -183,12 +183,18 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`x /*c*/url( a(b) \\// c ) 1px`, SCSS)).toEqual([{ start: 2, end: 7, isInline: false }])
 	})
 
-	// The tokenizer reads a word of its own in `aurl` and `/url`, and parentheses a quotation mark stands against as code; behind whitespace the mark is read the same, since a fix taking the whitespace away leaves the comment
-	it(`the same double slash where the tokenizer takes no such token, and behind a string opening such parentheses after whitespace`, () => {
+	// The tokenizer reads a word of its own in `aurl` and `/url`, and parentheses a quotation mark stands against as code
+	it(`the same double slash where the tokenizer takes no such token`, () => {
 		expect(findCommentSpans(`aurl(a\\//c) 1px`, SCSS)).toEqual([{ start: 7, end: 15, isInline: true }])
 		expect(findCommentSpans(`\\/url(a\\//c) 1px`, SCSS)).toEqual([{ start: 8, end: 16, isInline: true }])
 		expect(findCommentSpans(`url("a" \\//c) 1px`, SCSS)).toEqual([{ start: 9, end: 17, isInline: true }])
-		expect(findCommentSpans(`\\61 url( "a" \\//c ) 1px`, SCSS)).toEqual([{ start: 14, end: 23, isInline: true }])
+	})
+
+	// The tokenizer asks only the character behind the parenthesis, so whitespace in front of the quotation mark keeps the token, and Sass reads the escape there
+	it(`the same double slash behind a string opening such parentheses after whitespace`, () => {
+		expect(findCommentSpans(`\\61 url( "a" \\//c ) 1px`, SCSS)).toEqual([])
+		expect(findCommentSpans(`url( 'a' \\// c ) 1px`, SCSS)).toEqual([])
+		expect(findCommentSpans(`url(\n'a' \\// c\n) 1px`, SCSS)).toEqual([])
 	})
 
 	// The grammar reads the escape and PostCSS's tokenizer lets none cover a solidus, so all three parsers hand back the declaration with the comment cut out of its value. See #665
