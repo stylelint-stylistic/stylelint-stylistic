@@ -4,6 +4,8 @@ import { TOKENIZER_WORD_END } from "../../regexps.ts"
 import { type CommentSpan, findCommentSpanAt, findCommentSpans } from "../findCommentSpans/index.ts"
 import type { InlineCommentSpan } from "../findInlineCommentSpans/index.ts"
 import { isWhitespace } from "../isWhitespace/index.ts"
+import { namesAnAddress } from "../namesAnAddress/index.ts"
+import { readIdentifierCharacter } from "../readIdentifierCharacter/index.ts"
 
 /** The mask, as {@link hideQuotesInComments} writes it: `?` opens and closes nothing. */
 const MASK = `?`
@@ -103,11 +105,58 @@ function findHeldParentheses (text: string, spans: (CommentSpan | InlineCommentS
 }
 
 /**
- * Masks the `)` inside a string that the parentheses of a `url( ` hold, so that `postcss-value-parser` closes them where PostCSS does.
+ * Finds the backslash of every divider in the run opening the name of a call the rest of which spells `url`. A backslash in front of a line break spells nothing and is a word of its own to PostCSS, the break behind it whitespace, so the name opens behind the two as it does behind a plain `url(`; the parser steps over whatever a backslash stands in front of, keeps both inside the name, and reads the parentheses as code ([#588](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/588)). A divider behind a character of a word is left: the parser keeps that word in the name too, and the mask would stand in its reading as a character of the word.
+ * @param text - The value parsed.
+ * @param spans - The comment spans found in the value, both kinds.
+ * @returns The indices.
+ */
+function findDividersInUrlNames (text: string, spans: (CommentSpan | InlineCommentSpan)[]): number[] {
+	let dividers: number[] = []
+
+	valueParser(text).walk((node) => {
+		// A `//` comment the break closes may hold the backslash, and the name behind it is code all the same
+		if (node.type !== `function` || findCommentSpanAt(node.sourceIndex + node.value.length, spans)) return
+
+		let backslashes: number[] = []
+		let opening = 0
+
+		// Only a run of dividers opening the name: the mask is no boundary to the parser, and one behind a character of a word would read as part of that word
+		while (opening < node.value.length && readIdentifierCharacter(node.value, opening).character === undefined) {
+			backslashes.push(node.sourceIndex + opening)
+			// The break the backslash stands in front of is the value's whitespace, no character of the name
+			opening += 2
+		}
+
+		if (backslashes.length > 0 && namesAnAddress(node.value.slice(opening))) dividers.push(...backslashes)
+	})
+
+	return dividers
+}
+
+/**
+ * Writes the mask over the characters at the indices.
+ * @param text - The text to mask.
+ * @param indices - The indices, in code units, as the parse counts.
+ * @returns The masked text, as long as the text.
+ */
+function maskAt (text: string, indices: number[]): string {
+	if (indices.length === 0) return text
+
+	let characters = text.split(``)
+
+	for (let index of indices) characters[index] = MASK
+
+	return characters.join(``)
+}
+
+/**
+ * Masks the `)` inside a string that the parentheses of a `url( ` hold, so that `postcss-value-parser` closes them where PostCSS does, and first the backslash of a divider the parser took into such a call's name, so that it opens them where PostCSS does.
  *
  * The parser reads everything behind `url(` to the first `)` as one word wherever no quotation mark opens the parentheses. PostCSS reads the parentheses as code, where a string holds its `)`, on two triggers this asks about: whitespace of its own behind the `(`, and a name its tokenizer does not take as a word of its own, which is every boundary of the parser's the tokenizer does not share — a comma, a solidus, a star inside `calc()` and every code point of 32 and under outside its five whitespaces. A quotation mark behind the `(` is a third trigger of the tokenizer's and is not asked about: the parser reads no address there either. The rules skipping the address read the string's tail as code of the value and wrote into it. A block comment the spans handed in do not hold is read here as well; a comment they hold is left to the caller's guards.
  *
- * The parse is remade after each pass, since the parser reads on to the next `)`, which another string may hold. The mask keeps the width, so parse indexes count in the file's text.
+ * A divider is a backslash in front of a line break, which spells nothing and leaves the name behind the break a name of its own; the mask stands in for the backslash alone, the break staying the whitespace it is to PostCSS, so the parser reads the name behind the break as it reads one standing alone.
+ *
+ * The parse is remade after each pass of either mask, since the parser reads on to the next `)`, which another string may hold, and a string's parenthesis once masked may bring a divider to light, as a divider may an address holding such a string. The mask keeps the width, so parse indexes count in the file's text.
  * @param text - The value or params to mask.
  * @param spans - Its comment spans, from either scan.
  * @returns The masked text.
@@ -115,13 +164,16 @@ function findHeldParentheses (text: string, spans: (CommentSpan | InlineCommentS
 export function hideParenthesesInUrlStrings (text: string, spans: (CommentSpan | InlineCommentSpan)[] = findCommentSpans(text)): string {
 	let masked = text
 
-	for (let held = findHeldParentheses(masked, spans); held.length > 0; held = findHeldParentheses(masked, spans)) {
-		// Code units, as the parse counts
-		let characters = masked.split(``)
+	// Either mask may bring to light what the other reads: a string's parenthesis may hide a divider, and a divider an address holding one
+	for (let found = true; found;) {
+		let dividers = masked.includes(`\\`) ? findDividersInUrlNames(masked, spans) : []
 
-		for (let index of held) characters[index] = MASK
+		masked = maskAt(masked, dividers)
 
-		masked = characters.join(``)
+		let held = findHeldParentheses(masked, spans)
+
+		masked = maskAt(masked, held)
+		found = dividers.length > 0 || held.length > 0
 	}
 
 	return masked

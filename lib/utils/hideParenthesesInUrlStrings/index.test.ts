@@ -38,6 +38,59 @@ describe(`hideParenthesesInUrlStrings`, () => {
 		expect(hideParenthesesInUrlStrings(text, findCommentSpans(text))).toBe(text)
 	})
 
+	// See #588
+	it(`a backslash in front of a break, which spells nothing and leaves the name behind the break its own`, () => {
+		expect(hideParenthesesInUrlStrings(`\\\nurl(a)`)).toBe(`?\nurl(a)`)
+		expect(hideParenthesesInUrlStrings(`\\\rurl(a)`)).toBe(`?\rurl(a)`)
+		expect(hideParenthesesInUrlStrings(`\\\furl(a)`)).toBe(`?\furl(a)`)
+	})
+
+	it(`two dividers opening the name, both of which are masked`, () => {
+		expect(hideParenthesesInUrlStrings(`\\\n\\\nurl(a)`)).toBe(`?\n?\nurl(a)`)
+	})
+
+	// The mask is no boundary to the parser, so behind a character of a word it would read as a character of that word, and a rule writing the word would write it into the file
+	it(`a divider behind a character of a word, which is left as the parser reads it`, () => {
+		expect(hideParenthesesInUrlStrings(`a\\\nurl(b)`)).toBe(`a\\\nurl(b)`)
+		expect(hideParenthesesInUrlStrings(`#FFF\\\nurl(a.png)`)).toBe(`#FFF\\\nurl(a.png)`)
+	})
+
+	it(`a divider behind an address whose string holds a parenthesis, which the parser reads as text of that address until the parenthesis is masked`, () => {
+		expect(hideParenthesesInUrlStrings(`url( a ")" b ) \\\nurl(c)`)).toBe(`url( a "?" b ) ?\nurl(c)`)
+	})
+
+	it(`a divider behind a bare address holding a quotation mark, which the parser reads as opening a string until the divider in front of that address is masked`, () => {
+		expect(hideParenthesesInUrlStrings(`\\\nurl(a"b) \\\nurl(c) "e"`)).toBe(`?\nurl(a"b) ?\nurl(c) "e"`)
+	})
+
+	it(`a divider whose backslash ends a \`//\` comment the break closes, in front of a name that is code`, () => {
+		let text = `1px // c \\\nurl(a(b)c.png) f(x)`
+
+		expect(hideParenthesesInUrlStrings(text, findCommentSpans(text))).toBe(`1px // c ?\nurl(a(b)c.png) f(x)`)
+	})
+
+	it(`the same divider in front of a name an escape spells a letter of`, () => {
+		expect(hideParenthesesInUrlStrings(`\\\nu\\rl(a)`)).toBe(`?\nu\\rl(a)`)
+	})
+
+	it(`the same divider in front of an address whose string holds a parenthesis, which is masked once the name is read`, () => {
+		expect(hideParenthesesInUrlStrings(`\\\nurl( a ")" b )`)).toBe(`?\nurl( a "?" b )`)
+	})
+
+	it(`a Windows pair behind the backslash, whose line feed the parser divides the name on itself`, () => {
+		expect(hideParenthesesInUrlStrings(`\\\r\nurl(a)`)).toBe(`\\\r\nurl(a)`)
+	})
+
+	it(`a space or a tab behind the backslash, which close no divider and spell a character of the name`, () => {
+		expect(hideParenthesesInUrlStrings(`\\ url(a)`)).toBe(`\\ url(a)`)
+		expect(hideParenthesesInUrlStrings(`\\\turl(a)`)).toBe(`\\\turl(a)`)
+	})
+
+	it(`a divider in front of another name`, () => {
+		expect(hideParenthesesInUrlStrings(`\\\nimage-url(a)`)).toBe(`\\\nimage-url(a)`)
+		expect(hideParenthesesInUrlStrings(`\\\nf(a)`)).toBe(`\\\nf(a)`)
+	})
+
 	it(`a string holding no parenthesis`, () => {
 		expect(hideParenthesesInUrlStrings(`url( a "b" c ) 1px`)).toBe(`url( a "b" c ) 1px`)
 	})

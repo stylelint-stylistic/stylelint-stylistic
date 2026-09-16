@@ -272,6 +272,15 @@ testRule({
 
 	reject: [
 		{
+			// See #588
+			description: `a quoted address whose name a backslash and a break divide from what stands in front, standing beside a call`,
+			code: `a { b: \\\nurl("c", format("woff2")) f(1px, 2px); }`,
+			fixed: `a { b: \\\nurl("c", format("woff2")) f(1px,2px); }`,
+			line: 2,
+			column: 32,
+			message: messages.rejectedAfter(),
+		},
+		{
 			description: `a space behind the comma`,
 			code: `a { transform: translate(1, 1); }`,
 			fixed: `a { transform: translate(1,1); }`,

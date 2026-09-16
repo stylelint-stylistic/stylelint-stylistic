@@ -50,6 +50,24 @@ testRule({
 
 	reject: [
 		{
+			// See #588
+			description: `an address inside a feature, whose name a backslash and a break divide from what stands in front`,
+			code: `@media (a: \\\nurl(b.png)) { e { f: 1px } }`,
+			fixed: `@media ( a: \\\nurl(b.png) ) { e { f: 1px } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 2,
+					column: 10,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
 			// The value parser closes such an address on the string's parenthesis
 			description: `a feature holding an address with a string with a closing parenthesis, whose parenthesis the tokenizer's whitespace parts from it`,
 			code: `@media (c: url( a ")" b )) {}`,
