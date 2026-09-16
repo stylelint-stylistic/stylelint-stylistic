@@ -47,6 +47,12 @@ describe(`findUrlTokenEnd`, () => {
 		expect(findUrlTokenEnd(`a(url(b\\//c))`, 2, 1, SCSS)).toBe(12)
 	})
 
+	// The tokenizer ends a word at a quotation mark and in front of `/*`, so a `url` behind a string or a comment is a word of its own
+	it(`the word behind a string and behind a block comment, each of which ends a token`, () => {
+		expect(findUrlTokenEnd(`'x'url(a(b)\\//c)`, 3, 0, SCSS)).toBe(16)
+		expect(findUrlTokenEnd(`x/*c*/url(a(b)\\//c)`, 6, 1, SCSS)).toBe(19)
+	})
+
 	it(`the same parentheses under a parser whose own tokenizer reads no double-slash comment, where nothing asks for the token`, () => {
 		expect(findUrlTokenEnd(`url( a( b ) \\//c ) 1px`, 0, -1, { spells: true, tokenizes: false, endsOnFormFeed: false })).toBe(0)
 	})

@@ -627,5 +627,26 @@ testRule({
 			endColumn: 30,
 			message: messages.expected(`px`, `PX`),
 		},
+		{
+			// The tokenizer ends a word at a quotation mark and in front of `/*`, so a `url` behind a string or a comment is a word of its own and opens the token
+			description: `a lower-case unit behind such an address standing against a string`,
+			code: `a { b: 'x'url( a( b ) \\//c ) 1px; }`,
+			fixed: `a { b: 'x'url( a( b ) \\//c ) 1PX; }`,
+			line: 1,
+			column: 31,
+			endLine: 1,
+			endColumn: 33,
+			message: messages.expected(`px`, `PX`),
+		},
+		{
+			description: `the same address standing against a block comment`,
+			code: `a { b: x /*c*/url( a( b ) \\//c ) 1px; }`,
+			fixed: `a { b: x /*c*/url( a( b ) \\//c ) 1PX; }`,
+			line: 1,
+			column: 35,
+			endLine: 1,
+			endColumn: 37,
+			message: messages.expected(`px`, `PX`),
+		},
 	],
 })

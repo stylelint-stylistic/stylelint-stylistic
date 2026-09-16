@@ -4,7 +4,7 @@ import { isWhitespace } from "../isWhitespace/index.ts"
 import { skipString } from "../skipString/index.ts"
 
 /**
- * Asks whether a step of a walk may end a token of `postcss-scss`'s, so that a word behind it is a word of its own: whitespace, a comma, a parenthesis, a closing brace, and an escape of anything but a solidus, which the tokenizer leaves to open the next word. A step over a string, a comment or a name answers no, which only keeps a comment read behind it. Inside an interpolation none of them ends one, which {@link findUrlTokenEnd} answers for by the braces the parentheses hold.
+ * Asks whether a step of a walk may end a token of `postcss-scss`'s, so that a word behind it is a word of its own: whitespace, a comma, a parenthesis, a closing brace, a string, a block comment, and an escape of anything but a solidus, which the tokenizer leaves to open the next word. A step over a name answers no. Inside an interpolation none of them ends one, which {@link findUrlTokenEnd} answers for by the braces the parentheses hold.
  * @param text - The text walked.
  * @param step - Where the step opened, or less than zero at the text's start.
  * @returns True where it does.
@@ -14,7 +14,7 @@ function endsToken (text: string, step: number): boolean {
 
 	let character = text.charAt(step)
 
-	return isWhitespace(character) || `,()}`.includes(character) || (character === `\\` && text[step + 1] !== `/`)
+	return isWhitespace(character) || `,()}"'`.includes(character) || (character === `/` && text[step + 1] === `*`) || (character === `\\` && text[step + 1] !== `/`)
 }
 
 /**

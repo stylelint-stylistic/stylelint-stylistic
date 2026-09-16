@@ -177,6 +177,12 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`#{ url( a( b ) } \\//c ) 1px`, SCSS)).toEqual([{ start: 18, end: 27, isInline: true }])
 	})
 
+	// The tokenizer ends a word at a quotation mark and in front of `/*`, so a `url` behind a string or a comment is a word of its own, and Sass reads the escape there
+	it(`the same double slash inside such parentheses behind a string and behind a block comment standing against the word`, () => {
+		expect(findCommentSpans(`'x'url( a(b) \\// c ) 1px`, SCSS)).toEqual([])
+		expect(findCommentSpans(`x /*c*/url( a(b) \\// c ) 1px`, SCSS)).toEqual([{ start: 2, end: 7, isInline: false }])
+	})
+
 	// The tokenizer reads a word of its own in `aurl` and `/url`, and parentheses a quotation mark stands against as code; behind whitespace the mark is read the same, since a fix taking the whitespace away leaves the comment
 	it(`the same double slash where the tokenizer takes no such token, and behind a string opening such parentheses after whitespace`, () => {
 		expect(findCommentSpans(`aurl(a\\//c) 1px`, SCSS)).toEqual([{ start: 7, end: 15, isInline: true }])

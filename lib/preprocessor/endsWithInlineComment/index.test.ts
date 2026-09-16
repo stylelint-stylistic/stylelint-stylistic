@@ -172,6 +172,12 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`b: url( a( b ) \\//c ) 1px`, SCSS)).toBe(false)
 	})
 
+	// The tokenizer ends a word at a quotation mark and in front of `/*`, so a `url` behind a string or a comment is a word of its own and opens the token
+	it(`the same double slash inside such parentheses behind a string and behind a block comment standing against the word`, () => {
+		expect(endsWithInlineComment(`b: 'x'url( a( b ) \\//c ) 1px`, SCSS)).toBe(false)
+		expect(endsWithInlineComment(`b: x /*c*/url( a( b ) \\//c ) 1px`, SCSS)).toBe(false)
+	})
+
 	// The tokenizer reads a word of its own in `aurl` and ends the token on the parenthesis behind a backslash
 	it(`the same double slash where the tokenizer takes no such token, and behind the parenthesis ending one`, () => {
 		expect(endsWithInlineComment(`b: aurl(a\\//c) 1px`, SCSS)).toBe(true)
