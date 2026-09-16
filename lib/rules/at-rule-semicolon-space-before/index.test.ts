@@ -245,6 +245,15 @@ testRule({
 			column: 11,
 			message: messages.expectedBefore(),
 		},
+		{
+			// A write behind a backslash ending the params would be read with it
+			description: `a backslash ending the params in front of a line break, which the space would take the place of as the escaped character, so the warning stands`,
+			code: `@import a \\\n;`,
+			fixed: `@import a \\\n;`,
+			line: 1,
+			column: 12,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 
@@ -424,6 +433,15 @@ testRule({
 			`,
 			line: 3,
 			column: 26,
+			message: messages.rejectedBefore(),
+		},
+		{
+			// A write behind a backslash ending the params would be read with it
+			description: `a backslash ending the params in front of a space, which taken away would leave the semicolon escaped, so the warning stands`,
+			code: `@import a \\ ;`,
+			fixed: `@import a \\ ;`,
+			line: 1,
+			column: 12,
 			message: messages.rejectedBefore(),
 		},
 	],

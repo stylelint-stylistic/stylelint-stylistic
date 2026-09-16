@@ -16,7 +16,7 @@ import { nodeString } from "../../utils/nodeString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isAtRule, isDeclaration, isRoot } from "../../utils/typeGuards/index.ts"
-import { whitespaceBeforeSemicolon, writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
+import { keepsEscapedCharacter, readWhitespaceBeforeSemicolon, whitespaceBeforeSemicolon, writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -197,6 +197,39 @@ function takeTheTrailingSemicolonsAway (syntax: Syntax, node: AtRule | Declarati
 }
 
 /**
+ * Returns the text standing behind the node closing the block: the first raw behind it where it spells anything, else the node behind it, else the closing brace.
+ * @param node - The node closing the block.
+ * @param result - The Stylelint result.
+ * @param raws - The raws behind the node.
+ * @returns The text, empty where the node ends an inline `style` root.
+ */
+function textBehind (node: ChildNode, result: PostcssResult, raws: HeldRaw[]): string {
+	let next = node.next()
+
+	if (raws[0]?.text) return raws[0].text
+
+	if (next) return nodeString(next, result)
+
+	return node.parent && isRoot(node.parent) ? `` : `}`
+}
+
+/**
+ * Returns the run an `always` write leaves in front of the semicolon.
+ *
+ * Where no whitespace is asked for, the node keeps its own run, as a custom property's value does, unless the at-rule's run moves to the block.
+ * @param syntax - The syntax reading the value.
+ * @param node - The node closing the block.
+ * @param whitespace - The whitespace asked for.
+ * @param runMoves - Whether the fix moves the at-rule's trailing run to the block.
+ * @returns The run.
+ */
+function runLeftInFront (syntax: Syntax, node: AtRule | Declaration, whitespace: string, runMoves: boolean): string {
+	if (whitespace || runMoves) return whitespace
+
+	return readWhitespaceBeforeSemicolon(syntax, node)
+}
+
+/**
  * The bodiless at-rule that swallowed what follows the node closing a block into `raws.between`, which leaves it no sibling; not behind a Less mixin call's flag, since the `less` namespace hands that run to the block wherever it finds the flag in the file ([#374](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/374)).
  * @param node - The node closing the block.
  * @returns The at-rule, or undefined.
@@ -208,19 +241,21 @@ function swallowingAtRule (node: ChildNode): AtRule | undefined {
 /**
  * Asks whether the warning over a node can carry a fix.
  *
- * Under `always`, no for a node with a block (`postcss-scss` drops a Sass nested property's semicolon), where an inline comment ending the node would swallow the semicolon, and where the flag is that comment's text, which a break written in front of the semicolon would take out of it. Under `never`, no for the semicolon PostCSS writes regardless of the flag and the ones the syntax requires, which under Less are the semicolon behind a bodiless at-rule and the one behind a declaration it reads no value in. The warning then stands over code the fix leaves alone.
+ * Under `always`, no for a node with a block (`postcss-scss` drops a Sass nested property's semicolon), where an inline comment ending the node would swallow the semicolon, where the flag is that comment's text, which a break written in front of the semicolon would take out of it, and where a backslash ending the node would read the written text as part of it. Under `never`, no for the semicolon PostCSS writes regardless of the flag and the ones the syntax requires, which under Less are the semicolon behind a bodiless at-rule and the one behind a declaration it reads no value in. The warning then stands over code the fix leaves alone.
  * @param syntax - The syntax the rule is built over.
  * @param node - The node the semicolon stands behind.
  * @param primary - The primary option.
  * @param spelledBetween - The run between the node and an `always` write, where that write misses the node's trailing whitespace.
  * @param result - The Stylelint result.
  * @param flagIsCommentText - Whether the flag's semicolon is the text of a `//` comment.
+ * @param whitespace - The whitespace an `always` write puts in front of the semicolon.
+ * @param behind - The text standing behind the node.
  * @returns True where the fix may be written.
  */
-function isFixable (syntax: Syntax, node: ChildNode, primary: `always` | `never`, spelledBetween: string | undefined, result: PostcssResult, flagIsCommentText: boolean): boolean {
+function isFixable (syntax: Syntax, node: AtRule | Declaration, primary: `always` | `never`, spelledBetween: string | undefined, result: PostcssResult, flagIsCommentText: boolean, whitespace: string, behind: string): boolean {
 	if (primary === `never`) return !semicolonOutlivesTheFlag(node) && !syntax.requiresTrailingSemicolon(node, result)
 
-	return !hasBlock(node) && !syntax.writesIntoInlineComment(node, result, spelledBetween) && !flagIsCommentText
+	return !hasBlock(node) && !syntax.writesIntoInlineComment(node, result, spelledBetween) && !flagIsCommentText && keepsEscapedCharacter(syntax, node, whitespace, behind)
 }
 
 /** `always` a semicolon behind the last declaration, `never` none. */
@@ -324,7 +359,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					endIndex: problemIndex,
 					result,
 					ruleName,
-					...(isFixable(syntax, node, primary, spelledBetween, result, flagIsCommentText) && {
+					...(isFixable(syntax, node, primary, spelledBetween, result, flagIsCommentText, runLeftInFront(syntax, node, whitespace, atRuleHoldsTheBlockAfter), textBehind(node, result, raws)) && {
 						fix: (): void => {
 							if (primary === `always` && !hasSemicolon) {
 								parent.raws.semicolon = true

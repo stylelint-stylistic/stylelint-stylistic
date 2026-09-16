@@ -8,7 +8,7 @@ import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
+import { keepsEscapedCharacter, writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -64,7 +64,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let problemIndex = atRuleString.length - 1
 			// The fix writes over the run the at-rule ends with, and a `//` comment there is closed by that run's break, so either option would put the semicolon inside it: the warning stands
 			// A neighbour respelling the head makes a `@charset` the encoding declaration within the same run — `at-rule-name-case` the name's own case among them — and the specification reads no whitespace in front of its semicolon, so `always` never writes there (#697); `never` writes the spelling the specification asks for
-			let isFixable = !syntax.writesIntoInlineComment(atRule, result) && !(primary === `always` && atRule.name.toLowerCase() === `charset`)
+			// A backslash ending the params would read what the fix puts behind it
+			let isFixable = !syntax.writesIntoInlineComment(atRule, result) && !(primary === `always` && atRule.name.toLowerCase() === `charset`) && keepsEscapedCharacter(syntax, atRule, primary === `always` ? ` ` : ``)
 
 			checker.before({
 				source: atRuleString,

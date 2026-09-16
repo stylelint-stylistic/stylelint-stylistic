@@ -122,6 +122,51 @@ testRule({
 			column: 10,
 			message: messages.expected,
 		},
+		{
+			// A write behind a backslash ending the value would be read with it
+			description: `a backslash ending the value in front of a line break, which would read the semicolon as the character it escapes, so the warning stands`,
+			code: `a { color: red \\\n}`,
+			fixed: `a { color: red \\\n}`,
+			line: 1,
+			column: 16,
+			message: messages.expected,
+		},
+		{
+			// A write behind a backslash ending the value would be read with it
+			description: `a backslash ending the value in front of a comment, which PostCSS reads as a comment and the grammar as an escaped solidus`,
+			code: `a { color: red \\/* c */ }`,
+			fixed: `a { color: red \\/* c */ }`,
+			line: 1,
+			column: 16,
+			message: messages.expected,
+		},
+		{
+			// A write behind a backslash ending the params would be read with it
+			description: `a backslash ending a bodiless at-rule's params in front of a line break`,
+			code: `a { @extend .b \\\n}`,
+			fixed: `a { @extend .b \\\n}`,
+			line: 1,
+			column: 16,
+			message: messages.expected,
+		},
+		{
+			// A write keeping the character behind a backslash ending the value goes through
+			description: `an escaped backslash ending the value, which escapes nothing behind it, so the semicolon is written`,
+			code: `a { color: red \\\\\n}`,
+			fixed: `a { color: red \\\\;\n}`,
+			line: 1,
+			column: 17,
+			message: messages.expected,
+		},
+		{
+			// A write keeping the character behind a backslash ending the value goes through
+			description: `a backslash ending a custom property's value in front of a space, which the value keeps, so the semicolon is written behind it`,
+			code: `a { --b: red \\ }`,
+			fixed: `a { --b: red \\ ;}`,
+			line: 1,
+			column: 14,
+			message: messages.expected,
+		},
 	],
 })
 

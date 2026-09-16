@@ -166,6 +166,24 @@ testRule({
 			column: 26,
 			message: messages.expectedBefore(),
 		},
+		{
+			// A write behind a backslash ending the value would be read with it
+			description: `a backslash ending the value in front of a line break, which the space would take the place of as the escaped character, so the warning stands`,
+			code: `a { color: red \\\n; }`,
+			fixed: `a { color: red \\\n; }`,
+			line: 1,
+			column: 17,
+			message: messages.expectedBefore(),
+		},
+		{
+			// A write keeping the character behind a backslash ending the value goes through
+			description: `a backslash ending the value in front of two spaces, the first of which the write keeps behind it, so the second goes`,
+			code: `a { color: red \\  ; }`,
+			fixed: `a { color: red \\ ; }`,
+			line: 1,
+			column: 18,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 
@@ -328,6 +346,15 @@ testRule({
 			`,
 			line: 3,
 			column: 1,
+			message: messages.rejectedBefore(),
+		},
+		{
+			// A write behind a backslash ending the value would be read with it
+			description: `a backslash ending the value in front of a space, which taken away would leave the semicolon escaped and the declaration behind it unparsable, so the warning stands`,
+			code: `a { color: red \\ ; top: 0 }`,
+			fixed: `a { color: red \\ ; top: 0 }`,
+			line: 1,
+			column: 17,
 			message: messages.rejectedBefore(),
 		},
 	],

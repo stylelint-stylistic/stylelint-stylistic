@@ -262,6 +262,24 @@ testRule({
 			column: 33,
 			message: messages.expected,
 		},
+		{
+			// A write behind a backslash ending the value would be read with it
+			description: `a backslash ending the value in front of an inline comment, where the semicolon would join the value`,
+			code: `a { color: red \\// c\n}`,
+			fixed: `a { color: red \\// c\n}`,
+			line: 1,
+			column: 16,
+			message: messages.expected,
+		},
+		{
+			// A write behind a backslash ending the name would be read with it
+			description: `a backslash ending the name of an at-rule without params, which the parser keeps in the name`,
+			code: `a { @foo\\\n}`,
+			fixed: `a { @foo\\\n}`,
+			line: 1,
+			column: 9,
+			message: messages.expected,
+		},
 	],
 })
 testRule({

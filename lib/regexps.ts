@@ -274,6 +274,9 @@ export const TOKENIZER_WORD_END = /[\t\n\f\r "'():;@[\\\]{}]/u
 /** A template's `{…}`. */
 export const TPL_INTERPOLATION = /\{.+?\}/su
 
+/** The run of backslashes a text ends on. */
+export const TRAILING_BACKSLASHES = /\\*$/u
+
 /** The trailing whitespace as the tokenizer reads it ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)); the narrowing of {@link TRAILING_WHITESPACE}. */
 export const TRAILING_CSS_WHITESPACE = /[ \t\n\r\f]*$/u
 

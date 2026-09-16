@@ -13,7 +13,7 @@ import { isInlineStyleAttribute } from "../../utils/isInlineStyleAttribute/index
 import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
-import { writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
+import { keepsEscapedCharacter, writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesSharedRun } from "../../utils/writesSharedRun/index.ts"
 
@@ -73,8 +73,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let declString = declarationString(syntax, decl)
 			let problemIndex = declString.length - 1
-			// A `never-multi-line` fix taking the break that closes an inline comment would put the semicolon into it: unfixed. A whitespace-only value is the run behind the colon too, and the rules asked settle who writes it (#416)
-			let isFixable = (primary.startsWith(`always`) || !syntax.writesIntoInlineComment(decl, result)) && writesSharedRun(syntax, decl, result, ruleName)
+			// A `never-multi-line` fix taking the break that closes an inline comment would put the semicolon into it: unfixed. A whitespace-only value is the run behind the colon too, and the rules asked settle who writes it (#416). A backslash ending the value would read what the fix puts behind it
+			let isFixable = (primary.startsWith(`always`) || !syntax.writesIntoInlineComment(decl, result)) && writesSharedRun(syntax, decl, result, ruleName) && keepsEscapedCharacter(syntax, decl, primary.startsWith(`always`) ? getLineBreak(root, result) : ``)
 
 			checker.beforeAllowingIndentation({
 				source: declString,

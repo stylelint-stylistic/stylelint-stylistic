@@ -12,7 +12,7 @@ import { isInlineStyleAttribute } from "../../utils/isInlineStyleAttribute/index
 import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
-import { writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
+import { keepsEscapedCharacter, writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesSharedRun } from "../../utils/writesSharedRun/index.ts"
 
@@ -77,8 +77,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let declString = declarationString(syntax, decl)
 			let problemIndex = declString.length - 1
-			// The semicolon goes at the end of the run the fix cuts into; a `//` comment there is closed by that run's break, so either option would take the semicolon into it: the warning stands. A value of nothing but that run is the run behind the colon too, whose writer the rules asked about it settle (#416)
-			let isFixable = !syntax.writesIntoInlineComment(decl, result) && writesSharedRun(syntax, decl, result, ruleName)
+			// The semicolon goes at the end of the run the fix cuts into; a `//` comment there is closed by that run's break, so either option would take the semicolon into it: the warning stands. A value of nothing but that run is the run behind the colon too, whose writer the rules asked about it settle (#416). A backslash ending the value would read what the fix puts behind it
+			let isFixable = !syntax.writesIntoInlineComment(decl, result) && writesSharedRun(syntax, decl, result, ruleName) && keepsEscapedCharacter(syntax, decl, primary.startsWith(`always`) ? ` ` : ``)
 
 			checker.before({
 				source: declString,

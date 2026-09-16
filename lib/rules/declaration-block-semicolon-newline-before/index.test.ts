@@ -216,6 +216,15 @@ testRule({
 			column: 21,
 			message: messages.expectedBefore(),
 		},
+		{
+			// A write behind a backslash ending the value would be read with it
+			description: `a backslash ending the value in front of a space, which the grammar reads as an escaped space and a line break in its place as no escape at all, so the warning stands`,
+			code: `a { color: red \\ ; }`,
+			fixed: `a { color: red \\ ; }`,
+			line: 1,
+			column: 17,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 
@@ -629,6 +638,15 @@ testRule({
 			`,
 			line: 3,
 			column: 1,
+			message: messages.rejectedBeforeMultiLine(),
+		},
+		{
+			// A write behind a backslash ending the value would be read with it
+			description: `a backslash ending the value in front of a line break, which taken away would leave the semicolon escaped, so the warning stands`,
+			code: `a {\n\tcolor: red \\\n;\n\ttop: 0;\n}`,
+			fixed: `a {\n\tcolor: red \\\n;\n\ttop: 0;\n}`,
+			line: 2,
+			column: 14,
 			message: messages.rejectedBeforeMultiLine(),
 		},
 	],
