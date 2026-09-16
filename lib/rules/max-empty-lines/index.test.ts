@@ -710,6 +710,32 @@ a {}
 
 testRule({
 	ruleName,
+	config: [0],
+	customSyntax: `postcss-html`,
+
+	reject: [
+		// See #731
+		{
+			description: `a blank line closing an embedded stylesheet`,
+			code: `<style>\na {}\n\n</style>`,
+			fixed: `<style>\na {}\n</style>`,
+			line: 3,
+			column: 1,
+			message: messages.expected(0),
+		},
+		{
+			description: `a blank line closing a style attribute`,
+			code: `<div style="color: pink;\n\n"></div>`,
+			fixed: `<div style="color: pink;\n"></div>`,
+			line: 2,
+			column: 1,
+			message: messages.expected(0),
+		},
+	],
+})
+
+testRule({
+	ruleName,
 	config: [2],
 
 	accept: [

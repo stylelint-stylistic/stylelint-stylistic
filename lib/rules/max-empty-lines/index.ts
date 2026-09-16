@@ -105,8 +105,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				}
 			}
 			else if (rootRawsAfter) {
-				// `css in js` or `html`
-				root.raws.after = replaceEmptyLines(primary === 0 ? 1 : primary, rootRawsAfter)
+				// A root standing in an `html` document, whose tail is written as any run is, zero included, since the file's special case is its own
+				root.raws.after = getChars(rootRawsAfter)
 			}
 		}
 
