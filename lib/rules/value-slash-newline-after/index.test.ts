@@ -130,6 +130,15 @@ testRule({
 			column: 22,
 			message: messages.expectedAfter(),
 		},
+		{
+			// Pins the refusal to part the name of a bare address from the solidus, which switches how PostCSS reads its parentheses
+			description: `a solidus glued to the name of a bare address holding a string with a closing parenthesis, which a written break would make the tokenizer close inside the string`,
+			code: `a { b: 1/url(a ")" b) 2px; c: "d" }`,
+			fixed: `a { b: 1/url(a ")" b) 2px; c: "d" }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
@@ -202,6 +211,15 @@ testRule({
 			fixed: `a { grid-area: 1 / /*c*/2; }`,
 			line: 1,
 			column: 18,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		{
+			// Pins the refusal to join the name of a bare address to the solidus, which switches how PostCSS reads its parentheses
+			description: `a break between a solidus and the name of a bare address holding a quotation mark nothing closes, which taking the break away would make the tokenizer read as a string`,
+			code: `a {\n  b: 1/\nurl(a"b)\n    2px; c: "d" }`,
+			fixed: `a {\n  b: 1/\nurl(a"b)\n    2px; c: "d" }`,
+			line: 2,
+			column: 7,
 			message: messages.rejectedAfterMultiLine(),
 		},
 	],

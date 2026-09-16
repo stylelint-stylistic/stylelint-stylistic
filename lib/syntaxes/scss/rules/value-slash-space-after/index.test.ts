@@ -34,6 +34,15 @@ testRule({
 			column: 16,
 			message: messages.expectedAfter(),
 		},
+		{
+			// Pins the refusal to part the name of a bare address from the solidus where a space stands between the name and its parenthesis, which switches how the tokenizer reads the parentheses
+			description: `a solidus glued to the name of a bare address a space parts from its parenthesis, holding a string with a closing parenthesis`,
+			code: `a { b: 1/url (a ")" b) 2px; c: "d" }`,
+			fixed: `a { b: 1/url (a ")" b) 2px; c: "d" }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 

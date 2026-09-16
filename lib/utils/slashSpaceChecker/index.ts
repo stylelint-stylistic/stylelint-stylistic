@@ -11,6 +11,7 @@ import { findSeparatorSlashes, type SeparatorSlash } from "../findSeparatorSlash
 import { getLineBreak } from "../getLineBreak/index.ts"
 import { matchesStringOrRegExp } from "../matchesStringOrRegExp/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
+import { rereadsAnAddress } from "../rereadsAnAddress/index.ts"
 import type { WhitespaceChecker } from "../whitespaceChecker/index.ts"
 import { runBehind, runInFront, writesTwinRun } from "../writesTwinRun/index.ts"
 
@@ -90,6 +91,8 @@ function spansAt (text: string, checkIndex: number, position: `before` | `after`
  * Asks whether a solidus rule may write the span it names; a fixer cannot decline, so the answer is needed before the report.
  *
  * Both sides refuse the write that moves the character behind the span into a `//` comment: behind the solidus that is closing it up against a comment (`1 /// c` is one), in front of it the solidus itself, which a write emptying the run brings against the solidus ahead of it and so opens the comment it moves into. `before` refuses as well the write landing in a comment the text already stands in, which `movesEndIntoInlineComment` passes over wherever the run holds no break to close that comment.
+ *
+ * A write behind the solidus is refused too where it parts the name of a bare address from the solidus or joins it to it and the two readings of the parentheses part: PostCSS's tokenizer reads `1/url` as one word, so the parentheses behind it are code, while behind `1/ url` they are one token closed at the first `)`.
  * @param syntax - The syntax the rule is built over.
  * @param reading - What the syntax makes of a `//` comment.
  * @param text - The text the solidus stands in.
@@ -100,6 +103,8 @@ function spansAt (text: string, checkIndex: number, position: `before` | `after`
  */
 function writesTheSpan (syntax: Syntax, reading: InlineCommentReading, text: string, span: { start: number, end: number }, written: string, position: `before` | `after`): boolean {
 	if (syntax.movesEndIntoInlineComment(text.slice(0, span.end + 1), text.slice(0, span.start) + written + text.charAt(span.end), reading)) return false
+
+	if (rereadsAnAddress(text, { ...span, text: written }, reading)) return false
 
 	return position === `after` || !syntax.endsWithInlineComment(text.slice(0, span.start), reading)
 }
