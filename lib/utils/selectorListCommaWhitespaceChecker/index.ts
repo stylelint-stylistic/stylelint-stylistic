@@ -4,6 +4,7 @@ import stylelint, { type PostcssResult } from "stylelint"
 
 import type { SelectorCopies, Syntax } from "../../syntaxes/index.ts"
 import type { InlineComment } from "../../syntaxes/index.ts"
+import { selectorSearchCopy } from "../selectorSearchCopy/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -52,7 +53,8 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 
 		styleSearch(
 			{
-				source: selector,
+				// The search reads a string by rules of its own, so the commas are found over the copy and checked over the selector
+				source: selectorSearchCopy(selector),
 				target: `,`,
 				functionArguments: `skip`,
 			},

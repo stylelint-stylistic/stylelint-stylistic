@@ -180,6 +180,33 @@ testRule({
 				},
 			],
 		},
+		{
+			// The search the commas are found with closes no string at a quotation mark a backslash stands in front of, so the comma behind one went unread
+			description: `no space after a comma behind a string ending in an escaped backslash, whose closing quotation mark no escape holds`,
+			code: `[a="b\\\\"],c {}`,
+			fixed: `[a="b\\\\"], c {}`,
+			line: 1,
+			column: 10,
+			message: messages.expectedAfter(),
+		},
+		{
+			// The search opens a string at a quotation mark inside a bare address, which the tokenizer reads as a character of the address
+			description: `no space after a comma behind a bare address holding a quotation mark`,
+			code: `:is(url(x'y)),c {}`,
+			fixed: `:is(url(x'y)), c {}`,
+			line: 1,
+			column: 14,
+			message: messages.expectedAfter(),
+		},
+		{
+			// A quotation mark inside a comment opens no string, so the comma behind the comment is read
+			description: `no space after a comma behind a comment holding a quotation mark`,
+			code: `a/*"*/,c {}`,
+			fixed: `a/*"*/, c {}`,
+			line: 1,
+			column: 7,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 

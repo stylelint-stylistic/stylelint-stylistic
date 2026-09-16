@@ -7,6 +7,7 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { selectorSearchCopy } from "../../utils/selectorSearchCopy/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { runBehind, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
@@ -60,7 +61,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			styleSearch(
 				{
-					source: selector,
+					// The search reads a string by rules of its own, so the commas are found over the copy and checked over the selector
+					source: selectorSearchCopy(selector),
 					target: `,`,
 					functionArguments: `skip`,
 				},

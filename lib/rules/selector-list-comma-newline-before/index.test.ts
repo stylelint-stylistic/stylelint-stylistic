@@ -193,6 +193,15 @@ testRule({
 				},
 			],
 		},
+		{
+			// The search the commas are found with closes no string at a quotation mark a backslash stands in front of, so the comma behind one went unread
+			description: `no newline before a comma behind a string ending in an escaped backslash, whose closing quotation mark no escape holds`,
+			code: `[a="b\\\\"],c {}`,
+			fixed: `[a="b\\\\"]\n,c {}`,
+			line: 1,
+			column: 10,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 
