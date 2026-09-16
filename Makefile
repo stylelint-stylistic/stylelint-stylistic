@@ -43,9 +43,9 @@ oracles: ## 🔮 Compare every oracle's answer about the base with its answer ab
 	./scripts/oracles/compare.ts $(BASE) $(HEAD)
 .PHONY: oracles
 
-sweep: ## 🧹 Run one sweep on the base and on the working tree, and write the diff FILE= [BASE=]
+sweep: ## 🧹 Run one sweep on the base and on the working tree, and write the diff FILE= [BASE=] [WORKERS=]
 	@test -n "$(FILE)" || { printf "\t❌ $(ANSI_BOLD)FILE= names the sweep to run$(ANSI_RESET)\n\n"; exit 2; }
-	./scripts/sweeps/run.ts $(FILE) $(BASE)
+	SWEEP_WORKERS="$(WORKERS)" ./scripts/sweeps/run.ts $(FILE) $(BASE)
 .PHONY: sweep
 
 harness-check: ## 🧫 Check that the direct runner agrees with Stylelint over every run of the oracles

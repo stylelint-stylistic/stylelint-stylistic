@@ -13,10 +13,10 @@ import { ROOT } from "../harness/checkout.ts"
  * The inputs a result of one sweep over one side depends on.
  * @param sweepFile - The absolute path of the sweep module.
  * @param revision - The side, as `treeOf` reads it.
- * @returns The sweep module, the runner, `lib/` sources, `scripts/oracles`, `scripts/harness` and the lock file. Only `lib/` is taken at the side; its tree is in the meta (`measuredTreeOf`).
+ * @returns The sweep module, the runner, the measuring module and the worker it hands every row to, `lib/` sources, `scripts/oracles`, `scripts/harness` and the lock file. Only `lib/` is taken at the side; its tree is in the meta (`measuredTreeOf`).
  */
 function inputsOf (sweepFile: string, revision: string): Record<string, string> {
-	return { sweep: hashAt(`worktree`, path.relative(ROOT, sweepFile)), runner: hashAt(`worktree`, `scripts/sweeps/run.ts`), libSources: hashSourcesAt(revision, `lib`), oracles: hashSourcesAt(`worktree`, `scripts/oracles`), harness: hashSourcesAt(`worktree`, `scripts/harness`), lock: hashAt(`worktree`, `pnpm-lock.yaml`) }
+	return { sweep: hashAt(`worktree`, path.relative(ROOT, sweepFile)), runner: hashAt(`worktree`, `scripts/sweeps/run.ts`), measure: hashAt(`worktree`, `scripts/sweeps/measure.ts`), worker: hashAt(`worktree`, `scripts/sweeps/worker.ts`), libSources: hashSourcesAt(revision, `lib`), oracles: hashSourcesAt(`worktree`, `scripts/oracles`), harness: hashSourcesAt(`worktree`, `scripts/harness`), lock: hashAt(`worktree`, `pnpm-lock.yaml`) }
 }
 
 export { inputsOf }

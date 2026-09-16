@@ -47,7 +47,7 @@ function fabricatedSide (): string {
 	let blob = `100644 blob ${git([`hash-object`, `--stdin`], `nothing this repository holds`)}`
 	let harness = treeOfEntries([`${blob}\tcache.ts`])
 	let oracles = treeOfEntries([`${blob}\tfixtures.ts`])
-	let sweeps = treeOfEntries([`${blob}\teol.ts`, `${blob}\trun.ts`])
+	let sweeps = treeOfEntries([`${blob}\teol.ts`, `${blob}\tmeasure.ts`, `${blob}\trun.ts`, `${blob}\tworker.ts`])
 	let scripts = treeOfEntries([`040000 tree ${harness}\tharness`, `040000 tree ${oracles}\toracles`, `040000 tree ${sweeps}\tsweeps`])
 
 	return treeOfEntries([`040000 tree ${treeOfEntries([`${blob}\tindex.ts`])}\tlib`, `${blob}\tpnpm-lock.yaml`, `040000 tree ${scripts}\tscripts`])
@@ -97,6 +97,14 @@ describe(`what a sweep result is kept under`, () => {
 		expect(Object.entries(inputs).filter(([, hash]) => hash === inputs.runner)).toHaveLength(1)
 	})
 
+	it(`names the measuring module and the worker, where every row has been measured since the runner was split over threads, each under a name of its own`, () => {
+		let inputs = inputsOf(SWEEP, `HEAD`)
+
+		expect(inputs.measure).toBe(hashAt(`worktree`, `scripts/sweeps/measure.ts`))
+		expect(inputs.worker).toBe(hashAt(`worktree`, `scripts/sweeps/worker.ts`))
+		expect(new Set(Object.values(inputs)).size).toBe(Object.keys(inputs).length)
+	})
+
 	it(`names the sources of the oracles, whose corpus a sweep reads`, () => {
 		expect(inputsOf(SWEEP, `HEAD`).oracles).toBe(hashSourcesAt(`worktree`, `scripts/oracles`))
 	})
@@ -127,16 +135,19 @@ describe(`what a sweep result is kept under`, () => {
 		expect(inputs.libSources).not.toBe(hashSourcesAt(`worktree`, `lib`))
 		expect(inputs.sweep).toBe(hashAt(`worktree`, `scripts/sweeps/eol.ts`))
 		expect(inputs.runner).toBe(hashAt(`worktree`, `scripts/sweeps/run.ts`))
+		expect(inputs.measure).toBe(hashAt(`worktree`, `scripts/sweeps/measure.ts`))
+		expect(inputs.worker).toBe(hashAt(`worktree`, `scripts/sweeps/worker.ts`))
 		expect(inputs.oracles).toBe(hashSourcesAt(`worktree`, `scripts/oracles`))
 		expect(inputs.harness).toBe(hashSourcesAt(`worktree`, `scripts/harness`))
 		expect(inputs.lock).toBe(hashAt(`worktree`, `pnpm-lock.yaml`))
 	})
 
-	it(`is all the runner keys a result on, since that file names no hash of its own`, () => {
-		// The runner measures as it loads, so it is read as text, as `lib/syntaxes/index.test.ts` holds a rule about a module it does not run
+	it(`is all the runner keys a result on, since neither it nor the modules it measures through name a hash of their own`, () => {
+		// The runner measures as it loads, so it is read as text, as `lib/syntaxes/index.test.ts` holds a rule about a module it does not run; the two modules beside it are read the same way, since a hash spelled there would not be one of the key
 		let runner = readFileSync(path.join(ROOT, `scripts`, `sweeps`, `run.ts`), `utf8`)
 
 		expect(runner).toMatch(/\binputsOf\(/u)
-		expect(runner).not.toMatch(/hashAt|hashSourcesAt/u)
+
+		for (let module of [`run.ts`, `measure.ts`, `worker.ts`]) expect(readFileSync(path.join(ROOT, `scripts`, `sweeps`, module), `utf8`)).not.toMatch(/hashAt|hashSourcesAt/u)
 	})
 })

@@ -4,79 +4,32 @@
  * Runs one sweep on both sides and writes the diff. Started through `make sweep FILE=…`.
  *
  * A sweep module exports its `name`, `corpus` of keyed texts, `configs` and `syntaxes`. Every text is linted under each, checked and fixed, on base and branch; `tmp/sweeps/<name>.md` holds what moved. A side stands in the store as a digest of one short hash per row, so the rows are read only for the keys that moved.
+ *
+ * A side is measured by as many workers (`worker.ts`) as the machine has cores, `SWEEP_WORKERS` overriding; the rows come back in the order one worker would have measured them in, so a side reads the same whatever the count.
  */
 
 import { mkdirSync, writeFileSync } from "node:fs"
+import { availableParallelism } from "node:os"
 import path from "node:path"
-import { argv, exit, stderr, stdout } from "node:process"
+import { argv, env, exit, stderr, stdout } from "node:process"
+import { Worker } from "node:worker_threads"
 
 import { digestOf, keyOf, measuredTreeOf, read, readDigest, write } from "../harness/cache.ts"
 import { defaultBase, libAt, ROOT, type Side } from "../harness/checkout.ts"
 import { diff, render } from "../harness/diff.ts"
-import { lintDirect, loadRules, type Registry, type RuleSetting } from "../harness/lint.ts"
+import { lintDirect, loadRules, type Registry } from "../harness/lint.ts"
 
 import { inputsOf } from "./key.ts"
+import { settingOf, type Sweep, syntaxesOf, tasksOf } from "./measure.ts"
+import type { Answer, Job } from "./worker.ts"
 
-/** The syntax each name is read under, plain CSS under none. */
-const SYNTAXES: Record<string, string | undefined> = { css: undefined, scss: `postcss-scss`, less: `postcss-less`, styled: `postcss-styled-syntax` }
-
-/** The syntaxes a sweep that names none is read under; a stylesheet corpus is none for a styled template. */
-const DEFAULT_SYNTAXES = [`css`, `scss`, `less`]
+export type { Sweep } from "./measure.ts"
 
 /** The stylesheet each configuration is put over first, for the objections to its options. */
 const PROBE = `a {\n\tcolor: pink;\n}\n`
 
-/** What a sweep module exports. */
-export type Sweep = {
-	name: string,
-	corpus: [string, string][],
-	configs: { rule: string, primary: unknown, secondary?: object | undefined }[],
-	syntaxes?: string[],
-}
-
-/**
- * Lints one text under one configuration, checking and fixing.
- * @param options - What `lintDirect` takes, without `fix`.
- * @returns The warnings, the fixed text and whether it reparses, or why not.
- */
-async function measureOne (options: Omit<Parameters<typeof lintDirect>[0], `fix`>): Promise<object> {
-	let checked = await lintDirect({ ...options, stripNamespaces: true })
-
-	if (checked.unparsable) return { unparsable: true }
-	if (checked.invalidOptions.length > 0) return { usable: false }
-
-	let fixed = await lintDirect({ ...options, fix: true, stripNamespaces: true })
-
-	if (fixed.unparsable) throw new Error(`The text was read once and not again: ${fixed.detail}`)
-
-	let reparse = await lintDirect({ ...options, code: fixed.code, rules: [] })
-
-	return { warnings: checked.warnings.map((warning) => warning.text), fixed: fixed.code, reparses: !reparse.unparsable }
-}
-
-/**
- * Lints every text under every configuration and syntax; rows are keyed by syntax, rule and both options.
- * @param sweep - The corpus and configurations to measure.
- * @param registry - One side's rules.
- * @returns The rows by key.
- */
-async function measure (sweep: Sweep, registry: Registry): Promise<Record<string, object>> {
-	let rows: Record<string, object> = {}
-
-	for (let syntaxName of sweep.syntaxes ?? DEFAULT_SYNTAXES) {
-		for (let config of sweep.configs) {
-			let rules: RuleSetting[] = [[`${syntaxName === `css` ? `` : `${syntaxName}/`}${config.rule}`, config.primary, config.secondary]]
-
-			for (let [key, code] of sweep.corpus) {
-				// In turn, to keep a run light
-				// eslint-disable-next-line no-await-in-loop
-				rows[`${syntaxName}|${config.rule}|${JSON.stringify(config.primary)}${config.secondary ? `|${JSON.stringify(config.secondary)}` : ``}|${key}`] = await measureOne({ code, rules, registry, syntax: SYNTAXES[syntaxName] })
-			}
-		}
-	}
-
-	return rows
-}
+/** The workers a side is measured by: every core, unless `SWEEP_WORKERS` says otherwise. */
+const WORKERS = Number(env.SWEEP_WORKERS) || availableParallelism()
 
 let [file, base = defaultBase()] = argv.slice(2)
 
@@ -89,6 +42,66 @@ let sweepFile = path.resolve(file)
 let sweep: Sweep = await import(sweepFile)
 
 /**
+ * Measures every text under every configuration and syntax, the tasks shared out over the workers as each comes free.
+ * @param lib - One side's `lib/`, for the workers to load their rules from.
+ * @returns The rows by key, in corpus order.
+ */
+async function measure (lib: string): Promise<Record<string, object>> {
+	let tasks = tasksOf(sweep, WORKERS)
+	let results: [string, object][][] = []
+	let next = 0
+
+	/**
+	 * Runs one worker until the tasks run out.
+	 * @returns Settled when the worker has answered its last task, or rejected with the first error.
+	 */
+	function runWorker (): Promise<void> {
+		return new Promise((resolve, reject) => {
+			let worker = new Worker(new URL(`./worker.ts`, import.meta.url), { workerData: { sweepFile, lib } })
+
+			/** Posts the next task, or lets the worker go. */
+			function feed (): void {
+				let task = tasks[next]
+
+				if (!task) {
+					worker.terminate().then(() => resolve()).catch(reject)
+
+					return
+				}
+
+				let index = next
+
+				next += 1
+				// A worker's port takes one argument; the rule has a window's `postMessage` in mind
+				// eslint-disable-next-line unicorn/require-post-message-target-origin
+				worker.postMessage({ index, task } satisfies Job)
+			}
+
+			worker.on(`message`, (answer: Answer) => {
+				if (`error` in answer) {
+					reject(new Error(answer.error))
+
+					return
+				}
+
+				results[answer.index] = answer.rows
+				feed()
+			})
+			worker.on(`error`, reject)
+			feed()
+		})
+	}
+
+	await Promise.all(Array.from({ length: Math.min(WORKERS, tasks.length) }, runWorker))
+
+	let rows: Record<string, object> = {}
+
+	for (let taskRows of results) for (let [key, row] of taskRows) rows[key] = row
+
+	return rows
+}
+
+/**
  * Names every configuration the rules refuse, as `validateOptions` words it.
  *
  * Asked over `PROBE`, not the corpus: a refusal cannot depend on the text, and an unparsable text never reaches `validateOptions`.
@@ -98,11 +111,10 @@ let sweep: Sweep = await import(sweepFile)
 async function refusalsOf (registry: Registry): Promise<string[]> {
 	let refusals: string[] = []
 
-	for (let syntaxName of sweep.syntaxes ?? DEFAULT_SYNTAXES) {
+	for (let syntaxName of syntaxesOf(sweep)) {
 		for (let config of sweep.configs) {
-			let rules: RuleSetting[] = [[`${syntaxName === `css` ? `` : `${syntaxName}/`}${config.rule}`, config.primary, config.secondary]]
 			// eslint-disable-next-line no-await-in-loop
-			let answer = await lintDirect({ code: PROBE, rules, registry })
+			let answer = await lintDirect({ code: PROBE, rules: [settingOf(syntaxName, config)], registry })
 
 			if (!answer.unparsable && answer.invalidOptions.length > 0) refusals.push(answer.invalidOptions.join(`; `))
 		}
@@ -155,8 +167,8 @@ async function measureSide (side: Side): Promise<Result> {
 		}
 	}
 
-	stdout.write(`\t🧹 ${sweep.name} over ${side} (${revision})\n`)
-	let rows = await measure(sweep, await loadRules(libAt(revision)))
+	stdout.write(`\t🧹 ${sweep.name} over ${side} (${revision}), ${WORKERS} worker${WORKERS === 1 ? `` : `s`}\n`)
+	let rows = await measure(libAt(revision))
 
 	digest = digestOf(rows)
 	write(`sweeps`, sweep.name, key, rows, { ...inputs, ...measuredTreeOf(revision), revision, root: ROOT }, digest)
