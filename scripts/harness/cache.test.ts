@@ -309,6 +309,35 @@ describe(`the collector of the store`, () => {
 		expect(readdirSync(directory)).toEqual([])
 	})
 
+	it(`takes out a result written before the parts were compressed as a result, whole, and a plain digest alone as a stray`, () => {
+		let { store, directory } = open()
+		let plain = keyOf({ lib: `g` })
+		let stray = keyOf({ lib: `h` })
+
+		leave(directory, `${plain}.json`)
+		leave(directory, `${plain}.digest.json`)
+		leave(directory, filesOf(plain).meta)
+		leave(directory, `${stray}.digest.json`)
+
+		expect(store.collect(() => false)).toEqual({ removed: 1, kept: 0, stray: 1 })
+		expect(readdirSync(directory)).toEqual([])
+	})
+
+	it(`reads a result written before the parts were compressed, and keeps it while its tree is reached`, () => {
+		let { store, directory } = open()
+		let key = keyOf({ lib: `i` })
+
+		mkdirSync(directory, { recursive: true })
+		writeFileSync(path.join(directory, `${key}.json`), `{"one":1}`)
+		writeFileSync(path.join(directory, `${key}.digest.json`), `{"one":"a"}`)
+		leave(directory, filesOf(key).meta)
+
+		expect(store.read(KIND, NAME, key)).toEqual({ one: 1 })
+		expect(store.readDigest(KIND, NAME, key)).toEqual({ one: `a` })
+		expect(store.collect(() => true)).toEqual({ removed: 0, kept: 1, stray: 0 })
+		expect(readdirSync(directory)).toHaveLength(3)
+	})
+
 	it(`leaves a file no key names where it stands, beside the result it takes out`, () => {
 		let { store, directory } = open()
 		let key = keyOf({ lib: `e` })

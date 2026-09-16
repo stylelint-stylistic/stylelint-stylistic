@@ -20,6 +20,23 @@ export type Sweep = {
 	syntaxes?: string[],
 }
 
+/** What one text under one configuration came to; only what parted from the input is spelled, so a silent row is `{}` and a side stores a fraction of the bytes. `expand` puts the rest back for a reader. */
+export type Row = {
+	unparsable: true,
+} | {
+	usable: false,
+} | {
+	warnings?: string[],
+	fixed?: string,
+	reparses?: false,
+}
+
+/** One side as the store keeps it: the corpus keys once, and under each configuration's key a row per text in that order, so that no row carries a key of its own; `flatten` gives every row the key the diff and the report read it by. */
+export type Nested<T> = {
+	corpus: string[],
+	rows: Record<string, T[]>,
+}
+
 /** One configuration of a sweep under one syntax over a slice of its corpus; the indices point into the sweep's own lists, so a task travels to a worker without the texts. */
 export type Task = {
 	syntaxName: string,
@@ -48,22 +65,57 @@ function settingOf (syntaxName: string, config: Sweep[`configs`][number]): RuleS
 }
 
 /**
- * Keys one row by syntax, rule, both options and the text's own key.
+ * Keys one configuration by syntax, rule and both options.
+ * @param syntaxName - The syntax the text is read under.
+ * @param config - The rule with its options.
+ * @returns The configuration's key, the head of every row key under it.
+ */
+function configKeyOf (syntaxName: string, config: Sweep[`configs`][number]): string {
+	return `${syntaxName}|${config.rule}|${JSON.stringify(config.primary)}${config.secondary ? `|${JSON.stringify(config.secondary)}` : ``}`
+}
+
+/**
+ * Keys one row by its configuration and the text's own key.
  * @param syntaxName - The syntax the text is read under.
  * @param config - The rule with its options.
  * @param key - The text's key in the corpus.
  * @returns The row's key.
  */
 function rowKeyOf (syntaxName: string, config: Sweep[`configs`][number], key: string): string {
-	return `${syntaxName}|${config.rule}|${JSON.stringify(config.primary)}${config.secondary ? `|${JSON.stringify(config.secondary)}` : ``}|${key}`
+	return `${configKeyOf(syntaxName, config)}|${key}`
+}
+
+/**
+ * Gives every row of a side the key the diff reads it by, in the order one worker would have measured them in.
+ * @param nested - The side as the store keeps it.
+ * @returns The rows by key.
+ */
+function flatten<T> (nested: Nested<T>): Record<string, T> {
+	let flat: Record<string, T> = {}
+
+	for (let [configKey, rows] of Object.entries(nested.rows)) for (let [index, row] of rows.entries()) flat[`${configKey}|${nested.corpus[index] ?? index}`] = row
+
+	return flat
+}
+
+/**
+ * Puts back into a row what `measureOne` left unsaid, for a reader of the report.
+ * @param row - The row as stored.
+ * @param input - The text the row was measured over.
+ * @returns The warnings, the fixed text and whether it reparses, or why not.
+ */
+function expand (row: Row, input: string): object {
+	if (`unparsable` in row || `usable` in row) return row
+
+	return { warnings: row.warnings ?? [], fixed: row.fixed ?? input, reparses: row.reparses ?? true }
 }
 
 /**
  * Lints one text under one configuration, checking and fixing.
  * @param options - What `lintDirect` takes, without `fix`.
- * @returns The warnings, the fixed text and whether it reparses, or why not.
+ * @returns The row: the warnings where there are any, the fixed text where it parted from the input, and `reparses: false` where it does not, or why the text could not be measured.
  */
-async function measureOne (options: Omit<Parameters<typeof lintDirect>[0], `fix`>): Promise<object> {
+async function measureOne (options: Omit<Parameters<typeof lintDirect>[0], `fix`>): Promise<Row> {
 	let checked = await lintDirect({ ...options, stripNamespaces: true })
 
 	if (checked.unparsable) return { unparsable: true }
@@ -75,7 +127,11 @@ async function measureOne (options: Omit<Parameters<typeof lintDirect>[0], `fix`
 
 	let reparse = await lintDirect({ ...options, code: fixed.code, rules: [] })
 
-	return { warnings: checked.warnings.map((warning) => warning.text), fixed: fixed.code, reparses: !reparse.unparsable }
+	return {
+		...(checked.warnings.length > 0 && { warnings: checked.warnings.map((warning) => warning.text) }),
+		...(fixed.code !== options.code && { fixed: fixed.code }),
+		...(reparse.unparsable && { reparses: false }),
+	}
 }
 
 /**
@@ -83,24 +139,24 @@ async function measureOne (options: Omit<Parameters<typeof lintDirect>[0], `fix`
  * @param sweep - The sweep the task points into.
  * @param registry - One side's rules.
  * @param task - The configuration, the syntax and the slice.
- * @returns The rows, keyed, in corpus order.
+ * @returns The configuration's key and a row per text of the slice, in corpus order.
  */
-async function measureTask (sweep: Sweep, registry: Registry, task: Task): Promise<[string, object][]> {
+async function measureTask (sweep: Sweep, registry: Registry, task: Task): Promise<{ config: string, rows: Row[] }> {
 	let config = sweep.configs[task.config]
 
 	if (!config) throw new Error(`No configuration at ${task.config} in ${sweep.name}`)
 
 	let rules = [settingOf(task.syntaxName, config)]
 	let syntax = SYNTAXES[task.syntaxName]
-	let rows: [string, object][] = []
+	let rows: Row[] = []
 
-	for (let [key, code] of sweep.corpus.slice(task.from, task.to)) {
+	for (let [, code] of sweep.corpus.slice(task.from, task.to)) {
 		// In turn, to keep a worker light
 		// eslint-disable-next-line no-await-in-loop
-		rows.push([rowKeyOf(task.syntaxName, config, key), await measureOne({ code, rules, registry, syntax })])
+		rows.push(await measureOne({ code, rules, registry, syntax }))
 	}
 
-	return rows
+	return { config: configKeyOf(task.syntaxName, config), rows }
 }
 
 /**
@@ -125,4 +181,4 @@ function tasksOf (sweep: Sweep, workers: number): Task[] {
 	return tasks
 }
 
-export { DEFAULT_SYNTAXES, measureOne, measureTask, rowKeyOf, settingOf, SYNTAXES, syntaxesOf, tasksOf }
+export { configKeyOf, DEFAULT_SYNTAXES, expand, flatten, measureOne, measureTask, rowKeyOf, settingOf, SYNTAXES, syntaxesOf, tasksOf }

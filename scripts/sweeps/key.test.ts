@@ -47,7 +47,7 @@ function fabricatedSide (): string {
 	let blob = `100644 blob ${git([`hash-object`, `--stdin`], `nothing this repository holds`)}`
 	let harness = treeOfEntries([`${blob}\tcache.ts`])
 	let oracles = treeOfEntries([`${blob}\tfixtures.ts`])
-	let sweeps = treeOfEntries([`${blob}\teol.ts`, `${blob}\tmeasure.ts`, `${blob}\trun.ts`, `${blob}\tworker.ts`])
+	let sweeps = treeOfEntries([`040000 tree ${treeOfEntries([`${blob}\tplaces.ts`])}\taxes`, `${blob}\teol.ts`, `${blob}\tmeasure.ts`, `${blob}\trun.ts`, `${blob}\tworker.ts`])
 	let scripts = treeOfEntries([`040000 tree ${harness}\tharness`, `040000 tree ${oracles}\toracles`, `040000 tree ${sweeps}\tsweeps`])
 
 	return treeOfEntries([`040000 tree ${treeOfEntries([`${blob}\tindex.ts`])}\tlib`, `${blob}\tpnpm-lock.yaml`, `040000 tree ${scripts}\tscripts`])
@@ -97,11 +97,12 @@ describe(`what a sweep result is kept under`, () => {
 		expect(Object.entries(inputs).filter(([, hash]) => hash === inputs.runner)).toHaveLength(1)
 	})
 
-	it(`names the measuring module and the worker, where every row has been measured since the runner was split over threads, each under a name of its own`, () => {
+	it(`names the measuring module and the worker, where every row has been measured since the runner was split over threads, and the axes the sweeps share, each under a name of its own`, () => {
 		let inputs = inputsOf(SWEEP, `HEAD`)
 
 		expect(inputs.measure).toBe(hashAt(`worktree`, `scripts/sweeps/measure.ts`))
 		expect(inputs.worker).toBe(hashAt(`worktree`, `scripts/sweeps/worker.ts`))
+		expect(inputs.axes).toBe(hashSourcesAt(`worktree`, `scripts/sweeps/axes`))
 		expect(new Set(Object.values(inputs)).size).toBe(Object.keys(inputs).length)
 	})
 
@@ -137,6 +138,7 @@ describe(`what a sweep result is kept under`, () => {
 		expect(inputs.runner).toBe(hashAt(`worktree`, `scripts/sweeps/run.ts`))
 		expect(inputs.measure).toBe(hashAt(`worktree`, `scripts/sweeps/measure.ts`))
 		expect(inputs.worker).toBe(hashAt(`worktree`, `scripts/sweeps/worker.ts`))
+		expect(inputs.axes).toBe(hashSourcesAt(`worktree`, `scripts/sweeps/axes`))
 		expect(inputs.oracles).toBe(hashSourcesAt(`worktree`, `scripts/oracles`))
 		expect(inputs.harness).toBe(hashSourcesAt(`worktree`, `scripts/harness`))
 		expect(inputs.lock).toBe(hashAt(`worktree`, `pnpm-lock.yaml`))

@@ -8,7 +8,7 @@ import { parentPort, workerData } from "node:worker_threads"
 
 import { loadRules } from "../harness/lint.ts"
 
-import { measureTask, type Sweep, type Task } from "./measure.ts"
+import { measureTask, type Row, type Sweep, type Task } from "./measure.ts"
 
 /** What the runner hands a worker at its start. */
 type Start = {
@@ -22,10 +22,11 @@ export type Job = {
 	task: Task,
 }
 
-/** What a worker answers: the rows of the job, or why none. */
+/** What a worker answers: the configuration's key and the rows of the job, or why none. */
 export type Answer = {
 	index: number,
-	rows: [string, object][],
+	config: string,
+	rows: Row[],
 } | {
 	index: number,
 	error: string,
@@ -41,6 +42,6 @@ let [sweep, registry] = await Promise.all([import(sweepFile) as Promise<Sweep>, 
 
 port.on(`message`, (job: Job) => {
 	measureTask(sweep, registry, job.task)
-		.then((rows) => port.postMessage({ index: job.index, rows } satisfies Answer))
+		.then(({ config, rows }) => port.postMessage({ index: job.index, config, rows } satisfies Answer))
 		.catch((error: unknown) => port.postMessage({ index: job.index, error: error instanceof Error ? error.stack ?? error.message : String(error) } satisfies Answer))
 })

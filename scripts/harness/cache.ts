@@ -1,15 +1,16 @@
 /**
  * Caches the result of a run under a key of its inputs, so no tree is measured twice.
  *
- * The key hashes the Git hashes of the inputs, a directory as the hash of its sources so a reworded test keeps the key. A result is three read-only files, the meta last; without a meta it is unfinished, and the collector removes it and every result whose `lib/` tree is unreachable. The store is `~/.cache/stylelint-stylistic/`; `STYLISTIC_CACHE` overrides it.
+ * The key hashes the Git hashes of the inputs, a directory as the hash of its sources so a reworded test keeps the key. A result is three read-only files, the meta last; without a meta it is unfinished, and the collector removes it and every result whose `lib/` tree is unreachable. The rows and the digest are gzipped, since a side of two million rows came to 106 MB spelled out and 7 MB compressed at the lightest level, which costs a tenth of a second; the meta stays plain, for a reader. The store is `~/.cache/stylelint-stylistic/`; `STYLISTIC_CACHE` overrides it.
  */
 
 import { execFileSync } from "node:child_process"
-import { createHash } from "node:crypto"
+import { createHash, hash } from "node:crypto"
 import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { homedir } from "node:os"
 import path from "node:path"
 import { env, pid } from "node:process"
+import { gunzipSync, gzipSync } from "node:zlib"
 
 import { ROOT } from "./checkout.ts"
 
@@ -27,6 +28,9 @@ const KEY_LENGTH = 24
 
 /** The mode of a written result. */
 const READ_ONLY = 0o444
+
+/** How hard the rows and the digest are compressed: the lightest level takes a tenth of a second over 72 MB of rows and leaves 2.4 MB, the default four times as long for a third less. */
+const COMPRESSION = { level: 1 }
 
 /** The index the working tree is hashed through; one per process. */
 const SCRATCH_INDEX = path.join(ROOT, `tmp`, `harness-index-${pid}`)
@@ -144,7 +148,31 @@ function keyOf (parts: object): string {
  * @returns The file name of each part.
  */
 function filesOf (key: string): Record<Part, string> {
-	return { rows: `${key}.json`, digest: `${key}.digest.json`, meta: `${key}.meta.json` }
+	return { rows: `${key}.json.gz`, digest: `${key}.digest.json.gz`, meta: `${key}.meta.json` }
+}
+
+/**
+ * Names the rows and the digest as they were written before they were compressed, so the collector still takes such a result out whole and a reader still finds one.
+ * @param key - The hash of a result's inputs, as `keyOf` builds it.
+ * @returns The plain file name of each compressed part.
+ */
+function plainFilesOf (key: string): Record<Exclude<Part, `meta`>, string> {
+	return { rows: `${key}.json`, digest: `${key}.digest.json` }
+}
+
+/**
+ * Reads a part written by `write`, or one written before the parts were compressed.
+ * @param file - The compressed part's path.
+ * @returns The parsed contents, or undefined where neither spelling stands.
+ */
+function readPart<T> (file: string): T | undefined {
+	if (existsSync(file)) return JSON.parse(gunzipSync(readFileSync(file)).toString(`utf8`)) as T
+
+	let plain = file.slice(0, -`.gz`.length)
+
+	if (existsSync(plain)) return JSON.parse(readFileSync(plain, `utf8`)) as T
+
+	return undefined
 }
 
 /**
@@ -155,7 +183,8 @@ function filesOf (key: string): Record<Part, string> {
 function digestOf (rows: Record<string, unknown> | unknown[]): Record<string, string> {
 	let digest: Record<string, string> = {}
 
-	for (let [key, row] of Object.entries(rows)) digest[key] = createHash(`sha1`).update(JSON.stringify(row)).digest(`hex`).slice(0, 16)
+	// The one-shot `hash` is what `createHash` comes to without the object: a third off over two million rows
+	for (let [key, row] of Object.entries(rows)) digest[key] = hash(`sha1`, JSON.stringify(row), `hex`).slice(0, 16)
 
 	return digest
 }
@@ -171,7 +200,7 @@ function filesByKey (directory: string): Map<string, string[]> {
 	for (let file of readdirSync(directory)) {
 		let key = file.slice(0, KEY_LENGTH)
 
-		if (!Object.values(filesOf(key)).includes(file)) continue
+		if (![...Object.values(filesOf(key)), ...Object.values(plainFilesOf(key))].includes(file)) continue
 
 		keys.set(key, [...keys.get(key) ?? [], file])
 	}
@@ -201,7 +230,7 @@ function collectIn (directory: string, keeps: (meta: Record<string, unknown>) =>
 			tally.stray += files.length
 		}
 
-		for (let file of Object.values(names)) rmSync(path.join(directory, file), { force: true })
+		for (let file of [...Object.values(names), ...Object.values(plainFilesOf(key))]) rmSync(path.join(directory, file), { force: true })
 	}
 }
 
@@ -212,12 +241,12 @@ function collectIn (directory: string, keeps: (meta: Record<string, unknown>) =>
  */
 function storeAt (store: string): {
 	read: <T>(kind: string, name: string, key: string) => T | undefined,
-	readDigest: (kind: string, name: string, key: string) => Record<string, string> | undefined,
-	write: (kind: string, name: string, key: string, rows: Record<string, unknown> | unknown[], meta: object, digest?: Record<string, string>) => void,
+	readDigest: <T = Record<string, string>>(kind: string, name: string, key: string) => T | undefined,
+	write: (kind: string, name: string, key: string, rows: Record<string, unknown> | unknown[], meta: object, digest?: object) => void,
 	collect: (keeps: (meta: Record<string, unknown>) => boolean) => Collected,
 } {
 	/** Digests read so far, by file. */
-	let digests = new Map<string, Record<string, string>>()
+	let digests = new Map<string, unknown>()
 
 	/**
 	 * Names the file of one part of a result.
@@ -239,11 +268,7 @@ function storeAt (store: string): {
 	 * @returns The rows, or undefined.
 	 */
 	function read<T> (kind: string, name: string, key: string): T | undefined {
-		let file = fileOf(kind, name, key, `rows`)
-
-		if (!existsSync(file)) return
-
-		return JSON.parse(readFileSync(file, `utf8`)) as T
+		return readPart<T>(fileOf(kind, name, key, `rows`))
 	}
 
 	/**
@@ -251,17 +276,21 @@ function storeAt (store: string): {
 	 * @param kind - `oracles` or `sweeps`.
 	 * @param name - The oracle or sweep the result belongs to.
 	 * @param key - The hash of the result's inputs.
-	 * @returns The digest, or undefined.
+	 * @returns The digest, in whatever shape the writer gave it, or undefined.
 	 */
-	function readDigest (kind: string, name: string, key: string): Record<string, string> | undefined {
+	function readDigest<T = Record<string, string>> (kind: string, name: string, key: string): T | undefined {
 		let file = fileOf(kind, name, key, `digest`)
 
-		if (!existsSync(file)) return
-
 		// Two sides on one tree share a digest; parsed once
-		if (!digests.has(file)) digests.set(file, JSON.parse(readFileSync(file, `utf8`)))
+		if (!digests.has(file)) {
+			let digest = readPart<T>(file)
 
-		return digests.get(file)
+			if (digest === undefined) return
+
+			digests.set(file, digest)
+		}
+
+		return digests.get(file) as T | undefined
 	}
 
 	/**
@@ -271,16 +300,16 @@ function storeAt (store: string): {
 	 * @param key - The hash of the result's inputs.
 	 * @param rows - The result.
 	 * @param meta - The key's inputs.
-	 * @param digest - The rows' digest, if the caller has it.
+	 * @param digest - The rows' digest, if the caller has it, in whatever shape it reads it back in.
 	 */
-	function write (kind: string, name: string, key: string, rows: Record<string, unknown> | unknown[], meta: object, digest?: Record<string, string>): void {
+	function write (kind: string, name: string, key: string, rows: Record<string, unknown> | unknown[], meta: object, digest?: object): void {
 		let file = fileOf(kind, name, key, `rows`)
 
 		if (existsSync(file)) throw new Error(`${file} is already written; a result is written once, and a second answer to the same question is a finding rather than an update`)
 
-		let contents: Record<Part, string> = {
-			rows: JSON.stringify(rows),
-			digest: JSON.stringify(digest ?? digestOf(rows)),
+		let contents: Record<Part, string | Buffer> = {
+			rows: gzipSync(JSON.stringify(rows), COMPRESSION),
+			digest: gzipSync(JSON.stringify(digest ?? digestOf(rows)), COMPRESSION),
 			meta: `${JSON.stringify({ ...meta, writtenAt: new Date().toISOString() }, null, `\t`)}\n`,
 		}
 

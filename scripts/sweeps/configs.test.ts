@@ -19,6 +19,9 @@ const DIRECTORY = import.meta.dirname
 /** What stands in that directory besides sweep modules and their tests: the runner, which no case can import, its worker, the module the two measure a row through, and the module naming what a sweep result depends on. */
 const NOT_A_SWEEP = new Set([`run.ts`, `worker.ts`, `measure.ts`, `key.ts`])
 
+/** The directory of the axes the sweeps share, which the recursive listing reaches and the flat one does not; nothing in it is a sweep. */
+const AXES = `axes/`
+
 /** The stylesheet the configurations are put over; only what the rules object to about their options is read off the run. */
 const CODE = `a {\n\tcolor: pink;\n}\n`
 
@@ -84,7 +87,7 @@ describe(`the configurations the sweeps measure under`, () => {
 
 	it(`are read out of every file of the directory that is no module of the runner's`, () => {
 		// Three ways the two cases above could measure nothing and say nothing, one assertion each: a directory the flat listing under-reports is caught by the recursive listing; an empty listing, by the sweep named here, a canary that goes the day that sweep does; a file that is no sweep, by the last, which names it rather than letting a loop throw
-		expect(readdirSync(DIRECTORY, { recursive: true, encoding: `utf8` }).filter((entry) => entry.endsWith(`.ts`) && !entry.endsWith(`.test.ts`) && !NOT_A_SWEEP.has(entry)).toSorted()).toStrictEqual(files)
+		expect(readdirSync(DIRECTORY, { recursive: true, encoding: `utf8` }).filter((entry) => entry.endsWith(`.ts`) && !entry.endsWith(`.test.ts`) && !NOT_A_SWEEP.has(entry) && !entry.startsWith(AXES)).toSorted()).toStrictEqual(files)
 		expect(files).toContain(`colon-in-comment.ts`)
 		expect(modules.filter(([file]) => !sweeps.some(([name]) => name === file)).map(([file]) => file)).toStrictEqual([])
 		expect(sweeps.filter(([, sweep]) => sweep.configs.length === 0).map(([file]) => file)).toStrictEqual([])
