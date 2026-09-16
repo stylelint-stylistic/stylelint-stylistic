@@ -450,3 +450,19 @@ describe(`a bodiless at-rule the parser hands over with no source end`, () => {
 		expect(result.results[0]?.warnings.map((warning) => ({ line: warning.line, column: warning.column, endColumn: warning.endColumn }))).toEqual([{ line: 1, column: 12, endColumn: 13 }])
 	})
 })
+
+// A `never` of another namespace takes the semicolon away and this `always` writes it back in the same pass, and the at-rule the parser closed on that semicolon holds none of the run in front of the closing brace — the block's own raw does, so there is nothing for the `always` fix to move there ([#684](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/684)). Only a fixing run holds that state, so the file is asserted directly rather than through a case; both rules fix, so neither warning survives the run.
+describe(`a bodiless at-rule the parser closed on a semicolon`, () => {
+	it.each([
+		[`a single space`, `a { @content; }`],
+		[`a tab`, `a { @content;\t}`],
+		[`a line break`, `a { @content;\n}`],
+		[`the block of the issue, an indented at-rule between two breaks`, `a {\n\t@content;\n}\n`],
+	])(`keeps %s in front of the closing brace where a never listed first takes the semicolon away and an always writes it back`, async (_run, code) => {
+		let rules = { "@stylistic/scss/declaration-block-trailing-semicolon": `never`, [ruleName]: `always` }
+		let result = await stylelint.lint({ code, config: { plugins, rules }, fix: true })
+
+		expect(result.code).toBe(code)
+		expect(result.results[0]?.warnings).toEqual([])
+	})
+})

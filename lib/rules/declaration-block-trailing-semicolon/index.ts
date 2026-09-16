@@ -9,6 +9,7 @@ import { semicolonOutlivesTheFlag, standsInADeclarationBlock } from "../../utils
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
+import { lastNodeHoldsTheBlockAfter } from "../../utils/lastNodeHoldsTheBlockAfter/index.ts"
 import { lastNonCommentNode } from "../../utils/lastNonCommentNode/index.ts"
 import { nextNonCommentNode } from "../../utils/nextNonCommentNode/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
@@ -307,6 +308,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (message) {
 				let bodilessAtRule = swallowingAtRule(node)
+				// Whether the at-rule runs up to the closing brace, asked before the fix sets the flag, which would answer it no
+				let atRuleHoldsTheBlockAfter = Boolean(bodilessAtRule) && lastNodeHoldsTheBlockAfter(parent)
 				// The whitespace before the closing brace is parsed into the at-rule, not the block
 				let between = typeof bodilessAtRule?.raws.between === `string` ? bodilessAtRule.raws.between : ``
 				let beforeWhitespace = between.replace(TRAILING_CSS_WHITESPACE, ``)
@@ -327,9 +330,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								parent.raws.semicolon = true
 
 								if (bodilessAtRule) {
-									// The trailing whitespace goes to the block first, so the space lands in front of the semicolon
-									bodilessAtRule.raws.between = beforeWhitespace
-									parent.raws.after = between.slice(beforeWhitespace.length)
+									// The trailing whitespace goes to the block first, so the space lands in front of the semicolon; where a semicolon closed the at-rule at the parse, the at-rule holds none of that run and the block's raw holds it already, and the move took it off the file ([#684](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/684))
+									if (atRuleHoldsTheBlockAfter) {
+										bodilessAtRule.raws.between = beforeWhitespace
+										parent.raws.after = between.slice(beforeWhitespace.length)
+									}
 
 									if (whitespace) writeWhitespaceBeforeSemicolon(syntax, bodilessAtRule, whitespace)
 								}
