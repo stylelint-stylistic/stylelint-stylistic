@@ -76,6 +76,11 @@ testRule({
 			code: `a { background: URL(data:image/svg+xml;...0.5); }`,
 		},
 		{
+			// See #579
+			description: `an address behind a word ending in an escaped backslash and a digit, which open no escape to take the space between the word and the name`,
+			code: `a { b: x\\\\9 url(.5); }`,
+		},
+		{
 			description: `an import path carrying a fraction`,
 			code: `@import 'testfile.0.3.css'`,
 		},

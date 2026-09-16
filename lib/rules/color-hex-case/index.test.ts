@@ -20,6 +20,11 @@ testRule({
 			code: `a { stroke: url(#gradientA) }`,
 		},
 		{
+			// See #579
+			description: `an address behind a word ending in an escaped backslash and a digit, which open no escape to take the space between the word and the name`,
+			code: `a { b: \\\\9 url(#FFF); }`,
+		},
+		{
 			description: `a keyword, which carries no hash at all`,
 			code: `a { color: pink; }`,
 		},

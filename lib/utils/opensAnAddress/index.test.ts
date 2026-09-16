@@ -66,6 +66,13 @@ describe(`opensAnAddress`, () => {
 		expect(addressesOf(`\\75\r\nrl(a)`)).toEqual([`rl`])
 	})
 
+	// See #579
+	it(`an escaped backslash in front of the digits, which opens no escape and leaves the space dividing the value`, () => {
+		expect(addressesOf(`x\\\\9 url(a)`)).toEqual([`url`])
+		expect(addressesOf(`\\\\61 \\75 rl(a)`)).toEqual([`rl`])
+		expect(addressesOf(`x\\\\\\9 url(a)`)).toEqual([])
+	})
+
 	it(`a second whitespace character, which closes no escape and divides the value instead`, () => {
 		expect(addressesOf(`\\75  rl(a)`)).toEqual([])
 	})

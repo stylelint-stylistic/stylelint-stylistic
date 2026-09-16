@@ -96,6 +96,11 @@ testRule({
 			code: `a { margin: URL(13PX); }`,
 		},
 		{
+			// See #579
+			description: `an address behind a word ending in an escaped backslash and a digit, which open no escape to take the space between the word and the name`,
+			code: `a { b: x\\\\9 url(1PX); }`,
+		},
+		{
 			description: `a unit inside a property name`,
 			code: `a { marginPX: 10px; }`,
 		},

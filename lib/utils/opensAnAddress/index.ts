@@ -1,6 +1,7 @@
 import type { Node } from "postcss-value-parser"
 
-import { HEX_ESCAPE_TERMINATOR, TRAILING_HEX_ESCAPE } from "../../regexps.ts"
+import { HEX_ESCAPE_TERMINATOR } from "../../regexps.ts"
+import { endsInAnOpenHexEscape } from "../endsInAnOpenHexEscape/index.ts"
 import { namesAnAddress } from "../namesAnAddress/index.ts"
 
 /**
@@ -18,7 +19,7 @@ function readName (valueNode: Node, index: number, siblings: Node[]): string {
 		let word = siblings[at - 1]
 
 		if (space?.type !== `space` || !HEX_ESCAPE_TERMINATOR.test(space.value)) break
-		if (word?.type !== `word` || !TRAILING_HEX_ESCAPE.test(word.value)) break
+		if (word?.type !== `word` || !endsInAnOpenHexEscape(word.value)) break
 
 		name = `${word.value}${space.value}${name}`
 	}

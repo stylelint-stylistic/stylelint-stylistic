@@ -8,7 +8,7 @@ import { keysOf, multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** The spellings CSS reads as `url`, the runs that make an ordinary call, a name behind each thing that closes a scan state, a backslash-newline delimiter in front of and inside the name ([#566](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566)), and the three signs the tokenizer glues the name to where `postcss-value-parser` parts it, which left the parentheses an address to the parser alone. */
+/** The spellings CSS reads as `url`, the runs that make an ordinary call, a name behind each thing that closes a scan state, a backslash-newline delimiter in front of and inside the name ([#566](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566)), the three signs the tokenizer glues the name to where `postcss-value-parser` parts it, which left the parentheses an address to the parser alone, and a word ending in a digit behind an escaped backslash, which opens no escape to weld the name onto ([#579](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/579)), beside the one backslash that does. */
 const NAMES: Record<string, string> = {
 	plain: `url`,
 	upper: `URL`,
@@ -33,9 +33,12 @@ const NAMES: Record<string, string> = {
 	backslashThenCarriageReturnInFront: `\\\rurl`,
 	backslashThenFormFeedInFront: `\\\furl`,
 	backslashThenFormFeedInside: `u\\\frl`,
+	escapedBackslashAndDigitInFront: `x\\\\9 url`,
+	escapedBackslashAndDigitThenHexEscapedLetter: `x\\\\9 \\75 rl`,
+	hexEscapeAndSpaceInFront: `x\\9 url`,
 }
 
-/** Bare, quoted, and either behind whitespace, each with characters a reader may misread; the two spellings a quotation mark and a parenthesis behind whitespace make are the divergence [#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557) closed, the three block comments behind whitespace the one [#660](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/660) closed, and the three comments holding a parenthesis in parentheses Sass reads as code the one [#661](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/661) closed; a parenthesis nothing closes, bare and inside a string, is what parts the writes [#533](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/533) refused from the writes it kept; `bareSlashStar` and `bareBlockComment` are their control, the same delimiters with no whitespace in front of them, except under `postcss-scss`, where Sass reads `bareBlockComment`'s parentheses as code; the two strings holding the opening delimiter of a comment are what a string hides inside parentheses whose comments are read, the spaced one under every syntax and the other under `postcss-scss`; the two strings holding a parenthesis behind whitespace are where `postcss-value-parser` closed the call inside the string, `bareStringHoldingParenthesis` their control. */
+/** Bare, quoted, and either behind whitespace, each with characters a reader may misread; the two spellings a quotation mark and a parenthesis behind whitespace make are the divergence [#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557) closed, the three block comments behind whitespace the one [#660](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/660) closed, and the three comments holding a parenthesis in parentheses Sass reads as code the one [#661](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/661) closed; a parenthesis nothing closes, bare and inside a string, is what parts the writes [#533](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/533) refused from the writes it kept; `bareSlashStar` and `bareBlockComment` are their control, the same delimiters with no whitespace in front of them, except under `postcss-scss`, where Sass reads `bareBlockComment`'s parentheses as code; the two strings holding the opening delimiter of a comment are what a string hides inside parentheses whose comments are read, the spaced one under every syntax and the other under `postcss-scss`; the two strings holding a parenthesis behind whitespace are where `postcss-value-parser` closed the call inside the string, `bareStringHoldingParenthesis` their control; `bareDimensionColourFraction` holds what the case, zero and colour rules write where they read no address. */
 const ADDRESSES: Record<string, string> = {
 	bareProtocol: `http://a/b.png`,
 	bareSlashStar: `a/*b.png`,
@@ -45,6 +48,7 @@ const ADDRESSES: Record<string, string> = {
 	bareOpenParenthesis: `a(b.png`,
 	quotedOpenParenthesis: `"a(b.png"`,
 	bareOneCharacter: `a`,
+	bareDimensionColourFraction: `1.0PX,#FFF,.5`,
 	quotedProtocol: `"http://a/b.png"`,
 	quotedThenSlashes: `"a" // c`,
 	quotedThenSlashesBroken: `"a" // c\n`,
