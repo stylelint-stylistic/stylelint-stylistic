@@ -21,7 +21,7 @@ const corpus: Sweep[`corpus`] = multiply({ place: keysOf(VALUE_PLACES), name: UR
 	return wrap(`${spelledName}(${address})`)
 })
 
-/** Every rule reading the inline-comment guard, the four writers reading the comment spans that move over these forms, the bang writer and the three solidus writers behind which a run switches the reading of the parentheses, the value-parser readers that wrote into a string holding a parenthesis, and `max-line-length` at a maximum on either side of these lines' width. */
+/** Every rule reading the inline-comment guard, the four writers reading the comment spans that move over these forms, the bang writer, the range operator writer and the three solidus writers behind which a run switches the reading of the parentheses, the value-parser readers that wrote into a string holding a parenthesis, and `max-line-length` at a maximum on either side of these lines' width. */
 const configs: Sweep[`configs`] = ([
 	[`block-closing-brace-newline-before`, [`always`, `never-multi-line`]],
 	[`block-closing-brace-space-before`, [`always`, `never`]],
@@ -43,6 +43,7 @@ const configs: Sweep[`configs`] = ([
 	[`function-whitespace-after`, [`always`, `never`]],
 	[`indentation`, [`tab`]],
 	[`media-feature-parentheses-space-inside`, [`always`, `never`]],
+	[`media-feature-range-operator-space-after`, [`always`, `never`]],
 	[`named-grid-areas-alignment`, [true]],
 	[`media-feature-slash-space-after`, [`always`, `never`]],
 	[`media-query-list-comma-space-before`, [`always`, `never`]],

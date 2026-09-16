@@ -6,8 +6,10 @@ import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findMediaOperator } from "../../utils/findMediaOperator/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { rereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { runBehind } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -52,6 +54,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			findMediaOperator(syntax, atRule, result, (match, params, node) => {
 				let endIndex = match.startIndex + match.target.length - 1
 				let problemIndex = endIndex + atRuleParamIndex(node) + 1
+				// A write parting the name of a bare address from the operator or joining it to the operator switches how PostCSS reads the parentheses, as behind a comma or a bang; the warning stands without a fix there
+				let isFixable = !rereadsAnAddress(params, { start: endIndex + 1, end: endIndex + 1 + runBehind(params, endIndex).length, text: primary === `always` ? ` ` : `` }, syntax.inlineComments(node, result))
 
 				checker.after({
 					source: params,
@@ -64,9 +68,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 							endIndex: problemIndex,
 							result,
 							ruleName,
-							fix () {
-								fixOperatorIndices.push(endIndex)
-							},
+							...(isFixable && { fix: (): void => { fixOperatorIndices.push(endIndex) } }),
 						})
 					},
 				})

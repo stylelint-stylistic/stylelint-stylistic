@@ -2,7 +2,7 @@
  * The two axes of a `url()`: the spellings of its name, and what its parentheses hold. Kept apart from the sweeps so that a sweep about one form takes the spellings it needs rather than the product of them all.
  */
 
-/** The spellings CSS reads as `url`, the runs that make an ordinary call, a name behind each thing that closes a scan state, a backslash-newline delimiter in front of and inside the name ([#566](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566)), and one glued to a word in front, which `postcss-value-parser` took into the name, the three signs the tokenizer glues the name to where `postcss-value-parser` parts it, which left the parentheses an address to the parser alone, a bang glued to the name and parted from it by a space, where a write behind the bang switches how the tokenizer reads the parentheses, and a word ending in a digit behind an escaped backslash, which opens no escape to weld the name onto ([#579](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/579)), beside the one backslash that does. */
+/** The spellings CSS reads as `url`, the runs that make an ordinary call, a name behind each thing that closes a scan state, a backslash-newline delimiter in front of and inside the name ([#566](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566)), and one glued to a word in front, which `postcss-value-parser` took into the name, the three signs the tokenizer glues the name to where `postcss-value-parser` parts it, which left the parentheses an address to the parser alone, a bang glued to the name and parted from it by a space, where a write behind the bang switches how the tokenizer reads the parentheses, a range operator likewise, and a word ending in a digit behind an escaped backslash, which opens no escape to weld the name onto ([#579](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/579)), beside the one backslash that does. */
 const URL_NAMES: Record<string, string> = {
 	plain: `url`,
 	upper: `URL`,
@@ -19,6 +19,8 @@ const URL_NAMES: Record<string, string> = {
 	behindSolidus: `1/url`,
 	behindBang: `1!url`,
 	behindBangAndSpace: `1! url`,
+	behindRangeOperator: `1>=url`,
+	behindRangeOperatorAndSpace: `1>= url`,
 	behindVerticalTab: `1\vurl`,
 	behindString: `"x"url`,
 	behindBlockComment: `/*c*/url`,
