@@ -8,7 +8,7 @@ import { keysOf, multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** The spellings CSS reads as `url`, the runs that make an ordinary call, a name behind each thing that closes a scan state, a backslash-newline delimiter in front of and inside the name ([#566](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566)), the three signs the tokenizer glues the name to where `postcss-value-parser` parts it, which left the parentheses an address to the parser alone, a bang glued to the name and parted from it by a space, where a write behind the bang switches how the tokenizer reads the parentheses, and a word ending in a digit behind an escaped backslash, which opens no escape to weld the name onto ([#579](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/579)), beside the one backslash that does. */
+/** The spellings CSS reads as `url`, the runs that make an ordinary call, a name behind each thing that closes a scan state, a backslash-newline delimiter in front of and inside the name ([#566](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566)), and one glued to a word in front, which `postcss-value-parser` took into the name, the three signs the tokenizer glues the name to where `postcss-value-parser` parts it, which left the parentheses an address to the parser alone, a bang glued to the name and parted from it by a space, where a write behind the bang switches how the tokenizer reads the parentheses, and a word ending in a digit behind an escaped backslash, which opens no escape to weld the name onto ([#579](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/579)), beside the one backslash that does. */
 const NAMES: Record<string, string> = {
 	plain: `url`,
 	upper: `URL`,
@@ -35,6 +35,11 @@ const NAMES: Record<string, string> = {
 	backslashThenCarriageReturnInFront: `\\\rurl`,
 	backslashThenFormFeedInFront: `\\\furl`,
 	backslashThenFormFeedInside: `u\\\frl`,
+	backslashThenLineFeedBehindWord: `a\\\nurl`,
+	backslashThenCarriageReturnBehindColour: `#FFF\\\rurl`,
+	backslashThenFormFeedBehindDimension: `1PX\\\furl`,
+	backslashThenLineFeedBehindEscapedBackslash: `\\\\\\\nurl`,
+	backslashesThenLineFeedsAroundWord: `\\\na\\\n\\\nurl`,
 	escapedBackslashAndDigitInFront: `x\\\\9 url`,
 	escapedBackslashAndDigitThenHexEscapedLetter: `x\\\\9 \\75 rl`,
 	hexEscapeAndSpaceInFront: `x\\9 url`,

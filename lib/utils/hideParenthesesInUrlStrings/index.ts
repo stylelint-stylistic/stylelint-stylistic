@@ -10,6 +10,12 @@ import { readIdentifierCharacter } from "../readIdentifierCharacter/index.ts"
 /** The mask, as {@link hideQuotesInComments} writes it: `?` opens and closes nothing. */
 const MASK = `?`
 
+/** A character to write over, and the one written. */
+type Mask = {
+	index: number,
+	text: string,
+}
+
 /**
  * Skips a string as PostCSS's tokenizer reads one: to the next mark of its kind no escape holds, or to the end of the text.
  * @param text - The text holding the string.
@@ -105,46 +111,55 @@ function findHeldParentheses (text: string, spans: (CommentSpan | InlineCommentS
 }
 
 /**
- * Finds the backslash of every divider in the run opening the name of a call the rest of which spells `url`. A backslash in front of a line break spells nothing and is a word of its own to PostCSS, the break behind it whitespace, so the name opens behind the two as it does behind a plain `url(`; the parser steps over whatever a backslash stands in front of, keeps both inside the name, and reads the parentheses as code ([#588](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/588)). A divider behind a character of a word is left: the parser keeps that word in the name too, and the mask would stand in its reading as a character of the word.
+ * Finds the backslash of every divider in the name of a call the part of which behind the last divider spells `url`, with the mask each takes. A backslash in front of a line break spells nothing and is a word of its own to PostCSS, the break behind it whitespace, so the name opens behind the two as it does behind a plain `url(`; the parser steps over whatever a backslash stands in front of, keeps both inside the name, and reads the parentheses as code ([#588](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/588)). A divider in the run opening the name takes the mask, which is no boundary to the parser and leaves no whitespace beside what stands in front; one behind a character of a word takes a space, which ends that word as the grammar does, where the mask would read as a character of it.
  * @param text - The value parsed.
  * @param spans - The comment spans found in the value, both kinds.
- * @returns The indices.
+ * @returns The indices and their masks.
  */
-function findDividersInUrlNames (text: string, spans: (CommentSpan | InlineCommentSpan)[]): number[] {
-	let dividers: number[] = []
+function findDividersInUrlNames (text: string, spans: (CommentSpan | InlineCommentSpan)[]): Mask[] {
+	let dividers: Mask[] = []
 
 	valueParser(text).walk((node) => {
 		// A `//` comment the break closes may hold the backslash, and the name behind it is code all the same
 		if (node.type !== `function` || findCommentSpanAt(node.sourceIndex + node.value.length, spans)) return
 
-		let backslashes: number[] = []
+		let found: Mask[] = []
 		let opening = 0
+		let behindWord = false
 
-		// Only a run of dividers opening the name: the mask is no boundary to the parser, and one behind a character of a word would read as part of that word
-		while (opening < node.value.length && readIdentifierCharacter(node.value, opening).character === undefined) {
-			backslashes.push(node.sourceIndex + opening)
+		for (let at = 0; at < node.value.length;) {
+			let { character, end } = readIdentifierCharacter(node.value, at)
+
+			if (character !== undefined) {
+				behindWord = true
+				at = end
+				continue
+			}
+
+			found.push({ index: node.sourceIndex + at, text: behindWord ? ` ` : MASK })
 			// The break the backslash stands in front of is the value's whitespace, no character of the name
-			opening += 2
+			at += 2
+			opening = at
 		}
 
-		if (backslashes.length > 0 && namesAnAddress(node.value.slice(opening))) dividers.push(...backslashes)
+		if (found.length > 0 && namesAnAddress(node.value.slice(opening))) dividers.push(...found)
 	})
 
 	return dividers
 }
 
 /**
- * Writes the mask over the characters at the indices.
+ * Writes the masks over the characters at their indices.
  * @param text - The text to mask.
- * @param indices - The indices, in code units, as the parse counts.
+ * @param masks - The indices, in code units, as the parse counts, and the character each takes.
  * @returns The masked text, as long as the text.
  */
-function maskAt (text: string, indices: number[]): string {
-	if (indices.length === 0) return text
+function maskAt (text: string, masks: Mask[]): string {
+	if (masks.length === 0) return text
 
 	let characters = text.split(``)
 
-	for (let index of indices) characters[index] = MASK
+	for (let { index, text: mask } of masks) characters[index] = mask
 
 	return characters.join(``)
 }
@@ -154,7 +169,7 @@ function maskAt (text: string, indices: number[]): string {
  *
  * The parser reads everything behind `url(` to the first `)` as one word wherever no quotation mark opens the parentheses. PostCSS reads the parentheses as code, where a string holds its `)`, on two triggers this asks about: whitespace of its own behind the `(`, and a name its tokenizer does not take as a word of its own, which is every boundary of the parser's the tokenizer does not share — a comma, a solidus, a star inside `calc()` and every code point of 32 and under outside its five whitespaces. A quotation mark behind the `(` is a third trigger of the tokenizer's and is not asked about: the parser reads no address there either. The rules skipping the address read the string's tail as code of the value and wrote into it. A block comment the spans handed in do not hold is read here as well; a comment they hold is left to the caller's guards.
  *
- * A divider is a backslash in front of a line break, which spells nothing and leaves the name behind the break a name of its own; the mask stands in for the backslash alone, the break staying the whitespace it is to PostCSS, so the parser reads the name behind the break as it reads one standing alone.
+ * A divider is a backslash in front of a line break, which spells nothing and leaves the name behind the break a name of its own; the mask, or a space behind a character of a word, stands in for the backslash alone, the break staying the whitespace it is to PostCSS, so the parser reads the name behind the break as it reads one standing alone.
  *
  * The parse is remade after each pass of either mask, since the parser reads on to the next `)`, which another string may hold, and a string's parenthesis once masked may bring a divider to light, as a divider may an address holding such a string. The mask keeps the width, so parse indexes count in the file's text.
  * @param text - The value or params to mask.
@@ -172,7 +187,7 @@ export function hideParenthesesInUrlStrings (text: string, spans: (CommentSpan |
 
 		let held = findHeldParentheses(masked, spans)
 
-		masked = maskAt(masked, held)
+		masked = maskAt(masked, held.map((index) => ({ index, text: MASK })))
 		found = dividers.length > 0 || held.length > 0
 	}
 

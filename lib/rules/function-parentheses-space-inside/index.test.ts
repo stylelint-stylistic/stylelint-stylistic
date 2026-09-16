@@ -80,6 +80,24 @@ testRule({
 			],
 		},
 		{
+			// An address whose divider is glued to a word reads as a plain address
+			description: `the same address with a word glued in front of the backslash, which the backslash ends`,
+			code: `a { b: a\\\nurl(c.png) f(1px); }`,
+			fixed: `a { b: a\\\nurl(c.png) f( 1px ); }`,
+			warnings: [
+				{
+					line: 2,
+					column: 14,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 2,
+					column: 16,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
 			// See #533
 			description: `a call standing beside an address written in capitals, whose parentheses are spaced out while the address is left as the file spells it`,
 			code: `a { b: URL(a) f(1); }`,

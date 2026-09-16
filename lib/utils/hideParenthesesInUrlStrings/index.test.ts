@@ -50,9 +50,19 @@ describe(`hideParenthesesInUrlStrings`, () => {
 	})
 
 	// The mask is no boundary to the parser, so behind a character of a word it would read as a character of that word, and a rule writing the word would write it into the file
-	it(`a divider behind a character of a word, which is left as the parser reads it`, () => {
-		expect(hideParenthesesInUrlStrings(`a\\\nurl(b)`)).toBe(`a\\\nurl(b)`)
-		expect(hideParenthesesInUrlStrings(`#FFF\\\nurl(a.png)`)).toBe(`#FFF\\\nurl(a.png)`)
+	it(`a divider behind a character of a word, which takes a space ending the word`, () => {
+		expect(hideParenthesesInUrlStrings(`a\\\nurl(b)`)).toBe(`a \nurl(b)`)
+		expect(hideParenthesesInUrlStrings(`#FFF\\\nurl(a.png)`)).toBe(`#FFF \nurl(a.png)`)
+		expect(hideParenthesesInUrlStrings(`\\\\\\\nurl(a)`)).toBe(`\\\\ \nurl(a)`)
+	})
+
+	it(`dividers behind a word and in front of it, of which only the opening run takes the mask`, () => {
+		expect(hideParenthesesInUrlStrings(`\\\na\\\n\\\rurl(b)`)).toBe(`?\na \n \rurl(b)`)
+	})
+
+	it(`a divider behind a character of a word in front of another name`, () => {
+		expect(hideParenthesesInUrlStrings(`a\\\nf(b)`)).toBe(`a\\\nf(b)`)
+		expect(hideParenthesesInUrlStrings(`a\\\nurl\\\nf(b)`)).toBe(`a\\\nurl\\\nf(b)`)
 	})
 
 	it(`a divider behind an address whose string holds a parenthesis, which the parser reads as text of that address until the parenthesis is masked`, () => {

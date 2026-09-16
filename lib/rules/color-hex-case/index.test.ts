@@ -74,6 +74,15 @@ testRule({
 			message: messages.expected(`#FFF`, `#fff`),
 		},
 		{
+			// The backslash ends the colour, and the parser read the colour as part of the address's name
+			description: `a colour glued to a backslash and a break in front of an address, which end the colour`,
+			code: `a { background: #FFF\\\nurl(a.png); }`,
+			fixed: `a { background: #fff\\\nurl(a.png); }`,
+			line: 1,
+			column: 17,
+			message: messages.expected(`#FFF`, `#fff`),
+		},
+		{
 			description: `a capital letter in a colour of five digits, which is no valid length but is lowered all the same`,
 			code: `a { color: #Ababa; }`,
 			fixed: `a { color: #ababa; }`,

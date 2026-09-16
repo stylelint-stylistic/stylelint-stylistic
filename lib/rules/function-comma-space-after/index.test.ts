@@ -290,6 +290,15 @@ testRule({
 			message: messages.rejectedAfter(),
 		},
 		{
+			// An address whose divider is glued to a number reads as a plain address
+			description: `the same address with a number glued in front of the backslash, which the backslash ends`,
+			code: `a { b: 1px\\\nurl("c", format("woff2")) f(1px, 2px); }`,
+			fixed: `a { b: 1px\\\nurl("c", format("woff2")) f(1px,2px); }`,
+			line: 2,
+			column: 32,
+			message: messages.rejectedAfter(),
+		},
+		{
 			description: `a space behind the comma`,
 			code: `a { transform: translate(1, 1); }`,
 			fixed: `a { transform: translate(1,1); }`,
