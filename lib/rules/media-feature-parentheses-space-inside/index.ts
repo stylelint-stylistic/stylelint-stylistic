@@ -10,6 +10,7 @@ import { findCommentSpanAt, findCommentSpanHolding } from "../../utils/findComme
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
+import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { splitSpaceNodesAtWords } from "../../utils/splitSpaceNodesAtWords/index.ts"
 
@@ -110,9 +111,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// The value parser calls a control character such as a vertical tab whitespace where the tokenizer calls it a word, and both fixes rewrite a whole side
 			splitSpaceNodesAtWords(parsedParams.nodes)
 
-			parsedParams.walk((node) => {
+			parsedParams.walk((node, at, siblings) => {
 				// A comment's `(` is its own; an unclosed comment holds the rest of the query, so the walk goes on inside
 				if (findCommentSpanHolding(node, comments)) return
+
+				// A call opening an address holds no parentheses of the query, and the whitespace behind its `(` is what parts the parenthesis from the address, which is what a tokenizer reads one token by ([#533](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/533)): taking it away hands a string's `)` the end of the address and makes text of a comment. Passed over whole, and the walk goes no further in, as it does in both `function-parentheses-*-inside` rules.
+				if (opensAnAddress(node, at, siblings)) return false
 
 				if (node.type === `function`) {
 					// The `)` the parser closed the feature on may be one the file writes inside a comment: it knows nothing of a `//` comment and closes a `/*\/` one on its own star, so either kind can hand it a parenthesis of a comment's text and the fixes then write inside that text ([#347](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/347)). The whole feature goes, as it does in both `function-parentheses-*-inside` rules, the parenthesis the file does spell being one the parser never returned. Behind `unclosed`, since such a node's end index is not its own `)` but a nested call's or one past the text, and what a fix writes at the end of its params is #575.

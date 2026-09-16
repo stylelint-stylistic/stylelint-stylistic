@@ -243,6 +243,24 @@ testRule({
 				},
 			],
 		},
+		{
+			// The run behind the `(` of an address is what parts the parenthesis from what it holds, and a tokenizer reads the two spellings by different rules, so this option writes no space there
+			description: `a feature holding an address whose own parentheses hold no whitespace, spaced out around the address while the address is left as it stands`,
+			code: `@media (c: url(a b)) { a { b: 1px } }`,
+			fixed: `@media ( c: url(a b) ) { a { b: 1px } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 19,
+					message: messages.expectedClosing,
+				},
+			],
+		},
 	],
 })
 
@@ -284,6 +302,11 @@ testRule({
 			// See #347
 			description: `a parenthesis written in the text of a comment opened by a solidus, a star and a solidus, which closes the feature to the parser`,
 			code: `@media (a: 1 /*/ ) */ ) { a { b: c; } }`,
+		},
+		{
+			// The address is named by the spelling the file carries, so an escape inside the name is one a reader of the address resolves
+			description: `a feature holding an address whose name is written with a hexadecimal escape, its whitespace left as it stands`,
+			code: `@media (c: \\75 rl( a b )) { a { b: 1px } }`,
 		},
 	],
 
@@ -521,6 +544,42 @@ testRule({
 				{
 					line: 1,
 					column: 13,
+					message: messages.rejectedClosing,
+				},
+			],
+		},
+		{
+			// Taking the run behind the `(` of an address away hands the tokenizer the parenthesis of the string as the address's end, and the file stops parsing
+			description: `a feature holding an address whose string holds a closing parenthesis, whose whitespace is taken away while the address keeps its own`,
+			code: `@media ( c: url( a ")" b ) ) { a { b: 1px } }`,
+			fixed: `@media (c: url( a ")" b )) { a { b: 1px } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 27,
+					message: messages.rejectedClosing,
+				},
+			],
+		},
+		{
+			// The same run is what makes a comment inside an address a comment rather than characters of the address
+			description: `the same feature holding an address with a comment in place of the string`,
+			code: `@media ( c: url( a /* c */ ) ) { a { b: 1px } }`,
+			fixed: `@media (c: url( a /* c */ )) { a { b: 1px } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 29,
 					message: messages.rejectedClosing,
 				},
 			],
