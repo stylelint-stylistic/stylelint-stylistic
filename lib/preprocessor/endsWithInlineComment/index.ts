@@ -1,15 +1,18 @@
 import { IDENTIFIER_CODE_POINT, INLINE_COMMENT_BREAK, INLINE_COMMENT_BREAK_OR_FORM_FEED } from "../../regexps.ts"
+import { escapeReading, findUrlTokenEnd } from "../../utils/findUrlTokenEnd/index.ts"
 import { namesAnAddress } from "../../utils/namesAnAddress/index.ts"
 import { readAddress } from "../../utils/readAddress/index.ts"
 import { readEscapedCharacter } from "../../utils/readEscapedCharacter/index.ts"
 import type { InlineCommentReading } from "../readsInlineComments/index.ts"
 
-/** Where a scan stands; every state returning to code resets `wordStart`. */
+/** Where a scan stands; every state returning to code resets `wordStart`. `previousStep` is where the last step in code opened, and `urlTokenEnd` where the `postcss-scss` url token the scan stands in ends. */
 export type Scan = {
 	state: `blockComment` | `code` | `inlineComment` | `string`,
 	index: number,
 	openingQuote: string,
 	wordStart: number,
+	previousStep: number,
+	urlTokenEnd: number,
 }
 
 /**
@@ -24,6 +27,7 @@ function readInsideInlineComment (text: string, scan: Scan, reading: InlineComme
 	if ((reading.endsOnFormFeed ? INLINE_COMMENT_BREAK_OR_FORM_FEED : INLINE_COMMENT_BREAK).test(char)) {
 		scan.state = `code`
 		scan.wordStart = scan.index + 1
+		scan.previousStep = scan.index
 	}
 }
 
@@ -48,7 +52,13 @@ function readInsideBlockComment (text: string, scan: Scan): void {
 function readInsideString (text: string, scan: Scan): void {
 	let char = text[scan.index]
 
-	if (char === `\\`) scan.index += 1
+	// The tokenizer reads no string inside a url token, so the `)` closing the token closes one opened inside it
+	if (scan.index === scan.urlTokenEnd - 1) {
+		scan.state = `code`
+		scan.wordStart = scan.index + 1
+		scan.previousStep = scan.index
+	}
+	else if (char === `\\` && scan.index + 1 !== scan.urlTokenEnd - 1) scan.index += 1
 	else if (char === scan.openingQuote) {
 		scan.state = `code`
 		scan.wordStart = scan.index + 1
@@ -66,10 +76,14 @@ function readInsideString (text: string, scan: Scan): void {
 function readInsideCode (text: string, scan: Scan, reading: InlineCommentReading): void {
 	let char = text.charAt(scan.index)
 	let nextChar = text[scan.index + 1]
+	let step = scan.index
+
+	// `\61 url(` and `url( a(b) \//c )` are one token to `postcss-scss`, which reads no comment inside it, and Sass reads `\/` there as an escape
+	if (char === `u`) scan.urlTokenEnd = Math.max(scan.urlTokenEnd, findUrlTokenEnd(text, scan.index, scan.previousStep, reading))
 
 	if (char === `\\`) {
 		// The whole escape is one character; a backslash spelling nothing leaves its break to the next step
-		let escaped = readEscapedCharacter(text, scan.index, reading)
+		let escaped = readEscapedCharacter(text, scan.index, escapeReading(scan.index, scan.urlTokenEnd, reading))
 
 		scan.index = escaped.end - 1
 	}
@@ -100,6 +114,8 @@ function readInsideCode (text: string, scan: Scan, reading: InlineCommentReading
 	else if (!(char === `}` || IDENTIFIER_CODE_POINT.test(char))) {
 		scan.wordStart = scan.index + 1
 	}
+
+	scan.previousStep = step
 }
 
 /** The reader of one character, by state. */
@@ -120,7 +136,7 @@ const NOTHING_SAID = { spells: true, keeps: false, answered: false, tokenizes: f
  * @returns True if the scan ends inside a `//` comment.
  */
 function scanEndsInsideInlineComment (text: string, reading: InlineCommentReading): boolean {
-	let scan: Scan = { state: `code`, index: 0, openingQuote: ``, wordStart: 0 }
+	let scan: Scan = { state: `code`, index: 0, openingQuote: ``, wordStart: 0, previousStep: -1, urlTokenEnd: 0 }
 
 	while (scan.index < text.length) {
 		READ_INSIDE[scan.state](text, scan, reading)

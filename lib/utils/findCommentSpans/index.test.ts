@@ -150,6 +150,41 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`a\\//b 1px`, SCSS)).toEqual([{ start: 2, end: 9, isInline: true }])
 	})
 
+	// `postcss-scss` reads no comment inside the parentheses it takes as one token behind the word, and Sass reads the escape there
+	it(`the same double slash inside such parentheses behind a name the word ends after an escape or an interpolation, and behind a pair of parentheses inside them`, () => {
+		expect(findCommentSpans(`\\61 url( a\\// c ) 1px`, SCSS)).toEqual([])
+		expect(findCommentSpans(`#{$p}url( a\\// c ) 1px`, SCSS)).toEqual([])
+		expect(findCommentSpans(`url( a( b ) \\//c ) 1px`, SCSS)).toEqual([])
+	})
+
+	// The tokenizer ends the token on the first parenthesis to balance it, and reads the comment behind that one
+	it(`the same double slash behind a parenthesis a backslash stands in front of, behind one inside a comment or a string, and behind the token`, () => {
+		expect(findCommentSpans(`\\61 url( a\\) \\//c ) 1px`, SCSS)).toEqual([{ start: 14, end: 23, isInline: true }])
+		expect(findCommentSpans(`\\61 url( /* ) */ \\//c ) 1px`, SCSS)).toEqual([{ start: 9, end: 16, isInline: false }, { start: 18, end: 27, isInline: true }])
+		expect(findCommentSpans(`\\61 url( a\\//" ) \\//c " 1px`, SCSS)).toEqual([{ start: 18, end: 27, isInline: true }])
+		expect(findCommentSpans(`\\61 url(a) \\//c 1px`, SCSS)).toEqual([{ start: 12, end: 19, isInline: true }])
+	})
+
+	// Each of these ends a token, so the word behind it is one of its own
+	it(`the same double slash inside such parentheses behind a closing parenthesis, a bare address and a line an inline comment ends`, () => {
+		expect(findCommentSpans(`a)url(a(b)\\//c) 1px`, SCSS)).toEqual([])
+		expect(findCommentSpans(`url(a)url(a(b)\\//c) 1px`, SCSS)).toEqual([])
+		expect(findCommentSpans(`// c\nurl(a(b)\\//c) 1px`, SCSS)).toEqual([{ start: 0, end: 4, isInline: true }])
+	})
+
+	// The tokenizer reads an interpolation whole, so a word inside it opens no token, and the one it closes past the parentheses is read as none
+	it(`the same double slash behind parentheses an interpolation opens in front of and closes inside`, () => {
+		expect(findCommentSpans(`#{ url( a( b ) } \\//c ) 1px`, SCSS)).toEqual([{ start: 18, end: 27, isInline: true }])
+	})
+
+	// The tokenizer reads a word of its own in `aurl` and `/url`, and parentheses a quotation mark stands against as code; behind whitespace the mark is read the same, since a fix taking the whitespace away leaves the comment
+	it(`the same double slash where the tokenizer takes no such token, and behind a string opening such parentheses after whitespace`, () => {
+		expect(findCommentSpans(`aurl(a\\//c) 1px`, SCSS)).toEqual([{ start: 7, end: 15, isInline: true }])
+		expect(findCommentSpans(`\\/url(a\\//c) 1px`, SCSS)).toEqual([{ start: 8, end: 16, isInline: true }])
+		expect(findCommentSpans(`url("a" \\//c) 1px`, SCSS)).toEqual([{ start: 9, end: 17, isInline: true }])
+		expect(findCommentSpans(`\\61 url( "a" \\//c ) 1px`, SCSS)).toEqual([{ start: 14, end: 23, isInline: true }])
+	})
+
 	// The grammar reads the escape and PostCSS's tokenizer lets none cover a solidus, so all three parsers hand back the declaration with the comment cut out of its value. See #665
 	it(`a slash an escape spells in front of a star, which the parsers read as a comment all the same`, () => {
 		expect(findCommentSpans(`a\\/*c*/ 1px`)).toEqual([{ start: 2, end: 7, isInline: false }])

@@ -166,6 +166,29 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`b: url(a\\//x) `, SCSS)).toBe(false)
 	})
 
+	// `postcss-scss` reads no comment inside the parentheses it takes as one token behind the word, and Sass reads the escape there
+	it(`the same double slash inside such parentheses behind a name the word ends after an escape, and behind a pair of parentheses inside them`, () => {
+		expect(endsWithInlineComment(`b: \\61 url( a\\// c ) 1px`, SCSS)).toBe(false)
+		expect(endsWithInlineComment(`b: url( a( b ) \\//c ) 1px`, SCSS)).toBe(false)
+	})
+
+	// The tokenizer reads a word of its own in `aurl` and ends the token on the parenthesis behind a backslash
+	it(`the same double slash where the tokenizer takes no such token, and behind the parenthesis ending one`, () => {
+		expect(endsWithInlineComment(`b: aurl(a\\//c) 1px`, SCSS)).toBe(true)
+		expect(endsWithInlineComment(`b: \\61 url( a\\) \\//c ) 1px`, SCSS)).toBe(true)
+	})
+
+	// The tokenizer reads no string inside the token, so the parenthesis closing the token closes the string, and the comment behind is its own
+	it(`the same double slash behind the parenthesis ending such a token inside a string, one behind a backslash included`, () => {
+		expect(endsWithInlineComment(`b: \\61 url( a\\//" ) \\//c " 1px`, SCSS)).toBe(true)
+		expect(endsWithInlineComment(`b: url( a\\") \\//c 1px`, SCSS)).toBe(true)
+	})
+
+	// A line an inline comment ends ends a token, so the word on the next line is one of its own
+	it(`the same double slash inside such parentheses on the line behind an inline comment`, () => {
+		expect(endsWithInlineComment(`b: // c\nurl(a(b)\\//c) 1px`, SCSS)).toBe(false)
+	})
+
 	// See #665
 	it(`a double slash standing behind such a comment, which the comment's own delimiter closed`, () => {
 		expect(endsWithInlineComment(`b: red \\/*x*/ // c`, LESS)).toBe(true)

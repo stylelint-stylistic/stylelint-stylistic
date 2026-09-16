@@ -2,6 +2,7 @@ import type { Node } from "postcss-value-parser"
 
 import { IDENTIFIER_CODE_POINT, LEADING_CSS_WHITESPACE, LINE_BREAK, TRAILING_CSS_WHITESPACE, TRAILING_HEX_ESCAPE, WHITESPACE_ONLY } from "../../regexps.ts"
 import { findInlineCommentEnd } from "../findInlineCommentEnd/index.ts"
+import { escapeReading, findUrlTokenEnd, skipStringInUrlToken } from "../findUrlTokenEnd/index.ts"
 import { isOnlyWhitespace } from "../isOnlyWhitespace/index.ts"
 import { namesAnAddress } from "../namesAnAddress/index.ts"
 import { type Address, readAddress } from "../readAddress/index.ts"
@@ -205,22 +206,30 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 	let behindIdentifier = false
 	// Whether an `@import` name has been read and its address not yet
 	let awaitsImportAddress = false
+	// Where the step just taken opened, which says whether a `url` read next is a word of its own to the tokenizer
+	let previousStep = -1
+	// Where the url token the walk stands in ends, a backslash inside it covering the solidus of a `//`, as it does to Sass
+	let urlTokenEnd = 0
 
 	while (index < text.length) {
 		let character = text.charAt(index)
 		let next = text[index + 1]
+		// Where this step opened
+		let step = index
 
 		if (character === `\\`) {
 			// A backslash makes the next character ordinary: `a\//b` opens no comment. An escape can spell a letter of `url`, so an address is looked for first.
 			let behindUrl = skipUrl(text, index, behindIdentifier, reading, spans, addresses, strings)
 
 			if (behindUrl === index) {
-				let escaped = readEscapedCharacter(text, index, reading)
+				let escaped = readEscapedCharacter(text, index, escapeReading(index, urlTokenEnd, reading))
 
 				index = escaped.end
 				behindIdentifier = escaped.character !== undefined
 			}
 			else {
+				// The step ends on what closed the address, a `)` or a quotation mark
+				step = behindUrl - 1
 				index = behindUrl
 				behindIdentifier = false
 			}
@@ -228,7 +237,7 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 			awaitsImportAddress = false
 		}
 		else if (character === `"` || character === `'`) {
-			let end = skipString(text, index)
+			let end = skipStringInUrlToken(text, index, urlTokenEnd)
 
 			strings.push({ start: index, end: Math.min(end, text.length) })
 
@@ -239,6 +248,9 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 			awaitsImportAddress = false
 		}
 		else if (character === `u` || character === `U`) {
+			// `\61 url(` and `url( a(b) \//c )` are one token to `postcss-scss`, which reads no comment inside it, and Sass reads `\/` there as an escape
+			urlTokenEnd = Math.max(urlTokenEnd, findUrlTokenEnd(text, index, previousStep, reading))
+
 			let behindUrl = skipUrl(text, index, behindIdentifier, reading, spans, addresses, strings)
 
 			if (behindUrl === index) {
@@ -246,6 +258,8 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 				behindIdentifier = true
 			}
 			else {
+				// The step ends on what closed the address, a `)` or a quotation mark
+				step = behindUrl - 1
 				index = behindUrl
 				behindIdentifier = false
 			}
@@ -282,6 +296,8 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 
 			if (!WHITESPACE_ONLY.test(character)) awaitsImportAddress = false
 		}
+
+		previousStep = step
 	}
 
 	return { comments: spans, addresses, strings }

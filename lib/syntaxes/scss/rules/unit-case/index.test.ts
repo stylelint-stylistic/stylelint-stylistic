@@ -605,5 +605,27 @@ testRule({
 			endColumn: 18,
 			message: messages.expected(`px\\*2rem`, `PX\\*2REM`),
 		},
+		{
+			// `postcss-scss` takes the parentheses behind the word as one token, and Sass reads the backslash as escaping the solidus, so neither reads a comment there
+			description: `a lower-case unit behind a call whose name ends in the word of an address after an escape, holding a double slash a backslash stands in front of`,
+			code: `a { b: \\61 url( a\\// c ) 1px; }`,
+			fixed: `a { b: \\61 url( a\\// c ) 1PX; }`,
+			line: 1,
+			column: 27,
+			endLine: 1,
+			endColumn: 29,
+			message: messages.expected(`px`, `PX`),
+		},
+		{
+			// The same token read past the parentheses nested inside it
+			description: `a lower-case unit behind an address holding a pair of parentheses and then such a double slash`,
+			code: `a { b: url( a( b ) \\//c ) 1px; }`,
+			fixed: `a { b: url( a( b ) \\//c ) 1PX; }`,
+			line: 1,
+			column: 28,
+			endLine: 1,
+			endColumn: 30,
+			message: messages.expected(`px`, `PX`),
+		},
 	],
 })
