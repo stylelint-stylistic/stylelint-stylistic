@@ -5,6 +5,7 @@ import { LEADING_CSS_WHITESPACE, WHITESPACE_THEN_BLOCK_COMMENT, WHITESPACE_THEN_
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { rereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { selectorListCommaWhitespaceChecker } from "../../utils/selectorListCommaWhitespaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
@@ -61,6 +62,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			isFixable: (selector, index, _inlineComments, ruleNode, sourceIndex, commaIndices) => {
 				let run = runBehind(selector, index)
 				let behindRun = selector.slice(index + 1 + run.length)
+
+				// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses
+				if (rereadsAnAddress(selector, { start: index + 1, end: index + 1 + run.length, text: primary.startsWith(`always`) ? ` ` : `` }, syntax.inlineComments(ruleNode, result))) return false
 
 				return writesTwinRun(shortName, ruleName, ruleNode, result, {
 					side: `after`,

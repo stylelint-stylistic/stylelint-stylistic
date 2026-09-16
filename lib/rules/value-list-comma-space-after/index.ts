@@ -6,6 +6,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { rereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { valueListCommaWhitespaceChecker } from "../../utils/valueListCommaWhitespaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
@@ -62,6 +63,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			isFixable: (declNode, index, declString, indices) => {
 				let run = runBehind(declString, index)
 				let behindRun = declString.slice(index + 1 + run.length)
+
+				// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses
+				if (rereadsAnAddress(declString, { start: index + 1, end: index + 1 + run.length, text: primary.startsWith(`always`) ? ` ` : `` }, syntax.inlineComments(declNode, result))) return false
 
 				return index >= declarationValueIndex(declNode) && writesTwinRun(shortName, ruleName, declNode, result, {
 					side: `after`,

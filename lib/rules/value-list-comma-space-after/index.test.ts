@@ -220,6 +220,33 @@ testRule({
 			column: 13,
 			message: messages.expectedAfter(),
 		},
+		{
+			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads its parentheses
+			description: `a comma glued to the name of a bare address holding a string with a closing parenthesis, which a written run would make the tokenizer close inside the string`,
+			code: `a { b: 1,url(a ")" b) 2px; }`,
+			fixed: `a { b: 1,url(a ")" b) 2px; }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
+		{
+			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads its parentheses
+			description: `the same address with whitespace between the name and the opening parenthesis, which leaves the name the word the tokenizer reads last`,
+			code: `a { b: 1,url (a ")" b) 2px; }`,
+			fixed: `a { b: 1,url (a ")" b) 2px; }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
+		{
+			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads its parentheses
+			description: `a comma glued to the name of a bare address whose closing parenthesis stands in a comment holding a quotation mark`,
+			code: `a { b: 1,url(a/*)"*/b) 2px; }`,
+			fixed: `a { b: 1,url(a/*)"*/b) 2px; }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
@@ -331,6 +358,15 @@ testRule({
 			fixed: `:root { --variable: 0,0; }`,
 			line: 1,
 			column: 22,
+			message: messages.rejectedAfter(),
+		},
+		{
+			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads its parentheses
+			description: `a run between a comma and the name of a bare address holding a quotation mark nothing closes, which taking the run away would make the tokenizer read as a string`,
+			code: `a { b: 1, url(a"b) 2px; }`,
+			fixed: `a { b: 1, url(a"b) 2px; }`,
+			line: 1,
+			column: 9,
 			message: messages.rejectedAfter(),
 		},
 	],

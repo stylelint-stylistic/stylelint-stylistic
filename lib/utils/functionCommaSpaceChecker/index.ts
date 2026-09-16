@@ -11,6 +11,7 @@ import { hideParenthesesInUrlStrings } from "../hideParenthesesInUrlStrings/inde
 import { hideQuotesInComments } from "../hideQuotesInComments/index.ts"
 import { opensAnAddress } from "../opensAnAddress/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
+import { rereadsAnAddress } from "../rereadsAnAddress/index.ts"
 import { isValueFunction } from "../typeGuards/index.ts"
 import { commentsRemovedBefore, withoutComments } from "../withoutComments/index.ts"
 import { runBehind, runInFront, type TwinRun, writesTwinRun } from "../writesTwinRun/index.ts"
@@ -194,12 +195,15 @@ export function functionCommaSpaceChecker (opts: {
 			/**
 			 * Asks whether a fix can write at the comma. A `before` rule writes over the whitespace in front of it, and where that is an inline comment's closing break either option would take the comma into the comment; an `after` rule writes behind the comma, where no comment is open.
 			 * @param commaNode - The div node holding the comma.
+			 * @param nodeIndex - Its index among the arguments.
 			 * @param checkIndex - Its index in the arguments the check reads.
 			 * @param index - Its index in the declaration.
-			 * @returns True where the fix writes into no comment, and its twin, reading the same run, leaves it that run ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)).
+			 * @returns True where the fix writes into no comment, parts the name of no bare address from the comma or joins it to the comma, which switches how PostCSS reads the parentheses, and its twin, reading the same run, leaves it that run ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)).
 			 */
-			function isFixable (commaNode: ValueParserDivNode, checkIndex: number, index: number): boolean {
+			function isFixable (commaNode: ValueParserDivNode, nodeIndex: number, checkIndex: number, index: number): boolean {
 				if (opts.fixPosition === `before` && opts.syntax.endsWithInlineComment(declValue.slice(0, commaNode.sourceIndex), reading)) return false
+
+				if (fix?.(commaNode, nodeIndex, functionNode).some((edit) => rereadsAnAddress(declValue, edit, reading))) return false
 
 				return writesTwinRun(opts.shortName, opts.checkedRuleName, decl, opts.result, twinRunAt(opts.fixPosition === `before` ? `before` : `after`, functionArguments, {
 					checkIndex,
@@ -228,7 +232,7 @@ export function functionCommaSpaceChecker (opts: {
 						node: decl,
 						result: opts.result,
 						ruleName: opts.checkedRuleName,
-						...(fix && isFixable(commaNode, checkIndex, index) && {
+						...(fix && isFixable(commaNode, nodeIndex, checkIndex, index) && {
 							fix: (): void => {
 								edits.push(...fix(commaNode, nodeIndex, functionNode))
 							},

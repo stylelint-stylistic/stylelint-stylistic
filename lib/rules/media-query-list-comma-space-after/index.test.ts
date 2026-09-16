@@ -178,6 +178,15 @@ testRule({
 			column: 18,
 			message: messages.expectedAfter(),
 		},
+		{
+			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads its parentheses
+			description: `a comma glued to the name of a bare address holding a string with a closing parenthesis, which a written run would make the tokenizer close inside the string`,
+			code: `@media a,url(a ")" b) {}`,
+			fixed: `@media a,url(a ")" b) {}`,
+			line: 1,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
@@ -291,6 +300,15 @@ testRule({
 			fixed: `@media screen and (color),/*comment*/ projection and (color) {}`,
 			line: 1,
 			column: 26,
+			message: messages.rejectedAfter(),
+		},
+		{
+			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads its parentheses
+			description: `a run between a comma and the name of a bare address holding a quotation mark nothing closes, which taking the run away would make the tokenizer read as a string`,
+			code: `@media a, url(a"b) {}`,
+			fixed: `@media a, url(a"b) {}`,
+			line: 1,
+			column: 9,
 			message: messages.rejectedAfter(),
 		},
 	],

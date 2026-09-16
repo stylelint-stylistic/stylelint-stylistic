@@ -238,6 +238,9 @@ export const OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE = /^(?:[ \t\f]|\r(?!\n))*
 /** A leading quote, whitespace aside. */
 export const OPENS_WITH_QUOTE = /^\s*["']/u
 
+/** A quotation mark or tokenizer whitespace opening the text; behind either the tokenizer of PostCSS and `postcss-less` reads no `url(`'s parentheses as one token, while `postcss-scss`'s passes over the whitespace. */
+export const OPENS_WITH_QUOTE_OR_CSS_WHITESPACE = /^[\t\n\f\r "']/u
+
 /** A leading tag, whitespace aside. */
 export const OPENS_WITH_TAG = /^\s*</u
 
@@ -267,6 +270,12 @@ export const SCSS_INTERPOLATION = /#\{.+?\}/su
 
 /** A space or a tab. */
 export const SPACE_OR_TAB = /[ \t]/u
+
+/** An at-word closing the text, as PostCSS's tokenizer and `postcss-scss`'s read one: a comma does not end it. */
+export const AT_WORD_AT_END = /@[^\t\n\f\r "#'()/;[\\\]{}]*$/u
+
+/** A character behind which PostCSS's tokenizer opens a new token for a letter: whitespace, a quotation mark, a parenthesis, a colon, a semicolon, a square bracket, a brace. Unlike {@link TOKENIZER_WORD_END}, `@` and a backslash are not among them, since a letter behind either joins their word. */
+export const TOKENIZER_TOKEN_END = /[\t\n\f\r "'():;[\]{}]/u
 
 /** A character PostCSS's tokenizer ends a word on, less `!` and `#`, which open a word of their own the letters then join, and less the solidus of a `/*`, which ends one only in front of a star and is a comment's opening to ask a comment scan about. */
 export const TOKENIZER_WORD_END = /[\t\n\f\r "'():;@[\\\]{}]/u

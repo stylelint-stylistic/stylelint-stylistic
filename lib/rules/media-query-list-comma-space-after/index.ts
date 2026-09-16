@@ -7,6 +7,7 @@ import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { mediaQueryListCommaWhitespaceChecker } from "../../utils/mediaQueryListCommaWhitespaceChecker/index.ts"
+import { rereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { runBehind, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
@@ -58,8 +59,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.after,
 			checkedRuleName: ruleName,
-			// The break twin's `always` options read past a comment on the comma's line, and a write can put a break in front of one or take it away (#704)
-			isFixable: (params, index, atRule, commas) => writesTwinRun(shortName, ruleName, atRule, result, {
+			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses; the break twin's `always` options read past a comment on the comma's line, and a write can put a break in front of one or take it away (#704)
+			isFixable: (params, index, atRule, commas) => !rereadsAnAddress(params, { start: index + 1, end: index + 1 + runBehind(params, index).length, text: primary.startsWith(`always`) ? ` ` : `` }, syntax.inlineComments(atRule, result)) && writesTwinRun(shortName, ruleName, atRule, result, {
 				side: `after`,
 				run: runBehind(params, index),
 				lineText: params,

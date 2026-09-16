@@ -7,6 +7,7 @@ import { declarationValueIndex } from "../../utils/declarationValueIndex/index.t
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { rereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { valueListCommaWhitespaceChecker } from "../../utils/valueListCommaWhitespaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
@@ -59,15 +60,20 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.afterOneOnly,
 			checkedRuleName: ruleName,
 			// Declined here, since Stylelint counts a fixer as applied whatever it does: a comma in the property name is out of reach, one opening the value is not.
-			isFixable: (declNode, index, declString, indices) => index >= declarationValueIndex(declNode) && writesTwinRun(shortName, ruleName, declNode, result, {
-				side: `after`,
-				run: runBehind(declString, index),
-				lineText: declString,
-				runs: () => indices.map((each) => runBehind(declString, each)),
-				line: declNode.rangeBy({ index }).start.line,
-				// The space twin reads the run right behind the comma, which is this one where no comment moved the check (#704)
-				twinWrites: () => declString[index] === `,`,
-			}),
+			isFixable: (declNode, index, declString, indices) => {
+				// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses
+				let edit = primary.startsWith(`always`) ? { start: index + 1, end: index + 1, text: getLineBreak(root, result) } : { start: index + 1, end: index + 1 + runBehind(declString, index).length, text: `` }
+
+				return index >= declarationValueIndex(declNode) && !rereadsAnAddress(declString, edit, syntax.inlineComments(declNode, result)) && writesTwinRun(shortName, ruleName, declNode, result, {
+					side: `after`,
+					run: runBehind(declString, index),
+					lineText: declString,
+					runs: () => indices.map((each) => runBehind(declString, each)),
+					line: declNode.rangeBy({ index }).start.line,
+					// The space twin reads the run right behind the comma, which is this one where no comment moved the check (#704)
+					twinWrites: () => declString[index] === `,`,
+				})
+			},
 			fix: (declNode, index) => {
 				fixData = fixData || (new Map())
 
