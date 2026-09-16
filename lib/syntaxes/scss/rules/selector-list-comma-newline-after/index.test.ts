@@ -48,6 +48,23 @@ testRule({
 			column: 3,
 			message: messages.expectedAfter(),
 		},
+		{
+			// Pins the end of an inline comment where the parser cuts it, so the fix writes behind the comment rather than repeating the word after it
+			description: `a comma followed by an inline comment that a bare carriage return closes`,
+			code: `a, // c\r b {}`,
+			fixed: `a, // c\n\r b {}`,
+			line: 1,
+			column: 2,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `the same list with a form feed closing the comment`,
+			code: `a, // c\f b {}`,
+			fixed: `a, // c\n\f b {}`,
+			line: 1,
+			column: 2,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 testRule({

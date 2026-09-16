@@ -1,14 +1,14 @@
-import { LINE_BREAK } from "../../regexps.ts"
+import { INLINE_COMMENT_BREAK_OR_FORM_FEED } from "../../regexps.ts"
 import { findSelectorBlockComments } from "../../utils/findSelectorBlockComments/index.ts"
 
 /**
- * Gets the end of the line holding `index`, or of the text.
+ * Gets the end of the `//` comment holding `index`, or of the text. The copies read here are `postcss-scss`'s, so the comment is cut where its tokenizer cuts one: a line feed, a bare carriage return or a form feed, which {@link INLINE_COMMENT_BREAK_OR_FORM_FEED} spells.
  * @param text - The selector's source.
- * @param index - An offset on the line asked about.
- * @returns The end of the line.
+ * @param index - An offset inside the comment asked about.
+ * @returns The end of the comment.
  */
-function endOfLine (text: string, index: number): number {
-	let match = LINE_BREAK.exec(text.slice(index))
+function endOfInlineComment (text: string, index: number): number {
+	let match = INLINE_COMMENT_BREAK_OR_FORM_FEED.exec(text.slice(index))
 
 	return match ? index + match.index : text.length
 }
@@ -27,7 +27,7 @@ export type InlineComment = {
 /**
  * Collects a selector's `//` comments, pairing raw text with source text.
  *
- * `postcss-scss` rewrites every `//` comment of a selector into block comments in `raws.selector.raw` and prints the source kept in `raws.selector.scss`. The two are read side by side, not counted, since `// a *\/ b` becomes two block comments, and followed to the end of the line where they part. A comment is recorded by the place of its block comments among the selector's, which a fixed selector is read back through.
+ * `postcss-scss` rewrites every `//` comment of a selector into block comments in `raws.selector.raw` and prints the source kept in `raws.selector.scss`. The two are read side by side, not counted, since `// a *\/ b` becomes two block comments, and followed to the break ending the comment where they part. A comment is recorded by the place of its block comments among the selector's, which a fixed selector is read back through.
  * @param rawSelector - The raw the rules read.
  * @param scssSelector - The source, if it differs.
  * @returns The comments in source order.
@@ -52,9 +52,9 @@ export function findSelectorInlineComments (rawSelector: string, scssSelector?: 
 
 		// Both spellings share the opening slash; the divergence is one character in.
 		let startIndex = rawSelector.lastIndexOf(`/*`, rawIndex)
-		let endIndex = endOfLine(rawSelector, rawIndex)
+		let endIndex = endOfInlineComment(rawSelector, rawIndex)
 		let sourceStartIndex = sourceIndex - (rawIndex - startIndex)
-		let sourceEndIndex = endOfLine(scssSelector, sourceIndex)
+		let sourceEndIndex = endOfInlineComment(scssSelector, sourceIndex)
 		let value = scssSelector.slice(sourceStartIndex, sourceEndIndex)
 		let firstOrdinal = comments.findIndex((comment) => startIndex <= comment.start && comment.end <= endIndex)
 		let lastOrdinal = comments.findLastIndex((comment) => startIndex <= comment.start && comment.end <= endIndex)

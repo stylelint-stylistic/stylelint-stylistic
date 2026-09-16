@@ -7,6 +7,23 @@ let testRule = createTestRule({ ruleName })
 
 testRule({
 	ruleName,
+	config: [`always`],
+	customSyntax: `postcss-scss`,
+
+	reject: [
+		{
+			// Pins the end of an inline comment where the parser cuts it, so the fix writes behind the comment rather than repeating the word after the comma
+			description: `a comma behind an inline comment that a bare carriage return closes`,
+			code: `a // c\r, b {}`,
+			fixed: `a // c\r\n, b {}`,
+			line: 1,
+			column: 8,
+			message: messages.expectedBefore(),
+		},
+	],
+})
+testRule({
+	ruleName,
 	config: [`never-multi-line`],
 	customSyntax: `postcss-scss`,
 
