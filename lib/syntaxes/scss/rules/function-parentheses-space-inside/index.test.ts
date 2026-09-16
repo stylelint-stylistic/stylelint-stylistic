@@ -130,6 +130,34 @@ testRule({
 
 	reject: [
 		{
+			// The value parser closes the address on the inline comment's parenthesis, which Sass reads as a comment
+			description: `a call holding an address with an inline comment with a closing parenthesis, whose closing parenthesis stands against the address's on the line below`,
+			code: `
+				a {
+					b: f(url( a // )
+					));
+				}
+			`,
+			fixed: `
+				a {
+					b: f( url( a // )
+					) );
+				}
+			`,
+			warnings: [
+				{
+					line: 2,
+					column: 7,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 3,
+					column: 2,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
 			// See #131
 			description: `a closed call standing inside such a function, which is read and fixed where it stands`,
 			code: `

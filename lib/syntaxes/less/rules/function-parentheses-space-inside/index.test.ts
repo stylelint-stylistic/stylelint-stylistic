@@ -17,6 +17,16 @@ testRule({
 			code: `a { t: foo(1px // c) calc( d); }`,
 		},
 		{
+			// The closing parenthesis of the call stands against the address's, behind the break closing the inline comment
+			description: `a call holding an address with a block comment with a closing parenthesis and an inline comment behind it`,
+			code: `
+				a {
+					b: f(url( a/* ) */ // c
+					));
+				}
+			`,
+		},
+		{
 			// See #271
 			description: `the same call with its arguments a line down, whose closing parenthesis the parser reads out of the code behind the comment`,
 			code: `

@@ -88,6 +88,24 @@ testRule({
 
 	reject: [
 		{
+			// The value parser closes the address on the comment's parenthesis, and the whitespace behind the opening one makes the comment a comment to the tokenizer
+			description: `a call holding an address with a comment with a closing parenthesis, whose closing parenthesis stands against the address's`,
+			code: `a { b: f(url( $a /* ) */)); }`,
+			fixed: `a { b: f(\nurl( $a /* ) */)\n); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 25,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
 			// The value parser closes such an address on the string's parenthesis
 			description: `a call inside a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, beside one of the value`,
 			code: `a { b: url( a ") f(1)" ), f(1); }`,

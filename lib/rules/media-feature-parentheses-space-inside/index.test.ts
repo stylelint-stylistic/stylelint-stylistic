@@ -86,6 +86,24 @@ testRule({
 			],
 		},
 		{
+			// The value parser closes the address on the comment's parenthesis, and the whitespace behind the opening one makes the comment a comment to the tokenizer
+			description: `a feature holding an address with a comment with a closing parenthesis, whose closing parenthesis stands against the address's`,
+			code: `@media (c: url( $a /* ) */)) {}`,
+			fixed: `@media ( c: url( $a /* ) */) ) {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 27,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
 			// See #347
 			description: `such a feature standing beside one the file does spell, whose parentheses are spaced out while the text of the comment is left as it stands`,
 			code: `@media (a: 1) and (b: 2 /*/ ) */ ) { a { b: c; } }`,

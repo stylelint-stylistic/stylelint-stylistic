@@ -22,18 +22,48 @@ describe(`hideParenthesesInUrlStrings`, () => {
 	})
 
 	// The walk for comments steps over the string and finds the comment behind it
-	it(`a comment behind such a string, which the walk for comments finds and the mask leaves to the caller's guards`, () => {
+	it(`a comment behind such a string, which the walk for comments finds`, () => {
 		let text = `url( a ")" /* ) */ b ) 1px`
 
-		expect(hideParenthesesInUrlStrings(text, findCommentSpans(text))).toBe(`url( a "?" /* ) */ b ) 1px`)
+		expect(hideParenthesesInUrlStrings(text, findCommentSpans(text))).toBe(`url( a "?" /* ? */ b ) 1px`)
 	})
 
-	it(`the same comment where the spans handed in do not hold it, which is read here`, () => {
+	it(`the same comment where the spans handed in do not hold it`, () => {
 		expect(hideParenthesesInUrlStrings(`url( a ")" /* ) */ b ) 1px`, [])).toBe(`url( a "?" /* ? */ b ) 1px`)
 	})
 
-	it(`a comment the caller knows, whose parenthesis is its guards' to answer for`, () => {
+	it(`a comment the caller knows holding the parenthesis, and a string holding the one the parser reads on to`, () => {
 		let text = `url( a /* ) */ ")" ) 1px`
+
+		expect(hideParenthesesInUrlStrings(text, findCommentSpans(text))).toBe(`url( a /* ? */ "?" ) 1px`)
+	})
+
+	it(`a comment holding a parenthesis inside the parentheses of a call`, () => {
+		let text = `f(url( $a /* ) */))`
+
+		expect(hideParenthesesInUrlStrings(text, findCommentSpans(text))).toBe(`f(url( $a /* ? */))`)
+	})
+
+	it(`the same comment behind a name glued to a comma`, () => {
+		let text = `f(1,url($a /* ) */))`
+
+		expect(hideParenthesesInUrlStrings(text, findCommentSpans(text))).toBe(`f(1,url($a /* ? */))`)
+	})
+
+	it(`an inline comment holding a parenthesis where the parser reads one, which the break closes`, () => {
+		let text = `f(url( a // )\n))`
+
+		expect(hideParenthesesInUrlStrings(text, findCommentSpans(text, { spells: true, tokenizes: true, endsOnFormFeed: false }))).toBe(`f(url( a // ?\n))`)
+	})
+
+	it(`an inline comment no break closes, which runs to the end of the text past every parenthesis`, () => {
+		let text = `( c: url( "a" // c ) )`
+
+		expect(hideParenthesesInUrlStrings(text, findCommentSpans(text, { spells: true, tokenizes: true, endsOnFormFeed: false }))).toBe(text)
+	})
+
+	it(`the same comment behind an address with no whitespace, which the tokenizer takes to the first parenthesis`, () => {
+		let text = `f(url(a /* ) */))`
 
 		expect(hideParenthesesInUrlStrings(text, findCommentSpans(text))).toBe(text)
 	})

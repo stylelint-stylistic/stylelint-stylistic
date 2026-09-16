@@ -84,15 +84,13 @@ function findHeldParentheses (text: string, spans: (CommentSpan | InlineCommentS
 		while (index < closeIndex) {
 			let comment = findCommentSpanAt(index, spans)
 
-			// A `)` inside a comment the caller knows is its guards' to answer for
-			if (comment) {
-				index = comment.end
-				continue
-			}
+			// A comment running to the end of the text leaves no `)` behind it to close the address on
+			if (comment && comment.end >= text.length) break
 
 			let end = index + 1
 
-			if (text[index] === `\\`) end = index + 2
+			if (comment) end = comment.end
+			else if (text[index] === `\\`) end = index + 2
 			else if (text[index] === `"` || text[index] === `'`) end = skipString(text, index)
 			// A comment the spans handed in do not hold
 			else if (text[index] === `/` && text[index + 1] === `*`) end = skipBlockComment(text, index)
@@ -165,9 +163,9 @@ function maskAt (text: string, masks: Mask[]): string {
 }
 
 /**
- * Masks the `)` inside a string that the parentheses of a `url( ` hold, so that `postcss-value-parser` closes them where PostCSS does, and first the backslash of a divider the parser took into such a call's name, so that it opens them where PostCSS does.
+ * Masks the `)` inside a string or a comment that the parentheses of a `url( ` hold, so that `postcss-value-parser` closes them where PostCSS does, and first the backslash of a divider the parser took into such a call's name, so that it opens them where PostCSS does.
  *
- * The parser reads everything behind `url(` to the first `)` as one word wherever no quotation mark opens the parentheses. PostCSS reads the parentheses as code, where a string holds its `)`, on two triggers this asks about: whitespace of its own behind the `(`, and a name its tokenizer does not take as a word of its own, which is every boundary of the parser's the tokenizer does not share — a comma, a solidus, a star inside `calc()` and every code point of 32 and under outside its five whitespaces. A quotation mark behind the `(` is a third trigger of the tokenizer's and is not asked about: the parser reads no address there either. The rules skipping the address read the string's tail as code of the value and wrote into it. A block comment the spans handed in do not hold is read here as well; a comment they hold is left to the caller's guards.
+ * The parser reads everything behind `url(` to the first `)` as one word wherever no quotation mark opens the parentheses. PostCSS reads the parentheses as code, where a string holds its `)`, on two triggers this asks about: whitespace of its own behind the `(`, and a name its tokenizer does not take as a word of its own, which is every boundary of the parser's the tokenizer does not share — a comma, a solidus, a star inside `calc()` and every code point of 32 and under outside its five whitespaces. A quotation mark behind the `(` is a third trigger of the tokenizer's and is not asked about: the parser reads no address there either. The rules skipping the address read the string's tail as code of the value and wrote into it. A comment holds its `)` there too, whether the spans handed in hold it or a block comment they do not: the parser closed the address on it, and the rules checking the parentheses of the call around read the address's own `)` as that call's.
  *
  * A divider is a backslash in front of a line break, which spells nothing and leaves the name behind the break a name of its own; the mask, or a space behind a character of a word, stands in for the backslash alone, the break staying the whitespace it is to PostCSS, so the parser reads the name behind the break as it reads one standing alone.
  *
