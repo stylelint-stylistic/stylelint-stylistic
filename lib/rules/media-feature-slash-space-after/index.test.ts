@@ -183,6 +183,15 @@ testRule({
 			column: 13,
 			message: messages.expectedAfter(),
 		},
+		{
+			// Pins the reading of a separator solidus behind a star as text of the name's word, which no comment ends there
+			description: `a solidus behind a star glued to the name of a bare address holding a string with a closing parenthesis, which a written space would make the tokenizer close inside the string`,
+			code: `@media (a: 1 */url(b ")" c)) { d { e: 1px } }`,
+			fixed: `@media (a: 1 */url(b ")" c)) { d { e: 1px } }`,
+			line: 1,
+			column: 15,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
