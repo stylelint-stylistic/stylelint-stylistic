@@ -6,6 +6,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { breakAtRereadsParentheses } from "../../utils/breakRereadsParentheses/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
@@ -84,10 +85,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` nothing closes inside, or such a `{` in a custom property's value, is then a group the parser finds open and the file stops parsing: the break is refused there and the warning stands
 				if (primary.startsWith(`always`) && breakAtRereadsParentheses(declString, index, isCustomProperty(declNode.prop))) return false
 
+				let run = runInFront(runString, index)
+
+				// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎,b` would come out as `a\,b`, one identifier, so the warning stands; `always` leaves the break the backslash stands in front of (1789661965)
+				if (primary === `never-multi-line` && !editKeepsEscapedCharacter(declString, { start: index - run.length, end: index, text: `` })) return false
+
 				// The space twin writes the same run, save over a comment's closing break (#704)
 				return writesTwinRun(shortName, ruleName, declNode, result, {
 					side: `before`,
-					run: runInFront(runString, index),
+					run,
 					lineText: declString,
 					runs: () => indices.map((each) => runInFront(runString, each)),
 					line: declNode.rangeBy({ index }).start.line,

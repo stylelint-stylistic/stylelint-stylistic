@@ -45,6 +45,15 @@ testRule({
 
 	reject: [
 		{
+			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			description: `a backslash ending the feature's name in front of a line break and the colon, where the space would stand behind the backslash as its escaped character, so the warning stands`,
+			code: `@media (a\\\n:b) {}`,
+			fixed: `@media (a\\\n:b) {}`,
+			line: 2,
+			column: 1,
+			message: messages.expectedBefore(),
+		},
+		{
 			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
 			description: `an escaped space in front of the colon, which is a character of the feature's name and no space`,
 			code: `@media (a\\ :b) {}`,
@@ -199,6 +208,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			description: `a backslash ending the feature's name in front of a line break and the colon, which the write would turn into an escaped colon, so the warning stands`,
+			code: `@media (a\\\n:b) {}`,
+			fixed: `@media (a\\\n:b) {}`,
+			line: 2,
+			column: 1,
+			message: messages.rejectedBefore(),
+		},
 		{
 			description: `a space in front of the colon`,
 			code: `@media (max-width :600px) {}`,

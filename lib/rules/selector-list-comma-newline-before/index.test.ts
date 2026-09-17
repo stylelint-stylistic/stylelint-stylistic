@@ -311,6 +311,15 @@ testRule({
 
 	reject: [
 		{
+			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			description: `a backslash ending the selector in front of a line break and the comma, which the write would turn into an escaped comma, so the warning stands`,
+			code: `a,\nb\\\n,c {}`,
+			fixed: `a,\nb\\\n,c {}`,
+			line: 3,
+			column: 1,
+			message: messages.rejectedBeforeMultiLine(),
+		},
+		{
 			description: `a space in front of the second comma of a multi-line list`,
 			code: `a,\nb , c {}`,
 			fixed: `a,\nb, c {}`,

@@ -8,6 +8,11 @@ testRule({
 
 	accept: [
 		{
+			// The break the backslash stands in front of is a delimiter and the run the option asks for (1789661965)
+			description: `a backslash ending the word in front of the line break and the comma`,
+			code: `a { b: 1\n,a\\\n,b; }`,
+		},
+		{
 			description: `a newline in front of every comma`,
 			code: `a { background-size: 0\n,0\n,0; }`,
 		},
@@ -323,6 +328,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			description: `a backslash ending the word in front of a line break and the comma, which the write would turn into an escaped comma, so the warning stands`,
+			code: `a { b: 1,\n a\\\n,b; }`,
+			fixed: `a { b: 1,\n a\\\n,b; }`,
+			line: 3,
+			column: 1,
+			message: messages.rejectedBeforeMultiLine(),
+		},
 		{
 			description: `a newline in front of the second comma of a multi-line list`,
 			code: `a { background-size: 0,\n0\n, 0; }`,

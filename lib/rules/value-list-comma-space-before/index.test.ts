@@ -42,6 +42,15 @@ testRule({
 
 	reject: [
 		{
+			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			description: `a backslash ending the word in front of a line break and the comma, where the space would stand behind the backslash as its escaped character, so the warning stands`,
+			code: `a { b: 1 ,a\\\n,b; }`,
+			fixed: `a { b: 1 ,a\\\n,b; }`,
+			line: 2,
+			column: 1,
+			message: messages.expectedBefore(),
+		},
+		{
 			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
 			description: `an escaped space in front of the comma, which is a character of the word and no space`,
 			code: `a { b: 1 ,a\\ ,b; }`,
@@ -292,6 +301,23 @@ testRule({
 	],
 
 	reject: [
+		{
+			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			description: `a backslash ending the word in front of a line break and the comma, which the write would turn into an escaped comma, so the warning stands`,
+			code: `a { b: 1,a\\\n,b; }`,
+			fixed: `a { b: 1,a\\\n,b; }`,
+			line: 2,
+			column: 1,
+			message: messages.rejectedBefore(),
+		},
+		{
+			description: `a line break in front of the comma behind an escaped backslash, which is a run`,
+			code: `a { b: 1,a\\\\\n,b; }`,
+			fixed: `a { b: 1,a\\\\,b; }`,
+			line: 2,
+			column: 1,
+			message: messages.rejectedBefore(),
+		},
 		{
 			// The comma closes the escape as well as its space does, so the space is a run a rule may take away (1789657288)
 			description: `a space closing a hexadecimal escape in front of the comma, which is a run since the comma closes the escape as well`,
