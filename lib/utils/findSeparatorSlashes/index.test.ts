@@ -65,7 +65,11 @@ describe(`findSeparatorSlashes`, () => {
 		expect(slashesOf(`url(var(--a) c/2)`)).toEqual([])
 		expect(slashesOf(`url(var(--a) c/2) 3/4`)).toEqual([19])
 		expect(slashesOf(`url(a\\)/b) 3/4`)).toEqual([12])
-		expect(slashesOf(`url("a)b" /2) 3/4`)).toEqual([15])
+	})
+
+	// See #560
+	it(`reads the arguments behind a quoted address as those of any call, the string holding a parenthesis closing nothing`, () => {
+		expect(slashesOf(`url("a)b" /2) 3/4`)).toEqual([10, 15])
 	})
 
 	it(`passes over the arguments of a math function, in whatever case and behind whatever vendor prefix it is named`, () => {

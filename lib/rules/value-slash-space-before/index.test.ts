@@ -87,6 +87,15 @@ testRule({
 
 	reject: [
 		{
+			// See #560
+			description: `a solidus among the arguments behind a quoted address, which are those of any call`,
+			code: `a { b: url("x", 1/2); }`,
+			fixed: `a { b: url("x", 1 /2); }`,
+			line: 1,
+			column: 18,
+			message: messages.expectedBefore(),
+		},
+		{
 			// A comment behind such a string, which the walk for comments does not reach
 			description: `a solidus of the value behind an address holding a string with a closing parenthesis and a comment with another`,
 			code: `a { b: url( a ")" /* ) */ b ) 1px/2px; }`,

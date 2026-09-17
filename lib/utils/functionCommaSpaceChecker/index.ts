@@ -14,6 +14,7 @@ import { hideQuotesInComments } from "../hideQuotesInComments/index.ts"
 import { isCustomProperty } from "../isCustomProperty/index.ts"
 import { opensAnAddress } from "../opensAnAddress/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
+import { quotesItsAddress } from "../quotesItsAddress/index.ts"
 import { rereadsAnAddress } from "../rereadsAnAddress/index.ts"
 import { isValueFunction } from "../typeGuards/index.ts"
 import { commentsRemovedBefore, withoutComments } from "../withoutComments/index.ts"
@@ -93,7 +94,7 @@ function nestedCallsOf (functionNode: ValueParserFunctionNode, reading: CommentR
 	let calls: ReturnType<typeof commasOf>[] = []
 
 	valueParser.walk(functionNode.nodes, (node, at, siblings) => {
-		if (!isValueFunction(node) || opensAnAddress(node, at, siblings)) return
+		if (!isValueFunction(node) || (opensAnAddress(node, at, siblings) && !quotesItsAddress(node))) return
 
 		let answer = reads(node)
 
@@ -187,8 +188,8 @@ export function functionCommaSpaceChecker (opts: {
 
 			if (!opts.syntax.isStandardFunction(valueNode)) return
 
-			// A comma in an address separates no arguments; the name is read, not matched, so `u\rl(` and `URL(` are `url(` here as to the comment scan
-			if (opensAnAddress(valueNode, at, siblings)) return
+			// A comma in a bare address separates no arguments, while one behind a quoted address does; the name is read, not matched, so `u\rl(` and `URL(` are `url(` here as to the comment scan
+			if (opensAnAddress(valueNode, at, siblings) && !quotesItsAddress(valueNode)) return
 
 			// `ignoreFunctions` covers everything nested inside too
 			if (optionsMatches(opts, `ignoreFunctions`, valueNode.value)) return false

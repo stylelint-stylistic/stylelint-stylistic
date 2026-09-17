@@ -16,6 +16,7 @@ import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStr
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
+import { quotesItsAddress } from "../../utils/quotesItsAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { splitSpaceNodesAtWords } from "../../utils/splitSpaceNodesAtWords/index.ts"
 import { writesTwinRun } from "../../utils/writesTwinRun/index.ts"
@@ -210,8 +211,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			parsedValue.walk((valueNode, at, siblings) => {
 				if (valueNode.type !== `function`) return
 
-				// A call opening an address holds no arguments of the value: what stands inside is the address, and a space or a break written behind the `(` parts it from the parenthesis, which is what a tokenizer reads one token by ([#533](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/533)). Passed over whole, and the walk goes no further in, as it does in the four rules that ask this question of a node they would otherwise read inside; the two utilities asking it walk on, having nothing to say about what an address holds. The name is the file's spelling rather than the parser's, which is wider than what a parser takes a url token by ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)).
-				if (opensAnAddress(valueNode, at, siblings)) return false
+				// The parentheses of a call opening an address are the address's: a space or a break written behind the `(` parts a bare address from the parenthesis, which is what a tokenizer reads one token by ([#533](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/533)), and `postcss-scss` reads a quoted one behind such a space as a token counting parentheses, which a string holding one leaves unclosed. Passed over, and the walk goes no further in where the address is bare, as it does in the four rules that ask this question of a node they would otherwise read inside; behind a quoted address stand arguments, whose calls are walked ([#560](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/560)). The name is the file's spelling rather than the parser's, which is wider than what a parser takes a url token by ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)).
+				if (opensAnAddress(valueNode, at, siblings)) return quotesItsAddress(valueNode) ? undefined : false
 
 				// A narrowing here is not carried into a nested function
 				let functionNode = valueNode

@@ -54,6 +54,15 @@ testRule({
 
 	reject: [
 		{
+			// See #560
+			description: `the comma behind a quoted address, which parts the arguments of a call as any comma does`,
+			code: `a { b: url("x", f(1)); }`,
+			fixed: `a { b: url("x" , f(1)); }`,
+			line: 1,
+			column: 15,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `a comma abutting the argument in front of it`,
 			code: `a { transform: translate(1, 1); }`,
 			fixed: `a { transform: translate(1 , 1); }`,

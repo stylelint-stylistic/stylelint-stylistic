@@ -46,6 +46,15 @@ testRule({
 
 	reject: [
 		{
+			// See #560
+			description: `a solidus among the arguments behind a quoted address, which are those of any call`,
+			code: `a { b: url("x", 1/2); }`,
+			fixed: `a { b: url("x", 1\n/2); }`,
+			line: 1,
+			column: 18,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `no whitespace in front of the solidus`,
 			code: `a { grid-area: 1/2; }`,
 			fixed: `a { grid-area: 1\n/2; }`,

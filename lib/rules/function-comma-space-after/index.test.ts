@@ -58,6 +58,33 @@ testRule({
 
 	reject: [
 		{
+			// See #560
+			description: `the comma behind a quoted address, which parts the arguments of a call as any comma does`,
+			code: `a { b: url("x",f(1,2)); }`,
+			fixed: `a { b: url("x", f(1, 2)); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 15,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 19,
+					message: messages.expectedAfter(),
+				},
+			],
+		},
+		{
+			// See #560
+			description: `the same comma behind a comment standing behind the address`,
+			code: `a { b: url("x" /* c */,f(1)); }`,
+			fixed: `a { b: url("x" /* c */, f(1)); }`,
+			line: 1,
+			column: 23,
+			message: messages.expectedAfter(),
+		},
+		{
 			description: `arguments abutting the comma`,
 			code: `a { transform: translate(1,1); }`,
 			fixed: `a { transform: translate(1, 1); }`,
@@ -282,20 +309,20 @@ testRule({
 	reject: [
 		{
 			// See #588
-			description: `a quoted address whose name a backslash and a break divide from what stands in front, standing beside a call`,
-			code: `a { b: \\\nurl("c", format("woff2")) f(1px, 2px); }`,
-			fixed: `a { b: \\\nurl("c", format("woff2")) f(1px,2px); }`,
+			description: `an address whose name a backslash and a break divide from what stands in front, standing beside a call`,
+			code: `a { b: \\\nurl(c, d) f(1px, 2px); }`,
+			fixed: `a { b: \\\nurl(c, d) f(1px,2px); }`,
 			line: 2,
-			column: 32,
+			column: 16,
 			message: messages.rejectedAfter(),
 		},
 		{
 			// An address whose divider is glued to a number reads as a plain address
 			description: `the same address with a number glued in front of the backslash, which the backslash ends`,
-			code: `a { b: 1px\\\nurl("c", format("woff2")) f(1px, 2px); }`,
-			fixed: `a { b: 1px\\\nurl("c", format("woff2")) f(1px,2px); }`,
+			code: `a { b: 1px\\\nurl(c, d) f(1px, 2px); }`,
+			fixed: `a { b: 1px\\\nurl(c, d) f(1px,2px); }`,
 			line: 2,
-			column: 32,
+			column: 16,
 			message: messages.rejectedAfter(),
 		},
 		{
@@ -763,6 +790,29 @@ testRule({
 				{
 					line: 1,
 					column: 13,
+					message: messages.rejectedAfter(),
+				},
+				{
+					line: 2,
+					column: 3,
+					message: `Expected newline after "," in a multi-line function (@stylistic/function-comma-newline-after)`,
+				},
+			],
+		},
+		{
+			// See #560
+			description: `the same break behind the comma of a quoted address nested in the outer call, whose arguments are those of any call`,
+			code: `a { b: f(url("a",\n2), 3) }`,
+			fixed: `a { b: f(url("a",2),3) }`,
+			warnings: [
+				{
+					line: 2,
+					column: 3,
+					message: messages.rejectedAfter(),
+				},
+				{
+					line: 1,
+					column: 17,
 					message: messages.rejectedAfter(),
 				},
 				{

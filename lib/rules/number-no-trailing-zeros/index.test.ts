@@ -79,6 +79,15 @@ testRule({
 
 	reject: [
 		{
+			// See #560
+			description: `a trailing zero among the arguments behind a quoted address, which are those of any call`,
+			code: `a { b: url("x", f(1.50)); }`,
+			fixed: `a { b: url("x", f(1.5)); }`,
+			line: 1,
+			column: 22,
+			message: messages.rejected,
+		},
+		{
 			// The value parser closes such an address on the string's parenthesis
 			description: `a number inside a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, beside one of the value`,
 			code: `a { b: url( a ") 1.0" ) 1.0px; }`,

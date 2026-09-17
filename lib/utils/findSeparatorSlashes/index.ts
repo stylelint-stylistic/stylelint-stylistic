@@ -8,6 +8,7 @@ import { blankComments } from "../blankComments/index.ts"
 import { hideParenthesesInUrlStrings } from "../hideParenthesesInUrlStrings/index.ts"
 import { matchesStringOrRegExp } from "../matchesStringOrRegExp/index.ts"
 import { opensAnAddress } from "../opensAnAddress/index.ts"
+import { quotesItsAddress } from "../quotesItsAddress/index.ts"
 
 /** Options of the walk. */
 export type SlashOptions = {
@@ -99,11 +100,9 @@ export function findSeparatorSlashes (text: string, syntax: Syntax, node: AtRule
 				continue
 			}
 
-			if (opensAnAddress(valueNode, at, nodes)) {
-				let [address] = valueNode.nodes
-
-				// A quoted address closes on its mark and `)`; a bare one where the tokenizer says
-				addressEnd = address?.type === `string` ? valueNode.sourceEndIndex : bareAddressEnd(blanked, valueNode.sourceIndex + valueNode.value.length + 1)
+			// A bare address closes where the tokenizer says; a quoted one is a string among the arguments of a call, walked as any other
+			if (opensAnAddress(valueNode, at, nodes) && !quotesItsAddress(valueNode)) {
+				addressEnd = bareAddressEnd(blanked, valueNode.sourceIndex + valueNode.value.length + 1)
 
 				continue
 			}

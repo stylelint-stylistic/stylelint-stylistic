@@ -11,6 +11,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
+import { quotesItsAddress } from "../../utils/quotesItsAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { splitSpaceNodesAtWords } from "../../utils/splitSpaceNodesAtWords/index.ts"
 
@@ -111,8 +112,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A comment's `(` is its own; an unclosed comment holds the rest of the query, so the walk goes on inside
 				if (findCommentSpanHolding(node, comments)) return
 
-				// A call opening an address holds no parentheses of the query, and the whitespace behind its `(` is what parts the parenthesis from the address, which is what a tokenizer reads one token by ([#533](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/533)): taking it away hands a string's `)` the end of the address and makes text of a comment. Passed over whole, and the walk goes no further in, as it does in both `function-parentheses-*-inside` rules.
-				if (opensAnAddress(node, at, siblings)) return false
+				// The parentheses of a call opening an address are no parentheses of the query, and the whitespace behind its `(` is what parts the parenthesis from the address, which is what a tokenizer reads one token by ([#533](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/533)): taking it away hands a string's `)` the end of the address and makes text of a comment. Passed over, and the walk goes no further in where the address is bare, as it does in both `function-parentheses-*-inside` rules; the calls among a quoted address's arguments are walked.
+				if (opensAnAddress(node, at, siblings)) return quotesItsAddress(node) ? undefined : false
 
 				if (node.type === `function`) {
 					// A feature the file never closes holds the rest of the params, since PostCSS reads an at-rule's params past every brace while a `(` is open, and its `after` is empty whatever stands there; a fix at its end wrote a space at the end of the file every run ([#575](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/575)). The whole feature goes, as it does in both `function-parentheses-*-inside` rules, and the walk goes on inside, where a closed call ends on a `)` of its own.

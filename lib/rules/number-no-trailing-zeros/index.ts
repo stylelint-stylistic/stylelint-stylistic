@@ -12,6 +12,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
+import { quotesItsAddress } from "../../utils/quotesItsAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isAtRule } from "../../utils/typeGuards/index.ts"
 
@@ -73,8 +74,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// Quotation marks in comments are masked, so the parser pairs the rest as the file does (#508)
 			valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(value, comments), comments)).walk((valueNode, at, siblings) => {
-				// An address, not arguments; the name is read as CSS does, so `\75 rl(` counts
-				if (opensAnAddress(valueNode, at, siblings)) return false
+				// A bare address, not arguments, while a quoted one has arguments behind its string; the name is read as CSS does, so `\75 rl(` counts
+				if (opensAnAddress(valueNode, at, siblings) && !quotesItsAddress(valueNode)) return false
 
 				// A node in a comment is skipped but its children walked, since a call opened in a comment reaches past its end into code; an address likewise, so it is asked first
 				if (findCommentSpanHolding(valueNode, comments)) return
