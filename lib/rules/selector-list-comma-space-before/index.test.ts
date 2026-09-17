@@ -8,6 +8,11 @@ testRule({
 
 	accept: [
 		{
+			// An escape is a character of its name, and the search the commas are found with reads none
+			description: `an escaped comma inside a name, which is no comma of the list`,
+			code: `a ,b\\,c {}`,
+		},
+		{
 			description: `a space in front of the comma`,
 			code: `a ,b {}`,
 		},
@@ -62,6 +67,14 @@ testRule({
 	],
 
 	reject: [
+		{
+			description: `no space in front of a comma behind an escaped backslash, which is a comma of the list`,
+			code: `a ,b\\\\,c {}`,
+			fixed: `a ,b\\\\ ,c {}`,
+			line: 1,
+			column: 7,
+			message: messages.expectedBefore(),
+		},
 		{
 			description: `no space in front of the comma`,
 			code: `a,b {}`,

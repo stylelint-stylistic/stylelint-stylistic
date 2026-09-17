@@ -8,6 +8,11 @@ testRule({
 
 	accept: [
 		{
+			// An escape is a character of its word, and the search the commas are found with reads none
+			description: `an escaped comma inside a word, which is no comma of the list`,
+			code: `@media a ,b\\,c {}`,
+		},
+		{
 			description: `a comma inside the address of an import, which opens no query list`,
 			code: `@import url(x.com?a=b,c=d)`,
 		},
@@ -60,6 +65,14 @@ testRule({
 	],
 
 	reject: [
+		{
+			description: `no space in front of a comma behind an escaped backslash, which is a comma of the list`,
+			code: `@media a ,b\\\\,c {}`,
+			fixed: `@media a ,b\\\\ ,c {}`,
+			line: 1,
+			column: 14,
+			message: messages.expectedBefore(),
+		},
 		{
 			description: `no space in front of the comma`,
 			code: `@media screen and (color), projection and (color) {}`,

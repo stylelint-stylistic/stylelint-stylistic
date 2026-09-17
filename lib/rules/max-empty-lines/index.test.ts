@@ -944,6 +944,15 @@ testRule({
 
 	reject: [
 		{
+			// The escape is masked in the copy the breaks are found over, its closing break left standing (1789649818)
+			description: `three blank lines behind the line break closing a hexadecimal escape, which is a line of the file`,
+			code: `a { b: 1\\2c\n\n\n\n}`,
+			fixed: `a { b: 1\\2c\n\n\n}`,
+			line: 4,
+			column: 1,
+			message: messages.expected(2),
+		},
+		{
 			description: `three blank lines behind a comment whose own are let stand`,
 			code: `a {}\n\n/*\n\n\n\n\n*/\n\n\n\nb {}`,
 			fixed: `a {}\n\n/*\n\n\n\n\n*/\n\n\nb {}`,

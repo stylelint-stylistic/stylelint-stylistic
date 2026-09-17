@@ -8,6 +8,15 @@ testRule({
 
 	accept: [
 		{
+			// An escape is a character of its word, and the search the commas are found with reads none
+			description: `an escaped comma inside a word, which is no comma of the list`,
+			code: `a { b: 1, a\\,b; }`,
+		},
+		{
+			description: `a comma inside the arguments of a call whose name ends in a hexadecimal escape, which the search opens a call behind only where a letter stands in front of the parenthesis`,
+			code: `a { b: 1, fo\\6f(1,2); }`,
+		},
+		{
 			description: `a space on either side of the comma`,
 			code: `a { background-size: 0 , 0; }`,
 		},
@@ -31,6 +40,14 @@ testRule({
 	],
 
 	reject: [
+		{
+			description: `no space behind a comma behind an escaped backslash, which is a comma of the list`,
+			code: `a { b: 1, a\\\\,b; }`,
+			fixed: `a { b: 1, a\\\\, b; }`,
+			line: 1,
+			column: 14,
+			message: messages.expectedAfter(),
+		},
 		{
 			description: `no space after the comma`,
 			code: `a { background-size: 0,0; }`,

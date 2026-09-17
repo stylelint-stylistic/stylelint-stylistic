@@ -27,4 +27,14 @@ describe(`selectorSearchCopy`, () => {
 	it(`a double slash, taken for code since no selector a rule is handed holds an inline comment`, () => {
 		expect(selectorSearchCopy(`a//"b",c`)).toBe(`a//???,c`)
 	})
+
+	// See 1789649818
+	it(`an escaped comma, which is a character of the name, and an escaped backslash, behind which the comma is a comma`, () => {
+		expect(selectorSearchCopy(`a\\,b,c`)).toBe(`axxb,c`)
+		expect(selectorSearchCopy(`a\\\\,b`)).toBe(`axx,b`)
+	})
+
+	it(`an escape beside a string and a comment, each masked or kept as before`, () => {
+		expect(selectorSearchCopy(`[a="b\\,c"]\\,d/*,*/,e`)).toBe(`[a=??????]xxd/*,*/,e`)
+	})
 })
