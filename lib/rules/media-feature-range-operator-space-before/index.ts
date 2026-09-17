@@ -4,6 +4,7 @@ import { MEDIA_AT_RULE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { findMediaOperator } from "../../utils/findMediaOperator/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -59,6 +60,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					source: runString,
 					index: match.startIndex,
 					err: (message) => {
+						let run = runInFront(runString, match.startIndex)
+
+						// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎>b` would come out as `a\>b`, one identifier, or `a\ >b`, an escaped space, so the warning stands (1789661965)
+						let isFixable = editKeepsEscapedCharacter(params, { start: match.startIndex - run.length, end: match.startIndex, text: primary === `always` ? ` ` : `` })
+
 						report({
 							message,
 							node,
@@ -66,9 +72,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 							endIndex: problemIndex,
 							result,
 							ruleName,
-							fix () {
-								fixOperators.push([match.startIndex, runInFront(runString, match.startIndex)])
-							},
+							...(isFixable && {
+								fix (): void {
+									fixOperators.push([match.startIndex, run])
+								},
+							}),
 						})
 					},
 				})

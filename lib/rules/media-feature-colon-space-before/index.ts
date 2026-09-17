@@ -4,6 +4,7 @@ import stylelint from "stylelint"
 import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { mediaFeatureColonSpaceChecker } from "../../utils/mediaFeatureColonSpaceChecker/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -55,6 +56,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
+			// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎:b` would come out as `a\:b`, one identifier, or `a\ :b`, an escaped space, so the warning stands (1789661965)
+			isFixable: (params, index, atRule, runString) => {
+				let run = runInFront(runString, index)
+
+				return editKeepsEscapedCharacter(params, { start: index - run.length, end: index, text: primary === `always` ? ` ` : `` })
+			},
 			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ :b` is not cut (1789657288)
 			fix: (atRule, index, runString) => {
 				let paramColonIndex = index - atRuleParamIndex(atRule)

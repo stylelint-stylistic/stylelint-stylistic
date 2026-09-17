@@ -5,6 +5,7 @@ import { TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { valueListCommaWhitespaceChecker } from "../../utils/valueListCommaWhitespaceChecker/index.ts"
@@ -59,15 +60,24 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
 			// Refused before the report: a comma in front of the value is the property name's, and one behind a `//` comment is closed by the break either option removes
-			isFixable: (declNode, index, declString, indices, runString) => index >= declarationValueIndex(declNode) && !syntax.endsWithInlineComment(declString.slice(0, index), syntax.inlineComments(declNode, result)) && writesTwinRun(shortName, ruleName, declNode, result, {
+			isFixable: (declNode, index, declString, indices, runString) => {
+				if (index < declarationValueIndex(declNode) || syntax.endsWithInlineComment(declString.slice(0, index), syntax.inlineComments(declNode, result))) return false
+
+				let run = runInFront(runString, index)
+
+				// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎,b` would come out as `a\,b`, one identifier, or `a\ ,b`, an escaped space, so the warning stands (1789661965)
+				if (!editKeepsEscapedCharacter(declString, { start: index - run.length, end: index, text: primary.startsWith(`always`) ? ` ` : `` })) return false
+
 				// The break twin writes the same run (#704)
-				side: `before`,
-				run: runInFront(runString, index),
-				lineText: declString,
-				runs: () => indices.map((each) => runInFront(runString, each)),
-				line: declNode.rangeBy({ index }).start.line,
-				twinWrites: () => true,
-			}),
+				return writesTwinRun(shortName, ruleName, declNode, result, {
+					side: `before`,
+					run,
+					lineText: declString,
+					runs: () => indices.map((each) => runInFront(runString, each)),
+					line: declNode.rangeBy({ index }).start.line,
+					twinWrites: () => true,
+				})
+			},
 			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ ,b` is not cut (1789657288)
 			fix: (declNode, index, runString) => {
 				fixData = fixData || (new Map())

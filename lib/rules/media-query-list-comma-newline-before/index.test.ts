@@ -377,6 +377,15 @@ testRule({
 
 	reject: [
 		{
+			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			description: `a backslash ending the query in front of a line break and the comma, which the write would turn into an escaped comma, so the warning stands`,
+			code: `@media a,\nb\\\n,c {}`,
+			fixed: `@media a,\nb\\\n,c {}`,
+			line: 3,
+			column: 1,
+			message: messages.rejectedBeforeMultiLine(),
+		},
+		{
 			description: `a space in front of the first comma of a multi-line list`,
 			code: `@media screen and (color) ,projection and (color),\nprint {}`,
 			fixed: `@media screen and (color),projection and (color),\nprint {}`,

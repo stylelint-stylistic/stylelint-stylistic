@@ -66,6 +66,15 @@ testRule({
 
 	reject: [
 		{
+			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			description: `a backslash ending the query in front of a line break and the comma, where the space would stand behind the backslash as its escaped character, so the warning stands`,
+			code: `@media a ,b\\\n,c {}`,
+			fixed: `@media a ,b\\\n,c {}`,
+			line: 2,
+			column: 1,
+			message: messages.expectedBefore(),
+		},
+		{
 			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
 			description: `an escaped space in front of the comma, which is a character of the word and no space`,
 			code: `@media a ,b\\ ,c {}`,
@@ -242,6 +251,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			description: `a backslash ending the query in front of a line break and the comma, which the write would turn into an escaped comma, so the warning stands`,
+			code: `@media a,b\\\n,c {}`,
+			fixed: `@media a,b\\\n,c {}`,
+			line: 2,
+			column: 1,
+			message: messages.rejectedBefore(),
+		},
 		{
 			description: `a space in front of the comma`,
 			code: `@media screen and (color) , projection and (color) {}`,

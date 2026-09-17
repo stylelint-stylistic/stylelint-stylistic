@@ -3,6 +3,7 @@ import stylelint from "stylelint"
 
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { selectorListCommaWhitespaceChecker } from "../../utils/selectorListCommaWhitespaceChecker/index.ts"
@@ -62,10 +63,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (inlineComments.some((inlineComment) => runStart <= inlineComment.endIndex && inlineComment.endIndex < index)) return false
 
+				let run = runInFront(runString, index)
+
+				// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎,b` would come out as `a\,b`, one identifier, or `a\ ,b`, an escaped space, so the warning stands (1789661965)
+				if (!editKeepsEscapedCharacter(selector, { start: index - run.length, end: index, text: primary.includes(`always`) ? ` ` : `` })) return false
+
 				// The break twin writes the same run (#704)
 				return writesTwinRun(shortName, ruleName, ruleNode, result, {
 					side: `before`,
-					run: runInFront(runString, index),
+					run,
 					lineText: selector,
 					runs: () => commaIndices.map((each) => runInFront(runString, each)),
 					line: ruleNode.rangeBy({ index: sourceIndex }).start.line,
