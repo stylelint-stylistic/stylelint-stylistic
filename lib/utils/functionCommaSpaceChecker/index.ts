@@ -2,13 +2,16 @@ import type { Root } from "postcss"
 import valueParser, { type DivNode as ValueParserDivNode, type FunctionNode as ValueParserFunctionNode } from "postcss-value-parser"
 import stylelint, { type PostcssResult } from "stylelint"
 
+import { LINE_BREAK } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
+import { breakRereadsParentheses } from "../breakRereadsParentheses/index.ts"
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
 import { type CommentReading, type CommentSpan, findCommentSpans } from "../findCommentSpans/index.ts"
 import { hideFalseInlineComments } from "../hideFalseInlineComments/index.ts"
 import { hideParenthesesInUrlStrings } from "../hideParenthesesInUrlStrings/index.ts"
 import { hideQuotesInComments } from "../hideQuotesInComments/index.ts"
+import { isCustomProperty } from "../isCustomProperty/index.ts"
 import { opensAnAddress } from "../opensAnAddress/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
 import { rereadsAnAddress } from "../rereadsAnAddress/index.ts"
@@ -198,12 +201,17 @@ export function functionCommaSpaceChecker (opts: {
 			 * @param nodeIndex - Its index among the arguments.
 			 * @param checkIndex - Its index in the arguments the check reads.
 			 * @param index - Its index in the declaration.
-			 * @returns True where the fix writes into no comment, parts the name of no bare address from the comma or joins it to the comma, which switches how PostCSS reads the parentheses, and its twin, reading the same run, leaves it that run ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)).
+			 * @returns True where the fix writes into no comment, parts the name of no bare address from the comma or joins it to the comma, which switches how PostCSS reads the parentheses, writes no break into parentheses PostCSS holds as one token whose bracket the break would leave open, and its twin, reading the same run, leaves it that run ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)).
 			 */
 			function isFixable (commaNode: ValueParserDivNode, nodeIndex: number, checkIndex: number, index: number): boolean {
 				if (opts.fixPosition === `before` && opts.syntax.endsWithInlineComment(declValue.slice(0, commaNode.sourceIndex), reading)) return false
 
-				if (fix?.(commaNode, nodeIndex, functionNode).some((edit) => rereadsAnAddress(declValue, edit, reading))) return false
+				let commaEdits = fix?.(commaNode, nodeIndex, functionNode) ?? []
+
+				if (commaEdits.some((edit) => rereadsAnAddress(declValue, edit, reading))) return false
+
+				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` nothing closes inside, or such a `{` in a custom property's value, is then a group the parser finds open and the file stops parsing: the break is refused there and the warning stands
+				if (commaEdits.some((edit) => LINE_BREAK.test(edit.text)) && breakRereadsParentheses(declValue, functionNode.sourceIndex + functionNode.value.length, isCustomProperty(decl.prop))) return false
 
 				return writesTwinRun(opts.shortName, opts.checkedRuleName, decl, opts.result, twinRunAt(opts.fixPosition === `before` ? `before` : `after`, functionArguments, {
 					checkIndex,
