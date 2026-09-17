@@ -247,6 +247,15 @@ testRule({
 			column: 9,
 			message: messages.expectedAfter(),
 		},
+		{
+			// Pins the reading of a string between the name and its parenthesis as a token pushing no word, which leaves the name the word the tokenizer reads last
+			description: `a comma glued to the name of a bare address, a string between the name and its parenthesis, holding a string with a closing parenthesis, which a written space would make the tokenizer close inside the string`,
+			code: `a { b: 1,url"x"(a ")" b) 2px; }`,
+			fixed: `a { b: 1,url"x"(a ")" b) 2px; }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
