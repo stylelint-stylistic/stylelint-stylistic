@@ -43,6 +43,15 @@ testRule({
 			column: 9,
 			message: messages.expectedAfter(),
 		},
+		{
+			// Pins the reading of the url token `postcss-scss` opens behind whitespace and closes by the count of parentheses, through a string
+			description: `a solidus glued to the name of a bare address a space parts from its parenthesis, opening on whitespace and holding a string with a closing parenthesis, which a written space would make the tokenizer close inside the string`,
+			code: `a { b: 1/url ( a ")" b) 2px; c: "d" }`,
+			fixed: `a { b: 1/url ( a ")" b) 2px; c: "d" }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
@@ -73,6 +82,15 @@ testRule({
 			fixed: `a { b: 1 / /*c*/ 2; }`,
 			line: 1,
 			column: 10,
+			message: messages.rejectedAfter(),
+		},
+		{
+			// Pins the reading of the url token `postcss-scss` opens behind whitespace and closes by the count of parentheses, through a string
+			description: `a space between a solidus and the name of a bare address a space parts from its parenthesis, opening on whitespace and holding a quotation mark nothing closes, which taking the space away would make the tokenizer read as a string`,
+			code: `a { b: 1/ url ( a"b) 2px; c: "d" }`,
+			fixed: `a { b: 1/ url ( a"b) 2px; c: "d" }`,
+			line: 1,
+			column: 9,
 			message: messages.rejectedAfter(),
 		},
 	],
