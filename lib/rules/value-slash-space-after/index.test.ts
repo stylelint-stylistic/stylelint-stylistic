@@ -238,6 +238,15 @@ testRule({
 			column: 9,
 			message: messages.expectedAfter(),
 		},
+		{
+			// Pins the reading of a separator solidus behind a star as text of the name's word, which no comment ends there
+			description: `a solidus behind a star glued to the name of a bare address holding a string with a closing parenthesis, which a written space would make the tokenizer close inside the string`,
+			code: `a { b: 1 */url(a ")" b) 2px; c: "d" }`,
+			fixed: `a { b: 1 */url(a ")" b) 2px; c: "d" }`,
+			line: 1,
+			column: 11,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
@@ -372,6 +381,15 @@ testRule({
 			fixed: `a { b: 1/ url(a"b) 2px; c: "d" }`,
 			line: 1,
 			column: 9,
+			message: messages.rejectedAfter(),
+		},
+		{
+			// Pins the reading of a separator solidus behind a star as text of the name's word, which no comment ends there
+			description: `a space between a solidus behind a star and the name of a bare address holding a quotation mark nothing closes, which taking the space away would make the tokenizer read as a string`,
+			code: `a { b: 1 */ url(a"b) 2px; c: "d" }`,
+			fixed: `a { b: 1 */ url(a"b) 2px; c: "d" }`,
+			line: 1,
+			column: 11,
 			message: messages.rejectedAfter(),
 		},
 	],

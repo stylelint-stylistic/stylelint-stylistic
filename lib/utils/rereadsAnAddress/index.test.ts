@@ -69,6 +69,15 @@ describe(`rereadsAnAddress`, () => {
 		expect(rereadsAnAddress(`1/url(a ")" b)`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
 	})
 
+	it(`a separator solidus behind a star, which closes no comment and so is text of the name's word, and one closing a comment, which ends the word in front of it`, () => {
+		expect(rereadsAnAddress(`1 */url(a ")" b)`, { start: 4, end: 4, text: ` ` }, POSTCSS)).toBe(true)
+		expect(rereadsAnAddress(`1 */ url(a"b)`, { start: 4, end: 5, text: `` }, POSTCSS)).toBe(true)
+		expect(rereadsAnAddress(`"/*" */url(a ")" b)`, { start: 7, end: 7, text: ` ` }, POSTCSS)).toBe(true)
+		expect(rereadsAnAddress(`url(/*) */url(a ")" b)`, { start: 10, end: 10, text: ` ` }, POSTCSS)).toBe(true)
+		expect(rereadsAnAddress(`1 /* a */ b */url(a ")" b)`, { start: 14, end: 14, text: ` ` }, POSTCSS)).toBe(true)
+		expect(rereadsAnAddress(`1,/* c */url(a ")" b)`, { start: 9, end: 9, text: ` ` }, POSTCSS)).toBe(false)
+	})
+
 	it(`an edit not standing in front of the name`, () => {
 		expect(rereadsAnAddress(`1, url(a"b)`, { start: 2, end: 2, text: `\n` }, POSTCSS)).toBe(false)
 		expect(rereadsAnAddress(`1,URL(a"b)`, { start: 2, end: 2, text: ` ` }, POSTCSS)).toBe(false)
