@@ -3,10 +3,12 @@ import stylelint from "stylelint"
 
 import { LEADING_CSS_WHITESPACE, SPACES_THEN_BLOCK_COMMENT, SPACES_THEN_INLINE_COMMENT } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import { breakAtRereadsParentheses } from "../../utils/breakRereadsParentheses/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
 import { rereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { valueListCommaWhitespaceChecker } from "../../utils/valueListCommaWhitespaceChecker/index.ts"
@@ -64,7 +66,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses
 				let edit = primary.startsWith(`always`) ? { start: index + 1, end: index + 1, text: getLineBreak(root, result) } : { start: index + 1, end: index + 1 + runBehind(declString, index).length, text: `` }
 
-				return index >= declarationValueIndex(declNode) && !rereadsAnAddress(declString, edit, syntax.inlineComments(declNode, result)) && writesTwinRun(shortName, ruleName, declNode, result, {
+				if (index < declarationValueIndex(declNode) || rereadsAnAddress(declString, edit, syntax.inlineComments(declNode, result))) return false
+
+				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` nothing closes inside, or such a `{` in a custom property's value, is then a group the parser finds open and the file stops parsing: the break is refused there and the warning stands
+				if (primary.startsWith(`always`) && breakAtRereadsParentheses(declString, index, isCustomProperty(declNode.prop))) return false
+
+				return writesTwinRun(shortName, ruleName, declNode, result, {
 					side: `after`,
 					run: runBehind(declString, index),
 					lineText: declString,

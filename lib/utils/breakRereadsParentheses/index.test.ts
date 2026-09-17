@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { breakRereadsParentheses } from "./index.ts"
+import { breakAtRereadsParentheses, breakRereadsParentheses } from "./index.ts"
 
 describe(`breakRereadsParentheses`, () => {
 	it(`a square bracket nothing closes inside one token, alone, behind a comma and in front of one`, () => {
@@ -38,5 +38,27 @@ describe(`breakRereadsParentheses`, () => {
 		expect(breakRereadsParentheses(`f(a;b)`, 1, false)).toBe(false)
 		expect(breakRereadsParentheses(`f(a}b)`, 1, true)).toBe(false)
 		expect(breakRereadsParentheses(`f(a:b!c@d#e,f)`, 1, false)).toBe(false)
+	})
+})
+
+describe(`breakAtRereadsParentheses`, () => {
+	it(`an index inside the token, beside a comma and inside the bracket`, () => {
+		expect(breakAtRereadsParentheses(`1 (a,[b) 2px`, 4, false)).toBe(true)
+		expect(breakAtRereadsParentheses(`1 (a[b,c) 2px`, 6, false)).toBe(true)
+		expect(breakAtRereadsParentheses(`--b: (a,{b)`, 7, true)).toBe(true)
+		expect(breakAtRereadsParentheses(`1 (a,{b) 2px`, 4, false)).toBe(false)
+	})
+
+	it(`an index behind the parentheses, whose first \`)\` stands in front of it`, () => {
+		expect(breakAtRereadsParentheses(`(a[b) 1,2`, 7, false)).toBe(false)
+	})
+
+	it(`an index in front of every parenthesis`, () => {
+		expect(breakAtRereadsParentheses(`1,2 (a[b)`, 1, false)).toBe(false)
+	})
+
+	it(`an index inside a nested pair, which the tokenizer holds while the outer one is code`, () => {
+		expect(breakAtRereadsParentheses(`f(1, (a,[b))`, 7, false)).toBe(true)
+		expect(breakAtRereadsParentheses(`f(1, (a,[b)) ,c`, 13, false)).toBe(false)
 	})
 })

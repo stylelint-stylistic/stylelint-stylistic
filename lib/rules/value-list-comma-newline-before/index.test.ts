@@ -173,6 +173,39 @@ testRule({
 				},
 			],
 		},
+		{
+			// PostCSS holds `(a,[b)` as one token, opaque to the parser; a break inside makes it code, whose `[` opens a group nothing closes, and the file stops parsing
+			description: `parentheses without a name holding a square bracket nothing closes, where the break is refused and the warning stands`,
+			code: `a { b: 1 (a,[b) 2px; }`,
+			fixed: `a { b: 1 (a,[b) 2px; }`,
+			line: 1,
+			column: 12,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `parentheses holding a brace nothing closes in a custom property's value, where the parser reads a brace as a group too, refused likewise`,
+			code: `a { --b: (a,{b); }`,
+			fixed: `a { --b: (a,{b); }`,
+			line: 1,
+			column: 12,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `parentheses holding a square bracket closed inside them, which code reads as a group of its own, so the break is written`,
+			code: `a { b: (a[b],c); }`,
+			fixed: `a { b: (a[b]\n,c); }`,
+			line: 1,
+			column: 13,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `parentheses holding a brace nothing closes in an ordinary property's value, where the parser passes a brace inside parentheses over, so the break is written`,
+			code: `a { b: (a{b,c); }`,
+			fixed: `a { b: (a{b\n,c); }`,
+			line: 1,
+			column: 12,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 
@@ -238,6 +271,15 @@ testRule({
 			fixed: `a { background-size: 0\n, 0\n\t, 0; }`,
 			line: 2,
 			column: 5,
+			message: messages.expectedBeforeMultiLine(),
+		},
+		{
+			// The list is multi-line by a break outside the parentheses, which PostCSS still holds as one token; a break written inside makes them code, whose `[` nothing closes
+			description: `a multi-line list holding parentheses without a name whose square bracket nothing closes, where the break is refused and the warning stands`,
+			code: `a { b: 1 (a,[b) 2px\n,3px; }`,
+			fixed: `a { b: 1 (a,[b) 2px\n,3px; }`,
+			line: 1,
+			column: 12,
 			message: messages.expectedBeforeMultiLine(),
 		},
 	],

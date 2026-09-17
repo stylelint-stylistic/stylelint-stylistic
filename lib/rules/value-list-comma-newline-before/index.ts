@@ -3,10 +3,12 @@ import stylelint from "stylelint"
 
 import { TRAILING_CSS_WHITESPACE, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import { breakAtRereadsParentheses } from "../../utils/breakRereadsParentheses/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { valueListCommaWhitespaceChecker } from "../../utils/valueListCommaWhitespaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
@@ -77,6 +79,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let closesInlineComment = syntax.endsWithInlineComment(declString.slice(0, index), syntax.inlineComments(declNode, result))
 
 				if (primary === `never-multi-line` && closesInlineComment) return false
+
+				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` nothing closes inside, or such a `{` in a custom property's value, is then a group the parser finds open and the file stops parsing: the break is refused there and the warning stands
+				if (primary.startsWith(`always`) && breakAtRereadsParentheses(declString, index, isCustomProperty(declNode.prop))) return false
 
 				// The space twin writes the same run, save over a comment's closing break (#704)
 				return writesTwinRun(shortName, ruleName, declNode, result, {
