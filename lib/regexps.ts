@@ -199,6 +199,9 @@ export const LEADING_WHITESPACE_RUN = /^\s+/u
 /** The leading whitespace up to the first break, a Windows pair left whole; a vertical tab and a no-break space are words ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). */
 export const LEADING_WHITESPACE_WITHOUT_BREAK = /^(?:[ \t\f]|\r(?!\n))*/u
 
+/** A leading token PostCSS's tokenizer and `postcss-scss`'s read without pushing a word, a string and a comment aside: a run of whitespace, an at-word, one of the characters read as a token of their own, which are a colon, a semicolon, a square bracket and a brace, a closing parenthesis left out since it may close a token holding the name, or an escape, a word token pushed nowhere: a run of backslashes and, behind an odd run, one more character, unless that is a solidus or whitespace, with the hexadecimal digits behind it and the one space closing them; the tokenizer takes one code unit there, so a code point past the basic plane is left to be read as the word its second unit is. */
+export const LEADING_WORDLESS_TOKEN = /^(?:[\t\n\f\r ]+|@[^\t\n\f\r "#'()/;[\\\]{}]*|[:;[\]{}]|(?:\\\\)+(?!\\)|(?:\\\\)*\\(?:[\da-f]+ ?|[^\t\n\f\r /\da-f\u{10000}-\u{10FFFF}])?)/iu
+
 /** Less's `@{…}`. */
 export const LESS_INTERPOLATION = /@\{.+?\}/u
 

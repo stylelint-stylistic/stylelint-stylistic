@@ -1,31 +1,77 @@
-import { INLINE_COMMENT_BREAK_OR_FORM_FEED, LEADING_CSS_WHITESPACE, OPENS_WITH_QUOTE_OR_CSS_WHITESPACE, SCSS_PLAIN_BRACKETS_BREAKER } from "../../regexps.ts"
+import { INLINE_COMMENT_BREAK_OR_FORM_FEED, LEADING_WORDLESS_TOKEN, OPENS_WITH_QUOTE_OR_CSS_WHITESPACE, SCSS_PLAIN_BRACKETS_BREAKER, TRAILING_BACKSLASHES } from "../../regexps.ts"
 import type { Edit } from "../applyEditsFromEnd/index.ts"
 import type { CommentReading } from "../findCommentSpans/index.ts"
 import { joinsTheName } from "../joinsTheName/index.ts"
 import { skipString } from "../skipString/index.ts"
 
 /**
- * Finds the `(` the tokenizer meets behind a name with the name still its last word: whitespace and comments between the two push no word.
+ * Asks whether a `)` closes parentheses the tokenizer reads as one plain token, inside which a name is text and no word: the nearest `(` in front of it no backslash escapes, whose first `)` it is and whose content holds no character breaking the token.
+ * @param text - The text holding the parenthesis.
+ * @param closeIndex - The `)`.
+ * @returns True where the parenthesis closes such a token.
+ */
+function closesPlainParentheses (text: string, closeIndex: number): boolean {
+	let openIndex = text.lastIndexOf(`(`, closeIndex)
+
+	while (openIndex !== -1 && (text.slice(0, openIndex).match(TRAILING_BACKSLASHES) as RegExpMatchArray)[0].length % 2 === 1) openIndex = text.lastIndexOf(`(`, openIndex - 1)
+
+	return openIndex !== -1 && text.indexOf(`)`, openIndex) === closeIndex && !SCSS_PLAIN_BRACKETS_BREAKER.test(text.slice(openIndex, closeIndex + 1))
+}
+
+/**
+ * Finds the `(` the tokenizer meets behind a name with the name still its last word: whitespace, a comment, a string, an at-word, an escape and a character read as a token of its own between the two push no word, nor do a comma, an interpolation and a `//` comment under `postcss-scss`'s tokenizer, while any other token is a word taking the name's place, and a `)` closing a plain token in front makes the name text of that token rather than a word, in the text as it is spelled, so that a break written into the token is asked about too.
  * @param text - The text holding the name.
  * @param nameEnd - Behind the name.
- * @returns Behind the `(`, or -1 where something else stands first.
+ * @param reading - Whether the parser reads by a tokenizer of its own.
+ * @returns Behind the `(`, or -1 where a word stands first or nothing opens.
  */
-function openingParenthesisBehind (text: string, nameEnd: number): number {
+function openingParenthesisBehind (text: string, nameEnd: number, reading: Pick<CommentReading, `tokenizes`>): number {
 	let index = nameEnd
 
 	while (index < text.length) {
-		index += (text.slice(index).match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0].length
+		let character = text[index]
+		let rest = text.slice(index)
 
-		if (!text.startsWith(`/*`, index)) break
+		if (character === `(`) return index + 1
 
-		let commentEnd = text.indexOf(`*/`, index + 2)
+		if (character === `"` || character === `'`) {
+			index = reading.tokenizes ? skipScssString(text, index) : skipString(text, index)
+		}
+		else if (rest.startsWith(`/*`)) {
+			let commentEnd = text.indexOf(`*/`, index + 2)
 
-		if (commentEnd === -1) return -1
+			if (commentEnd === -1) return -1
 
-		index = commentEnd + 2
+			index = commentEnd + 2
+		}
+		else if (reading.tokenizes && rest.startsWith(`//`)) {
+			let breakIndex = rest.search(INLINE_COMMENT_BREAK_OR_FORM_FEED)
+
+			if (breakIndex === -1) return -1
+
+			index += breakIndex
+		}
+		else if (reading.tokenizes && rest.startsWith(`#{`)) {
+			index = skipScssInterpolation(text, index)
+		}
+		else if (character === `)`) {
+			if (closesPlainParentheses(text, index)) return -1
+
+			index += 1
+		}
+		else if (reading.tokenizes && character === `,`) {
+			index += 1
+		}
+		else {
+			let token = rest.match(LEADING_WORDLESS_TOKEN)
+
+			if (token === null) return -1
+
+			index += token[0].length
+		}
 	}
 
-	return text[index] === `(` ? index + 1 : -1
+	return -1
 }
 
 /**
@@ -213,9 +259,9 @@ function scssCodeClosingIndex (text: string, openIndex: number): number {
 /**
  * Asks whether an edit makes the tokenizer read the parentheses of a `url(` right behind it the other way, where the two readings part.
  *
- * PostCSS's tokenizer, which `postcss-less` reads by too, takes the parentheses as one token, closed by the first `)` no backslash escapes, where the last word it read is `url` itself, whitespace and comments between the name and the `(` aside, and as code where that word is longer; `1,url(` and `1/url(` are one word to it, so filling or emptying the run in front of the name switches the reading. A quotation mark or whitespace right behind the `(` makes the parentheses code under both words. The readings part where no `)` closes the token, and where code reads a string, a comment or a group past that `)`, or reads a group in front of it; there the output stops parsing or swallows what follows.
+ * PostCSS's tokenizer, which `postcss-less` reads by too, takes the parentheses as one token, closed by the first `)` no backslash escapes, where the last word it read is `url` itself, the tokens pushing no word between the name and the `(` aside, and as code where that word is longer; `1,url(` and `1/url(` are one word to it, so filling or emptying the run in front of the name switches the reading. A quotation mark or whitespace right behind the `(` makes the parentheses code under both words. The readings part where no `)` closes the token, and where code reads a string, a comment or a group past that `)`, or reads a group in front of it; there the output stops parsing or swallows what follows.
  *
- * `postcss-scss`'s tokenizer ends a word on a comma outside an at-word, so such a comma's run switches nothing under it. Its token opens behind whitespace too, a quotation mark right behind the `(` alone keeping the parentheses code, and closes where the count of parentheses returns to zero, through strings, comments and interpolations alike; so under it the readings part where the `)` code closes the parentheses at, a square-bracket group and the parser's reading of a `;` behind the token counted in, is not that one, or where the count never returns to zero (1789574294). A `)` the token closes at in front of code's, such as an escaped one, is refused with the rest, since a `;` or a brace between the two ends the declaration once the token has closed.
+ * `postcss-scss`'s tokenizer ends a word on a comma outside an at-word, so such a comma's run switches nothing under it, and a comma, an interpolation or a `//` comment between the name and the `(` pushes no word under it either. Its token opens behind whitespace too, a quotation mark right behind the `(` alone keeping the parentheses code, and closes where the count of parentheses returns to zero, through strings, comments and interpolations alike; so under it the readings part where the `)` code closes the parentheses at, a square-bracket group and the parser's reading of a `;` behind the token counted in, is not that one, or where the count never returns to zero (1789574294). A `)` the token closes at in front of code's, such as an escaped one, is refused with the rest, since a `;` or a brace between the two ends the declaration once the token has closed.
  * @param text - The text the edit applies to.
  * @param edit - The edit, indexed in that text.
  * @param edit.start - Where the span it replaces opens.
@@ -227,11 +273,18 @@ function scssCodeClosingIndex (text: string, openIndex: number): number {
 export function rereadsAnAddress (text: string, { start, end, text: written }: Edit, reading: Pick<CommentReading, `tokenizes`>): boolean {
 	if (!text.startsWith(`url`, end)) return false
 
-	let openIndex = openingParenthesisBehind(text, end + 3)
+	let edited = text.slice(0, start) + written + text.slice(end)
+	let editedEnd = start + written.length
+	let openIndex = openingParenthesisBehind(text, end + 3, reading)
+	let editedOpenIndex = openingParenthesisBehind(edited, editedEnd + 3, reading)
 
-	if (openIndex === -1) return false
+	// The name is the last word at the `(` under a spelling where nothing joins it and no plain token in front holds it, and a break written into such a token breaks it
+	let isLastWord = openIndex !== -1 && !joinsTheName(text.slice(0, end), reading)
+	let editedIsLastWord = editedOpenIndex !== -1 && !joinsTheName(edited.slice(0, editedEnd), reading)
 
-	if (joinsTheName(text.slice(0, end), reading) === joinsTheName(text.slice(0, start) + written, reading)) return false
+	if (isLastWord === editedIsLastWord) return false
+
+	if (openIndex === -1) openIndex = editedOpenIndex - (editedEnd - end)
 
 	if (reading.tokenizes) {
 		if (text[openIndex] === `"` || text[openIndex] === `'`) return false

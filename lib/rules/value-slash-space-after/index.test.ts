@@ -256,6 +256,24 @@ testRule({
 			column: 11,
 			message: messages.expectedAfter(),
 		},
+		{
+			// Pins the reading of a string between the name and its parenthesis as a token pushing no word, which leaves the name the word the tokenizer reads last
+			description: `a solidus glued to the name of a bare address, a string between the name and its parenthesis, holding a string with a closing parenthesis, which a written space would make the tokenizer close inside the string`,
+			code: `a { b: 1/url"x"(a ")" b) 2px; c: "d" }`,
+			fixed: `a { b: 1/url"x"(a ")" b) 2px; c: "d" }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
+		{
+			// Pins the reading of an escape between the name and its parenthesis as a token pushing no word
+			description: `a solidus glued to the name of a bare address, an escaped comma between the name and its parenthesis, holding a string with a closing parenthesis, which a written space would make the tokenizer close inside the string`,
+			code: `a { b: 1/url\\,(a ")" b) 2px; c: "d" }`,
+			fixed: `a { b: 1/url\\,(a ")" b) 2px; c: "d" }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
@@ -399,6 +417,15 @@ testRule({
 			fixed: `a { b: 1 */ url(a"b) 2px; c: "d" }`,
 			line: 1,
 			column: 11,
+			message: messages.rejectedAfter(),
+		},
+		{
+			// Pins the reading of an at-word between the name and its parenthesis as a token pushing no word
+			description: `a space between a solidus and the name of a bare address, an at-word between the name and its parenthesis, holding a quotation mark nothing closes, which taking the space away would make the tokenizer read as a string`,
+			code: `a { b: 1/ url@x(a"b) 2px; c: "d" }`,
+			fixed: `a { b: 1/ url@x(a"b) 2px; c: "d" }`,
+			line: 1,
+			column: 9,
 			message: messages.rejectedAfter(),
 		},
 	],
