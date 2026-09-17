@@ -164,6 +164,15 @@ testRule({
 
 	reject: [
 		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			description: `an escaped space in front of the combinator, which is a character of the name and no space`,
+			code: `a\\ >b {}`,
+			fixed: `a\\  >b {}`,
+			line: 1,
+			column: 4,
+			message: messages.expectedBefore(`>`),
+		},
+		{
 			description: `a comment the parser folds into the raws of the combinator, which the fix cannot write past`,
 			code: `.foo  /* c */  >  .bar { }`,
 			fixed: `.foo  /* c */  >  .bar { }`,
@@ -251,6 +260,11 @@ testRule({
 	config: [`never`],
 
 	accept: [
+		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			description: `an escaped space in front of the combinator, which is a character of the name and no whitespace`,
+			code: `a\\ >b {}`,
+		},
 		{
 			description: `a space after the adjacent-sibling combinator and none in front of it`,
 			code: `a+ a {}`,

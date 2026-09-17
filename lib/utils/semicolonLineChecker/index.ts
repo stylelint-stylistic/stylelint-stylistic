@@ -37,7 +37,7 @@ export function semicolonLineChecker ({ node, syntax, result, checkedRuleName, m
 	if (!isDeclaration(node) && !isAtRule(node)) return
 	if (hasBlock(node) || isLastNodeWithoutSemicolon(node)) return
 
-	let run = readWhitespaceBeforeSemicolon(syntax, node)
+	let run = readWhitespaceBeforeSemicolon(syntax, node, result)
 	let lines = run.split(EVERY_LINE_BREAK)
 
 	if (lines.length < 2 || lastLineIndentation(run) === expectedIndentation) return
@@ -54,7 +54,7 @@ export function semicolonLineChecker ({ node, syntax, result, checkedRuleName, m
 		result,
 		ruleName: checkedRuleName,
 		fix () {
-			writeWhitespaceBeforeSemicolon(syntax, node, fixIndentation(run, expectedIndentation))
+			writeWhitespaceBeforeSemicolon(syntax, node, result, fixIndentation(run, expectedIndentation))
 		},
 	})
 }

@@ -87,6 +87,15 @@ testRule({
 
 	reject: [
 		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			description: `an escaped space in front of the solidus, which is a character of the word and no space`,
+			code: `a { b: a\\ /b; }`,
+			fixed: `a { b: a\\  /b; }`,
+			line: 1,
+			column: 11,
+			message: messages.expectedBefore(),
+		},
+		{
 			// See #560
 			description: `a solidus among the arguments behind a quoted address, which are those of any call`,
 			code: `a { b: url("x", 1/2); }`,
@@ -264,6 +273,11 @@ testRule({
 
 	accept: [
 		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			description: `an escaped space in front of the solidus, which is a character of the word and no whitespace`,
+			code: `a { b: a\\ /b; }`,
+		},
+		{
 			description: `no space in front of the solidus`,
 			code: `a { grid-area: 1/ 2; }`,
 		},
@@ -298,6 +312,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			description: `a space in front of the solidus behind an escaped space, which is a character of the word and stays`,
+			code: `a { b: a\\  /b; }`,
+			fixed: `a { b: a\\ /b; }`,
+			line: 1,
+			column: 12,
+			message: messages.rejectedBefore(),
+		},
 		{
 			description: `a space in front of the solidus`,
 			code: `a { grid-area: 1 /2; }`,

@@ -194,7 +194,7 @@ function takeTheTrailingSemicolonsAway (syntax: Syntax, node: AtRule | Declarati
 
 	if (!parent) throw new Error(`The node must stand in a block`)
 
-	if (parent.raws.semicolon && !syntax.writesIntoInlineComment(node, result)) writeWhitespaceBeforeSemicolon(syntax, node, ``)
+	if (parent.raws.semicolon && !syntax.writesIntoInlineComment(node, result)) writeWhitespaceBeforeSemicolon(syntax, node, result, ``)
 
 	if (!flagIsCommentText) parent.raws.semicolon = false
 
@@ -231,14 +231,15 @@ function textBehind (node: ChildNode, result: PostcssResult, raws: HeldRaw[]): s
  * Where no whitespace is asked for, the node keeps its own run, as a custom property's value does, unless the at-rule's run moves to the block.
  * @param syntax - The syntax reading the value.
  * @param node - The node closing the block.
+ * @param result - The Stylelint result.
  * @param whitespace - The whitespace asked for.
  * @param runMoves - Whether the fix moves the at-rule's trailing run to the block.
  * @returns The run.
  */
-function runLeftInFront (syntax: Syntax, node: AtRule | Declaration, whitespace: string, runMoves: boolean): string {
+function runLeftInFront (syntax: Syntax, node: AtRule | Declaration, result: PostcssResult, whitespace: string, runMoves: boolean): string {
 	if (whitespace || runMoves) return whitespace
 
-	return readWhitespaceBeforeSemicolon(syntax, node)
+	return readWhitespaceBeforeSemicolon(syntax, node, result)
 }
 
 /**
@@ -267,7 +268,7 @@ function swallowingAtRule (node: ChildNode): AtRule | undefined {
 function isFixable (syntax: Syntax, node: AtRule | Declaration, primary: `always` | `never`, spelledBetween: string | undefined, result: PostcssResult, flagIsCommentText: boolean, whitespace: string, behind: string): boolean {
 	if (primary === `never`) return !semicolonOutlivesTheFlag(node) && !syntax.requiresTrailingSemicolon(node, result)
 
-	return !hasBlock(node) && !syntax.writesIntoInlineComment(node, result, spelledBetween) && !flagIsCommentText && keepsEscapedCharacter(syntax, node, whitespace, behind)
+	return !hasBlock(node) && !syntax.writesIntoInlineComment(node, result, spelledBetween) && !flagIsCommentText && keepsEscapedCharacter(syntax, node, result, whitespace, behind)
 }
 
 /** `always` a semicolon behind the last declaration, `never` none. */
@@ -371,7 +372,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					endIndex: problemIndex,
 					result,
 					ruleName,
-					...(isFixable(syntax, node, primary, spelledBetween, result, flagIsCommentText, runLeftInFront(syntax, node, whitespace, atRuleHoldsTheBlockAfter), textBehind(node, result, raws)) && {
+					...(isFixable(syntax, node, primary, spelledBetween, result, flagIsCommentText, runLeftInFront(syntax, node, result, whitespace, atRuleHoldsTheBlockAfter), textBehind(node, result, raws)) && {
 						fix: (): void => {
 							if (primary === `always` && !hasSemicolon) {
 								parent.raws.semicolon = true
@@ -383,10 +384,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 										parent.raws.after = between.slice(beforeWhitespace.length)
 									}
 
-									if (whitespace) writeWhitespaceBeforeSemicolon(syntax, bodilessAtRule, whitespace)
+									if (whitespace) writeWhitespaceBeforeSemicolon(syntax, bodilessAtRule, result, whitespace)
 								}
 								// A whitespace-only value shares its run with the colon, and a colon rule listed earlier may have written onto the tail of `raws.between` (#50); that tail and the value are read as one run, as the semicolon rules do (#536)
-								else if (isDeclaration(node) && whitespace && !(!node.important && WHITESPACE_OR_NOTHING.test(syntax.read(node)) && betweenTailAfterColon(syntax, node, result) + syntax.read(node) === whitespace)) writeWhitespaceBeforeSemicolon(syntax, node, whitespace)
+								else if (isDeclaration(node) && whitespace && !(!node.important && WHITESPACE_OR_NOTHING.test(syntax.read(node)) && betweenTailAfterColon(syntax, node, result) + syntax.read(node) === whitespace)) writeWhitespaceBeforeSemicolon(syntax, node, result, whitespace)
 							}
 							else if (primary === `never`) takeTheTrailingSemicolonsAway(syntax, node, result, raws, flagIsCommentText)
 						},

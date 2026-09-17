@@ -131,11 +131,11 @@ describe(`writeWhitespaceBeforeSemicolon`, () => {
 	it(`onto the end of the value, laid out the way the parser lays it: the run in the raw, the value without it`, () => {
 		let decl = lastDeclarationOf(`a { b: c }`)
 
-		writeWhitespaceBeforeSemicolon(css, decl, ` `)
+		writeWhitespaceBeforeSemicolon(css, decl, result({}), ` `)
 		expect(decl.value).toBe(`c`)
 		expect(decl.raws.value).toEqual({ raw: `c `, value: `c` })
 
-		writeWhitespaceBeforeSemicolon(css, decl, `\n`)
+		writeWhitespaceBeforeSemicolon(css, decl, result({}), `\n`)
 		expect(decl.value).toBe(`c`)
 		expect(decl.raws.value).toEqual({ raw: `c\n`, value: `c` })
 	})
@@ -144,8 +144,8 @@ describe(`writeWhitespaceBeforeSemicolon`, () => {
 		let exact = lastDeclarationOf(`a { b: c !important }`)
 		let spaced = lastDeclarationOf(`a { b: c ! important }`)
 
-		writeWhitespaceBeforeSemicolon(css, exact, ` `)
-		writeWhitespaceBeforeSemicolon(css, spaced, `\n`)
+		writeWhitespaceBeforeSemicolon(css, exact, result({}), ` `)
+		writeWhitespaceBeforeSemicolon(css, spaced, result({}), `\n`)
 		expect(exact.raws.important).toBe(` !important `)
 		expect(spaced.raws.important).toBe(` ! important\n`)
 		expect(exact.value).toBe(`c`)
@@ -155,11 +155,23 @@ describe(`writeWhitespaceBeforeSemicolon`, () => {
 		let tight = lastAtRuleOf(`a { @foo bar; }`)
 		let spaced = lastAtRuleOf(`a { @foo bar\t; }`)
 
-		writeWhitespaceBeforeSemicolon(css, tight, ` `)
-		writeWhitespaceBeforeSemicolon(css, spaced, ` `)
+		writeWhitespaceBeforeSemicolon(css, tight, result({}), ` `)
+		writeWhitespaceBeforeSemicolon(css, spaced, result({}), ` `)
 		expect(tight.raws.between).toBe(` `)
 		expect(spaced.raws.between).toBe(` `)
 		expect(tight.params).toBe(`bar`)
+	})
+
+	// See 1789661964
+	it(`over the run alone behind an escaped space, which is a character of the value, and out of the raw PostCSS parts it into behind a bodiless at-rule's params`, () => {
+		let decl = lastDeclarationOf(`a { b: c\\  ; }`)
+		let atRule = lastAtRuleOf(`a { @foo bar\\ ; }`)
+
+		writeWhitespaceBeforeSemicolon(css, decl, result({}), ``)
+		writeWhitespaceBeforeSemicolon(css, atRule, result({}), ` `)
+		expect(decl.raws.value).toEqual({ raw: `c\\ `, value: `c\\` })
+		expect(atRule.params).toBe(`bar\\`)
+		expect(atRule.raws.between).toBe(`  `)
 	})
 
 	// See #374
@@ -168,7 +180,7 @@ describe(`writeWhitespaceBeforeSemicolon`, () => {
 
 		call.raws.between = ` `
 		call.raws.important = `!important\t`
-		writeWhitespaceBeforeSemicolon(css, call, ``)
+		writeWhitespaceBeforeSemicolon(css, call, result({}), ``)
 		expect(call.raws.between).toBe(` `)
 		expect(call.raws.important).toBe(`!important`)
 	})
@@ -176,44 +188,50 @@ describe(`writeWhitespaceBeforeSemicolon`, () => {
 	it(`over a value that is nothing but whitespace`, () => {
 		let decl = lastDeclarationOf(`a { --b: }`)
 
-		writeWhitespaceBeforeSemicolon(css, decl, `\n`)
+		writeWhitespaceBeforeSemicolon(css, decl, result({}), `\n`)
 		expect(decl.value).toBe(`\n`)
 	})
 })
 
 describe(`keepsEscapedCharacter`, () => {
 	it(`yes behind a value ending on no backslash, or on an escaped one, whatever the write`, () => {
-		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c ; }`), ``)).toBe(true)
-		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\\\ ; }`), ``)).toBe(true)
-		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\31 ; }`), ``)).toBe(true)
+		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c ; }`), result({}), ``)).toBe(true)
+		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\\\ ; }`), result({}), ``)).toBe(true)
+		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\31 ; }`), result({}), ``)).toBe(true)
 	})
 
 	it(`no where the write changes the character behind a backslash ending the value`, () => {
-		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\ ; }`), ``)).toBe(false)
-		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\ ; }`), `\n`)).toBe(false)
-		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\\n; }`), ` `)).toBe(false)
-		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\\\\\\t; }`), ` `)).toBe(false)
+		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\\n; }`), result({}), ``)).toBe(false)
+		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\\n; }`), result({}), ` `)).toBe(false)
+		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\\\\\\n; }`), result({}), ` `)).toBe(false)
+	})
+
+	// See 1789661964
+	it(`yes behind an escaped space or tab, which is a character of the value and no run the write reaches`, () => {
+		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\ ; }`), result({}), ``)).toBe(true)
+		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\ ; }`), result({}), `\n`)).toBe(true)
+		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\\\\\\t; }`), result({}), ` `)).toBe(true)
 	})
 
 	it(`yes where the character stays, a line break of any spelling being one`, () => {
-		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\  ; }`), ` `)).toBe(true)
-		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\\f; }`), `\n`)).toBe(true)
-		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\\n; }`), `\r\n`)).toBe(true)
+		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\  ; }`), result({}), ` `)).toBe(true)
+		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\\f; }`), result({}), `\n`)).toBe(true)
+		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\\n; }`), result({}), `\r\n`)).toBe(true)
 	})
 
 	it(`against what stands behind the run, where the write adds the semicolon`, () => {
-		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\\n}`), ``, `\n}`)).toBe(false)
-		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\ }`), ` `, ` }`)).toBe(true)
-		expect(keepsEscapedCharacter(css, (parse(`a { b: c\\/* d */ }`).first as Rule).first as Declaration, ``, `/* d */`)).toBe(false)
+		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\\n}`), result({}), ``, `\n}`)).toBe(false)
+		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\ }`), result({}), ` `, ` }`)).toBe(true)
+		expect(keepsEscapedCharacter(css, (parse(`a { b: c\\/* d */ }`).first as Rule).first as Declaration, result({}), ``, `/* d */`)).toBe(false)
 	})
 
 	it(`behind a bodiless at-rule's params, whose run the at-rule holds in its own raw`, () => {
-		expect(keepsEscapedCharacter(css, lastAtRuleOf(`a { @foo bar\\\n; }`), ` `)).toBe(false)
-		expect(keepsEscapedCharacter(css, lastAtRuleOf(`a { @foo bar\\\n; }`), `\n`)).toBe(true)
+		expect(keepsEscapedCharacter(css, lastAtRuleOf(`a { @foo bar\\\n; }`), result({}), ` `)).toBe(false)
+		expect(keepsEscapedCharacter(css, lastAtRuleOf(`a { @foo bar\\\n; }`), result({}), `\n`)).toBe(true)
 	})
 
 	it(`yes behind a flag, which ends on no backslash`, () => {
-		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\ !important ; }`), ``)).toBe(true)
+		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\ !important ; }`), result({}), ``)).toBe(true)
 	})
 })
 

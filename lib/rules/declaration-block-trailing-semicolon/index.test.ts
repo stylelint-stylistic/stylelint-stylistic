@@ -380,6 +380,15 @@ testRule({
 
 	reject: [
 		{
+			// The run taken away with the semicolon is read over the copy with its escapes masked (1789661964)
+			description: `a semicolon behind an escaped space, which is a character of the value and stays`,
+			code: `a { color: red\\ ; }`,
+			fixed: `a { color: red\\  }`,
+			line: 1,
+			column: 17,
+			message: messages.rejected,
+		},
+		{
 			description: `a single-line block closing behind a semicolon`,
 			code: `a { color: pink; }`,
 			fixed: `a { color: pink }`,

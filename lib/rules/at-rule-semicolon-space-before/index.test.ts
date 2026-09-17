@@ -85,6 +85,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			description: `an escaped space in front of the semicolon, which is a character of the params and no space`,
+			code: `@import a \\ ;`,
+			fixed: `@import a \\  ;`,
+			line: 1,
+			column: 12,
+			message: messages.expectedBefore(),
+		},
 		// See #703
 		{
 			description: `a charset rule whose single quotes declare no encoding, so the warning stands while a neighbour may still make it one`,
@@ -263,6 +272,11 @@ testRule({
 
 	accept: [
 		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			description: `an escaped space in front of the semicolon, which is a character of the params and no whitespace`,
+			code: `@import a \\ ;`,
+		},
+		{
 			description: `a semicolon abutting the params`,
 			code: `@import "styles/mystyle";`,
 		},
@@ -335,6 +349,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// The run is read over the copy with its escapes masked and cut out of `raws.between`, where PostCSS puts the whitespace the escape covers (1789661964)
+			description: `a space in front of the semicolon behind an escaped space, which is a character of the params and stays`,
+			code: `@import a \\  ;`,
+			fixed: `@import a \\ ;`,
+			line: 1,
+			column: 13,
+			message: messages.rejectedBefore(),
+		},
 		{
 			description: `a space in front of the semicolon`,
 			code: `@import "styles/mystyle" ;`,
@@ -433,15 +456,6 @@ testRule({
 			`,
 			line: 3,
 			column: 26,
-			message: messages.rejectedBefore(),
-		},
-		{
-			// A write behind a backslash ending the params would be read with it
-			description: `a backslash ending the params in front of a space, which taken away would leave the semicolon escaped, so the warning stands`,
-			code: `@import a \\ ;`,
-			fixed: `@import a \\ ;`,
-			line: 1,
-			column: 12,
 			message: messages.rejectedBefore(),
 		},
 	],

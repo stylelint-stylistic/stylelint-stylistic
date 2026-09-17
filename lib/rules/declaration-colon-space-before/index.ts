@@ -1,7 +1,7 @@
 import type { Declaration } from "postcss"
 import stylelint from "stylelint"
 
-import { EVERY_BACKSLASH_IN_FRONT_OF_A_SLASH, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
+import { EVERY_BACKSLASH_IN_FRONT_OF_A_SLASH } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { declarationColonSpaceChecker } from "../../utils/declarationColonSpaceChecker/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
@@ -70,26 +70,16 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			checkedRuleName: ruleName,
 			// An inline comment ending this part would swallow the colon; a backslash in front of a slash is blanked first, since `\//` opens a comment to the parser but not to the guard
 			isFixable: (decl, index) => !syntax.endsWithInlineComment(beforeColonString(decl, index).replace(EVERY_BACKSLASH_IN_FRONT_OF_A_SLASH, ` `), syntax.inlineComments(decl, result)),
-			fix: (decl, index) => {
+			// The run is the check's, read over the copy with its escapes masked, so the space of `b\ :c` is not cut (1789661964)
+			fix: (decl, index, run) => {
 				let beforeColon = beforeColonString(decl, index)
 
 				assertString(decl.raws.between)
 
 				let fromColon = decl.raws.between.slice(beforeColon.length)
 
-				if (primary === `always`) {
-					decl.raws.between = beforeColon.replace(TRAILING_CSS_WHITESPACE, ` `) + fromColon
-
-					return true
-				}
-
-				if (primary === `never`) {
-					decl.raws.between = beforeColon.replace(TRAILING_CSS_WHITESPACE, ``) + fromColon
-
-					return true
-				}
-
-				return false
+				// PostCSS keeps the space closing a hexadecimal escape in the property, so the run may reach past `raws.between`, which is then cut to nothing
+				decl.raws.between = beforeColon.slice(0, Math.max(beforeColon.length - run.length, 0)) + (primary === `always` ? ` ` : ``) + fromColon
 			},
 		})
 	}

@@ -74,6 +74,15 @@ testRule({
 
 	reject: [
 		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			description: `an escaped space in front of the solidus, which is a character of the word and no space`,
+			code: `@media (a: 1\\ /2) {}`,
+			fixed: `@media (a: 1\\  /2) {}`,
+			line: 1,
+			column: 15,
+			message: messages.expectedBefore(),
+		},
+		{
 			// See #560
 			description: `a solidus among the arguments behind a quoted address, which are those of any call`,
 			code: `@media (c: url("x", 1/2)) {}`,
@@ -198,6 +207,11 @@ testRule({
 	config: [`never`],
 
 	accept: [
+		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			description: `an escaped space in front of the solidus, which is a character of the word and no whitespace`,
+			code: `@media (a: 1\\ /2) {}`,
+		},
 		{
 			description: `no space in front of the solidus`,
 			code: `@media (aspect-ratio: 16/ 9) {}`,

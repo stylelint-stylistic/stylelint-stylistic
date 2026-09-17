@@ -6,6 +6,9 @@ import { colonIndexInBetween } from "../colonIndexInBetween/index.ts"
 import { declarationColonSource } from "../declarationColonSource/index.ts"
 import { declarationValueAsSpelled } from "../declarationValueAsSpelled/index.ts"
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
+import { findEscapeSpans } from "../findCommentSpans/index.ts"
+import { maskEscapes } from "../maskEscapes/index.ts"
+import { runInFront } from "../writesTwinRun/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -24,7 +27,7 @@ export type LocationChecker = (args: {
 export function declarationColonSpaceChecker (opts: {
 	root: Root,
 	locationChecker: LocationChecker,
-	fix?: ((decl: Declaration, index: number) => void),
+	fix?: ((decl: Declaration, index: number, run: string) => void),
 	isChecked?: ((decl: Declaration) => boolean),
 	isFixable?: ((decl: Declaration, index: number) => boolean),
 	result: PostcssResult,
@@ -43,6 +46,8 @@ export function declarationColonSpaceChecker (opts: {
 		if (opts.isChecked && !opts.isChecked(decl)) return
 
 		let source = declarationColonSource(opts.syntax, decl, opts.result)
+		// The run is read over the copy with its escapes masked, where an escaped space is a character of the property and no run, and the fix in front of the colon cuts that run (1789661964)
+		let runString = maskEscapes(source, findEscapeSpans(source, opts.syntax.inlineComments(decl, opts.result)), true)
 
 		// The first colon of `raws.between` outside a comment, string or parentheses (#92, #408, #421)
 		let indexInBetween = colonIndexInBetween(opts.syntax, decl, opts.result)
@@ -56,7 +61,7 @@ export function declarationColonSpaceChecker (opts: {
 		let isFixable = fix && (!opts.isFixable || opts.isFixable(decl, startIndex))
 
 		opts.locationChecker({
-			source,
+			source: runString,
 			index: startIndex,
 			// `decl.value` drops comments, and a break inside one with them (#389)
 			lineCheckStr: declarationValueAsSpelled(opts.syntax, decl, opts.result),
@@ -68,7 +73,7 @@ export function declarationColonSpaceChecker (opts: {
 					endIndex: problemIndex,
 					result: opts.result,
 					ruleName: opts.checkedRuleName,
-					...(fix && isFixable && { fix: (): void => fix(decl, startIndex) }),
+					...(fix && isFixable && { fix: (): void => fix(decl, startIndex, runInFront(runString, startIndex)) }),
 				})
 			},
 		})

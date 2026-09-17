@@ -217,10 +217,10 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// A write behind a backslash ending the value would be read with it
-			description: `a backslash ending the value in front of a space, which the grammar reads as an escaped space and a line break in its place as no escape at all, so the warning stands`,
+			// The run is read over the copy with its escapes masked, so the break goes behind the escaped space, not in its place (1789661964)
+			description: `an escaped space in front of the semicolon, which is a character of the value and no run, so the break goes behind it`,
 			code: `a { color: red \\ ; }`,
-			fixed: `a { color: red \\ ; }`,
+			fixed: `a { color: red \\ \n; }`,
 			line: 1,
 			column: 17,
 			message: messages.expectedBefore(),
@@ -492,6 +492,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// The run taken away is read over the copy with its escapes masked, so the escaped space stays (1789661964)
+			description: `a line break in front of the semicolon behind an escaped space, which is a character of the value and stays`,
+			code: `a {\n\tcolor: red \\ \n;\n\ttop: 0;\n}`,
+			fixed: `a {\n\tcolor: red \\ ;\n\ttop: 0;\n}`,
+			line: 2,
+			column: 15,
+			message: messages.rejectedBeforeMultiLine(),
+		},
 		{
 			description: `a break in front of the semicolon of a custom property`,
 			code: `

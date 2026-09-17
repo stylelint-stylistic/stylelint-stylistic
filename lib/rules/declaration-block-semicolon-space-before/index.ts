@@ -1,15 +1,17 @@
 import stylelint from "stylelint"
 
-import { TRAILING_CSS_WHITESPACE, WHITESPACE_ONLY } from "../../regexps.ts"
+import { WHITESPACE_ONLY } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { betweenTailAfterColon } from "../../utils/betweenTailAfterColon/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { findEscapeSpans } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
 import { isInlineStyleAttribute } from "../../utils/isInlineStyleAttribute/index.ts"
 import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
+import { maskEscapes } from "../../utils/maskEscapes/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
 import { keepsEscapedCharacter, writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
@@ -78,10 +80,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let declString = declarationString(syntax, decl)
 			let problemIndex = declString.length - 1
 			// The semicolon goes at the end of the run the fix cuts into; a `//` comment there is closed by that run's break, so either option would take the semicolon into it: the warning stands. A value of nothing but that run is the run behind the colon too, whose writer the rules asked about it settle (#416). A backslash ending the value would read what the fix puts behind it
-			let isFixable = !syntax.writesIntoInlineComment(decl, result) && writesSharedRun(syntax, decl, result, ruleName) && keepsEscapedCharacter(syntax, decl, primary.startsWith(`always`) ? ` ` : ``)
+			let isFixable = !syntax.writesIntoInlineComment(decl, result) && writesSharedRun(syntax, decl, result, ruleName) && keepsEscapedCharacter(syntax, decl, result, primary.startsWith(`always`) ? ` ` : ``)
 
 			checker.before({
-				source: declString,
+				// The run is read over the copy with its escapes masked, where an escaped space is a character of the value and no run (1789661964)
+				source: maskEscapes(declString, findEscapeSpans(declString, syntax.inlineComments(decl, result)), true),
 				index: declString.length,
 				lineCheckStr: blockString(parentRule, result),
 				err: (message) => {
@@ -95,20 +98,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						...(isFixable && {
 							fix: (): void => {
 								if (primary.startsWith(`always`)) {
-									writeWhitespaceBeforeSemicolon(syntax, decl, ` `)
+									writeWhitespaceBeforeSemicolon(syntax, decl, result, ` `)
 
 									return
 								}
 
 								if (primary.startsWith(`never`)) {
-									if (decl.raws.important) decl.raws.important = decl.raws.important.replace(TRAILING_CSS_WHITESPACE, ``)
-									else {
-										let newValue = isCustomPropertyWithOnlySpaces
-											? ` `
-											: value.replace(TRAILING_CSS_WHITESPACE, ``)
-
-										syntax.write(decl, newValue)
-									}
+									if (isCustomPropertyWithOnlySpaces) syntax.write(decl, ` `)
+									else writeWhitespaceBeforeSemicolon(syntax, decl, result, ``)
 								}
 							},
 						}),
