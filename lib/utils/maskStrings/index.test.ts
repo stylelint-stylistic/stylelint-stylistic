@@ -34,6 +34,13 @@ describe(`maskStrings`, () => {
 		expect(maskStrings(`a // it's\n,'b'`, [{ start: 2, end: 9, isInline: true }])).toBe(`a // it's\n,???`)
 	})
 
+	// See 1789637913
+	it(`a string inside the parentheses of a bare address the tokenizer reads as code, which is masked whole`, () => {
+		expect(maskStrings(`1px, 1/url(a "),b" ), 2px`, [])).toBe(`1px, 1/url(a ????? ), 2px`)
+		expect(maskStrings(`1,url(a ') , b' ),c`, [])).toBe(`1,url(a ??????? ),c`)
+		expect(maskStrings(`url( a "),b" ),c`, [])).toBe(`url( a ????? ),c`)
+	})
+
 	it(`a quotation mark behind a double slash of code, which opens a string`, () => {
 		expect(maskStrings(`myurl(//a) "b",c`, [])).toBe(`myurl(//a) ???,c`)
 	})

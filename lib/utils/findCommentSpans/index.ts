@@ -54,14 +54,14 @@ function skipUrlName (text: string, openIndex: number): number {
 /**
  * Skips a `url()` token, whose bare address carries `//` and `/*` as ordinary characters.
  *
- * The name must stand alone, since `image-url(` is a call, and so is `$url(` ({@link lengthensTheName}). What the parentheses hold is {@link readAddress}'s reading: a quoted address leaves the rest of them code, so the walk reads on from behind the string and finds every comment written there ([#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378), [#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557)); a bare one runs to the first `)` no escape holds and no comment, string or Sass interpolation covers, a quotation mark inside it a character of it wherever no comment is read there ([#504](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504)). A comment inside such an address ends the room the address had, an address being one span ([#660](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/660)). `\61 \75 rl(` is a call.
+ * The name must stand alone, since `image-url(` is a call, and so is `$url(` ({@link lengthensTheName}). What the parentheses hold is {@link readAddress}'s reading: a quoted address leaves the rest of them code, so the walk reads on from behind the string and finds every comment written there ([#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378), [#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557)); a bare one runs to the first `)` no escape holds and no comment, string or Sass interpolation covers, a quotation mark inside it a character of it wherever no comment is read there ([#504](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504)) and the opening of a string wherever one is, which is recorded as a string so that a scan over the copy reads a comma inside it as text (1789637913). A comment inside such an address ends the room the address had, an address being one span ([#660](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/660)). `\61 \75 rl(` is a call.
  * @param text - The text walked for comments and addresses.
  * @param openIndex - Where it would start.
  * @param behindIdentifier - True behind a name: a {@link IDENTIFIER_CODE_POINT} code point, a `}` or an escape.
  * @param reading - What the syntax makes of a `//` comment.
  * @param spans - The comments the parentheses hold are added.
  * @param addresses - This one is added.
- * @param strings - The string of a quoted address is added.
+ * @param strings - The string of a quoted address is added, and every string the parentheses of a bare one hold where comments are read there.
  * @returns Where the walk reads on — behind the string of a quoted address, behind the `)` of a bare one — or `openIndex`.
  */
 function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, reading: CommentReading, spans: CommentSpan[], addresses: AddressSpan[], strings: StringSpan[]): number {
@@ -85,13 +85,14 @@ function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, re
 	let [start, end] = bareAddressRoom(text, behindName, address)
 
 	spans.push(...address.comments)
+	strings.push(...address.strings)
 	pushBareAddress(text, start, end, addresses)
 
 	return address.index + 1
 }
 
 /**
- * Finds the room a bare address stands in: the first run of code the parentheses hold that is not whitespace alone, since an address is one span and a comment inside them parts what they hold ([#660](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/660)).
+ * Finds the room a bare address stands in: the first run of code the parentheses hold that is not whitespace alone, since an address is one span and a comment inside them parts what they hold ([#660](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/660)). A string inside them parts what they hold to the tokenizer too, and is left in the room all the same: every reader of the span declines by it, and the string is masked whole where a scan reads the text (1789637913).
  * @param text - The text holding the `url()` token.
  * @param openIndex - Behind the `(`.
  * @param address - What {@link readAddress} read of the parentheses.
@@ -325,7 +326,7 @@ export function findAddressSpans (text: string, reading: CommentReading = SPELLS
 }
 
 /**
- * Finds the spans of a text's strings: a quotation mark inside a comment or inside a bare address as {@link skipUrl} reads one opens none, and one behind an escape closes none. PostCSS reads a bare address only behind a lowercase `url(` with no whitespace inside it, so a quotation mark behind `url( ` or `URL(` opens a string to it and none here. A string the text never closes runs to its end.
+ * Finds the spans of a text's strings: a quotation mark inside a comment or inside a bare address as {@link skipUrl} reads one opens none, and one behind an escape closes none. PostCSS reads a bare address only behind a lowercase `url(` with no whitespace inside it, so a quotation mark behind `url( `, `URL(` or `1/url(` opens a string to it, and one here, its parentheses being code to the tokenizer. A string the text never closes runs to its end outside such parentheses, and inside them a mark nothing closes stays a character of the address.
  * @param text - The raw walked for strings.
  * @param reading - What the syntax makes of a `//` comment ({@link inlineCommentReading}).
  * @returns The spans, in source order.
