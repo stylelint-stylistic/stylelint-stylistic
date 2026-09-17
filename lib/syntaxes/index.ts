@@ -271,6 +271,14 @@ export type Syntax = {
 	readsUnitAsIdentifier (): boolean,
 
 	/**
+	 * Asks whether the syntax reads a quotation mark inside the parentheses of a `url()` that open on no quotation mark as opening a string.
+	 *
+	 * To CSS such parentheses are a bad-url token to the first `)` under every spelling of the name, the mark a character of it, and Less refuses the file; Sass reads the parentheses as code and the string as a string, which it prints double-quoted (1789604002).
+	 * @returns True where a string opens there, false where the mark is a character of the address.
+	 */
+	readsQuoteInsideAddressAsString (): boolean,
+
+	/**
 	 * Asks whether whitespace written behind an at-rule's name changes what the syntax reads the at-rule as.
 	 *
 	 * To CSS and Sass `@import"x"` and `@import "x"` are one rule. Less takes `@import` and `@plugin` as directives only with whitespace behind the name, so a space written into `@import(reference) "x"` loads a file the stylesheet only printed ([#396](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/396)).

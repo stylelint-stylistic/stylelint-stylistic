@@ -9,6 +9,7 @@ import { declarationValueIndex } from "../../utils/declarationValueIndex/index.t
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
+import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isAtRule } from "../../utils/typeGuards/index.ts"
@@ -215,7 +216,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (hasValidQuotes || correctQuote === `'`) return
 			}
 
-			valueParser(hideParenthesesInUrlStrings(blankComments(value, commentSpans), commentSpans)).walk((valueNode) => {
+			valueParser(hideParenthesesInUrlStrings(blankComments(value, commentSpans), commentSpans)).walk((valueNode, index, siblings) => {
+				// A bare address is passed over whole where the syntax reads a quotation mark inside one as a character of it, since the parser opens an address behind the name spelled `url` alone and hands the strings behind `URL(`, `u\rl(` and `\75 rl(` back as strings (1789604002). A quoted address is the string, and is walked.
+				if (valueNode.type === `function` && !syntax.readsQuoteInsideAddressAsString() && opensAnAddress(valueNode, index, siblings) && valueNode.nodes[0]?.type !== `string`) return false
+
 				if (valueNode.type === `string` && valueNode.quote === erroneousQuote) {
 					let needsEscape = valueNode.value.includes(correctQuote)
 
