@@ -229,6 +229,39 @@ testRule({
 			column: 11,
 			message: messages.expectedBefore(),
 		},
+		{
+			// PostCSS holds `(a,[b)` as one token, opaque to the parser; a break inside makes it code, whose `[` opens a group nothing closes, and the file stops parsing
+			description: `a call whose parentheses hold a square bracket nothing closes, where the break is refused and the warning stands`,
+			code: `a { b: 1 f(a,[b) 2px; }`,
+			fixed: `a { b: 1 f(a,[b) 2px; }`,
+			line: 1,
+			column: 13,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `a call holding a brace nothing closes in a custom property's value, where the parser reads a brace as a group too, refused likewise`,
+			code: `a { --b: f(a,{b); }`,
+			fixed: `a { --b: f(a,{b); }`,
+			line: 1,
+			column: 13,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `a call whose parentheses hold a square bracket closed inside them, which code reads as a group of its own, so the break is written`,
+			code: `a { b: f(a[b],c); }`,
+			fixed: `a { b: f(a[b]\n,c); }`,
+			line: 1,
+			column: 14,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `a call holding a brace nothing closes in an ordinary property's value, where the parser passes a brace inside parentheses over, so the break is written`,
+			code: `a { b: f(a{b,c); }`,
+			fixed: `a { b: f(a{b\n,c); }`,
+			line: 1,
+			column: 13,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 
