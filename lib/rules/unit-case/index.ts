@@ -17,6 +17,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
+import { quotesItsAddress } from "../../utils/quotesItsAddress/index.ts"
 import { recaseAscii } from "../../utils/recaseAscii/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { weldEscapedWords } from "../../utils/weldEscapedWords/index.ts"
@@ -178,8 +179,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			parsed.walk((valueNode, at, siblings) => {
 				let value = valueNode.value
 
-				// A call opening an address holds no arguments and is passed over whole, under every spelling of `url(`
-				if (opensAnAddress(valueNode, at, siblings)) return false
+				// A call opening a bare address holds no arguments and is passed over whole, under every spelling of `url(`; a quoted one holds them behind its string
+				if (opensAnAddress(valueNode, at, siblings) && !quotesItsAddress(valueNode)) return false
 
 				// A node inside a comment is no node of the value, but its children are still walked: a call opened inside a `//` comment reaches past the comment's end. The address check comes first, since such a `url()` reaches past the end too.
 				if (findCommentSpanHolding(valueNode, comments)) return

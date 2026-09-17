@@ -381,6 +381,24 @@ testRule({
 
 	reject: [
 		{
+			// See #560
+			description: `a call among the arguments behind a quoted address, which are those of any call while the address's own parentheses stay as written`,
+			code: `@media (c: url( "x", f( 1 ) )) {}`,
+			fixed: `@media (c: url( "x", f(1) )) {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 23,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 26,
+					message: messages.rejectedClosing,
+				},
+			],
+		},
+		{
 			// See #347
 			description: `such a feature standing beside one the file does spell, whose whitespace is taken away while the text of the comment is left as it stands`,
 			code: `@media ( a: 1 ) and (b: 2 /*/ ) */ ) { a { b: c; } }`,

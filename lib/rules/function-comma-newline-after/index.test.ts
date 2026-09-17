@@ -107,6 +107,15 @@ testRule({
 
 	reject: [
 		{
+			// See #560
+			description: `the comma behind a quoted address, which parts the arguments of a call as any comma does`,
+			code: `a { b: url("x", f(1)); }`,
+			fixed: `a { b: url("x",\nf(1)); }`,
+			line: 1,
+			column: 15,
+			message: messages.expectedAfter(),
+		},
+		{
 			// The value parser closes such an address on the string's parenthesis
 			description: `a comma inside a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, beside one of the call`,
 			code: `a { b: f(url( a ") , b" ), c); }`,

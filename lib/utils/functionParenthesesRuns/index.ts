@@ -3,6 +3,7 @@ import valueParser, { type FunctionNode } from "postcss-value-parser"
 import { LEADING_CSS_WHITESPACE, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { type CommentSpan, findCommentSpanAt, findCommentSpanHolding } from "../findCommentSpans/index.ts"
 import { opensAnAddress } from "../opensAnAddress/index.ts"
+import { quotesItsAddress } from "../quotesItsAddress/index.ts"
 
 /**
  * The runs at the parentheses of a call and of every call nested in it that the rule reads, which the rule writes in one pass; a write is judged for lines by what they leave once all of them are written ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)). A `never-multi-line` fix reaches further, into every stretch it measured, so over a call holding a comment the judgment here is the cautious one.
@@ -17,8 +18,8 @@ export function parenthesesRuns (valueNode: FunctionNode, comments: CommentSpan[
 	valueParser.walk(valueNode.nodes, (node, at, siblings) => {
 		if (node.type !== `function`) return
 
-		// As the rules' own walks read it: an address holds no call of the value, and a call in a comment's text is none
-		if (opensAnAddress(node, at, siblings)) return false
+		// As the rules' own walks read it: a bare address holds no call of the value, a quoted one holds its arguments' calls, and a call in a comment's text is none
+		if (opensAnAddress(node, at, siblings)) return quotesItsAddress(node) ? undefined : false
 
 		if (findCommentSpanHolding(node, comments) || !reads(node)) return
 

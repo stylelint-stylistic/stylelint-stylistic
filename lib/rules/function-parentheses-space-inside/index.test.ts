@@ -584,8 +584,8 @@ testRule({
 	accept: [
 		{
 			// See #533
-			description: `a call nested inside a quoted address's parentheses, which the walk does not reach`,
-			code: `a { b: url( "a", format( "woff2" ) ); }`,
+			description: `the spaces inside a quoted address's own parentheses, where postcss-scss would read a token of a string holding a parenthesis`,
+			code: `a { b: url( "a", format("woff2") ); }`,
 		},
 		{
 			// See #378
@@ -623,6 +623,24 @@ testRule({
 	],
 
 	reject: [
+		{
+			// See #560
+			description: `a call among the arguments behind a quoted address, which are those of any call while the spaces of the address's own parentheses stay`,
+			code: `a { b: url( "a", format( "woff2" ) ); }`,
+			fixed: `a { b: url( "a", format("woff2") ); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 25,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 33,
+					message: messages.rejectedClosing,
+				},
+			],
+		},
 		{
 			// The value parser closes such an address on the string's parenthesis
 			description: `a call inside a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, beside one of the value`,
@@ -1156,6 +1174,30 @@ testRule({
 			warnings: [
 				{ line: 2, column: 7, message: messages.expectedOpening },
 				{ line: 5, column: 1, message: messages.expectedClosing },
+			],
+		},
+	],
+})
+
+// The lines a write leaves are counted over the runs of every call it writes, so a call among the arguments behind a quoted address counts its runs as the one around it does (#704)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/function-parentheses-newline-inside": `always-multi-line` },
+
+	reject: [
+		{
+			// See #560
+			description: `the only breaks of a call standing inside the parentheses of a call among the arguments behind a quoted address, which the write takes out along with the rest, leaving a call the twin passes over`,
+			code: `a { b: f(url("a", g(\n1\n))) }`,
+			fixed: `a { b: f( url("a", g( 1 )) ) }`,
+			warnings: [
+				{ line: 1, column: 10, message: messages.expectedOpening },
+				{ line: 3, column: 2, message: messages.expectedClosing },
+				{ line: 1, column: 21, message: messages.expectedOpening },
+				{ line: 2, column: 2, message: messages.expectedClosing },
+				{ line: 1, column: 10, message: `Expected newline after "(" in a multi-line function (@stylistic/function-parentheses-newline-inside)` },
+				{ line: 3, column: 2, message: `Expected newline before ")" in a multi-line function (@stylistic/function-parentheses-newline-inside)` },
 			],
 		},
 	],

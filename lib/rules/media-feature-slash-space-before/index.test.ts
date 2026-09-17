@@ -74,6 +74,15 @@ testRule({
 
 	reject: [
 		{
+			// See #560
+			description: `a solidus among the arguments behind a quoted address, which are those of any call`,
+			code: `@media (c: url("x", 1/2)) {}`,
+			fixed: `@media (c: url("x", 1 /2)) {}`,
+			line: 1,
+			column: 22,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `no space in front of the solidus`,
 			code: `@media (aspect-ratio: 16/9) {}`,
 			fixed: `@media (aspect-ratio: 16 /9) {}`,

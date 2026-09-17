@@ -11,6 +11,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
+import { quotesItsAddress } from "../../utils/quotesItsAddress/index.ts"
 import { recaseAscii } from "../../utils/recaseAscii/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
@@ -62,8 +63,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			parsedValue.walk((node, at, siblings) => {
 				let { value } = node
 
-				// An address is passed over whole; its name is read, not matched, so `u\rl(` and `URL(` are `url(` here as to the comment scan and Sass
-				if (opensAnAddress(node, at, siblings)) return false
+				// A bare address is passed over whole, and a quoted one walked for the arguments behind its string; the name is read, not matched, so `u\rl(` and `URL(` are `url(` here as to the comment scan and Sass
+				if (opensAnAddress(node, at, siblings) && !quotesItsAddress(node)) return false
 
 				// Not the value's, but its children are walked: a call opened in a comment reaches past its end into code. The address check comes first since the scan steps over one only where it is code
 				if (findCommentSpanHolding(node, comments)) return

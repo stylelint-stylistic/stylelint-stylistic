@@ -12,6 +12,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
+import { quotesItsAddress } from "../../utils/quotesItsAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isAtRule } from "../../utils/typeGuards/index.ts"
 
@@ -81,8 +82,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// Quotation marks a comment leaves open are masked (#508)
 			valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(value, comments), comments)).walk((valueNode, at, siblings) => {
-				// A call opening an address is passed over whole; the name is read, not matched, so `u\rl(` and `URL(` are `url(`
-				if (opensAnAddress(valueNode, at, siblings)) return false
+				// A call opening a bare address is passed over whole, and a quoted one walked for the arguments behind its string; the name is read, not matched, so `u\rl(` and `URL(` are `url(`
+				if (opensAnAddress(valueNode, at, siblings) && !quotesItsAddress(valueNode)) return false
 
 				// A node inside a comment is no node of the value, but its children are walked, since a call opened in a comment gathers code past its end; such a `url()` is turned away first
 				if (findCommentSpanHolding(valueNode, comments)) return

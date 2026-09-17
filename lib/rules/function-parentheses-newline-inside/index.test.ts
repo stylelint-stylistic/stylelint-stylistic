@@ -88,6 +88,24 @@ testRule({
 
 	reject: [
 		{
+			// See #560
+			description: `a call among the arguments behind a quoted address, which are those of any call while the address's own parentheses stay as written`,
+			code: `a { b: url("x", f(1)); }`,
+			fixed: `a { b: url("x", f(\n1\n)); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 19,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 19,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
 			// The value parser closes the address on the comment's parenthesis, and the whitespace behind the opening one makes the comment a comment to the tokenizer
 			description: `a call holding an address with a comment with a closing parenthesis, whose closing parenthesis stands against the address's`,
 			code: `a { b: f(url( $a /* ) */)); }`,
