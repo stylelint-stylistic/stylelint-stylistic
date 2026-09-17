@@ -159,6 +159,11 @@ testRule({
 			description: `a quotation mark inside a bare address in front of an end-of-line comment holding another, where the address closes on its parenthesis to every tokenizer and the mark inside it opens no string, so that the comment is a comment and the mark it holds is its text — a file Less itself refuses`,
 			code: `a { background: url(a/a,')//x "z"; }`,
 		},
+		{
+			// Less refuses the file with `Expected ')'` under this spelling of the name too, and the value parser alone reads a string here (1789604002)
+			description: `a quotation mark inside a bare address whose name is written in capitals, which lightningcss reads as a character of a bad-url token and a file Less itself refuses`,
+			code: `a { background: URL(a"b"c); }`,
+		},
 	],
 
 	reject: [

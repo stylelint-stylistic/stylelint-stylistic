@@ -29,4 +29,6 @@ export let scss: Syntax = {
 	isStandardSelector: isStandardPreprocessorSelector,
 	isStandardComment: isStandardPreprocessorComment,
 	readsSlashAsOperator,
+	// Sass reads the parentheses of a `url()` holding a quotation mark as code: `URL(a"b"c)` compiles to `URL(a "b" c)`, the string printed double-quoted (1789604002)
+	readsQuoteInsideAddressAsString: () => true,
 }

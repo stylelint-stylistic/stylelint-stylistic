@@ -90,6 +90,39 @@ testRule({
 			message: messages.expected(`single`),
 		},
 		{
+			// The value parser opens an address on the name spelled `url` alone, and reads the quotation marks inside every other spelling as a string
+			description: `a quotation mark inside a bare address whose name is written in capitals, which is a character of the address, beside a double-quoted value`,
+			code: `a { b: URL(a"b"c); c: "d" }`,
+			fixed: `a { b: URL(a"b"c); c: 'd' }`,
+			line: 1,
+			column: 23,
+			message: messages.expected(`single`),
+		},
+		{
+			description: `the same address with a letter of its name escaped`,
+			code: `a { b: u\\rl(a"b"c); c: "d" }`,
+			fixed: `a { b: u\\rl(a"b"c); c: 'd' }`,
+			line: 1,
+			column: 24,
+			message: messages.expected(`single`),
+		},
+		{
+			description: `a quotation mark and a closing parenthesis inside a bare address whose name opens with a hexadecimal escape a space closes, which the value parser hands back as a word in front of a call`,
+			code: `a { b: \\75 rl( a ")" b ); c: "d" }`,
+			fixed: `a { b: \\75 rl( a ")" b ); c: 'd' }`,
+			line: 1,
+			column: 30,
+			message: messages.expected(`single`),
+		},
+		{
+			description: `a quoted address whose name opens with a hexadecimal escape, which is a string`,
+			code: `a { b: \\75 rl("a"); }`,
+			fixed: `a { b: \\75 rl('a'); }`,
+			line: 1,
+			column: 15,
+			message: messages.expected(`single`),
+		},
+		{
 			description: `an attribute value spelling a preprocessor construct, which is text rather than syntax`,
 			code: `[title=":extend(x)"] {}`,
 			fixed: `[title=':extend(x)'] {}`,
@@ -311,6 +344,15 @@ testRule({
 			fixed: `a { background: url("foo"); }`,
 			line: 1,
 			column: 21,
+			message: messages.expected(`double`),
+		},
+		{
+			// The value parser opens an address on the name spelled `url` alone, and reads the quotation marks inside every other spelling as a string
+			description: `a quotation mark inside a bare address whose name opens with a hexadecimal escape, which is a character of the address, beside a single-quoted value`,
+			code: `a { b: \\75 rl(a'b'c); c: 'd' }`,
+			fixed: `a { b: \\75 rl(a'b'c); c: "d" }`,
+			line: 1,
+			column: 26,
 			message: messages.expected(`double`),
 		},
 		{

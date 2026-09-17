@@ -257,6 +257,15 @@ testRule({
 			message: messages.expected(`double`),
 		},
 		{
+			// Sass compiles it to `url(a ")" b)`, the string double-quoted, where the core passes such an address over whole (1789604002)
+			description: `a string holding a closing parenthesis inside the parentheses of an address whose name opens with a hexadecimal escape, which Sass reads as code`,
+			code: `a { b: \\75 rl( a ')' b ) 1px; }`,
+			fixed: `a { b: \\75 rl( a ")" b ) 1px; }`,
+			line: 1,
+			column: 18,
+			message: messages.expected(`double`),
+		},
+		{
 			description: `the double slash of an interpolated address is no comment here either`,
 			code: `a { background: url(#{map-get($m, a)}//cdn/a.png), url('b.png'); }`,
 			fixed: `a { background: url(#{map-get($m, a)}//cdn/a.png), url("b.png"); }`,
