@@ -5,6 +5,7 @@ import stylelint, { type PostcssResult } from "stylelint"
 import { WHITESPACE } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { parseSelector } from "../parseSelector/index.ts"
+import { selectorSearchCopy } from "../selectorSearchCopy/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -57,6 +58,9 @@ export function selectorCombinatorSpaceChecker (opts: {
 
 		if (!selectorTree) return
 
+		// The parser reads an escaped space as a character of its name, so the fix writes the combinator's own spaces alone; the check reads the run over the copy where it is none either (1789661964)
+		let { runString } = selectorSearchCopy(selector)
+
 		selectorTree.walkCombinators((node) => {
 			// Non-standard
 			if (!opts.syntax.isStandardCombinator(node)) return
@@ -75,7 +79,7 @@ export function selectorCombinatorSpaceChecker (opts: {
 			let sourceIndex = node.sourceIndex
 			let index = node.value.length > 1 && opts.locationType === `before` ? sourceIndex : sourceIndex + node.value.length - 1
 
-			check(selector, node, index, rule, copies.toSourceIndex(sourceIndex))
+			check(runString, node, index, rule, copies.toSourceIndex(sourceIndex))
 		})
 
 		if (hasFixed) {
@@ -87,7 +91,7 @@ export function selectorCombinatorSpaceChecker (opts: {
 
 	/**
 	 * Checks a combinator.
-	 * @param source - The selector.
+	 * @param source - The copy of the selector the run is read over.
 	 * @param combinator - The parsed combinator node whose whitespace is checked.
 	 * @param index - The index to check.
 	 * @param node - The rule.

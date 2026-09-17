@@ -48,6 +48,15 @@ testRule({
 
 	reject: [
 		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			description: `an escaped space in front of the colon, which is a character of the property and no space`,
+			code: `a { b\\ :c; }`,
+			fixed: `a { b\\  :c; }`,
+			line: 1,
+			column: 8,
+			message: messages.expectedBefore(),
+		},
+		{
 			// See #408
 			description: `a property ending in a run of two solidi, which the search that finds the colon reads to the end of the line as a comment though no syntax spells one there`,
 			code: `a { --b//c:\nx:y; }`,
@@ -164,6 +173,11 @@ testRule({
 
 	accept: [
 		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			description: `an escaped space in front of the colon, which is a character of the property and no whitespace`,
+			code: `a { b\\ :c; }`,
+		},
+		{
 			description: `a colon abutting the property, with the value abutting it too`,
 			code: `a { color:pink }`,
 		},
@@ -195,6 +209,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			description: `a space in front of the colon behind an escaped space, which is a character of the property and stays`,
+			code: `a { b\\  :c; }`,
+			fixed: `a { b\\ :c; }`,
+			line: 1,
+			column: 8,
+			message: messages.rejectedBefore(),
+		},
 		{
 			description: `the same custom property with a space in front of the colon`,
 			code: `a { --a : /*comment*/ !important; }`,

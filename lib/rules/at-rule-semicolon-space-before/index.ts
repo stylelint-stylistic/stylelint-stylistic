@@ -3,9 +3,11 @@ import stylelint from "stylelint"
 import { css } from "../../syntaxes/css/index.ts"
 import { declaresTheEncoding } from "../../utils/declaresTheEncoding/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { findEscapeSpans } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
+import { maskEscapes } from "../../utils/maskEscapes/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { keepsEscapedCharacter, writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
@@ -65,10 +67,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// The fix writes over the run the at-rule ends with, and a `//` comment there is closed by that run's break, so either option would put the semicolon inside it: the warning stands
 			// A neighbour respelling the head makes a `@charset` the encoding declaration within the same run — `at-rule-name-case` the name's own case among them — and the specification reads no whitespace in front of its semicolon, so `always` never writes there (#697); `never` writes the spelling the specification asks for
 			// A backslash ending the params would read what the fix puts behind it
-			let isFixable = !syntax.writesIntoInlineComment(atRule, result) && !(primary === `always` && atRule.name.toLowerCase() === `charset`) && keepsEscapedCharacter(syntax, atRule, primary === `always` ? ` ` : ``)
+			let isFixable = !syntax.writesIntoInlineComment(atRule, result) && !(primary === `always` && atRule.name.toLowerCase() === `charset`) && keepsEscapedCharacter(syntax, atRule, result, primary === `always` ? ` ` : ``)
 
 			checker.before({
-				source: atRuleString,
+				// The run is read over the copy with its escapes masked, where an escaped space is a character of the params and no run (1789661964)
+				source: maskEscapes(atRuleString, findEscapeSpans(atRuleString, syntax.inlineComments(atRule, result)), true),
 				index: atRuleString.length,
 				err: (m) => {
 					report({
@@ -80,7 +83,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						ruleName,
 						...(isFixable && {
 							fix: (): void => {
-								writeWhitespaceBeforeSemicolon(syntax, atRule, primary === `always` ? ` ` : ``)
+								writeWhitespaceBeforeSemicolon(syntax, atRule, result, primary === `always` ? ` ` : ``)
 							},
 						}),
 					})

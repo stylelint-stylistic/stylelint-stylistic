@@ -7,11 +7,12 @@ import type { Syntax } from "../../syntaxes/index.ts"
 import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import { breakRereadsParentheses } from "../breakRereadsParentheses/index.ts"
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
-import { type CommentReading, type CommentSpan, findCommentSpans } from "../findCommentSpans/index.ts"
+import { type CommentReading, type CommentSpan, findCommentSpans, findEscapeSpans } from "../findCommentSpans/index.ts"
 import { hideFalseInlineComments } from "../hideFalseInlineComments/index.ts"
 import { hideParenthesesInUrlStrings } from "../hideParenthesesInUrlStrings/index.ts"
 import { hideQuotesInComments } from "../hideQuotesInComments/index.ts"
 import { isCustomProperty } from "../isCustomProperty/index.ts"
+import { maskEscapes } from "../maskEscapes/index.ts"
 import { opensAnAddress } from "../opensAnAddress/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
 import { quotesItsAddress } from "../quotesItsAddress/index.ts"
@@ -37,13 +38,13 @@ type FunctionComma = {
 }
 
 /**
- * Reads a call's arguments with the comments taken out, which the check reads, and where each comma stands there.
+ * Reads a call's arguments with the comments taken out, which the check reads, the copy of them with the escapes masked, which the run beside a comma is read over, and where each comma stands there.
  * @param functionNode - The call.
  * @param reading - Whether `//` opens a comment.
  * @param valueCommentSpans - The comment spans of the whole value.
- * @returns The arguments and the commas.
+ * @returns The arguments, the copy and the commas.
  */
-function commasOf (functionNode: ValueParserFunctionNode, reading: CommentReading, valueCommentSpans: CommentSpan[]): { functionArguments: string, commaDataList: FunctionComma[] } {
+function commasOf (functionNode: ValueParserFunctionNode, reading: CommentReading, valueCommentSpans: CommentSpan[]): { functionArguments: string, runArguments: string, commaDataList: FunctionComma[] } {
 	let argumentStrings = functionNode.nodes.map((node) => valueParser.stringify(node))
 	// Remove function name and parens
 	let argumentsRun = functionNode.before + argumentStrings.join(``) + functionNode.after
@@ -79,7 +80,10 @@ function commasOf (functionNode: ValueParserFunctionNode, reading: CommentReadin
 	}
 
 	// A comment followed by whitespace alone takes the whitespace in front of it out too
-	return { functionArguments: withoutComments(hiddenArguments, commentSpans), commaDataList }
+	let functionArguments = withoutComments(hiddenArguments, commentSpans)
+
+	// The value parser reads an escaped space as a character of its word, so the fix cuts none, and the check reads the run over a copy where it is none either (1789661964)
+	return { functionArguments, runArguments: maskEscapes(functionArguments, findEscapeSpans(functionArguments, reading), true), commaDataList }
 }
 
 /**
@@ -125,9 +129,9 @@ function enclosingNamesOf (parsedValue: valueParser.ParsedValue): WeakMap<ValueP
 }
 
 /**
- * Describes the run beside a comma to the gate between twins: both read the arguments with the comments taken out, at the same comma.
+ * Describes the run beside a comma to the gate between twins: both read the arguments with the comments taken out and the escapes masked, at the same comma.
  * @param position - The side of the comma the rule writes.
- * @param functionArguments - The arguments with the comments taken out.
+ * @param functionArguments - The copy of the arguments the runs are read over.
  * @param comma - Where the comma stands.
  * @param comma.checkIndex - The comma's index there.
  * @param comma.checkIndices - The index there of every comma of the call.
@@ -144,7 +148,7 @@ function twinRunAt (position: `before` | `after`, functionArguments: string, { c
 		run: readRun(functionArguments, checkIndex),
 		lineText: functionArguments,
 		// A nested call's runs are lines of this one's text too
-		runs: () => [...checkIndices.map((each) => readRun(functionArguments, each)), ...nestedCalls().flatMap((call) => call.commaDataList.map((each) => readRun(call.functionArguments, each.checkIndex)))],
+		runs: () => [...checkIndices.map((each) => readRun(functionArguments, each)), ...nestedCalls().flatMap((call) => call.commaDataList.map((each) => readRun(call.runArguments, each.checkIndex)))],
 		line,
 		twinWrites: (_option, secondary) => !functionNames.some((name) => optionsMatches(secondary, `ignoreFunctions`, name)),
 	}
@@ -194,7 +198,7 @@ export function functionCommaSpaceChecker (opts: {
 			// `ignoreFunctions` covers everything nested inside too
 			if (optionsMatches(opts, `ignoreFunctions`, valueNode.value)) return false
 
-			let { functionArguments, commaDataList } = commasOf(valueNode, reading, valueCommentSpans)
+			let { runArguments, commaDataList } = commasOf(valueNode, reading, valueCommentSpans)
 
 			/**
 			 * Asks whether a fix can write at the comma. A `before` rule writes over the whitespace in front of it, and where that is an inline comment's closing break either option would take the comma into the comment; an `after` rule writes behind the comma, where no comment is open.
@@ -214,7 +218,7 @@ export function functionCommaSpaceChecker (opts: {
 				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` nothing closes inside, or such a `{` in a custom property's value, is then a group the parser finds open and the file stops parsing: the break is refused there and the warning stands
 				if (commaEdits.some((edit) => LINE_BREAK.test(edit.text)) && breakRereadsParentheses(declValue, functionNode.sourceIndex + functionNode.value.length, isCustomProperty(decl.prop))) return false
 
-				return writesTwinRun(opts.shortName, opts.checkedRuleName, decl, opts.result, twinRunAt(opts.fixPosition === `before` ? `before` : `after`, functionArguments, {
+				return writesTwinRun(opts.shortName, opts.checkedRuleName, decl, opts.result, twinRunAt(opts.fixPosition === `before` ? `before` : `after`, runArguments, {
 					checkIndex,
 					checkIndices: commaDataList.map((each) => each.checkIndex),
 					nestedCalls: () => nestedCallsOf(functionNode, reading, valueCommentSpans, (call) => optionsMatches(opts, `ignoreFunctions`, call.value) ? `ignored` : opts.syntax.isStandardFunction(call)),
@@ -252,7 +256,7 @@ export function functionCommaSpaceChecker (opts: {
 
 			for (let { commaNode, checkIndex, nodeIndex } of commaDataList) {
 				opts.locationChecker({
-					source: functionArguments,
+					source: runArguments,
 					index: checkIndex,
 					err: createErrHandler(commaNode, nodeIndex, checkIndex),
 				})

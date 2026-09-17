@@ -5,6 +5,7 @@ import stylelint, { type PostcssResult } from "stylelint"
 
 import type { Syntax } from "../../syntaxes/index.ts"
 import { parseSelector } from "../parseSelector/index.ts"
+import { selectorSearchCopy } from "../selectorSearchCopy/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -47,11 +48,13 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 			if (!operator) return
 
 			let attributeNodeString = attributeNode.toString()
+			// The parser reads an escaped space as a character of the attribute's name, so the fix writes the operator's own spaces alone; the check reads the run over the copy where it is none either (1789661964)
+			let { runString } = selectorSearchCopy(attributeNodeString)
 
 			styleSearch({ source: attributeNodeString, target: operator }, (match) => {
 				let index = options.checkBeforeOperator ? match.startIndex : match.endIndex - 1
 
-				checkOperator(attributeNodeString, index, rule, attributeNode, operator)
+				checkOperator(runString, index, rule, attributeNode, operator)
 			})
 		})
 
@@ -63,7 +66,7 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 
 		/**
 		 * Checks one operator.
-		 * @param source - The attribute's text.
+		 * @param source - The copy of the attribute's text the run is read over.
 		 * @param index - The index checked.
 		 * @param node - The node reported.
 		 * @param attributeNode - The parsed selector node handed to the fixer.

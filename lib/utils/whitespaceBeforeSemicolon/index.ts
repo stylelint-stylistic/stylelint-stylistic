@@ -4,7 +4,9 @@ import type { PostcssResult } from "stylelint"
 import { CSS_LINE_BREAK, TRAILING_BACKSLASHES, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blockString } from "../blockString/index.ts"
+import { type CommentReading, findEscapeSpans } from "../findCommentSpans/index.ts"
 import { isSingleLineString } from "../isSingleLineString/index.ts"
+import { maskEscapes } from "../maskEscapes/index.ts"
 import type { NeighbourRule } from "../neighbourSettings/index.ts"
 import { isAtRule } from "../typeGuards/index.ts"
 import { type Whitespace, whitespaceAsked } from "../whitespaceAsked/index.ts"
@@ -75,15 +77,29 @@ function atRuleTail (atRule: AtRule): string {
 }
 
 /**
- * Reads the whitespace in front of a semicolon: the run `writeWhitespaceBeforeSemicolon` writes over, as the tokenizer reads whitespace, since a no-break space or a vertical tab there is a word the value keeps.
+ * Reads the whitespace a text ends on, as the tokenizer reads whitespace, since a no-break space or a vertical tab there is a word the value keeps. The run is measured over the copy with its escapes masked: an escaped space is a character of a word and no run, and the whitespace closing a hexadecimal escape stays a run, since the semicolon closes the escape as well (1789661964). The reading is the syntax's, as the rules' checks read: in a plain CSS value `//d\ ` is code ending in an escaped space, and a comment to the default reading.
+ * @param text - The text.
+ * @param reading - What the syntax makes of a `//` comment.
+ * @returns The run, empty where the text ends in a word.
+ */
+function trailingRun (text: string, reading: CommentReading): string {
+	let copy = maskEscapes(text, findEscapeSpans(text, reading), true)
+
+	return text.slice(copy.replace(TRAILING_CSS_WHITESPACE, ``).length)
+}
+
+/**
+ * Reads the whitespace in front of a semicolon: the run `writeWhitespaceBeforeSemicolon` writes over. It is measured over the whole text in front of the semicolon and read out of the raw the node ends on, since PostCSS parts an escape ending a bodiless at-rule's params from the whitespace it covers, `"x"\` and `raws.between` of ` ` for `@import "x"\ ;`.
  * @param syntax - The syntax reading the value.
  * @param node - The declaration or bodiless at-rule.
+ * @param result - The Stylelint result.
  * @returns The run, empty where the node ends in a word.
  */
-export function readWhitespaceBeforeSemicolon (syntax: Syntax, node: AtRule | Declaration): string {
-	let text = isAtRule(node) ? atRuleTail(node) : textInFrontOfSemicolon(syntax, node)
+export function readWhitespaceBeforeSemicolon (syntax: Syntax, node: AtRule | Declaration, result: PostcssResult): string {
+	let tail = isAtRule(node) ? atRuleTail(node) : textInFrontOfSemicolon(syntax, node)
+	let run = trailingRun(textInFrontOfSemicolon(syntax, node), syntax.inlineComments(node, result))
 
-	return text.slice(text.replace(TRAILING_CSS_WHITESPACE, ``).length)
+	return tail.slice(Math.max(tail.length - run.length, 0))
 }
 
 /**
@@ -116,13 +132,14 @@ function openAlike (one: string, other: string): boolean {
  * PostCSS lets a backslash cover no whitespace and no solidus, so `red \` ends the value there; the grammar reads one in front of a line break as a delimiter and one in front of anything else as an escape. Whatever a write puts behind that backslash is read with it by one of the two: a semicolon joins the value, and under `never` the file stops parsing where a declaration follows.
  * @param syntax - The syntax reading the value.
  * @param node - The declaration or bodiless at-rule.
+ * @param result - The Stylelint result.
  * @param whitespace - The whitespace the write leaves in front of the semicolon.
  * @param behind - What stands behind the run now, a semicolon unless the write adds one.
  * @returns True where the node's code ends on no such backslash or the character behind it stays.
  */
-export function keepsEscapedCharacter (syntax: Syntax, node: AtRule | Declaration, whitespace: string, behind = `;`): boolean {
+export function keepsEscapedCharacter (syntax: Syntax, node: AtRule | Declaration, result: PostcssResult, whitespace: string, behind = `;`): boolean {
 	let text = textInFrontOfSemicolon(syntax, node)
-	let code = text.replace(TRAILING_CSS_WHITESPACE, ``)
+	let code = text.slice(0, text.length - trailingRun(text, syntax.inlineComments(node, result)).length)
 	let backslashes = code.length - code.replace(TRAILING_BACKSLASHES, ``).length
 
 	return backslashes % 2 === 0 || openAlike(text.slice(code.length) + behind, `${whitespace};`)
@@ -131,14 +148,26 @@ export function keepsEscapedCharacter (syntax: Syntax, node: AtRule | Declaratio
 /**
  * Writes the whitespace in front of a semicolon, over the whitespace the node ends with.
  *
- * With `!important` it goes into `raws.important`, kept by PostCSS only for a spelling other than ` !important` and edited so a comment in front of the flag survives; otherwise onto the end of the value, or into a bodiless at-rule's `raws.between` — a Less mixin call's `raws.important` where it has one, since the `less` namespace hands it the run behind the flag ([#374](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/374)). The two declaration rules and `declaration-block-trailing-semicolon` all write through here.
+ * With `!important` it goes into `raws.important`, kept by PostCSS only for a spelling other than ` !important` and edited so a comment in front of the flag survives; otherwise onto the end of the value, or into a bodiless at-rule's `raws.between` — a Less mixin call's `raws.important` where it has one, since the `less` namespace hands it the run behind the flag ([#374](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/374)). The two declaration rules, `at-rule-semicolon-space-before`, `declaration-block-trailing-semicolon` and `indentation` all write through here.
  * @param syntax - The syntax reading and writing the value.
  * @param node - The declaration or bodiless at-rule.
+ * @param result - The Stylelint result.
  * @param whitespace - The whitespace to write.
  */
-export function writeWhitespaceBeforeSemicolon (syntax: Syntax, node: AtRule | Declaration, whitespace: string): void {
-	if (isAtRule(node) && typeof node.raws.important === `string`) node.raws.important = node.raws.important.replace(TRAILING_CSS_WHITESPACE, whitespace)
-	else if (isAtRule(node)) node.raws.between = (node.raws.between ?? ``).replace(TRAILING_CSS_WHITESPACE, whitespace)
-	else if (node.important) node.raws.important = (node.raws.important || ` !important`).replace(TRAILING_CSS_WHITESPACE, whitespace)
-	else syntax.write(node, syntax.read(node).replace(TRAILING_CSS_WHITESPACE, whitespace))
+export function writeWhitespaceBeforeSemicolon (syntax: Syntax, node: AtRule | Declaration, result: PostcssResult, whitespace: string): void {
+	let run = readWhitespaceBeforeSemicolon(syntax, node, result)
+
+	/**
+	 * Writes the whitespace over the run a raw ends on.
+	 * @param raw - The raw.
+	 * @returns The raw with the whitespace in place of its run.
+	 */
+	function written (raw: string): string {
+		return raw.slice(0, raw.length - run.length) + whitespace
+	}
+
+	if (isAtRule(node) && typeof node.raws.important === `string`) node.raws.important = written(node.raws.important)
+	else if (isAtRule(node)) node.raws.between = written(node.raws.between ?? ``)
+	else if (node.important) node.raws.important = written(node.raws.important || ` !important`)
+	else syntax.write(node, written(syntax.read(node)))
 }

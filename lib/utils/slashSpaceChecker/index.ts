@@ -7,8 +7,10 @@ import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import { atRuleParamIndex } from "../atRuleParamIndex/index.ts"
 import { declarationString } from "../declarationString/index.ts"
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
+import { findEscapeSpans } from "../findCommentSpans/index.ts"
 import { findSeparatorSlashes, type SeparatorSlash } from "../findSeparatorSlashes/index.ts"
 import { getLineBreak } from "../getLineBreak/index.ts"
+import { maskEscapes } from "../maskEscapes/index.ts"
 import { matchesStringOrRegExp } from "../matchesStringOrRegExp/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
 import { rereadsAnAddress } from "../rereadsAnAddress/index.ts"
@@ -126,6 +128,8 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 
 	return (node, text, textIndex, lineCheckStr, readsGroups) => {
 		let reading = syntax.inlineComments(node, result)
+		// The run beside the solidus is read over the copy with its escapes masked, where an escaped space is a character of a word and no run (1789661964); the guards read the text the write lands in
+		let runText = maskEscapes(text, findEscapeSpans(text, reading), true)
 		let written = writes ? (whitespace === `newline` ? getLineBreak(node, result) : ` `) : ``
 		let edits: Edit[] = []
 
@@ -138,12 +142,12 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 		}
 
 		for (let { slash, checkIndex } of checks) {
-			let { run, span } = spansAt(text, checkIndex, position, whitespace, writes)
+			let { run, span } = spansAt(runText, checkIndex, position, whitespace, writes)
 			// Refused before the report, since a fixer cannot decline
 			let isFixable = writesTheSpan(syntax, reading, text, span, written, position)
 
 			opts.locationChecker({
-				source: text,
+				source: runText,
 				index: checkIndex,
 				lineCheckStr,
 				err: (message) => {
@@ -153,7 +157,7 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 						side: position,
 						run: text.slice(run.start, run.end),
 						lineText: lineCheckStr,
-						runs: () => checks.map(({ checkIndex: each }) => position === `before` ? runInFront(text, each) : runBehind(text, each)),
+						runs: () => checks.map(({ checkIndex: each }) => position === `before` ? runInFront(runText, each) : runBehind(runText, each)),
 						line: node.rangeBy({ index }).start.line,
 						twinWrites: (twinOption, secondary, over) => {
 							// A twin passing the property or a call around the solidus over contends for nothing
@@ -161,8 +165,9 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 
 							if (slash.functionNames.some((name) => optionsMatches(secondary, `ignoreFunctions`, name))) return false
 
-							// The text this write leaves, the run standing over by what the gate asks about; in front of the solidus the write moves the solidus itself
+							// The text this write leaves, the run standing over by what the gate asks about; in front of the solidus the write moves the solidus itself. The copy is edited alike, since the run holds no escape
 							let twinText = text.slice(0, run.start) + over + text.slice(run.end)
+							let twinRunText = runText.slice(0, run.start) + over + runText.slice(run.end)
 							let twinIndex = position === `before` ? run.start + over.length : slash.index
 
 							// In front of the solidus both twins read the very run the other writes; behind it they part over a comment
@@ -184,7 +189,7 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 							let twinWrites = twinOption.startsWith(`always`)
 							let twinWritten = twinWrites ? (twinWhitespace === `newline` ? getLineBreak(node, result) : ` `) : ``
 
-							return writesTheSpan(syntax, reading, twinText, spansAt(twinText, twinIndex, position, twinWhitespace, twinWrites).span, twinWritten, position)
+							return writesTheSpan(syntax, reading, twinText, spansAt(twinRunText, twinIndex, position, twinWhitespace, twinWrites).span, twinWritten, position)
 						},
 					})
 

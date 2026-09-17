@@ -359,6 +359,15 @@ testRule({
 
 	reject: [
 		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			description: `an escaped space in front of the operator, which is a character of the attribute's name and no space`,
+			code: `[a\\ =b] {}`,
+			fixed: `[a\\  =b] {}`,
+			line: 1,
+			column: 5,
+			message: messages.expectedBefore(`=`),
+		},
+		{
 			description: `no space in front of the equals operator`,
 			code: `[target=_blank] { }`,
 			fixed: `[target =_blank] { }`,
@@ -1007,6 +1016,11 @@ testRule({
 	config: [`never`],
 
 	accept: [
+		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			description: `an escaped space in front of the operator, which is a character of the attribute's name and no whitespace`,
+			code: `[a\\ =b] {}`,
+		},
 		{
 			description: `a selector with no attribute in it`,
 			code: `.foo { }`,
