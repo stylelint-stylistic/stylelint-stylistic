@@ -68,6 +68,15 @@ testRule({
 
 	reject: [
 		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			description: `an escaped space in front of the comma, which is a character of the name and no space`,
+			code: `a ,b\\ ,c {}`,
+			fixed: `a ,b\\  ,c {}`,
+			line: 1,
+			column: 7,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `no space in front of a comma behind an escaped backslash, which is a comma of the list`,
 			code: `a ,b\\\\,c {}`,
 			fixed: `a ,b\\\\ ,c {}`,
@@ -210,6 +219,11 @@ testRule({
 	config: [`never`],
 
 	accept: [
+		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			description: `an escaped space in front of the comma, which is a character of the name and no whitespace`,
+			code: `a,b\\ ,c {}`,
+		},
 		{
 			description: `no space in front of the comma`,
 			code: `a,b {}`,

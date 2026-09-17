@@ -28,11 +28,11 @@ export interface ValueListCommaWhitespaceCheckerOptions {
 	/** The rule's name. */
 	checkedRuleName: string,
 
-	/** Fixes the comma at an index. */
-	fix?: ((node: Declaration, index: number) => void),
+	/** Fixes the comma at an index; the copy the runs are read over comes along, so a fix cuts the run the check measured. */
+	fix?: ((node: Declaration, index: number, runString: string) => void),
 
-	/** Whether a problem can be fixed; the printed declaration and the index of every comma checked in it come along. */
-	isFixable?: ((node: Declaration, index: number, declString: string, indices: number[]) => boolean),
+	/** Whether a problem can be fixed; the printed declaration, the index of every comma checked in it and the copy the runs are read over come along. */
+	isFixable?: ((node: Declaration, index: number, declString: string, indices: number[], runString: string) => boolean),
 
 	/** Moves the index a comma is checked at, or refuses it with `false`. */
 	determineIndex?: ((declString: string, match: StyleSearchMatch) => number | false),
@@ -49,7 +49,7 @@ export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceC
 		if (!opts.syntax.isStandardDeclaration(decl) || !opts.syntax.isStandardProperty(decl.prop)) return
 
 		let declString = declarationString(opts.syntax, decl)
-		let { searchString } = opts.syntax.searchCopy(declString, decl, opts.result)
+		let { searchString, runString } = opts.syntax.searchCopy(declString, decl, opts.result)
 
 		let indices: number[] = []
 
@@ -68,23 +68,24 @@ export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceC
 			},
 		)
 
-		for (let index of indices) checkComma(declString, index, decl, indices)
+		for (let index of indices) checkComma(declString, runString, index, decl, indices)
 	})
 
 	/**
-	 * Checks one comma.
+	 * Checks one comma. The whitespace is read over the copy with its escapes masked, since an escaped space or the space closing a hexadecimal escape is a character of a word and no run (1789657288).
 	 * @param source - The declaration text.
+	 * @param runString - The copy of it the runs are read over.
 	 * @param index - The comma's index.
 	 * @param node - The declaration.
 	 * @param indices - The index of every comma checked in it.
 	 */
-	function checkComma (source: string, index: number, node: Declaration, indices: number[]): void {
+	function checkComma (source: string, runString: string, index: number, node: Declaration, indices: number[]): void {
 		opts.locationChecker({
-			source,
+			source: runString,
 			index,
 			err: (message) => {
 				// Stylelint counts a fixer as applied whatever it does, so the decision is made before the report; here, not before the check, so a clean declaration is not read once per comma.
-				let isFixable = fix && (!opts.isFixable || opts.isFixable(node, index, source, indices))
+				let isFixable = fix && (!opts.isFixable || opts.isFixable(node, index, source, indices, runString))
 
 				report({
 					message,
@@ -93,7 +94,7 @@ export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceC
 					endIndex: index,
 					result: opts.result,
 					ruleName: opts.checkedRuleName,
-					...(fix && isFixable && { fix: (): void => fix(node, index) }),
+					...(fix && isFixable && { fix: (): void => fix(node, index, runString) }),
 				})
 			},
 		})

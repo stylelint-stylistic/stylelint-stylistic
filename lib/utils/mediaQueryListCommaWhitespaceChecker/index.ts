@@ -32,15 +32,15 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 		err: (message: string) => void,
 	}) => void,
 	checkedRuleName: string,
-	fix?: ((atRule: AtRule, index: number) => void),
-	isFixable?: ((params: string, index: number, atRule: AtRule, commas: MediaQueryListComma[]) => boolean),
+	fix?: ((atRule: AtRule, index: number, runString: string) => void),
+	isFixable?: ((params: string, index: number, atRule: AtRule, commas: MediaQueryListComma[], runString: string) => boolean),
 	allowTrailingComments?: boolean,
 }): void {
 	let { fix } = opts
 
 	opts.root.walkAtRules(MEDIA_AT_RULE, (atRule) => {
 		let params = opts.syntax.read(atRule)
-		let { searchString, commentSpans } = opts.syntax.searchCopy(params, atRule, opts.result)
+		let { searchString, runString, commentSpans } = opts.syntax.searchCopy(params, atRule, opts.result)
 
 		// A comma inside a function's arguments is not the list's (`url(x/a,b.png)`), but a media feature's parentheses are not a call's
 		let functionArguments = findFunctionArgumentSpans(searchString).filter(({ name }) => !MEDIA_QUERY_COMBINATORS.has(name))
@@ -93,24 +93,25 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 			})
 		})
 
-		for (let { comma, pastComments } of commas) checkComma(params, opts.allowTrailingComments ? pastComments : comma, atRule, commas)
+		for (let { comma, pastComments } of commas) checkComma(params, runString, opts.allowTrailingComments ? pastComments : comma, atRule, commas)
 	})
 
 	/**
-	 * Checks one comma.
+	 * Checks one comma. The whitespace is read over the copy with its escapes masked, since an escaped space or the space closing a hexadecimal escape is a character of a word and no run (1789657288).
 	 * @param source - The at-rule's params the comma stands in.
+	 * @param runString - The copy of them the runs are read over.
 	 * @param index - The comma's index.
 	 * @param node - The at-rule.
 	 * @param commas - Every comma of the list.
 	 */
-	function checkComma (source: string, index: number, node: AtRule, commas: MediaQueryListComma[]): void {
+	function checkComma (source: string, runString: string, index: number, node: AtRule, commas: MediaQueryListComma[]): void {
 		opts.locationChecker({
-			source,
+			source: runString,
 			index,
 			err: (message) => {
 				let commaIndex = index + atRuleParamIndex(node)
 				// Asked here, not in front of the check, so parameters in order are not read once per comma
-				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, node, commas))
+				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, node, commas, runString))
 
 				report({
 					message,
@@ -119,7 +120,7 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 					endIndex: commaIndex,
 					result: opts.result,
 					ruleName: opts.checkedRuleName,
-					...(fix && isFixable && { fix: (): void => fix(node, commaIndex) }),
+					...(fix && isFixable && { fix: (): void => fix(node, commaIndex, runString) }),
 				})
 			},
 		})

@@ -53,6 +53,15 @@ testRule({
 
 	reject: [
 		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			description: `an escaped space in front of the operator, which is a character of the feature's name and no space`,
+			code: `@media (a\\ >b) {}`,
+			fixed: `@media (a\\  >b) {}`,
+			line: 1,
+			column: 11,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `no space before the operator`,
 			code: `@media (width< 600px) {}`,
 			fixed: `@media (width < 600px) {}`,
@@ -216,6 +225,11 @@ testRule({
 	config: [`never`],
 
 	accept: [
+		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			description: `an escaped space in front of the operator, which is a character of the feature's name and no whitespace`,
+			code: `@media (a\\ >b) {}`,
+		},
 		{
 			description: `no space before the operator`,
 			code: `@media (width= 600px) {}`,

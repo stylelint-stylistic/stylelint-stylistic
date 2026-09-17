@@ -53,6 +53,11 @@ describe(`searchCopy`, () => {
 		expect(searchCopy(`1,a\\\\,b`, cssDecl(`a { b: 1,a\\\\,b }`), CSS_RESULT).searchString).toBe(`1,axx,b`)
 	})
 
+	// See 1789657288
+	it(`the copy the runs are read over masks the escapes alone, the comments, the strings and the whitespace closing a hexadecimal escape left as they stand`, () => {
+		expect(searchCopy(`1,a\\ ,b\\2c ,c/*d*/"e"`, cssDecl(`a { b: 1,a\\ ,b\\2c ,c/*d*/"e" }`), CSS_RESULT).runString).toBe(`1,axx,bxxx ,c/*d*/"e"`)
+	})
+
 	it(`the copy is as long as the text it was made of, so every position stands where it did`, () => {
 		for (let text of [`myurl(//a)red`, `1px/*x*//*y*/2px`, `1px//*c*/2px`, `1,a\\,b\\2c ,c`]) {
 			expect(searchCopy(text, cssDecl(`a { b: ${text} }`), CSS_RESULT).searchString).toHaveLength(text.length)

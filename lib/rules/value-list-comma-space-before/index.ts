@@ -50,7 +50,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		let fixData: Map<Declaration, number[]> | undefined
+		let fixData: Map<Declaration, [number, string][]> | undefined
 
 		valueListCommaWhitespaceChecker({
 			root,
@@ -59,29 +59,30 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
 			// Refused before the report: a comma in front of the value is the property name's, and one behind a `//` comment is closed by the break either option removes
-			isFixable: (declNode, index, declString, indices) => index >= declarationValueIndex(declNode) && !syntax.endsWithInlineComment(declString.slice(0, index), syntax.inlineComments(declNode, result)) && writesTwinRun(shortName, ruleName, declNode, result, {
+			isFixable: (declNode, index, declString, indices, runString) => index >= declarationValueIndex(declNode) && !syntax.endsWithInlineComment(declString.slice(0, index), syntax.inlineComments(declNode, result)) && writesTwinRun(shortName, ruleName, declNode, result, {
 				// The break twin writes the same run (#704)
 				side: `before`,
-				run: runInFront(declString, index),
+				run: runInFront(runString, index),
 				lineText: declString,
-				runs: () => indices.map((each) => runInFront(declString, each)),
+				runs: () => indices.map((each) => runInFront(runString, each)),
 				line: declNode.rangeBy({ index }).start.line,
 				twinWrites: () => true,
 			}),
-			fix: (declNode, index) => {
+			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ ,b` is not cut (1789657288)
+			fix: (declNode, index, runString) => {
 				fixData = fixData || (new Map())
 
-				let commaIndices = fixData.get(declNode) || []
+				let commas = fixData.get(declNode) || []
 
-				commaIndices.push(index)
-				fixData.set(declNode, commaIndices)
+				commas.push([index, runInFront(runString, index)])
+				fixData.set(declNode, commas)
 			},
 		})
 
 		if (fixData) {
-			for (let [decl, commaIndices] of fixData.entries()) {
+			for (let [decl, commas] of fixData.entries()) {
 				// Back to front: the comma opening the value moves `declarationValueIndex`, so it is written last
-				for (let index of commaIndices.toSorted((a, b) => b - a)) {
+				for (let [index, run] of commas.toSorted(([a], [b]) => b - a)) {
 					let valueIndex = index - declarationValueIndex(decl)
 
 					// Before a comma opening the value the whitespace is `raws.between`'s
@@ -94,11 +95,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					}
 
 					let value = syntax.read(decl)
-					let beforeValue = value.slice(0, valueIndex)
+					let beforeValue = value.slice(0, valueIndex - run.length)
 					let afterValue = value.slice(valueIndex)
 
-					if (primary.startsWith(`always`)) beforeValue = beforeValue.replace(TRAILING_CSS_WHITESPACE, ` `)
-					else if (primary.startsWith(`never`)) beforeValue = beforeValue.replace(TRAILING_CSS_WHITESPACE, ``)
+					if (primary.startsWith(`always`)) beforeValue += ` `
 
 					syntax.write(decl, beforeValue + afterValue)
 				}

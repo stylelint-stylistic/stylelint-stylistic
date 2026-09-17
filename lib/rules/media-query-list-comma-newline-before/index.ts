@@ -1,7 +1,7 @@
 import type { AtRule } from "postcss"
 import stylelint from "stylelint"
 
-import { TRAILING_CSS_WHITESPACE, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
+import { TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { breakAtRereadsParentheses } from "../../utils/breakRereadsParentheses/index.ts"
@@ -51,7 +51,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		let fixData: Map<AtRule, number[]> | undefined
+		let fixData: Map<AtRule, [number, string][]> | undefined
 
 		mediaQueryListCommaWhitespaceChecker({
 			root,
@@ -60,7 +60,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.beforeAllowingIndentation,
 			checkedRuleName: ruleName,
 			// `never-multi-line` may take away the break closing a `//` comment and put the comma into it; report and leave the parameters. `always` only adds a break.
-			isFixable: (params, index, atRule, commas) => {
+			isFixable: (params, index, atRule, commas, runString) => {
 				// The run in front of a comma opening the parameters is `raws.afterName`, the at-rule name rules' to write; a break written into the parameters goes into that raw and is asked for again
 				if (index === 0) return false
 
@@ -74,43 +74,43 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// The space twin writes the same run, save over a comment's closing break (#704)
 				return writesTwinRun(shortName, ruleName, atRule, result, {
 					side: `before`,
-					run: runInFront(params, index),
+					run: runInFront(runString, index),
 					lineText: params,
-					runs: () => commas.map(({ comma }) => runInFront(params, comma)),
+					runs: () => commas.map(({ comma }) => runInFront(runString, comma)),
 					line: atRule.rangeBy({ index: index + atRuleParamIndex(atRule) }).start.line,
 					twinWrites: () => !closesInlineComment,
 				})
 			},
-			fix: (atRule, index) => {
+			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ ,b` is not cut and no break parts it from its backslash (1789657288)
+			fix: (atRule, index, runString) => {
 				let paramCommaIndex = index - atRuleParamIndex(atRule)
 
 				fixData = fixData || (new Map())
 
-				let commaIndices = fixData.get(atRule) || []
+				let commas = fixData.get(atRule) || []
 
-				commaIndices.push(paramCommaIndex)
-				fixData.set(atRule, commaIndices)
+				commas.push([paramCommaIndex, runInFront(runString, paramCommaIndex)])
+				fixData.set(atRule, commas)
 
 				return true
 			},
 		})
 
 		if (fixData) {
-			for (let [atRule, commaIndices] of fixData.entries()) {
+			for (let [atRule, commas] of fixData.entries()) {
 				let params = syntax.read(atRule)
 
-				for (let index of commaIndices.toSorted((a, b) => b - a)) {
+				for (let [index, run] of commas.toSorted(([a], [b]) => b - a)) {
 					let beforeComma = params.slice(0, index)
 					let afterComma = params.slice(index)
 
-					// The break goes in front of the spaces and tabs standing there, which become the indentation of the comma's line
+					// The break goes in front of the spaces and tabs ending the run, which become the indentation of the comma's line
 					if (primary.startsWith(`always`)) {
-						let spaceIndex = beforeComma.search(TRAILING_SPACES_AND_TABS)
+						let indentation = run.match(TRAILING_SPACES_AND_TABS)?.[0] ?? ``
 
-						beforeComma = spaceIndex >= 0 ? beforeComma.slice(0, spaceIndex) + getLineBreak(root, result) + beforeComma.slice(spaceIndex) : beforeComma + getLineBreak(root, result)
+						beforeComma = beforeComma.slice(0, beforeComma.length - indentation.length) + getLineBreak(root, result) + indentation
 					}
-					else if (primary === `never-multi-line`) beforeComma = beforeComma.replace(TRAILING_CSS_WHITESPACE, ``)
-
+					else if (primary === `never-multi-line`) beforeComma = beforeComma.slice(0, beforeComma.length - run.length)
 					params = beforeComma + afterComma
 				}
 

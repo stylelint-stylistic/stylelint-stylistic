@@ -66,6 +66,15 @@ testRule({
 
 	reject: [
 		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			description: `an escaped space in front of the comma, which is a character of the word and no space`,
+			code: `@media a ,b\\ ,c {}`,
+			fixed: `@media a ,b\\  ,c {}`,
+			line: 1,
+			column: 14,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `no space in front of a comma behind an escaped backslash, which is a comma of the list`,
 			code: `@media a ,b\\\\,c {}`,
 			fixed: `@media a ,b\\\\ ,c {}`,
@@ -185,6 +194,11 @@ testRule({
 	config: [`never`],
 
 	accept: [
+		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			description: `an escaped space in front of the comma, which is a character of the word and no whitespace`,
+			code: `@media a,b\\ ,c {}`,
+		},
 		{
 			description: `a comma with a space in front of it inside the address of an import, which opens no query list`,
 			code: `@import url(x.com?a=b ,c=d)`,

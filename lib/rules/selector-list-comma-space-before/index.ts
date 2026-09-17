@@ -1,7 +1,6 @@
 import type { Rule } from "postcss"
 import stylelint from "stylelint"
 
-import { TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -49,7 +48,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		let fixData: Map<Rule, number[]> | undefined
+		let fixData: Map<Rule, [number, string][]> | undefined
 
 		selectorListCommaWhitespaceChecker({
 			root,
@@ -58,7 +57,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
 			// The run in front of the comma may hold the break closing an inline comment, which no fix may write over
-			isFixable: (selector, index, inlineComments, ruleNode, sourceIndex, commaIndices) => {
+			isFixable: (selector, index, inlineComments, ruleNode, sourceIndex, commaIndices, runString) => {
 				let runStart = selector.slice(0, index).trimEnd().length
 
 				if (inlineComments.some((inlineComment) => runStart <= inlineComment.endIndex && inlineComment.endIndex < index)) return false
@@ -66,38 +65,36 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// The break twin writes the same run (#704)
 				return writesTwinRun(shortName, ruleName, ruleNode, result, {
 					side: `before`,
-					run: runInFront(selector, index),
+					run: runInFront(runString, index),
 					lineText: selector,
-					runs: () => commaIndices.map((each) => runInFront(selector, each)),
+					runs: () => commaIndices.map((each) => runInFront(runString, each)),
 					line: ruleNode.rangeBy({ index: sourceIndex }).start.line,
 					twinWrites: () => true,
 				})
 			},
-			fix: (ruleNode, index) => {
+			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ ,b` is not cut (1789657288)
+			fix: (ruleNode, index, runString) => {
 				fixData = fixData || (new Map())
 
-				let commaIndices = fixData.get(ruleNode) || []
+				let commas = fixData.get(ruleNode) || []
 
-				commaIndices.push(index)
-				fixData.set(ruleNode, commaIndices)
+				commas.push([index, runInFront(runString, index)])
+				fixData.set(ruleNode, commas)
 
 				return true
 			},
 		})
 
 		if (fixData) {
-			for (let [ruleNode, commaIndices] of fixData.entries()) {
+			for (let [ruleNode, commas] of fixData.entries()) {
 				let copies = syntax.selectorCopies(ruleNode)
 				let { selector } = copies
 
-				for (let index of commaIndices.toSorted((a, b) => b - a)) {
-					let beforeSelector = selector.slice(0, index)
+				for (let [index, run] of commas.toSorted(([a], [b]) => b - a)) {
+					let beforeSelector = selector.slice(0, index - run.length)
 					let afterSelector = selector.slice(index)
 
-					if (primary.includes(`always`)) beforeSelector = beforeSelector.replace(TRAILING_CSS_WHITESPACE, ` `)
-					else if (primary.includes(`never`)) beforeSelector = beforeSelector.replace(TRAILING_CSS_WHITESPACE, ``)
-
-					selector = beforeSelector + afterSelector
+					selector = beforeSelector + (primary.includes(`always`) ? ` ` : ``) + afterSelector
 				}
 
 				copies.write(selector)

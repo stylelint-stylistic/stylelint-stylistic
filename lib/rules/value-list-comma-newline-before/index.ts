@@ -35,13 +35,14 @@ export type PrimaryOption = `always` | `always-multi-line` | `never-multi-line`
 /**
  * Puts a break in front of the spaces and tabs ending a text, which become the indentation of the comma's line.
  * @param text - The text ending in the run in front of a comma.
+ * @param run - That run, read over the copy with its escapes masked.
  * @param lineBreak - The break to write.
  * @returns The text with the break in it.
  */
-function breakInFront (text: string, lineBreak: string): string {
-	let spaceIndex = text.search(TRAILING_SPACES_AND_TABS)
+function breakInFront (text: string, run: string, lineBreak: string): string {
+	let indentation = run.match(TRAILING_SPACES_AND_TABS)?.[0] ?? ``
 
-	return spaceIndex >= 0 ? text.slice(0, spaceIndex) + lineBreak + text.slice(spaceIndex) : text + lineBreak
+	return text.slice(0, text.length - indentation.length) + lineBreak + indentation
 }
 
 /**
@@ -64,7 +65,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		let fixData: Map<Declaration, number[]> | undefined
+		let fixData: Map<Declaration, [number, string][]> | undefined
 
 		valueListCommaWhitespaceChecker({
 			root,
@@ -73,7 +74,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.beforeAllowingIndentation,
 			checkedRuleName: ruleName,
 			// Refused before the report: a comma in front of the value is the property name's, and under `never-multi-line` a comma behind a `//` comment keeps the break closing it, while `always` only adds one
-			isFixable: (declNode, index, declString, indices) => {
+			isFixable: (declNode, index, declString, indices, runString) => {
 				if (index < declarationValueIndex(declNode)) return false
 
 				let closesInlineComment = syntax.endsWithInlineComment(declString.slice(0, index), syntax.inlineComments(declNode, result))
@@ -86,36 +87,37 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// The space twin writes the same run, save over a comment's closing break (#704)
 				return writesTwinRun(shortName, ruleName, declNode, result, {
 					side: `before`,
-					run: runInFront(declString, index),
+					run: runInFront(runString, index),
 					lineText: declString,
-					runs: () => indices.map((each) => runInFront(declString, each)),
+					runs: () => indices.map((each) => runInFront(runString, each)),
 					line: declNode.rangeBy({ index }).start.line,
 					twinWrites: () => !closesInlineComment,
 				})
 			},
-			fix: (declNode, index) => {
+			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ ,b` is not cut and no break parts it from its backslash (1789657288)
+			fix: (declNode, index, runString) => {
 				fixData = fixData || (new Map())
 
-				let commaIndices = fixData.get(declNode) || []
+				let commas = fixData.get(declNode) || []
 
-				commaIndices.push(index)
-				fixData.set(declNode, commaIndices)
+				commas.push([index, runInFront(runString, index)])
+				fixData.set(declNode, commas)
 			},
 		})
 
 		if (fixData) {
 			let lineBreak = getLineBreak(root, result)
 
-			for (let [decl, commaIndices] of fixData.entries()) {
+			for (let [decl, commas] of fixData.entries()) {
 				// Back to front: the comma opening the value moves `declarationValueIndex`, so it is written last
-				for (let index of commaIndices.toSorted((a, b) => b - a)) {
+				for (let [index, run] of commas.toSorted(([a], [b]) => b - a)) {
 					let valueIndex = index - declarationValueIndex(decl)
 
 					// Before a comma opening the value the whitespace is `raws.between`'s
 					if (valueIndex === 0) {
 						let between = decl.raws.between || `:`
 
-						decl.raws.between = primary.startsWith(`always`) ? breakInFront(between, lineBreak) : between.replace(TRAILING_CSS_WHITESPACE, ``)
+						decl.raws.between = primary.startsWith(`always`) ? breakInFront(between, run, lineBreak) : between.replace(TRAILING_CSS_WHITESPACE, ``)
 
 						continue
 					}
@@ -124,9 +126,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let beforeValue = value.slice(0, valueIndex)
 					let afterValue = value.slice(valueIndex)
 
-					if (primary.startsWith(`always`)) beforeValue = breakInFront(beforeValue, lineBreak)
-					else if (primary === `never-multi-line`) beforeValue = beforeValue.replace(TRAILING_CSS_WHITESPACE, ``)
-
+					if (primary.startsWith(`always`)) beforeValue = breakInFront(beforeValue, run, lineBreak)
+					else if (primary === `never-multi-line`) beforeValue = beforeValue.slice(0, beforeValue.length - run.length)
 					syntax.write(decl, beforeValue + afterValue)
 				}
 			}

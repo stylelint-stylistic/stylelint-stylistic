@@ -29,11 +29,11 @@ export interface SelectorListCommaWhitespaceCheckerOptions {
 	/** The rule's name. */
 	checkedRuleName: string,
 
-	/** The fix. */
-	fix?: ((rule: Rule, index: number) => void),
+	/** The fix; the copy the runs are read over comes along, so a fix cuts the run the check measured. */
+	fix?: ((rule: Rule, index: number, runString: string) => void),
 
-	/** Whether a problem can be fixed, since Stylelint counts a fixer as applied whatever it does; the rule, the comma's index in its source and every comma of the list come along. */
-	isFixable?: ((selector: string, index: number, inlineComments: InlineComment[], rule: Rule, sourceIndex: number, commaIndices: number[]) => boolean),
+	/** Whether a problem can be fixed, since Stylelint counts a fixer as applied whatever it does; the rule, the comma's index in its source, every comma of the list and the copy the runs are read over come along. */
+	isFixable?: ((selector: string, index: number, inlineComments: InlineComment[], rule: Rule, sourceIndex: number, commaIndices: number[], runString: string) => boolean),
 }
 
 /**
@@ -50,11 +50,12 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 		let { selector } = copies
 
 		let commaIndices: number[] = []
+		// The search reads a string and an escape by rules of its own, so the commas are found and checked over the copies and reported at the selector's index; the whitespace is read over the second copy, where an escaped space is a character of a name and no run (1789657288)
+		let { searchString, runString } = selectorSearchCopy(selector)
 
 		styleSearch(
 			{
-				// The search reads a string by rules of its own, so the commas are found over the copy and checked over the selector
-				source: selectorSearchCopy(selector),
+				source: searchString,
 				target: `,`,
 				functionArguments: `skip`,
 			},
@@ -63,25 +64,26 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 			},
 		)
 
-		for (let index of commaIndices) checkDelimiter(selector, index, rule, copies, commaIndices)
+		for (let index of commaIndices) checkDelimiter(selector, runString, index, rule, copies, commaIndices)
 	})
 
 	/**
 	 * Checks whitespace around a delimiter and reports.
 	 * @param source - The selector text the delimiter stands in.
+	 * @param runString - The copy of it the runs are read over.
 	 * @param index - The delimiter's index.
 	 * @param node - The rule the warning is reported on.
 	 * @param copies - The selector, opened by the syntax.
 	 * @param commaIndices - Every comma of the list.
 	 */
-	function checkDelimiter (source: string, index: number, node: Rule, copies: SelectorCopies, commaIndices: number[]): void {
+	function checkDelimiter (source: string, runString: string, index: number, node: Rule, copies: SelectorCopies, commaIndices: number[]): void {
 		opts.locationChecker({
-			source,
+			source: runString,
 			index,
 			err: (message) => {
 				let sourceIndex = copies.toSourceIndex(index)
 				// Before the report, since Stylelint counts a fixer as applied whatever it does
-				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, copies.comments, node, sourceIndex, commaIndices))
+				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, copies.comments, node, sourceIndex, commaIndices, runString))
 
 				report({
 					message,
@@ -90,7 +92,7 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 					endIndex: sourceIndex,
 					result: opts.result,
 					ruleName: opts.checkedRuleName,
-					...(fix && isFixable && { fix: (): void => fix(node, index) }),
+					...(fix && isFixable && { fix: (): void => fix(node, index, runString) }),
 				})
 			},
 		})

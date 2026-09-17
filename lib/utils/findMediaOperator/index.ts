@@ -14,13 +14,13 @@ const RANGE_OPERATORS = [`>=`, `<=`, `>`, `<`, `=`]
  * @param syntax - The syntax the at-rule's params are read under.
  * @param atRule - The at-rule.
  * @param result - The Stylelint result.
- * @param cb - Called with each match.
+ * @param cb - Called with each match, the params, the at-rule and the copy of the params the whitespace beside the operator is read over, its escapes masked (1789657288).
  */
-export function findMediaOperator<T extends AtRule> (syntax: Syntax, atRule: T, result: PostcssResult, cb: (match: StyleSearchMatch, params: string, atRule: T) => void): void {
+export function findMediaOperator<T extends AtRule> (syntax: Syntax, atRule: T, result: PostcssResult, cb: (match: StyleSearchMatch, params: string, atRule: T, runString: string) => void): void {
 	if (atRule.name.toLowerCase() !== `media`) return
 
 	let params = syntax.read(atRule)
-	let { searchString } = syntax.searchCopy(params, atRule, result)
+	let { searchString, runString } = syntax.searchCopy(params, atRule, result)
 
 	// An operator inside function arguments is no media feature's
 	let functionArguments = findFunctionArgumentSpans(searchString).filter(({ name }) => !MEDIA_QUERY_COMBINATORS.has(name))
@@ -35,6 +35,6 @@ export function findMediaOperator<T extends AtRule> (syntax: Syntax, atRule: T, 
 
 		if (functionArguments.some(({ start, end }) => match.startIndex >= start && match.startIndex < end)) return
 
-		cb(match, params, atRule)
+		cb(match, params, atRule, runString)
 	})
 }
