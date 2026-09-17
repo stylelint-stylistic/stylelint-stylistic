@@ -78,6 +78,23 @@ describe(`rereadsAnAddress`, () => {
 		expect(rereadsAnAddress(`1,/* c */url(a ")" b)`, { start: 9, end: 9, text: ` ` }, POSTCSS)).toBe(false)
 	})
 
+	it(`the url token of a parser whose own tokenizer reads one, which opens behind whitespace and closes by the count of parentheses through strings, comments, interpolations and escapes, against the code reading with its square-bracket groups`, () => {
+		expect(rereadsAnAddress(`1/url ( a ")" b)`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
+		expect(rereadsAnAddress(`1/url( "a)" )`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
+		expect(rereadsAnAddress(`1/url( a // )\n b)`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
+		expect(rereadsAnAddress(`1/url( a /* ) */ b)`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
+		expect(rereadsAnAddress(`1/url( #{")"} )`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
+		expect(rereadsAnAddress(`1/url( "(" a))`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
+		expect(rereadsAnAddress(`1/url( a(b )`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
+		expect(rereadsAnAddress(`1/url( a(b"c)d"e) )`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
+		expect(rereadsAnAddress(`1/url( a\\)b)`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
+		expect(rereadsAnAddress(`1/url(a[b"c") } d ])`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
+		expect(rereadsAnAddress(`1/url( "#{"); "}" )`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
+		expect(rereadsAnAddress(`1/url( a(b)c )`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(false)
+		expect(rereadsAnAddress(`1/url(a[b)`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(false)
+		expect(rereadsAnAddress(`1/url("a)")`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(false)
+	})
+
 	it(`an edit not standing in front of the name`, () => {
 		expect(rereadsAnAddress(`1, url(a"b)`, { start: 2, end: 2, text: `\n` }, POSTCSS)).toBe(false)
 		expect(rereadsAnAddress(`1,URL(a"b)`, { start: 2, end: 2, text: ` ` }, POSTCSS)).toBe(false)

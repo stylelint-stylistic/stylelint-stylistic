@@ -241,6 +241,9 @@ export const OPENS_WITH_QUOTE = /^\s*["']/u
 /** A quotation mark or tokenizer whitespace opening the text; behind either the tokenizer of PostCSS and `postcss-less` reads no `url(`'s parentheses as one token, while `postcss-scss`'s passes over the whitespace. */
 export const OPENS_WITH_QUOTE_OR_CSS_WHITESPACE = /^[\t\n\f\r "']/u
 
+/** A character behind the first of a text at which the tokenizer of PostCSS and `postcss-scss` stops reading parentheses that hold no `url` as one plain token: a line break, a quotation mark, an opening parenthesis, a solidus or a backslash, where `postcss-scss` reads the same parentheses behind `url` as one token closed by the count of parentheses, so that the two readings meet at the same `)` where no such character stands. */
+export const SCSS_PLAIN_BRACKETS_BREAKER = /.[\r\n"'(/\\]/u
+
 /** A leading tag, whitespace aside. */
 export const OPENS_WITH_TAG = /^\s*</u
 
