@@ -15,6 +15,11 @@ testRule({
 			description: `a rule closed by a newline with spaces behind it, which this option counts no line for either`,
 			code: `a {}\n   `,
 		},
+		{
+			// Pins the reading of a string inside parentheses the tokenizer reads as code behind a solidus glued to the name, whose empty lines are text of the string (1789637913)
+			description: `empty lines inside a string standing in the parentheses of a bare address whose name a solidus is glued to, which are no empty lines of the stylesheet`,
+			code: `a {\n\tb: 1/url(a "),\n\n\n\nb" ), 2px;\n}\n`,
+		},
 	],
 	reject: [
 		{

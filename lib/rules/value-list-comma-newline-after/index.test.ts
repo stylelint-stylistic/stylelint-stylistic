@@ -146,6 +146,32 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
+			// Pins the reading of a string inside parentheses the tokenizer reads as code behind a sign glued to the name, whose comma is no comma of the list (1789637913)
+			description: `no newline after the comma behind a bare address whose name a solidus is glued to, holding a string with a closing parenthesis and a comma, which are text of the string`,
+			code: `a { b: 1px,\n1/url(a "),b" ),2px; }`,
+			fixed: `a { b: 1px,\n1/url(a "),b" ),\n2px; }`,
+			line: 2,
+			column: 16,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `the same string behind a comma glued to the name, holding a space on either side of its comma, where the break beside the glued comma is refused as above and the one behind the address written`,
+			code: `a { b: 1px,\n1,url(a ") , b" ),2px; }`,
+			fixed: `a { b: 1px,\n1,url(a ") , b" ),\n2px; }`,
+			warnings: [
+				{
+					line: 2,
+					column: 2,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 2,
+					column: 18,
+					message: messages.expectedAfter(),
+				},
+			],
+		},
+		{
 			// PostCSS holds `(a,[b)` as one token, opaque to the parser; a break inside makes it code, whose `[` opens a group nothing closes, and the file stops parsing
 			description: `parentheses without a name holding a square bracket nothing closes, where the break is refused and the warning stands`,
 			code: `a { b: 1 (a,[b) 2px; }`,
