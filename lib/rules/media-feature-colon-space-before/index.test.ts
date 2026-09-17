@@ -45,6 +45,15 @@ testRule({
 
 	reject: [
 		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			description: `an escaped space in front of the colon, which is a character of the feature's name and no space`,
+			code: `@media (a\\ :b) {}`,
+			fixed: `@media (a\\  :b) {}`,
+			line: 1,
+			column: 12,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `a colon abutting the feature name`,
 			code: `@media (max-width:600px) {}`,
 			fixed: `@media (max-width :600px) {}`,
@@ -158,6 +167,11 @@ testRule({
 	config: [`never`],
 
 	accept: [
+		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			description: `an escaped space in front of the colon, which is a character of the feature's name and no whitespace`,
+			code: `@media (a\\ :b) {}`,
+		},
 		{
 			description: `a colon abutting the feature name`,
 			code: `@media (max-width:600px) {}`,

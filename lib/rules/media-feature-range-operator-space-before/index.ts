@@ -1,6 +1,6 @@
 import stylelint from "stylelint"
 
-import { MEDIA_AT_RULE, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
+import { MEDIA_AT_RULE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -8,6 +8,7 @@ import { findMediaOperator } from "../../utils/findMediaOperator/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { runInFront } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -47,14 +48,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		if (!validOptions) return
 
 		root.walkAtRules(MEDIA_AT_RULE, (atRule) => {
-			let fixOperatorIndices: number[] = []
+			let fixOperators: [number, string][] = []
 
-			findMediaOperator(syntax, atRule, result, (match, params, node) => {
+			// The run is read and cut over the copy with its escapes masked, so the space of `a\ >b` is not cut (1789657288)
+			findMediaOperator(syntax, atRule, result, (match, params, node, runString) => {
 				let problemIndex = match.startIndex - 1 + atRuleParamIndex(node)
 
 				// The match holds the character in front of the operator too
 				checker.before({
-					source: params,
+					source: runString,
 					index: match.startIndex,
 					err: (message) => {
 						report({
@@ -65,24 +67,22 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 							result,
 							ruleName,
 							fix () {
-								fixOperatorIndices.push(match.startIndex)
+								fixOperators.push([match.startIndex, runInFront(runString, match.startIndex)])
 							},
 						})
 					},
 				})
 			})
 
-			if (fixOperatorIndices.length > 0) {
+			if (fixOperators.length > 0) {
 				let params = syntax.read(atRule)
 
-				for (let index of fixOperatorIndices.toSorted((a, b) => b - a)) {
-					let beforeOperator = params.slice(0, index)
+				for (let [index, run] of fixOperators.toSorted(([a], [b]) => b - a)) {
+					let beforeOperator = params.slice(0, index - run.length)
 					let afterOperator = params.slice(index)
 
-					if (primary === `always`) params = beforeOperator.replace(TRAILING_CSS_WHITESPACE, ` `) + afterOperator
-					else if (primary === `never`) params = beforeOperator.replace(TRAILING_CSS_WHITESPACE, ``) + afterOperator
+					params = beforeOperator + (primary === `always` ? ` ` : ``) + afterOperator
 				}
-
 				syntax.write(atRule, params)
 			}
 		})

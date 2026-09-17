@@ -6,17 +6,21 @@ import { maskStrings } from "../maskStrings/index.ts"
 const CODE_READING = { spells: false, tokenizes: false, endsOnFormFeed: false }
 
 /**
- * Builds the copy of a rule's selector a `style-search` scan is handed in place of the text.
+ * Builds the copy of a rule's selector a `style-search` scan is handed in place of the text, and the copy the whitespace beside a delimiter is read over.
  *
  * The search reads a string by rules of its own ([#739](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/739)): it closes none at a quotation mark with a backslash in front, escaped or not, so everything behind the mark of `[a="b\\"]` passes for the text of a string, and it opens one at a mark inside the bare address of `:is(url(x'y))`, which the tokenizer reads as a character of the address. It reads an escape by none at all, so the `,` of `a\,b` is a comma of the list to it (1789649818). Every string of the copy and every mark inside an address is written as `?`, and every escape as a letter ({@link maskEscapes}), at the same length, so every position holds. The comments stay: a quotation mark inside one opens no string for the search either, masking one would eat what stands behind it, and a caller reads them out of the copy.
+ *
+ * The second copy is the same but for the whitespace closing a hexadecimal escape, which stays as it is: a rule reading the run in front of a comma over it may write or take that whitespace away, since the comma closes the escape as well (1789657288).
  * @param selector - The parseable copy of the selector.
- * @returns The copy the scan runs over.
+ * @returns The copy the scan runs over, and the copy the runs are read over.
  */
-export function selectorSearchCopy (selector: string): string {
+export function selectorSearchCopy (selector: string): { searchString: string, runString: string } {
 	// Every walk reads the text through, so each is spared where it cannot find anything: no mark, no string to mask; no backslash, no escape; no `/*`, no comment to find, since a `//` is code here
-	if (!selector.includes(`"`) && !selector.includes(`'`) && !selector.includes(`\\`)) return selector
+	if (!selector.includes(`"`) && !selector.includes(`'`) && !selector.includes(`\\`)) return { searchString: selector, runString: selector }
 
 	let comments = selector.includes(`/*`) ? findCommentSpans(selector, CODE_READING) : []
+	let masked = maskStrings(selector, comments)
+	let escapes = selector.includes(`\\`) ? findEscapeSpans(selector, CODE_READING) : []
 
-	return maskEscapes(maskStrings(selector, comments), selector.includes(`\\`) ? findEscapeSpans(selector, CODE_READING) : [])
+	return { searchString: maskEscapes(masked, escapes), runString: maskEscapes(masked, escapes, true) }
 }

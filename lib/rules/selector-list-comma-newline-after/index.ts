@@ -63,7 +63,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			styleSearch(
 				{
 					// The search reads a string by rules of its own, so the commas are found over the copy and checked over the selector
-					source: selectorSearchCopy(selector),
+					source: selectorSearchCopy(selector).searchString,
 					target: `,`,
 					functionArguments: `skip`,
 				},

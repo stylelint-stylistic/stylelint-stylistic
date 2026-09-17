@@ -21,7 +21,7 @@ export function mediaFeatureColonSpaceChecker (opts: {
 		index: number,
 		err: (message: string) => void,
 	}) => void,
-	fix?: ((node: AtRule, index: number) => void),
+	fix?: ((node: AtRule, index: number, runString: string) => void),
 	result: PostcssResult,
 	syntax: Syntax,
 	checkedRuleName: string,
@@ -30,7 +30,7 @@ export function mediaFeatureColonSpaceChecker (opts: {
 
 	opts.root.walkAtRules(MEDIA_AT_RULE, (atRule) => {
 		let params = opts.syntax.read(atRule)
-		let { searchString } = opts.syntax.searchCopy(params, atRule, opts.result)
+		let { searchString, runString } = opts.syntax.searchCopy(params, atRule, opts.result)
 
 		// A colon inside a function's arguments is no feature's: `url(http://x)`
 		let functionArguments = findFunctionArgumentSpans(searchString).filter(({ name }) => !MEDIA_QUERY_COMBINATORS.has(name))
@@ -40,19 +40,19 @@ export function mediaFeatureColonSpaceChecker (opts: {
 
 			if (functionArguments.some(({ start, end }) => index >= start && index < end)) return
 
-			checkColon(params, index, atRule)
+			checkColon(runString, index, atRule)
 		})
 	})
 
 	/**
-	 * Checks one colon.
-	 * @param source - The at-rule's params the colon is checked in.
+	 * Checks one colon. The whitespace is read over the copy with its escapes masked, since an escaped space or the space closing a hexadecimal escape is a character of a word and no run (1789657288).
+	 * @param runString - The copy of the at-rule's params the runs are read over.
 	 * @param index - The colon's index.
 	 * @param node - The at-rule.
 	 */
-	function checkColon (source: string, index: number, node: AtRule): void {
+	function checkColon (runString: string, index: number, node: AtRule): void {
 		opts.locationChecker({
-			source,
+			source: runString,
 			index,
 			err: (message) => {
 				let colonIndex = index + atRuleParamIndex(node)
@@ -64,7 +64,7 @@ export function mediaFeatureColonSpaceChecker (opts: {
 					endIndex: colonIndex,
 					result: opts.result,
 					ruleName: opts.checkedRuleName,
-					...(fix && { fix: (): void => fix(node, colonIndex) }),
+					...(fix && { fix: (): void => fix(node, colonIndex, runString) }),
 				})
 			},
 		})

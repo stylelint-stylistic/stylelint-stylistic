@@ -1,7 +1,6 @@
 import type { AtRule } from "postcss"
 import stylelint from "stylelint"
 
-import { TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -9,6 +8,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { mediaFeatureColonSpaceChecker } from "../../utils/mediaFeatureColonSpaceChecker/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { runInFront } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -47,7 +47,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		let fixData: Map<AtRule, number[]> | undefined
+		let fixData: Map<AtRule, [number, string][]> | undefined
 
 		mediaFeatureColonSpaceChecker({
 			root,
@@ -55,32 +55,31 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
-			fix: (atRule, index) => {
+			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ :b` is not cut (1789657288)
+			fix: (atRule, index, runString) => {
 				let paramColonIndex = index - atRuleParamIndex(atRule)
 
 				fixData = fixData || (new Map())
 
-				let colonIndices = fixData.get(atRule) || []
+				let colons = fixData.get(atRule) || []
 
-				colonIndices.push(paramColonIndex)
-				fixData.set(atRule, colonIndices)
+				colons.push([paramColonIndex, runInFront(runString, paramColonIndex)])
+				fixData.set(atRule, colons)
 
 				return true
 			},
 		})
 
 		if (fixData) {
-			for (let [atRule, colonIndices] of fixData.entries()) {
+			for (let [atRule, colons] of fixData.entries()) {
 				let params = syntax.read(atRule)
 
-				for (let index of colonIndices.toSorted((a, b) => b - a)) {
-					let beforeColon = params.slice(0, index)
+				for (let [index, run] of colons.toSorted(([a], [b]) => b - a)) {
+					let beforeColon = params.slice(0, index - run.length)
 					let afterColon = params.slice(index)
 
-					if (primary === `always`) params = beforeColon.replace(TRAILING_CSS_WHITESPACE, ` `) + afterColon
-					else if (primary === `never`) params = beforeColon.replace(TRAILING_CSS_WHITESPACE, ``) + afterColon
+					params = beforeColon + (primary === `always` ? ` ` : ``) + afterColon
 				}
-
 				syntax.write(atRule, params)
 			}
 		}

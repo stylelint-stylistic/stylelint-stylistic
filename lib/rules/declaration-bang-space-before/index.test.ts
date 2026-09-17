@@ -8,6 +8,11 @@ testRule({
 
 	accept: [
 		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			description: `a backslash ending the value in front of two spaces, the first an escaped space and a character of the value, so one space stands in front of the bang`,
+			code: `a { color: red \\  !important; }`,
+		},
+		{
 			description: `a declaration with no bang at all`,
 			code: `a { color: pink; }`,
 		},
@@ -58,6 +63,14 @@ testRule({
 	],
 
 	reject: [
+		{
+			description: `an escaped space ending the value in front of the bang, which is a character of the value and no space`,
+			code: `a { color: red\\ !important; }`,
+			fixed: `a { color: red\\  !important; }`,
+			line: 1,
+			column: 17,
+			message: messages.expectedBefore(),
+		},
 		{
 			description: `two spaces in front of the bang`,
 			code: `a { color: pink  !important; }`,
@@ -264,15 +277,6 @@ testRule({
 			column: 1,
 			message: messages.expectedBefore(),
 		},
-		{
-			// Pins that only a write changing the escaped character is refused
-			description: `a backslash ending the value in front of two spaces, the first of which the write keeps behind it, so the second goes`,
-			code: `a { color: red \\  !important; }`,
-			fixed: `a { color: red \\ !important; }`,
-			line: 1,
-			column: 19,
-			message: messages.expectedBefore(),
-		},
 	],
 })
 
@@ -281,6 +285,11 @@ testRule({
 	config: [`never`],
 
 	accept: [
+		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			description: `an escaped space ending the value in front of the bang, which is a character of the value and no whitespace`,
+			code: `a { color: red \\ !important; }`,
+		},
 		{
 			description: `a declaration with no bang at all`,
 			code: `a { color: pink; }`,
@@ -440,15 +449,6 @@ testRule({
 			description: `a space in front of the flag behind a bare address holding a spaced bang, whose space is the address's`,
 			code: `a { b: url(x !y) !important; }`,
 			fixed: `a { b: url(x !y)!important; }`,
-			line: 1,
-			column: 18,
-			message: messages.rejectedBefore(),
-		},
-		{
-			// Pins the refusal of a write that lets the backslash escape the bang
-			description: `a backslash ending the value in front of a space, which taken away would leave the bang escaped and the flag part of the value, so the warning stands`,
-			code: `a { color: red \\ !important; }`,
-			fixed: `a { color: red \\ !important; }`,
 			line: 1,
 			column: 18,
 			message: messages.rejectedBefore(),

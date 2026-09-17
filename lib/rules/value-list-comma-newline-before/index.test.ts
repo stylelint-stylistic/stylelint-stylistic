@@ -242,6 +242,15 @@ testRule({
 
 	reject: [
 		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			description: `an escaped space in front of the comma of a multi-line list, which is a character of the word and no newline, so the break goes behind it`,
+			code: `a { b: 1\n,a\\ ,b; }`,
+			fixed: `a { b: 1\n,a\\ \n,b; }`,
+			line: 2,
+			column: 5,
+			message: messages.expectedBeforeMultiLine(),
+		},
+		{
 			description: `no newline in front of the second comma of a multi-line list`,
 			code: `a { background-size: 0\n, 0, 0; }`,
 			fixed: `a { background-size: 0\n, 0\n, 0; }`,
@@ -290,6 +299,11 @@ testRule({
 	config: [`never-multi-line`],
 
 	accept: [
+		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			description: `an escaped space in front of the comma of a multi-line list, which is a character of the word and no whitespace`,
+			code: `a { b: 1,a\\ ,b\n2px; }`,
+		},
 		{
 			description: `a newline after every comma, which leaves nothing in front of them`,
 			code: `

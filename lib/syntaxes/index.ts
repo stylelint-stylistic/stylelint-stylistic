@@ -187,13 +187,13 @@ export type Syntax = {
 	writesIntoInlineComment (node: Node, result: PostcssResult, spelledBetween?: string): boolean,
 
 	/**
-	 * Builds the copy of a text a search runs over, every `//` the syntax reads as code hidden.
+	 * Builds the copy of a text a search runs over, every `//` the syntax reads as code hidden, and the copy the whitespace beside a delimiter is read over, its escapes alone masked.
 	 * @param text - The text the search runs over.
 	 * @param node - The node the text is from, whose syntax says which double slashes are code.
 	 * @param result - The lint result naming the syntax the file was parsed with.
-	 * @returns The copy and the comment spans.
+	 * @returns The two copies and the comment spans.
 	 */
-	searchCopy (text: string, node: Node, result: PostcssResult): { searchString: string, commentSpans: CommentSpan[] },
+	searchCopy (text: string, node: Node, result: PostcssResult): { searchString: string, runString: string, commentSpans: CommentSpan[] },
 
 	/**
 	 * Finds the spans of every comment in the text `read` returns: inline ones off the syntax's pair of copies while in step and from a scan once drifted, block ones from the scan always.

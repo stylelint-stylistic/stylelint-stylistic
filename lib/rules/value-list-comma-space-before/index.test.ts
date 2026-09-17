@@ -8,14 +8,14 @@ testRule({
 
 	accept: [
 		{
+			// The comma closes the escape as well as its space does, so the space is a run a rule may write or take away (1789657288)
+			description: `a hexadecimal escape spelling a comma, whose closing space is the run in front of the comma of the list`,
+			code: `a { b: 1 ,a\\2c ,b; }`,
+		},
+		{
 			// An escape is a character of its word, and the search the commas are found with reads none
 			description: `an escaped comma inside a word, which is no comma of the list`,
 			code: `a { b: 1 ,a\\,b; }`,
-		},
-		{
-			// The run in front of a comma is read over the source, where the escape's closing space passes for one; 1789657288 is about that reading
-			description: `a hexadecimal escape spelling a comma, whose closing space is the run in front of the comma of the list`,
-			code: `a { b: 1 ,a\\2c ,b; }`,
 		},
 		{
 			description: `a space on either side of the comma`,
@@ -41,6 +41,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			description: `an escaped space in front of the comma, which is a character of the word and no space`,
+			code: `a { b: 1 ,a\\ ,b; }`,
+			fixed: `a { b: 1 ,a\\  ,b; }`,
+			line: 1,
+			column: 14,
+			message: messages.expectedBefore(),
+		},
 		{
 			description: `no space in front of a comma behind an escaped backslash, which is a comma of the list`,
 			code: `a { b: a\\\\,b; }`,
@@ -260,6 +269,11 @@ testRule({
 
 	accept: [
 		{
+			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			description: `an escaped space in front of the comma, which is a character of the word and no whitespace`,
+			code: `a { b: 1,a\\ ,b; }`,
+		},
+		{
 			description: `no space in front of the comma`,
 			code: `a { background-size: 0, 0; }`,
 		},
@@ -278,6 +292,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// The comma closes the escape as well as its space does, so the space is a run a rule may take away (1789657288)
+			description: `a space closing a hexadecimal escape in front of the comma, which is a run since the comma closes the escape as well`,
+			code: `a { b: 1,a\\2c ,b; }`,
+			fixed: `a { b: 1,a\\2c,b; }`,
+			line: 1,
+			column: 15,
+			message: messages.rejectedBefore(),
+		},
 		{
 			description: `a space in front of the comma`,
 			code: `a { background-size: 0 , 0; }`,
