@@ -38,3 +38,16 @@ export function breakRereadsParentheses (text: string, openIndex: number, inCust
 
 	return leavesAGroupOpen(parentheses.slice(1, -1), inCustomProperty)
 }
+
+/**
+ * Asks the same of the parentheses the tokenizer would hold an index in: the last `(` in front of it, where its first `)` stands behind the index, and no parentheses at all where it does not. No earlier `(` can be the token, since it holds this one, which makes it code.
+ * @param text - The text the index is in.
+ * @param index - The index the break is written beside.
+ * @param inCustomProperty - Whether the text is a custom property's value, where a `{` opens a group too.
+ * @returns True where the break switches the reading of the parentheses holding the index and their two readings part.
+ */
+export function breakAtRereadsParentheses (text: string, index: number, inCustomProperty: boolean): boolean {
+	let openIndex = text.lastIndexOf(`(`, index)
+
+	return openIndex !== -1 && text.indexOf(`)`, openIndex + 1) > index && breakRereadsParentheses(text, openIndex, inCustomProperty)
+}
