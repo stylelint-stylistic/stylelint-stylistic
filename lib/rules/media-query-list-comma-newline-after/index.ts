@@ -4,6 +4,7 @@ import stylelint from "stylelint"
 import { LEADING_CSS_WHITESPACE, LEADING_WHITESPACE_WITHOUT_BREAK, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
+import { breakAtRereadsParentheses } from "../../utils/breakRereadsParentheses/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -66,7 +67,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses
 				let edit = primary.startsWith(`never`) ? { start: index + 1, end: index + 1 + run.length, text: `` } : { start: index + 1, end: index + 1, text: getLineBreak(root, result) }
 
-				return !rereadsAnAddress(params, edit, syntax.inlineComments(atRule, result)) && writesTwinRun(shortName, ruleName, atRule, result, {
+				if (rereadsAnAddress(params, edit, syntax.inlineComments(atRule, result))) return false
+
+				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` or a `{` nothing closes inside is then a group the parser finds open, so the at-rule gets no block and its params run to the end of the file, or the rule holding it is left unclosed: the break is refused there and the warning stands. In an at-rule's params a `{` opens a group whatever the at-rule, as it does in a custom property's value
+				if (primary.startsWith(`always`) && breakAtRereadsParentheses(params, index, true)) return false
+
+				return writesTwinRun(shortName, ruleName, atRule, result, {
 					side: `after`,
 					run,
 					lineText: params,

@@ -182,6 +182,39 @@ testRule({
 				},
 			],
 		},
+		{
+			// PostCSS holds `(a,[b)` as one token, opaque to the parser; a break inside makes it code, whose `[` opens a group nothing closes, so the at-rule gets no block and its params run to the end of the file, or the rule holding it is left unclosed
+			description: `a media feature's parentheses holding a square bracket nothing closes, where the break is refused and the warning stands`,
+			code: `@media a (a,[b) {}`,
+			fixed: `@media a (a,[b) {}`,
+			line: 1,
+			column: 12,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `parentheses holding a brace nothing closes, which the parser reads as a group inside an at-rule's params too, refused likewise`,
+			code: `@media a (a,{b) {}`,
+			fixed: `@media a (a,{b) {}`,
+			line: 1,
+			column: 12,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `parentheses holding a square bracket closed inside them, which code reads as a group of its own, so the break is written`,
+			code: `@media (a[b],c) {}`,
+			fixed: `@media (a[b]\n,c) {}`,
+			line: 1,
+			column: 13,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `parentheses holding a brace closed inside them, so the break is written`,
+			code: `@media (a{b},c) {}`,
+			fixed: `@media (a{b}\n,c) {}`,
+			line: 1,
+			column: 13,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 
@@ -267,6 +300,15 @@ testRule({
 			fixed: `@media screen and (color)\n,projection and (color)\n, print {\n}`,
 			line: 1,
 			column: 26,
+			message: messages.expectedBeforeMultiLine(),
+		},
+		{
+			// The list is multi-line by a break outside the parentheses, which PostCSS still holds as one token; a break written inside makes them code, whose `[` nothing closes
+			description: `a multi-line list holding a media feature's parentheses whose square bracket nothing closes, where the break is refused and the warning stands`,
+			code: `@media a (a,[b)\n,b {}`,
+			fixed: `@media a (a,[b)\n,b {}`,
+			line: 1,
+			column: 12,
 			message: messages.expectedBeforeMultiLine(),
 		},
 	],

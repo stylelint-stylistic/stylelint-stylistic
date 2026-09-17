@@ -4,6 +4,7 @@ import stylelint from "stylelint"
 import { TRAILING_CSS_WHITESPACE, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
+import { breakAtRereadsParentheses } from "../../utils/breakRereadsParentheses/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -66,6 +67,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let closesInlineComment = syntax.endsWithInlineComment(params.slice(0, index), syntax.inlineComments(atRule, result))
 
 				if (primary === `never-multi-line` && closesInlineComment) return false
+
+				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` or a `{` nothing closes inside is then a group the parser finds open, so the at-rule gets no block and its params run to the end of the file, or the rule holding it is left unclosed: the break is refused there and the warning stands. In an at-rule's params a `{` opens a group whatever the at-rule, as it does in a custom property's value
+				if (primary.startsWith(`always`) && breakAtRereadsParentheses(params, index, true)) return false
 
 				// The space twin writes the same run, save over a comment's closing break (#704)
 				return writesTwinRun(shortName, ruleName, atRule, result, {
