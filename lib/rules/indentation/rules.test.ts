@@ -587,6 +587,25 @@ testRule({
 
 	reject: [
 		{
+			// The escape is masked in the copy the breaks are found over, its closing break left standing (1789649818)
+			description: `a value continued on the line behind the line break closing a hexadecimal escape, which is a line of the file`,
+			code: `
+				a {
+					b: 1\\2c
+				c;
+				}
+			`,
+			fixed: `
+				a {
+					b: 1\\2c
+						c;
+				}
+			`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`2 tabs`),
+		},
+		{
 			description: `a rule indented by a tab at the root`,
 			code: `\ta {\n\tcolor: pink;\n}`,
 			fixed: `a {\n\tcolor: pink;\n}`,

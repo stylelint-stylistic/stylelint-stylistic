@@ -1,7 +1,7 @@
 import valueParser, { type Node } from "postcss-value-parser"
 import { describe, expect, it } from "vitest"
 
-import { findAddressSpans, findCommentSpanAt, findCommentSpanHolding, findCommentSpans, findCommentSpanTouching, findStringSpans } from "./index.ts"
+import { findAddressSpans, findCommentSpanAt, findCommentSpanHolding, findCommentSpans, findCommentSpanTouching, findEscapeSpans, findStringSpans } from "./index.ts"
 
 /** Plain CSS, which spells no `//` comment. */
 const PLAIN_CSS = { spells: false, tokenizes: false, endsOnFormFeed: false }
@@ -652,5 +652,49 @@ describe(`findStringSpans`, () => {
 
 	it(`a string the text never closes, which runs to its end`, () => {
 		expect(findStringSpans(`a "b`)).toEqual([{ start: 2, end: 4 }])
+	})
+})
+
+describe(`findEscapeSpans`, () => {
+	it(`no escape`, () => {
+		expect(findEscapeSpans(`1,a b`)).toEqual([])
+	})
+
+	it(`an escaped comma`, () => {
+		expect(findEscapeSpans(`1,a\\,b`)).toEqual([{ start: 3, end: 5 }])
+	})
+
+	it(`an escaped backslash, behind which the comma is a comma`, () => {
+		expect(findEscapeSpans(`1,a\\\\,b`)).toEqual([{ start: 3, end: 5 }])
+	})
+
+	it(`a hexadecimal escape, whose closing whitespace is part of the span`, () => {
+		expect(findEscapeSpans(`a\\2c b`)).toEqual([{ start: 1, end: 5 }])
+		expect(findEscapeSpans(`a\\2c\r\nb`)).toEqual([{ start: 1, end: 6 }])
+		expect(findEscapeSpans(`a\\2c,b`)).toEqual([{ start: 1, end: 4 }])
+	})
+
+	it(`a backslash in front of a line break or at the end, which escapes nothing`, () => {
+		expect(findEscapeSpans(`a\\\n,b`)).toEqual([])
+		expect(findEscapeSpans(`a\\`)).toEqual([])
+	})
+
+	it(`a backslash in front of a block comment's delimiter, which the tokenizer opens the comment on`, () => {
+		expect(findEscapeSpans(`a\\/*,*/b`)).toEqual([])
+	})
+
+	it(`a backslash in front of an inline comment's delimiter, an escape where the syntax spells the comment without reading it by its own tokenizer, and none where it does`, () => {
+		expect(findEscapeSpans(`a\\//,\nb`, PLAIN_CSS)).toEqual([{ start: 1, end: 3 }])
+		expect(findEscapeSpans(`a\\//,\nb`, SCSS)).toEqual([])
+	})
+
+	it(`an escape inside a string, a comment or a bare address, which is that span's`, () => {
+		expect(findEscapeSpans(`"a\\,b",c`)).toEqual([])
+		expect(findEscapeSpans(`/*a\\,b*/,c`)).toEqual([])
+		expect(findEscapeSpans(`url(a\\,b),c`)).toEqual([])
+	})
+
+	it(`an escape spelling a letter of a url name, which is the address's`, () => {
+		expect(findEscapeSpans(`\\75 rl(a,b),c`)).toEqual([])
 	})
 })

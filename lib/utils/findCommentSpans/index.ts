@@ -162,6 +162,16 @@ function pushQuotedAddress (text: string, openIndex: number, end: number, addres
 	if (end <= text.length && !LINE_BREAK.test(text.slice(openIndex, end))) addresses.push({ start: openIndex, end })
 }
 
+/**
+ * Records an escape: a backslash and what it spells. One spelling nothing is a delimiter and no span.
+ * @param openIndex - The backslash.
+ * @param escaped - What {@link readEscapedCharacter} read there.
+ * @param escapes - This one is added.
+ */
+function pushEscape (openIndex: number, escaped: { character: string | undefined, end: number }, escapes: EscapeSpan[]): void {
+	if (escaped.character !== undefined) escapes.push({ start: openIndex, end: escaped.end })
+}
+
 /** What the syntax makes of a `//` comment, as far as the walk asks: whether one opens, whether the parser's own tokenizer reads one, which is `postcss-scss` reading Sass, and whether a form feed closes one, which is the one break the two languages disagree about. */
 export type CommentReading = {
 	spells: boolean,
@@ -191,6 +201,12 @@ export type CommentSpan = {
 	isInline: boolean,
 }
 
+/** The span an escape occupies, backslash, the character or the hexadecimal digits, and the whitespace closing those digits. */
+export type EscapeSpan = {
+	start: number,
+	end: number,
+}
+
 /**
  * Walks a text once for its comments and addresses, each the other's exception: a protocol's `//` opens no comment, a `url(` inside a comment no address ([#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427)). A block comment's span holds its delimiters, a `//` comment's stops at the break.
  *
@@ -199,10 +215,11 @@ export type CommentSpan = {
  * @param reading - What the syntax makes of a `//` comment ({@link inlineCommentReading}).
  * @returns The spans of both, and of the strings the walk stepped over.
  */
-function scan (text: string, reading: CommentReading): { comments: CommentSpan[], addresses: AddressSpan[], strings: StringSpan[] } {
+function scan (text: string, reading: CommentReading): { comments: CommentSpan[], addresses: AddressSpan[], strings: StringSpan[], escapes: EscapeSpan[] } {
 	let spans: CommentSpan[] = []
 	let addresses: AddressSpan[] = []
 	let strings: StringSpan[] = []
+	let escapes: EscapeSpan[] = []
 	let index = 0
 	// Whether the run just stepped over is part of a name
 	let behindIdentifier = false
@@ -226,6 +243,7 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 			if (behindUrl === index) {
 				let escaped = readEscapedCharacter(text, index, escapeReading(index, urlTokenEnd, reading))
 
+				pushEscape(index, escaped, escapes)
 				index = escaped.end
 				behindIdentifier = escaped.character !== undefined
 			}
@@ -302,7 +320,7 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 		previousStep = step
 	}
 
-	return { comments: spans, addresses, strings }
+	return { comments: spans, addresses, strings, escapes }
 }
 
 /**
@@ -333,6 +351,16 @@ export function findAddressSpans (text: string, reading: CommentReading = SPELLS
  */
 export function findStringSpans (text: string, reading: CommentReading = SPELLS_INLINE_COMMENTS): StringSpan[] {
 	return scan(text, reading).strings
+}
+
+/**
+ * Finds the spans of a text's escapes, as {@link readEscapedCharacter} reads one: a backslash spelling a character, so one in front of a line break or at the end is none, and neither is one in front of a comment's delimiter, which the tokenizer opens the comment on. An escape inside a string, a comment or a bare address is that span's, and the letters of a `url(` are an address's.
+ * @param text - The raw walked for escapes.
+ * @param reading - What the syntax makes of a `//` comment ({@link inlineCommentReading}).
+ * @returns The spans, in source order.
+ */
+export function findEscapeSpans (text: string, reading: CommentReading = SPELLS_INLINE_COMMENTS): EscapeSpan[] {
+	return scan(text, reading).escapes
 }
 
 /**

@@ -44,8 +44,17 @@ describe(`searchCopy`, () => {
 		expect(searchCopy(`url(x'y),"a\\\\",b`, cssDecl(`a { b: url(x'y),"a\\\\",b }`), CSS_RESULT).searchString).toBe(`url(x?y),?????,b`)
 	})
 
+	// See 1789649818
+	it(`an escape is masked, the whitespace closing a hexadecimal one with it, so the search finds no comma in one`, () => {
+		expect(searchCopy(`1,a\\,b\\2c ,c`, cssDecl(`a { b: 1,a\\,b\\2c ,c }`), CSS_RESULT).searchString).toBe(`1,axxbxxxx,c`)
+	})
+
+	it(`an escaped backslash, behind which the comma is a comma`, () => {
+		expect(searchCopy(`1,a\\\\,b`, cssDecl(`a { b: 1,a\\\\,b }`), CSS_RESULT).searchString).toBe(`1,axx,b`)
+	})
+
 	it(`the copy is as long as the text it was made of, so every position stands where it did`, () => {
-		for (let text of [`myurl(//a)red`, `1px/*x*//*y*/2px`, `1px//*c*/2px`]) {
+		for (let text of [`myurl(//a)red`, `1px/*x*//*y*/2px`, `1px//*c*/2px`, `1,a\\,b\\2c ,c`]) {
 			expect(searchCopy(text, cssDecl(`a { b: ${text} }`), CSS_RESULT).searchString).toHaveLength(text.length)
 		}
 	})

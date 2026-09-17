@@ -8,6 +8,16 @@ testRule({
 
 	accept: [
 		{
+			// An escape is a character of its word, and the search the commas are found with reads none
+			description: `an escaped comma inside a word, which is no comma of the list`,
+			code: `a { b: 1 ,a\\,b; }`,
+		},
+		{
+			// The run in front of a comma is read over the source, where the escape's closing space passes for one; 1789657288 is about that reading
+			description: `a hexadecimal escape spelling a comma, whose closing space is the run in front of the comma of the list`,
+			code: `a { b: 1 ,a\\2c ,b; }`,
+		},
+		{
 			description: `a space on either side of the comma`,
 			code: `a { background-size: 0 , 0; }`,
 		},
@@ -31,6 +41,14 @@ testRule({
 	],
 
 	reject: [
+		{
+			description: `no space in front of a comma behind an escaped backslash, which is a comma of the list`,
+			code: `a { b: a\\\\,b; }`,
+			fixed: `a { b: a\\\\ ,b; }`,
+			line: 1,
+			column: 11,
+			message: messages.expectedBefore(),
+		},
 		{
 			description: `no space in front of the comma`,
 			code: `a { background-size: 0, 0; }`,
