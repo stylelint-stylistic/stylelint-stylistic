@@ -5,6 +5,7 @@ import { EVERY_WHITESPACE, LEADING_LINE_BREAK, LINE_BREAK, SEMICOLON_RUN, WHITES
 import { css } from "../../syntaxes/css/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -15,6 +16,7 @@ import { lastNodeHoldsTheBlockAfter } from "../../utils/lastNodeHoldsTheBlockAft
 import { nodeString } from "../../utils/nodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
+import { statementString } from "../../utils/statementString/index.ts"
 import { isDeclaration } from "../../utils/typeGuards/index.ts"
 import { writesSharedRun } from "../../utils/writesSharedRun/index.ts"
 
@@ -49,13 +51,29 @@ function spellTheRun (raw: string, lineBreak: string): string {
 }
 
 /**
- * Asks whether that spelling would leave out anything of the run the rule does not read as whitespace; the whitespace itself is what it is there to trim.
+ * The run the option writes in front of the closing brace: the `always` spelling, or nothing at all.
+ * @param primary - The primary option.
  * @param raw - The run as it stands.
- * @param lineBreak - The break the file is written with.
- * @returns True where the written run does not hold the same non-whitespace characters as the standing one.
+ * @param lineBreak - Returns the break the file is written with, called only where a break is written.
+ * @returns The run to write.
  */
-function writeDropsMoreThanWhitespace (raw: string, lineBreak: string): boolean {
-	return spellTheRun(raw, lineBreak).replaceAll(EVERY_WHITESPACE, ``) !== raw.replaceAll(EVERY_WHITESPACE, ``)
+function runToWrite (primary: PrimaryOption, raw: string, lineBreak: () => string): string {
+	return primary.startsWith(`always`) ? spellTheRun(raw, lineBreak()) : raw.replaceAll(EVERY_WHITESPACE, ``)
+}
+
+/**
+ * Asks whether the write may go in.
+ *
+ * The `always` write takes the run from its first break, keeping only what stands in front of the run's first whitespace, so a stray semicolon standing between the two would go with the whitespace, and no option of the rule speaks of such a semicolon ([#687](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/687)); the whitespace itself is what the write is there to trim. And a backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: emptying the run of `c \⏎}` would leave `c \}`, which the parser reads no block's end in, and the break `always` writes over the space of `c \ }` would take the escape off it (1789664271).
+ * @param text - The statement through its closing brace, which is its last character.
+ * @param raw - The run in front of that brace as it stands.
+ * @param written - The run the write leaves there.
+ * @returns True where it may.
+ */
+function writesTheRun (text: string, raw: string, written: string): boolean {
+	if (written.replaceAll(EVERY_WHITESPACE, ``) !== raw.replaceAll(EVERY_WHITESPACE, ``)) return false
+
+	return editKeepsEscapedCharacter(text, { start: text.length - 1 - raw.length, end: text.length - 1, text: written })
 }
 
 /** `always` a newline before the closing brace; `always-multi-line` asks it, and `never-multi-line` refuses whitespace there, in a multi-line block only. */
@@ -97,11 +115,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let after = blockAfter.replace(SEMICOLON_RUN, ``)
 
 			let blockIsMultiLine = !isSingleLineString(blockString(statement, result))
-			let statementString = nodeString(statement, result)
+			let printed = nodeString(statement, result)
 
-			let index = statementString.length - 2
+			let index = printed.length - 2
 
-			if (statementString[index - 1] === `\r`) index -= 1
+			if (printed[index - 1] === `\r`) index -= 1
 
 			// `never-multi-line` empties the final raw, so a `//` comment the last node left open is closed only by a break in the node's own trailing whitespace; where none is, the brace would land in the comment, so no fix. An `always` break closes the comment anyway
 			//
@@ -115,8 +133,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Behind a wordless declaration the brace alone closes, the run is the colon rules' head run too, and the rules asked settle who writes (#416)
 			if (isFixable && isDeclaration(last)) isFixable = writesSharedRun(syntax, last, result, ruleName)
 
-			// The `always` write takes the run from its first break, keeping only what stands in front of the run's first whitespace, so a stray semicolon standing between the two would go with the whitespace, and no option of the rule speaks of such a semicolon (#687)
-			if (isFixable && primary.startsWith(`always`) && writeDropsMoreThanWhitespace(blockAfter, getLineBreak(root, result))) isFixable = false
+			let written = runToWrite(primary, blockAfter, () => getLineBreak(root, result))
+
+			// A stray semicolon the write would drop, and a backslash the write would leave reading another character; the text is read through the brace, since a free semicolon behind it is printed too (#562)
+			if (isFixable) isFixable = writesTheRun(statementString(statement, result), blockAfter, written)
 
 			// The question is whether a break *starts* the final run (`LEADING_LINE_BREAK`); the whitespace behind it is `indentation`'s.
 			if (!LEADING_LINE_BREAK.test(after)) {
@@ -140,12 +160,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					endIndex: index,
 					...(isFixable && {
 						fix: (): void => {
-							let raw = getBlockAfter(syntax, statement)
+							if (typeof getBlockAfter(syntax, statement) !== `string`) return
 
-							if (typeof raw !== `string`) return
-
-							if (primary.startsWith(`always`)) setBlockAfter(syntax, statement, spellTheRun(raw, getLineBreak(root, result)))
-							else if (primary === `never-multi-line`) setBlockAfter(syntax, statement, raw.replaceAll(EVERY_WHITESPACE, ``))
+							setBlockAfter(syntax, statement, written)
 						},
 					}),
 				})

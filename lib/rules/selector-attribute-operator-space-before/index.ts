@@ -3,10 +3,12 @@ import stylelint from "stylelint"
 import { TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { selectorAttributeOperatorSpaceChecker } from "../../utils/selectorAttributeOperatorSpaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { runInFront } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -52,6 +54,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
 			checkBeforeOperator: true,
+			// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `[a\⏎=b]` would come out as `[a\=b]`, one attribute name, or `[a\ =b]`, an escaped space (1789664271)
+			isFixable: (text, index, runString) => editKeepsEscapedCharacter(text, { start: index - runInFront(runString, index).length, end: index, text: primary === `always` ? ` ` : `` }),
 			fix: (attributeNode) => {
 				let rawAttr = attributeNode.raws.spaces && attributeNode.raws.spaces.attribute
 				let rawAttrAfter = rawAttr && rawAttr.after

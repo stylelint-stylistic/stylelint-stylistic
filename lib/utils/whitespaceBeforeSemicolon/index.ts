@@ -127,9 +127,26 @@ function openAlike (one: string, other: string): boolean {
 }
 
 /**
- * Asks whether writing whitespace in front of a node's semicolon keeps the character behind a backslash the node's code ends on.
+ * Asks whether a write beside a node's semicolon keeps the character behind a backslash the node's code ends on.
  *
- * PostCSS lets a backslash cover no whitespace and no solidus, so `red \` ends the value there; the grammar reads one in front of a line break as a delimiter and one in front of anything else as an escape. Whatever a write puts behind that backslash is read with it by one of the two: a semicolon joins the value, and under `never` the file stops parsing where a declaration follows.
+ * PostCSS lets a backslash cover no whitespace and no solidus, so `red \` ends the value there; the grammar reads one in front of a line break as a delimiter and one in front of anything else as an escape. Whatever a write leaves behind that backslash is read with it by one of the two.
+ * @param syntax - The syntax reading the value.
+ * @param node - The declaration or bodiless at-rule.
+ * @param result - The Stylelint result.
+ * @param standing - What stands behind the node's run now.
+ * @param written - What stands there once the write has been made.
+ * @returns True where the node's code ends on no such backslash or the character behind it stays.
+ */
+function keepsTheEscape (syntax: Syntax, node: AtRule | Declaration, result: PostcssResult, standing: string, written: string): boolean {
+	let text = textInFrontOfSemicolon(syntax, node)
+	let code = text.slice(0, text.length - trailingRun(text, syntax.inlineComments(node, result)).length)
+	let backslashes = code.length - code.replace(TRAILING_BACKSLASHES, ``).length
+
+	return backslashes % 2 === 0 || openAlike(text.slice(code.length) + standing, written)
+}
+
+/**
+ * Asks whether writing whitespace in front of a node's semicolon keeps the character behind a backslash the node's code ends on: a semicolon written against it joins the value, and under `never` the file stops parsing where a declaration follows.
  * @param syntax - The syntax reading the value.
  * @param node - The declaration or bodiless at-rule.
  * @param result - The Stylelint result.
@@ -138,11 +155,19 @@ function openAlike (one: string, other: string): boolean {
  * @returns True where the node's code ends on no such backslash or the character behind it stays.
  */
 export function keepsEscapedCharacter (syntax: Syntax, node: AtRule | Declaration, result: PostcssResult, whitespace: string, behind = `;`): boolean {
-	let text = textInFrontOfSemicolon(syntax, node)
-	let code = text.slice(0, text.length - trailingRun(text, syntax.inlineComments(node, result)).length)
-	let backslashes = code.length - code.replace(TRAILING_BACKSLASHES, ``).length
+	return keepsTheEscape(syntax, node, result, behind, `${whitespace};`)
+}
 
-	return backslashes % 2 === 0 || openAlike(text.slice(code.length) + behind, `${whitespace};`)
+/**
+ * Asks whether taking a node's semicolon away, with the run in front of it, keeps the character behind a backslash the node's code ends on: `c\⏎;` would come out as `c\`, and whatever the file holds behind it lands against the backslash, an escaped space where a space stood (1789664271).
+ * @param syntax - The syntax reading the value.
+ * @param node - The declaration or bodiless at-rule.
+ * @param result - The Stylelint result.
+ * @param behind - The text standing behind the node once the semicolons are gone.
+ * @returns True where the node's code ends on no such backslash or the character behind it stays.
+ */
+export function takingTheSemicolonKeepsEscapedCharacter (syntax: Syntax, node: AtRule | Declaration, result: PostcssResult, behind: string): boolean {
+	return keepsTheEscape(syntax, node, result, `;`, behind)
 }
 
 /**

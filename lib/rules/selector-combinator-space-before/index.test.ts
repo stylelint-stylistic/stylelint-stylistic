@@ -164,6 +164,15 @@ testRule({
 
 	reject: [
 		{
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			description: `a backslash ending the name in front of a line break and the combinator, where the space would stand behind the backslash as its escaped character, so the warning stands`,
+			code: `a,b\\\n>c { d: e }`,
+			fixed: `a,b\\\n>c { d: e }`,
+			line: 2,
+			column: 1,
+			message: messages.expectedBefore(`>`),
+		},
+		{
 			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
 			description: `an escaped space in front of the combinator, which is a character of the name and no space`,
 			code: `a\\ >b {}`,
@@ -373,6 +382,23 @@ testRule({
 	],
 
 	reject: [
+		{
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			description: `a backslash ending the name in front of a line break and the combinator, which the write would turn into an escaped combinator, so the warning stands`,
+			code: `a,b\\\n>c { d: e }`,
+			fixed: `a,b\\\n>c { d: e }`,
+			line: 2,
+			column: 1,
+			message: messages.rejectedBefore(`>`),
+		},
+		{
+			description: `a line break in front of the combinator behind an escaped backslash, which is a run`,
+			code: `a,b\\\\\n>c { d: e }`,
+			fixed: `a,b\\\\>c { d: e }`,
+			line: 2,
+			column: 1,
+			message: messages.rejectedBefore(`>`),
+		},
 		{
 			description: `a space in front of the adjacent-sibling combinator`,
 			code: `a +a {}`,

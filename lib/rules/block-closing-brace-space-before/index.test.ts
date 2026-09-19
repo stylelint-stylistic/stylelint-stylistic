@@ -40,6 +40,15 @@ testRule({
 
 	reject: [
 		{
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			description: `a backslash ending the value in front of a line break and the brace, where the space would stand behind the backslash as its escaped character, so the warning stands`,
+			code: `a { b: c \\\n}`,
+			fixed: `a { b: c \\\n}`,
+			line: 1,
+			column: 11,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `a brace abutting the declaration`,
 			code: `a { color: pink;}`,
 			fixed: `a { color: pink; }`,
@@ -227,6 +236,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			description: `a backslash ending the value in front of a line break and the brace, which the write would turn into an escaped brace the file no longer parses, so the warning stands`,
+			code: `a { b: c \\\n}`,
+			fixed: `a { b: c \\\n}`,
+			line: 1,
+			column: 11,
+			message: messages.rejectedBefore(),
+		},
 		{
 			description: `a space in front of the brace`,
 			code: `a { color: pink; }`,

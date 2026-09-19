@@ -29,7 +29,7 @@ export function declarationColonSpaceChecker (opts: {
 	locationChecker: LocationChecker,
 	fix?: ((decl: Declaration, index: number, run: string) => void),
 	isChecked?: ((decl: Declaration) => boolean),
-	isFixable?: ((decl: Declaration, index: number) => boolean),
+	isFixable?: ((decl: Declaration, index: number, source: string, runString: string) => boolean),
 	result: PostcssResult,
 	syntax: Syntax,
 	checkedRuleName: string,
@@ -58,7 +58,7 @@ export function declarationColonSpaceChecker (opts: {
 		let startIndex = declarationValueIndex(decl) - decl.raws.between.length + indexInBetween
 		let problemIndex = decl.prop.toString().length + 1
 		// The rule's own fix guard
-		let isFixable = fix && (!opts.isFixable || opts.isFixable(decl, startIndex))
+		let isFixable = fix && (!opts.isFixable || opts.isFixable(decl, startIndex, source, runString))
 
 		opts.locationChecker({
 			source: runString,

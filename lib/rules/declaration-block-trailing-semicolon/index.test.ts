@@ -380,6 +380,23 @@ testRule({
 
 	reject: [
 		{
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			description: `a backslash ending the value in front of a line break and the semicolon, where the space behind the semicolon would stand behind the backslash as its escaped character, so the warning stands`,
+			code: `a { b: c\\\n; }`,
+			fixed: `a { b: c\\\n; }`,
+			line: 2,
+			column: 1,
+			message: messages.rejected,
+		},
+		{
+			description: `a line break behind the semicolon, which stands behind the backslash after the write as it did before`,
+			code: `a { b: c\\\n;\n}`,
+			fixed: `a { b: c\\\n}`,
+			line: 2,
+			column: 1,
+			message: messages.rejected,
+		},
+		{
 			// The run taken away with the semicolon is read over the copy with its escapes masked (1789661964)
 			description: `a semicolon behind an escaped space, which is a character of the value and stays`,
 			code: `a { color: red\\ ; }`,

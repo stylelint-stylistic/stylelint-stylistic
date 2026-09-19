@@ -6,10 +6,12 @@ import { css } from "../../syntaxes/css/index.ts"
 import { declarationColonSpaceChecker } from "../../utils/declarationColonSpaceChecker/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { assertString } from "../../utils/validateTypes/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { runInFront } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -68,8 +70,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
-			// An inline comment ending this part would swallow the colon; a backslash in front of a slash is blanked first, since `\//` opens a comment to the parser but not to the guard
-			isFixable: (decl, index) => !syntax.endsWithInlineComment(beforeColonString(decl, index).replace(EVERY_BACKSLASH_IN_FRONT_OF_A_SLASH, ` `), syntax.inlineComments(decl, result)),
+			// An inline comment ending this part would swallow the colon; a backslash in front of a slash is blanked first, since `\//` opens a comment to the parser but not to the guard. A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `b\⏎:c` would come out as `b\:c`, one word the file no longer parses, or `b\ :c`, an escaped space, so the warning stands (1789664271)
+			isFixable: (decl, index, source, runString) => !syntax.endsWithInlineComment(beforeColonString(decl, index).replace(EVERY_BACKSLASH_IN_FRONT_OF_A_SLASH, ` `), syntax.inlineComments(decl, result)) && editKeepsEscapedCharacter(source, { start: index - runInFront(runString, index).length, end: index, text: primary === `always` ? ` ` : `` }),
 			// The run is the check's, read over the copy with its escapes masked, so the space of `b\ :c` is not cut (1789661964)
 			fix: (decl, index, run) => {
 				let beforeColon = beforeColonString(decl, index)

@@ -6,6 +6,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { beforeBlockString } from "../../utils/beforeBlockString/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
@@ -28,6 +29,18 @@ const MESSAGES = defineMessages({
 export let meta = {
 	url: getRuleDocUrl(shortName),
 	fixable: true,
+}
+
+/**
+ * Puts a break in front of the indentation a run ends on, or behind the whole run where it holds none.
+ * @param between - The run in front of the brace.
+ * @param lineBreak - The break the file is written with.
+ * @returns The run to write.
+ */
+function breakBeforeTheIndentation (between: string, lineBreak: string): string {
+	let spaceIndex = between.search(TRAILING_SPACES_AND_TABS)
+
+	return spaceIndex >= 0 ? between.slice(0, spaceIndex) + lineBreak + between.slice(spaceIndex) : between + lineBreak
 }
 
 /** `always` a newline before the opening brace; the `-single-line` and `-multi-line` forms ask it, or refuse whitespace there, in a block of that shape only. */
@@ -86,8 +99,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				index: source.length,
 				err: (m) => {
 					let between = typeof statement.raws.between === `string` ? statement.raws.between : ``
+					let written = primary.startsWith(`always`) ? breakBeforeTheIndentation(between, getLineBreak(root, result)) : between.replace(TRAILING_WHITESPACE, ``)
 					// `never` would put the brace into a `//` comment ending the head, which the parser may keep in the selector or params: no fix
 					let isFixable = !(primary.startsWith(`never`) && syntax.endsWithInlineComment(`${syntax.read(statement)}${between}`, syntax.inlineComments(statement, result)))
+						// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: emptying the run of `a\⏎{` would leave `a\{`, which the parser reads no block in, and the break `always` writes over the space of `a\ {` would take the escape off it (1789664271)
+						&& editKeepsEscapedCharacter(`${source}{`, { start: source.length - between.length, end: source.length, text: written })
 
 					report({
 						message: m,
@@ -100,13 +116,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 							fix: (): void => {
 								if (typeof statement.raws.between !== `string`) return
 
-								if (primary.startsWith(`always`)) {
-									let spaceIndex = statement.raws.between.search(TRAILING_SPACES_AND_TABS)
-
-									if (spaceIndex >= 0) statement.raws.between = statement.raws.between.slice(0, spaceIndex) + getLineBreak(root, result) + statement.raws.between.slice(spaceIndex)
-									else statement.raws.between += getLineBreak(root, result)
-								}
-								else if (primary.startsWith(`never`)) statement.raws.between = statement.raws.between.replace(TRAILING_WHITESPACE, ``)
+								statement.raws.between = written
 							},
 						}),
 					})

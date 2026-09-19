@@ -5,6 +5,7 @@ import { TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
@@ -95,6 +96,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Behind a wordless declaration the brace alone closes, the run is the colon rules' head run too, and the rules asked settle who writes (#416)
 			if (isFixable && isDeclaration(last)) isFixable = writesSharedRun(syntax, last, result, ruleName)
 
+			let written = blockAfter.replace(TRAILING_WHITESPACE, primary.startsWith(`always`) ? ` ` : ``)
+
+			// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `c \⏎}` would come out as `c \}`, which the parser reads no block's end in, or `c \ }`, an escaped space (1789664271)
+			if (isFixable) isFixable = editKeepsEscapedCharacter(source, { start: source.length - 1 - blockAfter.length, end: source.length - 1, text: written })
+
 			checker.before({
 				source,
 				index: source.length - 1,
@@ -108,12 +114,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						ruleName,
 						...(isFixable && {
 							fix: (): void => {
-								let raw = getBlockAfter(syntax, statement)
+								if (typeof getBlockAfter(syntax, statement) !== `string`) return
 
-								if (typeof raw !== `string`) return
-
-								if (primary.startsWith(`always`)) setBlockAfter(syntax, statement, raw.replace(TRAILING_WHITESPACE, ` `))
-								else if (primary.startsWith(`never`)) setBlockAfter(syntax, statement, raw.replace(TRAILING_WHITESPACE, ``))
+								setBlockAfter(syntax, statement, written)
 							},
 						}),
 					})

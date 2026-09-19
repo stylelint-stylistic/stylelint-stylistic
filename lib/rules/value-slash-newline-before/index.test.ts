@@ -163,6 +163,15 @@ testRule({
 
 	reject: [
 		{
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			description: `a backslash ending the number in front of a line break and the solidus, which the write would turn into an escaped solidus, so the warning stands`,
+			code: `a { b: 1\\\n/2 }`,
+			fixed: `a { b: 1\\\n/2 }`,
+			line: 2,
+			column: 1,
+			message: messages.rejectedBeforeMultiLine(),
+		},
+		{
 			description: `a newline in front of the solidus, which makes the declaration multi-line`,
 			code: `a { grid-area: 1\n/ 2; }`,
 			fixed: `a { grid-area: 1/ 2; }`,

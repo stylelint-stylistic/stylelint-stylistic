@@ -6,6 +6,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { beforeBlockString } from "../../utils/beforeBlockString/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
@@ -120,8 +121,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let between = statement.raws.between ?? ``
 					// Comments in `between` survive
 					let beforeWhitespace = between.replace(TRAILING_WHITESPACE, ``)
+					let written = primary.startsWith(`always`) ? `${beforeWhitespace} ` : beforeWhitespace
 					// Behind an inline comment the brace cannot join its line, so neither option is satisfiable; the warning stands unfixed. The parser may keep the comment in the selector or params, so they are asked too
 					let isFixable = !syntax.endsWithInlineComment(`${syntax.read(statement)}${between}`, syntax.inlineComments(statement, result))
+						// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎{` would come out as `a\{`, which the parser no longer reads as a block, or `a\ {`, an escaped space (1789664271)
+						&& editKeepsEscapedCharacter(`${source}{`, { start: source.length - between.length, end: source.length, text: written })
 
 					report({
 						message: m,
@@ -132,13 +136,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						ruleName,
 						...(isFixable && {
 							fix: (): void => {
-								if (primary.startsWith(`always`)) {
-									statement.raws.between = `${beforeWhitespace} `
-
-									return
-								}
-
-								if (primary.startsWith(`never`)) statement.raws.between = beforeWhitespace
+								statement.raws.between = written
 							},
 						}),
 					})
