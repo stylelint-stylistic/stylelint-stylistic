@@ -274,6 +274,24 @@ testRule({
 			column: 9,
 			message: messages.expectedAfter(),
 		},
+		{
+			// Pins the refusal where a word stands between the name and the parentheses, popped off the tokenizer's stack by parentheses of its own, so that the name is what the next `(` pops
+			description: `a solidus glued to the name of a bare address, a word with parentheses of its own between the name and its parenthesis, holding a string with a closing parenthesis, which a written space would make the tokenizer close inside the string`,
+			code: `a { b: 1/url x(y)(a ")" b) 2px; c: "d" }`,
+			fixed: `a { b: 1/url x(y)(a ")" b) 2px; c: "d" }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
+		{
+			// Pins the same where two words stand over the name, each popped by parentheses of its own
+			description: `a solidus glued to the name of a bare address, two words with parentheses of their own between the name and its parenthesis, holding a string with a closing parenthesis, which a written space would make the tokenizer close inside the string`,
+			code: `a { b: 1/url x y(z)(w)(a ")" b) 2px; c: "d" }`,
+			fixed: `a { b: 1/url x y(z)(w)(a ")" b) 2px; c: "d" }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
