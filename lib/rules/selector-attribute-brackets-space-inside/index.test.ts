@@ -139,6 +139,15 @@ testRule({
 
 	reject: [
 		{
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			description: `a backslash ending the value in front of a line break and the bracket, where the space would stand behind the backslash as its escaped character, so the warning stands`,
+			code: `[ a=b\\\n] {}`,
+			fixed: `[ a=b\\\n] {}`,
+			line: 1,
+			column: 7,
+			message: messages.expectedClosing,
+		},
+		{
 			description: `a space inside the closing bracket alone, the attribute standing with no value`,
 			code: `[target ] { }`,
 			fixed: `[ target ] { }`,
@@ -713,6 +722,23 @@ testRule({
 	],
 
 	reject: [
+		{
+			description: `a space behind an escaped vertical tab in front of the bracket, which the fix takes without touching the escape`,
+			code: `[a=b\\\v ] {}`,
+			fixed: `[a=b\\\v] {}`,
+			line: 1,
+			column: 7,
+			message: messages.rejectedClosing,
+		},
+		{
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			description: `a backslash ending the value in front of a line break and the bracket, which the write would turn into an escaped bracket the file no longer parses, so the warning stands`,
+			code: `[a=b\\\n ] {}`,
+			fixed: `[a=b\\\n ] {}`,
+			line: 2,
+			column: 1,
+			message: messages.rejectedClosing,
+		},
 		{
 			description: `a space inside the opening bracket alone, the attribute standing with no value`,
 			code: `[ target] { }`,

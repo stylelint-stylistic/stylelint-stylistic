@@ -25,6 +25,7 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 	checkedRuleName: string,
 	checkBeforeOperator: boolean,
 	fix?: ((attributeNode: Attribute) => void),
+	isFixable?: ((text: string, index: number, runString: string) => boolean),
 }): void {
 	let { fix } = options
 
@@ -54,7 +55,7 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 			styleSearch({ source: attributeNodeString, target: operator }, (match) => {
 				let index = options.checkBeforeOperator ? match.startIndex : match.endIndex - 1
 
-				checkOperator(runString, index, rule, attributeNode, operator)
+				checkOperator(attributeNodeString, runString, index, rule, attributeNode, operator)
 			})
 		})
 
@@ -66,18 +67,21 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 
 		/**
 		 * Checks one operator.
-		 * @param source - The copy of the attribute's text the run is read over.
+		 * @param text - The attribute's text as the parseable copy of the selector spells it.
+		 * @param source - The copy of it the run is read over.
 		 * @param index - The index checked.
 		 * @param node - The node reported.
 		 * @param attributeNode - The parsed selector node handed to the fixer.
 		 * @param operator - The matched text, `=` or a two-character form.
 		 */
-		function checkOperator (source: string, index: number, node: Node, attributeNode: Attribute, operator: string): void {
+		function checkOperator (text: string, source: string, index: number, node: Node, attributeNode: Attribute, operator: string): void {
 			options.locationChecker({
 				source,
 				index,
 				err: (msg) => {
 					let problemIndex = copies.toSourceIndex(attributeNode.sourceIndex + index)
+					// The rule's own fix guard, asked here so a clean operator is never asked about
+					let isFixable = fix && (!options.isFixable || options.isFixable(text, index, source))
 
 					report({
 						message: msg.replace(
@@ -89,7 +93,7 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 						endIndex: problemIndex,
 						result: options.result,
 						ruleName: options.checkedRuleName,
-						...(fix && {
+						...(fix && isFixable && {
 							fix: (): void => {
 								hasFixed = true
 

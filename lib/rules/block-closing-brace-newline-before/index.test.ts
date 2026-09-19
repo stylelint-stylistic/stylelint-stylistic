@@ -100,6 +100,15 @@ testRule({
 
 	reject: [
 		{
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			description: `a space behind a backslash ending the value, which the written break would take the escape off, so the warning stands`,
+			code: `a { b: c\\ }`,
+			fixed: `a { b: c\\ }`,
+			line: 1,
+			column: 10,
+			message: messages.expectedBefore,
+		},
+		{
 			description: `a brace abutting the declaration`,
 			code: `a { color: pink;}`,
 			fixed: `a { color: pink;\n}`,
@@ -491,6 +500,23 @@ testRule({
 	],
 
 	reject: [
+		{
+			description: `a free semicolon behind the brace, which the text the guard reads ends on unless it is read through the brace`,
+			code: `a { b: c\\\n};`,
+			fixed: `a { b: c\\\n};`,
+			line: 2,
+			column: 1,
+			message: messages.rejectedBeforeMultiLine,
+		},
+		{
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			description: `a backslash ending the value in front of a line break and the brace, which the write would turn into an escaped brace the file no longer parses, so the warning stands`,
+			code: `a { b: c \\\n}`,
+			fixed: `a { b: c \\\n}`,
+			line: 1,
+			column: 11,
+			message: messages.rejectedBeforeMultiLine,
+		},
 		{
 			description: `a space in front of the brace of a multi-line block`,
 			code: `a { color: pink;\ntop: 0; }`,

@@ -115,6 +115,15 @@ testRule({
 
 	reject: [
 		{
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			description: `a backslash ending the argument in front of a line break and the parenthesis, where the space would stand behind the backslash as its escaped character, so the warning stands`,
+			code: `a:not( b\\\n) {}`,
+			fixed: `a:not( b\\\n) {}`,
+			line: 1,
+			column: 10,
+			message: messages.expectedClosing,
+		},
+		{
 			description: `no space inside the opening parenthesis`,
 			code: `input:not([type='submit'] ) { }`,
 			fixed: `input:not( [type='submit'] ) { }`,
@@ -531,6 +540,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			description: `a space behind an escaped vertical tab in front of the parenthesis, which the fix takes without touching the escape`,
+			code: `a:not(b\\\v ) {}`,
+			fixed: `a:not(b\\\v) {}`,
+			line: 1,
+			column: 10,
+			message: messages.rejectedClosing,
+		},
 		{
 			// See #173
 			description: `a form feed inside the arguments, which is whitespace and no line break, so the list is single-line and the space in front of the closing parenthesis goes`,

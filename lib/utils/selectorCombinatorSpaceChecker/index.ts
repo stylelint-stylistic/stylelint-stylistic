@@ -42,6 +42,7 @@ export function selectorCombinatorSpaceChecker (opts: {
 	locationType: `before` | `after`,
 	checkedRuleName: string,
 	fix?: ((combinator: Combinator) => void),
+	isFixable?: ((selector: string, index: number, runString: string) => boolean),
 }): void {
 	let { fix } = opts
 	let hasFixed
@@ -79,7 +80,7 @@ export function selectorCombinatorSpaceChecker (opts: {
 			let sourceIndex = node.sourceIndex
 			let index = node.value.length > 1 && opts.locationType === `before` ? sourceIndex : sourceIndex + node.value.length - 1
 
-			check(runString, node, index, rule, copies.toSourceIndex(sourceIndex))
+			check(selector, runString, node, index, rule, copies.toSourceIndex(sourceIndex))
 		})
 
 		if (hasFixed) {
@@ -91,15 +92,16 @@ export function selectorCombinatorSpaceChecker (opts: {
 
 	/**
 	 * Checks a combinator.
+	 * @param selector - The parseable copy of the selector, which the index counts in.
 	 * @param source - The copy of the selector the run is read over.
 	 * @param combinator - The parsed combinator node whose whitespace is checked.
 	 * @param index - The index to check.
 	 * @param node - The rule.
 	 * @param reportIndex - The combinator's index in the rule's source.
 	 */
-	function check (source: string, combinator: Combinator, index: number, node: Node, reportIndex: number): void {
-		// A comment beside a combinator folds into that side's raws, printed over the spaces the fix writes; declined here, since a fixer doing nothing still counts as applied and eats the warning
-		let isFixable = fix && combinator.raws?.spaces?.[opts.locationType] === undefined
+	function check (selector: string, source: string, combinator: Combinator, index: number, node: Node, reportIndex: number): void {
+		// A comment beside a combinator folds into that side's raws, printed over the spaces the fix writes; declined here, since a fixer doing nothing still counts as applied and eats the warning. The rule's own guard is asked last
+		let isFixable = fix && combinator.raws?.spaces?.[opts.locationType] === undefined && (!opts.isFixable || opts.isFixable(selector, index, source))
 
 		opts.locationChecker({
 			source,

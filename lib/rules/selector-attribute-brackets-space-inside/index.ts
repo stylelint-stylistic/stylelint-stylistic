@@ -5,6 +5,7 @@ import stylelint, { type FixCallback } from "stylelint"
 import { LEADING_WHITESPACE, TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -23,6 +24,42 @@ const MESSAGES = defineMessages({
 export let meta = {
 	url: getRuleDocUrl(shortName),
 	fixable: true,
+}
+
+/**
+ * The whitespace standing in front of `]` and the way to write over it: the raw where the parser filed the spaces, else the node's own, under the key the attribute's last part carries.
+ * @param attributeNode - The parsed attribute selector.
+ * @returns The whitespace and its writer.
+ */
+function closingSpaces (attributeNode: Attribute): {
+	after: string,
+	setAfter: (fixed: string) => void,
+} {
+	let key: `insensitive` | `value` | `attribute` = attributeNode.operator ? (attributeNode.insensitive ? `insensitive` : `value`) : `attribute`
+
+	let rawSpaces = attributeNode.raws.spaces && attributeNode.raws.spaces[key]
+	let rawAfter = rawSpaces && rawSpaces.after
+
+	let spaces = attributeNode.spaces[key]
+
+	if (rawSpaces && rawAfter) {
+		return {
+			after: rawAfter,
+			setAfter (fixed) {
+				rawSpaces.after = fixed
+			},
+		}
+	}
+
+	return {
+		after: (spaces && spaces.after) || ``,
+		setAfter (fixed) {
+			let written = attributeNode.spaces[key] ?? {}
+
+			written.after = fixed
+			attributeNode.spaces[key] = written
+		},
+	}
 }
 
 /** `always` a single space inside the brackets, `never` no whitespace. */
@@ -90,24 +127,20 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				styleSearch({ source: attributeSelectorString, target: `]` }, (match) => {
 					let prevCharIsSpace = attributeSelectorString[match.startIndex - 1] === ` `
 					let index = attributeNode.sourceIndex + match.startIndex - 1
+					// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `[a=b\⏎]` would come out as `[a=b\ ]`, an escaped space, so the warning stands. The question is asked about the whitespace the fix writes over, which is the node's own and never the escaped space in front of it (1789664271)
+					let run = (closingSpaces(attributeNode).after.match(TRAILING_WHITESPACE) as RegExpMatchArray)[0]
+					let keepsTheEscape = editKeepsEscapedCharacter(attributeSelectorString, { start: match.startIndex - run.length, end: match.startIndex, text: primary === `always` ? ` ` : `` })
 
-					if (prevCharIsSpace && primary === `never`) {
-						fix = (): void => {
+					fix = keepsTheEscape
+						? (): void => {
 							hasFixed = true
 							fixAfter(attributeNode)
 						}
+						: undefined
 
-						complain(messages.rejectedClosing, index)
-					}
+					if (prevCharIsSpace && primary === `never`) complain(messages.rejectedClosing, index)
 
-					if (!prevCharIsSpace && primary === `always`) {
-						fix = (): void => {
-							hasFixed = true
-							fixAfter(attributeNode)
-						}
-
-						complain(messages.expectedClosing, index)
-					}
+					if (!prevCharIsSpace && primary === `always`) complain(messages.expectedClosing, index)
 				})
 			})
 
@@ -174,32 +207,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 	 * @param attributeNode - The parsed attribute selector whose closing whitespace is rewritten.
 	 */
 	function fixAfter (attributeNode: Attribute): void {
-		let key: `insensitive` | `value` | `attribute` = attributeNode.operator ? (attributeNode.insensitive ? `insensitive` : `value`) : `attribute`
-
-		let rawSpaces = attributeNode.raws.spaces && attributeNode.raws.spaces[key]
-		let rawAfter = rawSpaces && rawSpaces.after
-
-		let spaces = attributeNode.spaces[key]
-
-		let { after, setAfter }: {
-			after: string,
-			setAfter: (fixed: string) => void,
-		} = rawSpaces && rawAfter
-			? {
-				after: rawAfter,
-				setAfter (fixed) {
-					rawSpaces.after = fixed
-				},
-			}
-			: {
-				after: (spaces && spaces.after) || ``,
-				setAfter (fixed) {
-					let written = attributeNode.spaces[key] ?? {}
-
-					written.after = fixed
-					attributeNode.spaces[key] = written
-				},
-			}
+		let { after, setAfter } = closingSpaces(attributeNode)
 
 		if (primary === `always`) setAfter(after.replace(TRAILING_WHITESPACE, ` `))
 		else if (primary === `never`) setAfter(after.replace(TRAILING_WHITESPACE, ``))

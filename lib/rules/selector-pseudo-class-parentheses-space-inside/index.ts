@@ -1,9 +1,10 @@
 import type { Container, Node, Root, Spaces } from "postcss-selector-parser"
 import stylelint, { type FixCallback } from "stylelint"
 
-import { LEADING_WHITESPACE_OR_BLOCK_COMMENT, LEADING_WHITESPACE_RUN, LINE_BREAK, TRAILING_WHITESPACE_RUN, WHITESPACE } from "../../regexps.ts"
+import { LEADING_WHITESPACE_OR_BLOCK_COMMENT, LEADING_WHITESPACE_RUN, LINE_BREAK, TRAILING_WHITESPACE, TRAILING_WHITESPACE_RUN, WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -110,22 +111,21 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (lastNode) {
 					let prevCharIsSpace = paramString.endsWith(` `)
 					let closeIndex = openIndex + paramString.length - 1
+					let written = primary === `always` ? ` ` : ``
+					// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a:not(b\⏎)` would come out as `a:not(b\ )`, an escaped space, so the warning stands. The question is asked about the whitespace the fix writes over, which is the node's own and never the escaped space in front of it (1789664271)
+					let run = (spaceAfter(lastNode).match(TRAILING_WHITESPACE) as RegExpMatchArray)[0]
+					let keepsTheEscape = editKeepsEscapedCharacter(selector, { start: closeIndex + 1 - run.length, end: closeIndex + 1, text: written })
 
-					if (prevCharIsSpace && primary === `never` && !isParamStringMultiline) {
-						fix = (): void => {
+					fix = keepsTheEscape
+						? (): void => {
 							hasFixed = true
-							setSpaceAfter(lastNode, ``)
+							setSpaceAfter(lastNode, written)
 						}
-						complain(messages.rejectedClosing, closeIndex)
-					}
+						: undefined
 
-					if (!prevCharIsSpace && primary === `always`) {
-						fix = (): void => {
-							hasFixed = true
-							setSpaceAfter(lastNode, ` `)
-						}
-						complain(messages.expectedClosing, closeIndex)
-					}
+					if (prevCharIsSpace && primary === `never` && !isParamStringMultiline) complain(messages.rejectedClosing, closeIndex)
+
+					if (!prevCharIsSpace && primary === `always`) complain(messages.expectedClosing, closeIndex)
 				}
 			})
 
@@ -295,6 +295,15 @@ function lastNodeInside (node: Container): Node | undefined {
 	while (target && target.type === `selector`) target = target.last
 
 	return target
+}
+
+/**
+ * The whitespace standing behind a node, which `setSpaceAfter` writes over: the raw where a comment moved the run there, since `toString()` prints the raw, else the node's own spaces.
+ * @param target - The node.
+ * @returns The whitespace.
+ */
+function spaceAfter (target: Node): string {
+	return (target as NodeWithRaws).raws?.spaces?.after ?? target.spaces.after ?? ``
 }
 
 /**

@@ -33,6 +33,15 @@ testRule({
 
 	reject: [
 		{
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			description: `a backslash ending the selector in front of a line break and the brace, where the space would stand behind the backslash as its escaped character, so the warning stands`,
+			code: `a\\\n{ b: c }`,
+			fixed: `a\\\n{ b: c }`,
+			line: 1,
+			column: 3,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `a brace abutting the selector`,
 			code: `a{ color: pink; }`,
 			fixed: `a { color: pink; }`,
@@ -216,6 +225,23 @@ testRule({
 	],
 
 	reject: [
+		{
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			description: `a backslash ending the selector in front of a line break and the brace, which the write would turn into an escaped brace the file no longer parses, so the warning stands`,
+			code: `a\\\n{ b: c }`,
+			fixed: `a\\\n{ b: c }`,
+			line: 1,
+			column: 3,
+			message: messages.rejectedBefore(),
+		},
+		{
+			description: `a space behind such a backslash, which the write would turn into an escaped brace the same way`,
+			code: `a\\ { b: c }`,
+			fixed: `a\\ { b: c }`,
+			line: 1,
+			column: 3,
+			message: messages.rejectedBefore(),
+		},
 		{
 			description: `a space in front of the brace`,
 			code: `a { color: pink; }`,

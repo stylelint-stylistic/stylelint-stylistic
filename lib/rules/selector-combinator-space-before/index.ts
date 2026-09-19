@@ -2,10 +2,12 @@ import stylelint from "stylelint"
 
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { selectorCombinatorSpaceChecker } from "../../utils/selectorCombinatorSpaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { runInFront } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -51,6 +53,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.before,
 			locationType: `before`,
 			checkedRuleName: ruleName,
+			// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `b\⏎>c` would come out as `b\>c`, one word, or `b\ >c`, an escaped space, so the warning stands (1789664271)
+			isFixable: (selector, index, runString) => editKeepsEscapedCharacter(selector, { start: index - runInFront(runString, index).length, end: index, text: primary === `always` ? ` ` : `` }),
 			fix: (combinator) => {
 				if (primary === `always`) {
 					combinator.spaces.before = ` `
