@@ -4,6 +4,8 @@ import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
 import type { Syntax } from "../../syntaxes/index.ts"
+import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
+import { editKeepsEscapedCharacter } from "../editKeepsEscapedCharacter/index.ts"
 import { parseSelector } from "../parseSelector/index.ts"
 import { selectorSearchCopy } from "../selectorSearchCopy/index.ts"
 
@@ -24,8 +26,7 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 	}) => void,
 	checkedRuleName: string,
 	checkBeforeOperator: boolean,
-	fix?: ((attributeNode: Attribute) => void),
-	isFixable?: ((text: string, index: number, runString: string) => boolean),
+	fix?: ((index: number, runString: string) => Edit[]),
 }): void {
 	let { fix } = options
 
@@ -37,7 +38,7 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 
 		if (!selector.includes(`[`) || !selector.includes(`=`)) return
 
-		let hasFixed = false
+		let edits: Edit[] = []
 
 		let selectorTree = parseSelector(selector, options.result, rule)
 
@@ -49,39 +50,41 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 			if (!operator) return
 
 			let attributeNodeString = attributeNode.toString()
-			// The parser reads an escaped space as a character of the attribute's name, so the fix writes the operator's own spaces alone; the check reads the run over the copy where it is none either (1789661964)
+
+			// The parser reads a backslash in front of a tab as no escape and files what follows into parts it prints back in another order, so `[a=\⇥\⇥b]` comes back as `[a=\⇥b⇥]`: an attribute whose parts do not spell the source is passed over, since every index here is measured in them (1789666655)
+			if (!selector.startsWith(attributeNodeString, attributeNode.sourceIndex)) return
+
+			// The parser reads an escaped space as a character of the attribute's name, and a tab behind a backslash as whitespace of its own; the run is read over the copy where the escapes are masked, and the fix cuts it out of the selector (1789661964, 1789666655)
 			let { runString } = selectorSearchCopy(attributeNodeString)
 
 			styleSearch({ source: attributeNodeString, target: operator }, (match) => {
 				let index = options.checkBeforeOperator ? match.startIndex : match.endIndex - 1
 
-				checkOperator(attributeNodeString, runString, index, rule, attributeNode, operator)
+				checkOperator(runString, index, rule, attributeNode, operator)
 			})
 		})
 
-		if (hasFixed) {
-			let fixedSelector = String(selectorTree)
-
-			copies.write(fixedSelector)
-		}
+		if (edits.length > 0) copies.write(applyEditsFromEnd(selector, edits))
 
 		/**
 		 * Checks one operator.
-		 * @param text - The attribute's text as the parseable copy of the selector spells it.
-		 * @param source - The copy of it the run is read over.
+		 * @param source - The copy of the attribute's text the run is read over.
 		 * @param index - The index checked.
 		 * @param node - The node reported.
-		 * @param attributeNode - The parsed selector node handed to the fixer.
+		 * @param attributeNode - The parsed attribute, whose `sourceIndex` the edits and the report are measured from.
 		 * @param operator - The matched text, `=` or a two-character form.
 		 */
-		function checkOperator (text: string, source: string, index: number, node: Node, attributeNode: Attribute, operator: string): void {
+		function checkOperator (source: string, index: number, node: Node, attributeNode: Attribute, operator: string): void {
+			// Indexed in the selector, which the attribute's parts spell from its own index on
+			let operatorEdits = fix ? fix(index, source).map(({ start, end, text: written }) => ({ start: attributeNode.sourceIndex + start, end: attributeNode.sourceIndex + end, text: written })) : []
+
 			options.locationChecker({
 				source,
 				index,
 				err: (msg) => {
 					let problemIndex = copies.toSourceIndex(attributeNode.sourceIndex + index)
-					// The rule's own fix guard, asked here so a clean operator is never asked about
-					let isFixable = fix && (!options.isFixable || options.isFixable(text, index, source))
+					// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `[a\⏎=b]` would come out as `[a\=b]`, one attribute name, or `[a\ =b]`, an escaped space (1789664271)
+					let isFixable = fix && operatorEdits.every((edit) => editKeepsEscapedCharacter(selector, edit))
 
 					report({
 						message: msg.replace(
@@ -95,9 +98,7 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 						ruleName: options.checkedRuleName,
 						...(fix && isFixable && {
 							fix: (): void => {
-								hasFixed = true
-
-								fix(attributeNode)
+								edits.push(...operatorEdits)
 							},
 						}),
 					})

@@ -8,6 +8,11 @@ testRule({
 
 	accept: [
 		{
+			// The selector parser reads a backslash in front of a tab as no escape, and the fix wrote over the tab (1789666655)
+			description: `an escaped tab between two names, which is a character of one name and no combinator`,
+			code: `a\\\tb {}`,
+		},
+		{
 			description: `two classes with no combinator between them`,
 			code: `.foo.bar {}`,
 		},
@@ -127,6 +132,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// The selector parser reads a backslash in front of a tab as no escape, and the fix wrote over the tab (1789666655)
+			description: `a tab behind an escaped tab, where the escaped one is a character of the name and the other stands for the combinator`,
+			code: `a\\\t\tb {}`,
+			fixed: `a\\\t b {}`,
+			line: 1,
+			column: 4,
+			message: messages.rejected(`\t`),
+		},
 		{
 			description: `two spaces standing for the descendant combinator`,
 			code: `.foo  .bar {}`,

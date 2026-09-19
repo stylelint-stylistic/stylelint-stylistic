@@ -8,6 +8,11 @@ testRule({
 
 	accept: [
 		{
+			// The selector parser files the parts of such an attribute so that it prints them back in another order, and the checker passes it over (1789666655)
+			description: `two escaped tabs behind the operator, whose parts the selector parser prints back in another order`,
+			code: `[a=\\\t\\\tb] {}`,
+		},
+		{
 			description: `a selector with no attribute in it`,
 			code: `.foo { }`,
 		},
@@ -358,6 +363,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// The selector parser reads a backslash in front of a tab as no escape, and the fix wrote over the tab (1789666655)
+			description: `an escaped tab in front of the operator, which is a character of the name and no space`,
+			code: `[a\\\t=b] {}`,
+			fixed: `[a\\\t =b] {}`,
+			line: 1,
+			column: 5,
+			message: messages.expectedBefore(`=`),
+		},
 		{
 			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
 			description: `a backslash ending the attribute in front of a line break and the operator, where the space would stand behind the backslash as its escaped character, so the warning stands`,
@@ -1361,6 +1375,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// The selector parser reads a backslash in front of a tab as no escape, and the fix wrote over the tab (1789666655)
+			description: `a space in front of the operator behind an escaped tab, which is a character of the name`,
+			code: `[a\\\t =b] {}`,
+			fixed: `[a\\\t=b] {}`,
+			line: 1,
+			column: 6,
+			message: messages.rejectedBefore(`=`),
+		},
 		{
 			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
 			description: `a backslash ending the attribute in front of a line break and the operator, which the write would turn into an escaped operator, so the warning stands`,

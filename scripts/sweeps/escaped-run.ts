@@ -5,6 +5,8 @@
  *
  * A bare break behind the backslashes, alone and with a space, was added for 1789664271, where the backslash is the delimiter itself and the character a write puts behind it is read as its escape; the brace, bracket and parenthesis shapes and the rules reading their runs came with it.
  *
+ * The descendant shape, a second escaped tab and `selector-descendant-combinator-no-non-space` were added for 1789666655, where `postcss-selector-parser` reads a backslash in front of a tab as no escape: the tab stands in the spaces of its nodes, and a rule writing them wrote over a character of the name. The second escaped tab is the shape the parser files an attribute's parts so that it prints them back in another order.
+ *
  * The controls: `value-list-comma-space-before`, which reads its run over the search copy already (1789657288), and `declaration-bang-space-before`.
  */
 
@@ -28,6 +30,7 @@ const ESCAPED: Record<string, string> = {
 	spaceThenBreak: ` \n`,
 	tab: `\t`,
 	tabThenSpace: `\t `,
+	tabThenEscapedTab: `\t\\\t`,
 	hexComma: `2c`,
 	hexCommaThenSpace: `2c `,
 	hexCommaThenTwoSpaces: `2c  `,
@@ -48,6 +51,7 @@ const corpus: Sweep[`corpus`] = place(
 		call: (text) => `a { b: f(1${text},2); c: d }`,
 		callAfter: (text) => `a { b: f(1,${text}2); c: d }`,
 		combinator: (text) => `a${text}>b { c: d }`,
+		descendant: (text) => `a${text}b { c: d }`,
 		combinatorAfter: (text) => `a>${text}b { c: d }`,
 		attribute: (text) => `[a${text}=b] { c: d }`,
 		attributeAfter: (text) => `[a=${text}b] { c: d }`,
@@ -103,6 +107,7 @@ const configs: Sweep[`configs`] = [
 	{ rule: `selector-attribute-operator-space-before`, primary: `never` },
 	{ rule: `selector-attribute-operator-space-after`, primary: `always` },
 	{ rule: `selector-attribute-operator-space-after`, primary: `never` },
+	{ rule: `selector-descendant-combinator-no-non-space`, primary: true },
 	{ rule: `selector-attribute-brackets-space-inside`, primary: `always` },
 	{ rule: `selector-attribute-brackets-space-inside`, primary: `never` },
 	{ rule: `selector-pseudo-class-parentheses-space-inside`, primary: `always` },

@@ -4,6 +4,8 @@ import stylelint, { type PostcssResult } from "stylelint"
 
 import { WHITESPACE } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
+import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
+import { editKeepsEscapedCharacter } from "../editKeepsEscapedCharacter/index.ts"
 import { parseSelector } from "../parseSelector/index.ts"
 import { selectorSearchCopy } from "../selectorSearchCopy/index.ts"
 
@@ -41,16 +43,12 @@ export function selectorCombinatorSpaceChecker (opts: {
 	locationChecker: LocationChecker,
 	locationType: `before` | `after`,
 	checkedRuleName: string,
-	fix?: ((combinator: Combinator) => void),
-	isFixable?: ((selector: string, index: number, runString: string) => boolean),
+	fix?: ((index: number, runString: string) => Edit[]),
 }): void {
 	let { fix } = opts
-	let hasFixed
 
 	opts.root.walkRules((rule) => {
 		if (!opts.syntax.isStandardRule(rule)) return
-
-		hasFixed = false
 
 		let copies = opts.syntax.selectorCopies(rule)
 		let { selector } = copies
@@ -59,8 +57,45 @@ export function selectorCombinatorSpaceChecker (opts: {
 
 		if (!selectorTree) return
 
-		// The parser reads an escaped space as a character of its name, so the fix writes the combinator's own spaces alone; the check reads the run over the copy where it is none either (1789661964)
+		// The parser reads an escaped space as a character of its name, and a backslash in front of a tab as no escape at all, so its spaces hold whitespace the grammar covers with the escape either way; the run is read over the copy where the escapes are masked, and the fix cuts that run out of the selector rather than writing the spaces (1789661964, 1789666655)
 		let { runString } = selectorSearchCopy(selector)
+		let edits: Edit[] = []
+
+		/**
+		 * Checks a combinator.
+		 * @param selectorText - The parseable copy of the selector, which the index counts in.
+		 * @param source - The copy of the selector the run is read over.
+		 * @param combinator - The parsed combinator node whose whitespace is checked.
+		 * @param index - The index to check.
+		 * @param node - The rule.
+		 * @param reportIndex - The combinator's index in the rule's source.
+		 */
+		function check (selectorText: string, source: string, combinator: Combinator, index: number, node: Node, reportIndex: number): void {
+			let combinatorEdits = fix ? fix(index, source) : []
+			// A comment beside a combinator folds into that side's raws, and whether the fix may write the run the check read between it and the combinator is unsettled, so the warning stands there (1789857483). A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `b\⏎>c` would come out as `b\>c`, one word, or `b\ >c`, an escaped space, so the warning stands for that too (1789664271)
+			let isFixable = fix && combinator.raws?.spaces?.[opts.locationType] === undefined && combinatorEdits.every((edit) => editKeepsEscapedCharacter(selectorText, edit))
+
+			opts.locationChecker({
+				source,
+				index,
+				errTarget: combinator.value,
+				err: (message) => {
+					report({
+						message,
+						node,
+						index: reportIndex,
+						endIndex: reportIndex,
+						result: opts.result,
+						ruleName: opts.checkedRuleName,
+						...(fix && isFixable && {
+							fix: (): void => {
+								edits.push(...combinatorEdits)
+							},
+						}),
+					})
+				},
+			})
+		}
 
 		selectorTree.walkCombinators((node) => {
 			// Non-standard
@@ -83,47 +118,6 @@ export function selectorCombinatorSpaceChecker (opts: {
 			check(selector, runString, node, index, rule, copies.toSourceIndex(sourceIndex))
 		})
 
-		if (hasFixed) {
-			let fixedSelector = String(selectorTree)
-
-			copies.write(fixedSelector)
-		}
+		if (edits.length > 0) copies.write(applyEditsFromEnd(selector, edits))
 	})
-
-	/**
-	 * Checks a combinator.
-	 * @param selector - The parseable copy of the selector, which the index counts in.
-	 * @param source - The copy of the selector the run is read over.
-	 * @param combinator - The parsed combinator node whose whitespace is checked.
-	 * @param index - The index to check.
-	 * @param node - The rule.
-	 * @param reportIndex - The combinator's index in the rule's source.
-	 */
-	function check (selector: string, source: string, combinator: Combinator, index: number, node: Node, reportIndex: number): void {
-		// A comment beside a combinator folds into that side's raws, printed over the spaces the fix writes; declined here, since a fixer doing nothing still counts as applied and eats the warning. The rule's own guard is asked last
-		let isFixable = fix && combinator.raws?.spaces?.[opts.locationType] === undefined && (!opts.isFixable || opts.isFixable(selector, index, source))
-
-		opts.locationChecker({
-			source,
-			index,
-			errTarget: combinator.value,
-			err: (message) => {
-				report({
-					message,
-					node,
-					index: reportIndex,
-					endIndex: reportIndex,
-					result: opts.result,
-					ruleName: opts.checkedRuleName,
-					...(fix && isFixable && {
-						fix: (): void => {
-							hasFixed = true
-
-							fix(combinator)
-						},
-					}),
-				})
-			},
-		})
-	}
 }

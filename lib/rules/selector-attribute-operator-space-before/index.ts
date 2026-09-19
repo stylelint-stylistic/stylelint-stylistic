@@ -1,9 +1,7 @@
 import stylelint from "stylelint"
 
-import { TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { selectorAttributeOperatorSpaceChecker } from "../../utils/selectorAttributeOperatorSpaceChecker/index.ts"
@@ -54,45 +52,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
 			checkBeforeOperator: true,
-			// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `[a\⏎=b]` would come out as `[a\=b]`, one attribute name, or `[a\ =b]`, an escaped space (1789664271)
-			isFixable: (text, index, runString) => editKeepsEscapedCharacter(text, { start: index - runInFront(runString, index).length, end: index, text: primary === `always` ? ` ` : `` }),
-			fix: (attributeNode) => {
-				let rawAttr = attributeNode.raws.spaces && attributeNode.raws.spaces.attribute
-				let rawAttrAfter = rawAttr && rawAttr.after
-
-				let { attrAfter, setAttrAfter }: {
-					attrAfter: string,
-					setAttrAfter: (fixed: string) => void,
-				} = rawAttr && rawAttrAfter
-					? {
-						attrAfter: rawAttrAfter,
-						setAttrAfter (fixed) {
-							rawAttr.after = fixed
-						},
-					}
-					: {
-						attrAfter: (attributeNode.spaces.attribute && attributeNode.spaces.attribute.after) || ``,
-						setAttrAfter (fixed) {
-							if (!attributeNode.spaces.attribute) attributeNode.spaces.attribute = {}
-
-							attributeNode.spaces.attribute.after = fixed
-						},
-					}
-
-				if (primary === `always`) {
-					setAttrAfter(attrAfter.replace(TRAILING_WHITESPACE, ` `))
-
-					return true
-				}
-
-				if (primary === `never`) {
-					setAttrAfter(attrAfter.replace(TRAILING_WHITESPACE, ``))
-
-					return true
-				}
-
-				return false
-			},
+			// The run the check read, cut from the selector: the parser holds a tab behind a backslash in `spaces.attribute.after` although the grammar reads it as a character of the name in front (1789666655)
+			fix: (index, runString) => [{ start: index - runInFront(runString, index).length, end: index, text: primary === `always` ? ` ` : `` }],
 		})
 	}
 }
