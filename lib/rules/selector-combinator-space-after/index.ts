@@ -6,6 +6,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { selectorCombinatorSpaceChecker } from "../../utils/selectorCombinatorSpaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { runBehind } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -51,21 +52,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.after,
 			locationType: `after`,
 			checkedRuleName: ruleName,
-			fix: (combinator) => {
-				if (primary === `always`) {
-					combinator.spaces.after = ` `
-
-					return true
-				}
-
-				if (primary === `never`) {
-					combinator.spaces.after = ``
-
-					return true
-				}
-
-				return false
-			},
+			// The run the check read, cut from the selector: the parser holds a tab behind a backslash in the combinator's spaces although the grammar reads it as a character of the name behind it (1789666655)
+			fix: (index, runString) => [{ start: index + 1, end: index + 1 + runBehind(runString, index).length, text: primary === `always` ? ` ` : `` }],
 		})
 	}
 }

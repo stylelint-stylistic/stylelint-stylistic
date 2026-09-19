@@ -9,6 +9,8 @@ import { findSelectorBlockComments } from "../../utils/findSelectorBlockComments
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { selectorSearchCopy } from "../../utils/selectorSearchCopy/index.ts"
+import { runInFront } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -59,6 +61,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Skipped where the tree does not print the source back, since message, index and fix are measured against it.
 			if (!standsForSource(fullSelector, selector)) return
 
+			// The parser reads a backslash in front of a tab as no escape, and hands the tab over as a descendant combinator although the grammar reads it as a character of the name: the run is read over the copy with the escapes masked (1789666655)
+			let { runString } = selectorSearchCopy(selector)
+
 			fullSelector.walkCombinators((combinatorNode) => {
 				// A descendant combinator is `" "`, surplus in `spaces.before` or `raws.value`; other whitespace in `value` is what this rule reports.
 				let isDescendant = combinatorNode.value === ` `
@@ -106,25 +111,30 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					isComment: boolean,
 					closesInlineComment: boolean,
 				}): void {
-					// A single space is what the rule asks for; an empty run is a comment abutting the selector.
-					if (segment.isComment || segment.value === ` ` || segment.value === ``) return
+					if (segment.isComment) return
+
+					// What the segment holds of whitespace, the characters an escape covers left out of it
+					let run = runInFront(runString.slice(segment.index, segment.index + segment.value.length), segment.value.length)
+
+					// A single space is what the rule asks for; an empty run is a comment abutting the selector, or a tab an escape covers.
+					if (run === ` ` || run === ``) return
 
 					// The break in this run closes a `//` comment, which a single space would not, so the run is skipped.
 					if (segment.closesInlineComment) return
 
-					let index = copies.toSourceIndex(segment.index)
+					let index = copies.toSourceIndex(segment.index + segment.value.length - run.length)
 
 					report({
 						result,
 						ruleName,
 						message: messages.rejected,
-						messageArgs: [segment.value],
+						messageArgs: [run],
 						node: ruleNode,
 						index,
 						endIndex: index,
 						fix: (): void => {
 							hasFixed = true
-							segment.value = ` `
+							segment.value = `${segment.value.slice(0, segment.value.length - run.length)} `
 							write()
 						},
 					})

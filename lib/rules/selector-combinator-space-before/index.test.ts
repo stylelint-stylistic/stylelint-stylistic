@@ -182,6 +182,15 @@ testRule({
 			message: messages.expectedBefore(`>`),
 		},
 		{
+			// The selector parser reads a backslash in front of a tab as no escape, and the fix wrote over the tab (1789666655)
+			description: `an escaped tab in front of the combinator, which is a character of the name and no space`,
+			code: `a\\\t>b {}`,
+			fixed: `a\\\t >b {}`,
+			line: 1,
+			column: 4,
+			message: messages.expectedBefore(`>`),
+		},
+		{
 			description: `a comment the parser folds into the raws of the combinator, which the fix cannot write past`,
 			code: `.foo  /* c */  >  .bar { }`,
 			fixed: `.foo  /* c */  >  .bar { }`,
@@ -389,6 +398,15 @@ testRule({
 			fixed: `a,b\\\n>c { d: e }`,
 			line: 2,
 			column: 1,
+			message: messages.rejectedBefore(`>`),
+		},
+		{
+			// The selector parser reads a backslash in front of a tab as no escape, and the fix wrote over the tab (1789666655)
+			description: `a space in front of the combinator behind an escaped tab, which is a character of the name`,
+			code: `a\\\t >b {}`,
+			fixed: `a\\\t>b {}`,
+			line: 1,
+			column: 5,
 			message: messages.rejectedBefore(`>`),
 		},
 		{
