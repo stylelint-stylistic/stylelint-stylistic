@@ -146,4 +146,27 @@ describe(`rereadsAnAddress`, () => {
 	it(`a name joined to a vertical tab, which a written space parts`, () => {
 		expect(rereadsAnAddress(`1,url(a"b)`, { start: 3, end: 3, text: ` ` }, POSTCSS)).toBe(true)
 	})
+
+	it(`a word standing over the name on the tokenizer's stack, which parentheses of its own pop, leaving the name the word the next parenthesis pops`, () => {
+		expect(rereadsAnAddress(`1/url x(y)(a ")" b)`, { start: 2, end: 2, text: ` ` }, POSTCSS)).toBe(true)
+		expect(rereadsAnAddress(`1/url x y(z)(w)(a ")" b)`, { start: 2, end: 2, text: ` ` }, POSTCSS)).toBe(true)
+		expect(rereadsAnAddress(`1/url[x](y)(a ")" b)`, { start: 2, end: 2, text: ` ` }, POSTCSS)).toBe(true)
+		expect(rereadsAnAddress(`1/url url(y)(a ")" b)`, { start: 2, end: 2, text: ` ` }, POSTCSS)).toBe(true)
+		expect(rereadsAnAddress(`1/url x(y)(a ")" b)`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
+	})
+
+	it(`a word over the name no parentheses pop, which leaves the name under a word at every parenthesis`, () => {
+		expect(rereadsAnAddress(`1/url x(a ")" b)`, { start: 2, end: 2, text: ` ` }, POSTCSS)).toBe(false)
+		expect(rereadsAnAddress(`1/url x(y)(z)(a ")" b)`, { start: 2, end: 2, text: ` ` }, POSTCSS)).toBe(false)
+	})
+
+	it(`parentheses PostCSS reads as code, which push the words inside them and keep every parenthesis to their content's end code as well`, () => {
+		expect(rereadsAnAddress(`f(1,url x(y)(a ")" b)`, { start: 4, end: 4, text: ` ` }, POSTCSS)).toBe(false)
+		expect(rereadsAnAddress(`f(1,url x(y)(z)(a ")" b)`, { start: 4, end: 4, text: ` ` }, POSTCSS)).toBe(true)
+	})
+
+	it(`a double slash joined to the name, which the tokenizer reads into the name's word rather than as a comment`, () => {
+		expect(rereadsAnAddress(`1/url// c\n(a ")" b)`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(false)
+		expect(rereadsAnAddress(`@a,url// c\n(a ")" b)`, { start: 3, end: 3, text: ` ` }, SCSS)).toBe(false)
+	})
 })

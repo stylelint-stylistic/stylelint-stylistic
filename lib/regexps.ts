@@ -289,8 +289,14 @@ export const AT_WORD_AT_END = /@[^\t\n\f\r "#'()/;[\\\]{}]*$/u
 /** A character behind which PostCSS's tokenizer opens a new token for a letter: whitespace, a quotation mark, a parenthesis, a colon, a semicolon, a square bracket, a brace. Unlike {@link TOKENIZER_WORD_END}, `@` and a backslash are not among them, since a letter behind either joins their word. */
 export const TOKENIZER_TOKEN_END = /[\t\n\f\r "'():;[\]{}]/u
 
-/** A character PostCSS's tokenizer ends a word on, less `!` and `#`, which open a word of their own the letters then join, and less the solidus of a `/*`, which ends one only in front of a star and is a comment's opening to ask a comment scan about. */
+/** A character PostCSS's tokenizer ends a word on, less `!` and `#`, which open a word of their own the letters then join, and less the solidus of a `/*`, which ends one only in front of a star and is a comment's opening to ask a comment scan about. The whole set is {@link POSTCSS_WORD_END}. */
 export const TOKENIZER_WORD_END = /[\t\n\f\r "'():;@[\\\]{}]/u
+
+/** Every character PostCSS's tokenizer ends a word on, its `RE_WORD_END`: the narrowing {@link TOKENIZER_WORD_END} leaves out `!`, `#` and the solidus in front of a star, which this one holds. A word's first character is its own whatever it is, so a search starts behind it. */
+export const POSTCSS_WORD_END = /[\t\n\f\r !"#'():;@[\\\]{}]|\/(?=\*)/u
+
+/** Every character `postcss-scss`'s tokenizer ends a word on, its `RE_WORD_END`: {@link POSTCSS_WORD_END} and a comma, which it reads as a token of its own outside an at-word. */
+export const SCSS_WORD_END = /[,\t\n\f\r !"#'():;@[\\\]{}]|\/(?=\*)/u
 
 /** A template's `{…}`. */
 export const TPL_INTERPOLATION = /\{.+?\}/su
