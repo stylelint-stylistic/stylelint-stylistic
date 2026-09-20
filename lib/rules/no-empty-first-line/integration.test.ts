@@ -88,3 +88,101 @@ describe(`the output of no-empty-first-line beside a rule that writes into the h
 		await expectBothOrders(`<style>\n\n;\na {}</style>`, { once: `<style>\n\na {}</style>`, onceWarnings: 1, twice: `<style>\na {}</style>` }, `postcss-html`)
 	})
 })
+
+/** The three rules that write the head of the file, by the short names the orders are spelled with. */
+const HEAD_WRITERS: Record<string, unknown> = {
+	"no-empty-first-line": true,
+	"max-empty-lines": 1,
+	"no-extra-semicolons": true,
+}
+
+/**
+ * Every ordering of some rule names.
+ * @param names - The names to permute.
+ * @returns Every ordering.
+ */
+function orders (names: string[]): string[][] {
+	if (names.length <= 1) return [[...names]]
+
+	let built: string[][] = []
+
+	for (let [index, name] of names.entries()) {
+		for (let rest of orders([...names.slice(0, index), ...names.slice(index + 1)])) built.push([name, ...rest])
+	}
+
+	return built
+}
+
+/**
+ * Fixes a snippet under one order of the three until the runs stop moving it.
+ * @param code - The snippet.
+ * @param order - The rules in the order the configuration is to spell them.
+ * @param customSyntax - The syntax to parse the snippet with, where it is not a plain stylesheet.
+ * @returns The file the runs left and how many warnings the three have about it.
+ */
+async function settle (code: string, order: string[], customSyntax?: string): Promise<{ file: string, warnings: number }> {
+	let rules: Record<string, unknown> = {}
+
+	for (let name of order) rules[`@stylistic/${name}`] = HEAD_WRITERS[name]
+
+	let options = { config: { plugins, rules }, ...(customSyntax && { customSyntax }) }
+	let file = code
+
+	for (let run = 0; run < 8; run += 1) {
+		// eslint-disable-next-line no-await-in-loop
+		let answer = await stylelint.lint({ code: file, fix: true, ...options })
+		let next = answer.code ?? file
+
+		if (next === file) break
+
+		file = next
+	}
+
+	let read = await stylelint.lint({ code: file, ...options })
+
+	return { file, warnings: pick(read.results).warnings.length }
+}
+
+/**
+ * Asserts that every order of the three leaves one file, and that the three have nothing to say about it.
+ * @param code - The snippet.
+ * @param expected - The file every order is to leave.
+ * @param customSyntax - The syntax to parse the snippet with, where it is not a plain stylesheet.
+ * @returns Nothing.
+ */
+async function expectEveryOrder (code: string, expected: string, customSyntax?: string): Promise<void> {
+	let settled = await Promise.all(orders(Object.keys(HEAD_WRITERS)).map(async (order) => ({ order, settlement: await settle(code, order, customSyntax) })))
+
+	for (let { order, settlement } of settled) expect({ order, ...settlement }).toEqual({ order, file: expected, warnings: 0 })
+}
+
+// See #682
+describe(`the output of the three rules that write the head of the file`, () => {
+	it(`leaves one file over a free semicolon between two breaks, where the head raw is the whole file`, async () => {
+		await expectEveryOrder(`\n;\n`, `\n`)
+	})
+
+	it(`does the same where the file opens with two empty lines`, async () => {
+		await expectEveryOrder(`\n\n;\n`, `\n`)
+	})
+
+	it(`does the same where two breaks stand behind the semicolon`, async () => {
+		await expectEveryOrder(`\n;\n\n`, `\n`)
+	})
+
+	it(`does the same where the file ends on the semicolon, which leaves it no line ending to keep`, async () => {
+		await expectEveryOrder(`\n;`, ``)
+	})
+
+	it(`does the same where the empty second line carries a space`, async () => {
+		await expectEveryOrder(`\n \n;\n`, `\n`)
+	})
+
+	it(`does the same with a carriage-return line break`, async () => {
+		await expectEveryOrder(`\r\n;\r\n`, `\r\n`)
+	})
+
+	it(`does the same inside a style element, whose root keeps the block in the raw the page's own runs stand outside of`, async () => {
+		await expectEveryOrder(`<style>\n\n\n;\n</style>\n`, `<style>\n\n</style>\n`, `postcss-html`)
+	})
+})

@@ -2,7 +2,7 @@ import { type ChildNode, type Container, type Document, type Root, stringify } f
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, LEADING_LINE_BREAK_RUN, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
+import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, LEADING_LINE_BREAK_RUN, OPENS_WITH_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -15,6 +15,7 @@ import { nodeSyntax } from "../../utils/nodeSyntax/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
+import { takesTheOpeningLines } from "../../utils/takesTheOpeningLines/index.ts"
 import { isNumber } from "../../utils/validateTypes/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -72,16 +73,19 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		let ignoreComments = optionsMatches(secondaryOptions, `ignore`, `comments`)
 		let getChars = replaceEmptyLines.bind(null, primary)
+		let openingLinesAreTaken = takesTheOpeningLines(root, result)
 
 		/** Collapses every run of empty lines to the maximum: `raws.before`, a comment's `left` and `right`, the run in front of a closing brace, and the root's first node and tail apart from the walk, where an empty line counts one short. */
 		function fix (): void {
+			let { first } = root
+
 			root.walk((node) => {
 				if (node.type === `comment` && !ignoreComments) {
 					node.raws.left = getChars(node.raws.left)
 					node.raws.right = getChars(node.raws.right)
 				}
 
-				if (node.raws.before) node.raws.before = getChars(node.raws.before)
+				if (node.raws.before) node.raws.before = node === first ? pastTheOpeningLines(node.raws.before, openingLinesAreTaken, getChars) : getChars(node.raws.before)
 
 				if (carriesABlock(node)) {
 					let blockAfter = getBlockAfter(syntax, node)
@@ -90,7 +94,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				}
 			})
 
-			let { first } = root
 			let { document } = root as { document?: Document }
 			let firstNodeRawsBefore = first && first.raws.before
 			let rootRawsAfter = root.raws.after
@@ -98,16 +101,18 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// In an embedded block, the whitespace around the first and last nodes is the page's
 			if ((document && document.constructor.name) !== `Document`) {
 				// Only the leading run is the file's, the rest written by the walk as any run is, or zero took a free semicolon standing in this raw with the breaks (#598)
-				if (first && firstNodeRawsBefore) first.raws.before = firstNodeRawsBefore.replace(LEADING_LINE_BREAK_RUN, (run) => getChars(run, true))
+				if (first && firstNodeRawsBefore) first.raws.before = pastTheOpeningLines(firstNodeRawsBefore, openingLinesAreTaken, (text) => text.replace(LEADING_LINE_BREAK_RUN, (run) => getChars(run, true)))
 
 				if (rootRawsAfter) {
 					// Zero is read as one, a file ending on a break satisfying it. An empty root keeps the whole file here, and its leading run is written as such first, or a break survived every `--fix` (#404)
-					root.raws.after = replaceEmptyLines(primary === 0 ? 1 : primary, first ? rootRawsAfter : rootRawsAfter.replace(LEADING_LINE_BREAK_RUN, (run) => getChars(run, true)), true)
+					root.raws.after = first
+						? replaceEmptyLines(primary === 0 ? 1 : primary, rootRawsAfter, true)
+						: pastTheOpeningLines(rootRawsAfter, openingLinesAreTaken, (text) => replaceEmptyLines(primary === 0 ? 1 : primary, text.replace(LEADING_LINE_BREAK_RUN, (run) => getChars(run, true)), true))
 				}
 			}
 			else if (rootRawsAfter) {
-				// A root standing in an `html` document, whose tail is written as any run is, zero included, since the file's special case is its own
-				root.raws.after = getChars(rootRawsAfter)
+				// A root standing in an `html` document, whose tail is written as any run is, zero included, since the file's special case is its own; where such a root got no node this raw is the block entire, so the lines it opens with are the taker's here as they are in a file of its own (#682)
+				root.raws.after = first ? getChars(rootRawsAfter) : pastTheOpeningLines(rootRawsAfter, openingLinesAreTaken, getChars)
 			}
 		}
 
@@ -179,6 +184,21 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			}
 		}
 	}
+}
+
+/**
+ * Writes a raw the file opens with, leaving the empty lines `no-empty-first-line` takes off where that rule is the one taking them ([#682](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/682)).
+ * @param raw - The raw as it stands.
+ * @param openingLinesAreTaken - Whether that rule takes the run off this file.
+ * @param write - What this rule makes of the text it may write.
+ * @returns The run left alone and the rest written.
+ */
+function pastTheOpeningLines (raw: string, openingLinesAreTaken: boolean, write: (text: string) => string): string {
+	if (!openingLinesAreTaken) return write(raw)
+
+	let opening = OPENS_WITH_LINE_BREAK.exec(raw)?.[0] ?? ``
+
+	return opening + write(raw.slice(opening.length))
 }
 
 /**
