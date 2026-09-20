@@ -802,5 +802,15 @@ testRule({
 			column: 2,
 			message: messages.expected(`0 tabs`),
 		},
+		{
+			// The braces carry the break into the property, so the core rule meets one outside Sass too (1789503578)
+			description: `a property broken inside a pair of interpolation braces, standing in a style attribute`,
+			code: `<a style="font-#{\n$s}: 1px\n2px"></a>`,
+			fixed: `<a style="font-#{\n\t$s}: 1px\n\t2px"></a>`,
+			warnings: [
+				{ line: 2, column: 1, message: messages.expected(`1 tab`) },
+				{ line: 3, column: 1, message: messages.expected(`1 tab`) },
+			],
+		},
 	],
 })
