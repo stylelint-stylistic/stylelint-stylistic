@@ -9,7 +9,6 @@ import { blockString } from "../blockString/index.ts"
 import { closedBySemicolon, valueAsClosed } from "../closedBySemicolon/index.ts"
 import { colonIndexInBetween } from "../colonIndexInBetween/index.ts"
 import { declarationValueAsSpelled } from "../declarationValueAsSpelled/index.ts"
-import { defersToRunEnd } from "../defersToRunEnd/index.ts"
 import { isCustomProperty } from "../isCustomProperty/index.ts"
 import { isInlineStyleAttribute } from "../isInlineStyleAttribute/index.ts"
 import { isSingleLineString } from "../isSingleLineString/index.ts"
@@ -256,7 +255,7 @@ function spellingOf (run: string): Run {
  *
  * On a whitespace-only value the run behind the colon is the one in front of the semicolon; the colon rules write `raws.between` and the semicolon rules the value, so a pair took it in turns across runs of `--fix` ([#416](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/416)).
  *
- * A rule writes only where every rule behind it (in `neighbourSettings` order) that speaks with its fix on accepts a spelling it accepts too or is silenced by the write; otherwise it reports and leaves the run. A rule deferred to the run's end ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)) also needs each rule ahead to accept what the write leaves, to have warned, or to be silenced; a turned-off fix exempts nothing there.
+ * A rule writes only where every rule behind it (in `neighbourSettings` order) that speaks with its fix on accepts a spelling it accepts too or is silenced by the write; otherwise it reports and leaves the run. It also needs each rule ahead of it in run order — a deferred rule waits behind every undeferred one ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)) — to accept what the write leaves, to have warned, or to be silenced; a turned-off fix exempts nothing there.
  *
  * A `-single-line` or `-multi-line` option speaks as its rule judges over the text as it sees it: a colon rule's break stays in `raws.between` within the pass and reaches the value on the reparsed run after.
  *
@@ -352,8 +351,8 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 	let standingRun = readers === head ? betweenTailAfterColon(syntax, decl, result) + (valueAsClosed(syntax, decl, result).match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0] + (runPastDeclaration(syntax, decl, result) ?? ``) : run
 	let standing = spellingOf(standingRun)
 
-	// A rule ahead judged the run before the write (#355), so it gates the write unless it accepts what the write leaves, has warned already, or is silenced; a rejected write is a silent violation rewritten next run (#416)
-	let restsAhead = !defersToRunEnd(option) || settings.slice(0, position).every(([ahead, aheadOption]) => {
+	// Every rule ahead in run order judged the run before the write, deferred or not, so it gates the write unless it accepts what the write leaves, has warned already, or is silenced; a rejected write is a silent violation rewritten next run (#416)
+	let restsAhead = settings.slice(0, position).every(([ahead, aheadOption]) => {
 		if (!readersAfterTheWrite.has(ahead)) return true
 
 		let aheadAccepts = accepts(ahead, aheadOption, decl, runIsTheText)
