@@ -40,6 +40,15 @@ testRule({
 
 	reject: [
 		{
+			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			description: `a backslash ending the value in front of a space, which spells a character of the value, leaving no run for the option`,
+			code: `a { b: c\\ }`,
+			fixed: `a { b: c\\  }`,
+			line: 1,
+			column: 10,
+			message: messages.expectedBefore(),
+		},
+		{
 			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
 			description: `a backslash ending the value in front of a line break and the brace, where the space would stand behind the backslash as its escaped character, so the warning stands`,
 			code: `a { b: c \\\n}`,
@@ -212,6 +221,11 @@ testRule({
 
 	accept: [
 		{
+			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			description: `a backslash ending the value in front of a space, which spells a character of the value and no run`,
+			code: `a { b: c\\ }`,
+		},
+		{
 			description: `a brace abutting the declaration`,
 			code: `a { color: pink;}`,
 		},
@@ -241,6 +255,15 @@ testRule({
 			description: `a backslash ending the value in front of a line break and the brace, which the write would turn into an escaped brace the file no longer parses, so the warning stands`,
 			code: `a { b: c \\\n}`,
 			fixed: `a { b: c \\\n}`,
+			line: 1,
+			column: 11,
+			message: messages.rejectedBefore(),
+		},
+		{
+			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			description: `a space behind a backslash ending the value and a second one in front of the brace, where only the second is a run`,
+			code: `a { b: c\\  }`,
+			fixed: `a { b: c\\ }`,
 			line: 1,
 			column: 11,
 			message: messages.rejectedBefore(),

@@ -100,10 +100,10 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
-			description: `a space behind a backslash ending the value, which the written break would take the escape off, so the warning stands`,
+			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			description: `a space behind a backslash ending the value, which spells a character of the value, so the break goes behind it`,
 			code: `a { b: c\\ }`,
-			fixed: `a { b: c\\ }`,
+			fixed: `a { b: c\\ \n}`,
 			line: 1,
 			column: 10,
 			message: messages.expectedBefore,
@@ -446,6 +446,11 @@ testRule({
 
 	accept: [
 		{
+			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			description: `a backslash ending the value of a multi-line block in front of a space, which spells a character of the value and no run`,
+			code: `a { color: pink;\ntop: 0\\ }`,
+		},
+		{
 			description: `a multi-line block whose brace abuts the last declaration`,
 			code: `a { color: pink;\ntop: 0;}`,
 		},
@@ -513,6 +518,15 @@ testRule({
 			description: `a backslash ending the value in front of a line break and the brace, which the write would turn into an escaped brace the file no longer parses, so the warning stands`,
 			code: `a { b: c \\\n}`,
 			fixed: `a { b: c \\\n}`,
+			line: 1,
+			column: 11,
+			message: messages.rejectedBeforeMultiLine,
+		},
+		{
+			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			description: `a space behind a backslash ending the value and a break in front of the brace, where only the break is a run`,
+			code: `a { b: c\\ \n}`,
+			fixed: `a { b: c\\ }`,
 			line: 1,
 			column: 11,
 			message: messages.rejectedBeforeMultiLine,

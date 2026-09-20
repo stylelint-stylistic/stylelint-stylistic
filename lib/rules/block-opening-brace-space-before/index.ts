@@ -7,9 +7,11 @@ import { beforeBlockString } from "../../utils/beforeBlockString/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
+import { findEscapeSpans } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
+import { escapeHeadLength, maskEscapes } from "../../utils/maskEscapes/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isRegExp, isString } from "../../utils/validateTypes/index.ts"
@@ -113,19 +115,24 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (beforeBraceNoRaw[index - 1] === `\r`) index -= 1
 
+			let between = statement.raws.between ?? ``
+			let escapes = findEscapeSpans(source, syntax.inlineComments(statement, result))
+			// An escaped space is a character of the head and no run at all, so the run is read over the copy with the escapes masked (1789661964); PostCSS ends the head at the backslash and files the whitespace an escape covering one spells in `raws.between`, which the write keeps in front of the run it rewrites
+			let escapedHead = between.slice(0, escapeHeadLength(source, escapes, source.length - between.length))
+			let run = between.slice(escapedHead.length)
+
 			checker.before({
-				source,
+				source: maskEscapes(source, escapes, true),
 				index: source.length,
 				lineCheckStr: blockString(statement, result),
 				err: (m) => {
-					let between = statement.raws.between ?? ``
-					// Comments in `between` survive
-					let beforeWhitespace = between.replace(TRAILING_WHITESPACE, ``)
+					// Comments in the run survive
+					let beforeWhitespace = run.replace(TRAILING_WHITESPACE, ``)
 					let written = primary.startsWith(`always`) ? `${beforeWhitespace} ` : beforeWhitespace
 					// Behind an inline comment the brace cannot join its line, so neither option is satisfiable; the warning stands unfixed. The parser may keep the comment in the selector or params, so they are asked too
 					let isFixable = !syntax.endsWithInlineComment(`${syntax.read(statement)}${between}`, syntax.inlineComments(statement, result))
 						// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎{` would come out as `a\{`, which the parser no longer reads as a block, or `a\ {`, an escaped space (1789664271)
-						&& editKeepsEscapedCharacter(`${source}{`, { start: source.length - between.length, end: source.length, text: written })
+						&& editKeepsEscapedCharacter(`${source}{`, { start: source.length - run.length, end: source.length, text: written })
 
 					report({
 						message: m,
@@ -136,7 +143,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						ruleName,
 						...(isFixable && {
 							fix: (): void => {
-								statement.raws.between = written
+								statement.raws.between = `${escapedHead}${written}`
 							},
 						}),
 					})
