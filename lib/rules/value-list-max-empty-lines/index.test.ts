@@ -71,13 +71,23 @@ testRule({
 			description: `the same value written with a carriage-return line break`,
 			code: `a { box-shadow: inset 0 2px 0 #dcffa6,\r\n0 2px 5px #000; }`,
 		},
+		// A run of breaks inside a comment is text of the comment, and collapsing it would carry lines out of the file
+		{
+			description: `blank lines inside the text of a comment, which are no blank lines of the value`,
+			code: `a { padding: 10px /*\n\n\n\n\n\n*/ 10px 10px 10px }`,
+		},
+		{
+			description: `the same comment written with carriage-return line breaks`,
+			code: `a { padding: 10px /*\r\n\r\n\r\n\r\n\r\n\r\n*/ 10px 10px 10px }`,
+		},
 	],
 
 	reject: [
+		// The run inside the comment stands where it was while the one behind it is collapsed
 		{
-			description: `blank lines inside a comment, which the rule counts like any others`,
-			code: `a { padding: 10px /*\n\n\n\n\n\n*/ 10px 10px 10px }`,
-			fixed: `a { padding: 10px /*\n*/ 10px 10px 10px }`,
+			description: `a blank line of the value behind a comment whose text holds blank lines of its own`,
+			code: `a { padding: 10px /*\n\n\n*/\n\n10px 10px 10px }`,
+			fixed: `a { padding: 10px /*\n\n\n*/\n10px 10px 10px }`,
 			line: 1,
 			column: 5,
 			message: messages.expected(0),
