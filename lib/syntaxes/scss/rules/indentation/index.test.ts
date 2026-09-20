@@ -759,3 +759,29 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`tab`],
+	customSyntax: `postcss-scss`,
+
+	reject: [
+		{
+			// The break stands in the property alone, where the guard used to ask only the value and the run in front of it (1789926320)
+			description: `a property broken inside its interpolation, over a value written on one line`,
+			code: `a {\n\tfont-#{\n$s}: 1px;\n}\n`,
+			fixed: `a {\n\tfont-#{\n\t\t$s}: 1px;\n}\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`2 tabs`),
+		},
+		{
+			description: `the same property broken in front of the brace that closes the interpolation`,
+			code: `a {\n\tfont-#{$s\n}: 1px;\n}\n`,
+			fixed: `a {\n\tfont-#{$s\n\t\t}: 1px;\n}\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`2 tabs`),
+		},
+	],
+})

@@ -812,5 +812,14 @@ testRule({
 				{ line: 3, column: 1, message: messages.expected(`1 tab`) },
 			],
 		},
+		{
+			// The break stands in the property alone, where the guard used to ask only the value and the run in front of it (1789926320)
+			description: `the same property over a value written on one line`,
+			code: `<a style="font-#{\n$s}: 1px"></a>`,
+			fixed: `<a style="font-#{\n\t$s}: 1px"></a>`,
+			line: 2,
+			column: 1,
+			message: messages.expected(`1 tab`),
+		},
 	],
 })
