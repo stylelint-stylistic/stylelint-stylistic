@@ -57,18 +57,14 @@ testRule({
 			description: `a vertical tab between single spaces inside a call, which the tokenizer reads as the call's argument, so each parenthesis already has its space`,
 			code: `a { b: f( \v ); }`,
 		},
+		{
+			// The sign ends the name to `@csstools/css-tokenizer`, so what the parentheses hold is the text of an address; the space used to be written into that text, in front of its first character (1789895915)
+			description: `an address glued to a sign, holding what the parser reads as a block comment`,
+			code: `a { b: 1!url(a /* c */ ) 1px; }`,
+		},
 	],
 
 	reject: [
-		{
-			// The walk reads an address behind the sign where the parser reads a call and the comment in both spellings, so the space is written
-			description: `a call glued to a sign, named like an address and holding a block comment`,
-			code: `a { b: 1!url(a /* c */ ) 1px; }`,
-			fixed: `a { b: 1!url( a /* c */ ) 1px; }`,
-			line: 1,
-			column: 14,
-			message: messages.expectedOpening,
-		},
 		{
 			// The value parser closes the address on the comment's parenthesis, and the whitespace behind the opening one makes the comment a comment to the tokenizer
 			description: `a call holding an address with a comment with a closing parenthesis, whose closing parenthesis stands against the address's`,

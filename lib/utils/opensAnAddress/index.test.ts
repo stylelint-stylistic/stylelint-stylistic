@@ -102,8 +102,31 @@ describe(`opensAnAddress`, () => {
 		expect(addressesOf(`\\\\]url(a)`)).toEqual([`\\\\]url`])
 	})
 
-	// `#{$p}url(` names the call `xurl` to Sass, and Less refuses an interpolation standing in a value outside a string at all; the comment scan reads both as a call too
-	it(`an interpolation in front of the name, which is a character of it`, () => {
+	// `@csstools/css-tokenizer` opens a url token behind every one of these signs, and lightningcss quotes the address behind `+`, `%`, `*` and `.`; Less compiles `1+url(a//b.png)` and `1%url(a//b.png)` with the `//` whole and Sass `1&url(a//b.png)` too, while both refuse the control `aurl(a//b.png)` at the `)` its `//` swallowed (1789895915)
+	it(`a sign in front of the name, which ends it`, () => {
+		expect(addressesOf(`1+url(a)`)).toEqual([`1+url`])
+		expect(addressesOf(`1%url(a)`)).toEqual([`1%url`])
+		expect(addressesOf(`1.url(a)`)).toEqual([`1.url`])
+		expect(addressesOf(`1!URL(a)`)).toEqual([`1!URL`])
+		expect(addressesOf(`1*u\\rl(a)`)).toEqual([`1*u\\rl`])
+	})
+
+	// An opening brace ends the name as any other sign does, and a value carries one where a call holds it: `a { b: f(1{url(c)); }` is one declaration to PostCSS
+	it(`an opening brace in front of the name, which ends it as a sign does`, () => {
+		expect(addressesOf(`f(1{url(a))`)).toEqual([`1{url`])
+	})
+
+	// The hyphen and the underscore are identifier code points, so lightningcss prints `1-url(http://a/b.png)` unquoted where it quotes the address behind a sign; a `#` and an `@` make the letters a hash and an at-word, and the `(` behind them opens no address either
+	it(`a character in front of the name that the name goes on through`, () => {
+		expect(addressesOf(`1-url(a)`)).toEqual([])
+		expect(addressesOf(`1_url(a)`)).toEqual([])
+		expect(addressesOf(`1#url(a)`)).toEqual([])
+		expect(addressesOf(`1@url(a)`)).toEqual([])
+		expect(addressesOf(`1\\%url(a)`)).toEqual([])
+	})
+
+	// `#{$p}url(a//b.png)` Sass refuses at the `)` the `//` swallowed, so it names the call `xurl` to it, and Less refuses an interpolation standing in a value outside a string at all; the closing brace is what keeps the name theirs, since what it leaves in front of the letters is a `p`, and `p}url` is no address
+	it(`an interpolation in front of the name, whose closing brace is a character of it`, () => {
 		expect(addressesOf(`#{$p}url(a)`)).toEqual([])
 		expect(addressesOf(`@{p}url(a)`)).toEqual([])
 	})

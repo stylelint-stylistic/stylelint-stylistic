@@ -111,6 +111,11 @@ testRule({
 			code: `a { b: [c]url(1PX); }`,
 		},
 		{
+			// A sign between the number and the name ends it to `@csstools/css-tokenizer` and to lightningcss, and Less and Sass compile the address whole (1789895915)
+			description: `an address behind a number and a sign`,
+			code: `a { b: 1%url(1PX); }`,
+		},
+		{
 			description: `a unit inside a property name`,
 			code: `a { marginPX: 10px; }`,
 		},
@@ -219,6 +224,17 @@ testRule({
 			description: `a unit inside the parentheses of a call whose name stands behind an escaped square bracket`,
 			code: `a { b: \\]url(1PX); }`,
 			fixed: `a { b: \\]url(1px); }`,
+			line: 1,
+			column: 15,
+			endLine: 1,
+			endColumn: 17,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// A hyphen is an identifier code point, so `1-url` is one dimension to `@csstools/css-tokenizer` and to lightningcss and the parentheses behind it are no address's (1789895915)
+			description: `a unit inside the parentheses of a call whose name stands behind a number and a hyphen`,
+			code: `a { b: 1-url(1PX); }`,
+			fixed: `a { b: 1-url(1px); }`,
 			line: 1,
 			column: 15,
 			endLine: 1,
