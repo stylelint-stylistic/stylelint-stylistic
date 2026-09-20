@@ -17,6 +17,7 @@ import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import { quotesItsAddress } from "../../utils/quotesItsAddress/index.ts"
+import { editsRereadAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { splitSpaceNodesAtWords } from "../../utils/splitSpaceNodesAtWords/index.ts"
 import { writesTwinRun } from "../../utils/writesTwinRun/index.ts"
@@ -233,12 +234,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let openingIndex = valueNode.sourceIndex + valueNode.value.length + 1
 
 				/**
-				 * Asks whether the line break behind the `(` closes a `//` comment, which no option can satisfy without commenting the argument out; the warning then stands unfixed ([#114](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/114)). Under a parser whose tokenizer reads the parentheses behind `url(` as one token, a write opening a comment, as taking away the whitespace in front of a quotation mark there does, is refused too; outside it the question is not asked, since a name glued to a sign, `1!url(`, is an address to the walk and a call to the parser, and a refusal there would take away a write the parser reads the same. The break twin writes this run too, and only one of them may (#704).
+				 * Asks whether the line break behind the `(` closes a `//` comment, which no option can satisfy without commenting the argument out; the warning then stands unfixed ([#114](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/114)). Under a parser whose tokenizer reads the parentheses behind `url(` as one token, a write opening a comment, as taking away the whitespace in front of a quotation mark there does, is refused too; outside it the question is not asked, since a name glued to a sign, `1!url(`, is an address to the walk and a call to the parser, and a refusal there would take away a write the parser reads the same. A write switching how the tokenizer reads parentheses it takes for an address's is refused as well: this run holds the character that decides it, and the name the parser reads there is not the one the walk read ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)). The break twin writes this run too, and only one of them may (#704).
 				 * @param write - The whitespace the fix writes.
-				 * @returns True if the argument stays outside a comment, no comment opens where that question is asked, and the run is this rule's to write.
+				 * @returns True if the argument stays outside a comment, no comment opens where that question is asked, the parentheses keep their reading, and the run is this rule's to write.
 				 */
 				function isOpeningFixable (write: string): boolean {
-					return !movesOpeningIntoComment(syntax, declValue, functionNode, reading) && (!reading.tokenizes || editsOpenNoComment(declValue, [openingEdit(functionNode, write)], reading)) && writesParenthesisRun(twinRead, `after`, openingIndex)
+					return !movesOpeningIntoComment(syntax, declValue, functionNode, reading) && (!reading.tokenizes || editsOpenNoComment(declValue, [openingEdit(functionNode, write)], reading)) && !editsRereadAnAddress(declValue, openingIndex - 1, [openingEdit(functionNode, write)], reading) && writesParenthesisRun(twinRead, `after`, openingIndex)
 				}
 
 				if (primary === `always` && valueNode.before !== ` `) {

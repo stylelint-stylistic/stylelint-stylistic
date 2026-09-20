@@ -443,6 +443,42 @@ testRule({
 			],
 		},
 		{
+			// See #669
+			description: `a call whose name a hexadecimal escape welds to the word in front of it, holding a bare address with a quotation mark, where the break behind the parenthesis would hand the parentheses to code and leave a string nothing closes`,
+			code: `a { b: \\61 url(a"b.png); }`,
+			fixed: `a { b: \\61 url(a"b.png\n); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 16,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 22,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
+			// See #669
+			description: `the same call holding a square bracket closed inside it, which leaves the parentheses code the parser closes at their own parenthesis, so both breaks are written`,
+			code: `a { b: \\61 url(a[b]c.png); }`,
+			fixed: `a { b: \\61 url(\na[b]c.png\n); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 16,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 24,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
 			description: `the same call holding a brace nothing closes in a custom property's value, where the parser reads a brace as a group too, left unfixed likewise`,
 			code: `a { --b: f(a{b); }`,
 			fixed: `a { --b: f(a{b); }`,
@@ -599,6 +635,19 @@ testRule({
 	],
 
 	reject: [
+		{
+			// See #669
+			description: `a call whose name a hexadecimal escape welds to the word in front of it, broken in front of its closing parenthesis, where the break behind the opening one would hand the parentheses to code and leave a string nothing closes`,
+			code: `a { b: \\61 url(a"b.png\n); }`,
+			fixed: `a { b: \\61 url(a"b.png\n); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 16,
+					message: messages.expectedOpeningMultiLine,
+				},
+			],
+		},
 		{
 			description: `a first argument abutting the opening parenthesis`,
 			code: `a { transform: translate(1, 1\n); }`,
@@ -801,6 +850,24 @@ testRule({
 	],
 
 	reject: [
+		{
+			// See #669
+			description: `a call whose name a hexadecimal escape welds to the word in front of it, holding a string with a closing parenthesis, where emptying the run behind the opening parenthesis would close the address's token inside that string and leave its quotation mark unpaired`,
+			code: `a { b: \\61 url(\n a ")" b\n); }`,
+			fixed: `a { b: \\61 url(\n a ")" b); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 16,
+					message: messages.rejectedOpeningMultiLine,
+				},
+				{
+					line: 2,
+					column: 9,
+					message: messages.rejectedClosingMultiLine,
+				},
+			],
+		},
 		{
 			// See #533
 			description: `a call standing beside a bare address, whose breaks are closed up while the address is left as the file spells it`,

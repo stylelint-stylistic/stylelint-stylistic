@@ -60,6 +60,42 @@ testRule({
 
 	reject: [
 		{
+			// See #669
+			description: `a call in a feature's value whose name a hexadecimal escape welds to the word in front of it, holding a bare address with a quotation mark, where the space behind its parenthesis would hand the parentheses to code and leave a string nothing closes`,
+			code: `@media ( a: \\61 url(b"c.png) ) { d { e: f } }`,
+			fixed: `@media ( a: \\61 url(b"c.png ) ) { d { e: f } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 18,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 27,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
+			// See #669 and #575
+			description: `the same call holding a parenthesis nothing closes, where the space would open a group the params run past every brace with, and the at-rule would swallow its own block`,
+			code: `@media ( a: \\61 url(b(c.png) ) { d { e: f } }`,
+			fixed: `@media ( a: \\61 url(b(c.png ) ) { d { e: f } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 18,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 27,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
 			// See #588
 			description: `an address inside a feature, whose name a backslash and a break divide from what stands in front`,
 			code: `@media (a: \\\nurl(b.png)) { e { f: 1px } }`,
@@ -380,6 +416,24 @@ testRule({
 	],
 
 	reject: [
+		{
+			// See #669
+			description: `the same call holding a string with a closing parenthesis, where emptying the run behind its parenthesis would close the address's token inside that string and leave its quotation mark unpaired`,
+			code: `@media (a: \\61 url( b ")" c )) { d { e: f } }`,
+			fixed: `@media (a: \\61 url( b ")" c)) { d { e: f } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 17,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 28,
+					message: messages.rejectedClosing,
+				},
+			],
+		},
 		{
 			// See #560
 			description: `a call among the arguments behind a quoted address, which are those of any call while the address's own parentheses stay as written`,

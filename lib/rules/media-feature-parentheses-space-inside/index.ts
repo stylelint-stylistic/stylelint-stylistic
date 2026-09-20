@@ -12,6 +12,7 @@ import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStr
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import { quotesItsAddress } from "../../utils/quotesItsAddress/index.ts"
+import { editsRereadAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { splitSpaceNodesAtWords } from "../../utils/splitSpaceNodesAtWords/index.ts"
 
@@ -125,13 +126,17 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let closingIndex = closingParenthesisIndex(node) - 1
 					// A pair holding no node encloses one run of the tokenizer's whitespace, `splitSpaceNodesAtWords` having carried any other control character into a node, and the value parser hands that run back whole as `before` and never as `after`: the closing question is the opening one, and asking it again reported a half the opening fix had settled and wrote another space every run ([#329](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/329)). Under `never` no guard is wanted, since an empty `after` is whitespace to nobody.
 					let enclosesOneRun = node.nodes.length === 0
+					// The walk reads every call of the params, and a name the compilers read as no address is one the tokenizer can still take a url token by: the run behind the `(` holds the character deciding that, so a write switching the reading is refused and the warning stands ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)). The run in front of the `)` moves no such character.
+					let openParenthesisIndex = node.sourceIndex + node.value.length
 
 					if (primary === `never`) {
 						if (SPACE_OR_TAB.test(node.before)) {
+							let isFixable = !editsRereadAnAddress(params, openParenthesisIndex, [openingEdit(node, ``)], reading)
+
 							problems.push({
 								message: messages.rejectedOpening,
 								index: node.sourceIndex + 1 + indexBoost,
-								fix () { edits.push(openingEdit(node, ``)) },
+								...(isFixable && { fix: (): void => { edits.push(openingEdit(node, ``)) } }),
 							})
 						}
 
@@ -148,10 +153,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					}
 					else if (primary === `always`) {
 						if (node.before === ``) {
+							let isFixable = !editsRereadAnAddress(params, openParenthesisIndex, [openingEdit(node, ` `)], reading)
+
 							problems.push({
 								message: messages.expectedOpening,
 								index: node.sourceIndex + 1 + indexBoost,
-								fix () { edits.push(openingEdit(node, ` `)) },
+								...(isFixable && { fix: (): void => { edits.push(openingEdit(node, ` `)) } }),
 							})
 						}
 
