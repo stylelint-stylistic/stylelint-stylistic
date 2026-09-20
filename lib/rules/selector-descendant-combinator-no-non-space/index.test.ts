@@ -133,6 +133,33 @@ testRule({
 
 	reject: [
 		{
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789857484)
+			description: `a line break behind a child combinator and a backslash, where the space would stand behind the backslash as its escaped character and leave the second selector a name opening with a space, so the warning stands`,
+			code: `a>\\\nb {}`,
+			fixed: `a>\\\nb {}`,
+			line: 1,
+			column: 4,
+			message: messages.rejected(`\n`),
+		},
+		{
+			// Pins the same refusal where the backslash follows a name (1789857484)
+			description: `a line break behind a name and a backslash, where the space would become a character of the name and join the two into one, so the warning stands`,
+			code: `a\\\nb {}`,
+			fixed: `a\\\nb {}`,
+			line: 1,
+			column: 3,
+			message: messages.rejected(`\n`),
+		},
+		{
+			// Pins the write the refusal lets through: an even run of backslashes spells an escaped backslash, and the space behind it is no escape (1789857484)
+			description: `a line break behind two backslashes, the second of which the first escapes, so the run is written`,
+			code: `a\\\\\nb {}`,
+			fixed: `a\\\\ b {}`,
+			line: 1,
+			column: 4,
+			message: messages.rejected(`\n`),
+		},
+		{
 			// The selector parser reads a backslash in front of a tab as no escape, and the fix wrote over the tab (1789666655)
 			description: `a tab behind an escaped tab, where the escaped one is a character of the name and the other stands for the combinator`,
 			code: `a\\\t\tb {}`,
