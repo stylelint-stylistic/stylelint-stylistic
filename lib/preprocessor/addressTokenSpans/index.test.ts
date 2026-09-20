@@ -1,3 +1,4 @@
+import { type AtRule, parse } from "postcss"
 import scssSyntax from "postcss-scss"
 import { describe, expect, it } from "vitest"
 
@@ -33,6 +34,23 @@ describe(`addressTokenSpans`, () => {
 		expect(addressTokenSpans(`url: `, `(a "),b)`)).toEqual([{ start: 0, end: 5 }])
 		expect(addressTokenSpans(`b: `, `(a "),b)`)).toEqual([])
 		expect(addressTokenSpans(`url (a "),b) `, `c`)).toEqual([])
+	})
+
+	it(`the word a node in front left on the tokenizer's stack, which the at-rule's own text does not hold`, () => {
+		let atRule = parse(`a { b: url } @media (c "d) "e" { f: g }`).nodes[1] as AtRule
+
+		expect(addressTokenSpans(`@media `, atRule.params, undefined, undefined, atRule)).toEqual([{ start: 0, end: 6 }])
+		expect(addressTokenSpans(`@media `, atRule.params)).toEqual([])
+	})
+
+	it(`the same word taken off the stack by parentheses of its own, and a word that is no address's name`, () => {
+		let carried = parse(`a { b: url } @media (c: "d") { e { f: g } }`).nodes[1] as AtRule
+		let popped = parse(`a { b: url(x) } @media (c: "d") { e { f: g } }`).nodes[1] as AtRule
+		let other = parse(`a { b: x } @media (c: "d") { e { f: g } }`).nodes[1] as AtRule
+
+		expect(addressTokenSpans(`@media `, carried.params, undefined, undefined, carried)).toEqual([{ start: 0, end: 8 }])
+		expect(addressTokenSpans(`@media `, popped.params, undefined, undefined, popped)).toEqual([])
+		expect(addressTokenSpans(`@media `, other.params, undefined, undefined, other)).toEqual([])
 	})
 
 	it(`a text holding no quotation mark, which no span of this is asked about`, () => {

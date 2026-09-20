@@ -60,7 +60,7 @@ export let css: Syntax = {
 	write: writePrintedText,
 	inlineComments: inlineCommentReading,
 	colonTokenIndex: (before, text, node, result) => colonTokenIndex(before, text, nodeSyntax(node, result), node.source?.input.file),
-	addressTokenSpans: (before, text, node, result) => addressTokenSpans(before, text, nodeSyntax(node, result), node.source?.input.file),
+	addressTokenSpans: (before, text, node, result) => addressTokenSpans(before, text, nodeSyntax(node, result), node.source?.input.file, node),
 	commentSpans: (text, node, result) => findCommentSpans(text, inlineCommentReading(node, result)),
 	endsWithInlineComment,
 	movesEndIntoInlineComment,
