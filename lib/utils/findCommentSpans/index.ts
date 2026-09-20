@@ -62,9 +62,10 @@ function skipUrlName (text: string, openIndex: number): number {
  * @param spans - The comments the parentheses hold are added.
  * @param addresses - This one is added.
  * @param strings - The string of a quoted address is added, and every string the parentheses of a bare one hold where comments are read there.
+ * @param escapes - The escapes standing in the code of a bare address are added, which the walk itself never meets, the parentheses being one step of it.
  * @returns Where the walk reads on — behind the string of a quoted address, behind the `)` of a bare one — or `openIndex`.
  */
-function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, reading: CommentReading, spans: CommentSpan[], addresses: AddressSpan[], strings: StringSpan[]): number {
+function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, reading: CommentReading, spans: CommentSpan[], addresses: AddressSpan[], strings: StringSpan[], escapes: EscapeSpan[]): number {
 	if (behindIdentifier || lengthensTheName(text.slice(0, openIndex), reading)) return openIndex
 
 	let behindName = skipUrlName(text, openIndex)
@@ -86,6 +87,7 @@ function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, re
 
 	spans.push(...address.comments)
 	strings.push(...address.strings)
+	escapes.push(...address.escapes)
 	pushBareAddress(text, start, end, addresses)
 
 	return address.index + 1
@@ -238,7 +240,7 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 
 		if (character === `\\`) {
 			// A backslash makes the next character ordinary: `a\//b` opens no comment. An escape can spell a letter of `url`, so an address is looked for first.
-			let behindUrl = skipUrl(text, index, behindIdentifier, reading, spans, addresses, strings)
+			let behindUrl = skipUrl(text, index, behindIdentifier, reading, spans, addresses, strings, escapes)
 
 			if (behindUrl === index) {
 				let escaped = readEscapedCharacter(text, index, escapeReading(index, urlTokenEnd, reading))
@@ -271,7 +273,7 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 			// `\61 url(` and `url( a(b) \//c )` are one token to `postcss-scss`, which reads no comment inside it, and Sass reads `\/` there as an escape
 			urlTokenEnd = Math.max(urlTokenEnd, findUrlTokenEnd(text, index, previousStep, reading))
 
-			let behindUrl = skipUrl(text, index, behindIdentifier, reading, spans, addresses, strings)
+			let behindUrl = skipUrl(text, index, behindIdentifier, reading, spans, addresses, strings, escapes)
 
 			if (behindUrl === index) {
 				index += 1
@@ -354,7 +356,7 @@ export function findStringSpans (text: string, reading: CommentReading = SPELLS_
 }
 
 /**
- * Finds the spans of a text's escapes, as {@link readEscapedCharacter} reads one: a backslash spelling a character, so one in front of a line break or at the end is none, and neither is one in front of a comment's delimiter, which the tokenizer opens the comment on. An escape inside a string, a comment or a bare address is that span's, and the letters of a `url(` are an address's.
+ * Finds the spans of a text's escapes, as {@link readEscapedCharacter} reads one: a backslash spelling a character, so one in front of a line break or at the end is none, and neither is one in front of a comment's delimiter, which the tokenizer opens the comment on. An escape inside a string or a comment is that span's, and the letters of a `url(` are an address's; one standing in the code of a bare address is its own, {@link readAddress} reading the parentheses the walk steps over in one (1789879423).
  * @param text - The raw walked for escapes.
  * @param reading - What the syntax makes of a `//` comment ({@link inlineCommentReading}).
  * @returns The spans, in source order.

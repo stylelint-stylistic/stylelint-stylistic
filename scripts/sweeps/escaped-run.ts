@@ -13,6 +13,8 @@
  *
  * `no-multiple-whitespaces` was added for 1789855320: it reads every run of a value rather than one beside a delimiter, and the texts here put an escape in front of a run in a value already.
  *
+ * The five address shapes were added for 1789879423, where the escapes standing in the code of a bare address came to be recorded: the walk steps over a `url()`'s parentheses in one, so no rule reading a copy with the escapes masked saw one inside them. The comma shapes put a delimiter behind the escape, where a shorter run is what an `always` option writes into, and no rule reads a comma inside a bare address at all; the selector shapes carry the same addresses through `selectorSearchCopy`; and the quoted shape is the control, an escape inside a string being that string's under either side.
+ *
  * The controls: `value-list-comma-space-before`, which reads its run over the search copy already (1789657288), and `declaration-bang-space-before`.
  */
 
@@ -73,6 +75,11 @@ const corpus: Sweep[`corpus`] = place(
 		flagSemicolon: (text) => `a { b: 1${text} !important; c: d }`,
 		atRuleSemicolon: (text) => `@import "x"${text};`,
 		block: (text) => `a {\n\tb: 1${text};\n\tc: d;\n}`,
+		address: (text) => `a { b: url(c${text}d); e: f }`,
+		addressComma: (text) => `a { b: url(c${text},d); e: f }`,
+		quotedAddress: (text) => `a { b: url("c${text}d"); e: f }`,
+		selectorAddress: (text) => `:is(url(c${text}d)) { e: f }`,
+		selectorAddressComma: (text) => `:is(url(c${text},d)) { e: f }`,
 	},
 )
 

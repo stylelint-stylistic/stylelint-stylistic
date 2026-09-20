@@ -1,5 +1,5 @@
 import { CRLF, OPENS_WITH_QUOTE, SASS_URL_CODE_POINT } from "../../regexps.ts"
-import type { CommentReading, CommentSpan, StringSpan } from "../findCommentSpans/index.ts"
+import type { CommentReading, CommentSpan, EscapeSpan, StringSpan } from "../findCommentSpans/index.ts"
 import { findInlineCommentEnd } from "../findInlineCommentEnd/index.ts"
 import { isWhitespace } from "../isWhitespace/index.ts"
 import { joinsTheName } from "../joinsTheName/index.ts"
@@ -20,6 +20,9 @@ export type Address = {
 
 	/** The strings standing inside such parentheses, quotation marks and all, which are strings wherever comments are read there; a quoted address's own string is none of them, and neither is a mark nothing closes. */
 	strings: StringSpan[],
+
+	/** The escapes standing in the code of a bare address, which the walk cannot find itself, the parentheses being one step of it; one inside a comment or a string read there is that span's, one inside an interpolation is nobody's (1789883888), and a quoted address holds none of its own. */
+	escapes: EscapeSpan[],
 }
 
 /** The comments an interpolation's expression holds, which the walk records of the kinds it reads. */
@@ -80,10 +83,17 @@ function skipInterpolation (text: string, openIndex: number, reading: CommentRea
  * @param index - Where the search stands.
  * @param reading - What the syntax makes of a `//` comment.
  * @param comments - Where the comments inside an interpolation are recorded.
+ * @param escapes - Where an escape met here is recorded; one spelling nothing is a delimiter and none.
  * @returns Behind the piece, or `index` where none opens.
  */
-function skipWhole (text: string, index: number, reading: CommentReading, comments: InterpolationComments): number {
-	if (text[index] === `\\`) return readEscapedCharacter(text, index).end
+function skipWhole (text: string, index: number, reading: CommentReading, comments: InterpolationComments, escapes: EscapeSpan[]): number {
+	if (text[index] === `\\`) {
+		let escaped = readEscapedCharacter(text, index)
+
+		if (escaped.character !== undefined) escapes.push({ start: index, end: escaped.end })
+
+		return escaped.end
+	}
 
 	if (reading.tokenizes && text[index] === `#` && text[index + 1] === `{`) return skipInterpolation(text, index, reading, comments) ?? index
 
@@ -168,19 +178,20 @@ function tokenizesAsCode (text: string, openIndex: number, name: string, reading
 export function readAddress (text: string, openIndex: number, name: string, reading: CommentReading): Address {
 	let quoted = text.slice(openIndex).match(OPENS_WITH_QUOTE)?.[0]
 
-	if (quoted !== undefined) return { isQuoted: true, index: openIndex + quoted.length - 1, comments: [], strings: [] }
+	if (quoted !== undefined) return { isQuoted: true, index: openIndex + quoted.length - 1, comments: [], strings: [], escapes: [] }
 
 	let isSassCode = reading.tokenizes && !readsAsSassAddress(text, openIndex, reading)
 	let readsBlockComments = isSassCode || tokenizesAsCode(text, openIndex, name, reading)
 	let readsInlineComments = isSassCode && reading.spells
 	let comments: CommentSpan[] = []
 	let strings: StringSpan[] = []
+	let escapes: EscapeSpan[] = []
 	// A comment inside an interpolation is recorded as one the walk would have met outside it
 	let interpolationComments = { block: readsBlockComments, inline: readsInlineComments, spans: comments }
 	let index = openIndex
 
 	while (index < text.length && text[index] !== `)`) {
-		let behindWhole = skipWhole(text, index, reading, interpolationComments)
+		let behindWhole = skipWhole(text, index, reading, interpolationComments, escapes)
 
 		if (behindWhole !== index) {
 			index = behindWhole
@@ -215,5 +226,5 @@ export function readAddress (text: string, openIndex: number, name: string, read
 		}
 	}
 
-	return { isQuoted: false, index: Math.min(index, text.length), comments, strings }
+	return { isQuoted: false, index: Math.min(index, text.length), comments, strings, escapes }
 }

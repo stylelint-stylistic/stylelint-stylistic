@@ -23,6 +23,16 @@ testRule({
 			code: `a { b: c\\1f60  d; e: f }`,
 		},
 		{
+			// The escapes of a bare address are masked as the rest of a value's are, so what a backslash covers there is no run either (1789879423)
+			description: `an escaped space inside a bare address, and one space behind it`,
+			code: `a { b: url(c\\  d) }`,
+		},
+		{
+			// 1789879423
+			description: `a hexadecimal escape inside a bare address, closed by the first of two spaces`,
+			code: `a { b: url(c\\2c  d) }`,
+		},
+		{
 			description: `double spaces inside comments, which the rule does not read`,
 			code: `/* This  is  comment */\na { gap: 0 /* And   another   comment */ }`,
 		},
@@ -139,6 +149,42 @@ testRule({
 			fixed: `a { b: c\\\\ d; e: f }`,
 			line: 1,
 			column: 11,
+			message: messages.rejected,
+		},
+		{
+			// Pins the escaped tab kept where the run stands inside a bare address, whose escapes the walk used to hand over none of (1789879423)
+			description: `two spaces behind an escaped tab inside a bare address`,
+			code: `a { b: url(c\\\t  d) }`,
+			fixed: `a { b: url(c\\\t d) }`,
+			line: 1,
+			column: 15,
+			message: messages.rejected,
+		},
+		{
+			// The parentheses hold a line break, so they are no address span, and the escape is recorded all the same (1789879423)
+			description: `the same run inside parentheses a line break keeps from being an address`,
+			code: `a { b: url(c\\\t  \n d) }`,
+			fixed: `a { b: url(c\\\t \n d) }`,
+			line: 1,
+			column: 15,
+			message: messages.rejected,
+		},
+		{
+			// Pins the write a bare address keeps: nothing covers this run, and the mask leaves it where it was (1789879423)
+			description: `two spaces between the words of a bare address`,
+			code: `a { b: url(c  d) }`,
+			fixed: `a { b: url(c d) }`,
+			line: 1,
+			column: 13,
+			message: messages.rejected,
+		},
+		{
+			// The carriage return closing the escape is a character of it rather than a break of the value, so the run behind it is one the rule used to read as indentation (1789879423)
+			description: `two spaces behind a hexadecimal escape a carriage return closes inside a bare address`,
+			code: `a { b: url(c\\2c\r  d) }`,
+			fixed: `a { b: url(c\\2c\r d) }`,
+			line: 1,
+			column: 17,
 			message: messages.rejected,
 		},
 		{

@@ -688,10 +688,22 @@ describe(`findEscapeSpans`, () => {
 		expect(findEscapeSpans(`a\\//,\nb`, SCSS)).toEqual([])
 	})
 
-	it(`an escape inside a string, a comment or a bare address, which is that span's`, () => {
+	it(`an escape inside a string or a comment, which is that span's`, () => {
 		expect(findEscapeSpans(`"a\\,b",c`)).toEqual([])
 		expect(findEscapeSpans(`/*a\\,b*/,c`)).toEqual([])
-		expect(findEscapeSpans(`url(a\\,b),c`)).toEqual([])
+	})
+
+	// The walk steps over the parentheses in one, so the address reader records what stands in their code (1789879423)
+	it(`an escape standing in the code of a bare address, which is its own`, () => {
+		expect(findEscapeSpans(`url(a\\,b),c`)).toEqual([{ start: 5, end: 7 }])
+		expect(findEscapeSpans(`url(a\\\t  b)`)).toEqual([{ start: 5, end: 7 }])
+		expect(findEscapeSpans(`url(a\\2c  b)`)).toEqual([{ start: 5, end: 9 }])
+	})
+
+	// A quoted address is a string, and a comment the parentheses hold is a comment
+	it(`an escape inside a string or a comment such parentheses hold, which is that span's`, () => {
+		expect(findEscapeSpans(`url("a\\,b"),c`)).toEqual([])
+		expect(findEscapeSpans(`url( a /*\\,*/ b),c`)).toEqual([])
 	})
 
 	it(`an escape spelling a letter of a url name, which is the address's`, () => {
