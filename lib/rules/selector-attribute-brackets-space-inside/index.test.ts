@@ -157,6 +157,96 @@ testRule({
 			message: messages.expectedClosing,
 		},
 		{
+			// Pins the attribute passed over and the one beside it fixed all the same: the parser prints the first with a tab in another place and a backslash gone, and every index here is measured in that print (1789855319)
+			description: `a backslash in front of a tab twice over inside the value of the first attribute of a list, the second standing with no whitespace inside its brackets`,
+			code: `[a=\\\t\\\tb], [c=d] {}`,
+			fixed: `[a=\\\t\\\tb], [ c=d ] {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 16,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
+			// Pins the space written in front of the bracket: the run the parser files opens on the tab behind the backslash, so the write over it was refused and the warning stood (1789855319)
+			description: `a backslash ending the value in front of a tab, which the parser reads as whitespace of its own and the grammar as a character of the value`,
+			code: `[a=b\\\t] {}`,
+			fixed: `[ a=b\\\t ] {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 2,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 6,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
+			// Pins the tab left where it stands: the write took it for the run it was asked for (1789855319)
+			description: `a backslash opening the value in front of a tab, the bracket carrying no whitespace at either end`,
+			code: `[a=\\\tb] {}`,
+			fixed: `[ a=\\\tb ] {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 2,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 6,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
+			// Pins the run read where it stands rather than at the part the parser picked by `insensitive`, which it sets for a literal `i` alone (1789864269)
+			description: `a case flag the parser reads as no insensitivity mark, whose value carries the run the parser files for the closing bracket`,
+			code: `[a=b s] {}`,
+			fixed: `[ a=b s ] {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 2,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 6,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
+			// Pins the line break kept: the write went to the run in front of the flag, which is the break, and carried it off (1789864269)
+			description: `the same flag standing behind a line break, which is no run of the closing bracket`,
+			code: `[a=b\ns] {}`,
+			fixed: `[ a=b\ns ] {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 2,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 2,
+					column: 1,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
 			description: `a space inside the closing bracket alone, the attribute standing with no value`,
 			code: `[target ] { }`,
 			fixed: `[ target ] { }`,
@@ -751,6 +841,24 @@ testRule({
 			fixed: `[a=b\\\n ] {}`,
 			line: 2,
 			column: 1,
+			message: messages.rejectedClosing,
+		},
+		{
+			// Pins the space taken and the tab left: the run the parser files opens on that tab, so the write over it was refused and the warning stood (1789855319)
+			description: `a space behind an escaped tab in front of the bracket, which the fix takes without touching the escape`,
+			code: `[a=b\\\t ] {}`,
+			fixed: `[a=b\\\t] {}`,
+			line: 1,
+			column: 7,
+			message: messages.rejectedClosing,
+		},
+		{
+			// Pins the run read where it stands rather than at the part the parser picked by `insensitive`, which it sets for a literal `i` alone (1789864269)
+			description: `a space in front of the bracket behind a case flag the parser reads as no insensitivity mark`,
+			code: `[a=b s ] {}`,
+			fixed: `[a=b s] {}`,
+			line: 1,
+			column: 7,
 			message: messages.rejectedClosing,
 		},
 		{

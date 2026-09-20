@@ -1,15 +1,15 @@
-import type { Attribute } from "postcss-selector-parser"
 import styleSearch from "style-search"
-import stylelint, { type FixCallback } from "stylelint"
+import stylelint from "stylelint"
 
-import { LEADING_WHITESPACE, TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import { applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { selectorSearchCopy } from "../../utils/selectorSearchCopy/index.ts"
+import { runBehind, runInFront } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -27,42 +27,6 @@ export let meta = {
 	fixable: true,
 }
 
-/**
- * The whitespace standing in front of `]` and the way to write over it: the raw where the parser filed the spaces, else the node's own, under the key the attribute's last part carries.
- * @param attributeNode - The parsed attribute selector.
- * @returns The whitespace and its writer.
- */
-function closingSpaces (attributeNode: Attribute): {
-	after: string,
-	setAfter: (fixed: string) => void,
-} {
-	let key: `insensitive` | `value` | `attribute` = attributeNode.operator ? (attributeNode.insensitive ? `insensitive` : `value`) : `attribute`
-
-	let rawSpaces = attributeNode.raws.spaces && attributeNode.raws.spaces[key]
-	let rawAfter = rawSpaces && rawSpaces.after
-
-	let spaces = attributeNode.spaces[key]
-
-	if (rawSpaces && rawAfter) {
-		return {
-			after: rawAfter,
-			setAfter (fixed) {
-				rawSpaces.after = fixed
-			},
-		}
-	}
-
-	return {
-		after: (spaces && spaces.after) || ``,
-		setAfter (fixed) {
-			let written = attributeNode.spaces[key] ?? {}
-
-			written.after = fixed
-			attributeNode.spaces[key] = written
-		},
-	}
-}
-
 /** `always` a single space inside the brackets, `never` no whitespace. */
 export type PrimaryOption = `always` | `never`
 
@@ -76,6 +40,8 @@ export type PrimaryOption = `always` | `never`
  * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
+	let written = primary === `always` ? ` ` : ``
+
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,
@@ -93,72 +59,59 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!selector.includes(`[`)) return
 
-			let fix: FixCallback | undefined
-			let hasFixed
+			let edits: Edit[] = []
 			let selectorTree = parseSelector(selector, result, ruleNode)
 
 			if (!selectorTree) return
 
 			selectorTree.walkAttributes((attributeNode) => {
 				let attributeSelectorString = attributeNode.toString()
-				// The run in front of the `]` is read over the copy with the escapes masked, where an escaped space is a character of the attribute and no run at all (1789661964); the run behind the `[` opens on the backslash of an escape, so it is read over the text
+				// The print opens on the whitespace the node carries, which stands in front of the index the parser gives it
+				let attributeStart = attributeNode.sourceIndex - attributeSelectorString.indexOf(`[`)
+
+				// The parser reads a backslash in front of a tab as no escape and files what follows into parts it prints back in another order, so `[a=\⇥\⇥b]` comes back as `[a=\⇥b⇥]`: an attribute whose parts do not spell the source is passed over, since every edit here is measured in them (1789666655)
+				if (!selector.startsWith(attributeSelectorString, attributeStart)) return
+
+				// The run beside the bracket is read over the copy with the escapes masked, where an escaped space is a character of the attribute and no run at all (1789661964), and written into the selector at the index it was read at: the parser files an escaped tab in the spaces of a part and prints it back with the whitespace of the source (1789666655)
 				let { runString } = selectorSearchCopy(attributeSelectorString)
 
 				styleSearch({ source: attributeSelectorString, target: `[` }, (match) => {
 					let nextCharIsSpace = attributeSelectorString[match.startIndex + 1] === ` `
 					let index = attributeNode.sourceIndex + match.startIndex + 1
+					let openIndex = attributeStart + match.startIndex + 1
+					// No escape reaches over the bracket, so the run behind it opens on the backslash of one and never covers a character of the attribute
+					let run = runBehind(runString, match.startIndex)
+					let edit = { start: openIndex, end: openIndex + run.length, text: written }
 
-					if (nextCharIsSpace && primary === `never`) {
-						fix = (): void => {
-							hasFixed = true
-							fixBefore(attributeNode)
-						}
+					if (nextCharIsSpace && primary === `never`) complain(messages.rejectedOpening, index, edit)
 
-						complain(messages.rejectedOpening, index)
-					}
-
-					if (!nextCharIsSpace && primary === `always`) {
-						fix = (): void => {
-							hasFixed = true
-							fixBefore(attributeNode)
-						}
-
-						complain(messages.expectedOpening, index)
-					}
+					if (!nextCharIsSpace && primary === `always`) complain(messages.expectedOpening, index, edit)
 				})
 
 				styleSearch({ source: attributeSelectorString, target: `]` }, (match) => {
 					let prevCharIsSpace = runString[match.startIndex - 1] === ` `
 					let index = attributeNode.sourceIndex + match.startIndex - 1
-					// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `[a=b\⏎]` would come out as `[a=b\ ]`, an escaped space, so the warning stands. The question is asked about the whitespace the fix writes over, which is the node's own and never the escaped space in front of it (1789664271)
-					let run = (closingSpaces(attributeNode).after.match(TRAILING_WHITESPACE) as RegExpMatchArray)[0]
-					let keepsTheEscape = editKeepsEscapedCharacter(attributeSelectorString, { start: match.startIndex - run.length, end: match.startIndex, text: primary === `always` ? ` ` : `` })
+					let closeIndex = attributeStart + match.startIndex
+					let run = runInFront(runString, match.startIndex)
+					let edit = { start: closeIndex - run.length, end: closeIndex, text: written }
+					// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `[a=b\⏎]` would come out as `[a=b\ ]`, an escaped space, so the warning stands with no fix (1789664271)
+					let keepsTheEscape = editKeepsEscapedCharacter(selector, edit)
 
-					fix = keepsTheEscape
-						? (): void => {
-							hasFixed = true
-							fixAfter(attributeNode)
-						}
-						: undefined
+					if (prevCharIsSpace && primary === `never`) complain(messages.rejectedClosing, index, keepsTheEscape ? edit : undefined)
 
-					if (prevCharIsSpace && primary === `never`) complain(messages.rejectedClosing, index)
-
-					if (!prevCharIsSpace && primary === `always`) complain(messages.expectedClosing, index)
+					if (!prevCharIsSpace && primary === `always`) complain(messages.expectedClosing, index, keepsTheEscape ? edit : undefined)
 				})
 			})
 
-			if (hasFixed) {
-				let fixedSelector = String(selectorTree)
-
-				copies.write(fixedSelector)
-			}
+			if (edits.length > 0) copies.write(applyEditsFromEnd(selector, edits))
 
 			/**
 			 * Reports a problem.
 			 * @param message - The warning text to report.
 			 * @param index - The index in the selector copy.
+			 * @param edit - The edit fixing it, indexed in the same copy; nothing where the fix is refused.
 			 */
-			function complain (message: string, index: number): void {
+			function complain (message: string, index: number, edit?: Edit): void {
 				let sourceIndex = copies.toSourceIndex(index)
 
 				report({
@@ -168,52 +121,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					result,
 					ruleName,
 					node: ruleNode,
-					...(fix && { fix }),
+					...(edit && {
+						fix: (): void => {
+							edits.push(edit)
+						},
+					}),
 				})
 			}
 		})
-	}
-
-	/**
-	 * Rewrites the whitespace behind `[`.
-	 * @param attributeNode - The parsed attribute selector whose opening whitespace is rewritten.
-	 */
-	function fixBefore (attributeNode: Attribute): void {
-		let spacesAttribute = attributeNode.raws.spaces && attributeNode.raws.spaces.attribute
-		let rawAttrBefore = spacesAttribute && spacesAttribute.before
-
-		let { attrBefore, setAttrBefore }: {
-			attrBefore: string,
-			setAttrBefore: (fixed: string) => void,
-		} = spacesAttribute && rawAttrBefore
-			? {
-				attrBefore: rawAttrBefore,
-				setAttrBefore (fixed) {
-					spacesAttribute.before = fixed
-				},
-			}
-			: {
-				attrBefore: (attributeNode.spaces.attribute && attributeNode.spaces.attribute.before) || ``,
-				setAttrBefore (fixed) {
-					if (!attributeNode.spaces.attribute) attributeNode.spaces.attribute = {}
-
-					attributeNode.spaces.attribute.before = fixed
-				},
-			}
-
-		if (primary === `always`) setAttrBefore(attrBefore.replace(LEADING_WHITESPACE, ` `))
-		else if (primary === `never`) setAttrBefore(attrBefore.replace(LEADING_WHITESPACE, ``))
-	}
-
-	/**
-	 * Rewrites the whitespace in front of `]`.
-	 * @param attributeNode - The parsed attribute selector whose closing whitespace is rewritten.
-	 */
-	function fixAfter (attributeNode: Attribute): void {
-		let { after, setAfter } = closingSpaces(attributeNode)
-
-		if (primary === `always`) setAfter(after.replace(TRAILING_WHITESPACE, ` `))
-		else if (primary === `never`) setAfter(after.replace(TRAILING_WHITESPACE, ``))
 	}
 }
 

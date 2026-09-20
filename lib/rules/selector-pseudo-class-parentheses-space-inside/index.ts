@@ -1,14 +1,16 @@
 import type { Container, Node, Root, Spaces } from "postcss-selector-parser"
-import stylelint, { type FixCallback } from "stylelint"
+import stylelint from "stylelint"
 
-import { LEADING_WHITESPACE_OR_BLOCK_COMMENT, LEADING_WHITESPACE_RUN, LINE_BREAK, TRAILING_WHITESPACE, TRAILING_WHITESPACE_RUN, WHITESPACE } from "../../regexps.ts"
+import { LEADING_CSS_WHITESPACE, LEADING_WHITESPACE_OR_BLOCK_COMMENT, LEADING_WHITESPACE_RUN, LINE_BREAK, TRAILING_WHITESPACE_RUN, WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import { applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { selectorSearchCopy } from "../../utils/selectorSearchCopy/index.ts"
+import { runInFront } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -47,6 +49,8 @@ export type PrimaryOption = `always` | `never`
  * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
+	let written = primary === `always` ? ` ` : ``
+
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,
@@ -60,8 +64,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!ruleNode.selector.includes(`(`)) return
 
-			let fix: FixCallback | undefined
-			let hasFixed = false
+			let edits: Edit[] = []
 
 			let copies = syntax.selectorCopies(ruleNode)
 
@@ -71,14 +74,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!selectorTree) return
 
-			// A fix writes the whole selector back, so the tree must print as the source
+			// Every index the check works in is measured in the tree's print, so it must spell the source
 			if (!standsForSource(selectorTree, selector)) return
 
 			selectorTree.walkPseudos((pseudoNode) => {
 				if (pseudoNode.length === 0) return
 
 				let paramString = pseudoNode.map((node) => node.toString()).join(`,`)
-				// The run in front of the `)` is read over the copy with the escapes masked, where an escaped space is a character of the argument and no run at all (1789661964); the run behind the `(` opens on the backslash of an escape, so it is read over the text
+				// The run beside the parenthesis is read over the copy with the escapes masked, where an escaped space is a character of the argument and no run at all (1789661964), and written into the selector at the index it was read at: the parser files an escaped tab in the spaces of the node beside it and prints it back as the source spells it (1789666655)
 				let { runString } = selectorSearchCopy(paramString)
 				// Multi-line by line feed only, as PostCSS counts lines
 				let isParamStringMultiline = LINE_BREAK.test(paramString)
@@ -90,22 +93,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (firstNode) {
 					let nextCharIsSpace = paramString.startsWith(` `)
+					// No escape reaches over the parenthesis, so the run behind it opens on the backslash of one and never covers a character of the argument
+					let run = (runString.match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0]
+					let edit = { start: openIndex, end: openIndex + run.length, text: written }
 
-					if (nextCharIsSpace && primary === `never`) {
-						fix = (): void => {
-							hasFixed = true
-							setSpaceBefore(firstNode, ``)
-						}
-						complain(messages.rejectedOpening, openIndex)
-					}
+					if (nextCharIsSpace && primary === `never`) complain(messages.rejectedOpening, openIndex, edit)
 
-					if (!nextCharIsSpace && primary === `always`) {
-						fix = (): void => {
-							hasFixed = true
-							setSpaceBefore(firstNode, ` `)
-						}
-						complain(messages.expectedOpening, openIndex)
-					}
+					if (!nextCharIsSpace && primary === `always`) complain(messages.expectedOpening, openIndex, edit)
 				}
 
 				// A closing run ending a `//` comment: either option would write the `)` into it
@@ -114,36 +108,26 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (lastNode) {
 					let prevCharIsSpace = runString.endsWith(` `)
 					let closeIndex = openIndex + paramString.length - 1
-					let written = primary === `always` ? ` ` : ``
-					// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a:not(b\⏎)` would come out as `a:not(b\ )`, an escaped space, so the warning stands. The question is asked about the whitespace the fix writes over, which is the node's own and never the escaped space in front of it (1789664271)
-					let run = (spaceAfter(lastNode).match(TRAILING_WHITESPACE) as RegExpMatchArray)[0]
-					let keepsTheEscape = editKeepsEscapedCharacter(selector, { start: closeIndex + 1 - run.length, end: closeIndex + 1, text: written })
+					let run = runInFront(runString, paramString.length)
+					let edit = { start: closeIndex + 1 - run.length, end: closeIndex + 1, text: written }
+					// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a:not(b\⏎)` would come out as `a:not(b\ )`, an escaped space, so the warning stands with no fix (1789664271)
+					let keepsTheEscape = editKeepsEscapedCharacter(selector, edit)
 
-					fix = keepsTheEscape
-						? (): void => {
-							hasFixed = true
-							setSpaceAfter(lastNode, written)
-						}
-						: undefined
+					if (prevCharIsSpace && primary === `never` && !isParamStringMultiline) complain(messages.rejectedClosing, closeIndex, keepsTheEscape ? edit : undefined)
 
-					if (prevCharIsSpace && primary === `never` && !isParamStringMultiline) complain(messages.rejectedClosing, closeIndex)
-
-					if (!prevCharIsSpace && primary === `always`) complain(messages.expectedClosing, closeIndex)
+					if (!prevCharIsSpace && primary === `always`) complain(messages.expectedClosing, closeIndex, keepsTheEscape ? edit : undefined)
 				}
 			})
 
-			if (hasFixed) {
-				let fixedSelector = String(selectorTree)
-
-				copies.write(fixedSelector)
-			}
+			if (edits.length > 0) copies.write(applyEditsFromEnd(selector, edits))
 
 			/**
 			 * Reports a problem.
 			 * @param message - The warning text to report.
 			 * @param rawIndex - The index in the parsed selector.
+			 * @param edit - The edit fixing it, indexed in the same copy; nothing where the fix is refused.
 			 */
-			function complain (message: string, rawIndex: number): void {
+			function complain (message: string, rawIndex: number, edit?: Edit): void {
 				let index = copies.toSourceIndex(rawIndex)
 
 				report({
@@ -153,7 +137,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					result,
 					ruleName,
 					node: ruleNode,
-					...(fix && { fix }),
+					...(edit && {
+						fix: (): void => {
+							edits.push(edit)
+						},
+					}),
 				})
 			}
 		})
@@ -298,41 +286,6 @@ function lastNodeInside (node: Container): Node | undefined {
 	while (target && target.type === `selector`) target = target.last
 
 	return target
-}
-
-/**
- * The whitespace standing behind a node, which `setSpaceAfter` writes over: the raw where a comment moved the run there, since `toString()` prints the raw, else the node's own spaces.
- * @param target - The node.
- * @returns The whitespace.
- */
-function spaceAfter (target: Node): string {
-	return (target as NodeWithRaws).raws?.spaces?.after ?? target.spaces.after ?? ``
-}
-
-/**
- * Sets the space before a node, in `raws.spaces` too where a comment moved the run there, since `toString()` prints the raw.
- * @param target - The node.
- * @param value - The space.
- */
-function setSpaceBefore (target: Node, value: string): void {
-	target.spaces.before = value
-
-	let spaces = (target as NodeWithRaws).raws?.spaces
-
-	if (spaces?.before !== undefined) spaces.before = value + spaces.before.replace(LEADING_WHITESPACE_RUN, ``)
-}
-
-/**
- * The mirror of `setSpaceBefore`, whose raws branch has no reproducer: the parser writes `raws.spaces.before` only on a combinator behind a comment.
- * @param target - The node.
- * @param value - The space.
- */
-function setSpaceAfter (target: Node, value: string): void {
-	target.spaces.after = value
-
-	let spaces = (target as NodeWithRaws).raws?.spaces
-
-	if (spaces?.after !== undefined) spaces.after = spaces.after.replace(TRAILING_WHITESPACE_RUN, ``) + value
 }
 
 export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
