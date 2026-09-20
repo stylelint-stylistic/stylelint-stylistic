@@ -44,6 +44,15 @@ testRule({
 			code: `a\n,b[data-foo="tr,tr"] {}`,
 		},
 		{
+			// The break the option asks for stands in `raws.before`, which is where the parser files the run in front of a selector (1789593917)
+			description: `a comma opening the selector of a rule standing behind another, whose run lies in the raw in front of the selector`,
+			code: `x {}\n,a {}`,
+		},
+		{
+			description: `the same run written with indentation behind the break`,
+			code: `x {}\n\t,a {}`,
+		},
+		{
 			description: `spaces of indentation in front of the comma`,
 			code: `a\n    ,b {}`,
 		},
@@ -211,15 +220,6 @@ testRule({
 			column: 1,
 			message: messages.expectedBefore(),
 		},
-		{
-			// The raw here already holds the break the option asks for, and the warning is a false positive of the checker's, recorded as spec 1789593917
-			description: `a comma opening the selector of a rule standing behind another, where the run lies in that raw as well`,
-			code: `x {}\n,a {}`,
-			fixed: `x {}\n,a {}`,
-			line: 2,
-			column: 1,
-			message: messages.expectedBefore(),
-		},
 	],
 })
 
@@ -247,6 +247,11 @@ testRule({
 		{
 			description: `an indented multi-line list`,
 			code: `\ta\n\t, b {\n}`,
+		},
+		{
+			// The break in front of the first comma stands in `raws.before` (1789593917)
+			description: `a comma opening the selector of a multi-line list, whose run lies in the raw in front of the selector`,
+			code: `x {}\n,a\n,b {}`,
 		},
 	],
 
@@ -282,15 +287,6 @@ testRule({
 			fixed: `a\n,b\n, c {\n}`,
 			line: 2,
 			column: 3,
-			message: messages.expectedBeforeMultiLine(),
-		},
-		{
-			// The same raw in front of a multi-line list: a break written there grows the file by a line every run, and the warning itself is spec 1789593917's false positive
-			description: `a comma opening the selector of a multi-line list`,
-			code: `x {}\n,a\n,b {}`,
-			fixed: `x {}\n,a\n,b {}`,
-			line: 2,
-			column: 1,
 			message: messages.expectedBeforeMultiLine(),
 		},
 	],
@@ -430,6 +426,36 @@ testRule({
 			fixed: `a ,b {}`,
 			line: 1,
 			column: 3,
+			message: messages.expectedBefore(),
+		},
+	],
+})
+
+// `postcss-html` files the run in front of a `<style>` element's first rule in the root's `raws.codeBefore`, the opening tag and all (1789593917)
+testRule({
+	ruleName,
+	config: [`always`],
+	customSyntax: `postcss-html`,
+	autoStripIndent: false,
+
+	accept: [
+		{
+			description: `a comma opening the first rule of an embedded stylesheet, whose break closes the opening tag's line`,
+			code: `<style>\n,a { b: c }</style>`,
+		},
+		{
+			description: `the same run written with indentation behind the break`,
+			code: `<style>\n\t,a { b: c }</style>`,
+		},
+	],
+
+	reject: [
+		{
+			description: `a comma opening an embedded stylesheet that starts on the opening tag's own line`,
+			code: `<style>,a { b: c }</style>`,
+			fixed: `<style>,a { b: c }</style>`,
+			line: 1,
+			column: 8,
 			message: messages.expectedBefore(),
 		},
 	],

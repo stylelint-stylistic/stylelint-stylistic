@@ -7,7 +7,9 @@ import { LEADING_BLOCK_COMMENT, LEADING_CSS_WHITESPACE, MEDIA_AT_RULE, OPENS_WIT
 import type { Syntax } from "../../syntaxes/index.ts"
 import { atRuleParamIndex } from "../atRuleParamIndex/index.ts"
 import { findFunctionArgumentSpans } from "../findFunctionArgumentSpans/index.ts"
+import { rawInFrontOfText } from "../rawInFrontOfText/index.ts"
 import { assertString } from "../validateTypes/index.ts"
+import type { WhitespaceChecker } from "../whitespaceChecker/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -26,11 +28,7 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 	root: Root,
 	result: PostcssResult,
 	syntax: Syntax,
-	locationChecker: (args: {
-		source: string,
-		index: number,
-		err: (message: string) => void,
-	}) => void,
+	locationChecker: WhitespaceChecker,
 	checkedRuleName: string,
 	fix?: ((atRule: AtRule, index: number, runString: string) => void),
 	isFixable?: ((params: string, index: number, atRule: AtRule, commas: MediaQueryListComma[], runString: string) => boolean),
@@ -93,7 +91,10 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 			})
 		})
 
-		for (let { comma, pastComments } of commas) checkComma(params, runString, opts.allowTrailingComments ? pastComments : comma, atRule, commas)
+		// The run in front of a comma opening the parameters lies in `raws.afterName`, comments and all (1789593917)
+		let textBefore = rawInFrontOfText(atRule)
+
+		for (let { comma, pastComments } of commas) checkComma(params, runString, opts.allowTrailingComments ? pastComments : comma, atRule, commas, textBefore)
 	})
 
 	/**
@@ -103,11 +104,13 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 	 * @param index - The comma's index.
 	 * @param node - The at-rule.
 	 * @param commas - Every comma of the list.
+	 * @param textBefore - What the file holds in front of the parameters, where a comma opening them has its run (1789593917).
 	 */
-	function checkComma (source: string, runString: string, index: number, node: AtRule, commas: MediaQueryListComma[]): void {
+	function checkComma (source: string, runString: string, index: number, node: AtRule, commas: MediaQueryListComma[], textBefore: string): void {
 		opts.locationChecker({
 			source: runString,
 			index,
+			textBefore,
 			err: (message) => {
 				let commaIndex = index + atRuleParamIndex(node)
 				// Asked here, not in front of the check, so parameters in order are not read once per comma

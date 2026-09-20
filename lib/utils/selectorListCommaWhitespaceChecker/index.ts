@@ -4,7 +4,9 @@ import stylelint, { type PostcssResult } from "stylelint"
 
 import type { SelectorCopies, Syntax } from "../../syntaxes/index.ts"
 import type { InlineComment } from "../../syntaxes/index.ts"
+import { rawInFrontOfText } from "../rawInFrontOfText/index.ts"
 import { selectorSearchCopy } from "../selectorSearchCopy/index.ts"
+import type { WhitespaceChecker } from "../whitespaceChecker/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -20,11 +22,7 @@ export interface SelectorListCommaWhitespaceCheckerOptions {
 	syntax: Syntax,
 
 	/** The location checker. */
-	locationChecker: (opts: {
-		source: string,
-		index: number,
-		err: (msg: string) => void,
-	}) => void,
+	locationChecker: WhitespaceChecker,
 
 	/** The rule's name. */
 	checkedRuleName: string,
@@ -49,6 +47,7 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 		let copies = opts.syntax.selectorCopies(rule)
 		let { selector } = copies
 
+		let textBefore = rawInFrontOfText(rule)
 		let commaIndices: number[] = []
 		// The search reads a string and an escape by rules of its own, so the commas are found and checked over the copies and reported at the selector's index; the whitespace is read over the second copy, where an escaped space is a character of a name and no run (1789657288)
 		let { searchString, runString } = selectorSearchCopy(selector)
@@ -64,7 +63,7 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 			},
 		)
 
-		for (let index of commaIndices) checkDelimiter(selector, runString, index, rule, copies, commaIndices)
+		for (let index of commaIndices) checkDelimiter(selector, runString, index, rule, copies, commaIndices, textBefore)
 	})
 
 	/**
@@ -75,11 +74,13 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 	 * @param node - The rule the warning is reported on.
 	 * @param copies - The selector, opened by the syntax.
 	 * @param commaIndices - Every comma of the list.
+	 * @param textBefore - What the file holds in front of the selector, where a comma opening it has its run (1789593917).
 	 */
-	function checkDelimiter (source: string, runString: string, index: number, node: Rule, copies: SelectorCopies, commaIndices: number[]): void {
+	function checkDelimiter (source: string, runString: string, index: number, node: Rule, copies: SelectorCopies, commaIndices: number[], textBefore: string): void {
 		opts.locationChecker({
 			source: runString,
 			index,
+			textBefore,
 			err: (message) => {
 				let sourceIndex = copies.toSourceIndex(index)
 				// Before the report, since Stylelint counts a fixer as applied whatever it does

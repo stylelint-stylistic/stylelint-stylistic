@@ -76,6 +76,19 @@ testRule({
 			description: `a comma inside the arguments of a function is a comma of the address and of no query list`,
 			code: `@media (min-width: url(x/a,b.png)) { a { b: c; } }`,
 		},
+		{
+			// The break the option asks for stands in `raws.afterName`, where the parser files the run in front of the parameters, comments and all (1789593917)
+			description: `a comma opening the parameters, whose run lies in the raw behind the at-rule name`,
+			code: `@media\n,a { b { c: d } }`,
+		},
+		{
+			description: `the same run written with indentation behind the break`,
+			code: `@media\n\t,a { b { c: d } }`,
+		},
+		{
+			description: `the same run written behind a comment, which the parser files in that raw too`,
+			code: `@media /*x*/\n,a { b { c: d } }`,
+		},
 	],
 
 	reject: [
