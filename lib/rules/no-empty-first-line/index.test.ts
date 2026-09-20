@@ -39,6 +39,15 @@ testRule({
 			description: `a comment opening the first line`,
 			code: `/* comment */`,
 		},
+		{
+			// See #683
+			description: `a no-break space opening the first line, which the tokenizer reads as the head of the first selector`,
+			code: `\u00A0\n.class {}\n`,
+		},
+		{
+			description: `a vertical tab opening it, read the same way`,
+			code: `\v\n.class {}\n`,
+		},
 	],
 	reject: [
 		{
@@ -134,6 +143,15 @@ testRule({
 			description: `an empty first line in front of two free semicolons parted by a space`,
 			code: `\n; ;`,
 			fixed: `; ;`,
+			line: 1,
+			column: 1,
+			message: messages.rejected,
+		},
+		{
+			// See #683
+			description: `an empty first line in front of a second one opening on a no-break space`,
+			code: `\n\u00A0\n.class {}\n`,
+			fixed: `\u00A0\n.class {}\n`,
 			line: 1,
 			column: 1,
 			message: messages.rejected,
