@@ -116,6 +116,11 @@ testRule({
 			code: `a { b: 1%url(1PX); }`,
 		},
 		{
+			// A closing brace closing no interpolation ends the name too, and `@csstools/css-tokenizer` reads `1}url(` as an address; PostCSS keeps the brace inside the parentheses of the call around it (1789899902)
+			description: `an address behind a number and a closing brace`,
+			code: `a { b: f(1}url(1PX)); }`,
+		},
+		{
 			description: `a unit inside a property name`,
 			code: `a { marginPX: 10px; }`,
 		},
@@ -239,6 +244,17 @@ testRule({
 			column: 15,
 			endLine: 1,
 			endColumn: 17,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// The brace of `#{p}url(` closes the interpolation its own word opens, and Sass names one call there, so the parentheses stay a call's (1789899902)
+			description: `a unit inside the parentheses of a call whose name stands behind an interpolation`,
+			code: `a { b: f(#{p}url(1PX)); }`,
+			fixed: `a { b: f(#{p}url(1px)); }`,
+			line: 1,
+			column: 19,
+			endLine: 1,
+			endColumn: 21,
 			message: messages.expected(`PX`, `px`),
 		},
 		{

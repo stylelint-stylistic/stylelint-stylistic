@@ -124,6 +124,9 @@ export const INLINE_COMMENT_BREAK = /[\n\r]/u
 /** A break closing a `//` comment where a form feed closes one too, which is Sass's reading: `postcss-scss` tokenizes a line in the character and dart-sass compiles the code behind it. Spelled as {@link CSS_LINE_BREAK} is, which asks another question of the same three characters. */
 export const INLINE_COMMENT_BREAK_OR_FORM_FEED = /[\n\r\f]/u
 
+/** The character a preprocessor's interpolation opens with in front of its `{`: Sass's `#` and Less's `@`. Spelled as {@link NAME_CHARACTER_BESIDE_IDENTIFIER} is, which asks another question of the same two characters. The third spelling of {@link EVERY_INTERPOLATION}, postcss-simple-vars' `$(…)`, closes on a parenthesis and carries no brace to ask about, and a template's braces ({@link TPL_INTERPOLATION}) are left out here as they are there: no engine reads a call behind `${p}url(`, and `@csstools/css-tokenizer` reads the address. */
+export const INTERPOLATION_MARK = /[#@]/u
+
 /** The last line, its break excluded; nothing where the text ends in one. */
 export const LAST_LINE = /[^\r\n]+$/u
 
@@ -211,8 +214,8 @@ export const LINE_BREAK = /\r?\n/u
 /** `media`, any case. */
 export const MEDIA_AT_RULE = /^media$/iu
 
-/** A character a call's name goes on through inside a word `postcss-value-parser` hands back whole while being no {@link IDENTIFIER_CODE_POINT} code point: a `#` and an `@`, behind which the tokenizer reads the letters as a hash or an at-word and the `(` behind them opens no address, and a closing brace, since `#{$p}url(` names one call to Sass, and Less refuses an interpolation standing in a value outside a string at all. A sign ends the name, and the `url(` behind it opens an address to `@csstools/css-tokenizer` and `lightningcss` alike (1789895915). */
-export const NAME_CHARACTER_BESIDE_IDENTIFIER = /[#@}]/u
+/** A character a call's name goes on through inside a word `postcss-value-parser` hands back whole while being no {@link IDENTIFIER_CODE_POINT} code point: a `#` and an `@`, behind which the tokenizer reads the letters as a hash or an at-word and the `(` behind them opens no address. A sign ends the name, and the `url(` behind it opens an address to `@csstools/css-tokenizer` and `lightningcss` alike (1789895915). A closing brace ends it as well, unless it closes an interpolation the same word opens ({@link INTERPOLATION_MARK}). */
+export const NAME_CHARACTER_BESIDE_IDENTIFIER = /[#@]/u
 
 /** Anything but a space. */
 export const NON_SPACE = /[^ ]/u

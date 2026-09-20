@@ -131,6 +131,31 @@ describe(`opensAnAddress`, () => {
 		expect(addressesOf(`@{p}url(a)`)).toEqual([])
 	})
 
+	// `@csstools/css-tokenizer` reads a url token behind every closing brace, and dart-sass and Less refuse every one of these texts, so the tokenizer is the only reading there is; a `{` no mark stands in front of, or one an escape covers, opens no interpolation (1789899902)
+	it(`a closing brace that closes no interpolation, which ends the name`, () => {
+		expect(addressesOf(`f(1}url(a))`)).toEqual([`1}url`])
+		expect(addressesOf(`f(c}url(a))`)).toEqual([`c}url`])
+		expect(addressesOf(`f(#p}url(a))`)).toEqual([`#p}url`])
+		expect(addressesOf(`f({p}url(a))`)).toEqual([`{p}url`])
+		expect(addressesOf(`f(\${p}url(a))`)).toEqual([`\${p}url`])
+		expect(addressesOf(`f(\\#{p}url(a))`)).toEqual([`\\#{p}url`])
+	})
+
+	// Once such a brace has ended the name, the word is one no compiler reads, so a brace behind it ends the name as well, whatever it closes
+	it(`an interpolation in a word a brace has already ended, which keeps no name`, () => {
+		expect(addressesOf(`f(#{$p}1}url(a))`)).toEqual([`#{$p}1}url`])
+		expect(addressesOf(`f(#{a}b}url(a))`)).toEqual([`#{a}b}url`])
+		expect(addressesOf(`f(1}#{$p}url(a))`)).toEqual([`1}#{$p}url`])
+		expect(addressesOf(`f(#{$p}1}#{q}url(a))`)).toEqual([`#{$p}1}#{q}url`])
+		expect(addressesOf(`f(1}#{#{p}}url(a))`)).toEqual([`1}#{#{p}}url`])
+	})
+
+	// `#{#{$q}}url(a//b.png)` and `#{$p}#{$q}url(a//b.png)` dart-sass refuses at the `)` the `//` swallowed, as it refuses the control `aurl(a//b.png)`, so it names a call at both
+	it(`an interpolation inside another, and two of them in one word, whose braces are their own`, () => {
+		expect(addressesOf(`f(#{#{p}}url(a))`)).toEqual([])
+		expect(addressesOf(`f(#{$p}#{q}url(a))`)).toEqual([])
+	})
+
 	it(`a node that is no call at all`, () => {
 		expect(addressesOf(`url`)).toEqual([])
 		expect(addressesOf(`"url(a)"`)).toEqual([])
