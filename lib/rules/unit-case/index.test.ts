@@ -106,6 +106,11 @@ testRule({
 			code: `a { background: #FFF\\\n\\75 rl(1PX); }`,
 		},
 		{
+			// Less and Sass compile the same address behind such a group, and the value parser alone keeps the bracket in the name (1789894076)
+			description: `an address behind a square-bracket group, which ends the name to every tokenizer`,
+			code: `a { b: [c]url(1PX); }`,
+		},
+		{
 			description: `a unit inside a property name`,
 			code: `a { marginPX: 10px; }`,
 		},
@@ -209,6 +214,17 @@ testRule({
 	],
 
 	reject: [
+		{
+			// `@csstools/css-tokenizer` reads the escaped bracket as a character of the name, and Less and Sass refuse such a text, so the parentheses stay a call's (1789894076)
+			description: `a unit inside the parentheses of a call whose name stands behind an escaped square bracket`,
+			code: `a { b: \\]url(1PX); }`,
+			fixed: `a { b: \\]url(1px); }`,
+			line: 1,
+			column: 15,
+			endLine: 1,
+			endColumn: 17,
+			message: messages.expected(`PX`, `px`),
+		},
 		{
 			// See #560
 			description: `a unit among the arguments behind a quoted address, which are those of any call`,

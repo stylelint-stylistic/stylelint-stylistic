@@ -81,6 +81,33 @@ describe(`opensAnAddress`, () => {
 		expect(addressesOf(`\\0 rl(a)`)).toEqual([])
 	})
 
+	// Less and Sass compile `[c]url(http://a/b.png)` with the protocol's `//` whole, so the parentheses hold an address to both; `postcss-value-parser` hands the bracket back inside the word in front of the call (1789894076)
+	it(`a square-bracket group in front of the name, which ends it to every tokenizer`, () => {
+		expect(addressesOf(`[c]url(a)`)).toEqual([`[c]url`])
+		expect(addressesOf(`[url(a)`)).toEqual([`[url`])
+		expect(addressesOf(`]url(a)`)).toEqual([`]url`])
+		expect(addressesOf(`[c]URL(a)`)).toEqual([`[c]URL`])
+		expect(addressesOf(`[c]u\\rl(a)`)).toEqual([`[c]u\\rl`])
+	})
+
+	it(`a name of its own behind such a group`, () => {
+		expect(addressesOf(`[c]aurl(a)`)).toEqual([])
+		expect(addressesOf(`[c]\\61 url(a)`)).toEqual([])
+	})
+
+	// `@csstools/css-tokenizer` reads the escaped bracket as a character of the name, and Less and Sass refuse such a text
+	it(`a bracket an escape covers, which ends nothing`, () => {
+		expect(addressesOf(`[c\\]url(a)`)).toEqual([])
+		expect(addressesOf(`\\]url(a)`)).toEqual([])
+		expect(addressesOf(`\\\\]url(a)`)).toEqual([`\\\\]url`])
+	})
+
+	// `#{$p}url(` names the call `xurl` to Sass, and Less refuses an interpolation standing in a value outside a string at all; the comment scan reads both as a call too
+	it(`an interpolation in front of the name, which is a character of it`, () => {
+		expect(addressesOf(`#{$p}url(a)`)).toEqual([])
+		expect(addressesOf(`@{p}url(a)`)).toEqual([])
+	})
+
 	it(`a node that is no call at all`, () => {
 		expect(addressesOf(`url`)).toEqual([])
 		expect(addressesOf(`"url(a)"`)).toEqual([])

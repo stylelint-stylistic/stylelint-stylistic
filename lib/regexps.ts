@@ -211,6 +211,9 @@ export const LINE_BREAK = /\r?\n/u
 /** `media`, any case. */
 export const MEDIA_AT_RULE = /^media$/iu
 
+/** The two characters of {@link TOKENIZER_TOKEN_END} that end a call's name inside a word `postcss-value-parser` hands back whole: a square bracket and a semicolon. It keeps a brace inside a word as well, and a brace ends no name: `#{$p}url(` names one call to Sass, and Less refuses an interpolation standing in a value outside a string at all. */
+export const NAME_END_IN_A_WORD = /[;[\]]/u
+
 /** Anything but a space. */
 export const NON_SPACE = /[^ ]/u
 
