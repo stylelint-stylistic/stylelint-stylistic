@@ -6,9 +6,11 @@ import { css } from "../../syntaxes/css/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { findEscapeSpans } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { gridTableLines, type Span } from "../../utils/gridTableLines/index.ts"
 import { isWhitespace } from "../../utils/isWhitespace/index.ts"
+import { maskEscapes } from "../../utils/maskEscapes/index.ts"
 import { neighbourCopies } from "../../utils/neighbourSettings/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
@@ -137,6 +139,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let owned: Span[] = laysTablesOut && GRID_AREAS_PROPERTY.test(decl.prop)
 				? gridTableLines(value, valueParser(blankComments(value, syntax.commentSpans(value, decl, result))).nodes).flatMap(({ gaps }) => gaps)
 				: []
+			// A backslash spelling a character makes it one of a word, and the first whitespace character behind a hexadecimal escape closes the escape, so neither is a run of the value: the walk reads the copy with the escapes masked, and the fix writes into the value, where every position holds (1789855320)
+			let walked = maskEscapes(value, findEscapeSpans(value, syntax.inlineComments(decl, result)))
 			let inString = false
 			let stringChar = ``
 			let afterNewline = true
@@ -147,10 +151,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			}[] = []
 
 			// Walk the characters for whitespace runs
-			for (let i = 0; i < value.length; i += 1) {
-				let char = value.charAt(i)
+			for (let i = 0; i < walked.length; i += 1) {
+				let char = walked.charAt(i)
 
-				let stringState = handleStringChar(char, inString, stringChar, value, i)
+				let stringState = handleStringChar(char, inString, stringChar, walked, i)
 				inString = stringState.inString
 				stringChar = stringState.stringChar
 
@@ -167,7 +171,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (isInlineWhitespace(char)) {
 					// Indentation behind a newline is left alone
 					if (afterNewline) {
-						while (i < value.length && isInlineWhitespace(value.charAt(i))) i += 1
+						while (i < walked.length && isInlineWhitespace(walked.charAt(i))) i += 1
 						afterNewline = false
 						i -= 1
 						continue
@@ -176,7 +180,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let whitespaceStart = i
 					let whitespaceCount = 0
 
-					while (i < value.length && isInlineWhitespace(value.charAt(i))) {
+					while (i < walked.length && isInlineWhitespace(walked.charAt(i))) {
 						whitespaceCount += 1
 						i += 1
 					}

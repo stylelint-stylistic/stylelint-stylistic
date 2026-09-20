@@ -8,6 +8,21 @@ testRule({
 
 	accept: [
 		{
+			// The run is read over the copy with the escapes masked, so the character a backslash covers is none of it (1789855320)
+			description: `an escaped tab and a space behind it, where the tab is a character of the word and the space the only whitespace`,
+			code: `a { b: c\\\t ; d: e }`,
+		},
+		{
+			// The first whitespace character behind a hexadecimal escape closes it and is none of the run (1789855320)
+			description: `a hexadecimal escape closed by the first of two spaces, the second of which parts the words`,
+			code: `a { b: c\\2c  d }`,
+		},
+		{
+			// An escape of four digits closes on the space just as one of two does, which a mask reading a fixed length would miss (1789855320)
+			description: `a four-digit hexadecimal escape closed by the first of two spaces`,
+			code: `a { b: c\\1f60  d; e: f }`,
+		},
+		{
 			description: `double spaces inside comments, which the rule does not read`,
 			code: `/* This  is  comment */\na { gap: 0 /* And   another   comment */ }`,
 		},
@@ -72,6 +87,60 @@ testRule({
 	],
 
 	reject: [
+		{
+			// Pins the escaped tab kept and the run behind it collapsed, where the write used to take the tab as well (1789855320)
+			description: `two spaces behind an escaped tab`,
+			code: `a { b: c\\\t  d; e: f }`,
+			fixed: `a { b: c\\\t d; e: f }`,
+			line: 1,
+			column: 11,
+			message: messages.rejected,
+		},
+		{
+			// Pins the character closing a hexadecimal escape kept out of the run (1789855320)
+			description: `a hexadecimal escape closed by the first of three spaces`,
+			code: `a { b: c\\2c   d }`,
+			fixed: `a { b: c\\2c  d }`,
+			line: 1,
+			column: 13,
+			message: messages.rejected,
+		},
+		{
+			// An escaped apostrophe opens no string, and the rest of the value was passed over behind one (1789855320)
+			description: `two spaces further along a value holding an escaped apostrophe, which opens no string`,
+			code: `a { b: c\\'d  e; f: g }`,
+			fixed: `a { b: c\\'d e; f: g }`,
+			line: 1,
+			column: 12,
+			message: messages.rejected,
+		},
+		{
+			// Pins a four-digit escape read to its end, where a mask of a fixed length would take the closing space for a run (1789855320)
+			description: `three spaces behind a four-digit hexadecimal escape`,
+			code: `a { b: c\\1f60   d; e: f }`,
+			fixed: `a { b: c\\1f60  d; e: f }`,
+			line: 1,
+			column: 15,
+			message: messages.rejected,
+		},
+		{
+			// Pins a form feed closing a hexadecimal escape, which the write used to carry off with the run (1789855320)
+			description: `two spaces behind a hexadecimal escape closed by a form feed`,
+			code: `a { b: c\\2c\f  d; e: f }`,
+			fixed: `a { b: c\\2c\f d; e: f }`,
+			line: 1,
+			column: 13,
+			message: messages.rejected,
+		},
+		{
+			// Pins the write the mask lets through: an even run of backslashes spells an escaped backslash, and the whitespace behind it is a run of its own (1789855320)
+			description: `two spaces behind an escaped backslash`,
+			code: `a { b: c\\\\  d; e: f }`,
+			fixed: `a { b: c\\\\ d; e: f }`,
+			line: 1,
+			column: 11,
+			message: messages.rejected,
+		},
 		{
 			description: `two spaces between the parts of a value`,
 			code: `a { gap: 1em  2em }`,
