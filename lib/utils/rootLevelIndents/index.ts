@@ -10,7 +10,7 @@ import { isAtRule, isRule } from "../typeGuards/index.ts"
 /**
  * Reads the indentation of the lines at the root's own level: where each child opens and where its block closes. Continuation and nested lines are left out, or a level read off one would rise with every run of the fix.
  *
- * The first child may open on the tag's line, `<style>a {`, returned apart under `tagLine`. A line's indentation is the tokenizer whitespace opening it, form feed or bare carriage return included, since the rule writes over the same run ([#452](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/452)); a stray semicolon behind that run stands on the line rather than in front of it, as the rule reads a node's own line ([#516](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/516)).
+ * The first child may open on the tag's line, `<style>a {`, returned apart under `tagLine`. A line's indentation is the tokenizer whitespace opening it, a form feed or a bare carriage return as much as a space; what stands behind that run, a stray semicolon or a hack, is on the line rather than in front of it.
  * @param syntax - The syntax the rule is built over, which the closing run is read through.
  * @param root - The stylesheet whose top-level lines are read.
  * @param closingBraceIndented - Whether a closing brace stands a level deeper; its line is then none of the root's.
