@@ -63,7 +63,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (!standsForSource(fullSelector, selector)) return
 
 			// The parser reads a backslash in front of a tab as no escape, and hands the tab over as a descendant combinator although the grammar reads it as a character of the name: the run is read over the copy with the escapes masked (1789666655)
-			let { runString } = selectorSearchCopy(selector)
+			let { runString, escapes } = selectorSearchCopy(selector)
 
 			fullSelector.walkCombinators((combinatorNode) => {
 				// A descendant combinator is `" "`, surplus in `spaces.before` or `raws.value`; other whitespace in `value` is what this rule reports.
@@ -114,10 +114,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				}): void {
 					if (segment.isComment) return
 
+					// The whitespace closing a hexadecimal escape is a character of the escape and no whitespace of the file, and the copy leaves it standing (1789657288), so the run opens behind the span it falls in: `a\41⏎⏎b` is the name `aA` and one break standing for the combinator (1789874864)
+					let runOpensAt = escapes.find(({ start, end }) => start < segment.index && end > segment.index)?.end ?? segment.index
 					// What the segment holds of whitespace, the characters an escape covers left out of it
-					let run = runInFront(runString.slice(segment.index, segment.index + segment.value.length), segment.value.length)
+					let run = runInFront(runString.slice(runOpensAt, segment.index + segment.value.length), segment.index + segment.value.length - runOpensAt)
 
-					// A single space is what the rule asks for; an empty run is a comment abutting the selector, or a tab an escape covers.
+					// A single space is what the rule asks for; an empty run is a comment abutting the selector, a tab an escape covers, or a run the escape in front closes on, where the grammar reads no combinator at all.
 					if (run === ` ` || run === ``) return
 
 					// The break in this run closes a `//` comment, which a single space would not, so the run is skipped.

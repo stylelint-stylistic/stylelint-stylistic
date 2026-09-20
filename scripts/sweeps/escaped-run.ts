@@ -9,6 +9,8 @@
  *
  * A multi-line block closing on the same run was added for 1789845987, where the rules of the brace, the bracket and the parenthesis came to read their run over the copy with the escapes masked: the `-multi-line` options speak only of a block the single-line shapes are not. A space in front of the bracket's run came with it, since `postcss-selector-parser` reads what follows as the attribute's flag and files the run in another part of it than the one `selector-attribute-brackets-space-inside` writes.
  *
+ * A second break behind the hexadecimal escape was added for 1789874864, where the character closing such an escape stood in the run `selector-descendant-combinator-no-non-space` writes: the one break the corpus already held leaves nothing behind the escape, so no fixture carried a combinator the write could take away.
+ *
  * The controls: `value-list-comma-space-before`, which reads its run over the search copy already (1789657288), and `declaration-bang-space-before`.
  */
 
@@ -38,6 +40,7 @@ const ESCAPED: Record<string, string> = {
 	hexCommaThenTwoSpaces: `2c  `,
 	hexCommaThenThreeSpaces: `2c   `,
 	hexCommaThenBreak: `2c\n`,
+	hexCommaThenTwoBreaks: `2c\n\n`,
 }
 
 const name: Sweep[`name`] = `escaped-run`

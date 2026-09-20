@@ -8,6 +8,19 @@ testRule({
 
 	accept: [
 		{
+			// The parser hands the character closing a hexadecimal escape over inside the combinator wherever it is not a space, and wherever the escape carries six digits (1789874864)
+			description: `a hexadecimal escape closed by a line break, where the grammar reads no combinator at all`,
+			code: `a\\41\nb {}`,
+		},
+		{
+			description: `a hexadecimal escape closed by a line break with a single space behind it, which is the combinator`,
+			code: `a\\41\n b {}`,
+		},
+		{
+			description: `a six-digit hexadecimal escape closed by a space with a single space behind it, which is the combinator`,
+			code: `a\\000041  b {}`,
+		},
+		{
 			// The selector parser reads a backslash in front of a tab as no escape, and the fix wrote over the tab (1789666655)
 			description: `an escaped tab between two names, which is a character of one name and no combinator`,
 			code: `a\\\tb {}`,
@@ -132,6 +145,42 @@ testRule({
 	],
 
 	reject: [
+		{
+			// Pins the run read from behind the escape: writing over the character that closes it would close the escape with the written space and leave no combinator (1789874864)
+			description: `two line breaks behind a hexadecimal escape, the first of which closes it, so the second alone stands for the combinator`,
+			code: `a\\41\n\nb {}`,
+			fixed: `a\\41\n b {}`,
+			line: 2,
+			column: 1,
+			message: messages.rejected(`\n`),
+		},
+		{
+			// Pins the same reading where the escape closes on a tab, which closes one as each of the five characters CSS reads as whitespace does (1789874864)
+			description: `two tabs behind a hexadecimal escape, the first of which closes it`,
+			code: `a\\41\t\tb {}`,
+			fixed: `a\\41\t b {}`,
+			line: 1,
+			column: 6,
+			message: messages.rejected(`\t`),
+		},
+		{
+			// Pins the pair counted as the one character closing the escape, which a reading taking a single character off the run would miss (1789874864)
+			description: `two carriage-return line breaks behind a hexadecimal escape, the first pair of which closes it`,
+			code: `a\\41\r\n\r\nb {}`,
+			fixed: `a\\41\r\n b {}`,
+			line: 2,
+			column: 1,
+			message: messages.rejected(`\r\n`),
+		},
+		{
+			// Pins the space handed over behind a six-digit escape, where the run the rule may write opens one character further on than the digits end (1789874864)
+			description: `a six-digit hexadecimal escape closed by a space with two spaces behind it`,
+			code: `a\\000041   b {}`,
+			fixed: `a\\000041  b {}`,
+			line: 1,
+			column: 10,
+			message: messages.rejected(`  `),
+		},
 		{
 			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789857484)
 			description: `a line break behind a child combinator and a backslash, where the space would stand behind the backslash as its escaped character and leave the second selector a name opening with a space, so the warning stands`,
