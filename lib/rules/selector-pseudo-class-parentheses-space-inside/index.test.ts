@@ -555,7 +555,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			// Pins the write the guard lets through: the space it takes stands behind the escaped character, not behind the backslash (1789664271)
 			description: `a space behind an escaped vertical tab in front of the parenthesis, which the fix takes without touching the escape`,
 			code: `a:not(b\\\v ) {}`,
 			fixed: `a:not(b\\\v) {}`,
