@@ -239,6 +239,81 @@ testRule({
 			message: messages.expected(`single`),
 		},
 		{
+			// 1789653630: the tokenizer pops the word `url` at the `(` whatever parts the two, and reads to the first `)` from there
+			description: `a quotation mark nothing closes inside the parentheses the tokenizer takes as one token behind a url parted from them, which the value parser reads as a string running to the end of the value`,
+			code: `a { b: url (a "),b) 1px; c: "d" }`,
+			fixed: `a { b: url (a "),b) 1px; c: 'd' }`,
+			line: 1,
+			column: 29,
+			message: messages.expected(`single`),
+		},
+		{
+			description: `the mark closing the value's own string, which the value parser pairs with the one inside that token instead`,
+			code: `a { b: url (a "b) "c"; }`,
+			fixed: `a { b: url (a "b) 'c'; }`,
+			line: 1,
+			column: 19,
+			message: messages.expected(`single`),
+		},
+		{
+			description: `the same token behind a comment, which pushes no word of its own`,
+			code: `a { b: url/*x*/(a "),b) 1px; c: "d" }`,
+			fixed: `a { b: url/*x*/(a "),b) 1px; c: 'd' }`,
+			line: 1,
+			column: 33,
+			message: messages.expected(`single`),
+		},
+		{
+			description: `the same token behind a property named url, the last word the tokenizer read in front of the parenthesis`,
+			code: `a { url: (a "),b); c: "d" }`,
+			fixed: `a { url: (a "),b); c: 'd' }`,
+			line: 1,
+			column: 23,
+			message: messages.expected(`single`),
+		},
+		{
+			description: `the same property in front of a value whose two marks stand on either side of the token's edge`,
+			code: `a { url: (a "b) "c"); }`,
+			fixed: `a { url: (a "b) 'c'); }`,
+			line: 1,
+			column: 17,
+			message: messages.expected(`single`),
+		},
+		{
+			// The stack of words carries across the nodes, so the `(` of the at-rule pops the `url` of the rule in front of it, which the spans read from the node's own start do not see; the string nothing closes is refused all the same
+			description: `a value the parser never closed a string in, behind parentheses a neighbour's word made a token of`,
+			code: `a { b: url } @media (c "d) { e: f } g { h: "i" }`,
+			fixed: `a { b: url } @media (c "d) { e: f } g { h: 'i' }`,
+			line: 1,
+			column: 44,
+			message: messages.expected(`single`),
+		},
+		{
+			description: `a string opening such parentheses, which keeps them code to the tokenizer`,
+			code: `a { b: url ("a") }`,
+			fixed: `a { b: url ('a') }`,
+			line: 1,
+			column: 13,
+			message: messages.expected(`single`),
+		},
+		{
+			description: `the same parentheses behind a name the tokenizer reads as one longer word, which leaves them code and the marks strings`,
+			code: `a { b: aurl (a"b"c); }`,
+			fixed: `a { b: aurl (a'b'c); }`,
+			line: 1,
+			column: 15,
+			message: messages.expected(`single`),
+		},
+		{
+			// Sass and lightningcss read the parentheses as code and the pair as the string it is, and the tokenizer holds the parentheses opaque, so rewriting both marks changes only the text inside them
+			description: `a pair of marks standing wholly inside such a token, which Sass and lightningcss read as the string it is`,
+			code: `a { b: url (a"b"c); }`,
+			fixed: `a { b: url (a'b'c); }`,
+			line: 1,
+			column: 14,
+			message: messages.expected(`single`),
+		},
+		{
 			skip: true,
 			description: `should be covered by a new at-charset-rule-no-invalid rule
 			see stylelint/stylelint#7492`,
@@ -353,6 +428,15 @@ testRule({
 			fixed: `a { b: \\75 rl(a'b'c); c: "d" }`,
 			line: 1,
 			column: 26,
+			message: messages.expected(`double`),
+		},
+		{
+			// 1789653630: the mark inside the token is a character of the address under either option
+			description: `a quotation mark nothing closes inside the parentheses the tokenizer takes as one token behind a url parted from them`,
+			code: `a { b: url (a '),b) 1px; c: 'd' }`,
+			fixed: `a { b: url (a '),b) 1px; c: "d" }`,
+			line: 1,
+			column: 29,
 			message: messages.expected(`double`),
 		},
 		{

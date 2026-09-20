@@ -6,7 +6,7 @@ import type { PostcssResult } from "stylelint"
 import type { InlineComment } from "../preprocessor/findSelectorInlineComments/index.ts"
 import type { InlineCommentReading } from "../preprocessor/readsInlineComments/index.ts"
 import type { Edit } from "../utils/applyEditsFromEnd/index.ts"
-import type { CommentSpan } from "../utils/findCommentSpans/index.ts"
+import type { AddressSpan, CommentSpan } from "../utils/findCommentSpans/index.ts"
 import type { InterpolationSpan } from "../utils/findInterpolationSpans/index.ts"
 
 import { less } from "./less/index.ts"
@@ -150,6 +150,16 @@ export type Syntax = {
 	 * @returns The index of the colon, or `-1`.
 	 */
 	colonTokenIndex (before: string, text: string, node: Node, result: PostcssResult): number,
+
+	/**
+	 * Finds the parentheses the syntax's tokenizer takes as one token behind the word `url`, whose quotation marks are characters of an address and no strings. The text in front is tokenized too, since a tokenizer carries state and a property named `url` opens such a token in front of a value.
+	 * @param before - The text in front, tokenized but not answered for: the property, or the at-rule's name.
+	 * @param text - The value or params the spans are sought in, tokenized behind the text in front.
+	 * @param node - The node the text is from, whose syntax tokenizes it.
+	 * @param result - The lint result naming the syntax the file was parsed with.
+	 * @returns The spans, in the text's coordinates, or nothing where the text may hold such a token and the parser's own tokenizer is out of reach.
+	 */
+	addressTokenSpans (before: string, text: string, node: Node, result: PostcssResult): AddressSpan[] | undefined,
 
 	/**
 	 * Finds the spans of every comment in a text: block ones, and inline ones where the syntax reads them.

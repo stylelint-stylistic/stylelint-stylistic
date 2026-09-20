@@ -94,6 +94,15 @@ testRule({
 			column: 2,
 			message: messages.expected(`double`),
 		},
+		{
+			// 1789653630: Less refuses `url (a)` itself, so the reading here is the parser's, whose tokenizer holds the parentheses as one token
+			description: `a quotation mark nothing closes inside the parentheses the tokenizer takes as one token behind a url parted from them`,
+			code: `a { b: url (a '),b) 1px; c: 'd' }`,
+			fixed: `a { b: url (a '),b) 1px; c: "d" }`,
+			line: 1,
+			column: 29,
+			message: messages.expected(`double`),
+		},
 	],
 })
 testRule({

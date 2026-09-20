@@ -3,14 +3,14 @@ import type { Declaration } from "postcss"
 import { isObject, isString } from "../validateTypes/index.ts"
 
 /**
- * Gets the index a declaration's value opens at.
+ * Reads what a declaration spells in front of its value: the property as the file writes it, with what the parser took off it, and the run holding the colon.
  * @param decl - The declaration.
- * @returns The index.
+ * @returns The text.
  */
-export function declarationValueIndex (decl: Declaration): number {
+export function declarationValuePrefix (decl: Declaration): string {
 	let raws = decl.raws
 	let prop = raws.prop
-	let count = 0
+	let prefix = ``
 
 	let items = [
 		isObject(prop) && `prefix` in prop && prop.prefix,
@@ -20,7 +20,16 @@ export function declarationValueIndex (decl: Declaration): number {
 		raws.value && `prefix` in raws.value && raws.value.prefix,
 	]
 
-	for (let str of items) if (isString(str)) count += str.length
+	for (let str of items) if (isString(str)) prefix += str
 
-	return count
+	return prefix
+}
+
+/**
+ * Gets the index a declaration's value opens at.
+ * @param decl - The declaration.
+ * @returns The index.
+ */
+export function declarationValueIndex (decl: Declaration): number {
+	return declarationValuePrefix(decl).length
 }

@@ -326,6 +326,23 @@ testRule({
 				},
 			],
 		},
+		{
+			// 1789653630: this tokenizer opens the token behind whitespace of the parenthesis too, and counts parentheses to its close, where PostCSS keeps such parentheses code and refuses the file over the mark
+			description: `a quotation mark nothing closes inside the parentheses this syntax takes as one token behind a url parted from them and behind whitespace of their own`,
+			code: `a { b: url ( a '),b ) 1px; c: 'd' }`,
+			fixed: `a { b: url ( a '),b ) 1px; c: "d" }`,
+			line: 1,
+			column: 31,
+			message: messages.expected(`double`),
+		},
+		{
+			description: `a quoted address inside the same token, whose two marks stand in it alike and which Sass reads as the string it is`,
+			code: `a { b: url( 'a' ) 1px; }`,
+			fixed: `a { b: url( "a" ) 1px; }`,
+			line: 1,
+			column: 13,
+			message: messages.expected(`double`),
+		},
 	],
 })
 
