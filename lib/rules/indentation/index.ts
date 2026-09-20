@@ -412,9 +412,11 @@ type FixPosition = {
 }
 
 /**
- * Writes a declaration's indentation, each line into its raw.
+ * Writes a declaration's indentation, each line into the copy of the declaration that holds it.
  *
  * Positions are counted from the declaration's start through the property, `raws.between`, the value and the bang's `raws.important`, which holds a break standing in front of the flag or inside it. Written onto the end of the value, where the writer knew `raws.between` and the value alone, the value grew a level every run.
+ *
+ * The property is written as `decl.prop`, the only copy of it a node carries: PostCSS builds a `raws` copy of the params, the value and the selector and of nothing else. A break reaches it inside the `#{…}` of an interpolated property, which `postcss-scss` reads and `postcss-html` reads too, in a `style` attribute as much as in a `<style lang="scss">`, so the core's rule meets one as well. Counted from the property's end such a position is negative, and `replaceIndentation` then built the text out of two slices taken from the end of `raws.between`: the indentation landed behind the interpolation, and where the two slices did not meet the leading colon went with them and the file stopped parsing.
  * @param decl - The declaration.
  * @param fixPositions - The positions, in reverse order.
  * @param syntax - The syntax that reads and writes the value.
@@ -425,14 +427,18 @@ function writeDeclarationIndentation (decl: Declaration, fixPositions: FixPositi
 	if (!isString(declBetween)) throw new TypeError(`The \`between\` property must be a string`)
 
 	let declValue = syntax.read(decl)
-	let valueStartIndex = decl.prop.length + declBetween.length
 
-	// Written from the end, so no write moves this boundary
+	// Written from the end, so no write moves these boundaries
+	let propEndIndex = decl.prop.length
+	let valueStartIndex = propEndIndex + declBetween.length
 	let valueEndIndex = valueStartIndex + declValue.length
 
 	for (let fixPosition of fixPositions) {
-		if (fixPosition.startIndex < valueStartIndex) {
-			decl.raws.between = replaceIndentation(decl.raws.between || ``, fixPosition.currentIndentation, fixPosition.expectedIndentation, fixPosition.startIndex - decl.prop.length)
+		if (fixPosition.startIndex < propEndIndex) {
+			decl.prop = replaceIndentation(decl.prop, fixPosition.currentIndentation, fixPosition.expectedIndentation, fixPosition.startIndex)
+		}
+		else if (fixPosition.startIndex < valueStartIndex) {
+			decl.raws.between = replaceIndentation(decl.raws.between || ``, fixPosition.currentIndentation, fixPosition.expectedIndentation, fixPosition.startIndex - propEndIndex)
 		}
 		else if (fixPosition.startIndex < valueEndIndex) {
 			declValue = replaceIndentation(declValue, fixPosition.currentIndentation, fixPosition.expectedIndentation, fixPosition.startIndex - valueStartIndex)

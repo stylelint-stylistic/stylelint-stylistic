@@ -713,3 +713,49 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`tab`],
+	customSyntax: `postcss-scss`,
+
+	reject: [
+		{
+			// The break inside the interpolation is in `prop`, the copy of the declaration the writer counted its offset back from (1789503578)
+			description: `a property broken inside its interpolation, whose value opens on the line behind the colon`,
+			code: `a {\n\tfont-#{\n$s}:\n\t\t1px;\n}\n`,
+			fixed: `a {\n\tfont-#{\n\t\t$s}:\n\t\t1px;\n}\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`2 tabs`),
+		},
+		{
+			description: `the same property, its value broken over lines, whose two lines are written into two copies of the declaration`,
+			code: `a {\n\tfont-#{\n$s}: 1px\n2px;\n}\n`,
+			fixed: `a {\n\tfont-#{\n\t\t$s}: 1px\n\t\t2px;\n}\n`,
+			warnings: [
+				{ line: 3, column: 1, message: messages.expected(`2 tabs`) },
+				{ line: 4, column: 1, message: messages.expected(`2 tabs`) },
+			],
+		},
+		{
+			description: `the same property with the interpolation opening it`,
+			code: `a {\n\t#{\n$s}-font: 1px\n2px;\n}\n`,
+			fixed: `a {\n\t#{\n\t\t$s}-font: 1px\n\t\t2px;\n}\n`,
+			warnings: [
+				{ line: 3, column: 1, message: messages.expected(`2 tabs`) },
+				{ line: 4, column: 1, message: messages.expected(`2 tabs`) },
+			],
+		},
+		{
+			description: `the same property broken twice inside the interpolation, which puts two lines in the one copy`,
+			code: `a {\n\tfont-#{\n$s\n}: 1px\n2px;\n}\n`,
+			fixed: `a {\n\tfont-#{\n\t\t$s\n\t\t}: 1px\n\t\t2px;\n}\n`,
+			warnings: [
+				{ line: 3, column: 1, message: messages.expected(`2 tabs`) },
+				{ line: 4, column: 1, message: messages.expected(`2 tabs`) },
+				{ line: 5, column: 1, message: messages.expected(`2 tabs`) },
+			],
+		},
+	],
+})
