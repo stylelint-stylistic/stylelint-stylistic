@@ -1,3 +1,4 @@
+import less from "postcss-less"
 import scss from "postcss-scss"
 import stylelint from "stylelint"
 import { describe, expect, it } from "vitest"
@@ -42,6 +43,21 @@ testRule({
 		{
 			description: `double spaces inside comments, which the rule does not read`,
 			code: `/* This  is  comment */\na { gap: 0 /* And   another   comment */ }`,
+		},
+		{
+			// A comment standing between the words of a value reaches the rule, where a trailing one is kept out of the value, and the walk read its text as code (1789885007)
+			description: `double spaces inside a comment standing between the words of a value`,
+			code: `a { b: c /* x  y */ d }`,
+		},
+		{
+			// No escape span covers a backslash inside a comment, so the write took the tab it covers along with the run (1789885007)
+			description: `an escaped tab in front of a run, both inside such a comment`,
+			code: `a { b: c /* x\\\t  y */ d }`,
+		},
+		{
+			// The mark used to open a string of the walk's own, which closed on the one opening the value's string and left the run inside it outside one (1789885007)
+			description: `a run inside a string behind a comment holding one quotation mark`,
+			code: `a { b: c /* " */ "x  y" }`,
 		},
 		{
 			description: `spaces inside a string`,
@@ -104,6 +120,34 @@ testRule({
 	],
 
 	reject: [
+		{
+			// Pins both runs of the value collapsed while the run inside the comment between them stays where it was (1789885007)
+			description: `two spaces on either side of a comment holding two more`,
+			code: `a { b: c  /* x  y */  d }`,
+			fixed: `a { b: c /* x  y */ d }`,
+			message: messages.rejected,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.rejected,
+				},
+				{
+					line: 1,
+					column: 21,
+					message: messages.rejected,
+				},
+			],
+		},
+		{
+			// The run used to stand inside the string the comment's mark opened, and was passed over with it (1789885007)
+			description: `two spaces behind a comment holding one quotation mark`,
+			code: `a { b: c /* " */ d  e }`,
+			fixed: `a { b: c /* " */ d e }`,
+			line: 1,
+			column: 19,
+			message: messages.rejected,
+		},
 		{
 			// Pins the escaped tab kept and the run behind it collapsed, where the write used to take the tab as well (1789855320)
 			description: `two spaces behind an escaped tab`,
@@ -373,5 +417,43 @@ describe(`a run behind an escape inside an interpolation of a bare address`, () 
 
 	it(`reads the run inside the expression where no escape covers it`, async () => {
 		expect(await fix(`a { b: url(c#{d  e}f) }`)).toEqual({ fixed: `a { b: url(c#{d e}f) }`, left: [] })
+	})
+})
+
+// A parser spelling a double slash leaves the comment in the value a rule reads, and the walk read the run inside it as code; plain CSS spells none there, so the same text is code to the core (1789885007)
+/**
+ * Fixes a text under one namespace of this rule.
+ * @param configured - The rule's name in that namespace.
+ * @param text - The stylesheet.
+ * @param customSyntax - The parser, or nothing for plain CSS.
+ * @returns What the fix left.
+ */
+async function fixUnder (configured: string, text: string, customSyntax?: typeof less | typeof scss): Promise<string | undefined> {
+	return (await stylelint.lint({ code: text, config: { plugins, rules: { [configured]: true }, ...(customSyntax && { customSyntax }) }, fix: true })).code
+}
+
+describe(`a run inside a double-slash comment of a value`, () => {
+	let code = `a { b: c // x  y\n; }`
+
+	it(`leaves the comment where the Less parser hands it over`, async () => {
+		expect(await fixUnder(`@stylistic/less/no-multiple-whitespaces`, code, less)).toBe(code)
+	})
+
+	it(`leaves the comment where the SCSS parser hands it over`, async () => {
+		expect(await fixUnder(`@stylistic/scss/no-multiple-whitespaces`, code, scss)).toBe(code)
+	})
+
+	it(`collapses the run under plain CSS, which reads the double slash as code`, async () => {
+		expect(await fixUnder(ruleName, code)).toBe(`a { b: c // x y\n; }`)
+	})
+
+	it(`leaves the run behind the double slash of an address Sass reads as code`, async () => {
+		let address = `a { b: url(http://x/y  z.png) }`
+
+		expect(await fixUnder(`@stylistic/scss/no-multiple-whitespaces`, address, scss)).toBe(address)
+	})
+
+	it(`collapses the same run under Less, whose parentheses hold the address whole`, async () => {
+		expect(await fixUnder(`@stylistic/less/no-multiple-whitespaces`, `a { b: url(http://x/y  z.png) }`, less)).toBe(`a { b: url(http://x/y z.png) }`)
 	})
 })

@@ -6,7 +6,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { findEscapeSpans } from "../../utils/findCommentSpans/index.ts"
+import { type CommentSpan, findEscapeSpans } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { gridTableLines, type Span } from "../../utils/gridTableLines/index.ts"
 import { isWhitespace } from "../../utils/isWhitespace/index.ts"
@@ -46,6 +46,38 @@ function isNewline (char: string): boolean {
  */
 function isInlineWhitespace (char: string): boolean {
 	return isWhitespace(char) && !isNewline(char)
+}
+
+/** The letter every character of a comment is written as, the same stand-in {@link maskEscapes} uses. */
+const COMMENT_MASK = `x`
+
+/**
+ * Writes every character of a comment as a letter, so the walk finds no run, no quotation mark and no delimiter in a comment's text; a newline is none of those and is left standing.
+ *
+ * A letter stands in rather than a space, as {@link blankComments} writes: blanking a comment would join the run in front of it to the one behind and have the fix write the joined run — the comment — over with one space. The copy is as long as the text, so every position of a run holds in the value the fix writes into, and the newlines left standing carry the value's lines into the copy as {@link maskEscapes} carries them; nothing here turns on that, the walk asking about a break only for the character right behind one, which is never the character behind a comment's end.
+ * @param text - The value the walk runs over.
+ * @param spans - The comment spans the syntax found in it.
+ * @returns The copy.
+ */
+function maskComments (text: string, spans: CommentSpan[]): string {
+	if (spans.length === 0) return text
+
+	let pieces = []
+	let index = 0
+
+	for (let { start, end } of spans) {
+		let comment = ``
+
+		// Counted in code units, as the walk reads the copy: a spread would write one letter over a surrogate pair and move every position behind it
+		for (let at = start; at < end; at += 1) comment += isNewline(text.charAt(at)) ? text.charAt(at) : COMMENT_MASK
+
+		pieces.push(text.slice(index, start), comment)
+		index = end
+	}
+
+	pieces.push(text.slice(index))
+
+	return pieces.join(``)
 }
 
 /**
@@ -136,11 +168,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		root.walkDecls((decl) => {
 			let value = syntax.read(decl)
 			let valueIndex = declarationValueIndex(decl)
+			// A comment opens on a solidus, so a value spelling none holds none, and the scan is worth nothing there
+			let comments = value.includes(`/`) ? syntax.commentSpans(value, decl, result) : []
 			let owned: Span[] = laysTablesOut && GRID_AREAS_PROPERTY.test(decl.prop)
-				? gridTableLines(value, valueParser(blankComments(value, syntax.commentSpans(value, decl, result))).nodes).flatMap(({ gaps }) => gaps)
+				? gridTableLines(value, valueParser(blankComments(value, comments)).nodes).flatMap(({ gaps }) => gaps)
 				: []
 			// A backslash spelling a character makes it one of a word, and the first whitespace character behind a hexadecimal escape closes the escape, so neither is a run of the value: the walk reads the copy with the escapes masked, and the fix writes into the value, where every position holds (1789855320)
-			let walked = maskEscapes(value, findEscapeSpans(value, syntax.inlineComments(decl, result)))
+			// A comment's text is no code of the value either, and the walk read it as code: it collapsed a run standing inside a comment, took the character a backslash covered there, which no escape span records, and opened a string on a quotation mark of a comment, which moved the run it then wrote into out of a string of the value (1789885007)
+			let walked = maskComments(maskEscapes(value, findEscapeSpans(value, syntax.inlineComments(decl, result))), comments)
 			let inString = false
 			let stringChar = ``
 			let afterNewline = true
