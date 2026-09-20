@@ -202,6 +202,24 @@ testRule({
 			column: 10,
 			message: messages.expectedBefore(),
 		},
+		{
+			// The run in front of such a comma is `raws.before`, which this rule does not write: a break written into the selector lands in that raw at the next parse, the comma opens the selector again, and every run grows the file by a line
+			description: `a comma opening the selector of the first rule of the file`,
+			code: `,a {}`,
+			fixed: `,a {}`,
+			line: 1,
+			column: 1,
+			message: messages.expectedBefore(),
+		},
+		{
+			// The raw here already holds the break the option asks for, and the warning is a false positive of the checker's, recorded as spec 1789593917
+			description: `a comma opening the selector of a rule standing behind another, where the run lies in that raw as well`,
+			code: `x {}\n,a {}`,
+			fixed: `x {}\n,a {}`,
+			line: 2,
+			column: 1,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 
@@ -264,6 +282,15 @@ testRule({
 			fixed: `a\n,b\n, c {\n}`,
 			line: 2,
 			column: 3,
+			message: messages.expectedBeforeMultiLine(),
+		},
+		{
+			// The same raw in front of a multi-line list: a break written there grows the file by a line every run, and the warning itself is spec 1789593917's false positive
+			description: `a comma opening the selector of a multi-line list`,
+			code: `x {}\n,a\n,b {}`,
+			fixed: `x {}\n,a\n,b {}`,
+			line: 2,
+			column: 1,
 			message: messages.expectedBeforeMultiLine(),
 		},
 	],

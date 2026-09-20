@@ -60,6 +60,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			checkedRuleName: ruleName,
 			// `never-multi-line` may take away the break closing a `//` comment and put the comma into it; report and leave the code. `always` only adds a break.
 			isFixable: (selector, index, inlineComments, ruleNode, sourceIndex, commaIndices, runString) => {
+				// The run in front of a comma opening the selector is `raws.before`, other rules' to write; a break written into the selector goes into that raw at the next parse, the comma opens the selector again, and every run grows the file by a line
+				if (index === 0) return false
+
 				let runStart = selector.slice(0, index).trimEnd().length
 				let closesInlineComment = inlineComments.some((inlineComment) => runStart <= inlineComment.endIndex && inlineComment.endIndex < index)
 
