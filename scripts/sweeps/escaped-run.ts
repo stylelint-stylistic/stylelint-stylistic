@@ -11,6 +11,8 @@
  *
  * A second break behind the hexadecimal escape was added for 1789874864, where the character closing such an escape stood in the run `selector-descendant-combinator-no-non-space` writes: the one break the corpus already held leaves nothing behind the escape, so no fixture carried a combinator the write could take away.
  *
+ * `no-multiple-whitespaces` was added for 1789855320: it reads every run of a value rather than one beside a delimiter, and the texts here put an escape in front of a run in a value already.
+ *
  * The controls: `value-list-comma-space-before`, which reads its run over the search copy already (1789657288), and `declaration-bang-space-before`.
  */
 
@@ -143,6 +145,7 @@ const configs: Sweep[`configs`] = [
 	{ rule: `at-rule-semicolon-space-before`, primary: `always` },
 	{ rule: `at-rule-semicolon-space-before`, primary: `never` },
 	{ rule: `indentation`, primary: `tab` },
+	{ rule: `no-multiple-whitespaces`, primary: true },
 	{ rule: `value-list-comma-space-before`, primary: `always` },
 	{ rule: `declaration-bang-space-before`, primary: `never` },
 ]
