@@ -5,6 +5,7 @@ import { LEADING_WHITESPACE_AND_REST, WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { InlineComment } from "../../syntaxes/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { findSelectorBlockComments } from "../../utils/findSelectorBlockComments/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
@@ -122,7 +123,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					// The break in this run closes a `//` comment, which a single space would not, so the run is skipped.
 					if (segment.closesInlineComment) return
 
-					let index = copies.toSourceIndex(segment.index + segment.value.length - run.length)
+					let start = segment.index + segment.value.length - run.length
+					let index = copies.toSourceIndex(start)
+					// A backslash in front of a line break is a delimiter, and the space written in its place is read as its escape: `a>\⏎b` would come out as `a>\ b`, a child combinator and the name ` b`, so the warning stands with no fix (1789857484)
+					let keepsTheEscape = editKeepsEscapedCharacter(selector, { start, end: segment.index + segment.value.length, text: ` ` })
 
 					report({
 						result,
@@ -132,11 +136,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						node: ruleNode,
 						index,
 						endIndex: index,
-						fix: (): void => {
-							hasFixed = true
-							segment.value = `${segment.value.slice(0, segment.value.length - run.length)} `
-							write()
-						},
+						...(keepsTheEscape && {
+							fix: (): void => {
+								hasFixed = true
+								segment.value = `${segment.value.slice(0, segment.value.length - run.length)} `
+								write()
+							},
+						}),
 					})
 				}
 
