@@ -133,6 +133,24 @@ testRule({
 			message: messages.expectedClosing,
 		},
 		{
+			// Pins the space written in front of the parenthesis: the run the parser files opens on the tab behind the backslash, so the write over it was refused and the warning stood (1789855319)
+			description: `a backslash ending the argument in front of a tab, which the parser reads as whitespace of its own and the grammar as a character of the argument`,
+			code: `a:not(b\\\t) {}`,
+			fixed: `a:not( b\\\t ) {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 7,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 9,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
 			description: `no space inside the opening parenthesis`,
 			code: `input:not([type='submit'] ) { }`,
 			fixed: `input:not( [type='submit'] ) { }`,
@@ -559,6 +577,15 @@ testRule({
 			description: `a space behind an escaped vertical tab in front of the parenthesis, which the fix takes without touching the escape`,
 			code: `a:not(b\\\v ) {}`,
 			fixed: `a:not(b\\\v) {}`,
+			line: 1,
+			column: 10,
+			message: messages.rejectedClosing,
+		},
+		{
+			// Pins the space taken and the tab left: the run the parser files opens on that tab, so the write over it was refused and the warning stood (1789855319)
+			description: `the same space standing behind an escaped tab, which the parser reads as whitespace of its own`,
+			code: `a:not(b\\\t ) {}`,
+			fixed: `a:not(b\\\t) {}`,
 			line: 1,
 			column: 10,
 			message: messages.rejectedClosing,
