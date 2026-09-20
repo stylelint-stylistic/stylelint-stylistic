@@ -314,6 +314,39 @@ testRule({
 			message: messages.expected(`single`),
 		},
 		{
+			// 1789910265: the stack of words runs through the whole file, so the `(` of the at-rule pops the `url` of the node in front of it, whose name pushes no word of its own
+			description: `a pair of marks parted by the edge of a token the word of the node in front opened, whose mark inside it is a character of the address`,
+			code: `a { b: url } @media (c "d) "e" { f: g }`,
+			fixed: `a { b: url } @media (c "d) 'e' { f: g }`,
+			line: 1,
+			column: 28,
+			message: messages.expected(`single`),
+		},
+		{
+			description: `a pair standing wholly inside that same token, which is rewritten as one inside a token the text's own word opened`,
+			code: `a { b: url } @media (c"d"e) { f: g }`,
+			fixed: `a { b: url } @media (c'd'e) { f: g }`,
+			line: 1,
+			column: 23,
+			message: messages.expected(`single`),
+		},
+		{
+			description: `two such tokens in one at-rule's params, the second of which opens on a word the first parenthesis left on the stack`,
+			code: `@x url url; @media (c "d) (e "f) "g" { h: i }`,
+			fixed: `@x url url; @media (c "d) (e "f) 'g' { h: i }`,
+			line: 1,
+			column: 34,
+			message: messages.expected(`single`),
+		},
+		{
+			description: `the same two tokens in a value, where the property named url opens the first and the stack in front of it the second`,
+			code: `url { url: (d "e) (f "g) "h" }`,
+			fixed: `url { url: (d "e) (f "g) 'h' }`,
+			line: 1,
+			column: 26,
+			message: messages.expected(`single`),
+		},
+		{
 			skip: true,
 			description: `should be covered by a new at-charset-rule-no-invalid rule
 			see stylelint/stylelint#7492`,
@@ -437,6 +470,15 @@ testRule({
 			fixed: `a { b: url (a '),b) 1px; c: "d" }`,
 			line: 1,
 			column: 29,
+			message: messages.expected(`double`),
+		},
+		{
+			// 1789910265: the mark inside such a token is a character of the address under either option
+			description: `a pair of marks parted by the edge of a token the word of the node in front opened`,
+			code: `a { b: url } @media (c 'd) 'e' { f: g }`,
+			fixed: `a { b: url } @media (c 'd) "e" { f: g }`,
+			line: 1,
+			column: 28,
 			message: messages.expected(`double`),
 		},
 		{

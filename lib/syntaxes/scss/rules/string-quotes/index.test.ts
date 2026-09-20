@@ -343,6 +343,21 @@ testRule({
 			column: 13,
 			message: messages.expected(`double`),
 		},
+		{
+			// 1789910265: the stack of words runs through the whole file, and this tokenizer reads the comment behind the word, so what the at-rule's `(` pops is `url` itself
+			description: `a pair of marks parted by the edge of a token the word of the node in front opened, with an end-of-line comment standing between that word and the parentheses`,
+			code: `
+				a { b: url // c
+				} @media (c 'd) 'e' { f: g }
+			`,
+			fixed: `
+				a { b: url // c
+				} @media (c 'd) "e" { f: g }
+			`,
+			line: 2,
+			column: 17,
+			message: messages.expected(`double`),
+		},
 	],
 })
 
