@@ -1,8 +1,9 @@
 /** Where a value of a stylesheet stands, for a sweep to place a text in every one of them. */
 
-/** Where the text stands; two of the places are no code. */
+/** Where the text stands; two of the places are no code. `insideCall` stands for a text whose braces are a value's: a word holding a `}` is read at four of the places — inside the call, inside the parameters of `media`, inside the string and inside the comment — and makes PostCSS refuse the file at the other five (1789899902). */
 const VALUE_PLACES: Record<string, (call: string) => string> = {
 	value: (call) => `a { b: ${call} 1px; c: 2px }\n`,
+	insideCall: (call) => `a { b: f(${call}) 1px; c: 2px }\n`,
 	blockTail: (call) => `a { b: 1px ${call} }\n`,
 	list: (call) => `a { b: 1px , ${call} , 2px; }\n`,
 	grid: (call) => `a { grid-template-areas: "a b" ${call} "c d"; }\n`,
