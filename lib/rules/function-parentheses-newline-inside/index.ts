@@ -20,6 +20,7 @@ import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import { quotesItsAddress } from "../../utils/quotesItsAddress/index.ts"
+import { editsRereadAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { splitSpaceNodesAtWords } from "../../utils/splitSpaceNodesAtWords/index.ts"
 import { writesTwinRun } from "../../utils/writesTwinRun/index.ts"
@@ -169,7 +170,7 @@ function findFirstCharacterIndex (declValue: string, firstIndex: number): number
 /**
  * Says which of the two `never` fixes of one function may be written.
  *
- * A fix is refused where it carries a character of the function into an inline comment: the opening one asks about the first significant thing, the closing one about the `)`. Under a parser whose tokenizer reads the parentheses behind `url(` as one token, the opening one is refused too where it opens a comment, as taking away the whitespace in front of a quotation mark there does. Where both pass alone, both are asked again over the union of what either empties, since two writes safe apart destroyed the value together ([#312](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/312)); where the union fails, neither is written.
+ * A fix is refused where it carries a character of the function into an inline comment: the opening one asks about the first significant thing, the closing one about the `)`. Under a parser whose tokenizer reads the parentheses behind `url(` as one token, the opening one is refused too where it opens a comment, as taking away the whitespace in front of a quotation mark there does, and under either tokenizer where emptying the run switches how it reads parentheses it takes for an address's ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)). Where both pass alone, both are asked again over the union of what either empties, since two writes safe apart destroyed the value together ([#312](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/312)); where the union fails, neither is written.
  * @param syntax - The syntax the rule is built over.
  * @param read - What the walk read of the function, and the value.
  * @returns Whether each fix may be written.
@@ -195,7 +196,7 @@ function getNeverFixability (syntax: Syntax, read: {
 	// Each `never` fix empties the stretches its walk measured, minus one opening on the break closing an inline comment; a fix not reaching every stretch is refused, since Stylelint would call the problem solved while the option stayed violated (#285, #378).
 	let emptiedBefore = checkBefore === `` ? [] : measuredBefore.filter((stretch) => !closesAnInlineComment(stretch, comments))
 	let emptiedAfter = checkAfter === `` ? [] : measuredAfter.filter((stretch) => !closesAnInlineComment(stretch, comments))
-	let isOpeningFixable = checkBefore !== `` && reachesEveryStretch(measuredBefore, emptiedBefore) && !movesIntoComment(syntax, declValue, firstCharacterIndex, emptiedBefore, reading) && (!reading.tokenizes || editsOpenNoComment(declValue, fixBeforeForNever(emptiedBefore), reading))
+	let isOpeningFixable = checkBefore !== `` && reachesEveryStretch(measuredBefore, emptiedBefore) && !movesIntoComment(syntax, declValue, firstCharacterIndex, emptiedBefore, reading) && (!reading.tokenizes || editsOpenNoComment(declValue, fixBeforeForNever(emptiedBefore), reading)) && !editsRereadAnAddress(declValue, valueNode.sourceIndex + valueNode.value.length, fixBeforeForNever(emptiedBefore), reading)
 	let isClosingFixable = checkAfter !== `` && reachesEveryStretch(measuredAfter, emptiedAfter) && !movesIntoComment(syntax, declValue, closingParenthesisIndex, emptiedAfter, reading)
 
 	if (isOpeningFixable && isClosingFixable) {
@@ -312,6 +313,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let writesOpeningRun = valueNode.nodes.length === 0 || (primary !== `never-multi-line` && measuredBefore.length > 1) || writesParenthesisRun(twinRead, `after`, openingIndex)
 				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` inside, or a `{` in a custom property's value, is then a group nothing closes: the file stops parsing, so the `always` fixes are refused there and the warnings stand; a multi-line call holds a break inside its parentheses already, so `always-multi-line` never meets the token
 				let breaksAToken = breakRereadsParentheses(declValue, openingIndex - 1, isCustomProperty(decl.prop))
+				// The break the `always` options write behind the `(` stands where the tokenizer decides whether parentheses it takes for an address's are one token, and the name it reads there is not the one the walk read ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)); the break in front of the `)` moves no such character, so only this one is asked about. Read under those two options alone: `fixBeforeForAlways` takes the last stretch the walk measured, and `never-multi-line` is the option that can meet a call with none.
+				let writesABreakBehind = primary === `always` || primary === `always-multi-line`
+				let openingWrite = writesABreakBehind ? fixBeforeForAlways(measuredBefore, declValue, getLineBreak(root, result)) : []
+				let alwaysRereadsAnAddress = writesABreakBehind && editsRereadAnAddress(declValue, openingIndex - 1, openingWrite, reading)
 
 				checkOpening()
 
@@ -323,12 +328,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				/** Reports the whitespace behind the `(`, fixing it where the run is this rule's to write. */
 				function checkOpening (): void {
 					if (primary === `always` && !LINE_BREAK.test(checkBefore)) {
-						fix = writesOpeningRun && !breaksAToken ? fixWith(() => fixBeforeForAlways(measuredBefore, declValue, getLineBreak(root, result))) : undefined
+						fix = writesOpeningRun && !breaksAToken && !alwaysRereadsAnAddress ? fixWith(() => openingWrite) : undefined
 						complain(messages.expectedOpening, openingIndex)
 					}
 
 					if (isMultiLine && primary === `always-multi-line` && !LINE_BREAK.test(checkBefore)) {
-						fix = writesOpeningRun ? fixWith(() => fixBeforeForAlways(measuredBefore, declValue, getLineBreak(root, result))) : undefined
+						fix = writesOpeningRun && !alwaysRereadsAnAddress ? fixWith(() => openingWrite) : undefined
 						complain(messages.expectedOpeningMultiLine, openingIndex)
 					}
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { rereadsAnAddress } from "./index.ts"
+import { editsRereadAnAddress, rereadsAnAddress } from "./index.ts"
 
 let POSTCSS = { tokenizes: false }
 let SCSS = { tokenizes: true }
@@ -168,5 +168,71 @@ describe(`rereadsAnAddress`, () => {
 	it(`a double slash joined to the name, which the tokenizer reads into the name's word rather than as a comment`, () => {
 		expect(rereadsAnAddress(`1/url// c\n(a ")" b)`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(false)
 		expect(rereadsAnAddress(`@a,url// c\n(a ")" b)`, { start: 3, end: 3, text: ` ` }, SCSS)).toBe(false)
+	})
+})
+
+describe(`editsRereadAnAddress`, () => {
+	it(`a space written behind the parenthesis of a name the compilers read as no address, in front of a quotation mark nothing closes`, () => {
+		expect(editsRereadAnAddress(String.raw`\61 url(a"b)`, 7, [{ start: 8, end: 8, text: ` ` }], POSTCSS)).toBe(true)
+		expect(editsRereadAnAddress(String.raw`x\9 url(a"b)`, 7, [{ start: 8, end: 8, text: ` ` }], POSTCSS)).toBe(true)
+		expect(editsRereadAnAddress(`@{p}url(a"b)`, 7, [{ start: 8, end: 8, text: ` ` }], POSTCSS)).toBe(true)
+	})
+
+	it(`a break written there, which the tokenizer reads as the space does`, () => {
+		expect(editsRereadAnAddress(String.raw`\61 url(a"b)`, 7, [{ start: 8, end: 8, text: `\n` }], POSTCSS)).toBe(true)
+	})
+
+	it(`the run taken away, which hands the parentheses back to the token`, () => {
+		expect(editsRereadAnAddress(String.raw`\61 url( a ")" b)`, 7, [{ start: 8, end: 9, text: `` }], POSTCSS)).toBe(true)
+	})
+
+	it(`parentheses both readings close at the same parenthesis`, () => {
+		expect(editsRereadAnAddress(String.raw`\61 url(a.png)`, 7, [{ start: 8, end: 8, text: ` ` }], POSTCSS)).toBe(false)
+	})
+
+	it(`a quotation mark behind the parenthesis, which keeps the parentheses code under PostCSS's tokenizer and opens the token under postcss-scss's`, () => {
+		expect(editsRereadAnAddress(String.raw`\61 url("a(b")`, 7, [{ start: 8, end: 8, text: ` ` }], POSTCSS)).toBe(false)
+		expect(editsRereadAnAddress(String.raw`\61 url("a(b")`, 7, [{ start: 8, end: 8, text: ` ` }], SCSS)).toBe(true)
+	})
+
+	it(`the run in front of the closing parenthesis, which holds no character the tokenizer reads the parentheses by`, () => {
+		expect(editsRereadAnAddress(String.raw`\61 url(a"b )`, 7, [{ start: 11, end: 12, text: `` }], POSTCSS)).toBe(false)
+		expect(editsRereadAnAddress(String.raw`\61 url(a"b)`, 7, [{ start: 11, end: 11, text: ` ` }], POSTCSS)).toBe(false)
+	})
+
+	it(`a name the tokenizer pops as a word of its own, which opens no token`, () => {
+		expect(editsRereadAnAddress(String.raw`\75 rl(a"b)`, 6, [{ start: 7, end: 7, text: ` ` }], POSTCSS)).toBe(false)
+		expect(editsRereadAnAddress(`URL(a"b)`, 3, [{ start: 4, end: 4, text: ` ` }], POSTCSS)).toBe(false)
+		expect(editsRereadAnAddress(`aurl(a"b)`, 4, [{ start: 5, end: 5, text: ` ` }], POSTCSS)).toBe(false)
+	})
+
+	it(`a word standing over the name, which parentheses of its own pop`, () => {
+		expect(editsRereadAnAddress(String.raw`\61 url x(y)(a"b)`, 12, [{ start: 13, end: 13, text: ` ` }], POSTCSS)).toBe(true)
+		expect(editsRereadAnAddress(String.raw`\61 url x(y)(a"b)`, 9, [{ start: 10, end: 10, text: ` ` }], POSTCSS)).toBe(false)
+	})
+
+	it(`parentheses the reading that is not the address's takes as one plain token, which closes where the address's token closes`, () => {
+		expect(editsRereadAnAddress(String.raw`\61 url(a[b.png)`, 7, [{ start: 8, end: 8, text: ` ` }], POSTCSS)).toBe(false)
+	})
+
+	it(`the same parentheses inside a call PostCSS read as code, which leaves every parenthesis to its content's end code as well`, () => {
+		expect(editsRereadAnAddress(String.raw`f( \61 url(a[b.png) ) 1px`, 10, [{ start: 11, end: 11, text: ` ` }], POSTCSS)).toBe(true)
+		expect(editsRereadAnAddress(String.raw`f( \61 url(a(b.png) ) 1px`, 10, [{ start: 11, end: 11, text: ` ` }], POSTCSS)).toBe(true)
+	})
+
+	it(`a group code reads inside the parentheses, which close at a parenthesis of their own under either reading`, () => {
+		expect(editsRereadAnAddress(String.raw`\61 url(a(b)c.png)`, 7, [{ start: 8, end: 8, text: ` ` }], POSTCSS)).toBe(false)
+	})
+
+	it(`a group nothing closes, which leaves the parentheses open where code reads it`, () => {
+		expect(editsRereadAnAddress(String.raw`\61 url(a(b.png)`, 7, [{ start: 8, end: 8, text: ` ` }], POSTCSS)).toBe(true)
+	})
+
+	it(`a comment of code holding the parenthesis the token closes at, which the token leaves unopened`, () => {
+		expect(editsRereadAnAddress(String.raw`\61 url( a /* ) */ )`, 7, [{ start: 8, end: 9, text: `` }], POSTCSS)).toBe(true)
+	})
+
+	it(`parentheses the token swallows, which the parser reads nothing of`, () => {
+		expect(editsRereadAnAddress(String.raw`\61 url(a(b"c)`, 9, [{ start: 10, end: 10, text: ` ` }], POSTCSS)).toBe(false)
 	})
 })
