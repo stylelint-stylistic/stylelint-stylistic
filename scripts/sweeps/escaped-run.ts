@@ -15,6 +15,8 @@
  *
  * The five address shapes were added for 1789879423, where the escapes standing in the code of a bare address came to be recorded: the walk steps over a `url()`'s parentheses in one, so no rule reading a copy with the escapes masked saw one inside them. The comma shapes put a delimiter behind the escape, where a shorter run is what an `always` option writes into, and no rule reads a comma inside a bare address at all; the selector shapes carry the same addresses through `selectorSearchCopy`; and the quoted shape is the control, an escape inside a string being that string's under either side.
  *
+ * The three interpolation shapes were added for 1789883888, where the escapes standing in the code of an interpolation's expression came to be recorded: only a parser whose own tokenizer reads a `//` comment reads an interpolation there at all, so the call shape, whose escape the walk meets itself, is the control that parts the two readings. The open shape leaves the expression unclosed, where its reader and the walk behind it both go over the same characters, so a span recorded twice shows up as a mask longer than the text.
+ *
  * The controls: `value-list-comma-space-before`, which reads its run over the search copy already (1789657288), and `declaration-bang-space-before`.
  */
 
@@ -80,6 +82,9 @@ const corpus: Sweep[`corpus`] = place(
 		quotedAddress: (text) => `a { b: url("c${text}d"); e: f }`,
 		selectorAddress: (text) => `:is(url(c${text}d)) { e: f }`,
 		selectorAddressComma: (text) => `:is(url(c${text},d)) { e: f }`,
+		interpolationAddress: (text) => `a { b: url(c#{d${text}e}f); g: h }`,
+		interpolationCall: (text) => `a { b: f(c#{d${text}e}f); g: h }`,
+		interpolationOpen: (text) => `a { b: url(c#{d${text}e); f: g }`,
 	},
 )
 

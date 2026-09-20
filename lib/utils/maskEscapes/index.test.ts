@@ -4,6 +4,9 @@ import { findEscapeSpans } from "../findCommentSpans/index.ts"
 
 import { escapeHeadLength, maskEscapes } from "./index.ts"
 
+/** `postcss-scss`, whose own tokenizer reads a `//` comment, so the parentheses of an address are read as Sass reads them, interpolations and all. */
+const SCSS = { spells: true, tokenizes: true, endsOnFormFeed: true }
+
 describe(`maskEscapes`, () => {
 	it(`no escape`, () => {
 		expect(maskEscapes(`1,a b`, [])).toBe(`1,a b`)
@@ -41,6 +44,13 @@ describe(`maskEscapes`, () => {
 	it(`a copy as long as the text`, () => {
 		for (let text of [`1,a\\,b`, `a\\2c ,b`, `a\\000061 b`, `a\\2c\r\nb`, `a\\\r\nb`]) {
 			expect(maskEscapes(text, findEscapeSpans(text))).toHaveLength(text.length)
+		}
+	})
+
+	// An interpolation the text never closes is walked twice, by the reader of its expression and by the caller behind it, and a span recorded on both walks would splice the escape in twice (1789883888)
+	it(`a copy as long as the text where an interpolation inside an address is never closed`, () => {
+		for (let text of [`url(a#{b\\}c)`, `url(a#{b\\)`, `url(c#{d\\\t  e f)`]) {
+			expect(maskEscapes(text, findEscapeSpans(text, SCSS))).toHaveLength(text.length)
 		}
 	})
 })

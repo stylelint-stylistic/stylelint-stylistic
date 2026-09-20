@@ -1,3 +1,10 @@
+import scss from "postcss-scss"
+import stylelint from "stylelint"
+import { describe, expect, it } from "vitest"
+
+import { pick } from "../../../vitest.helpers.ts"
+import plugins from "../../index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -330,4 +337,41 @@ testRule({
 			],
 		},
 	],
+})
+
+// The expression of an interpolation is read only under the parser whose tokenizer reads one, and the escapes standing in it went unrecorded until 1789883888: the write took the character a backslash covers for whitespace of the run
+describe(`a run behind an escape inside an interpolation of a bare address`, () => {
+	let scssRule = `@stylistic/scss/no-multiple-whitespaces`
+
+	/**
+	 * Fixes a text under this rule in the SCSS namespace, whose parser is the one that reads an interpolation.
+	 * @param code - The text.
+	 * @returns What the fix left and what a check of it says.
+	 */
+	async function fix (code: string): Promise<{
+		fixed: string | undefined,
+		left: string[],
+	}> {
+		let config = { plugins, rules: { [scssRule]: true }, customSyntax: scss }
+		let ours = await stylelint.lint({ code, config, fix: true })
+		let again = await stylelint.lint({ code: ours.code ?? code, config })
+
+		return { fixed: ours.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column} ${warning.text}`) }
+	}
+
+	it(`keeps the escaped tab and collapses the run behind it`, async () => {
+		expect(await fix(`a { b: url(c#{d\\\t  e}f) }`)).toEqual({ fixed: `a { b: url(c#{d\\\t e}f) }`, left: [] })
+	})
+
+	it(`leaves the text where the escape covers the first of two spaces`, async () => {
+		expect(await fix(`a { b: url(c#{d\\  e}f) }`)).toEqual({ fixed: `a { b: url(c#{d\\  e}f) }`, left: [] })
+	})
+
+	it(`leaves the space closing a hexadecimal escape out of the run`, async () => {
+		expect(await fix(`a { b: url(c#{d\\2c  e}f) }`)).toEqual({ fixed: `a { b: url(c#{d\\2c  e}f) }`, left: [] })
+	})
+
+	it(`reads the run inside the expression where no escape covers it`, async () => {
+		expect(await fix(`a { b: url(c#{d  e}f) }`)).toEqual({ fixed: `a { b: url(c#{d e}f) }`, left: [] })
+	})
 })

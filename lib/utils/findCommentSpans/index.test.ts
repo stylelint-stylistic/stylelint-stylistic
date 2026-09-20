@@ -706,6 +706,19 @@ describe(`findEscapeSpans`, () => {
 		expect(findEscapeSpans(`url( a /*\\,*/ b),c`)).toEqual([])
 	})
 
+	// The walk steps over the parentheses in one, and the expression of an interpolation is Sass code, so the address reader records what stands in it (1789883888)
+	it(`an escape standing in the code of an interpolation inside such an address, which is its own under the parser that reads an interpolation`, () => {
+		expect(findEscapeSpans(`url(a#{b\\,c}d)`, SCSS)).toEqual([{ start: 8, end: 10 }])
+		expect(findEscapeSpans(`url(a#{b\\\t  c}d)`, SCSS)).toEqual([{ start: 8, end: 10 }])
+		expect(findEscapeSpans(`url(a#{"b\\,c"}d)`, SCSS)).toEqual([])
+	})
+
+	// The expression is walked twice where the text never closes it, once by its own reader and once by the walk behind it, and a span recorded on both would leave the mask longer than the text (1789883888)
+	it(`the same escape where the text closes no such expression, which is recorded once`, () => {
+		expect(findEscapeSpans(`url(a#{b\\}c)`, SCSS)).toEqual([{ start: 8, end: 10 }])
+		expect(findEscapeSpans(`url(a#{b\\)`, SCSS)).toEqual([{ start: 8, end: 10 }])
+	})
+
 	it(`an escape spelling a letter of a url name, which is the address's`, () => {
 		expect(findEscapeSpans(`\\75 rl(a,b),c`)).toEqual([])
 	})
