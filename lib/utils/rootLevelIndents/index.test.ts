@@ -37,6 +37,16 @@ describe(`rootLevelIndents`, () => {
 		expect(run(`  <a style="@import url(\n'x')"></a>`, html)).toEqual({ own: [], tagLine: [`  `] })
 	})
 
+	it(`reads the head of a line a stray semicolon stands on, leaving the semicolon and the run behind it out`, () => {
+		expect(run(`\n\t; b {}`)).toEqual({ own: [`\t`], tagLine: [] })
+		expect(run(`<div style="\n\t; color: pink"></div>`, html)).toEqual({ own: [`\t`], tagLine: [] })
+	})
+
+	it(`reads the head of the line a block closes on, a stray semicolon in front of the brace and all`, () => {
+		expect(run(`a {\n\tcolor: pink;\n\t; }`)).toEqual({ own: [``, `\t`], tagLine: [] })
+		expect(run(`<style>a {\n\t\tcolor: pink;\n\t; }\n</style>`, html)).toEqual({ own: [`\t`], tagLine: [``] })
+	})
+
 	it(`leaves the closing braces' lines out where they stand a level deeper than their blocks`, () => {
 		expect(run(`<style>a {\n\tcolor: pink;\n\t}\n</style>`, html, true)).toEqual({ own: [], tagLine: [``] })
 		expect(run(`a {\n\tcolor: pink;\n\t}\nb {}`, undefined, true)).toEqual({ own: [``, ``], tagLine: [] })

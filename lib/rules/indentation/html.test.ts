@@ -45,9 +45,23 @@ a {
 			code: `<a style="@import url(
 	'x')"></a>`,
 		},
+		{
+			// The stray semicolon is no part of the run the level is read off
+			description: `a style attribute whose only declaration stands behind a stray semicolon on its line, indented one level`,
+			code: `<div style="\n\t; color: red"></div>`,
+		},
 	],
 
 	reject: [
+		{
+			// The stray semicolons are no part of the runs the level is read off
+			description: `a style attribute whose two declarations stand behind a stray semicolon each, the second indented a level deeper`,
+			code: `<div style="\n\t; color: red;\n\t\t; top: 0"></div>`,
+			fixed: `<div style="\n\t; color: red;\n\t; top: 0"></div>`,
+			line: 3,
+			column: 5,
+			message: messages.expected(`1 tab`),
+		},
 		{
 			// See #635
 			description: `a style attribute whose value opens on the line behind its colon, not indented`,
@@ -301,6 +315,11 @@ a {
   display:block;
 }
 </style>`,
+		},
+		{
+			// The stray semicolon is no part of the run the level is read off
+			description: `a style attribute whose only declaration stands behind a stray semicolon on its line, indented two spaces`,
+			code: `<div style="\n  ; color: red"></div>`,
 		},
 	],
 	reject: [
