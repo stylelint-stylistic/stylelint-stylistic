@@ -40,6 +40,14 @@ describe(`selectorSearchCopy`, () => {
 
 	// See 1789657288
 	it(`the copy the runs are read over, which leaves the whitespace closing a hexadecimal escape as it is`, () => {
-		expect(selectorSearchCopy(`a\\2c ,b\\ ,c`)).toEqual({ searchString: `axxxx,bxx,c`, runString: `axxx ,bxx,c` })
+		expect(selectorSearchCopy(`a\\2c ,b\\ ,c`)).toEqual({ searchString: `axxxx,bxx,c`, runString: `axxx ,bxx,c`, escapes: [{ start: 1, end: 5 }, { start: 7, end: 9 }] })
+	})
+
+	// See 1789874864
+	it(`the spans, which hold the whitespace closing a hexadecimal escape`, () => {
+		expect(selectorSearchCopy(`a\\41\n\nb`).escapes).toEqual([{ start: 1, end: 5 }])
+		expect(selectorSearchCopy(`a\\41\r\n\r\nb`).escapes).toEqual([{ start: 1, end: 6 }])
+		expect(selectorSearchCopy(`a\\000041  b`).escapes).toEqual([{ start: 1, end: 9 }])
+		expect(selectorSearchCopy(`a b`).escapes).toEqual([])
 	})
 })
