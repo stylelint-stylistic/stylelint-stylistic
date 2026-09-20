@@ -17,6 +17,9 @@ const ROOT = path.resolve(import.meta.dirname, `..`)
 /** A property parted from its colon by an inline comment, which only `postcss-scss` reads. */
 const SCSS_STYLESHEET = `a { b //x:y\n: red; }\n`
 
+/** A single-quoted value, which `string-quotes` rewrites only where it can ask the parser's own tokenizer what the parentheses of the value hold. */
+const QUOTED_STYLESHEET = `a { b: url ( c '),d ) 'e'; }\n`
+
 /** Two interpolations on lines of their own, the first holding a break, and a declaration behind them, each line two levels too deep. */
 const STYLED_STYLESHEET = `const a = styled.div\`\n\tcolor: red;\n\t\t\t\${\`\n\`}\n\t\t\t\${y}\n\t\t\ttop: 0;\n\`;\n`
 
@@ -33,6 +36,9 @@ const SCSS: Subject = { file: `a.scss`, syntax: `postcss-scss`, rule: `@stylisti
 
 /** The styled check. */
 const STYLED: Subject = { file: `a.js`, syntax: `postcss-styled-syntax`, rule: `@stylistic/styled/indentation`, primary: `tab` }
+
+/** The SCSS check of a rule reading the tokenizer for the parentheses of a `url`. */
+const QUOTED: Subject = { file: `b.scss`, syntax: `postcss-scss`, rule: `@stylistic/scss/string-quotes`, primary: `double` }
 
 /**
  * Lints one stylesheet with the built plugin.
@@ -102,6 +108,7 @@ try {
 	link(path.join(beside, `node_modules`), `postcss-scss`)
 	link(path.join(beside, `node_modules`), `postcss-styled-syntax`)
 	writeFileSync(path.join(beside, `a.scss`), SCSS_STYLESHEET)
+	writeFileSync(path.join(beside, `b.scss`), QUOTED_STYLESHEET)
 	writeFileSync(path.join(beside, `a.js`), STYLED_STYLESHEET)
 
 	let read = lint(project, beside, beside, SCSS)
@@ -116,6 +123,12 @@ try {
 
 	stdout.write(`\t📦 the template reader of a syntax is reached from the stylesheet it parsed\n`)
 
+	let quoted = lint(project, beside, beside, QUOTED)
+
+	if (quoted !== `a { b: url ( c '),d ) "e"; }\n`) throw new Error(`The mark of a value was not read against the tokenizer standing beside the stylesheet: ${JSON.stringify(quoted)}`)
+
+	stdout.write(`\t📦 a mark is read against the tokenizer of its syntax where that one is reached\n`)
+
 	// `postcss-scss` where only Stylelint finds it
 	let apart = path.join(project, `apart`)
 	let runner = path.join(project, `runner`)
@@ -125,6 +138,7 @@ try {
 	link(path.join(runner, `node_modules`), `postcss-scss`)
 	link(path.join(runner, `node_modules`), `postcss-styled-syntax`)
 	writeFileSync(path.join(apart, `a.scss`), SCSS_STYLESHEET)
+	writeFileSync(path.join(apart, `b.scss`), QUOTED_STYLESHEET)
 	writeFileSync(path.join(apart, `a.js`), STYLED_STYLESHEET)
 
 	let untouched = lint(project, apart, runner, SCSS)
@@ -138,6 +152,12 @@ try {
 	if (untouchedTemplate !== STYLED_STYLESHEET.replace(`\n\t\t\t\${\``, `\n\t\${\``).replace(`\n\t\t\ttop`, `\n\ttop`)) throw new Error(`A template was written between its interpolations where the plugin could not reach the reader of its syntax: ${JSON.stringify(untouchedTemplate)}`)
 
 	stdout.write(`\t📦 no break between interpolations is written where the template reader of its syntax is out of reach\n`)
+
+	let untouchedQuotes = lint(project, apart, runner, QUOTED)
+
+	if (untouchedQuotes !== QUOTED_STYLESHEET) throw new Error(`A mark was rewritten where the plugin could not reach the tokenizer its syntax is read by: ${JSON.stringify(untouchedQuotes)}`)
+
+	stdout.write(`\t📦 a value is passed over where the tokenizer of its syntax is out of reach\n`)
 }
 catch (error) {
 	stderr.write(`${(error as Error).message}\n`)
