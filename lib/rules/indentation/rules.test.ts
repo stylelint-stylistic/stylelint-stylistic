@@ -773,6 +773,23 @@ testRule({
 			column: 1,
 			message: messages.expected(`2 tabs`),
 		},
+		{
+			// The break stands in the flag's raw alone, where the guard used to ask only the value and the run in front of it (1789926320)
+			description: `the same flag behind a value written on one line, whose break is the declaration's only one`,
+			code: `a {\n\tcolor: pink\n!important;\n}\n`,
+			fixed: `a {\n\tcolor: pink\n\t\t!important;\n}\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`2 tabs`),
+		},
+		{
+			description: `the same flag broken between its bang and its word, over a value written on one line`,
+			code: `a {\n\tcolor: pink !\nimportant;\n}\n`,
+			fixed: `a {\n\tcolor: pink !\n\t\timportant;\n}\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`2 tabs`),
+		},
 	],
 })
 

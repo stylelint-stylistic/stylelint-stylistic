@@ -211,14 +211,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		 * @param declLevel - The indent level the declaration stands at.
 		 */
 		function checkValue (decl: Declaration, declLevel: number): void {
-			// A break in front of the value or of the colon is in `raws.between` (#635)
-			if (!LINE_BREAK.test(decl.value) && !LINE_BREAK.test(decl.raws.between || ``)) return
-
 			if (syntax.valueEmbedsHostCode(decl)) return
 
 			if (optionsMatches(secondaryOptions, `ignore`, `value`)) return
 
 			let declString = declarationString(syntax, decl)
+
+			// Asked of the whole text the lines are then measured in, since a break stands in any of the four copies it is printed from: in front of the value or of the colon in `raws.between` (#635), inside the `#{…}` of an interpolated property in `prop`, and in front of the bang or inside the flag in `raws.important`
+			if (!LINE_BREAK.test(declString)) return
+
 			let valueLevel = optionsMatches(secondaryOptions, `except`, `value`) ? declLevel : declLevel + 1
 
 			checkMultilineBit(declString, valueLevel, decl, declLevel)
