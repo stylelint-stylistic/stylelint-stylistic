@@ -14,6 +14,7 @@ import { getLineBreak } from "../getLineBreak/index.ts"
 import { maskEscapes } from "../maskEscapes/index.ts"
 import { matchesStringOrRegExp } from "../matchesStringOrRegExp/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
+import { rawInFrontOfText } from "../rawInFrontOfText/index.ts"
 import { rereadsAnAddress } from "../rereadsAnAddress/index.ts"
 import type { WhitespaceChecker } from "../whitespaceChecker/index.ts"
 import { runBehind, runInFront, writesTwinRun } from "../writesTwinRun/index.ts"
@@ -133,6 +134,8 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 
 	return (node, text, textIndex, lineCheckStr, readsGroups) => {
 		let reading = syntax.inlineComments(node, result)
+		// A solidus opening the text has its run in the raw in front of it, `raws.between` of a declaration or `raws.afterName` of an at-rule (1789593917)
+		let textBefore = rawInFrontOfText(node)
 		// The run beside the solidus is read over the copy with its escapes masked, where an escaped space is a character of a word and no run (1789661964); the guards read the text the write lands in
 		let runText = maskEscapes(text, findEscapeSpans(text, reading), true)
 		let written = writes ? (whitespace === `newline` ? getLineBreak(node, result) : ` `) : ``
@@ -155,6 +158,7 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 				source: runText,
 				index: checkIndex,
 				lineCheckStr,
+				textBefore,
 				err: (message) => {
 					let index = textIndex + slash.index
 					// Asked here rather than before the check, so a text no rule reports on is never weighed against the twin

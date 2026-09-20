@@ -42,9 +42,31 @@ testRule({
 			description: `the solidus of a media feature, which no rule about a newline reads`,
 			code: `@media (aspect-ratio: 16 / 9) {}`,
 		},
+		{
+			// The break the option asks for stands behind the colon in `raws.between`, where the parser files the run in front of a value (1789593917)
+			description: `a solidus opening the value, whose run lies in the raw behind the colon`,
+			code: `a { grid-area:\n/ 2; }`,
+		},
+		{
+			description: `the same run written with indentation behind the break`,
+			code: `a { grid-area:\n\t/ 2; }`,
+		},
+		{
+			description: `a comment in that raw, which the parser files there whole`,
+			code: `a { grid-area:/*q*/\n/ 2; }`,
+		},
 	],
 
 	reject: [
+		{
+			// The break is written into `raws.between`, which the check now reads, so the second run has nothing left to ask for (1789593917)
+			description: `a solidus opening the value, whose raw holds no break`,
+			code: `a { grid-area:/ 2; }`,
+			fixed: `a { grid-area:\n/ 2; }`,
+			line: 1,
+			column: 15,
+			message: messages.expectedBefore(),
+		},
 		{
 			// The run is read over the copy with its escapes masked, so the break goes behind the escaped space, not in its place (1789661964)
 			description: `an escaped space in front of the solidus, which is a character of the word and no run, so the break goes behind it`,
