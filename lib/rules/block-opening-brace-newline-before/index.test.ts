@@ -105,10 +105,10 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
-			description: `a space behind a backslash ending the selector, which the written break would take the escape off, so the warning stands`,
+			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			description: `a space behind a backslash ending the selector, which spells a character of the selector, so the break goes behind it`,
 			code: `a\\ { b: c }`,
-			fixed: `a\\ { b: c }`,
+			fixed: `a\\ \n{ b: c }`,
 			line: 1,
 			column: 3,
 			message: messages.expectedBefore(),
@@ -354,6 +354,11 @@ testRule({
 
 	accept: [
 		{
+			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			description: `a backslash ending the selector in front of a space, which spells a character of the selector and no run`,
+			code: `a\\ { b: c }`,
+		},
+		{
 			description: `a single-line block whose brace abuts the selector`,
 			code: `a{ color: pink; }`,
 		},
@@ -415,6 +420,15 @@ testRule({
 			fixed: `a\\\n{ b: c }`,
 			line: 1,
 			column: 3,
+			message: messages.rejectedBeforeSingleLine(),
+		},
+		{
+			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			description: `a space behind such a backslash and a second one in front of the brace, where only the second is a run`,
+			code: `a\\  { b: c }`,
+			fixed: `a\\ { b: c }`,
+			line: 1,
+			column: 4,
 			message: messages.rejectedBeforeSingleLine(),
 		},
 		{

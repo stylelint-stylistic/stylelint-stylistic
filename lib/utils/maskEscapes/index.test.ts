@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { findEscapeSpans } from "../findCommentSpans/index.ts"
 
-import { maskEscapes } from "./index.ts"
+import { escapeHeadLength, maskEscapes } from "./index.ts"
 
 describe(`maskEscapes`, () => {
 	it(`no escape`, () => {
@@ -42,5 +42,27 @@ describe(`maskEscapes`, () => {
 		for (let text of [`1,a\\,b`, `a\\2c ,b`, `a\\000061 b`, `a\\2c\r\nb`, `a\\\r\nb`]) {
 			expect(maskEscapes(text, findEscapeSpans(text))).toHaveLength(text.length)
 		}
+	})
+})
+
+describe(`escapeHeadLength`, () => {
+	// Pins what an escape in front of a raw owns inside it, which the rules of the brace keep where they rewrite the raw
+	it(`no escape reaching into the raw`, () => {
+		expect(escapeHeadLength(`a {`, findEscapeSpans(`a {`), 1)).toBe(0)
+		expect(escapeHeadLength(`a\\\\ {`, findEscapeSpans(`a\\\\ {`), 3)).toBe(0)
+	})
+
+	it(`an escaped space, whose space PostCSS files in the raw`, () => {
+		expect(escapeHeadLength(`a\\ {`, findEscapeSpans(`a\\ {`), 2)).toBe(1)
+		expect(escapeHeadLength(`a\\  {`, findEscapeSpans(`a\\  {`), 2)).toBe(1)
+	})
+
+	it(`a backslash in front of a line break, which is a delimiter and spells nothing`, () => {
+		expect(escapeHeadLength(`a\\\n{`, findEscapeSpans(`a\\\n{`), 2)).toBe(0)
+	})
+
+	it(`a hexadecimal escape, whose closing whitespace is a run to a delimiter that is no hexadecimal digit`, () => {
+		expect(escapeHeadLength(`a\\2c {`, findEscapeSpans(`a\\2c {`), 4)).toBe(0)
+		expect(escapeHeadLength(`a\\2c  {`, findEscapeSpans(`a\\2c  {`), 5)).toBe(0)
 	})
 })

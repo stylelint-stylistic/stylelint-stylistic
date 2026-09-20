@@ -139,6 +139,15 @@ testRule({
 
 	reject: [
 		{
+			// Pins the run in front of the bracket read over the copy with the escapes masked (1789845987)
+			description: `a backslash ending the value in front of a space, which spells a character of the value, leaving no run for the option`,
+			code: `[ a=b\\ ] {}`,
+			fixed: `[ a=b\\  ] {}`,
+			line: 1,
+			column: 7,
+			message: messages.expectedClosing,
+		},
+		{
 			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
 			description: `a backslash ending the value in front of a line break and the bracket, where the space would stand behind the backslash as its escaped character, so the warning stands`,
 			code: `[ a=b\\\n] {}`,
@@ -619,6 +628,11 @@ testRule({
 	config: [`never`],
 
 	accept: [
+		{
+			// Pins the run in front of the bracket read over the copy with the escapes masked (1789845987)
+			description: `a backslash ending the value in front of a space, which spells a character of the value and no run`,
+			code: `[a=b\\ ] {}`,
+		},
 		{
 			description: `a selector with no attribute in it`,
 			code: `.foo { }`,

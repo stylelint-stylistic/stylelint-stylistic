@@ -6,11 +6,13 @@ import { css } from "../../syntaxes/css/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
+import { findEscapeSpans } from "../../utils/findCommentSpans/index.ts"
 import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
 import { lastNodeHoldsTheBlockAfter } from "../../utils/lastNodeHoldsTheBlockAfter/index.ts"
+import { escapeHeadLength, maskEscapes } from "../../utils/maskEscapes/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { statementString } from "../../utils/statementString/index.ts"
@@ -86,23 +88,28 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (text[index - 1] === `\r`) index -= 1
 
+			let escapes = findEscapeSpans(source, syntax.inlineComments(statement, result))
+			// An escaped space is the last character of the block's final node and no run at all, so the run is read over the copy with the escapes masked (1789661964); PostCSS ends the node at the backslash and files the whitespace an escape covering one spells in the raw behind it, which the write keeps in front of the run it rewrites
+			let escapedHead = blockAfter.slice(0, escapeHeadLength(source, escapes, source.length - 1 - blockAfter.length))
+			let run = blockAfter.slice(escapedHead.length)
+
 			// The fix writes over only the whitespace ending the block's final raw, so the guard is asked about the whole surviving run: a break anywhere in it closes a `//` comment the last node left open; where none survives the brace would land in the comment, and the warning stands unfixed. Where the last node has swallowed the final raw the write lands on its own trailing whitespace, which the guard reads when told nothing of the run
 			let { last } = statement
 
 			if (!last) throw new Error(`The block must hold a node`)
 
-			let isFixable = !syntax.writesIntoInlineComment(last, result, lastNodeHoldsTheBlockAfter(statement) ? undefined : blockAfter.replace(TRAILING_WHITESPACE, ``))
+			let isFixable = !syntax.writesIntoInlineComment(last, result, lastNodeHoldsTheBlockAfter(statement) ? undefined : `${escapedHead}${run.replace(TRAILING_WHITESPACE, ``)}`)
 
 			// Behind a wordless declaration the brace alone closes, the run is the colon rules' head run too, and the rules asked settle who writes (#416)
 			if (isFixable && isDeclaration(last)) isFixable = writesSharedRun(syntax, last, result, ruleName)
 
-			let written = blockAfter.replace(TRAILING_WHITESPACE, primary.startsWith(`always`) ? ` ` : ``)
+			let written = run.replace(TRAILING_WHITESPACE, primary.startsWith(`always`) ? ` ` : ``)
 
 			// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `c \⏎}` would come out as `c \}`, which the parser reads no block's end in, or `c \ }`, an escaped space (1789664271)
-			if (isFixable) isFixable = editKeepsEscapedCharacter(source, { start: source.length - 1 - blockAfter.length, end: source.length - 1, text: written })
+			if (isFixable) isFixable = editKeepsEscapedCharacter(source, { start: source.length - 1 - run.length, end: source.length - 1, text: written })
 
 			checker.before({
-				source,
+				source: maskEscapes(source, escapes, true),
 				index: source.length - 1,
 				err: (msg) => {
 					report({
@@ -116,7 +123,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 							fix: (): void => {
 								if (typeof getBlockAfter(syntax, statement) !== `string`) return
 
-								setBlockAfter(syntax, statement, written)
+								setBlockAfter(syntax, statement, `${escapedHead}${written}`)
 							},
 						}),
 					})

@@ -35,3 +35,26 @@ export function maskEscapes (text: string, spans: EscapeSpan[], terminatorStays:
 
 	return pieces.join(``)
 }
+
+/**
+ * The length of the head of a raw that an escape in front of it spells.
+ *
+ * Where an escape covers whitespace the tokenizer reads as such, PostCSS ends the word at the backslash and files that character in the raw behind it: `c\ ` is the value `c\` and a `raws.after` opening on the space the escape spells, and `c\⇥` the same with a tab. A rule reading its run over the copy of {@link maskEscapes} must keep that head where it writes the raw back, the character being the last of the word and no run at all. An escape covering anything else stays in the word whole, and the head is empty.
+ *
+ * The whitespace closing a hexadecimal escape is no part of the head, as it is no part of the copy the run is read over: it is a run to every delimiter that is no hexadecimal digit, `a\2c{` and `a\2c {` spelling the same tokens.
+ * @param text - The text the raw stands in.
+ * @param spans - The escape spans {@link findEscapeSpans} found in it, in source order.
+ * @param index - Where the raw opens in it.
+ * @returns The number of characters the escape owns there, zero where none does.
+ */
+export function escapeHeadLength (text: string, spans: EscapeSpan[], index: number): number {
+	let span = spans.find(({ start, end }) => start < index && end > index)
+
+	if (!span) return 0
+
+	let escape = text.slice(span.start, span.end)
+	// An escape of two characters spells the second; a longer one is hexadecimal and may close on one whitespace character
+	let terminator = escape.length > 2 ? (escape.match(TRAILING_CSS_WHITESPACE) as RegExpMatchArray)[0].length : 0
+
+	return Math.max(0, span.end - terminator - index)
+}

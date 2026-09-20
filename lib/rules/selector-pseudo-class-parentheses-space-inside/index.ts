@@ -8,6 +8,7 @@ import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { selectorSearchCopy } from "../../utils/selectorSearchCopy/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -77,6 +78,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (pseudoNode.length === 0) return
 
 				let paramString = pseudoNode.map((node) => node.toString()).join(`,`)
+				// The run in front of the `)` is read over the copy with the escapes masked, where an escaped space is a character of the argument and no run at all (1789661964); the run behind the `(` opens on the backslash of an escape, so it is read over the text
+				let { runString } = selectorSearchCopy(paramString)
 				// Multi-line by line feed only, as PostCSS counts lines
 				let isParamStringMultiline = LINE_BREAK.test(paramString)
 				let openIndex = pseudoNode.sourceIndex + pseudoNode.value.length + 1
@@ -109,7 +112,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (copies.comments.some((inlineComment) => inlineComment.startIndex < openIndex + paramString.trimEnd().length && openIndex + paramString.trimEnd().length <= inlineComment.endIndex)) lastNode = undefined
 
 				if (lastNode) {
-					let prevCharIsSpace = paramString.endsWith(` `)
+					let prevCharIsSpace = runString.endsWith(` `)
 					let closeIndex = openIndex + paramString.length - 1
 					let written = primary === `always` ? ` ` : ``
 					// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a:not(b\⏎)` would come out as `a:not(b\ )`, an escaped space, so the warning stands. The question is asked about the whitespace the fix writes over, which is the node's own and never the escaped space in front of it (1789664271)

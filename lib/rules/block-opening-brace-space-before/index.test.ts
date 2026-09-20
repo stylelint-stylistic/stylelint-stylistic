@@ -10,6 +10,11 @@ testRule({
 
 	accept: [
 		{
+			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			description: `a backslash ending the selector in front of a space, and the run of one space behind it`,
+			code: `a\\  { b: c }`,
+		},
+		{
 			description: `a blockless at-rule, which has no opening brace to space in front of`,
 			code: `@import url(x.css)`,
 		},
@@ -32,6 +37,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			description: `a backslash ending the selector in front of a space, which spells a character of the selector, leaving no run for the option`,
+			code: `a\\ { b: c }`,
+			fixed: `a\\  { b: c }`,
+			line: 1,
+			column: 3,
+			message: messages.expectedBefore(),
+		},
 		{
 			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
 			description: `a backslash ending the selector in front of a line break and the brace, where the space would stand behind the backslash as its escaped character, so the warning stands`,
@@ -215,6 +229,11 @@ testRule({
 
 	accept: [
 		{
+			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			description: `a backslash ending the selector in front of a space, which spells a character of the selector and no run`,
+			code: `a\\ { b: c }`,
+		},
+		{
 			description: `a brace abutting the selector`,
 			code: `a{ color: pink; }`,
 		},
@@ -235,11 +254,12 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			description: `a space behind such a backslash, which the write would turn into an escaped brace the same way`,
-			code: `a\\ { b: c }`,
+			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			description: `a space behind such a backslash and a second one in front of the brace, where only the second is a run`,
+			code: `a\\  { b: c }`,
 			fixed: `a\\ { b: c }`,
 			line: 1,
-			column: 3,
+			column: 4,
 			message: messages.rejectedBefore(),
 		},
 		{

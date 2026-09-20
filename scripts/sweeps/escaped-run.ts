@@ -7,6 +7,8 @@
  *
  * The descendant shape, a second escaped tab and `selector-descendant-combinator-no-non-space` were added for 1789666655, where `postcss-selector-parser` reads a backslash in front of a tab as no escape: the tab stands in the spaces of its nodes, and a rule writing them wrote over a character of the name. The second escaped tab is the shape the parser files an attribute's parts so that it prints them back in another order.
  *
+ * A multi-line block closing on the same run was added for 1789845987, where the rules of the brace, the bracket and the parenthesis came to read their run over the copy with the escapes masked: the `-multi-line` options speak only of a block the single-line shapes are not. A space in front of the bracket's run came with it, since `postcss-selector-parser` reads what follows as the attribute's flag and files the run in another part of it than the one `selector-attribute-brackets-space-inside` writes.
+ *
  * The controls: `value-list-comma-space-before`, which reads its run over the search copy already (1789657288), and `declaration-bang-space-before`.
  */
 
@@ -56,9 +58,11 @@ const corpus: Sweep[`corpus`] = place(
 		attribute: (text) => `[a${text}=b] { c: d }`,
 		attributeAfter: (text) => `[a=${text}b] { c: d }`,
 		bracket: (text) => `[a=b${text}] { c: d }`,
+		bracketFlag: (text) => `[a=b ${text}] { c: d }`,
 		parenthesis: (text) => `a:not(b${text}) { c: d }`,
 		openingBrace: (text) => `a${text}{ b: c }`,
 		closingBrace: (text) => `a { b: c${text}}`,
+		closingBraceBlock: (text) => `a {\n\tb: c${text}}`,
 		semicolon: (text) => `a { b: 1${text}; c: d }`,
 		lastSemicolon: (text) => `a { b: 1${text}; }`,
 		flagSemicolon: (text) => `a { b: 1${text} !important; c: d }`,

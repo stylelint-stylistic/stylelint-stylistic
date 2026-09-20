@@ -9,6 +9,7 @@ import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { selectorSearchCopy } from "../../utils/selectorSearchCopy/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -100,6 +101,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			selectorTree.walkAttributes((attributeNode) => {
 				let attributeSelectorString = attributeNode.toString()
+				// The run in front of the `]` is read over the copy with the escapes masked, where an escaped space is a character of the attribute and no run at all (1789661964); the run behind the `[` opens on the backslash of an escape, so it is read over the text
+				let { runString } = selectorSearchCopy(attributeSelectorString)
 
 				styleSearch({ source: attributeSelectorString, target: `[` }, (match) => {
 					let nextCharIsSpace = attributeSelectorString[match.startIndex + 1] === ` `
@@ -125,7 +128,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				})
 
 				styleSearch({ source: attributeSelectorString, target: `]` }, (match) => {
-					let prevCharIsSpace = attributeSelectorString[match.startIndex - 1] === ` `
+					let prevCharIsSpace = runString[match.startIndex - 1] === ` `
 					let index = attributeNode.sourceIndex + match.startIndex - 1
 					// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `[a=b\⏎]` would come out as `[a=b\ ]`, an escaped space, so the warning stands. The question is asked about the whitespace the fix writes over, which is the node's own and never the escaped space in front of it (1789664271)
 					let run = (closingSpaces(attributeNode).after.match(TRAILING_WHITESPACE) as RegExpMatchArray)[0]

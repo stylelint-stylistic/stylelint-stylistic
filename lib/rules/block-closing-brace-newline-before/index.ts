@@ -6,6 +6,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
+import { findEscapeSpans } from "../../utils/findCommentSpans/index.ts"
 import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -13,6 +14,7 @@ import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { lastNodeHoldsTheBlockAfter } from "../../utils/lastNodeHoldsTheBlockAfter/index.ts"
+import { escapeHeadLength } from "../../utils/maskEscapes/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
@@ -64,7 +66,7 @@ function runToWrite (primary: PrimaryOption, raw: string, lineBreak: () => strin
 /**
  * Asks whether the write may go in.
  *
- * The `always` write takes the run from its first break, keeping only what stands in front of the run's first whitespace, so a stray semicolon standing between the two would go with the whitespace, and no option of the rule speaks of such a semicolon ([#687](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/687)); the whitespace itself is what the write is there to trim. And a backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: emptying the run of `c \⏎}` would leave `c \}`, which the parser reads no block's end in, and the break `always` writes over the space of `c \ }` would take the escape off it (1789664271).
+ * The `always` write takes the run from its first break, keeping only what stands in front of the run's first whitespace, so a stray semicolon standing between the two would go with the whitespace, and no option of the rule speaks of such a semicolon ([#687](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/687)); the whitespace itself is what the write is there to trim. And a backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: emptying the run of `c \⏎}` would leave `c \}`, which the parser reads no block's end in (1789664271).
  * @param text - The statement through its closing brace, which is its last character.
  * @param raw - The run in front of that brace as it stands.
  * @param written - The run the write leaves there.
@@ -110,9 +112,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 
 			let blockAfter = getBlockAfter(syntax, statement) || ``
+			// The text is read through the brace, since a free semicolon behind it is printed too (#562)
+			let text = statementString(statement, result)
+			// An escaped space is the last character of the block's final node and no run at all: PostCSS ends the node at the backslash and files the whitespace an escape covering one spells in the raw behind it, and the run the options speak of opens behind that character, which the write keeps (1789661964)
+			let escapedHead = blockAfter.slice(0, escapeHeadLength(text, findEscapeSpans(text, syntax.inlineComments(statement, result)), text.length - 1 - blockAfter.length))
+			let run = blockAfter.slice(escapedHead.length)
 
 			// Ignore extra semicolon
-			let after = blockAfter.replace(SEMICOLON_RUN, ``)
+			let after = run.replace(SEMICOLON_RUN, ``)
 
 			let blockIsMultiLine = !isSingleLineString(blockString(statement, result))
 			let printed = nodeString(statement, result)
@@ -128,15 +135,16 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!last) throw new Error(`The block must hold a node`)
 
-			let isFixable = primary.startsWith(`always`) || !syntax.writesIntoInlineComment(last, result, lastNodeHoldsTheBlockAfter(statement) ? undefined : blockAfter.replaceAll(EVERY_WHITESPACE, ``))
+			let isFixable = primary.startsWith(`always`) || !syntax.writesIntoInlineComment(last, result, lastNodeHoldsTheBlockAfter(statement) ? undefined : `${escapedHead}${run.replaceAll(EVERY_WHITESPACE, ``)}`)
 
 			// Behind a wordless declaration the brace alone closes, the run is the colon rules' head run too, and the rules asked settle who writes (#416)
 			if (isFixable && isDeclaration(last)) isFixable = writesSharedRun(syntax, last, result, ruleName)
 
-			let written = runToWrite(primary, blockAfter, () => getLineBreak(root, result))
+			let writtenRun = runToWrite(primary, run, () => getLineBreak(root, result))
+			let written = `${escapedHead}${writtenRun}`
 
-			// A stray semicolon the write would drop, and a backslash the write would leave reading another character; the text is read through the brace, since a free semicolon behind it is printed too (#562)
-			if (isFixable) isFixable = writesTheRun(statementString(statement, result), blockAfter, written)
+			// A stray semicolon the write would drop, and a backslash the write would leave reading another character
+			if (isFixable) isFixable = writesTheRun(text, run, writtenRun)
 
 			// The question is whether a break *starts* the final run (`LEADING_LINE_BREAK`); the whitespace behind it is `indentation`'s.
 			if (!LEADING_LINE_BREAK.test(after)) {

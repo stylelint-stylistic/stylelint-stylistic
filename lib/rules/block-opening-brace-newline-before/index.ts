@@ -7,10 +7,12 @@ import { beforeBlockString } from "../../utils/beforeBlockString/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
+import { findEscapeSpans } from "../../utils/findCommentSpans/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
+import { escapeHeadLength, maskEscapes } from "../../utils/maskEscapes/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
@@ -93,17 +95,22 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (beforeBraceNoRaw[index - 1] === `\r`) index -= 1
 
+			let between = typeof statement.raws.between === `string` ? statement.raws.between : ``
+			let escapes = findEscapeSpans(source, syntax.inlineComments(statement, result))
+			// An escaped space is a character of the head and no run at all, so the run is read over the copy with the escapes masked (1789661964); PostCSS ends the head at the backslash and files the whitespace an escape covering one spells in `raws.between`, which the write keeps in front of the run it rewrites
+			let escapedHead = between.slice(0, escapeHeadLength(source, escapes, source.length - between.length))
+			let run = between.slice(escapedHead.length)
+
 			checker.beforeAllowingIndentation({
 				lineCheckStr: blockString(statement, result),
-				source,
+				source: maskEscapes(source, escapes, true),
 				index: source.length,
 				err: (m) => {
-					let between = typeof statement.raws.between === `string` ? statement.raws.between : ``
-					let written = primary.startsWith(`always`) ? breakBeforeTheIndentation(between, getLineBreak(root, result)) : between.replace(TRAILING_WHITESPACE, ``)
+					let written = primary.startsWith(`always`) ? breakBeforeTheIndentation(run, getLineBreak(root, result)) : run.replace(TRAILING_WHITESPACE, ``)
 					// `never` would put the brace into a `//` comment ending the head, which the parser may keep in the selector or params: no fix
 					let isFixable = !(primary.startsWith(`never`) && syntax.endsWithInlineComment(`${syntax.read(statement)}${between}`, syntax.inlineComments(statement, result)))
-						// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: emptying the run of `a\⏎{` would leave `a\{`, which the parser reads no block in, and the break `always` writes over the space of `a\ {` would take the escape off it (1789664271)
-						&& editKeepsEscapedCharacter(`${source}{`, { start: source.length - between.length, end: source.length, text: written })
+						// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: emptying the run of `a\⏎{` would leave `a\{`, which the parser reads no block in (1789664271)
+						&& editKeepsEscapedCharacter(`${source}{`, { start: source.length - run.length, end: source.length, text: written })
 
 					report({
 						message: m,
@@ -116,7 +123,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 							fix: (): void => {
 								if (typeof statement.raws.between !== `string`) return
 
-								statement.raws.between = written
+								statement.raws.between = `${escapedHead}${written}`
 							},
 						}),
 					})

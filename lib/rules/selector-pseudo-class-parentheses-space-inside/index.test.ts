@@ -115,6 +115,15 @@ testRule({
 
 	reject: [
 		{
+			// Pins the run in front of the parenthesis read over the copy with the escapes masked (1789845987)
+			description: `a backslash ending the argument in front of a space, which spells a character of the argument, leaving no run for the option`,
+			code: `a:not( b\\ ) {}`,
+			fixed: `a:not( b\\  ) {}`,
+			line: 1,
+			column: 10,
+			message: messages.expectedClosing,
+		},
+		{
 			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
 			description: `a backslash ending the argument in front of a line break and the parenthesis, where the space would stand behind the backslash as its escaped character, so the warning stands`,
 			code: `a:not( b\\\n) {}`,
@@ -439,6 +448,11 @@ testRule({
 	config: [`never`],
 
 	accept: [
+		{
+			// Pins the run in front of the parenthesis read over the copy with the escapes masked (1789845987)
+			description: `a backslash ending the argument in front of a space, which spells a character of the argument and no run`,
+			code: `a:not(b\\ ) {}`,
+		},
 		{
 			description: `no space inside either parenthesis of a negation`,
 			code: `input:not([type='submit']) { }`,
