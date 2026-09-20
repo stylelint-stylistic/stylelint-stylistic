@@ -382,34 +382,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					syntax.write(node, fixedSelector)
 				}
 
-				if (isDeclaration(node)) {
-					let declProp = node.prop
-					let declBetween = node.raws.between
-					let declValue = syntax.read(node)
-
-					if (!isString(declBetween)) throw new TypeError(`The \`between\` property must be a string`)
-
-					for (let fixPosition of fixPositions) {
-						if (fixPosition.startIndex < declProp.length + declBetween.length) {
-							node.raws.between = replaceIndentation(
-								node.raws.between || ``,
-								fixPosition.currentIndentation,
-								fixPosition.expectedIndentation,
-								fixPosition.startIndex - declProp.length,
-							)
-						}
-						else {
-							declValue = replaceIndentation(
-								declValue,
-								fixPosition.currentIndentation,
-								fixPosition.expectedIndentation,
-								fixPosition.startIndex - declProp.length - declBetween.length,
-							)
-
-							syntax.write(node, declValue)
-						}
-					}
-				}
+				if (isDeclaration(node)) writeDeclarationIndentation(node, fixPositions, syntax)
 
 				if (isAtRule(node)) writeAtRuleIndentation(node, fixPositions, syntax)
 			}
@@ -436,6 +409,43 @@ type FixPosition = {
 	expectedIndentation: string,
 	currentIndentation: string,
 	startIndex: number,
+}
+
+/**
+ * Writes a declaration's indentation, each line into its raw.
+ *
+ * Positions are counted from the declaration's start through the property, `raws.between`, the value and the bang's `raws.important`, which holds a break standing in front of the flag or inside it. Written onto the end of the value, where the writer knew `raws.between` and the value alone, the value grew a level every run.
+ * @param decl - The declaration.
+ * @param fixPositions - The positions, in reverse order.
+ * @param syntax - The syntax that reads and writes the value.
+ */
+function writeDeclarationIndentation (decl: Declaration, fixPositions: FixPosition[], syntax: Syntax): void {
+	let declBetween = decl.raws.between
+
+	if (!isString(declBetween)) throw new TypeError(`The \`between\` property must be a string`)
+
+	let declValue = syntax.read(decl)
+	let valueStartIndex = decl.prop.length + declBetween.length
+
+	// Written from the end, so no write moves this boundary
+	let valueEndIndex = valueStartIndex + declValue.length
+
+	for (let fixPosition of fixPositions) {
+		if (fixPosition.startIndex < valueStartIndex) {
+			decl.raws.between = replaceIndentation(decl.raws.between || ``, fixPosition.currentIndentation, fixPosition.expectedIndentation, fixPosition.startIndex - decl.prop.length)
+		}
+		else if (fixPosition.startIndex < valueEndIndex) {
+			declValue = replaceIndentation(declValue, fixPosition.currentIndentation, fixPosition.expectedIndentation, fixPosition.startIndex - valueStartIndex)
+
+			syntax.write(decl, declValue)
+		}
+		else {
+			let flag = decl.raws.important
+
+			// Reached only behind a break the raw holds, so the ` !important` PostCSS leaves no raw for never comes here
+			if (isString(flag)) decl.raws.important = replaceIndentation(flag, fixPosition.currentIndentation, fixPosition.expectedIndentation, fixPosition.startIndex - valueEndIndex)
+		}
+	}
 }
 
 /**

@@ -756,6 +756,23 @@ testRule({
 			column: 3,
 			message: messages.expected(`0 tabs`),
 		},
+		{
+			// The flag's line is in `raws.important`, which the writer wrote nothing to: its indentation landed at the end of the value and the value grew every run (1789503160)
+			description: `an important flag standing on a line of its own behind a value broken over lines`,
+			code: `a {\n\tbackground-position: top left,\n\t\ttop right\n!important;\n}\n`,
+			fixed: `a {\n\tbackground-position: top left,\n\t\ttop right\n\t\t!important;\n}\n`,
+			line: 4,
+			column: 1,
+			message: messages.expected(`2 tabs`),
+		},
+		{
+			description: `the same flag broken between its bang and its word, whose run the same raw holds`,
+			code: `a {\n\tbackground-position: top left,\n\t\ttop right !\nimportant;\n}\n`,
+			fixed: `a {\n\tbackground-position: top left,\n\t\ttop right !\n\t\timportant;\n}\n`,
+			line: 4,
+			column: 1,
+			message: messages.expected(`2 tabs`),
+		},
 	],
 })
 
