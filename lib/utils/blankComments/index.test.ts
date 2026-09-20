@@ -38,6 +38,6 @@ describe(`blankComments`, () => {
 	})
 
 	it(`spans handed in rather than found`, () => {
-		expect(blankComments(`1px /*c*/ 2px`, [{ start: 4, end: 9, isInline: false }])).toBe(`1px       2px`)
+		expect(blankComments(`1px /*c*/ 2px`, [{ start: 4, end: 9 }])).toBe(`1px       2px`)
 	})
 })

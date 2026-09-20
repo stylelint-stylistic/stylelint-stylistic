@@ -683,9 +683,36 @@ testRule({
 			description: `a line break in front of a comment inside the selector and a blank line behind a comment inside the selector, written with carriage-return line breaks`,
 			code: `.foo \r\n/*comment*/\n\r .bar { }`,
 		},
+		// A run of breaks inside a comment is text of the comment, and collapsing it would carry lines out of the file
+		{
+			description: `blank lines inside the text of a comment, which are no blank lines of the selector`,
+			code: `.foo /*com\n\n\nment*/, .bar { }`,
+		},
+		{
+			description: `the same comment written with carriage-return line breaks`,
+			code: `.foo /*com\r\n\r\n\r\nment*/, .bar { }`,
+		},
 	],
 
 	reject: [
+		// The control of the two above: the delimiters inside the string open no comment, so the run in front of the real one is still the selector's
+		{
+			description: `a blank line of the selector in front of a comment, behind an attribute selector whose string spells the delimiters of a comment`,
+			code: `.foo[href="/*"]\n\n\n/*comment*/, .bar { }`,
+			fixed: `.foo[href="/*"]\n/*comment*/, .bar { }`,
+			line: 1,
+			column: 1,
+			message: messages.expected(0),
+		},
+		// The run inside the comment stands where it was while the one behind it is collapsed
+		{
+			description: `a blank line of the selector behind a comment whose text holds blank lines of its own`,
+			code: `.foo /*com\n\n\nment*/\n\n.bar { }`,
+			fixed: `.foo /*com\n\n\nment*/\n.bar { }`,
+			line: 1,
+			column: 1,
+			message: messages.expected(0),
+		},
 		{
 			description: `a blank line inside the selector`,
 			code: `.foo\n\n.bar { }`,

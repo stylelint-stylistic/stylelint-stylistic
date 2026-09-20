@@ -6,6 +6,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { replaceRuns } from "../../utils/replaceRuns/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { assertString, isNumber } from "../../utils/validateTypes/index.ts"
 
@@ -31,31 +32,6 @@ function placeIndexOnValueStart (decl: Declaration): number {
 	assertString(decl.raws.between)
 
 	return decl.prop.length + decl.raws.between.length - 1
-}
-
-/**
- * Replaces every run of line breaks a pattern finds in the blanked copy, in the copy and the text alike: {@link blankComments} leaves the copy the text's length with every comment spaced out, so every run found lies outside the comments, where the two agree.
- * @param blanked - The text with comments blanked.
- * @param text - The text the copy was blanked from.
- * @param pattern - A forbidden run.
- * @param replacement - The allowed run.
- * @returns The copy and the text.
- */
-function replaceRuns (blanked: string, text: string, pattern: RegExp, replacement: string): [string, string] {
-	let blankedPieces = []
-	let pieces = []
-	let index = 0
-
-	for (let run of blanked.matchAll(new RegExp(pattern, `gmu`))) {
-		blankedPieces.push(blanked.slice(index, run.index), replacement)
-		pieces.push(text.slice(index, run.index), replacement)
-		index = run.index + run[0].length
-	}
-
-	blankedPieces.push(blanked.slice(index))
-	pieces.push(text.slice(index))
-
-	return [blankedPieces.join(``), pieces.join(``)]
 }
 
 /** The most empty lines allowed in a row inside a function. */

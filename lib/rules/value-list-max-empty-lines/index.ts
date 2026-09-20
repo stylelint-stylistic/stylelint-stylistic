@@ -1,8 +1,10 @@
 import stylelint from "stylelint"
 
 import { css } from "../../syntaxes/css/index.ts"
+import { blankComments } from "../../utils/blankComments/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { replaceRuns } from "../../utils/replaceRuns/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isNumber } from "../../utils/validateTypes/index.ts"
 
@@ -50,7 +52,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		root.walkDecls((decl) => {
 			let value = syntax.read(decl)
 
-			if (violatedLFNewLinesRegex.test(value) || violatedCRLFNewLinesRegex.test(value)) {
+			// Both kinds, since a `/*` written inside a `//` comment opens no comment under a syntax that spells one
+			let comments = syntax.commentSpans(value, decl, result)
+
+			// Read in a copy of the same length with every comment blanked, so a run inside a comment is reported by no warning and collapsed by no fix (#503)
+			let blankedValue = blankComments(value, comments)
+
+			if (violatedLFNewLinesRegex.test(blankedValue) || violatedCRLFNewLinesRegex.test(blankedValue)) {
 				report({
 					message: messages.expected,
 					messageArgs: [primary],
@@ -60,9 +68,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					result,
 					ruleName,
 					fix () {
-						let newValueString = value
-							.replaceAll(new RegExp(violatedLFNewLinesRegex, `gmu`), allowedLFNewLinesString)
-							.replaceAll(new RegExp(violatedCRLFNewLinesRegex, `gmu`), allowedCRLFNewLinesString)
+						// The second pass reads what the first wrote
+						let [blankedWithoutLFRuns, withoutLFRuns] = replaceRuns(blankedValue, value, violatedLFNewLinesRegex, allowedLFNewLinesString)
+						let [, newValueString] = replaceRuns(blankedWithoutLFRuns, withoutLFRuns, violatedCRLFNewLinesRegex, allowedCRLFNewLinesString)
 
 						syntax.write(decl, newValueString)
 					},

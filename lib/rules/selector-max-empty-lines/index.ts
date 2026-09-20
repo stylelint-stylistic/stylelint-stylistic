@@ -1,8 +1,10 @@
 import stylelint from "stylelint"
 
 import { css } from "../../syntaxes/css/index.ts"
+import { blankComments } from "../../utils/blankComments/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { replaceRuns } from "../../utils/replaceRuns/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isNumber } from "../../utils/validateTypes/index.ts"
 
@@ -51,9 +53,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let copies = syntax.selectorCopies(ruleNode)
 			let { selector } = copies
 
-			// The break closing each comment survives the fix, which leaves the first break of every run
+			// Both kinds, since `postcss-less` leaves a `//` comment of a selector in the raw, where a `/*` inside it opens nothing
+			let comments = syntax.commentSpans(selector, ruleNode, result)
 
-			if (violatedLFNewLinesRegex.test(selector) || violatedCRLFNewLinesRegex.test(selector)) {
+			// Read in a copy of the same length with every comment blanked, so a run inside a comment is reported by no warning and collapsed by no fix (#503); a `//` comment holds no run, since the break closing it ends it, and that break survives the fix, which leaves the first break of every run
+			let blankedSelector = blankComments(selector, comments)
+
+			if (violatedLFNewLinesRegex.test(blankedSelector) || violatedCRLFNewLinesRegex.test(blankedSelector)) {
 				report({
 					message: messages.expected,
 					messageArgs: [primary],
@@ -63,9 +69,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					result,
 					ruleName,
 					fix () {
-						let newSelectorString = selector
-							.replaceAll(new RegExp(violatedLFNewLinesRegex, `gmu`), allowedLFNewLinesString)
-							.replaceAll(new RegExp(violatedCRLFNewLinesRegex, `gmu`), allowedCRLFNewLinesString)
+						// The second pass reads what the first wrote
+						let [blankedWithoutLFRuns, withoutLFRuns] = replaceRuns(blankedSelector, selector, violatedLFNewLinesRegex, allowedLFNewLinesString)
+						let [, newSelectorString] = replaceRuns(blankedWithoutLFRuns, withoutLFRuns, violatedCRLFNewLinesRegex, allowedCRLFNewLinesString)
 
 						copies.write(newSelectorString)
 					},
