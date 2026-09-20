@@ -5,6 +5,7 @@ import plugins from "../../index.ts"
 import { messages as declarationBlockSemicolonNewlineBeforeMessages } from "../declaration-block-semicolon-newline-before/index.ts"
 import { messages as declarationBlockSemicolonSpaceBeforeMessages } from "../declaration-block-semicolon-space-before/index.ts"
 import { messages as trailingSemicolonMessages } from "../declaration-block-trailing-semicolon/index.ts"
+import { messages as colonNewlineAfterMessages } from "../declaration-colon-newline-after/index.ts"
 
 import { messages, ruleName } from "./index.ts"
 
@@ -185,6 +186,17 @@ testRule({
 			endColumn: 10,
 			message: messages.expectedAfter(),
 		},
+		{
+			// The neighbour listed behind used to take away the space this rule accepts, and the fixing run came back clean (1789508665)
+			description: `a value that is nothing but the single space this rule asks for, which the neighbour asks to take away: the space stays, and the file rests with the neighbour's warning`,
+			code: `a { color: ; }`,
+			fixed: `a { color: ; }`,
+			line: 1,
+			column: 11,
+			endLine: 1,
+			endColumn: 12,
+			message: declarationBlockSemicolonSpaceBeforeMessages.rejectedBefore(),
+		},
 	],
 })
 
@@ -256,7 +268,7 @@ testRule({
 	],
 })
 
-// The other side of #484: this rule listed first declines in favour of the newline rule behind, and the file it used to fold the break out of rests as it stands.
+// The other side of #484: this rule listed first declines in favour of the newline rule behind, and the file it used to fold the break out of rests as it stands; the newline rule listed behind declines in its turn over a run this rule accepts.
 testRule({
 	ruleName,
 	config: [`always`],
@@ -279,6 +291,17 @@ testRule({
 			endLine: 1,
 			endColumn: 12,
 			message: messages.expectedAfter(),
+		},
+		{
+			// The newline rule listed behind used to write over the space this rule accepts, and the fixing run came back clean (1789508665)
+			description: `the single space this rule asks for behind the colon of a value carrying words, which the newline rule listed last asks to be a break: the break is not written, and the file rests with that rule's warning`,
+			code: `a { b: c, d }`,
+			fixed: `a { b: c, d }`,
+			line: 1,
+			column: 6,
+			endLine: 1,
+			endColumn: 7,
+			message: colonNewlineAfterMessages.expectedAfter(),
 		},
 	],
 })

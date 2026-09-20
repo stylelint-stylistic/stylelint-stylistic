@@ -1,6 +1,8 @@
+import { messages as colonSpaceAfterMessages } from "../declaration-colon-space-after/index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
-// Behind a wordless declaration the brace alone closes, the run in front of the brace is the run the `declaration-colon-*-after` rules read behind the colon. The library lists the rule a block names first and its extra rules behind it, so the neighbour has the last word.
+// Behind a wordless declaration the brace alone closes, the run in front of the brace is the run the `declaration-colon-*-after` rules read behind the colon. The library lists the rule a block names first and its extra rules behind it, so the neighbour runs last; neither of the two writes a run the other accepts.
 let testRule = createTestRule({ ruleName })
 
 testRule({
@@ -23,6 +25,23 @@ testRule({
 			line: 2,
 			column: 4,
 			message: messages.expectedBefore,
+		},
+		{
+			// The neighbour listed behind used to write over the break this rule accepts, and the fixing run came back clean (1789508665)
+			description: `the same declaration with the break this rule asks for in front of the brace, which the neighbour asks to be a single space: the space is not written, and the file rests with the neighbour's warning`,
+			code: `
+				a {
+					x:
+				}
+			`,
+			fixed: `
+				a {
+					x:
+				}
+			`,
+			line: 2,
+			column: 4,
+			message: colonSpaceAfterMessages.expectedAfter(),
 		},
 	],
 })
