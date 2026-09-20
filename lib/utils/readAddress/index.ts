@@ -21,7 +21,7 @@ export type Address = {
 	/** The strings standing inside such parentheses, quotation marks and all, which are strings wherever comments are read there; a quoted address's own string is none of them, and neither is a mark nothing closes. */
 	strings: StringSpan[],
 
-	/** The escapes standing in the code of a bare address, which the walk cannot find itself, the parentheses being one step of it; one inside a comment or a string read there is that span's, one inside an interpolation is nobody's (1789883888), and a quoted address holds none of its own. */
+	/** The escapes standing in the code of a bare address, which the walk cannot find itself, the parentheses being one step of it; one inside a comment or a string read there is that span's, one standing in the code of an interpolation is the address's too (1789883888), and a quoted address holds none of its own. */
 	escapes: EscapeSpan[],
 }
 
@@ -33,34 +33,55 @@ type InterpolationComments = {
 }
 
 /**
- * Skips a Sass interpolation, whose expression may hold braces, strings and comments of both kinds of its own.
+ * Reads a comment standing in the expression of an interpolation, and records it where the caller asks for its kind.
+ * @param text - The text holding the interpolation.
+ * @param openIndex - The comment's opening solidus.
+ * @param reading - What the syntax makes of a `//` comment, which says where one ends.
+ * @param comments - Where it is recorded, of the kinds asked for.
+ * @returns Behind the comment.
+ */
+function readInterpolationComment (text: string, openIndex: number, reading: CommentReading, comments?: InterpolationComments): number {
+	let isInline = text[openIndex + 1] === `/`
+	let closeIndex = text.indexOf(`*/`, openIndex + 2)
+	let blockEnd = closeIndex === -1 ? text.length : closeIndex + 2
+	let end = isInline ? findInlineCommentEnd(text, openIndex, reading) : blockEnd
+
+	if (comments && (isInline ? comments.inline : comments.block)) comments.spans.push({ start: openIndex, end, isInline })
+
+	return end
+}
+
+/**
+ * Skips a Sass interpolation, whose expression may hold braces, strings, comments of both kinds and escapes of its own. The expression is Sass code, so a backslash there covers the character behind it as it does anywhere else: `#{d\}e}` closes on the second brace, and the escape is recorded for the callers reading a copy with the escapes masked (1789883888).
  * @param text - The text holding the interpolation.
  * @param openIndex - The `#`.
  * @param reading - What the syntax makes of a `//` comment, which says where one inside the expression ends.
  * @param comments - Where the comments inside are recorded, of the kinds it asks for.
+ * @param escapes - Where the escapes standing in the code of the expression are recorded, and only once the expression is closed: an attempt the text cuts short is walked again by the caller, which records them itself. An escape inside a string or a comment there is none of them.
  * @returns Behind its closing brace, or nothing where the text never closes it.
  */
-function skipInterpolation (text: string, openIndex: number, reading: CommentReading, comments?: InterpolationComments): number | undefined {
+function skipInterpolation (text: string, openIndex: number, reading: CommentReading, comments?: InterpolationComments, escapes?: EscapeSpan[]): number | undefined {
 	let depth = 0
 	let index = openIndex + 1
+	let found: EscapeSpan[] = []
 
 	while (index < text.length) {
 		let character = text.charAt(index)
 
-		if (character === `"` || character === `'`) {
+		if (character === `\\`) {
+			let escaped = readEscapedCharacter(text, index)
+
+			if (escaped.character !== undefined) found.push({ start: index, end: escaped.end })
+
+			index = escaped.end - 1
+		}
+		else if (character === `"` || character === `'`) {
 			index += 1
 
 			while (index < text.length && text[index] !== character) index += text[index] === `\\` ? 2 : 1
 		}
 		else if (character === `/` && (text[index + 1] === `*` || text[index + 1] === `/`)) {
-			let isInline = text[index + 1] === `/`
-			let closeIndex = text.indexOf(`*/`, index + 2)
-			let blockEnd = closeIndex === -1 ? text.length : closeIndex + 2
-			let commentEnd = isInline ? findInlineCommentEnd(text, index, reading) : blockEnd
-
-			if (comments && (isInline ? comments.inline : comments.block)) comments.spans.push({ start: index, end: commentEnd, isInline })
-
-			index = commentEnd - 1
+			index = readInterpolationComment(text, index, reading, comments) - 1
 		}
 		else if (character === `{`) {
 			depth += 1
@@ -68,7 +89,11 @@ function skipInterpolation (text: string, openIndex: number, reading: CommentRea
 		else if (character === `}`) {
 			depth -= 1
 
-			if (depth === 0) return index + 1
+			if (depth === 0) {
+				escapes?.push(...found)
+
+				return index + 1
+			}
 		}
 
 		index += 1
@@ -95,7 +120,7 @@ function skipWhole (text: string, index: number, reading: CommentReading, commen
 		return escaped.end
 	}
 
-	if (reading.tokenizes && text[index] === `#` && text[index + 1] === `{`) return skipInterpolation(text, index, reading, comments) ?? index
+	if (reading.tokenizes && text[index] === `#` && text[index + 1] === `{`) return skipInterpolation(text, index, reading, comments, escapes) ?? index
 
 	return index
 }
