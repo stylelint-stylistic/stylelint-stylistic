@@ -238,10 +238,10 @@ export const OPENS_WITH_BLOCK_COMMENT = /^(?:[ \t\f]|\r(?!\n))*\/\*/u
 /** A leading `//` comment, breaks aside. */
 export const OPENS_WITH_INLINE_COMMENT = /^[^\S\n]*\/\//u
 
-/** A first line of whitespace alone, with `\s` on purpose: `no-empty-first-line` replaces by it over every leading empty line, which a tokenizer-true spelling stops short of ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)); a fix reads {@link OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE}. */
-export const OPENS_WITH_LINE_BREAK = /^\s*\n/u
+/** The leading run of tokenizer whitespace down to its last break: every empty line a file opens with. Tokenizer whitespace, since a vertical tab, a no-break space or any other character `\s` spells beyond the five opens the first node's own text instead of the raw a fix writes, and the warning stood where nothing could be taken off ([#683](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/683)). {@link OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE} reads the same whitespace down to its first break. */
+export const OPENS_WITH_LINE_BREAK = /^[ \t\n\r\f]*\n/u
 
-/** A break behind the leading tokenizer non-break whitespace; a vertical tab and a no-break space stop the run ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)), where {@link OPENS_WITH_LINE_BREAK} reads over them. */
+/** A break behind the leading tokenizer non-break whitespace; a vertical tab and a no-break space stop the run ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). It is {@link OPENS_WITH_LINE_BREAK}'s match cut at its first break, that one reading the same whitespace on to its last ([#683](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/683)). */
 export const OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE = /^(?:[ \t\f]|\r(?!\n))*\r?\n/u
 
 /** A leading quote, whitespace aside. */
