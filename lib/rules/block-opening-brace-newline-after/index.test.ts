@@ -212,6 +212,33 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
+			// The parser files a stray semicolon in the run in front of the node behind it, and the trim to that run's break used to take it along
+			description: `a stray semicolon between that space and a break, which the write keeps behind the break it puts in front of the run`,
+			code: `a { ;\n color: pink; }`,
+			fixed: `a {\n ;\n color: pink; }`,
+			line: 1,
+			column: 4,
+			message: messages.expectedAfter(),
+		},
+		{
+			// The break is the comment's and the write goes in front of the declaration, whose own run holds the semicolon
+			description: `a stray semicolon between a comment and the declaration, behind a break carried off that comment's run`,
+			code: `a { \n/* c */;b: c;}`,
+			fixed: `a { \n/* c */\n;b: c;}`,
+			line: 1,
+			column: 4,
+			message: messages.expectedAfter(),
+		},
+		{
+			// The run carried is read from its break on, and a semicolon standing there used to be written in front of the declaration a second time
+			description: `a stray semicolon behind the break of that comment's run, which is the comment's and is not copied`,
+			code: `a { \n;/* c */b: c;}`,
+			fixed: `a { \n;/* c */\nb: c;}`,
+			line: 1,
+			column: 4,
+			message: messages.expectedAfter(),
+		},
+		{
 			description: `a declaration abutting the brace`,
 			code: `a {color: pink; }`,
 			fixed: `a {\ncolor: pink; }`,
@@ -539,6 +566,15 @@ testRule({
 			message: messages.expectedAfterMultiLine(),
 		},
 		{
+			// The trim to the break behind a stray semicolon used to take the semicolon along
+			description: `a multi-line block with a stray semicolon between its brace and a break`,
+			code: `a {;\ncolor: pink;\n}`,
+			fixed: `a {\n;\ncolor: pink;\n}`,
+			line: 1,
+			column: 4,
+			message: messages.expectedAfterMultiLine(),
+		},
+		{
 			description: `a multi-line block whose declaration abuts the brace`,
 			code: `a {color: pink;\nbackground: orange; }`,
 			fixed: `a {\ncolor: pink;\nbackground: orange; }`,
@@ -713,6 +749,24 @@ testRule({
 			description: `a space behind the brace of a multi-line block`,
 			code: `a { color: pink;\nbackground: orange; }`,
 			fixed: `a {color: pink;\nbackground: orange; }`,
+			line: 1,
+			column: 4,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		{
+			// The run used to be emptied, a stray semicolon standing in it included
+			description: `a stray semicolon behind the break behind the brace of a multi-line block, which stays where the whitespace in front of it goes`,
+			code: `a {\n;color: pink;\n}`,
+			fixed: `a {;color: pink;\n}`,
+			line: 1,
+			column: 4,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		{
+			// The write takes the whitespace the run opens with and nothing behind the semicolon, a break included
+			description: `the same semicolon with a break behind it, which is none of the whitespace the run opens with`,
+			code: `a {\n;\ncolor: pink;\n}`,
+			fixed: `a {;\ncolor: pink;\n}`,
 			line: 1,
 			column: 4,
 			message: messages.rejectedAfterMultiLine(),
