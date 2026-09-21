@@ -1092,6 +1092,34 @@ testRule({
 	],
 })
 
+// An option that waits for the run's end runs behind the twin whatever the configuration lists, so the break this rule then writes would stand in front of the space the twin wrote (1790006583)
+testRule({
+	ruleName,
+	config: [`always-multi-line`],
+	extraRules: { "@stylistic/block-opening-brace-space-after": `always` },
+
+	reject: [
+		{
+			// The gate used to judge such a run by a spelling it has none of, both wrote, and the fixing run came back clean over a file the twin refuses
+			description: `a stray semicolon abutting the brace of a multi-line block, in front of which the twin ahead asks for a space and this rule for a break: the space is not written, and the twin's warning stands`,
+			code: `a {;\nb: c;}`,
+			fixed: `a {\n;\nb: c;}`,
+			warnings: [
+				{
+					line: 1,
+					column: 4,
+					message: openingSpaceAfterMessages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 4,
+					message: messages.expectedAfterMultiLine(),
+				},
+			],
+		},
+	],
+})
+
 /**
  * Fixes a stylesheet under two rules, once in each order the configuration can list them, and reports what is left.
  * @param code - The stylesheet.

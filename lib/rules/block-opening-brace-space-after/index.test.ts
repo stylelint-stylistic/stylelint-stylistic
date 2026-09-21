@@ -751,5 +751,18 @@ testRule({
 				},
 			],
 		},
+		{
+			// The gate used to judge such a run by a spelling it has none of, the twin wrote its break in front of the space, and the fixing run came back clean over a file this rule refuses (1790006583)
+			description: `the single space this rule asks for in front of a stray semicolon, which the twin behind wants a break in front of: the break is not written, and the twin's warning stands`,
+			code: `a{ ;b:c}`,
+			fixed: `a{ ;b:c}`,
+			warnings: [
+				{
+					line: 1,
+					column: 3,
+					message: openingNewlineAfterMessages.expectedAfter(),
+				},
+			],
+		},
 	],
 })
