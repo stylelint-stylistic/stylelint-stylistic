@@ -22,7 +22,7 @@ const BODIES = {
 	inline: `//c\n`,
 }
 
-/** The run in front of the closing brace; the last two hold a stray semicolon, which no fix writes over. */
+/** The run in front of the closing brace; the last two hold a stray semicolon, which every write keeps. */
 const TAILS = { none: ``, space: ` `, lineBreak: `\n`, spaceThenBreak: ` \n`, twoBreaks: `\n\n`, semicolon: `;`, semicolonInARun: ` ; ` }
 
 const name: Sweep[`name`] = `comment-only-block`

@@ -22,9 +22,10 @@ const RULES = [
 	`no-extra-semicolons`,
 ]
 
-/** Where the block stands: `§` the last node, `¶` the run in front of the closing brace. The Sass nested property is a rule whose selector ends in a colon to the core. */
+/** Where the block stands: `§` the last node, `¶` the run in front of the closing brace. The Sass nested property is a rule whose selector ends in a colon to the core. Behind a brace the last node abuts, a comment leaves `block-opening-brace-newline-after` no break to carry, so its `always` options read the run too (1789520440). */
 const PLACES: Record<string, string> = {
 	rule: `a {⏎\t§¶}⏎`,
+	abuttingRule: `a {§¶}⏎`,
 	atRule: `@media (x) {⏎\t§¶}⏎`,
 	nested: `@media (x) {⏎\ta {⏎\t\t§¶\t}⏎}⏎`,
 	nestedProperty: `a {⏎\tfont: {⏎\t\t§¶\t}⏎}⏎`,

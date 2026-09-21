@@ -141,10 +141,10 @@ testRule({
 			message: messages.expectedBefore,
 		},
 		{
-			// See #687
-			description: `a stray semicolon between that space and the break, which the trim would take with it, so the run is left alone`,
+			// See #687; the trim keeps the semicolon, so the warning is one the fix answers
+			description: `a stray semicolon between that space and the break, which the trim leaves standing against the declaration`,
 			code: `a { color: pink; ;\n}`,
-			fixed: `a { color: pink; ;\n}`,
+			fixed: `a { color: pink;;\n}`,
 			line: 1,
 			column: 19,
 			message: messages.expectedBefore,
@@ -373,10 +373,10 @@ testRule({
 			message: messages.expectedBeforeMultiLine,
 		},
 		{
-			// See #687
-			description: `a stray semicolon between a space and the break, which the trim would take with it, so the run is left alone`,
+			// See #687; the trim keeps the semicolon, so the warning is one the fix answers
+			description: `a stray semicolon between a space and the break, which the trim leaves standing against the declaration`,
 			code: `a { color: pink;\ntop: 0; ;\n}`,
-			fixed: `a { color: pink;\ntop: 0; ;\n}`,
+			fixed: `a { color: pink;\ntop: 0;;\n}`,
 			line: 2,
 			column: 10,
 			message: messages.expectedBeforeMultiLine,
