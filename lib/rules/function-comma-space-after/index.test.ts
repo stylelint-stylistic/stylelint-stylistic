@@ -36,7 +36,7 @@ testRule({
 			code: `a { background: url(data:image/svg+xml;charset=utf8,%3Csvg%20xmlns); }`,
 		},
 		{
-			description: `a comment abutting the comma, with the space in front of the comment`,
+			description: `a space behind the comma, a comment behind the space and an argument abutting the comment`,
 			code: `a { transform: translate(1, /* comment */1); }`,
 		},
 		{
@@ -53,6 +53,11 @@ testRule({
 			// See #275
 			description: `a comma inside the text of a comment the value parser closes early, which is no comma of the value`,
 			code: `a { b: f(x/*/*q,w*/y); }`,
+		},
+		{
+			// The run behind the comma is the one in front of the comment, not the break standing behind it
+			description: `a single space behind the comma and a comment closing the line behind the space`,
+			code: `a { b: f(1, /* c */\n2); }`,
 		},
 	],
 
@@ -82,6 +87,15 @@ testRule({
 			fixed: `a { b: url("x" /* c */, f(1)); }`,
 			line: 1,
 			column: 23,
+			message: messages.expectedAfter(),
+		},
+		{
+			// The space standing behind the comment is another run, so the comma carries none
+			description: `a comment abutting the comma, with the space behind the comment`,
+			code: `a { b: f(1,/* c */ 2); }`,
+			fixed: `a { b: f(1, /* c */ 2); }`,
+			line: 1,
+			column: 11,
 			message: messages.expectedAfter(),
 		},
 		{
@@ -388,15 +402,15 @@ testRule({
 			message: messages.rejectedAfter(),
 		},
 		{
-			description: `the same comment with a space behind it too`,
+			description: `the same comment with a space behind it too, which is a run of its own`,
 			code: `a { transform: translate(1, /* comment */ 1); }`,
-			fixed: `a { transform: translate(1,/* comment */1); }`,
+			fixed: `a { transform: translate(1,/* comment */ 1); }`,
 			message: messages.rejectedAfter(),
 		},
 		{
-			description: `three comments behind the comma, the first on a line of its own`,
+			description: `three comments behind the comma, the first on a line of its own, whose runs are none of the comma's`,
 			code: `a { transform: translate(1, /* 1 */\n/* 2 */ /* 3 */ 1); }`,
-			fixed: `a { transform: translate(1,/* 1 *//* 2 *//* 3 */1); }`,
+			fixed: `a { transform: translate(1,/* 1 */\n/* 2 */ /* 3 */ 1); }`,
 			message: messages.rejectedAfter(),
 		},
 		{

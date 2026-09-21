@@ -72,17 +72,6 @@ testRule({
 			`,
 		},
 		{
-			description: `a comment behind the comma, with the break behind the comment`,
-			code: `
-				a {
-				  transform: translate(
-				    1px, /* comment */
-				    1px
-				  );
-				}
-			`,
-		},
-		{
 			// See #153
 			description: `a bare address inside each argument, whose double slash opens no comment`,
 			code: `
@@ -106,6 +95,22 @@ testRule({
 	],
 
 	reject: [
+		{
+			// A comment carries no break of the comma's: the run the rule reads and writes is the one at the comma
+			description: `a comment behind the comma, with the break behind the comment`,
+			code: `
+				a {
+				  transform: translate(
+				    1px, /* comment */
+				    1px
+				  );
+				}
+			`,
+			fixed: `a {\n  transform: translate(\n    1px,\n/* comment */\n    1px\n  );\n}`,
+			line: 3,
+			column: 8,
+			message: messages.expectedAfter(),
+		},
 		{
 			// See #560
 			description: `the comma behind a quoted address, which parts the arguments of a call as any comma does`,
@@ -408,7 +413,11 @@ testRule({
 				  }
 			`,
 		},
+	],
+
+	reject: [
 		{
+			// A comment carries no break of the comma's here either
 			description: `a comment behind the comma of a multi-line call`,
 			code: `
 				a {
@@ -418,10 +427,11 @@ testRule({
 				  );
 				}
 			`,
+			fixed: `a {\n  transform: translate(\n    1px,\n/* comment */\n    1px\n  );\n}`,
+			line: 3,
+			column: 8,
+			message: messages.expectedAfterMultiLine(),
 		},
-	],
-
-	reject: [
 		{
 			description: `the first two commas of a nested multi-line call, neither broken behind`,
 			code: `a { transform: color(rgb(0 , 0 ,\n0) lightness(50%)); }`,
