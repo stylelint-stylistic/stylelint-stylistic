@@ -1,3 +1,4 @@
+import { messages as spaceBeforeMessages } from "../declaration-block-semicolon-space-before/index.ts"
 import { messages as colonNewlineAfterMessages } from "../declaration-colon-newline-after/index.ts"
 import { messages as colonSpaceAfterMessages } from "../declaration-colon-space-after/index.ts"
 
@@ -208,6 +209,61 @@ testRule({
 					message: colonNewlineAfterMessages.expectedAfter(),
 				},
 			],
+		},
+	],
+})
+
+// The space twin reads and writes the run in front of the semicolon too, and the library lists it behind this rule, so its write would be the file's last (1789508663)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-block-semicolon-space-before": `always` },
+
+	reject: [
+		{
+			// The two options disagree over the run, and the twin behind writes it
+			description: `a tab in front of a semicolon, which the twin behind this rule would write its space over: the break is not written, and the file rests on the twin's space with this rule's warning`,
+			code: `a { b: c\t; d: e }`,
+			fixed: `a { b: c ; d: e }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					endLine: 1,
+					endColumn: 10,
+					message: messages.expectedBefore(),
+				},
+				{
+					line: 1,
+					column: 9,
+					endLine: 1,
+					endColumn: 10,
+					message: spaceBeforeMessages.expectedBefore(),
+				},
+			],
+		},
+		{
+			// A twin behind may not write over a run this rule took as it stood
+			description: `a semicolon on a line of its own, which this rule asks for and the twin behind it wants a single space in front of: the space is not written, since this rule reported nothing about the run as it stood, and the twin's warning stands`,
+			code: `
+				a {
+					b: c
+					;
+					d: e
+				}
+			`,
+			fixed: `
+				a {
+					b: c
+					;
+					d: e
+				}
+			`,
+			line: 3,
+			column: 1,
+			endLine: 3,
+			endColumn: 2,
+			message: spaceBeforeMessages.expectedBefore(),
 		},
 	],
 })
