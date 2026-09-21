@@ -1,33 +1,7 @@
-import valueParser, { type FunctionNode } from "postcss-value-parser"
+import type { FunctionNode } from "postcss-value-parser"
 
 import { LEADING_CSS_WHITESPACE, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { type CommentSpan, findCommentSpanAt, findCommentSpanHolding } from "../findCommentSpans/index.ts"
-import { opensAnAddress } from "../opensAnAddress/index.ts"
-import { quotesItsAddress } from "../quotesItsAddress/index.ts"
-
-/**
- * The runs at the parentheses of a call and of every call nested in it that the rule reads, which the rule writes in one pass; a write is judged for lines by what they leave once all of them are written ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)). A `never-multi-line` fix reaches further, into every stretch it measured, so over a call holding a comment the judgment here is the cautious one.
- * @param valueNode - The call.
- * @param comments - The comment spans of the value, both kinds.
- * @param reads - Whether the rule reads a nested call's parentheses.
- * @returns The runs.
- */
-export function parenthesesRuns (valueNode: FunctionNode, comments: CommentSpan[], reads: (call: FunctionNode) => boolean): string[] {
-	let runs = [valueNode.before, valueNode.after]
-
-	valueParser.walk(valueNode.nodes, (node, at, siblings) => {
-		if (node.type !== `function`) return
-
-		// As the rules' own walks read it: a bare address holds no call of the value, a quoted one holds its arguments' calls, and a call in a comment's text is none
-		if (opensAnAddress(node, at, siblings)) return quotesItsAddress(node) ? undefined : false
-
-		if (findCommentSpanHolding(node, comments) || !reads(node)) return
-
-		runs.push(node.before, node.after)
-	})
-
-	return runs
-}
 
 /**
  * The span of the whitespace in front of a call's closing parenthesis.
@@ -48,7 +22,7 @@ export function getAfterSpan (valueNode: FunctionNode): {
 /**
  * Reads the whitespace behind a call's `(`, up to its first significant node, and where that node begins.
  *
- * A comment between the `(` and the break is walked past and the whitespace behind it counted; nodes are placed against the comment spans, since the value parser reads a `//` comment as nodes. In a call of comments and whitespace alone the first significant thing is its closing `)`. The stretches come back for the `never` guard, and their count says whether the break rule writes the very run the space rule does ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)): the first stretch is the space rule's, and the break rule's `always` writes into the last.
+ * A comment between the `(` and the break is walked past and the whitespace behind it counted; nodes are placed against the comment spans, since the value parser reads a `//` comment as nodes. In a call of comments and whitespace alone the first significant thing is its closing `)`. The stretches come back for the `never` guard.
  * @param valueNode - The call.
  * @param openingIndex - Where the text behind the `(` begins.
  * @param declValue - The value the positions count in.

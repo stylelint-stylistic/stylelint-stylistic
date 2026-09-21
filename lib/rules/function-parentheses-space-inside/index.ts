@@ -1,8 +1,6 @@
-import type { Declaration } from "postcss"
 import valueParser, { type FunctionNode } from "postcss-value-parser"
-import stylelint, { type FixCallback, type PostcssResult } from "stylelint"
+import stylelint, { type FixCallback } from "stylelint"
 
-import { LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { InlineCommentReading, Syntax } from "../../syntaxes/index.ts"
 import { applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/index.ts"
@@ -10,7 +8,6 @@ import { declarationValueIndex } from "../../utils/declarationValueIndex/index.t
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editsOpenNoComment } from "../../utils/editsOpenNoComment/index.ts"
 import { type CommentSpan, findCommentSpanAt, findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
-import { parenthesesRuns, readClosingRuns, readOpeningRuns } from "../../utils/functionParenthesesRuns/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
@@ -20,7 +17,6 @@ import { quotesItsAddress } from "../../utils/quotesItsAddress/index.ts"
 import { editsRereadAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { splitSpaceNodesAtWords } from "../../utils/splitSpaceNodesAtWords/index.ts"
-import { writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -132,45 +128,6 @@ function closingEdit (valueNode: FunctionNode, text: string): Edit {
 	return { start: end - valueNode.after.length, end, text }
 }
 
-/**
- * Asks whether the space rule, rather than its break twin, writes a run inside a call's parentheses, which both read and write ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)).
- * @param read - What the walk read of the call, and what names the rule.
- * @param side - `after` for the run behind the `(`, `before` for the one in front of the `)`.
- * @param parenthesisIndex - That parenthesis's index in the value.
- * @returns True where this rule writes the run.
- */
-function writesParenthesisRun (read: {
-	ruleName: string,
-	decl: Declaration,
-	result: PostcssResult,
-	syntax: Syntax,
-	valueNode: FunctionNode,
-	comments: CommentSpan[],
-	declValue: string,
-	functionString: string,
-}, side: `after` | `before`, parenthesisIndex: number): boolean {
-	let { ruleName, decl, result, syntax, valueNode, comments, declValue, functionString } = read
-
-	return writesTwinRun(shortName, ruleName, decl, result, {
-		side,
-		run: side === `after` ? valueNode.before : valueNode.after,
-		lineText: functionString,
-		// A call holding nothing is passed over, so the rule never writes its run
-		runs: () => parenthesesRuns(valueNode, comments, (call) => call.nodes.length > 0 && isFunctionParsedAsWritten(syntax, call, comments)),
-		line: decl.rangeBy({ index: declarationValueIndex(decl) + parenthesisIndex }).start.line,
-		// `never-multi-line` empties every stretch the break twin measured, this run among them; its `always` writes a break where none stands in any of them, and behind the `(` it writes into the last stretch rather than this one wherever a comment stands in between
-		twinWrites: (twinOption, _secondary, over) => {
-			if (twinOption === `never-multi-line`) return true
-
-			if (side === `after`) return readOpeningRuns(valueNode, parenthesisIndex, declValue, comments).measured.length === 1
-
-			let { after } = readClosingRuns(valueNode, declValue, comments)
-
-			return !LINE_BREAK.test(after.slice(0, after.length - valueNode.after.length) + over)
-		},
-	})
-}
-
 /** `always` a single space inside the parentheses, `never` no whitespace; the `-single-line` forms in a single-line function only. */
 export type PrimaryOption = `always` | `never` | `always-single-line` | `never-single-line`
 
@@ -228,18 +185,17 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				let functionString = valueParser.stringify(valueNode)
 				let isSingleLine = isSingleLineString(functionString)
-				let twinRead = { ruleName, decl, result, syntax, valueNode: functionNode, comments, declValue, functionString }
 
 				// Check opening ...
 				let openingIndex = valueNode.sourceIndex + valueNode.value.length + 1
 
 				/**
-				 * Asks whether the line break behind the `(` closes a `//` comment, which no option can satisfy without commenting the argument out; the warning then stands unfixed ([#114](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/114)). Under a parser whose tokenizer reads the parentheses behind `url(` as one token, a write opening a comment, as taking away the whitespace in front of a quotation mark there does, is refused too; outside it the question is not asked, since a name glued to a sign, `1!url(`, is an address to the walk and a call to the parser, and a refusal there would take away a write the parser reads the same. A write switching how the tokenizer reads parentheses it takes for an address's is refused as well: this run holds the character that decides it, and the name the parser reads there is not the one the walk read ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)). The break twin writes this run too, and only one of them may (#704).
+				 * Asks whether the line break behind the `(` closes a `//` comment, which no option can satisfy without commenting the argument out; the warning then stands unfixed ([#114](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/114)). Under a parser whose tokenizer reads the parentheses behind `url(` as one token, a write opening a comment, as taking away the whitespace in front of a quotation mark there does, is refused too; outside it the question is not asked, since a name glued to a sign, `1!url(`, is an address to the walk and a call to the parser, and a refusal there would take away a write the parser reads the same. A write switching how the tokenizer reads parentheses it takes for an address's is refused as well: this run holds the character that decides it, and the name the parser reads there is not the one the walk read ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)).
 				 * @param write - The whitespace the fix writes.
-				 * @returns True if the argument stays outside a comment, no comment opens where that question is asked, the parentheses keep their reading, and the run is this rule's to write.
+				 * @returns True if the argument stays outside a comment, no comment opens where that question is asked, and the parentheses keep their reading.
 				 */
 				function isOpeningFixable (write: string): boolean {
-					return !movesOpeningIntoComment(syntax, declValue, functionNode, reading) && (!reading.tokenizes || editsOpenNoComment(declValue, [openingEdit(functionNode, write)], reading)) && !editsRereadAnAddress(declValue, openingIndex - 1, [openingEdit(functionNode, write)], reading) && writesParenthesisRun(twinRead, `after`, openingIndex)
+					return !movesOpeningIntoComment(syntax, declValue, functionNode, reading) && (!reading.tokenizes || editsOpenNoComment(declValue, [openingEdit(functionNode, write)], reading)) && !editsRereadAnAddress(declValue, openingIndex - 1, [openingEdit(functionNode, write)], reading)
 				}
 
 				if (primary === `always` && valueNode.before !== ` `) {
@@ -267,11 +223,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let closingIndex = closingParenthesisIndex(valueNode) - 1
 
 				/**
-				 * Asks whether the line break in front of the `)` closes a `//` comment, which no option can satisfy without commenting it out; the warning then stands unfixed. The break twin writes this run too, and only one of them may (#704).
-				 * @returns True if the `)` stays outside a comment and the run is this rule's to write.
+				 * Asks whether the line break in front of the `)` closes a `//` comment, which no option can satisfy without commenting it out; the warning then stands unfixed.
+				 * @returns True if the `)` stays outside a comment.
 				 */
 				function isClosingFixable (): boolean {
-					return !movesClosingIntoComment(syntax, declValue, functionNode, reading) && writesParenthesisRun(twinRead, `before`, closingParenthesisIndex(functionNode))
+					return !movesClosingIntoComment(syntax, declValue, functionNode, reading)
 				}
 
 				if (primary === `always` && valueNode.after !== ` `) {

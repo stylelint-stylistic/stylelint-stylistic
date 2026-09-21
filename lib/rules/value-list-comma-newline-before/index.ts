@@ -11,9 +11,9 @@ import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runInFront } from "../../utils/runInFront/index.ts"
 import { valueListCommaWhitespaceChecker } from "../../utils/valueListCommaWhitespaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
-import { runInFront, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -75,7 +75,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.beforeAllowingIndentation,
 			checkedRuleName: ruleName,
 			// Refused before the report: a comma in front of the value is the property name's, and under `never-multi-line` a comma behind a `//` comment keeps the break closing it, while `always` only adds one
-			isFixable: (declNode, index, declString, indices, runString) => {
+			isFixable: (declNode, index, declString, runString) => {
 				if (index < declarationValueIndex(declNode)) return false
 
 				let closesInlineComment = syntax.endsWithInlineComment(declString.slice(0, index), syntax.inlineComments(declNode, result))
@@ -90,15 +90,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎,b` would come out as `a\,b`, one identifier, so the warning stands; `always` leaves the break the backslash stands in front of (1789661965)
 				if (primary === `never-multi-line` && !editKeepsEscapedCharacter(declString, { start: index - run.length, end: index, text: `` })) return false
 
-				// The space twin writes the same run, save over a comment's closing break (#704)
-				return writesTwinRun(shortName, ruleName, declNode, result, {
-					side: `before`,
-					run,
-					lineText: declString,
-					runs: () => indices.map((each) => runInFront(runString, each)),
-					line: declNode.rangeBy({ index }).start.line,
-					twinWrites: () => !closesInlineComment,
-				})
+				return true
 			},
 			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ ,b` is not cut and no break parts it from its backslash (1789657288)
 			fix: (declNode, index, runString) => {

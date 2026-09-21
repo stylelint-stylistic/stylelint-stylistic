@@ -43,14 +43,11 @@ function bareAddressEnd (text: string, openIndex: number): number {
 	return index
 }
 
-/** A separator solidus: where it stands, and the calls it stands in, the innermost first. */
+/** A separator solidus: where it stands. */
 export type SeparatorSlash = {
 
 	/** The solidus's index in the text. */
 	index: number,
-
-	/** The names of the calls around it, which a twin's `ignoreFunctions` passes over ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)); a nameless group names nothing. */
-	functionNames: string[],
 }
 
 /**
@@ -72,9 +69,8 @@ export function findSeparatorSlashes (text: string, syntax: Syntax, node: AtRule
 	/**
 	 * Walks a list of nodes, into every call that is read.
 	 * @param nodes - The value-parser nodes of one level.
-	 * @param functionNames - The names of the calls around them, the innermost first.
 	 */
-	function walk (nodes: ValueParserNode[], functionNames: string[]): void {
+	function walk (nodes: ValueParserNode[]): void {
 		// The end of a bare address's token; siblings made of its tail are skipped
 		let addressEnd = 0
 
@@ -87,7 +83,7 @@ export function findSeparatorSlashes (text: string, syntax: Syntax, node: AtRule
 				// `//` separates nothing, but the parser returns two dividers for it (#548)
 				let pairsWithANeighbour = blanked.charAt(index - 1) === `/` || blanked.charAt(index + 1) === `/`
 
-				if (valueNode.value === `/` && !pairsWithANeighbour && !syntax.readsSlashAsOperator(nodes[at - 1], nodes[at + 1])) slashes.push({ index, functionNames })
+				if (valueNode.value === `/` && !pairsWithANeighbour && !syntax.readsSlashAsOperator(nodes[at - 1], nodes[at + 1])) slashes.push({ index })
 
 				continue
 			}
@@ -95,7 +91,7 @@ export function findSeparatorSlashes (text: string, syntax: Syntax, node: AtRule
 			if (valueNode.type !== `function`) continue
 
 			if (valueNode.value === ``) {
-				if (options.readsGroups) walk(valueNode.nodes, functionNames)
+				if (options.readsGroups) walk(valueNode.nodes)
 
 				continue
 			}
@@ -111,11 +107,11 @@ export function findSeparatorSlashes (text: string, syntax: Syntax, node: AtRule
 
 			if (options.ignoreFunctions !== undefined && matchesStringOrRegExp(valueNode.value, options.ignoreFunctions)) continue
 
-			walk(valueNode.nodes, [valueNode.value, ...functionNames])
+			walk(valueNode.nodes)
 		}
 	}
 
-	walk(valueParser(blanked).nodes, [])
+	walk(valueParser(blanked).nodes)
 
 	return slashes
 }

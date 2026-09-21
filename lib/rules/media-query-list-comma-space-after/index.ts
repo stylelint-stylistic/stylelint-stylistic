@@ -9,8 +9,8 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { mediaQueryListCommaWhitespaceChecker } from "../../utils/mediaQueryListCommaWhitespaceChecker/index.ts"
 import { rereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runBehind } from "../../utils/runBehind/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
-import { runBehind, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -59,15 +59,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.after,
 			checkedRuleName: ruleName,
-			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses; the break twin's `always` options read past a comment on the comma's line, and a write can put a break in front of one or take it away (#704)
-			isFixable: (params, index, atRule, commas) => !rereadsAnAddress(params, { start: index + 1, end: index + 1 + runBehind(params, index).length, text: primary.startsWith(`always`) ? ` ` : `` }, syntax.inlineComments(atRule, result)) && writesTwinRun(shortName, ruleName, atRule, result, {
-				side: `after`,
-				run: runBehind(params, index),
-				lineText: params,
-				runs: () => commas.map(({ comma }) => runBehind(params, comma)),
-				line: atRule.rangeBy({ index: index + atRuleParamIndex(atRule) }).start.line,
-				twinWrites: (twinOption, _secondary, over) => !twinOption.startsWith(`always`) || !commas.find(({ comma }) => comma === index)?.movesPastCommentsWith(over),
-			}),
+			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses
+			isFixable: (params, index, atRule) => !rereadsAnAddress(params, { start: index + 1, end: index + 1 + runBehind(params, index).length, text: primary.startsWith(`always`) ? ` ` : `` }, syntax.inlineComments(atRule, result)),
 			fix: (atRule, index) => {
 				let paramCommaIndex = index - atRuleParamIndex(atRule)
 

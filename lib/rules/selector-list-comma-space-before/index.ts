@@ -6,9 +6,9 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runInFront } from "../../utils/runInFront/index.ts"
 import { selectorListCommaWhitespaceChecker } from "../../utils/selectorListCommaWhitespaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
-import { runInFront, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -58,7 +58,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
 			// The run in front of the comma may hold the break closing an inline comment, which no fix may write over
-			isFixable: (selector, index, inlineComments, ruleNode, sourceIndex, commaIndices, runString) => {
+			isFixable: (selector, index, inlineComments, ruleNode, runString) => {
 				let runStart = selector.slice(0, index).trimEnd().length
 
 				if (inlineComments.some((inlineComment) => runStart <= inlineComment.endIndex && inlineComment.endIndex < index)) return false
@@ -68,15 +68,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎,b` would come out as `a\,b`, one identifier, or `a\ ,b`, an escaped space, so the warning stands (1789661965)
 				if (!editKeepsEscapedCharacter(selector, { start: index - run.length, end: index, text: primary.includes(`always`) ? ` ` : `` })) return false
 
-				// The break twin writes the same run (#704)
-				return writesTwinRun(shortName, ruleName, ruleNode, result, {
-					side: `before`,
-					run,
-					lineText: selector,
-					runs: () => commaIndices.map((each) => runInFront(runString, each)),
-					line: ruleNode.rangeBy({ index: sourceIndex }).start.line,
-					twinWrites: () => true,
-				})
+				return true
 			},
 			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ ,b` is not cut (1789657288)
 			fix: (ruleNode, index, runString) => {

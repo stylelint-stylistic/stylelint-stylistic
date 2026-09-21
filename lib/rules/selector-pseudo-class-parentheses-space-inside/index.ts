@@ -9,8 +9,8 @@ import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runInFront } from "../../utils/runInFront/index.ts"
 import { selectorSearchCopy } from "../../utils/selectorSearchCopy/index.ts"
-import { runInFront } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 

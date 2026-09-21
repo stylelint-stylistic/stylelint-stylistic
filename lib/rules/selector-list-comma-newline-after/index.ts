@@ -8,9 +8,9 @@ import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { rereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runBehind } from "../../utils/runBehind/index.ts"
 import { selectorSearchCopy } from "../../utils/selectorSearchCopy/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
-import { runBehind, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -90,15 +90,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses
 						let rereads = rereadsAnAddress(selector, primary.startsWith(`always`) ? { start: fixIndex, end: fixIndex, text: getLineBreak(root, result) } : { start: fixIndex, end: fixIndex + runBehind(selector, checkIndex).length, text: `` }, syntax.inlineComments(ruleNode, result))
 						let sourceIndex = copies.toSourceIndex(commaIndex)
-						// The space twin reads the run right behind the comma, so it writes this one too where no comment moved the check (#704)
-						let isFixable = !closesInlineComment && !rereads && writesTwinRun(shortName, ruleName, ruleNode, result, {
-							side: `after`,
-							run: runBehind(selector, checkIndex),
-							lineText: selector,
-							runs: () => checks.map((each) => runBehind(selector, each.checkIndex)),
-							line: ruleNode.rangeBy({ index: sourceIndex }).start.line,
-							twinWrites: () => checkIndex === commaIndex,
-						})
+						let isFixable = !closesInlineComment && !rereads
 
 						report({
 							message: m,

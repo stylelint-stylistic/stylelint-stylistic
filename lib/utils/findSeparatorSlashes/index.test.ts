@@ -22,16 +22,6 @@ function slashesOf (value: string, options: Partial<SlashOptions> = {}): number[
 	return findSeparatorSlashes(value, css, DECL, RESULT, { readsGroups: false, ...options }).map(({ index }) => index)
 }
 
-/**
- * Names the calls around each separator solidus of a value written in plain CSS.
- * @param value - The declaration value the solidi are sought in.
- * @param options - What the walk is told, a declaration's reading unless said otherwise.
- * @returns The names per solidus, the innermost first.
- */
-function functionNamesOf (value: string, options: Partial<SlashOptions> = {}): string[][] {
-	return findSeparatorSlashes(value, css, DECL, RESULT, { readsGroups: false, ...options }).map(({ functionNames }) => functionNames)
-}
-
 describe(`findSeparatorSlashes`, () => {
 	it(`finds the solidus between two parts of a value, wherever it stands and however it is spaced`, () => {
 		expect(slashesOf(`1/2`)).toEqual([1])
@@ -93,14 +83,6 @@ describe(`findSeparatorSlashes`, () => {
 		expect(slashesOf(`fn(g(1/2))`, { ignoreFunctions: [`fn`] })).toEqual([])
 		expect(slashesOf(`fn(1/2)`, { ignoreFunctions: [`/^f/`] })).toEqual([])
 		expect(slashesOf(`fn(1/2)`, { ignoreFunctions: [`g`] })).toEqual([4])
-	})
-
-	it(`names the calls a solidus stands in, the innermost first, a parenthesised group naming nothing`, () => {
-		expect(functionNamesOf(`1/2`)).toEqual([[]])
-		expect(functionNamesOf(`fn(1/2)`)).toEqual([[`fn`]])
-		expect(functionNamesOf(`fn(g(1/2))`)).toEqual([[`g`, `fn`]])
-		expect(functionNamesOf(`fn(1/2) 3/4`)).toEqual([[`fn`], []])
-		expect(functionNamesOf(`fn((1/2))`, { readsGroups: true })).toEqual([[`fn`]])
 	})
 
 	it(`passes over a call the syntax does not read as one`, () => {
