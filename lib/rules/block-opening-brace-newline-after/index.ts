@@ -86,7 +86,7 @@ function unbreakTheRunInFrontOf (node: Node): void {
 }
 
 /**
- * Spells the run in front of the closing brace of a block holding nothing but comments.
+ * Spells a run the rule reads: the one in front of the first node that is no comment, or the one in front of the closing brace of a block holding nothing but comments.
  *
  * The rule reads the run's first character, so what it spells is the whitespace the run opens with, and whatever stands behind that whitespace is kept as it is: a stray semicolon is no whitespace, and no write may drop it ([#655](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/655)).
  * @param primary - The primary option.
@@ -94,7 +94,7 @@ function unbreakTheRunInFrontOf (node: Node): void {
  * @param lineBreak - Returns the break the file is written with, called only where a break is written.
  * @returns The run to write.
  */
-function spellTheTrailingRun (primary: PrimaryOption, standing: string, lineBreak: () => string): string {
+function spellTheRun (primary: PrimaryOption, standing: string, lineBreak: () => string): string {
 	let kept = standing.replace(LEADING_CSS_WHITESPACE, ``)
 
 	if (primary === `never-multi-line`) return kept
@@ -104,6 +104,20 @@ function spellTheTrailingRun (primary: PrimaryOption, standing: string, lineBrea
 
 	// Trim to the break already there, or add one, as `block-closing-brace-newline-before` spells a run of whitespace alone
 	return (index >= 0 ? opening.slice(index) : lineBreak() + opening) + kept
+}
+
+/**
+ * Spells the run in front of a node a comment's break was carried onto, which the `always` options read in that comment's run and write in front of the node.
+ *
+ * The break and the whitespace behind it are the comment's run's, and what the node's own run holds behind its whitespace is kept: a stray semicolon standing in either run is no whitespace, so the write neither drops the node's nor copies the comment's (1789998855).
+ * @param carried - The comment's run, which holds a break.
+ * @param own - The node's own run, or nothing where it carries no raw.
+ * @returns The run to write.
+ */
+function spellTheCarriedRun (carried: string, own: string | undefined): string {
+	let fromTheBreak = carried.slice(carried.search(LINE_BREAK))
+
+	return fromTheBreak.slice(0, fromTheBreak.length - fromTheBreak.replace(LEADING_CSS_WHITESPACE, ``).length) + (own ?? ``).replace(LEADING_CSS_WHITESPACE, ``)
 }
 
 /**
@@ -125,7 +139,7 @@ function writeTheTrailingRun (syntax: Syntax, statement: Rule | AtRule, nodes: C
 /**
  * Asks whether this rule, rather than its space twin, writes the run behind the opening brace ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)).
  *
- * The twin writes that run, the block's first node's, whenever it reports. This rule spells it only where it is the run it checks: its `always` options write a break into the run in front of the first node that is not a comment, and `never-multi-line` empties that one. Behind a comment it writes the first node's run too, but only by taking the breaks out of it, which leaves a space the twin wrote standing and is left standing by a space the twin writes after.
+ * The twin writes that run, the block's first node's, whenever it reports. This rule spells it only where it is the run it checks: its `always` options write a break into the run in front of the first node that is not a comment, and `never-multi-line` takes the whitespace that one opens with off it. Behind a comment it writes the first node's run too, but only by taking the breaks out of it, which leaves a space the twin wrote standing and is left standing by a space the twin writes after.
  * @param statement - The rule or at-rule whose block is checked.
  * @param result - The Stylelint result, which holds the configuration.
  * @param ruleName - This rule's configured name.
@@ -272,7 +286,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (typeof standing !== `string`) return
 
-				let written = spellTheTrailingRun(primary, standing, () => getLineBreak(root, result))
+				let written = spellTheRun(primary, standing, () => getLineBreak(root, result))
 				// The `always` write opens the run with a break; the `never-multi-line` one takes every break out of the block's whitespace in front of what it keeps, so only a comment's own text or a break behind a stray semicolon can leave the block multi-line
 				let isSingleLine = primary === `never-multi-line` && !LINE_BREAK.test(written) && nodes.every((node) => isSingleLineString(nodeString(node, result)))
 
@@ -298,10 +312,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 					if (primary.startsWith(`always`)) {
 						let standing = runInFrontOf(nodeToFix)
-						// Trim to the break already there, or add one
-						let index = standing.search(LINE_BREAK)
 
-						nodeToFixRaws.before = index >= 0 ? standing.slice(index) : getLineBreak(root, result) + standing
+						nodeToFixRaws.before = backupCommentNextBefores.has(nodeToFix)
+							? spellTheCarriedRun(standing, backupCommentNextBefores.get(nodeToFix))
+							: spellTheRun(primary, standing, () => getLineBreak(root, result))
 
 						backupCommentNextBefores.delete(nodeToFix)
 
@@ -311,17 +325,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					if (primary === `never-multi-line`) {
 						restoreCarriedBreaks()
 
-						let fixTarget = statement.first
+						// The comments in front lose their breaks; the checked node's run loses the whitespace it opens with, and a stray semicolon behind it stays with whatever follows it (1789998855)
+						for (let comment = statement.first; comment && comment !== nodeToFix; comment = comment.next()) unbreakTheRunInFrontOf(comment)
 
-						while (fixTarget) {
-							unbreakTheRunInFrontOf(fixTarget)
-
-							if (fixTarget.type !== `comment`) break
-
-							fixTarget = fixTarget.next()
-						}
-
-						nodeToFixRaws.before = ``
+						nodeToFixRaws.before = spellTheRun(primary, nodeToFixRaws.before ?? ``, () => ``)
 					}
 				}
 			}
