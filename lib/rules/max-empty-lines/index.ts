@@ -2,7 +2,7 @@ import { type ChildNode, type Comment, type Container, type Document, type Root,
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, LEADING_LINE_BREAK_RUN, OPENS_WITH_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
+import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, LEADING_LINE_BREAK_RUN, OPENS_WITH_LINE_BREAK, TRAILING_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
@@ -79,8 +79,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let ignoreComments = optionsMatches(secondaryOptions, `ignore`, `comments`)
 		let getChars = replaceEmptyLines.bind(null, primary)
 		let openingLinesAreTaken = takesTheOpeningLines(root, result)
+		let headOpensALine = opensALine(root, result)
+		let writeHead = writeHeadRun.bind(null, getChars, headOpensALine)
 
-		/** Collapses every run of empty lines to the maximum: `raws.before`, a comment's `left`, text and `right`, the raws between the parts of a statement and the node's own text, the run in front of a closing brace, the run in front of a free semicolon behind one, and the root's first node and tail apart from the walk, where an empty line counts one short. */
+		/** Collapses every run of empty lines to the maximum: `raws.before`, a comment's `left`, text and `right`, the raws between the parts of a statement and the node's own text, the run in front of a closing brace, the run in front of a free semicolon behind one, and the root's head and tail apart from the walk, where a run opening a line of the file counts an empty line more. */
 		function fix (): void {
 			let { first } = root
 
@@ -105,21 +107,18 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let firstNodeRawsBefore = first && first.raws.before
 			let rootRawsAfter = root.raws.after
 
-			// In an embedded block, the whitespace around the first and last nodes is the page's
-			if ((document && document.constructor.name) !== `Document`) {
-				// Only the leading run is the file's, the rest written by the walk as any run is, or zero took a free semicolon standing in this raw with the breaks (#598)
-				if (first && firstNodeRawsBefore) first.raws.before = pastTheOpeningLines(firstNodeRawsBefore, openingLinesAreTaken, (text) => text.replace(LEADING_LINE_BREAK_RUN, (run) => getChars(run, true)))
+			// The raw is written here rather than left to the walk, which reads every run as one standing inside a line; how many empty lines this one closes is the head's own question ([#585](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/585))
+			if (first && firstNodeRawsBefore) first.raws.before = pastTheOpeningLines(firstNodeRawsBefore, openingLinesAreTaken, writeHead)
 
-				if (rootRawsAfter) {
-					// Zero is read as one, a file ending on a break satisfying it. An empty root keeps the whole file here, and its leading run is written as such first, or a break survived every `--fix` (#404)
+			if (rootRawsAfter) {
+				// A root standing in an `html` document, whose tail is written as any run is, zero included, since the file's special case is its own; where such a root got no node this raw is the block entire, so the lines it opens with are the taker's here as they are in a file of its own (#682)
+				if ((document && document.constructor.name) === `Document`) root.raws.after = first ? getChars(rootRawsAfter) : pastTheOpeningLines(rootRawsAfter, openingLinesAreTaken, (text) => getChars(writeHead(text)))
+				// A root of its own, a file's or a styled template's, whose tail ends the text it stands in. Zero is read as one, a file ending on a break satisfying it. An empty root keeps the whole file here, and its leading run is written as such first, or a break survived every `--fix` (#404)
+				else {
 					root.raws.after = first
 						? replaceEmptyLines(primary === 0 ? 1 : primary, rootRawsAfter, true)
-						: pastTheOpeningLines(rootRawsAfter, openingLinesAreTaken, (text) => replaceEmptyLines(primary === 0 ? 1 : primary, text.replace(LEADING_LINE_BREAK_RUN, (run) => getChars(run, true)), true))
+						: pastTheOpeningLines(rootRawsAfter, openingLinesAreTaken, (text) => replaceEmptyLines(primary === 0 ? 1 : primary, writeHead(text), true))
 				}
-			}
-			else if (rootRawsAfter) {
-				// A root standing in an `html` document, whose tail is written as any run is, zero included, since the file's special case is its own; where such a root got no node this raw is the block entire, so the lines it opens with are the taker's here as they are in a file of its own (#682)
-				root.raws.after = first ? getChars(rootRawsAfter) : pastTheOpeningLines(rootRawsAfter, openingLinesAreTaken, getChars)
 			}
 		}
 
@@ -148,11 +147,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let eof = matchEndIndex >= endOfFile
 			let problem = false
 
-			// Additional check for beginning of file
-			if (!matchStartIndex || lastIndex === matchStartIndex) emptyLines += 1
+			// Additional check for beginning of file, where the text counted opens a line of it
+			let opensTheText = !matchStartIndex && headOpensALine
+
+			if (opensTheText || lastIndex === matchStartIndex) emptyLines += 1
 			else emptyLines = 0
 
-			opensTheFile = !matchStartIndex || (opensTheFile && lastIndex === matchStartIndex)
+			opensTheFile = opensTheText || (opensTheFile && lastIndex === matchStartIndex)
 			lastIndex = matchEndIndex
 
 			if (emptyLines > primary) problem = true
@@ -279,6 +280,17 @@ function writeStatementText (syntax: Syntax, node: ChildNode, result: PostcssRes
 }
 
 /**
+ * Writes the run a raw opens with and nothing else, so the rest of it is the caller's: the raw of a first node was written by the walk, which reads a run as one standing inside a line, and the raw of a root with no node is written around this call. The narrowing is what keeps zero from taking a free semicolon standing in the raw with the breaks ([#598](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/598)), since `replaceEmptyLines` empties a whole text where it is left no break to keep.
+ * @param getChars - What the rule makes of a run it writes.
+ * @param headOpensALine - Whether the run stands at the start of a line, closing one empty line per break rather than one fewer.
+ * @param text - The raw as it stands.
+ * @returns The raw written.
+ */
+function writeHeadRun (getChars: (text: string, isSpecialCase?: boolean) => string, headOpensALine: boolean, text: string): string {
+	return text.replace(LEADING_LINE_BREAK_RUN, (run) => getChars(run, headOpensALine))
+}
+
+/**
  * Writes a raw the file opens with, leaving the empty lines `no-empty-first-line` takes off where that rule is the one taking them ([#682](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/682)).
  * @param raw - The raw as it stands.
  * @param openingLinesAreTaken - Whether that rule takes the run off this file.
@@ -361,6 +373,24 @@ function replaceEmptyLines (maxLines: number, str: unknown, isSpecialCase: boole
 	if (repeatTimes === 0 || typeof str !== `string`) return ``
 
 	return str.replaceAll(EVERY_RUN_OF_LINE_BREAKS, (run) => run.match(EVERY_LINE_BREAK)?.slice(0, repeatTimes).join(``) ?? run)
+}
+
+/**
+ * Asks whether the text counted opens a line of the file, which decides how many empty lines the run standing at its head closes: one per break where it does, and one fewer where the page's text runs in front of it on that line.
+ *
+ * A file's own text opens one. So does a `<style>` element's block wherever a break follows the opening tag, since `postcss-html` leaves that break in `raws.codeBefore` and the block begins on the line behind it. An inline `style` attribute's block and a styled template's never do: what `codeBefore` ends in is the quotation mark or the backtick, and the run's first break closes the page's line rather than an empty one ([#585](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/585)).
+ *
+ * The question is put to the text in front of the block rather than to the host it came from, so a block no list of hosts names is answered by what stands there.
+ * @param root - The stylesheet.
+ * @param result - The Stylelint result, which tells a standalone root from a block of a document.
+ * @returns True where nothing but a break stands in front of the text counted.
+ */
+function opensALine (root: Root, result: PostcssResult): boolean {
+	if (result.root === root) return true
+
+	let { codeBefore } = root.raws as { codeBefore?: string }
+
+	return !codeBefore || TRAILING_LINE_BREAK.test(codeBefore)
 }
 
 /**

@@ -10,7 +10,24 @@ testRule({
 	config: [1],
 	customSyntax: `postcss-styled-syntax`,
 
+	accept: [
+		{
+			// See #585
+			description: `a blank line opening a template, whose run opens on the line the host code stands on`,
+			code: `const A = styled.div\`\n\n\tcolor: pink;\n\`\n`,
+		},
+	],
+
 	reject: [
+		{
+			// See #585
+			description: `two blank lines opening a template, one of them standing on a line of its own`,
+			code: `const A = styled.div\`\n\n\n\tcolor: pink;\n\`\n`,
+			fixed: `const A = styled.div\`\n\n\tcolor: pink;\n\`\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(1),
+		},
 		// See #583
 		{
 			description: `two blank lines inside a template, whose surrounding code the stringifier of the syntax prints in front of the stylesheet`,
