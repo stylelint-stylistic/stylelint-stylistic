@@ -118,6 +118,16 @@ testRule({
 			code: `a {\n  color: pink;\n  ; top: 1px;\n}`,
 		},
 		{
+			// The stray semicolon stands on the brace's line and is no part of the run the brace's level is read off
+			description: `a closing brace standing at its level behind a stray semicolon on its line`,
+			code: `a {\n  color: pink;\n;}`,
+		},
+		{
+			// The same line inside a nested rule, where the brace stands a level in
+			description: `a closing brace of a nested rule standing at its level behind a stray semicolon on its line`,
+			code: `a {\n  b {\n    color: pink;\n  ;}\n}`,
+		},
+		{
 			description: `a universal selector on one line`,
 			code: `* { top: 0; }`,
 		},
@@ -234,6 +244,15 @@ testRule({
 			line: 3,
 			column: 7,
 			message: messages.expected(`2 spaces`),
+		},
+		{
+			// The run in front of the stray semicolon is the brace's indentation, and the fix writes it alone
+			description: `a closing brace indented a level too deep behind a stray semicolon on its line`,
+			code: `a {\n  color: pink;\n  ;}`,
+			fixed: `a {\n  color: pink;\n;}`,
+			line: 3,
+			column: 4,
+			message: messages.expected(`0 spaces`),
 		},
 		{
 			description: `a closing brace indented one level`,

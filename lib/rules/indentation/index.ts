@@ -154,9 +154,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let expectedClosingBraceIndentation = indentChar.repeat(closingBraceLevel)
 			// Read wherever the parser filed the run: behind an at-rule with neither block nor semicolon it is in `raws.between`, trimmed by `checkAtRuleParams`, so nobody measured the brace's line (#509)
 			let blockAfter = isRule(node) || isAtRule(node) ? getBlockAfter(syntax, node) ?? `` : ``
-			let afterLineStart = lastLineStart(blockAfter, syntax.hostCodeSpans(blockAfter, node))
+			let blockAfterSpans = syntax.hostCodeSpans(blockAfter, node)
+			let afterLineStart = lastLineStart(blockAfter, blockAfterSpans)
 
-			if ((isRule(node) || isAtRule(node)) && hasBlock(node) && afterLineStart >= 0 && blockAfter.slice(afterLineStart) !== expectedClosingBraceIndentation) {
+			// The brace's indentation is the whitespace opening the last line of that run, as a node's is the whitespace opening the last line of `raws.before` (#452, #516). What stands behind it is on the brace's line: a styled template's interpolation, or a free semicolon wherever the run reaches the brace at all — behind a block the parser takes such a semicolon into the last node's `raws.ownSemicolon` instead
+			if ((isRule(node) || isAtRule(node)) && hasBlock(node) && afterLineStart >= 0 && lastLineIndentation(blockAfter, blockAfterSpans) !== expectedClosingBraceIndentation) {
 				let problemIndex = nodeString(node, result).length - 1
 
 				report({
@@ -168,7 +170,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					result,
 					ruleName,
 					fix () {
-						setBlockAfter(syntax, node, fixIndentation(blockAfter, expectedClosingBraceIndentation, syntax.hostCodeSpans(blockAfter, node)))
+						setBlockAfter(syntax, node, fixIndentation(blockAfter, expectedClosingBraceIndentation, blockAfterSpans))
 					},
 				})
 			}
