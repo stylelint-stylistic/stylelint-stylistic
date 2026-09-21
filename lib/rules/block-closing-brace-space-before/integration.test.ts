@@ -60,5 +60,14 @@ testRule({
 				},
 			],
 		},
+		{
+			// The twin behind reads the break behind a stray semicolon as its own, and used to put one in front of the space this rule wrote, the fixing run coming back clean over a file this rule refuses (1789979881)
+			description: `a break behind a stray semicolon, which the twin behind accepts and would write back in front of the space: the space is not written, and this rule's warning stands`,
+			code: `a { b: c;;\n}`,
+			fixed: `a { b: c;;\n}`,
+			line: 1,
+			column: 11,
+			message: messages.expectedBefore(),
+		},
 	],
 })

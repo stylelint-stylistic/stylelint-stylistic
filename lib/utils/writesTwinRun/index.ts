@@ -1,14 +1,14 @@
 import type { Node } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { EVERY_LINE_BREAK, LEADING_CSS_WHITESPACE, LEADING_LINE_BREAK, TRAILING_CSS_WHITESPACE, TRAILING_LINE_BREAK_AND_INDENTATION } from "../../regexps.ts"
+import { EVERY_LINE_BREAK, LEADING_CSS_WHITESPACE, LEADING_LINE_BREAK, LINE_BREAK, TRAILING_CSS_WHITESPACE, TRAILING_LINE_BREAK_AND_INDENTATION } from "../../regexps.ts"
 import { fixDisabledOnLine } from "../fixDisabledOnLine/index.ts"
 import { getLineBreak } from "../getLineBreak/index.ts"
 import { isSingleLineString } from "../isSingleLineString/index.ts"
 import { type NeighbourRule, neighbourSettings, speaksOf } from "../neighbourSettings/index.ts"
 
 /** The two twins: the rule asking for a break and the rule asking for a space. */
-type Twin = `newline` | `space`
+export type Twin = `newline` | `space`
 
 /** A spelling of the run, as the twins judge it; `other` (two spaces, a space and a break) is one no option accepts. */
 type Run = `newline` | `space` | `none` | `other`
@@ -77,6 +77,16 @@ function twinsOf (shortName: string): Record<Twin, NeighbourRule> | undefined {
 	return table
 }
 
+/** How one twin reads and writes a run no one spelling stands for. */
+export type TwinReading = {
+
+	/** Whether the option is content with the run as given. */
+	accepts: (option: string, run: string) => boolean,
+
+	/** The run the option's fix leaves over the one given. */
+	writes: (option: string, run: string) => string,
+}
+
 /** The run a twin's check reads at one delimiter, and what its lineness is judged over. */
 export type TwinRun = {
 
@@ -103,6 +113,9 @@ export type TwinRun = {
 
 	/** Whether the twin's own fix guards leave it a write here, asked of a twin behind alone: one ahead judged the run whether or not it may write it. Yes where left out. */
 	twinFixes?: () => boolean,
+
+	/** How each twin reads and writes the run, where it holds more than whitespace and the twins write different parts of it, so that a write is judged by the run it leaves rather than by a spelling (1789979881). Where left out, the run is whitespace alone and the gate models it by its spelling: an option accepts the one spelling its rule writes, and is taken to write it over the whole run. */
+	readings?: Record<Twin, TwinReading>,
 }
 
 /**
@@ -174,7 +187,7 @@ export function runInFront (text: string, index: number): string {
 /**
  * Asks whether a rule is the one to write the run beside a delimiter, which its twin reads and writes too ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)).
  *
- * A rule writes only where every twin behind it in run order that would write the very same run accepts a spelling it accepts, or is one the write silences; otherwise that twin's write would be the file's last, and this rule's warning would be dropped as fixed over a run it refuses. A twin ahead ran before the write, so where it was content with the run as it stood and refuses what the write leaves, the write would put the file in breach of a rule that reported nothing ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)).
+ * A rule writes only where every twin behind it in run order that would write the very same run is content with the write, or is one the write silences, or writes over it a run this rule accepts or is silenced by; otherwise that twin's write would be the file's last, and this rule's warning would be dropped as fixed over a run it refuses. A twin ahead ran before the write, so where it was content with the run as it stood and refuses what the write leaves, the write would put the file in breach of a rule that reported nothing ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)).
  *
  * A twin behind that would write nothing gates nothing: its `disableFix` and its disable ranges are asked here, and whatever else keeps it from reading the run — the secondaries that pass it over, the run it would rather read — is the caller's to answer in `twinWrites`, and its own fix guards in `twinFixes`. A twin ahead is asked the same but for `disableFix` and `twinFixes`, a rule that may not write still reporting or staying silent ([#536](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/536)). A `-single-line` or `-multi-line` option is judged over the text as the write leaves it, a written break making it multi-line.
  * @param shortName - The asking rule's short name.
@@ -194,32 +207,54 @@ export function writesTwinRun (shortName: string, ruleName: string, node: Node, 
 
 	if (position === -1) return true
 
-	let { side, run, lineText, runs, breakPattern, line, twinWrites, twinFixes } = twinRun
+	let { side, run, lineText, runs, breakPattern, line, twinWrites, twinFixes, readings } = twinRun
 	let [asking, option] = settings[position] as [Twin, string, boolean, string]
-	let accepted = accepts(asking, option)
-	let writes: Run = option.startsWith(`always`) ? asking : `none`
-	let standing = spellingOf(side, run, breakPattern)
 	let breaksOutsideTheRuns: number | undefined
 	let runsInTheText: string[] | undefined
 
 	/**
-	 * Asks whether the text is one line once a spelling stands over every run.
+	 * Asks whether the text is one line once a write stands over every run.
 	 *
 	 * A text holding none of the rule's runs is counted as it stands: a break written in front of an opening brace leaves the block that brace opens the lines it had.
-	 * @param written - The spelling over the runs.
+	 * @param over - The whitespace written over the runs.
 	 * @returns True where it is one line.
 	 */
-	function isSingleLineWith (written: Run): boolean {
+	function isSingleLineWith (over: string): boolean {
 		runsInTheText ??= runs()
 
-		if (written === `newline` && runsInTheText.length > 0) return false
+		if (LINE_BREAK.test(over) && runsInTheText.length > 0) return false
 
 		breaksOutsideTheRuns ??= breaksOf(lineText) - runsInTheText.reduce((sum, each) => sum + breaksOf(each), 0)
 
 		return breaksOutsideTheRuns === 0
 	}
 
-	let written = writes === `newline` ? getLineBreak(node, result) : (writes === `space` ? ` ` : ``)
+	/**
+	 * Asks whether a twin's option is content with a run.
+	 * @param twin - The twin.
+	 * @param twinOption - Its primary.
+	 * @param over - The run.
+	 * @returns True where it accepts it.
+	 */
+	function acceptsRun (twin: Twin, twinOption: string, over: string): boolean {
+		return readings ? readings[twin].accepts(twinOption, over) : accepts(twin, twinOption).includes(spellingOf(side, over, breakPattern))
+	}
+
+	/**
+	 * The run a twin's fix leaves.
+	 * @param twin - The twin.
+	 * @param twinOption - Its primary.
+	 * @param over - The run it writes over.
+	 * @returns The run written.
+	 */
+	function writtenBy (twin: Twin, twinOption: string, over: string): string {
+		if (readings) return readings[twin].writes(twinOption, over)
+		if (!twinOption.startsWith(`always`)) return ``
+
+		return twin === `newline` ? getLineBreak(node, result) : ` `
+	}
+
+	let written = writtenBy(asking, option, run)
 
 	/**
 	 * Asks whether a twin copy would write this run, its fix kept on by the disable comments.
@@ -236,11 +271,14 @@ export function writesTwinRun (shortName: string, ruleName: string, node: Node, 
 
 	let restsBehind = settings.slice(position + 1).every(([behind, behindOption, behindFixTurnedOff, behindName]) => {
 		// A turned-off fix rewrites nothing, so it gates nothing (#485)
-		if (behind === asking || behindFixTurnedOff || twinFixes?.() === false || !speaksOf(behindOption, () => isSingleLineWith(writes)) || !contends(behindOption, behindName, written)) return true
+		if (behind === asking || behindFixTurnedOff || twinFixes?.() === false || !speaksOf(behindOption, () => isSingleLineWith(written)) || !contends(behindOption, behindName, written)) return true
 
-		let behindWrites: Run = behindOption.startsWith(`always`) ? behind : `none`
+		// It is content with the write and writes nothing; or it writes, and what it leaves silences the asking rule or is a run that rule accepts
+		if (acceptsRun(behind, behindOption, written)) return true
 
-		return accepts(behind, behindOption).some((spelling) => accepted.includes(spelling)) || !speaksOf(option, () => isSingleLineWith(behindWrites))
+		let behindWrites = writtenBy(behind, behindOption, written)
+
+		return !speaksOf(option, () => isSingleLineWith(behindWrites)) || acceptsRun(asking, option, behindWrites)
 	})
 
 	// A turned-off fix exempts nothing ahead: such a rule still reports, or still stays silent
@@ -252,13 +290,11 @@ export function writesTwinRun (shortName: string, ruleName: string, node: Node, 
 
 		if (!contends(aheadOption, aheadName, written)) return true
 
-		let aheadAccepts = accepts(ahead, aheadOption)
-
 		// It warned about the run as it stood, or is silent about what the write leaves
-		if (readStanding && speaksOf(aheadOption, () => isSingleLineString(lineText)) && !aheadAccepts.includes(standing)) return true
-		if (!speaksOf(aheadOption, () => isSingleLineWith(writes))) return true
+		if (readStanding && speaksOf(aheadOption, () => isSingleLineString(lineText)) && !acceptsRun(ahead, aheadOption, run)) return true
+		if (!speaksOf(aheadOption, () => isSingleLineWith(written))) return true
 
-		return aheadAccepts.includes(writes)
+		return acceptsRun(ahead, aheadOption, written)
 	})
 
 	return restsBehind && restsAhead
