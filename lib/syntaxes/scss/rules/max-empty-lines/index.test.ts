@@ -93,6 +93,15 @@ testRule({
 			column: 1,
 			message: messages.expected(2),
 		},
+		// See #581
+		{
+			description: `three blank lines between the colon of a nested property and its block`,
+			code: `a {\n\tb:\n\n\n\n{ c: d; }\n}\n`,
+			fixed: `a {\n\tb:\n\n\n{ c: d; }\n}\n`,
+			line: 5,
+			column: 1,
+			message: messages.expected(2),
+		},
 	],
 })
 
