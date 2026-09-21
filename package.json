@@ -44,11 +44,11 @@
 	},
 	"devDependencies": {
 		"@firefoxic/beautypography": "^0.1.0",
-		"@firefoxic/oxlint-config": "^0.4.0",
+		"@firefoxic/oxlint-config": "^0.5.0",
 		"@morev/stylelint-testing-library": "^1.1.1",
 		"@types/node": "^26.2.0",
 		"@vitest/coverage-v8": "4.1.10",
-		"oxlint": "^1.77.0",
+		"oxlint": "^1.83.0",
 		"postcss-html": "^2.0.0",
 		"postcss-less": "^6.0.0",
 		"postcss-scss": "^4.0.9",

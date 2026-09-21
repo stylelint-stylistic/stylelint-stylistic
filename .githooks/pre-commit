@@ -42,10 +42,10 @@ trap 'rm -rf "$work"' EXIT
 # Git hands a hook the very index the commit is being made from — `GIT_INDEX_FILE` names a temporary one where `git commit -a` or a commit over paths builds it — so what is written out is exactly what is about to be committed, and `-u`, which would write that index back, must never be passed. Tracked files alone: no untracked file, no `dist/`, nothing the commit does not carry. A test reading a document off disk therefore reads the committed edition of it.
 git checkout-index -a -f --ignore-skip-worktree-bits --prefix="$work/"
 
-# `.oxlintrc.json` extends its shared configuration by a path relative to itself, so the packages have to stand beside the copy. And the copy stands outside the repository because oxlint reads `.gitignore` and passes over every path under an ignored directory, `tmp/` among them, however explicitly the path is named.
+# `oxlint.config.ts` imports its shared configuration as a package, and a package is resolved from the directory of the file importing it, so the packages have to stand beside the copy. And the copy stands outside the repository because oxlint reads `.gitignore` and passes over every path under an ignored directory, `tmp/` among them, however explicitly the path is named.
 ln -s "$root/node_modules" "$work/node_modules"
 
-# The `overrides` of `.oxlintrc.json` name their files from the root of the repository, and the copy is that root.
+# The `overrides` of `oxlint.config.ts` name their files from the root of the repository, and the copy is that root.
 cd "$work"
 
 # What git prints is a path and never a pattern, and a path holding a space is one path all the same. Split it into pieces and neither check says a word: oxlint passes over a path that does not exist as long as one of the paths it was given does, and `vitest related` answers a list it cannot match with a run of no files, which is a pass. So a file would be committed unchecked while the hook reported success.
