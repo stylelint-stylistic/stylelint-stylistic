@@ -1,3 +1,5 @@
+import { messages as newlineAfterMessages } from "../at-rule-name-newline-after/index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -481,6 +483,151 @@ testRule({
 			line: 1,
 			column: 18,
 			message: messages.expectedAfter(`@-webkit-keyframes`),
+		},
+	],
+})
+
+// The break twin reads and writes the run behind the name too, and the library lists it behind this rule, so its write would be the file's last (1789508664)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/at-rule-name-newline-after": `always` },
+
+	reject: [
+		{
+			// The two options disagree over the run, and the twin behind would write its break back over the space
+			description: `a break behind the name, which the twin behind this rule asks for: the space is not written, and this rule's warning stands`,
+			code: `
+				@media
+				(a) { b { c: d } }
+			`,
+			fixed: `
+				@media
+				(a) { b { c: d } }
+			`,
+			line: 1,
+			column: 6,
+			endLine: 1,
+			endColumn: 7,
+			message: messages.expectedAfter(`@media`),
+		},
+		{
+			// The twin behind writes the run both rules refuse, and no space of this rule's stands behind its break
+			description: `no whitespace behind the name, where the twin behind writes its break: the file rests on that break with this rule's warning`,
+			code: `@media(a) { b { c: d } }`,
+			fixed: `
+				@media
+				(a) { b { c: d } }
+			`,
+			warnings: [
+				{
+					line: 1,
+					column: 6,
+					endLine: 1,
+					endColumn: 7,
+					message: messages.expectedAfter(`@media`),
+				},
+				{
+					line: 1,
+					column: 6,
+					endLine: 1,
+					endColumn: 7,
+					message: newlineAfterMessages.expectedAfter(`@media`),
+				},
+			],
+		},
+		{
+			// The guard that keeps what the base did: a twin behind that writes into no charset rule gates nothing
+			description: `two spaces behind the name of a charset rule that declares no encoding, which the twin behind reports and never writes: the space is written`,
+			code: `@CHARSET  "utf-8";`,
+			fixed: `@CHARSET "utf-8";`,
+			warnings: [
+				{
+					line: 1,
+					column: 8,
+					endLine: 1,
+					endColumn: 9,
+					message: messages.expectedAfter(`@CHARSET`),
+				},
+				{
+					line: 1,
+					column: 8,
+					endLine: 1,
+					endColumn: 9,
+					message: newlineAfterMessages.expectedAfter(`@CHARSET`),
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/at-rule-name-newline-after": `always-multi-line` },
+
+	reject: [
+		{
+			// The twins count the lines of the name and the params, not of the block
+			description: `two spaces behind the name of an at-rule whose block alone is multi-line, which the twin behind says nothing about: the space is written`,
+			code: `
+				@media  (a) {
+					b { c: d }
+				}
+			`,
+			fixed: `
+				@media (a) {
+					b { c: d }
+				}
+			`,
+			line: 1,
+			column: 6,
+			endLine: 1,
+			endColumn: 7,
+			message: messages.expectedAfter(`@media`),
+		},
+		{
+			// The lines are counted as the write leaves them
+			description: `a break behind the name, the only one of the name and the params, which the space takes away and the twin behind then says nothing about: the space is written`,
+			code: `
+				@media
+				(a) { b { c: d } }
+			`,
+			fixed: `@media (a) { b { c: d } }`,
+			line: 1,
+			column: 6,
+			endLine: 1,
+			endColumn: 7,
+			message: messages.expectedAfter(`@media`),
+		},
+		{
+			// The second pair of options that spell one run two ways
+			description: `two spaces behind the name of an at-rule with multi-line params, where the twin behind writes its break: no space of this rule's is written in front of it`,
+			code: `
+				@media  (a),
+				(b) { c { d: e } }
+			`,
+			fixed: `
+				@media
+				  (a),
+				(b) { c { d: e } }
+			`,
+			warnings: [
+				{
+					line: 1,
+					column: 6,
+					endLine: 1,
+					endColumn: 7,
+					message: messages.expectedAfter(`@media`),
+				},
+				{
+					line: 1,
+					column: 6,
+					endLine: 1,
+					endColumn: 7,
+					message: newlineAfterMessages.expectedAfter(`@media`),
+				},
+			],
 		},
 	],
 })

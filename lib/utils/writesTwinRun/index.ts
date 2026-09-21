@@ -15,6 +15,8 @@ type Run = `newline` | `space` | `none` | `other`
 
 /** The primaries of every rule that shares its run with a twin, by short name; the twin's name swaps `-newline-` and `-space-`. */
 const TWIN_OPTIONS: Record<string, string[]> = {
+	"at-rule-name-newline-after": [`always`, `always-multi-line`],
+	"at-rule-name-space-after": [`always`, `always-single-line`],
 	"block-closing-brace-newline-before": [`always`, `always-multi-line`, `never-multi-line`],
 	"block-closing-brace-space-before": [`always`, `never`, `always-single-line`, `never-single-line`, `always-multi-line`, `never-multi-line`],
 	"block-opening-brace-newline-after": [`always`, `always-multi-line`, `never-multi-line`],
@@ -98,6 +100,9 @@ export type TwinRun = {
 
 	/** Whether the twin, under its primary and secondaries, reads this very run and would write it where the given whitespace stands over it; a twin passing the delimiter over or reading behind a comment contends for nothing, and a write can move that comment against the delimiter. */
 	twinWrites: (option: string, secondary: Record<string, unknown>, run: string) => boolean,
+
+	/** Whether the twin's own fix guards leave it a write here, asked of a twin behind alone: one ahead judged the run whether or not it may write it. Yes where left out. */
+	twinFixes?: () => boolean,
 }
 
 /**
@@ -171,7 +176,7 @@ export function runInFront (text: string, index: number): string {
  *
  * A rule writes only where every twin behind it in run order that would write the very same run accepts a spelling it accepts, or is one the write silences; otherwise that twin's write would be the file's last, and this rule's warning would be dropped as fixed over a run it refuses. A twin ahead ran before the write, so where it was content with the run as it stood and refuses what the write leaves, the write would put the file in breach of a rule that reported nothing ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)).
  *
- * A twin behind that would write nothing gates nothing: its `disableFix` and its disable ranges are asked here, and whatever else keeps it from writing — the secondaries that pass it over, its own fix guards, the run it would rather read — is the caller's to answer in `twinWrites`. A twin ahead is asked the same but for `disableFix`, a turned-off fix still reporting or staying silent ([#536](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/536)). A `-single-line` or `-multi-line` option is judged over the text as the write leaves it, a written break making it multi-line.
+ * A twin behind that would write nothing gates nothing: its `disableFix` and its disable ranges are asked here, and whatever else keeps it from reading the run — the secondaries that pass it over, the run it would rather read — is the caller's to answer in `twinWrites`, and its own fix guards in `twinFixes`. A twin ahead is asked the same but for `disableFix` and `twinFixes`, a rule that may not write still reporting or staying silent ([#536](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/536)). A `-single-line` or `-multi-line` option is judged over the text as the write leaves it, a written break making it multi-line.
  * @param shortName - The asking rule's short name.
  * @param ruleName - The asking rule's configured name.
  * @param node - The node the run stands in.
@@ -189,7 +194,7 @@ export function writesTwinRun (shortName: string, ruleName: string, node: Node, 
 
 	if (position === -1) return true
 
-	let { side, run, lineText, runs, breakPattern, line, twinWrites } = twinRun
+	let { side, run, lineText, runs, breakPattern, line, twinWrites, twinFixes } = twinRun
 	let [asking, option] = settings[position] as [Twin, string, boolean, string]
 	let accepted = accepts(asking, option)
 	let writes: Run = option.startsWith(`always`) ? asking : `none`
@@ -231,7 +236,7 @@ export function writesTwinRun (shortName: string, ruleName: string, node: Node, 
 
 	let restsBehind = settings.slice(position + 1).every(([behind, behindOption, behindFixTurnedOff, behindName]) => {
 		// A turned-off fix rewrites nothing, so it gates nothing (#485)
-		if (behind === asking || behindFixTurnedOff || !speaksOf(behindOption, () => isSingleLineWith(writes)) || !contends(behindOption, behindName, written)) return true
+		if (behind === asking || behindFixTurnedOff || twinFixes?.() === false || !speaksOf(behindOption, () => isSingleLineWith(writes)) || !contends(behindOption, behindName, written)) return true
 
 		let behindWrites: Run = behindOption.startsWith(`always`) ? behind : `none`
 

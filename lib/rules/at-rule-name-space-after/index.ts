@@ -49,7 +49,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			result,
 			syntax,
 			locationChecker: checker.after,
+			shortName,
 			checkedRuleName: ruleName,
+			// The break twin writes into no `@charset` (#708)
+			twinIsFixable: (atRule) => atRule.name.toLowerCase() !== `charset`,
 			fix: (atRule) => {
 				if (typeof atRule.raws.afterName === `string`) atRule.raws.afterName = atRule.raws.afterName.replace(LEADING_WHITESPACE, ` `)
 			},

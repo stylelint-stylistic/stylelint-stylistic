@@ -9,14 +9,15 @@ import { LEADING_ENCODING_DECLARATION } from "../../regexps.ts"
  *
  * A byte-order mark is answered yes over, PostCSS taking it off the text it hands back while the offsets stay where they were. The mark outranks the declaration there, so the at-rule declares nothing either way, and the answer only ever holds a rule back.
  * @param atRule - The at-rule.
+ * @param text - The text of its root without a byte-order mark, where the question is about a respelling of it rather than the file as parsed.
  * @returns True where the at-rule is that declaration.
  */
-export function declaresTheEncoding (atRule: AtRule): boolean {
+export function declaresTheEncoding (atRule: AtRule, text?: string): boolean {
 	if (atRule.name !== `charset` || atRule.source?.start?.offset !== 0) return false
 
 	let root = atRule.root()
 
 	if (root.first !== atRule) return false
 
-	return LEADING_ENCODING_DECLARATION.test(root.source?.input.css ?? ``)
+	return LEADING_ENCODING_DECLARATION.test(text ?? root.source?.input.css ?? ``)
 }
