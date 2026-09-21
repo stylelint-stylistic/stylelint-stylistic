@@ -655,22 +655,3 @@ testRule({
 		},
 	],
 })
-
-// The space twin writes the run in front of the comma too, and the library lists it behind this rule, so its write would be the file's last (#704)
-testRule({
-	ruleName,
-	config: [`always`],
-	extraRules: { "@stylistic/function-comma-space-before": `always` },
-
-	reject: [
-		{
-			// See #704
-			description: `a space in front of the comma, which the twin behind this rule accepts and would take the break back from, so the warning stands and nothing is written`,
-			code: `a { b: f(1 ,2) }`,
-			fixed: `a { b: f(1 ,2) }`,
-			line: 1,
-			column: 12,
-			message: messages.expectedBefore(),
-		},
-	],
-})

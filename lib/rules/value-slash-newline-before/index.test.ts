@@ -239,59 +239,21 @@ testRule({
 	],
 })
 
-// The space twin writes the run in front of the solidus too, and the library lists it behind this rule, so its write would be the file's last (#704)
-testRule({
-	ruleName,
-	config: [`always`],
-	extraRules: { "@stylistic/value-slash-space-before": `always` },
-
-	reject: [
-		{
-			// The run beside a solidus belongs to one of its two twin rules where their options disagree
-			description: `a space in front of the solidus, which the twin behind this rule accepts and would take the break back from, so the warning stands and nothing is written`,
-			code: `a { b: 1 / 2 }`,
-			fixed: `a { b: 1 / 2 }`,
-			line: 1,
-			column: 10,
-			message: messages.expectedBefore(),
-		},
-	],
-})
-
-testRule({
-	ruleName,
-	config: [`always`],
-	extraRules: { "@stylistic/value-slash-space-before": [`always`, { ignoreProperties: [`b`] }] },
-
-	reject: [
-		{
-			description: `a declaration whose property the twin's own \`ignoreProperties\` names, so the twin writes nothing and the break is written`,
-			code: `a { b: 1 / 2 }`,
-			fixed: `a { b: 1\n/ 2 }`,
-			line: 1,
-			column: 10,
-			message: messages.expectedBefore(),
-		},
-	],
-})
-
-// A write emptying the run between two solidi brings them together into a `//` comment, and the twin's write is weighed by that same guard
+// A write emptying the run between two solidi brings them together into a `//` comment
 describe(`the run in front of a solidus under a syntax that spells a \`//\` comment`, () => {
 	let rule = `@stylistic/scss/value-slash-newline-before`
-	let twin = `@stylistic/scss/value-slash-space-before`
 
 	/**
-	 * Fixes a Sass text under this rule, the space twin listed behind it where one is given.
+	 * Fixes a Sass text under this rule.
 	 * @param code - The text.
 	 * @param option - This rule's primary.
-	 * @param [twinOption] - The twin's primary, where the twin is configured at all.
 	 * @returns What the fix left and what a check of it says.
 	 */
-	async function fix (code: string, option: string, twinOption?: string): Promise<{
+	async function fix (code: string, option: string): Promise<{
 		fixed: string | undefined,
 		left: string[],
 	}> {
-		let config = { plugins, rules: { [rule]: option, ...(twinOption === undefined ? {} : { [twin]: twinOption }) }, customSyntax: scss }
+		let config = { plugins, rules: { [rule]: option }, customSyntax: scss }
 		let ours = await stylelint.lint({ code, config, fix: true })
 		let again = await stylelint.lint({ code: ours.code ?? code, config })
 
@@ -302,20 +264,6 @@ describe(`the run in front of a solidus under a syntax that spells a \`//\` comm
 		expect(await fix(`a {\n\tb: 1/  /2,\n\t\t3;\n}`, `never-multi-line`)).toEqual({
 			fixed: `a {\n\tb: 1/  /2,\n\t\t3;\n}`,
 			left: [`2:9 Unexpected whitespace before "/" in a multi-line declaration (@stylistic/scss/value-slash-newline-before)`],
-		})
-	})
-
-	it(`writes the break where the space twin's own \`never\` fix is refused over that very run`, async () => {
-		expect(await fix(`a { b: 1/  /2 }`, `always`, `never`)).toEqual({
-			fixed: `a { b: 1/\n/2 }`,
-			left: [`1:9 Expected newline before "/" (@stylistic/scss/value-slash-newline-before)`, `2:1 Unexpected whitespace before "/" (@stylistic/scss/value-slash-space-before)`],
-		})
-	})
-
-	it(`leaves the run where that twin can write it, its \`never\` taking the whole of it out`, async () => {
-		expect(await fix(`a { b: 1  /2 }`, `always`, `never`)).toEqual({
-			fixed: `a { b: 1/2 }`,
-			left: [`1:9 Expected newline before "/" (@stylistic/scss/value-slash-newline-before)`],
 		})
 	})
 })

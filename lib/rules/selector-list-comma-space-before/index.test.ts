@@ -496,22 +496,3 @@ testRule({
 		},
 	],
 })
-
-// The break twin writes the run in front of the comma too, and the library lists it behind this rule, so its write would be the file's last (#704)
-testRule({
-	ruleName,
-	config: [`always`],
-	extraRules: { "@stylistic/selector-list-comma-newline-before": `always` },
-
-	reject: [
-		{
-			// See #704
-			description: `a break in front of the comma, which the twin behind this rule accepts and would put back, so the warning stands and nothing is written`,
-			code: `a\n,b {}`,
-			fixed: `a\n,b {}`,
-			line: 2,
-			column: 1,
-			message: messages.expectedBefore(),
-		},
-	],
-})

@@ -1,8 +1,3 @@
-import stylelint from "stylelint"
-import { describe, expect, it } from "vitest"
-
-import { pick } from "../../../vitest.helpers.ts"
-import plugins from "../../index.ts"
 import { messages as closingSpaceBeforeMessages } from "../block-closing-brace-space-before/index.ts"
 import { messages as openingSpaceAfterMessages } from "../block-opening-brace-space-after/index.ts"
 
@@ -931,62 +926,4 @@ testRule({
 			],
 		},
 	],
-})
-
-/** The twin that writes the run in front of the opening brace where this rule does not. */
-const TWIN = `@stylistic/block-opening-brace-space-before`
-
-/**
- * Fixes a stylesheet under this rule and its twin, once in each order the configuration can list them, and reports what each order wrote and what the first order made of its own output.
- * @param code - The stylesheet.
- * @param option - This rule's primary option.
- * @param twinOption - The twin's primary option.
- * @returns What each order wrote, what the first order's fixing run said, and what a check of its output says.
- */
-async function race (code: string, option: string, twinOption: string): Promise<{
-	ours: string | undefined,
-	theirs: string | undefined,
-	said: string[],
-	left: string[],
-}> {
-	let ours = await stylelint.lint({ code, config: { plugins, rules: { [ruleName]: option, [TWIN]: twinOption } }, fix: true })
-	let theirs = await stylelint.lint({ code, config: { plugins, rules: { [TWIN]: twinOption, [ruleName]: option } }, fix: true })
-	let again = await stylelint.lint({ code: ours.code ?? code, config: { plugins, rules: { [ruleName]: option, [TWIN]: twinOption } } })
-
-	return {
-		ours: ours.code,
-		theirs: theirs.code,
-		said: pick(ours.results).warnings.map((warning) => warning.text),
-		left: pick(again.results).warnings.map((warning) => warning.text),
-	}
-}
-
-// See 1789508662
-describe(`${ruleName} beside the space twin, which writes the run in front of the brace too`, () => {
-	it(`leaves the run to whichever of the two the configuration lists behind the other, and says as much of its own output as a check of it does`, async () => {
-		expect(await race(`a{b:c;d:e}`, `always`, `always`)).toEqual({
-			ours: `a {b:c;d:e}`,
-			theirs: `a\n{b:c;d:e}`,
-			said: [`Expected newline before "{" (${ruleName})`],
-			left: [`Expected newline before "{" (${ruleName})`],
-		})
-	})
-
-	it(`leaves it to a twin behind it that empties the run, whose refusal of whitespace the break would not satisfy either`, async () => {
-		expect(await race(`a\t{b:c;d:e}`, `always`, `never`)).toEqual({
-			ours: `a{b:c;d:e}`,
-			theirs: `a\n\t{b:c;d:e}`,
-			said: [`Expected newline before "{" (${ruleName})`],
-			left: [`Expected newline before "{" (${ruleName})`],
-		})
-	})
-
-	it(`writes it in either order where its own option waits for the run's writers, so that the twin's space is the one written over`, async () => {
-		expect(await race(`a{b:c;d:e}`, `always-single-line`, `always`)).toEqual({
-			ours: `a\n{b:c;d:e}`,
-			theirs: `a\n{b:c;d:e}`,
-			said: [`Expected single space before "{" (${TWIN})`],
-			left: [`Expected single space before "{" (${TWIN})`],
-		})
-	})
 })

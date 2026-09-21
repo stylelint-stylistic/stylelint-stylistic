@@ -4,6 +4,7 @@ import rules from "../rules/index.ts"
 import { namespaces } from "../syntaxes/index.ts"
 import { addNamespace } from "../utils/addNamespace/index.ts"
 import { configurationError } from "../utils/configurationError/index.ts"
+import { configuredSetting, contradictionsAmong, contradictionsError } from "../utils/contradictingSettings/index.ts"
 import type { RuleFactory } from "../utils/defineRule/index.ts"
 
 /** The registry, whose type carries every rule's name and options. */
@@ -163,7 +164,7 @@ function namespaceOf (syntax: SyntaxName | undefined): string | undefined {
 }
 
 /**
- * Names the rules for a JavaScript configuration: `{ "@stylistic/scss/color-hex-case": "lower" }` for `{ syntax: "scss", rules: { "color-hex-case": "lower" } }`, typed off the rules themselves ([#624](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/624)). A name or a syntax the plugin does not know stops the run with a configuration error; what an option holds is the rule's to check at its turn.
+ * Names the rules for a JavaScript configuration: `{ "@stylistic/scss/color-hex-case": "lower" }` for `{ syntax: "scss", rules: { "color-hex-case": "lower" } }`, typed off the rules themselves ([#624](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/624)). A name or a syntax the plugin does not know stops the run with a configuration error, and so do two settings of the call that contradict each other ([#743](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/743)); what an option holds is the rule's to check at its turn.
  * @param options - The syntax and the rules.
  * @param options.syntax - `scss`, `less` or `styled`; `css`, or nothing, for the core.
  * @param options.rules - The settings by short name, as `rules` takes them.
@@ -176,8 +177,13 @@ export function defineStylistic<const S extends SyntaxName | undefined = undefin
 	let entries = Object.entries(options.rules).map(([name, setting]) => {
 		if (!Object.hasOwn(rules, name)) throw configurationError(`"${name}" is not a rule of "@stylistic/stylelint-plugin": the rules are named by their short names, "color-hex-case" for "@stylistic/color-hex-case".`)
 
-		return [addNamespace(name, namespace), normalized(name, setting, globals ?? {})]
+		return [addNamespace(name, namespace), normalized(name, setting, globals ?? {})] as const
 	})
+
+	// One call names the rules of one namespace, which all read the same stylesheets; a pair put together by several calls, `extends` or `overrides` is the run's to refuse (#743)
+	let contradictions = contradictionsAmong(entries.map(([name, setting]) => configuredSetting(name, setting)).filter(({ primary }) => primary !== null && primary !== undefined))
+
+	if (contradictions.length > 0) throw contradictionsError(contradictions)
 
 	return Object.fromEntries(entries) as StylisticRules<S, R, G>
 }

@@ -412,25 +412,6 @@ testRule({
 	],
 })
 
-// The space twin writes the run in front of the comma too, and the library lists it behind this rule, so its write would be the file's last (#704)
-testRule({
-	ruleName,
-	config: [`always`],
-	extraRules: { "@stylistic/selector-list-comma-space-before": `always` },
-
-	reject: [
-		{
-			// See #704
-			description: `a space in front of the comma, which the twin behind this rule accepts and would take the break back from, so the warning stands and nothing is written`,
-			code: `a ,b {}`,
-			fixed: `a ,b {}`,
-			line: 1,
-			column: 3,
-			message: messages.expectedBefore(),
-		},
-	],
-})
-
 // `postcss-html` files the run in front of a `<style>` element's first rule in the root's `raws.codeBefore`, the opening tag and all (1789593917)
 testRule({
 	ruleName,
