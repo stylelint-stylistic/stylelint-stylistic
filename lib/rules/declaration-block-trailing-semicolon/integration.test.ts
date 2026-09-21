@@ -373,6 +373,45 @@ testRule({
 	],
 })
 
+// The break rule's always and a single-line option of its space twin both speak of a block on a line, and the semicolon this rule writes goes behind the break, which makes the block multi-line and the space rule silent, rather than behind the space, which would leave the break rule asking on the next run (1790029462)
+testRule({
+	ruleName: newlineBeforeRuleName,
+	config: [`always`],
+	extraRules: { [ruleName]: `always`, [spaceBeforeRuleName]: `always-single-line` },
+
+	reject: [
+		{
+			description: `a block on a line whose one declaration has no semicolon, which goes behind a break`,
+			code: `a{b:c}`,
+			fixed: `a{b:c\n;}`,
+			line: 1,
+			column: 5,
+			endLine: 1,
+			endColumn: 6,
+			message: messages.expected,
+		},
+	],
+})
+
+testRule({
+	ruleName: newlineBeforeRuleName,
+	config: [`always`],
+	extraRules: { [ruleName]: `always`, [spaceBeforeRuleName]: `never-single-line` },
+
+	reject: [
+		{
+			description: `the same block where the space twin forbids the space, which the break rule's ask outranks the same way`,
+			code: `a{b:c}`,
+			fixed: `a{b:c\n;}`,
+			line: 1,
+			column: 5,
+			endLine: 1,
+			endColumn: 6,
+			message: messages.expected,
+		},
+	],
+})
+
 testRuleListedFirst({
 	ruleName,
 	config: [`never`],

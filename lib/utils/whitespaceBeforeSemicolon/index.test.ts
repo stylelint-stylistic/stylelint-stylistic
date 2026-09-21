@@ -35,7 +35,8 @@ describe(`whitespaceBeforeSemicolon`, () => {
 		expect(ask(SINGLE_LINE, { [SPACE_BEFORE]: [`always`, {}] })).toBe(` `)
 	})
 
-	it(`nothing under a never option, whose bare semicolon is what it asks for`, () => {
+	it(`nothing under a never option, whose bare semicolon is what it asks for, and under two twins that both forbid`, () => {
+		expect(ask(MULTI_LINE, { [NEWLINE_BEFORE]: `never-multi-line`, [SPACE_BEFORE]: `never-single-line` })).toBe(``)
 		expect(ask(SINGLE_LINE, { [NEWLINE_BEFORE]: `never-multi-line` })).toBe(``)
 		expect(ask(MULTI_LINE, { [NEWLINE_BEFORE]: `never-multi-line` })).toBe(``)
 		expect(ask(SINGLE_LINE, { [SPACE_BEFORE]: `never` })).toBe(``)
@@ -58,32 +59,24 @@ describe(`whitespaceBeforeSemicolon`, () => {
 		expect(ask(MULTI_LINE, { [SPACE_BEFORE]: `always-single-line` })).toBe(``)
 	})
 
-	it(`the rule the configuration lists later, where both ask for something, since that is the one that runs last`, () => {
-		expect(ask(SINGLE_LINE, { [SPACE_BEFORE]: `always`, [NEWLINE_BEFORE]: `always` })).toBe(`\n`)
-		expect(ask(SINGLE_LINE, { [NEWLINE_BEFORE]: `always`, [SPACE_BEFORE]: `always` })).toBe(` `)
+	it(`the break, where the break rule's always and a single-line option of the space rule both speak of a block on a line, whichever is listed first, since the break makes the block multi-line and the space rule silent`, () => {
+		expect(ask(SINGLE_LINE, { [NEWLINE_BEFORE]: `always`, [SPACE_BEFORE]: `always-single-line` })).toBe(`\n`)
+		expect(ask(SINGLE_LINE, { [SPACE_BEFORE]: `always-single-line`, [NEWLINE_BEFORE]: `always` })).toBe(`\n`)
+		expect(ask(SINGLE_LINE, { [SPACE_BEFORE]: `never-single-line`, [NEWLINE_BEFORE]: `always` })).toBe(`\n`)
 	})
 
-	it(`nothing under a never option listed later, which strips over the file's own semicolons whatever the earlier rule wrote`, () => {
-		expect(ask(MULTI_LINE, { [NEWLINE_BEFORE]: `always`, [SPACE_BEFORE]: `never` })).toBe(``)
-		expect(ask(MULTI_LINE, { [SPACE_BEFORE]: `always`, [NEWLINE_BEFORE]: `never-multi-line` })).toBe(``)
-		expect(ask(SINGLE_LINE, { [NEWLINE_BEFORE]: `always`, [SPACE_BEFORE]: `never-single-line` })).toBe(``)
+	it(`the ask of a turned-off rule, written as this writer's own text, the break outranking the space whichever of the two is off`, () => {
+		expect(ask(SINGLE_LINE, { [SPACE_BEFORE]: [`always`, { disableFix: true }] })).toBe(` `)
+		expect(ask(SINGLE_LINE, { [NEWLINE_BEFORE]: [`always`, { disableFix: true }] })).toBe(`\n`)
+		expect(ask(SINGLE_LINE, { [SPACE_BEFORE]: [`always-single-line`, { disableFix: true }], [NEWLINE_BEFORE]: [`always`, { disableFix: true }] })).toBe(`\n`)
+		expect(ask(SINGLE_LINE, { [NEWLINE_BEFORE]: [`always`, { disableFix: true }], [SPACE_BEFORE]: `always-single-line` })).toBe(`\n`)
+		expect(ask(SINGLE_LINE, { [SPACE_BEFORE]: [`never-single-line`, { disableFix: true }], [NEWLINE_BEFORE]: `always` })).toBe(`\n`)
 	})
 
 	it(`the rule listed earlier, where the later one is silent about this block`, () => {
 		expect(ask(SINGLE_LINE, { [SPACE_BEFORE]: `always`, [NEWLINE_BEFORE]: `always-multi-line` })).toBe(` `)
 		expect(ask(SINGLE_LINE, { [SPACE_BEFORE]: `always`, [NEWLINE_BEFORE]: `never-multi-line` })).toBe(` `)
 		expect(ask(MULTI_LINE, { [NEWLINE_BEFORE]: `always`, [SPACE_BEFORE]: `never-single-line` })).toBe(`\n`)
-	})
-
-	it(`the last-listed speaking rule whose fix is turned on, past one turned off behind it`, () => {
-		expect(ask(SINGLE_LINE, { [SPACE_BEFORE]: `always`, [NEWLINE_BEFORE]: [`always`, { disableFix: true }] })).toBe(` `)
-		expect(ask(SINGLE_LINE, { [NEWLINE_BEFORE]: [`always`, { disableFix: true }], [SPACE_BEFORE]: `always` })).toBe(` `)
-	})
-
-	it(`the ask of a turned-off rule where no live one speaks, written as this writer's own text`, () => {
-		expect(ask(SINGLE_LINE, { [SPACE_BEFORE]: [`always`, { disableFix: true }] })).toBe(` `)
-		expect(ask(SINGLE_LINE, { [NEWLINE_BEFORE]: [`always`, { disableFix: true }] })).toBe(`\n`)
-		expect(ask(SINGLE_LINE, { [SPACE_BEFORE]: [`always`, { disableFix: true }], [NEWLINE_BEFORE]: [`always`, { disableFix: true }] })).toBe(`\n`)
 	})
 
 	it(`the break the linebreaks rule asks for, wherever the configuration lists it`, () => {
