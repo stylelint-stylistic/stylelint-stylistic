@@ -1,7 +1,7 @@
 import type { AtRule, ChildNode, Node, Rule } from "postcss"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { EVERY_LINE_BREAK, LINE_BREAK } from "../../regexps.ts"
+import { EVERY_LINE_BREAK, LEADING_CSS_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { beforeBlockString } from "../../utils/beforeBlockString/index.ts"
@@ -12,7 +12,6 @@ import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
-import { isOnlyWhitespace } from "../../utils/isOnlyWhitespace/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { nextNonCommentNode } from "../../utils/nextNonCommentNode/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
@@ -84,6 +83,27 @@ function unbreakTheRunInFrontOf (node: Node): void {
 
 	if (typeof before !== `string`) node.raws.before = ``
 	else if (LINE_BREAK.test(before)) node.raws.before = before.replaceAll(EVERY_LINE_BREAK, ``)
+}
+
+/**
+ * Spells the run in front of the closing brace of a block holding nothing but comments.
+ *
+ * The rule reads the run's first character, so what it spells is the whitespace the run opens with, and whatever stands behind that whitespace is kept as it is: a stray semicolon is no whitespace, and no write may drop it ([#655](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/655)).
+ * @param primary - The primary option.
+ * @param standing - The run as it stands.
+ * @param lineBreak - Returns the break the file is written with, called only where a break is written.
+ * @returns The run to write.
+ */
+function spellTheTrailingRun (primary: PrimaryOption, standing: string, lineBreak: () => string): string {
+	let kept = standing.replace(LEADING_CSS_WHITESPACE, ``)
+
+	if (primary === `never-multi-line`) return kept
+
+	let opening = standing.slice(0, standing.length - kept.length)
+	let index = opening.search(LINE_BREAK)
+
+	// Trim to the break already there, or add one, as `block-closing-brace-newline-before` spells a run of whitespace alone
+	return (index >= 0 ? opening.slice(index) : lineBreak() + opening) + kept
 }
 
 /**
@@ -245,22 +265,16 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			/**
 			 * Builds the fix that spells the run in front of the closing brace of a block holding nothing but comments.
-			 *
-			 * A run holding anything the plugin does not read as whitespace is left alone. The four rules reading it part on a stray semicolon — two measure the run with it cut out, one reads the character in front of the brace, and this one the run's first character — so no one spelling answers them all; and a vertical tab or a no-break space is a word to the tokenizer that no write may drop ([#655](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/655)).
 			 * @returns The fix, or nothing where the run is not this rule's to write.
 			 */
 			function fixTheTrailingRun (): (() => void) | undefined {
 				let standing = getBlockAfter(syntax, statement)
 
-				if (typeof standing !== `string` || !isOnlyWhitespace(standing)) return
+				if (typeof standing !== `string`) return
 
-				let index = standing.search(LINE_BREAK)
-				// Trim to the break already there, or add one, as `block-closing-brace-newline-before` spells the same raw
-				let written = primary.startsWith(`always`)
-					? (index >= 0 ? standing.slice(index) : getLineBreak(root, result) + standing)
-					: ``
-				// The `always` write opens the run with a break; the `never-multi-line` one takes every break out of the block's whitespace, so only a comment's own text can leave the block multi-line
-				let isSingleLine = primary === `never-multi-line` && nodes.every((node) => isSingleLineString(nodeString(node, result)))
+				let written = spellTheTrailingRun(primary, standing, () => getLineBreak(root, result))
+				// The `always` write opens the run with a break; the `never-multi-line` one takes every break out of the block's whitespace in front of what it keeps, so only a comment's own text or a break behind a stray semicolon can leave the block multi-line
+				let isSingleLine = primary === `never-multi-line` && !LINE_BREAK.test(written) && nodes.every((node) => isSingleLineString(nodeString(node, result)))
 
 				if (!writesBlockAfter(statement, result, primary, isSingleLine)) return
 

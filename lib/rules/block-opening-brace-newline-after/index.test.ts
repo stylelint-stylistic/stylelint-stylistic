@@ -382,9 +382,29 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			description: `a stray semicolon standing in the run in front of the closing brace of such a block, which no write may drop`,
+			// The break is written in front of a stray semicolon, which no write may drop, so the warning is one the fix answers
+			description: `a stray semicolon opening the run in front of the closing brace of such a block`,
 			code: `a {/*c*/;}`,
-			fixed: `a {/*c*/;}`,
+			fixed: `
+				a {/*c*/
+				;}
+			`,
+			line: 1,
+			column: 4,
+			message: messages.expectedAfter(),
+		},
+		{
+			// A break behind the semicolon is not the one the rule reads, and trimming to it would drop the semicolon
+			description: `the same semicolon standing between a space and a break`,
+			code: `
+				a {/*c*/ ;
+				}
+			`,
+			fixed: `
+				a {/*c*/
+				 ;
+				}
+			`,
 			line: 1,
 			column: 4,
 			message: messages.expectedAfter(),
@@ -825,6 +845,7 @@ testRule({
 			message: messages.rejectedAfterMultiLine(),
 		},
 		{
+			// The write takes the whitespace the run opens with and keeps what stands behind it, the break behind the semicolon included
 			description: `a stray semicolon standing among the whitespace of that run, which no write may drop`,
 			code: `
 				a {
@@ -832,8 +853,7 @@ testRule({
 				}
 			`,
 			fixed: `
-				a {
-				/*c*/${S};${S}
+				a {/*c*/;${S}
 				}
 			`,
 			line: 1,
@@ -1096,6 +1116,11 @@ describe(`${ruleName} beside the rules that write the same run`, () => {
 			theirs: `a {/*1*/\n/*a\nb*/\n\n}`,
 			left: [messages.rejectedAfterMultiLine()],
 		})
+	})
+
+	// The never-multi-line write keeps what stands behind the whitespace the run opens with, so the block it leaves is judged with that break in it
+	it(`writes it under never-multi-line where a break behind a stray semicolon keeps the block multi-line, which takes the always-single-line of the rule about a space out of the conversation`, async () => {
+		expect(await race(`a {\n/*c*/ ;\n}`, `never-multi-line`, closingSpace, `always-single-line`)).toEqual({ ours: `a {/*c*/;\n}`, theirs: `a {/*c*/;\n}`, left: [] })
 	})
 
 	// See #715

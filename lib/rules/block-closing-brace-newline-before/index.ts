@@ -41,18 +41,21 @@ export let meta = {
 }
 
 /**
- * Spells the run in front of the closing brace as the `always` options ask: whatever stands in front of the run's first whitespace, then the run from its first break, or a break in front of the whole run where it holds none.
+ * Spells the run in front of the closing brace as the `always` options ask: whatever stands in front of the run's first break with the whitespace taken out of it, then the run from that break; where the run holds no break, one in front of its first whitespace, or behind a run holding no whitespace either.
+ *
+ * A stray semicolon standing in front of the break is no whitespace and stays, since no option of the rule speaks of it ([#687](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/687)), and the check cuts it out of the run it measures, so the break behind it opens that run (1789520440).
  * @param raw - The run as it stands.
  * @param lineBreak - The break the file is written with.
  * @returns The run to write.
  */
 function spellTheRun (raw: string, lineBreak: string): string {
-	let firstWhitespaceIndex = raw.search(WHITESPACE)
-	let head = firstWhitespaceIndex >= 0 ? raw.slice(0, firstWhitespaceIndex) : raw
-	let tail = firstWhitespaceIndex >= 0 ? raw.slice(firstWhitespaceIndex) : ``
-	let breakIndex = tail.search(LINE_BREAK)
+	let breakIndex = raw.search(LINE_BREAK)
 
-	return breakIndex >= 0 ? head + tail.slice(breakIndex) : head + lineBreak + tail
+	if (breakIndex >= 0) return raw.slice(0, breakIndex).replaceAll(EVERY_WHITESPACE, ``) + raw.slice(breakIndex)
+
+	let firstWhitespaceIndex = raw.search(WHITESPACE)
+
+	return firstWhitespaceIndex >= 0 ? raw.slice(0, firstWhitespaceIndex) + lineBreak + raw.slice(firstWhitespaceIndex) : raw + lineBreak
 }
 
 /**
@@ -67,17 +70,13 @@ function runToWrite (primary: PrimaryOption, raw: string, lineBreak: () => strin
 }
 
 /**
- * Asks whether the write may go in.
- *
- * The `always` write takes the run from its first break, keeping only what stands in front of the run's first whitespace, so a stray semicolon standing between the two would go with the whitespace, and no option of the rule speaks of such a semicolon ([#687](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/687)); the whitespace itself is what the write is there to trim. And a backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: emptying the run of `c \⏎}` would leave `c \}`, which the parser reads no block's end in (1789664271).
+ * Asks whether the write may go in: a backslash in front of a line break is a delimiter, and what is written behind it is read as its escape, so emptying the run of `c \⏎}` would leave `c \}`, which the parser reads no block's end in (1789664271).
  * @param text - The statement through its closing brace, which is its last character.
  * @param raw - The run in front of that brace as it stands.
  * @param written - The run the write leaves there.
  * @returns True where it may.
  */
 function writesTheRun (text: string, raw: string, written: string): boolean {
-	if (written.replaceAll(EVERY_WHITESPACE, ``) !== raw.replaceAll(EVERY_WHITESPACE, ``)) return false
-
 	return editKeepsEscapedCharacter(text, { start: text.length - 1 - raw.length, end: text.length - 1, text: written })
 }
 
@@ -187,7 +186,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let writtenRun = runToWrite(primary, run, () => getLineBreak(root, result))
 			let written = `${escapedHead}${writtenRun}`
 
-			// A stray semicolon the write would drop, and a backslash the write would leave reading another character
+			// A backslash the write would leave reading another character
 			if (isFixable) isFixable = writesTheRun(text, run, writtenRun)
 
 			// The question is whether a break *starts* the final run (`LEADING_LINE_BREAK`); the whitespace behind it is `indentation`'s.
