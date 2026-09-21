@@ -1,8 +1,8 @@
-import { type ChildNode, type Container, type Document, type Root, stringify } from "postcss"
+import { type ChildNode, type Comment, type Container, type Document, type Root, stringify } from "postcss"
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, LEADING_LINE_BREAK_RUN, OPENS_WITH_LINE_BREAK, TRAILING_CSS_WHITESPACE, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
+import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, LEADING_LINE_BREAK_RUN, OPENS_WITH_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
@@ -23,6 +23,9 @@ import { isNumber } from "../../utils/validateTypes/index.ts"
 let { utils: { report, validateOptions } } = stylelint
 
 let shortName = `max-empty-lines`
+
+/** What the strings of a text are found by: the comments are blanked in front of the scan, so whichever reading a `//` gets changes nothing there. */
+const STRING_READING = { spells: false, tokenizes: false, endsOnFormFeed: false }
 
 const MESSAGES = defineMessages({
 	expected: (max) => `Expected no more than ${max} empty ${max === 1 ? `line` : `lines`}`,
@@ -77,19 +80,16 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let getChars = replaceEmptyLines.bind(null, primary)
 		let openingLinesAreTaken = takesTheOpeningLines(root, result)
 
-		/** Collapses every run of empty lines to the maximum: `raws.before`, a comment's `left` and `right`, the raws between the parts of a statement, the run in front of a closing brace, and the root's first node and tail apart from the walk, where an empty line counts one short. */
+		/** Collapses every run of empty lines to the maximum: `raws.before`, a comment's `left`, text and `right`, the raws between the parts of a statement and the node's own text, the run in front of a closing brace, and the root's first node and tail apart from the walk, where an empty line counts one short. */
 		function fix (): void {
 			let { first } = root
 
 			root.walk((node) => {
-				if (node.type === `comment` && !ignoreComments) {
-					node.raws.left = getChars(node.raws.left)
-					node.raws.right = getChars(node.raws.right)
-				}
+				if (isComment(node) && !ignoreComments) writeComment(syntax, node, getChars)
 
 				if (node.raws.before) node.raws.before = node === first ? pastTheOpeningLines(node.raws.before, openingLinesAreTaken, getChars) : getChars(node.raws.before)
 
-				writeStatementRaws(syntax, node, result, getChars)
+				writeStatementText(syntax, node, result, ignoreComments, getChars)
 
 				if (carriesABlock(node)) {
 					let blockAfter = getBlockAfter(syntax, node)
@@ -191,66 +191,87 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 }
 
 /**
- * Collapses every run of a raw outside the comments written in it: the text of a comment is the node's own and no raw of the statement (1788575747), and `ignore: comments` keeps every fix off it.
- * @param syntax - The syntax the rule is built over, which says where a comment runs.
- * @param node - The node the raw is from.
- * @param result - The Stylelint result, which names the syntax the file was parsed with.
+ * Collapses every run of breaks a text holds outside the spans handed over, leaving the rest as the file spells them.
  * @param getChars - What the rule makes of a run it writes.
- * @param raw - The raw as the file spells it.
- * @returns The raw written.
+ * @param text - The text as the file spells it.
+ * @param blanked - The copy of it the runs are read off, as long as the text.
+ * @returns The text written.
  */
-function outsideComments (syntax: Syntax, node: ChildNode, result: PostcssResult, getChars: (text: string) => string, raw: string): string {
-	let blanked = blankComments(raw, syntax.commentSpans(raw, node, result))
+function writeRuns (getChars: (text: string) => string, text: string, blanked: string): string {
 	let pieces = []
 	let index = 0
 
 	for (let run of blanked.matchAll(EVERY_RUN_OF_LINE_BREAKS)) {
-		pieces.push(raw.slice(index, run.index), getChars(run[0]))
+		pieces.push(text.slice(index, run.index), getChars(run[0]))
 		index = run.index + run[0].length
 	}
 
-	pieces.push(raw.slice(index))
+	pieces.push(text.slice(index))
 
 	return pieces.join(``)
 }
 
 /**
- * Collapses the run a printed value ends on and leaves every other run of it alone, a run standing inside the value being the node's own text (1788575747).
- * @param getChars - What the rule makes of a run it writes.
- * @param text - The printed value.
- * @returns The value written.
+ * Blanks what a run written into would not be the stylesheet's: the host code of a styled template's interpolation, whose breaks end lines of the host file and none of the stylesheet, and every string, which a write would rewrite. A comment is blanked too where `ignore: comments` is set, the option's whole question; a quotation mark standing inside one opens no string, so the strings are read with every comment gone either way.
+ * @param syntax - The syntax the rule is built over, which says where a comment and an interpolation run.
+ * @param node - The node the text is from.
+ * @param result - The Stylelint result, which names the syntax the file was parsed with.
+ * @param ignoreComments - Whether the option passes the empty lines inside comments over.
+ * @param text - The text as the file spells it.
+ * @returns The copy, as long as the text.
  */
-function trailingRun (getChars: (text: string) => string, text: string): string {
-	let head = text.replace(TRAILING_CSS_WHITESPACE, ``)
+function countedCopy (syntax: Syntax, node: ChildNode, result: PostcssResult, ignoreComments: boolean, text: string): string {
+	let outsideHostCode = blankComments(text, syntax.hostCodeSpans(text, node))
+	let outsideComments = blankComments(outsideHostCode, syntax.commentSpans(outsideHostCode, node, result))
 
-	return head + getChars(text.slice(head.length))
+	return blankComments(ignoreComments ? outsideComments : outsideHostCode, findStringSpans(outsideComments, STRING_READING))
 }
 
 /**
- * Collapses the runs standing between the parts of one statement: an at-rule's `raws.afterName`, the `raws.between` of a rule, a declaration or an at-rule, the raw a flag stands in, and the run a printed value ends on, which is the one in front of the closing semicolon wherever the parser keeps it there rather than in a raw of its own ([#581](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/581)).
- * @param syntax - The syntax the rule is built over, which reads and writes a value.
+ * Collapses the runs a comment holds: the two around its text, which are raws of the node, and the ones inside the text, which the check counts as it counts any run of the file. A quotation mark standing inside a comment opens no string, so none of the text is left alone but the host code of a styled interpolation ([#582](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/582)).
+ * @param syntax - The syntax the rule is built over, which says where an interpolation runs.
+ * @param comment - The comment node.
+ * @param getChars - What the rule makes of a run it writes; a raw the parser left unfilled comes back empty, as it did before the text was written beside them.
+ */
+function writeComment (syntax: Syntax, comment: Comment, getChars: (text: string | undefined) => string): void {
+	comment.raws.left = getChars(comment.raws.left)
+	comment.text = writeRuns(getChars, comment.text, blankComments(comment.text, syntax.hostCodeSpans(comment.text, comment)))
+	comment.raws.right = getChars(comment.raws.right)
+}
+
+/**
+ * Collapses the runs a statement holds: the ones between its parts — an at-rule's `raws.afterName`, the `raws.between` of a rule, a declaration or an at-rule, and the raw a flag stands in ([#581](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/581)) — and the ones inside the node's own text, its selector, parameters or value ([#582](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/582)).
+ * @param syntax - The syntax the rule is built over, which reads and writes a text.
  * @param node - The node of the walk.
  * @param result - The Stylelint result, which names the syntax the file was parsed with.
+ * @param ignoreComments - Whether the option passes the empty lines inside comments over.
  * @param getChars - What the rule makes of a run it writes.
  */
-function writeStatementRaws (syntax: Syntax, node: ChildNode, result: PostcssResult, getChars: (text: string) => string): void {
+function writeStatementText (syntax: Syntax, node: ChildNode, result: PostcssResult, ignoreComments: boolean, getChars: (text: string) => string): void {
 	if (isComment(node)) return
 
-	if (isAtRule(node) && node.raws.afterName) node.raws.afterName = outsideComments(syntax, node, result, getChars, node.raws.afterName)
+	/**
+	 * Writes one text or raw of this node.
+	 * @param text - The text as the file spells it.
+	 * @returns The text written.
+	 */
+	function write (text: string): string {
+		return writeRuns(getChars, text, countedCopy(syntax, node, result, ignoreComments, text))
+	}
 
-	if (node.raws.between) node.raws.between = outsideComments(syntax, node, result, getChars, node.raws.between)
+	if (isAtRule(node) && node.raws.afterName) node.raws.afterName = write(node.raws.afterName)
+
+	if (node.raws.between) node.raws.between = write(node.raws.between)
 
 	let flag = isAtRule(node) || isDeclaration(node) ? node.raws.important : undefined
 
 	// The raw a flag stands in runs from the end of the value through the flag, so the runs on both sides of it and the one inside `! important` are all in it; it is left undefined at the exact ` !important`, where none of them stands. A Less mixin call carries the same raw as a declaration does
-	if (typeof flag === `string`) node.raws.important = outsideComments(syntax, node, result, getChars, flag)
-
-	if (!isDeclaration(node)) return
+	if (typeof flag === `string`) node.raws.important = write(flag)
 
 	let text = syntax.read(node)
-	let written = trailingRun(getChars, text)
+	let written = write(text)
 
-	// Written through the syntax, so every copy it keeps of the value stays in step
+	// Written through the syntax, so every copy it keeps of the text stays in step
 	if (written !== text) syntax.write(node, written)
 }
 
@@ -296,7 +317,7 @@ function breakStart (text: string, lineFeedIndex: number): number {
  */
 function searchOptions (text: string, comments: CommentSpan[]): Parameters<typeof styleSearch>[0] {
 	return {
-		source: blankComments(text, findStringSpans(blankComments(text, comments), { spells: false, tokenizes: false, endsOnFormFeed: false })),
+		source: blankComments(text, findStringSpans(blankComments(text, comments), STRING_READING)),
 		// A line feed is a break whatever stands in front of it, so a run spelling its breaks both ways is one run, as PostCSS counts it (#586)
 		target: `\n`,
 		comments: `check`,
