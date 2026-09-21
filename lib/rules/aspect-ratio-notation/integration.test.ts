@@ -280,6 +280,29 @@ testRule({
 	],
 })
 
+// The break rule's always and a single-line option of its space twin both speak of a declaration on a line: the solidus is written with the break, which makes the declaration multi-line and the space rule silent, rather than with the space, which would leave the break rule asking on the next run (1790029462)
+testRule({
+	ruleName,
+	config: [`ratio`],
+	extraRules: {
+		"@stylistic/value-slash-newline-after": `always`,
+		"@stylistic/value-slash-space-after": `always-single-line`,
+	},
+
+	reject: [
+		{
+			description: `a whole number written on its own in a declaration on a line, whose second number goes behind a solidus and the break the neighbour about the break asks for`,
+			code: `a { aspect-ratio: 2; }`,
+			fixed: `a { aspect-ratio: 2 /\n1; }`,
+			line: 1,
+			column: 19,
+			endLine: 1,
+			endColumn: 20,
+			message: messages.expected(`2`, `2 /\n1`),
+		},
+	],
+})
+
 testRule({
 	ruleName,
 	config: [`ratio`],

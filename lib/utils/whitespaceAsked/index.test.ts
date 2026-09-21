@@ -40,17 +40,16 @@ describe(`whitespaceAsked`, () => {
 		expect(ask({ [SPACE_AFTER]: [`always-single-line`, {}] })).toBe(` `)
 	})
 
-	it(`the rule the configuration lists later, where both speak, since that is the one that runs last`, () => {
-		expect(ask({ [SPACE_AFTER]: `always`, [NEWLINE_AFTER]: `always` })).toBe(`\n`)
-		expect(ask({ [NEWLINE_AFTER]: `always`, [SPACE_AFTER]: `always` })).toBe(` `)
-		expect(ask({ [NEWLINE_AFTER]: `always`, [SPACE_AFTER]: `never` })).toBe(``)
+	it(`the break, where the newline rule asks for one and the space twin speaks of single-line constructs, whichever is listed first`, () => {
+		expect(ask({ [NEWLINE_AFTER]: `always`, [SPACE_AFTER]: `always-single-line` })).toBe(`\n`)
+		expect(ask({ [SPACE_AFTER]: `never-single-line`, [NEWLINE_AFTER]: `always` })).toBe(`\n`)
 	})
 
-	it(`a rule whose fix is turned off only where no live rule speaks`, () => {
+	it(`what a rule whose fix is turned off asks for, as the caller still writes its whitespace, the break outranking the space whichever of the two is off`, () => {
 		expect(ask({ [SPACE_AFTER]: [`never`, { disableFix: true }] }, ` `)).toBe(``)
 		expect(ask({ [NEWLINE_AFTER]: [`always`, { disableFix: true }] })).toBe(`\n`)
-		expect(ask({ [SPACE_AFTER]: `always`, [NEWLINE_AFTER]: [`always`, { disableFix: true }] })).toBe(` `)
-		expect(ask({ [NEWLINE_AFTER]: [`always`, { disableFix: true }], [SPACE_AFTER]: `never` })).toBe(``)
+		expect(ask({ [NEWLINE_AFTER]: [`always`, { disableFix: true }], [SPACE_AFTER]: `always-single-line` })).toBe(`\n`)
+		expect(ask({ [SPACE_AFTER]: [`always-single-line`, { disableFix: true }], [NEWLINE_AFTER]: `always` })).toBe(`\n`)
 	})
 
 	it(`the break the file spells its lines with`, () => {
