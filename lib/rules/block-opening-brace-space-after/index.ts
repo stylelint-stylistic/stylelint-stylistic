@@ -1,6 +1,7 @@
 import type { AtRule, Rule } from "postcss"
 import stylelint from "stylelint"
 
+import { LEADING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { beforeBlockString } from "../../utils/beforeBlockString/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
@@ -119,9 +120,9 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: Prim
 						result,
 						ruleName,
 						...(isFixable && {
+							// The rule reads the characters right behind the brace, so the write spells the whitespace the run opens with and keeps what stands behind it: the parser files a stray semicolon standing in front of the first node in this run, and no option speaks of it (1790006582)
 							fix: (): void => {
-								if (primary.startsWith(`always`)) statementFirst.raws.before = ` `
-								else if (primary.startsWith(`never`)) statementFirst.raws.before = ``
+								statementFirst.raws.before = (primary.startsWith(`always`) ? ` ` : ``) + runInFrontOf(statementFirst).replace(LEADING_CSS_WHITESPACE, ``)
 							},
 						}),
 					})

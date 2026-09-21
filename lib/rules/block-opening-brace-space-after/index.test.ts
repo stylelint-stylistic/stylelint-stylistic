@@ -35,6 +35,24 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
+			// The parser files a stray semicolon in the run in front of the node behind it, and the space used to be written over that run whole
+			description: `a stray semicolon abutting the brace, with a break behind it, which the write keeps behind the space`,
+			code: `a {;\ncolor: pink; }`,
+			fixed: `a { ;\ncolor: pink; }`,
+			line: 1,
+			column: 4,
+			message: messages.expectedAfter(),
+		},
+		{
+			// Only the whitespace the run opens with is the rule's to spell
+			description: `a break between the brace and a stray semicolon, which keeps the space standing behind it`,
+			code: `a {\n; color: pink; }`,
+			fixed: `a { ; color: pink; }`,
+			line: 1,
+			column: 4,
+			message: messages.expectedAfter(),
+		},
+		{
 			description: `two spaces where one belongs`,
 			code: `a {  color: pink; }`,
 			fixed: `a { color: pink; }`,
@@ -121,6 +139,15 @@ testRule({
 			description: `a space behind the brace`,
 			code: `a { color: pink; }`,
 			fixed: `a {color: pink; }`,
+			line: 1,
+			column: 4,
+			message: messages.rejectedAfter(),
+		},
+		{
+			// The run used to be emptied, a stray semicolon standing in it included
+			description: `a stray semicolon behind that space, which stays with the whitespace behind it`,
+			code: `a { ; color: pink; }`,
+			fixed: `a {; color: pink; }`,
 			line: 1,
 			column: 4,
 			message: messages.rejectedAfter(),
@@ -500,6 +527,15 @@ testRule({
 			description: `a space behind the brace of a multi-line block`,
 			code: `a { color: pink;\nbackground: orange; }`,
 			fixed: `a {color: pink;\nbackground: orange; }`,
+			line: 1,
+			column: 4,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		{
+			// The run used to be emptied, a stray semicolon standing in it included
+			description: `a break behind the brace of a multi-line block with a stray semicolon behind it, which stays with the break behind it`,
+			code: `a {\n;\ncolor: pink; }`,
+			fixed: `a {;\ncolor: pink; }`,
 			line: 1,
 			column: 4,
 			message: messages.rejectedAfterMultiLine(),
