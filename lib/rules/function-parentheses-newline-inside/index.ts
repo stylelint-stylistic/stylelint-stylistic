@@ -5,7 +5,7 @@ import stylelint, { type FixCallback, type PostcssResult } from "stylelint"
 import { LEADING_CSS_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { InlineCommentReading, Syntax } from "../../syntaxes/index.ts"
-import { addEdit, applyEditsFromEnd, type Edit, toIndexBeforeEdits } from "../../utils/applyEditsFromEnd/index.ts"
+import { addEdit, applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { breakRereadsParentheses } from "../../utils/breakRereadsParentheses/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -41,22 +41,6 @@ const MESSAGES = defineMessages({
 export let meta = {
 	url: getRuleDocUrl(shortName),
 	fixable: true,
-}
-
-/**
- * Finds the comment spans of the value as the collected fixes leave it, in the value's own coordinates.
- *
- * A break an `always` option writes closes a `//` comment running to the end of the value, so a function behind it stops being comment text ([#288](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/288)); the parse survives, since `postcss-value-parser` knows nothing of `//` comments.
- * @param syntax - The syntax the rule is built over.
- * @param decl - The declaration.
- * @param declValue - The value as read.
- * @param edits - The fixes collected so far.
- * @param result - The Stylelint result.
- * @returns The spans, in the coordinates of `declValue`.
- */
-function findCommentSpansAfterEdits (syntax: Syntax, decl: Declaration, declValue: string, edits: Edit[], result: PostcssResult): CommentSpan[] {
-	return syntax.commentSpans(applyEditsFromEnd(declValue, edits), decl, result)
-		.map(({ start, end, isInline }) => ({ start: toIndexBeforeEdits(start, edits), end: toIndexBeforeEdits(end, edits), isInline }))
 }
 
 /**
@@ -269,8 +253,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let reading = syntax.inlineComments(decl, result)
 			// Both kinds: the value parser reads a `//` comment as nodes, and closes `/*/` on its own star (#378)
 			let comments = syntax.commentSpans(declValue, decl, result)
-			// A break this rule writes closes an open `//` comment, so the spans are found again before the next function
-			let areSpansStale = false
 			// Quotation marks a comment leaves open are masked so the parser pairs them as the file does (#508)
 			let parsedValue = valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(declValue, comments), comments))
 
@@ -285,11 +267,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				// The parentheses of a call opening an address are the address's: a space or a break written behind the `(` parts a bare address from the parenthesis, which is what a tokenizer reads one token by ([#533](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/533)), and `postcss-scss` reads a quoted one behind such a space as a token counting parentheses, which a string holding one leaves unclosed. Passed over, and the walk goes no further in where the address is bare, as it does in the four rules that ask this question of a node they would otherwise read inside; behind a quoted address stand arguments, whose calls are walked ([#560](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/560)). The name is the file's spelling rather than the parser's, which is wider than what a parser takes a url token by ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)).
 				if (opensAnAddress(valueNode, at, siblings)) return quotesItsAddress(valueNode) ? undefined : false
-
-				if (areSpansStale) {
-					comments = findCommentSpansAfterEdits(syntax, decl, declValue, edits, result)
-					areSpansStale = false
-				}
 
 				// A call in a comment's text is skipped, but its nested calls are walked: a call opened inside a comment reaches past its close
 				if (findCommentSpanHolding(valueNode, comments)) return
@@ -376,8 +353,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			function fixWith (write: () => Edit[]): () => void {
 				return () => {
 					for (let edit of write()) addEdit(edits, edit)
-
-					areSpansStale = true
 				}
 			}
 
