@@ -4,6 +4,7 @@
 
 - [Rules](./user-guide/rules.md)
 - [Typed configuration](./user-guide/typed-configuration.md)
+- [Contradicting settings](./user-guide/contradicting-settings.md)
 
 ## Developer guide
 

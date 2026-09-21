@@ -45,6 +45,10 @@ Many rules now read the settings of other rules and lean on them, so what `
 
 The plugin now reads a line break the way PostCSS and Stylelint do: a line feed, alone or behind the carriage return of a Windows pair. A bare carriage return and a form feed are plain whitespace, so a file broken with either is one line to every rule about breaks, empty lines and multi-line lists, and no rule reports a position your editor cannot show. The `linebreaks` rule still tells `\n` from `\r\n`.
 
+#### Contradicting settings
+
+The plugin now refuses a configuration holding two settings that [contradict each other](https://stylelint-stylistic.github.io/user-guide/contradicting-settings), such as `value-list-comma-newline-after: "always-multi-line"` beside `value-list-comma-space-after: "always"`: the run stops with a configuration error naming both settings and what to change (see [#743](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/743)). Where your configuration holds such a pair, change one of the two as the message says, or turn one of them off.
+
 ### Added
 
 #### New rules

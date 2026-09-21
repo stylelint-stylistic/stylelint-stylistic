@@ -730,22 +730,3 @@ testRule({
 		},
 	],
 })
-
-// The break twin writes the run in front of the comma too, and the library lists it behind this rule, so its write would be the file's last (#704)
-testRule({
-	ruleName,
-	config: [`always`],
-	extraRules: { "@stylistic/function-comma-newline-before": `always` },
-
-	reject: [
-		{
-			// See #704
-			description: `a break in front of the comma, which the twin behind this rule accepts and would put back, so the warning stands and nothing is written`,
-			code: `a { b: f(1\n,2) }`,
-			fixed: `a { b: f(1\n,2) }`,
-			line: 2,
-			column: 1,
-			message: messages.expectedBefore(),
-		},
-	],
-})

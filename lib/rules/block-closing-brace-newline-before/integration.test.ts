@@ -1,4 +1,3 @@
-import { messages as closingSpaceBeforeMessages } from "../block-closing-brace-space-before/index.ts"
 import { messages as colonSpaceAfterMessages } from "../declaration-colon-space-after/index.ts"
 
 import { messages, ruleName } from "./index.ts"
@@ -43,65 +42,6 @@ testRule({
 			line: 2,
 			column: 4,
 			message: colonSpaceAfterMessages.expectedAfter(),
-		},
-	],
-})
-
-// The space twin writes the run in front of the brace too, and the library lists it behind this rule, so its write would be the file's last (#704)
-testRule({
-	ruleName,
-	config: [`always`],
-	extraRules: { "@stylistic/block-closing-brace-space-before": `always` },
-
-	reject: [
-		{
-			// The run in front of the brace is one of the twins' to write, and the two options disagree over it
-			description: `two blocks closing on a single space, which the twin behind this rule accepts and would write back: neither break is written, and both warnings stand`,
-			code: `@media (a) { b { c: d } }`,
-			fixed: `@media (a) { b { c: d } }`,
-			warnings: [
-				{
-					line: 1,
-					column: 22,
-					endLine: 1,
-					endColumn: 23,
-					message: messages.expectedBefore,
-				},
-				{
-					line: 1,
-					column: 24,
-					endLine: 1,
-					endColumn: 25,
-					message: messages.expectedBefore,
-				},
-			],
-		},
-		{
-			// The twin behind writes over the break the trim rests on, and the fixing run used to come back clean over a file this rule refuses (1789979881)
-			description: `a stray semicolon between a space and the break, which the twin behind would turn into a space: the trim is not written, the twin writes its space, and this rule's warning stands`,
-			code: `a { b: c; ;\n}`,
-			fixed: `a { b: c; ; }`,
-			warnings: [
-				{
-					line: 1,
-					column: 12,
-					message: messages.expectedBefore,
-				},
-				{
-					line: 1,
-					column: 12,
-					message: closingSpaceBeforeMessages.expectedBefore(),
-				},
-			],
-		},
-		{
-			// Around a stray semicolon the twins write different parts of the run, so one file answers both; the gate must not refuse it
-			description: `the same semicolon in a run holding no break, where the break goes in front of the semicolon and the twin's space stays behind it`,
-			code: `a { b: c; ; }`,
-			fixed: `a { b: c;\n ; }`,
-			line: 1,
-			column: 12,
-			message: messages.expectedBefore,
 		},
 	],
 })

@@ -1138,3 +1138,71 @@ testRule({
 		},
 	],
 })
+
+// A block comment behind a break is off the colon's line, and the write over the break puts it on that line (#590)
+testRule({
+	ruleName,
+	config: [`always`],
+
+	reject: [
+		{
+			description: `a break behind the colon in front of a comment on a line of its own, with the value's word on the line after`,
+			code: `
+				a { b:
+				/*c*/
+				x; }
+			`,
+			fixed: `
+				a { b: /*c*/
+				x; }
+			`,
+			line: 1,
+			column: 7,
+			endLine: 1,
+			endColumn: 8,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `the same shape on a custom property whose value is the comment alone, with the break inside the comment`,
+			code: `
+				a { --b:
+				/*c
+				 */ ; }
+			`,
+			fixed: `
+				a { --b: /*c
+				 */ ; }
+			`,
+			line: 1,
+			column: 9,
+			endLine: 1,
+			endColumn: 10,
+			message: messages.expectedAfter(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never`],
+
+	reject: [
+		{
+			description: `the same break in front of a comment on its own line, which is taken away and leaves the comment on the colon's line`,
+			code: `
+				a { b:
+				/*c*/
+				x; }
+			`,
+			fixed: `
+				a { b:/*c*/
+				x; }
+			`,
+			line: 1,
+			column: 7,
+			endLine: 1,
+			endColumn: 8,
+			message: messages.rejectedAfter(),
+		},
+	],
+})

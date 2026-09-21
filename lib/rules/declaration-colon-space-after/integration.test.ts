@@ -1,7 +1,6 @@
 import { messages as declarationBlockSemicolonNewlineBeforeMessages } from "../declaration-block-semicolon-newline-before/index.ts"
 import { messages as declarationBlockSemicolonSpaceBeforeMessages } from "../declaration-block-semicolon-space-before/index.ts"
 import { messages as trailingSemicolonMessages } from "../declaration-block-trailing-semicolon/index.ts"
-import { messages as colonNewlineAfterMessages } from "../declaration-colon-newline-after/index.ts"
 
 import { messages, ruleName } from "./index.ts"
 
@@ -264,115 +263,6 @@ testRule({
 	],
 })
 
-// The other side of #484: this rule listed first declines in favour of the newline rule behind, and the file it used to fold the break out of rests as it stands; the newline rule listed behind declines in its turn over a run this rule accepts.
-testRule({
-	ruleName,
-	config: [`always`],
-	extraRules: { "@stylistic/declaration-colon-newline-after": `always` },
-
-	reject: [
-		{
-			// See #484
-			description: `a break already standing behind the colon of a value that is a flag behind its run, which the newline rule listed last asks to stay: the space is not written and the warning stands`,
-			code: `
-				a { color:
-				 !important ; }
-			`,
-			fixed: `
-				a { color:
-				 !important ; }
-			`,
-			line: 1,
-			column: 11,
-			endLine: 1,
-			endColumn: 12,
-			message: messages.expectedAfter(),
-		},
-		{
-			// The newline rule listed behind used to write over the space this rule accepts, and the fixing run came back clean (1789508665)
-			description: `the single space this rule asks for behind the colon of a value carrying words, which the newline rule listed last asks to be a break: the break is not written, and the file rests with that rule's warning`,
-			code: `a { b: c, d }`,
-			fixed: `a { b: c, d }`,
-			line: 1,
-			column: 6,
-			endLine: 1,
-			endColumn: 7,
-			message: colonNewlineAfterMessages.expectedAfter(),
-		},
-	],
-})
-
-// A block comment behind a break is off the colon's line, and the space this rule writes over the break puts it on that line, where the newline rule reads the run behind the comment rather than the head run (#590).
-testRule({
-	ruleName,
-	config: [`always`],
-	extraRules: { "@stylistic/declaration-colon-newline-after": `always-multi-line` },
-
-	reject: [
-		{
-			description: `a break behind the colon in front of a comment on a line of its own, with the value's word on the line after: the space is written, and the newline rule is content with the break behind the comment`,
-			code: `
-				a { b:
-				/*c*/
-				x; }
-			`,
-			fixed: `
-				a { b: /*c*/
-				x; }
-			`,
-			line: 1,
-			column: 7,
-			endLine: 1,
-			endColumn: 8,
-			message: messages.expectedAfter(),
-		},
-		{
-			description: `the same shape on a custom property whose value is the comment alone, with the break inside the comment`,
-			code: `
-				a { --b:
-				/*c
-				 */ ; }
-			`,
-			fixed: `
-				a { --b: /*c
-				 */
-				 ; }
-			`,
-			line: 1,
-			column: 9,
-			endLine: 1,
-			endColumn: 10,
-			message: messages.expectedAfter(),
-		},
-	],
-})
-
-testRule({
-	ruleName,
-	config: [`never`],
-	extraRules: { "@stylistic/declaration-colon-newline-after": `always-multi-line` },
-
-	reject: [
-		{
-			description: `the same break in front of a comment on its own line, which is taken away and leaves the comment on the colon's line`,
-			code: `
-				a { b:
-				/*c*/
-				x; }
-			`,
-			fixed: `
-				a { b:/*c*/
-				x; }
-			`,
-			line: 1,
-			column: 7,
-			endLine: 1,
-			endColumn: 8,
-			message: messages.rejectedAfter(),
-		},
-	],
-})
-
 // A neighbour whose fix the configuration turned off reports the run and cannot rewrite it, so this rule writes past it instead of deferring (#485).
 testRule({
 	ruleName,
@@ -455,49 +345,6 @@ testRule({
 					message: declarationBlockSemicolonSpaceBeforeMessages.rejectedBefore(),
 				},
 			],
-		},
-	],
-})
-
-// A deferred rule writes the head run the two colon rules share only where the rule ahead accepts what the write leaves (#355): a rule content with the run has spoken by staying silent, and erasing its run would leave the file violating a rule that reported nothing.
-testRule({
-	ruleName,
-	config: [`always-single-line`],
-	extraRules: { "@stylistic/declaration-colon-newline-after": `always` },
-
-	reject: [
-		{
-			// See #355
-			description: `a break behind the colon the neighbour is content with: the deferred single-line option reports the run and leaves it alone, and the file rests with that warning standing`,
-			code: `a { b:\nx; }`,
-			fixed: `a { b:\nx; }`,
-			line: 1,
-			column: 7,
-			endLine: 1,
-			endColumn: 8,
-			message: messages.expectedAfterSingleLine(),
-		},
-		{
-			// See #387
-			description: `the same break where the declaration prints nothing behind its colon, so that the run the neighbour is content with is the one the block's own raw holds`,
-			code: `a { b:\n}`,
-			fixed: `a { b:\n}`,
-			line: 1,
-			column: 7,
-			endLine: 1,
-			endColumn: 8,
-			message: messages.expectedAfterSingleLine(),
-		},
-		{
-			// See #387
-			description: `the same run held by the raw of a comment written behind the declaration`,
-			code: `a { b:\n/*c*/ }`,
-			fixed: `a { b:\n/*c*/ }`,
-			line: 1,
-			column: 7,
-			endLine: 1,
-			endColumn: 8,
-			message: messages.expectedAfterSingleLine(),
 		},
 	],
 })

@@ -1,6 +1,5 @@
 import { messages as semicolonNewlineBeforeMessages } from "../declaration-block-semicolon-newline-before/index.ts"
 import { messages as trailingSemicolonMessages } from "../declaration-block-trailing-semicolon/index.ts"
-import { messages as colonSpaceAfterMessages } from "../declaration-colon-space-after/index.ts"
 
 import { messages, ruleName } from "./index.ts"
 
@@ -103,26 +102,6 @@ testRule({
 					message: messages.expectedAfter(),
 				},
 			],
-		},
-	],
-})
-
-testRule({
-	ruleName,
-	config: [`always`],
-	extraRules: { "@stylistic/declaration-colon-space-after": `always-single-line` },
-
-	reject: [
-		{
-			// See #484
-			description: `a custom property whose single space the other colon rule asks for: the break this rule writes would stand in the raw between until the next parse, so that rule still reads the value as one line and would fold the break away, and the break is not written`,
-			code: `a { --a: ; }`,
-			fixed: `a { --a: ; }`,
-			line: 1,
-			column: 8,
-			endLine: 1,
-			endColumn: 9,
-			message: messages.expectedAfter(),
 		},
 	],
 })
@@ -264,71 +243,6 @@ testRule({
 	],
 })
 
-// The two colon rules read one run behind the colon of every declaration and settle between them who writes it (#484). The library lists the rule a block names first, so the block below runs this rule first, the order in which its blind break used to grow the file; the SCSS spelling of the shape stands in that namespace's own file.
-testRule({
-	ruleName,
-	config: [`always`],
-	extraRules: { "@stylistic/declaration-colon-space-after": `always` },
-
-	reject: [
-		{
-			// See #484
-			description: `a value that is a flag behind its run, over which the file used to grow by a space on every run of the fixer: the space rule is listed last and has the last word, so the break is not written and the warning stands`,
-			code: `a { color: !important ; }`,
-			fixed: `a { color: !important ; }`,
-			line: 1,
-			column: 10,
-			endLine: 1,
-			endColumn: 11,
-			message: messages.expectedAfter(),
-		},
-		{
-			description: `a value carrying a word behind two spaces, where the space rule listed last writes the run down to its one space`,
-			code: `a { color:  red; }`,
-			fixed: `a { color: red; }`,
-			warnings: [
-				{
-					line: 1,
-					column: 10,
-					endLine: 1,
-					endColumn: 11,
-					message: messages.expectedAfter(),
-				},
-				{
-					line: 1,
-					column: 11,
-					endLine: 1,
-					endColumn: 12,
-					message: colonSpaceAfterMessages.expectedAfter(),
-				},
-			],
-		},
-	],
-})
-
-testRule({
-	ruleName,
-	config: [`always`],
-	extraRules: { "@stylistic/declaration-colon-space-after": [`always`, { disableFix: true }] },
-
-	reject: [
-		{
-			// See #485
-			description: `the other colon rule with its fix turned off, which this rule no longer defers to: the break is written, and that rule's report stands over it as the configuration asked`,
-			code: `a { color: !important ; }`,
-			fixed: `
-				a { color:
-				 !important ; }
-			`,
-			line: 1,
-			column: 10,
-			endLine: 1,
-			endColumn: 11,
-			message: messages.expectedAfter(),
-		},
-	],
-})
-
 // A vertical tab and a no-break space are words to the tokenizer, and the shared run reads whitespace the tokenizer's way (#494): the fix writes its break in front of such a character, and the question of whether the run already opens on a break steps over the tokenizer's whitespace only.
 testRule({
 	ruleName,
@@ -376,27 +290,6 @@ testRule({
 					message: semicolonNewlineBeforeMessages.expectedBefore(),
 				},
 			],
-		},
-	],
-})
-
-// A deferred rule writes the head run the two colon rules share only where the rule ahead accepts what the write leaves (#355): a rule content with the run has spoken by staying silent, and erasing its run would leave the file violating a rule that reported nothing.
-testRule({
-	ruleName,
-	config: [`always-multi-line`],
-	extraRules: { "@stylistic/declaration-colon-space-after": `always` },
-
-	reject: [
-		{
-			// See #355
-			description: `a space behind the colon the neighbour is content with: the deferred multi-line option reports the run and leaves it alone, and the file rests with that warning standing`,
-			code: `a { b: x,\ny; }`,
-			fixed: `a { b: x,\ny; }`,
-			line: 1,
-			column: 6,
-			endLine: 1,
-			endColumn: 7,
-			message: messages.expectedAfterMultiLine(),
 		},
 	],
 })

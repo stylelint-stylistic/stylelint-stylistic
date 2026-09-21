@@ -73,8 +73,14 @@ async function askStylelint (code: string, config: Config, fix: boolean): Promis
  * @param fix - Whether to fix.
  * @returns The answer.
  */
-function askRunner (code: string, config: Config, fix: boolean): Promise<Answer> {
-	return lintDirect({ code, rules: settingsOf(config.rules), registry: REGISTRY, syntax: config.customSyntax, fix })
+async function askRunner (code: string, config: Config, fix: boolean): Promise<Answer> {
+	try {
+		return await lintDirect({ code, rules: settingsOf(config.rules), registry: REGISTRY, syntax: config.customSyntax, fix })
+	}
+	catch (error) {
+		// A rule stopping the run, as over contradicting settings (#743), is answered as Stylelint's own stop is above
+		return { unparsable: true, detail: (error as { message: string }).message }
+	}
 }
 
 /**

@@ -41,6 +41,7 @@ const ALLOWED: Record<string, string[]> = {
 		`let allowedLFNewLinesString = \`\\n\`.repeat(maxAdjacentNewlines)`,
 		`let allowedCRLFNewLinesString = \`\\r\\n\`.repeat(maxAdjacentNewlines)`,
 	],
+	"lib/utils/contradictingSettings/index.ts": [`const MESSAGE_LINE_BREAK = \`\\n\``],
 	"lib/utils/getLineBreak/index.ts": [
 		`const BREAK_OF_OPTION = { unix: \`\\n\`, windows: \`\\r\\n\` }`,
 		`return lineBreakOfFile(node) ?? \`\\n\``,
