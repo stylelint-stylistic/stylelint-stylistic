@@ -20,8 +20,10 @@ import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
+import { isAtRule } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesBlockAfter } from "../../utils/writesBlockAfter/index.ts"
+import { writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -98,6 +100,34 @@ function writeTheTrailingRun (syntax: Syntax, statement: Rule | AtRule, nodes: C
 	}
 
 	setBlockAfter(syntax, statement, written)
+}
+
+/**
+ * Asks whether this rule, rather than its space twin, writes the run behind the opening brace ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)).
+ *
+ * The twin writes that run, the block's first node's, whenever it reports. This rule spells it only where it is the run it checks: its `always` options write a break into the run in front of the first node that is not a comment, and `never-multi-line` empties that one. Behind a comment it writes the first node's run too, but only by taking the breaks out of it, which leaves a space the twin wrote standing and is left standing by a space the twin writes after.
+ * @param statement - The rule or at-rule whose block is checked.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @param ruleName - This rule's configured name.
+ * @param primary - This rule's primary option.
+ * @param nodeToCheck - The first non-comment node of the block, or nothing where it holds none.
+ * @param problemIndex - Where the opening brace stands in the statement.
+ * @returns True where this rule writes it.
+ */
+function writesTheRunBehindTheBrace (statement: Rule | AtRule, result: PostcssResult, ruleName: string, primary: PrimaryOption, nodeToCheck: Node | null, problemIndex: number): boolean {
+	let first = statement.first
+
+	if (!first || first !== nodeToCheck) return true
+
+	return writesTwinRun(shortName, ruleName, statement, result, {
+		side: `after`,
+		run: runInFrontOf(first),
+		lineText: blockString(statement, result),
+		runs: () => [runInFrontOf(first)],
+		line: statement.rangeBy({ index: problemIndex }).start.line,
+		// `ignore: at-rules` passes the twin over an at-rule's brace
+		twinWrites: (_twinOption, secondary) => !(isAtRule(statement) && optionsMatches(secondary, `ignore`, `at-rules`)),
+	})
 }
 
 /** `always` a newline after the opening brace; `always-multi-line` asks it, and `never-multi-line` refuses whitespace there, in a multi-line block only. */
@@ -189,7 +219,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let nodeToCheck = nextNonCommentNode(statement.first, carryBreakPastComment)
 			let problemIndex = beforeBlockString(statement, result, { noRawBefore: true }).length + 1
 			// Taking away the break closing an inline comment would put the rest of the block inside it, so the `never-multi-line` warning stands unfixed there. The `always` options never report such a block; the short-circuit mirrors `declaration-block-semicolon-newline-after`, where it is reached and pinned
-			let fix = primary.startsWith(`always`) || !fixWouldCommentOutTheBlock(syntax, statement, nodeToCheck, result)
+			let fix = writesTheRunBehindTheBrace(statement, result, ruleName, primary, nodeToCheck, problemIndex) && (primary.startsWith(`always`) || !fixWouldCommentOutTheBlock(syntax, statement, nodeToCheck, result))
 				? (nodeToCheck === null ? fixTheTrailingRun() : fixTheCheckedRun(nodeToCheck))
 				: undefined
 

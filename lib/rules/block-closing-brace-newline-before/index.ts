@@ -1,8 +1,9 @@
-import type { AtRule, Rule } from "postcss"
-import stylelint from "stylelint"
+import type { AtRule, ChildNode, Rule } from "postcss"
+import stylelint, { type PostcssResult } from "stylelint"
 
-import { EVERY_WHITESPACE, LEADING_LINE_BREAK, LINE_BREAK, SEMICOLON_RUN, WHITESPACE } from "../../regexps.ts"
+import { EVERY_WHITESPACE, LEADING_LINE_BREAK, LINE_BREAK, SEMICOLON_RUN, TRAILING_WHITESPACE, WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import type { Syntax } from "../../syntaxes/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
@@ -12,6 +13,7 @@ import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
+import { isOnlyWhitespace } from "../../utils/isOnlyWhitespace/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { lastNodeHoldsTheBlockAfter } from "../../utils/lastNodeHoldsTheBlockAfter/index.ts"
 import { escapeHeadLength } from "../../utils/maskEscapes/index.ts"
@@ -20,7 +22,8 @@ import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { statementString } from "../../utils/statementString/index.ts"
 import { isDeclaration } from "../../utils/typeGuards/index.ts"
-import { writesSharedRun } from "../../utils/writesSharedRun/index.ts"
+import { sharesRunWithBrace, writesSharedRun } from "../../utils/writesSharedRun/index.ts"
+import { writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -76,6 +79,47 @@ function writesTheRun (text: string, raw: string, written: string): boolean {
 	if (written.replaceAll(EVERY_WHITESPACE, ``) !== raw.replaceAll(EVERY_WHITESPACE, ``)) return false
 
 	return editKeepsEscapedCharacter(text, { start: text.length - 1 - raw.length, end: text.length - 1, text: written })
+}
+
+/**
+ * Asks whether this rule is the one to write the run in front of the closing brace.
+ *
+ * Its space twin reads and writes that run too ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)), and behind a wordless declaration the colon rules read it as the run behind the colon ([#416](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/416)). `writesSharedRun` settles the twins as well wherever it holds this rule, so the twin gate is asked outside it alone.
+ * @param syntax - The syntax the rule is built over.
+ * @param statement - The rule or at-rule whose block is checked.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @param ruleName - This rule's configured name.
+ * @param read - What the check read of the run.
+ * @param read.last - The block's last node.
+ * @param read.run - The raw in front of the brace behind the escaped head.
+ * @param read.after - That run with a stray semicolon cut out, which is what the options speak of.
+ * @param read.escapedHead - The head an escape spells, which every write keeps.
+ * @param read.index - Where the brace stands in the statement.
+ * @returns True where this rule writes it.
+ */
+function writesTheRunInFrontOfTheBrace (syntax: Syntax, statement: Rule | AtRule, result: PostcssResult, ruleName: string, read: { last: ChildNode, run: string, after: string, escapedHead: string, index: number }): boolean {
+	let { last, run, after, escapedHead, index } = read
+
+	if (isDeclaration(last)) {
+		if (!writesSharedRun(syntax, last, result, ruleName)) return false
+
+		if (sharesRunWithBrace(syntax, last, result, ruleName)) return true
+	}
+
+	// The twins spell one run between them, which a raw holding anything but whitespace is not: a stray semicolon stands in front of the space rule's write and behind the break rule's break, so the two write different parts of the raw (#687)
+	if (!isOnlyWhitespace(run)) return true
+
+	return writesTwinRun(shortName, ruleName, statement, result, {
+		side: `before`,
+		run: after,
+		lineText: blockString(statement, result),
+		runs: () => [after],
+		// The run is this rule's where a break opens it, the indentation behind the break being `indentation`'s
+		breakPattern: LEADING_LINE_BREAK,
+		line: statement.rangeBy({ index }).start.line,
+		// The twin writes over the whitespace ending the block's final raw whatever its option, and writes nothing where the brace would land in a `//` comment the last node left open
+		twinWrites: () => !syntax.writesIntoInlineComment(last, result, lastNodeHoldsTheBlockAfter(statement) ? undefined : `${escapedHead}${run.replace(TRAILING_WHITESPACE, ``)}`),
+	})
 }
 
 /** `always` a newline before the closing brace; `always-multi-line` asks it, and `never-multi-line` refuses whitespace there, in a multi-line block only. */
@@ -137,8 +181,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let isFixable = primary.startsWith(`always`) || !syntax.writesIntoInlineComment(last, result, lastNodeHoldsTheBlockAfter(statement) ? undefined : `${escapedHead}${run.replaceAll(EVERY_WHITESPACE, ``)}`)
 
-			// Behind a wordless declaration the brace alone closes, the run is the colon rules' head run too, and the rules asked settle who writes (#416)
-			if (isFixable && isDeclaration(last)) isFixable = writesSharedRun(syntax, last, result, ruleName)
+			// The rules that read this run with it settle who writes: the twin, and the colon rules behind a wordless declaration
+			if (isFixable) isFixable = writesTheRunInFrontOfTheBrace(syntax, statement, result, ruleName, { last, run, after, escapedHead, index })
 
 			let writtenRun = runToWrite(primary, run, () => getLineBreak(root, result))
 			let written = `${escapedHead}${writtenRun}`

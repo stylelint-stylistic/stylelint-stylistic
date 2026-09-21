@@ -45,3 +45,35 @@ testRule({
 		},
 	],
 })
+
+// The space twin writes the run in front of the brace too, and the library lists it behind this rule, so its write would be the file's last (#704)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/block-closing-brace-space-before": `always` },
+
+	reject: [
+		{
+			// The run in front of the brace is one of the twins' to write, and the two options disagree over it
+			description: `two blocks closing on a single space, which the twin behind this rule accepts and would write back: neither break is written, and both warnings stand`,
+			code: `@media (a) { b { c: d } }`,
+			fixed: `@media (a) { b { c: d } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 22,
+					endLine: 1,
+					endColumn: 23,
+					message: messages.expectedBefore,
+				},
+				{
+					line: 1,
+					column: 24,
+					endLine: 1,
+					endColumn: 25,
+					message: messages.expectedBefore,
+				},
+			],
+		},
+	],
+})

@@ -1,4 +1,5 @@
 import { messages as closingNewlineBeforeMessages } from "../block-closing-brace-newline-before/index.ts"
+import { messages as openingNewlineAfterMessages } from "../block-opening-brace-newline-after/index.ts"
 import { messages as openingNewlineBeforeMessages } from "../block-opening-brace-newline-before/index.ts"
 
 import { messages, ruleName } from "./index.ts"
@@ -679,6 +680,38 @@ testRule({
 					endLine: 1,
 					endColumn: 26,
 					message: messages.expectedAfterSingleLine(),
+				},
+			],
+		},
+	],
+})
+
+// The break twin writes the run behind the brace too, and the library lists it behind this rule, so its write would be the file's last (#704)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/block-opening-brace-newline-after": `always` },
+
+	reject: [
+		{
+			// The run behind the brace is one of the twins' to write, and the two options disagree over it
+			description: `a block opening on no whitespace at all, whose run the twin behind this rule would write its break into: the space is not written, and the file rests on the twin's break with this rule's warning`,
+			code: `a{b:c;d:e}`,
+			fixed: `a{\nb:c;d:e}`,
+			warnings: [
+				{
+					line: 1,
+					column: 3,
+					endLine: 1,
+					endColumn: 4,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 3,
+					endLine: 1,
+					endColumn: 4,
+					message: openingNewlineAfterMessages.expectedAfter(),
 				},
 			],
 		},
