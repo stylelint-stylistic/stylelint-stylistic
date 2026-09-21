@@ -2,8 +2,9 @@ import { type ChildNode, type Container, type Document, type Root, stringify } f
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, LEADING_LINE_BREAK_RUN, OPENS_WITH_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
+import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, LEADING_LINE_BREAK_RUN, OPENS_WITH_LINE_BREAK, TRAILING_CSS_WHITESPACE, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import type { Syntax } from "../../syntaxes/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { type CommentSpan, findStringSpans } from "../../utils/findCommentSpans/index.ts"
@@ -16,6 +17,7 @@ import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { takesTheOpeningLines } from "../../utils/takesTheOpeningLines/index.ts"
+import { isAtRule, isComment, isDeclaration } from "../../utils/typeGuards/index.ts"
 import { isNumber } from "../../utils/validateTypes/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -75,7 +77,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let getChars = replaceEmptyLines.bind(null, primary)
 		let openingLinesAreTaken = takesTheOpeningLines(root, result)
 
-		/** Collapses every run of empty lines to the maximum: `raws.before`, a comment's `left` and `right`, the run in front of a closing brace, and the root's first node and tail apart from the walk, where an empty line counts one short. */
+		/** Collapses every run of empty lines to the maximum: `raws.before`, a comment's `left` and `right`, the raws between the parts of a statement, the run in front of a closing brace, and the root's first node and tail apart from the walk, where an empty line counts one short. */
 		function fix (): void {
 			let { first } = root
 
@@ -86,6 +88,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				}
 
 				if (node.raws.before) node.raws.before = node === first ? pastTheOpeningLines(node.raws.before, openingLinesAreTaken, getChars) : getChars(node.raws.before)
+
+				writeStatementRaws(syntax, node, result, getChars)
 
 				if (carriesABlock(node)) {
 					let blockAfter = getBlockAfter(syntax, node)
@@ -184,6 +188,70 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			}
 		}
 	}
+}
+
+/**
+ * Collapses every run of a raw outside the comments written in it: the text of a comment is the node's own and no raw of the statement (1788575747), and `ignore: comments` keeps every fix off it.
+ * @param syntax - The syntax the rule is built over, which says where a comment runs.
+ * @param node - The node the raw is from.
+ * @param result - The Stylelint result, which names the syntax the file was parsed with.
+ * @param getChars - What the rule makes of a run it writes.
+ * @param raw - The raw as the file spells it.
+ * @returns The raw written.
+ */
+function outsideComments (syntax: Syntax, node: ChildNode, result: PostcssResult, getChars: (text: string) => string, raw: string): string {
+	let blanked = blankComments(raw, syntax.commentSpans(raw, node, result))
+	let pieces = []
+	let index = 0
+
+	for (let run of blanked.matchAll(EVERY_RUN_OF_LINE_BREAKS)) {
+		pieces.push(raw.slice(index, run.index), getChars(run[0]))
+		index = run.index + run[0].length
+	}
+
+	pieces.push(raw.slice(index))
+
+	return pieces.join(``)
+}
+
+/**
+ * Collapses the run a printed value ends on and leaves every other run of it alone, a run standing inside the value being the node's own text (1788575747).
+ * @param getChars - What the rule makes of a run it writes.
+ * @param text - The printed value.
+ * @returns The value written.
+ */
+function trailingRun (getChars: (text: string) => string, text: string): string {
+	let head = text.replace(TRAILING_CSS_WHITESPACE, ``)
+
+	return head + getChars(text.slice(head.length))
+}
+
+/**
+ * Collapses the runs standing between the parts of one statement: an at-rule's `raws.afterName`, the `raws.between` of a rule, a declaration or an at-rule, the raw a flag stands in, and the run a printed value ends on, which is the one in front of the closing semicolon wherever the parser keeps it there rather than in a raw of its own ([#581](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/581)).
+ * @param syntax - The syntax the rule is built over, which reads and writes a value.
+ * @param node - The node of the walk.
+ * @param result - The Stylelint result, which names the syntax the file was parsed with.
+ * @param getChars - What the rule makes of a run it writes.
+ */
+function writeStatementRaws (syntax: Syntax, node: ChildNode, result: PostcssResult, getChars: (text: string) => string): void {
+	if (isComment(node)) return
+
+	if (isAtRule(node) && node.raws.afterName) node.raws.afterName = outsideComments(syntax, node, result, getChars, node.raws.afterName)
+
+	if (node.raws.between) node.raws.between = outsideComments(syntax, node, result, getChars, node.raws.between)
+
+	let flag = isAtRule(node) || isDeclaration(node) ? node.raws.important : undefined
+
+	// The raw a flag stands in runs from the end of the value through the flag, so the runs on both sides of it and the one inside `! important` are all in it; it is left undefined at the exact ` !important`, where none of them stands. A Less mixin call carries the same raw as a declaration does
+	if (typeof flag === `string`) node.raws.important = outsideComments(syntax, node, result, getChars, flag)
+
+	if (!isDeclaration(node)) return
+
+	let text = syntax.read(node)
+	let written = trailingRun(getChars, text)
+
+	// Written through the syntax, so every copy it keeps of the value stays in step
+	if (written !== text) syntax.write(node, written)
 }
 
 /**

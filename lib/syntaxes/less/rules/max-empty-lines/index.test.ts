@@ -53,6 +53,15 @@ testRule({
 			column: 1,
 			message: messages.expected(1),
 		},
+		// See #581
+		{
+			description: `two blank lines between the flag of a mixin call and the semicolon closing it, which the parser keeps behind the flag`,
+			code: `a {\n\t.m() !important\n\n\n;\n}\n`,
+			fixed: `a {\n\t.m() !important\n\n;\n}\n`,
+			line: 4,
+			column: 1,
+			message: messages.expected(1),
+		},
 	],
 })
 
