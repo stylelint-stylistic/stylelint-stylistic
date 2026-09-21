@@ -12,19 +12,16 @@ import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
-import { isOnlyWhitespace } from "../../utils/isOnlyWhitespace/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { nextNonCommentNode } from "../../utils/nextNonCommentNode/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
-import { openingBraceTwinReadings } from "../../utils/openingBraceTwinReadings/index.ts"
+import { openingBraceRunWrites } from "../../utils/openingBraceRunWrites/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
-import { isAtRule } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesBlockAfter } from "../../utils/writesBlockAfter/index.ts"
-import { type Twin, type TwinReading, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -117,39 +114,6 @@ function writeTheTrailingRun (syntax: Syntax, statement: Rule | AtRule, nodes: C
 	setBlockAfter(syntax, statement, written)
 }
 
-/**
- * Asks whether this rule, rather than its space twin, writes the run behind the opening brace ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)).
- *
- * The twin writes that run, the block's first node's, whenever it reports. This rule spells it only where it is the run it checks: its `always` options write a break into the run in front of the first node that is not a comment, and `never-multi-line` takes the whitespace that one opens with off it. Behind a comment it writes the first node's run too, but only by taking the breaks out of it, which leaves a space the twin wrote standing and is left standing by a space the twin writes after.
- * @param statement - The rule or at-rule whose block is checked.
- * @param result - The Stylelint result, which holds the configuration.
- * @param ruleName - This rule's configured name.
- * @param primary - This rule's primary option.
- * @param nodeToCheck - The first non-comment node of the block, or nothing where it holds none.
- * @param problemIndex - Where the opening brace stands in the statement.
- * @param readings - How the two twins read and write that run.
- * @returns True where this rule writes it.
- */
-function writesTheRunBehindTheBrace (statement: Rule | AtRule, result: PostcssResult, ruleName: string, primary: PrimaryOption, nodeToCheck: Node | null, problemIndex: number, readings: Record<Twin, TwinReading>): boolean {
-	let first = statement.first
-
-	if (!first || first !== nodeToCheck) return true
-
-	let run = runInFrontOf(first)
-
-	return writesTwinRun(shortName, ruleName, statement, result, {
-		side: `after`,
-		run,
-		lineText: blockString(statement, result),
-		runs: () => [run],
-		line: statement.rangeBy({ index: problemIndex }).start.line,
-		// `ignore: at-rules` passes the twin over an at-rule's brace
-		twinWrites: (_twinOption, secondary) => !(isAtRule(statement) && optionsMatches(secondary, `ignore`, `at-rules`)),
-		// The twins spell one run between them, which a run holding a stray semicolon is not: each writes the whitespace in front of it and keeps the rest, so a write is judged by the run it leaves (1790006583)
-		...(!isOnlyWhitespace(run) && { readings }),
-	})
-}
-
 /** `always` a newline after the opening brace; `always-multi-line` asks it, and `never-multi-line` refuses whitespace there, in a multi-line block only. */
 export type PrimaryOption = `always` | `always-multi-line` | `never-multi-line`
 
@@ -192,7 +156,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		let readings = openingBraceTwinReadings(() => getLineBreak(root, result))
+		let writes = openingBraceRunWrites(() => getLineBreak(root, result))
 
 		if (!optionsMatches(secondaryOptions, `ignore`, `rules`)) root.walkRules(check)
 
@@ -241,7 +205,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let nodeToCheck = nextNonCommentNode(statement.first, carryBreakPastComment)
 			let problemIndex = beforeBlockString(statement, result, { noRawBefore: true }).length + 1
 			// Taking away the break closing an inline comment would put the rest of the block inside it, so the `never-multi-line` warning stands unfixed there. The `always` options never report such a block; the short-circuit mirrors `declaration-block-semicolon-newline-after`, where it is reached and pinned
-			let fix = writesTheRunBehindTheBrace(statement, result, ruleName, primary, nodeToCheck, problemIndex, readings) && (primary.startsWith(`always`) || !fixWouldCommentOutTheBlock(syntax, statement, nodeToCheck, result))
+			let fix = primary.startsWith(`always`) || !fixWouldCommentOutTheBlock(syntax, statement, nodeToCheck, result)
 				? (nodeToCheck === null ? fixTheTrailingRun() : fixTheCheckedRun(nodeToCheck))
 				: undefined
 
@@ -274,7 +238,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (typeof standing !== `string`) return
 
-				let written = readings.newline.writes(primary, standing)
+				let written = writes.newline(primary, standing)
 				// The `always` write opens the run with a break; the `never-multi-line` one takes every break out of the block's whitespace in front of what it keeps, so only a comment's own text or a break behind a stray semicolon can leave the block multi-line
 				let isSingleLine = primary === `never-multi-line` && !LINE_BREAK.test(written) && nodes.every((node) => isSingleLineString(nodeString(node, result)))
 
@@ -303,7 +267,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 						nodeToFixRaws.before = backupCommentNextBefores.has(nodeToFix)
 							? spellTheCarriedRun(standing, backupCommentNextBefores.get(nodeToFix))
-							: readings.newline.writes(primary, standing)
+							: writes.newline(primary, standing)
 
 						backupCommentNextBefores.delete(nodeToFix)
 
@@ -316,7 +280,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						// The comments in front lose their breaks; the checked node's run loses the whitespace it opens with, and a stray semicolon behind it stays with whatever follows it (1789998855)
 						for (let comment = statement.first; comment && comment !== nodeToFix; comment = comment.next()) unbreakTheRunInFrontOf(comment)
 
-						nodeToFixRaws.before = readings.newline.writes(primary, nodeToFixRaws.before ?? ``)
+						nodeToFixRaws.before = writes.newline(primary, nodeToFixRaws.before ?? ``)
 					}
 				}
 			}

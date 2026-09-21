@@ -8,8 +8,8 @@ import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter
 import { findMediaOperator } from "../../utils/findMediaOperator/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runInFront } from "../../utils/runInFront/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
-import { runInFront } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 

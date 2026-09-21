@@ -73,7 +73,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.afterOneOnly,
 			checkedRuleName: ruleName,
-			shortName,
 			fixPosition: `after`,
 			ignoreFunctions: secondaryOptions?.ignoreFunctions,
 			fix: (div, index, functionNode) => functionCommaSpaceFix({

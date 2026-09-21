@@ -32,7 +32,7 @@ export interface ValueListCommaWhitespaceCheckerOptions {
 	fix?: ((node: Declaration, index: number, runString: string) => void),
 
 	/** Whether a problem can be fixed; the printed declaration, the index of every comma checked in it and the copy the runs are read over come along. */
-	isFixable?: ((node: Declaration, index: number, declString: string, indices: number[], runString: string) => boolean),
+	isFixable?: ((node: Declaration, index: number, declString: string, runString: string) => boolean),
 
 	/** Moves the index a comma is checked at, or refuses it with `false`. */
 	determineIndex?: ((declString: string, match: StyleSearchMatch) => number | false),
@@ -68,7 +68,7 @@ export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceC
 			},
 		)
 
-		for (let index of indices) checkComma(declString, runString, index, decl, indices)
+		for (let index of indices) checkComma(declString, runString, index, decl)
 	})
 
 	/**
@@ -77,15 +77,14 @@ export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceC
 	 * @param runString - The copy of it the runs are read over.
 	 * @param index - The comma's index.
 	 * @param node - The declaration.
-	 * @param indices - The index of every comma checked in it.
 	 */
-	function checkComma (source: string, runString: string, index: number, node: Declaration, indices: number[]): void {
+	function checkComma (source: string, runString: string, index: number, node: Declaration): void {
 		opts.locationChecker({
 			source: runString,
 			index,
 			err: (message) => {
 				// Stylelint counts a fixer as applied whatever it does, so the decision is made before the report; here, not before the check, so a clean declaration is not read once per comma.
-				let isFixable = fix && (!opts.isFixable || opts.isFixable(node, index, source, indices, runString))
+				let isFixable = fix && (!opts.isFixable || opts.isFixable(node, index, source, runString))
 
 				report({
 					message,

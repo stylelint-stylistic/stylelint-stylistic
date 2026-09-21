@@ -8,8 +8,8 @@ import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { mediaQueryListCommaWhitespaceChecker } from "../../utils/mediaQueryListCommaWhitespaceChecker/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runInFront } from "../../utils/runInFront/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
-import { runInFront, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -59,7 +59,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
 			// The fix's whitespace ends this text, and its break would close an inline comment standing there, taking the comma into the comment: leave the parameters alone
-			isFixable: (params, index, atRule, commas, runString) => {
+			isFixable: (params, index, atRule, runString) => {
 				if (syntax.endsWithInlineComment(params.slice(0, index), syntax.inlineComments(atRule, result))) return false
 
 				let run = runInFront(runString, index)
@@ -67,15 +67,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎,b` would come out as `a\,b`, one identifier, or `a\ ,b`, an escaped space, so the warning stands (1789661965)
 				if (!editKeepsEscapedCharacter(params, { start: index - run.length, end: index, text: primary.startsWith(`always`) ? ` ` : `` })) return false
 
-				// The break twin writes the same run (#704)
-				return writesTwinRun(shortName, ruleName, atRule, result, {
-					side: `before`,
-					run,
-					lineText: params,
-					runs: () => commas.map(({ comma }) => runInFront(runString, comma)),
-					line: atRule.rangeBy({ index: index + atRuleParamIndex(atRule) }).start.line,
-					twinWrites: () => true,
-				})
+				return true
 			},
 			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ ,b` is not cut (1789657288)
 			fix: (atRule, index, runString) => {

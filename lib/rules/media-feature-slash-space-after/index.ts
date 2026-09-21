@@ -49,7 +49,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			result,
 			syntax,
 			checkedRuleName: ruleName,
-			shortName,
 			locationChecker: checker.after,
 			position: `after`,
 			expectation: primary,

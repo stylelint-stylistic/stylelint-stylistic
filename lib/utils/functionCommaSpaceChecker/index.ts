@@ -19,7 +19,6 @@ import { quotesItsAddress } from "../quotesItsAddress/index.ts"
 import { rereadsAnAddress } from "../rereadsAnAddress/index.ts"
 import { isValueFunction } from "../typeGuards/index.ts"
 import { commentsRemovedBefore, withoutComments } from "../withoutComments/index.ts"
-import { runBehind, runInFront, type TwinRun, writesTwinRun } from "../writesTwinRun/index.ts"
 
 let { utils: { report } } = stylelint
 
@@ -93,76 +92,6 @@ function commasOf (functionNode: ValueParserFunctionNode, reading: CommentReadin
 }
 
 /**
- * Reads the calls nested in a call whose commas the check reads, as the walk of the value finds them.
- * @param functionNode - The call.
- * @param reading - Whether `//` opens a comment.
- * @param valueCommentSpans - The comment spans of the whole value.
- * @param reads - Whether the rule reads a call's commas, or `ignored` where its `ignoreFunctions` names the call, which covers everything inside.
- * @returns Each nested call's arguments and commas.
- */
-function nestedCallsOf (functionNode: ValueParserFunctionNode, reading: CommentReading, valueCommentSpans: CommentSpan[], reads: (call: ValueParserFunctionNode) => `ignored` | boolean): ReturnType<typeof commasOf>[] {
-	let calls: ReturnType<typeof commasOf>[] = []
-
-	valueParser.walk(functionNode.nodes, (node, at, siblings) => {
-		if (!isValueFunction(node) || (opensAnAddress(node, at, siblings) && !quotesItsAddress(node))) return
-
-		let answer = reads(node)
-
-		if (answer === `ignored`) return false
-		if (answer) calls.push(commasOf(node, reading, valueCommentSpans))
-	})
-
-	return calls
-}
-
-/**
- * Names the calls around every nested call of a value, since `ignoreFunctions` covers everything inside a call it names.
- * @param parsedValue - The parsed value.
- * @returns The names by call, the innermost first; a call standing in no other has no entry.
- */
-function enclosingNamesOf (parsedValue: valueParser.ParsedValue): WeakMap<ValueParserFunctionNode, string[]> {
-	let names: WeakMap<ValueParserFunctionNode, string[]> = new WeakMap()
-
-	parsedValue.walk((valueNode) => {
-		if (!isValueFunction(valueNode)) return
-
-		for (let child of valueNode.nodes) {
-			if (isValueFunction(child)) names.set(child, [child.value, ...(names.get(valueNode) ?? [valueNode.value])])
-		}
-	})
-
-	return names
-}
-
-/**
- * Describes the run beside a comma to the gate between twins: the run in dispute is read over the copy the check reads it over, while the lines are counted, and the runs they are counted without are read, over the copy with the comments taken out — the one the `-single-line` and `-multi-line` options are judged over.
- * @param position - The side of the comma the rule writes.
- * @param runText - The copy of the arguments the run in dispute is read over.
- * @param lineText - The copy the lines are counted of, which the runs subtracted from them are read over too.
- * @param comma - Where the comma stands.
- * @param comma.checkIndex - The comma's index in `runText`.
- * @param comma.lineIndices - The index in `lineText` of every comma of the call.
- * @param comma.nestedCalls - The calls nested in it that the rule reads, whose runs it writes in the same pass.
- * @param comma.line - The line the comma stands on.
- * @param comma.functionNames - The names of the call and of the calls around it, which a twin's `ignoreFunctions` passes over.
- * @returns The run.
- */
-function twinRunAt (position: `before` | `after`, runText: string, lineText: string, { checkIndex, lineIndices, nestedCalls, line, functionNames }: { checkIndex: number, lineIndices: number[], nestedCalls: () => ReturnType<typeof commasOf>[], line: number, functionNames: string[] }): TwinRun {
-	let readRun = position === `before` ? runInFront : runBehind
-
-	return {
-		side: position,
-		run: readRun(runText, checkIndex),
-		lineText,
-		// A nested call's runs are lines of this one's text too
-		runs: () => [...lineIndices.map((each) => readRun(lineText, each)), ...nestedCalls().flatMap((call) => call.commaDataList.map((each) => readRun(call.runArguments, each.checkIndex)))],
-		line,
-		// Both twinread and write the comma'own run, whatever comment standbehind it
-		twinWrites: (_option, secondary) => !functionNames.some((name) => optionsMatches(secondary, `ignoreFunctions`, name)),
-	}
-}
-
-/**
  * Checks whitespace around the commas of function arguments.
  * @param opts - The options.
  */
@@ -175,7 +104,6 @@ export function functionCommaSpaceChecker (opts: {
 	checkedRuleName: string,
 	fixPosition?: `before` | `after`,
 	ignoreFunctions?: string | RegExp | Array<string | RegExp> | undefined,
-	shortName: string,
 }): void {
 	let { fix } = opts
 	// A `before` rule reads the run in front of the comma, which a comment there leaves where it stands until the fix writes there (1789971383); only the run behind one is read past a comment by the copy with the comments taken out
@@ -192,7 +120,6 @@ export function functionCommaSpaceChecker (opts: {
 		let edits: Edit[] = []
 		// Masked so the parser pairs quotation marks as the file does (#508)
 		let parsedValue = valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(declValue, valueCommentSpans), valueCommentSpans))
-		let enclosingNames = enclosingNamesOf(parsedValue)
 
 		parsedValue.walk((valueNode, at, siblings) => {
 			if (!isValueFunction(valueNode)) return
@@ -225,11 +152,9 @@ export function functionCommaSpaceChecker (opts: {
 			 * Asks whether a fix can write at the comma. A `before` rule writes over the whitespace in front of it, and where that is an inline comment's closing break either option would take the comma into the comment; an `after` rule writes behind the comma, where no comment is open.
 			 * @param commaNode - The div node holding the comma.
 			 * @param nodeIndex - Its index among the arguments.
-			 * @param readIndex - Its index in the copy the runs are read over.
-			 * @param index - Its index in the declaration.
-			 * @returns True where the fix writes into no comment, parts the name of no bare address from the comma or joins it to the comma, which switches how PostCSS reads the parentheses, writes no break into parentheses PostCSS holds as one token whose bracket the break would leave open, and its twin, reading the same run, leaves it that run ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)).
+			 * @returns True where the fix writes into no comment, parts the name of no bare address from the comma or joins it to the comma, which switches how PostCSS reads the parentheses, and writes no break into parentheses PostCSS holds as one token whose bracket the break would leave open.
 			 */
-			function isFixable (commaNode: ValueParserDivNode, nodeIndex: number, readIndex: number, index: number): boolean {
+			function isFixable (commaNode: ValueParserDivNode, nodeIndex: number): boolean {
 				if (opts.fixPosition === `before` && opts.syntax.endsWithInlineComment(declValue.slice(0, commaNode.sourceIndex), reading)) return false
 
 				let commaEdits = fix?.(commaNode, nodeIndex, functionNode) ?? []
@@ -237,25 +162,16 @@ export function functionCommaSpaceChecker (opts: {
 				if (commaEdits.some((edit) => rereadsAnAddress(declValue, edit, reading))) return false
 
 				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` nothing closes inside, or such a `{` in a custom property's value, is then a group the parser finds open and the file stops parsing: the break is refused there and the warning stands
-				if (commaEdits.some((edit) => LINE_BREAK.test(edit.text)) && breakRereadsParentheses(declValue, functionNode.sourceIndex + functionNode.value.length, isCustomProperty(decl.prop))) return false
-
-				return writesTwinRun(opts.shortName, opts.checkedRuleName, decl, opts.result, twinRunAt(readsBehind ? `after` : `before`, readText, runArguments, {
-					checkIndex: readIndex,
-					lineIndices: commaDataList.map((each) => each.checkIndex),
-					nestedCalls: () => nestedCallsOf(functionNode, reading, valueCommentSpans, (call) => optionsMatches(opts, `ignoreFunctions`, call.value) ? `ignored` : opts.syntax.isStandardFunction(call)),
-					line: decl.rangeBy({ index }).start.line,
-					functionNames: enclosingNames.get(functionNode) ?? [functionNode.value],
-				}))
+				return !(commaEdits.some((edit) => LINE_BREAK.test(edit.text)) && breakRereadsParentheses(declValue, functionNode.sourceIndex + functionNode.value.length, isCustomProperty(decl.prop)))
 			}
 
 			/**
 			 * Builds the callback reporting a problem at one comma.
 			 * @param commaNode - The div node holding the comma.
 			 * @param nodeIndex - Its index among the arguments.
-			 * @param readIndex - Its index in the copy the runs are read over.
 			 * @returns The callback, which reports the message at the comma.
 			 */
-			function createErrHandler (commaNode: ValueParserDivNode, nodeIndex: number, readIndex: number): (message: string) => void {
+			function createErrHandler (commaNode: ValueParserDivNode, nodeIndex: number): (message: string) => void {
 				return (message) => {
 					let index = declarationValueIndex(decl) + commaNode.sourceIndex + commaNode.before.length
 
@@ -266,7 +182,7 @@ export function functionCommaSpaceChecker (opts: {
 						node: decl,
 						result: opts.result,
 						ruleName: opts.checkedRuleName,
-						...(fix && isFixable(commaNode, nodeIndex, readIndex, index) && {
+						...(fix && isFixable(commaNode, nodeIndex) && {
 							fix: (): void => {
 								edits.push(...fix(commaNode, nodeIndex, functionNode))
 							},
@@ -283,7 +199,7 @@ export function functionCommaSpaceChecker (opts: {
 					index: readIndex,
 					// The lines are counted of the copy with the comments taken out, which is what a comma of a call has always been judged single- or multi-line over
 					lineCheckStr: runArguments,
-					err: createErrHandler(comma.commaNode, comma.nodeIndex, readIndex),
+					err: createErrHandler(comma.commaNode, comma.nodeIndex),
 				})
 			}
 		})

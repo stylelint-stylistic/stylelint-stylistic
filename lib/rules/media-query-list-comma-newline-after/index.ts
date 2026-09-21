@@ -11,8 +11,8 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { mediaQueryListCommaWhitespaceChecker } from "../../utils/mediaQueryListCommaWhitespaceChecker/index.ts"
 import { rereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runBehind } from "../../utils/runBehind/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
-import { runBehind, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -62,7 +62,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.afterOneOnly,
 			checkedRuleName: ruleName,
 			allowTrailingComments: primary.startsWith(`always`),
-			isFixable: (params, index, atRule, commas) => {
+			isFixable: (params, index, atRule) => {
 				let run = runBehind(params, index)
 				// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses
 				let edit = primary.startsWith(`never`) ? { start: index + 1, end: index + 1 + run.length, text: `` } : { start: index + 1, end: index + 1, text: getLineBreak(root, result) }
@@ -72,15 +72,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` or a `{` nothing closes inside is then a group the parser finds open, so the at-rule gets no block and its params run to the end of the file, or the rule holding it is left unclosed: the break is refused there and the warning stands. In an at-rule's params a `{` opens a group whatever the at-rule, as it does in a custom property's value
 				if (primary.startsWith(`always`) && breakAtRereadsParentheses(params, index, true)) return false
 
-				return writesTwinRun(shortName, ruleName, atRule, result, {
-					side: `after`,
-					run,
-					lineText: params,
-					runs: () => commas.map(({ comma, pastComments }) => runBehind(params, primary.startsWith(`always`) ? pastComments : comma)),
-					line: atRule.rangeBy({ index: index + atRuleParamIndex(atRule) }).start.line,
-					// The space twin reads the run right behind the comma, which is this one where no comment moved the check (#704)
-					twinWrites: () => params[index] === `,`,
-				})
+				return true
 			},
 			fix: (atRule, index) => {
 				let paramCommaIndex = index - atRuleParamIndex(atRule)

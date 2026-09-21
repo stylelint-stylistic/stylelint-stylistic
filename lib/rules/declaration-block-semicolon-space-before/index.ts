@@ -13,12 +13,10 @@ import { isInlineStyleAttribute } from "../../utils/isInlineStyleAttribute/index
 import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
 import { maskEscapes } from "../../utils/maskEscapes/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { semicolonClosedDeclarations } from "../../utils/semicolonClosedDeclarations/index.ts"
 import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
-import { keepsEscapedCharacter, readWhitespaceBeforeSemicolon, writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
+import { keepsEscapedCharacter, writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
-import { sharesRunWithSemicolon, writesSharedRun } from "../../utils/writesSharedRun/index.ts"
-import { writesTwinRun } from "../../utils/writesTwinRun/index.ts"
+import { writesSharedRun } from "../../utils/writesSharedRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -68,8 +66,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (isLastNodeWithoutSemicolon(decl)) return
 
-			// The narrowing does not reach into the function below
-			let block = parentRule
 			let value = syntax.read(decl)
 			let isCustomPropertyWithOnlySpaces = false
 
@@ -86,24 +82,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// The semicolon goes at the end of the run the fix cuts into; a `//` comment there is closed by that run's break, so either option would take the semicolon into it: the warning stands. A value of nothing but that run is the run behind the colon too, whose writer the rules asked about it settle (#416). A backslash ending the value would read what the fix puts behind it
 			let isFixable = !syntax.writesIntoInlineComment(decl, result) && writesSharedRun(syntax, decl, result, ruleName) && keepsEscapedCharacter(syntax, decl, result, primary.startsWith(`always`) ? ` ` : ``)
 
-			/**
-			 * Asks whether this rule writes the run, which the break twin reads and writes too (1789508663). Over a wordless value `writesSharedRun` has settled the two already, and it alone knows that the twin's `never-multi-line` leaves a single space there (#50).
-			 * @returns True where it does.
-			 */
-			function writesTheRun (): boolean {
-				if (sharesRunWithSemicolon(syntax, decl, result, ruleName)) return true
-
-				return writesTwinRun(shortName, ruleName, decl, result, {
-					side: `before`,
-					run: readWhitespaceBeforeSemicolon(syntax, decl, result),
-					lineText: blockString(block, result),
-					runs: () => semicolonClosedDeclarations(block).map((each) => readWhitespaceBeforeSemicolon(syntax, each, result)),
-					line: decl.rangeBy({ index: problemIndex }).start.line,
-					// The twin's guards need no mirror: they hold behind a `//` comment or a backslash, where this rule writes nothing either
-					twinWrites: () => true,
-				})
-			}
-
 			checker.before({
 				// The run is read over the copy with its escapes masked, where an escaped space is a character of the value and no run (1789661964)
 				source: maskEscapes(declString, findEscapeSpans(declString, syntax.inlineComments(decl, result)), true),
@@ -117,7 +95,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						endIndex: problemIndex,
 						result,
 						ruleName,
-						...(isFixable && writesTheRun() && {
+						...(isFixable && {
 							fix: (): void => {
 								if (primary.startsWith(`always`)) {
 									writeWhitespaceBeforeSemicolon(syntax, decl, result, ` `)

@@ -3,7 +3,7 @@ import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
 import { MEDIA_QUERY_COMBINATORS } from "../../reference/mediaQueries.ts"
-import { LEADING_BLOCK_COMMENT, LEADING_CSS_WHITESPACE, MEDIA_AT_RULE, OPENS_WITH_INLINE_COMMENT } from "../../regexps.ts"
+import { LEADING_BLOCK_COMMENT, MEDIA_AT_RULE, OPENS_WITH_INLINE_COMMENT } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { atRuleParamIndex } from "../atRuleParamIndex/index.ts"
 import { findFunctionArgumentSpans } from "../findFunctionArgumentSpans/index.ts"
@@ -13,11 +13,10 @@ import type { WhitespaceChecker } from "../whitespaceChecker/index.ts"
 
 let { utils: { report } } = stylelint
 
-/** A comma of a media query list: its index in the params, the index the check moves to past the comments trailing it on its line, and whether it moves once some other whitespace stands behind the comma. */
-export type MediaQueryListComma = {
+/** A comma of a media query list: its index in the params, and the index the check moves to past the comments trailing it on its line. */
+type MediaQueryListComma = {
 	comma: number,
 	pastComments: number,
-	movesPastCommentsWith: (run: string) => boolean,
 }
 
 /**
@@ -31,7 +30,7 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 	locationChecker: WhitespaceChecker,
 	checkedRuleName: string,
 	fix?: ((atRule: AtRule, index: number, runString: string) => void),
-	isFixable?: ((params: string, index: number, atRule: AtRule, commas: MediaQueryListComma[], runString: string) => boolean),
+	isFixable?: ((params: string, index: number, atRule: AtRule, runString: string) => boolean),
 	allowTrailingComments?: boolean,
 }): void {
 	let { fix } = opts
@@ -70,31 +69,16 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 				if (inlineComment && inlineComment.end < params.length) index = inlineComment.end - 1
 			}
 
-			let standingRun = (params.slice(comma + 1).match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0]
-			let behindRun = params.slice(comma + 1 + standingRun.length)
-
 			commas.push({
 				comma,
 				pastComments: index,
-				movesPastCommentsWith: (run) => {
-					if (LEADING_BLOCK_COMMENT.test(run + behindRun)) return true
-
-					let opening = OPENS_WITH_INLINE_COMMENT.exec(run + behindRun)
-
-					if (!opening) return false
-
-					let start = comma + 1 + standingRun.length + opening[0].length - 2 - run.length
-					let inlineComment = commentSpans.find((span) => span.start === start)
-
-					return inlineComment !== undefined && inlineComment.end < params.length
-				},
 			})
 		})
 
 		// The run in front of a comma opening the parameters lies in `raws.afterName`, comments and all (1789593917)
 		let textBefore = rawInFrontOfText(atRule)
 
-		for (let { comma, pastComments } of commas) checkComma(params, runString, opts.allowTrailingComments ? pastComments : comma, atRule, commas, textBefore)
+		for (let { comma, pastComments } of commas) checkComma(params, runString, opts.allowTrailingComments ? pastComments : comma, atRule, textBefore)
 	})
 
 	/**
@@ -103,10 +87,9 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 	 * @param runString - The copy of them the runs are read over.
 	 * @param index - The comma's index.
 	 * @param node - The at-rule.
-	 * @param commas - Every comma of the list.
 	 * @param textBefore - What the file holds in front of the parameters, where a comma opening them has its run (1789593917).
 	 */
-	function checkComma (source: string, runString: string, index: number, node: AtRule, commas: MediaQueryListComma[], textBefore: string): void {
+	function checkComma (source: string, runString: string, index: number, node: AtRule, textBefore: string): void {
 		opts.locationChecker({
 			source: runString,
 			index,
@@ -114,7 +97,7 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 			err: (message) => {
 				let commaIndex = index + atRuleParamIndex(node)
 				// Asked here, not in front of the check, so parameters in order are not read once per comma
-				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, node, commas, runString))
+				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, node, runString))
 
 				report({
 					message,

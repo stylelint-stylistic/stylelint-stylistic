@@ -16,7 +16,6 @@ import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isRegExp, isString } from "../../utils/validateTypes/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
-import { runInFront, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -135,17 +134,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let isFixable = !syntax.endsWithInlineComment(`${syntax.read(statement)}${between}`, syntax.inlineComments(statement, result))
 						// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎{` would come out as `a\{`, which the parser no longer reads as a block, or `a\ {`, an escaped space (1789664271)
 						&& editKeepsEscapedCharacter(`${source}{`, { start: source.length - run.length, end: source.length, text: written })
-						// The break twin writes the same run, and behind an inline comment neither of them writes at all (#704)
-						&& writesTwinRun(shortName, ruleName, statement, result, {
-							side: `before`,
-							// The run is the check's, read over the copy with its escapes masked, so the space of `a\ {` is no whitespace at all (1789661964)
-							run: runInFront(maskedSource, maskedSource.length),
-							lineText: blockString(statement, result),
-							// The run stands in front of the block whose lines both twins count, so no write of theirs moves it a line
-							runs: () => [],
-							line: statement.rangeBy({ index }).start.line,
-							twinWrites: () => true,
-						})
 
 					report({
 						message: m,

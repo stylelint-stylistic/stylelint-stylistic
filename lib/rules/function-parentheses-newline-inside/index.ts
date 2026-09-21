@@ -1,6 +1,5 @@
-import type { Declaration } from "postcss"
 import valueParser, { type FunctionNode } from "postcss-value-parser"
-import stylelint, { type FixCallback, type PostcssResult } from "stylelint"
+import stylelint, { type FixCallback } from "stylelint"
 
 import { LEADING_CSS_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
@@ -11,7 +10,7 @@ import { declarationValueIndex } from "../../utils/declarationValueIndex/index.t
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editsOpenNoComment } from "../../utils/editsOpenNoComment/index.ts"
 import { type CommentSpan, findCommentSpanAt, findCommentSpanHolding } from "../../utils/findCommentSpans/index.ts"
-import { getAfterSpan, parenthesesRuns, readClosingRuns, readOpeningRuns } from "../../utils/functionParenthesesRuns/index.ts"
+import { getAfterSpan, readClosingRuns, readOpeningRuns } from "../../utils/functionParenthesesRuns/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
@@ -23,7 +22,6 @@ import { quotesItsAddress } from "../../utils/quotesItsAddress/index.ts"
 import { editsRereadAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { splitSpaceNodesAtWords } from "../../utils/splitSpaceNodesAtWords/index.ts"
-import { writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -193,34 +191,6 @@ function getNeverFixability (syntax: Syntax, read: {
 	return { isOpeningFixable, isClosingFixable }
 }
 
-/**
- * Asks whether the break rule, rather than its space twin, writes a run inside a call's parentheses, which both read and write ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)).
- * @param read - What the walk read of the call, and what names the rule.
- * @param side - `after` for the run behind the `(`, `before` for the one in front of the `)`.
- * @param parenthesisIndex - The parenthesis's index in the value.
- * @returns True where this rule writes the run.
- */
-function writesParenthesisRun (read: {
-	ruleName: string,
-	decl: Declaration,
-	result: PostcssResult,
-	syntax: Syntax,
-	valueNode: FunctionNode,
-	comments: CommentSpan[],
-	functionString: string,
-}, side: `after` | `before`, parenthesisIndex: number): boolean {
-	let { ruleName, decl, result, syntax, valueNode, comments, functionString } = read
-
-	return writesTwinRun(shortName, ruleName, decl, result, {
-		side,
-		run: side === `after` ? valueNode.before : valueNode.after,
-		lineText: functionString,
-		runs: () => parenthesesRuns(valueNode, comments, (call) => isFunctionParsedAsWritten(syntax, call, comments)),
-		line: decl.rangeBy({ index: declarationValueIndex(decl) + parenthesisIndex }).start.line,
-		twinWrites: () => true,
-	})
-}
-
 /** `always` a newline inside the parentheses; `always-multi-line` asks it, and `never-multi-line` refuses whitespace there, in a multi-line function only. */
 export type PrimaryOption = `always` | `always-multi-line` | `never-multi-line`
 
@@ -285,9 +255,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let { isOpeningFixable, isClosingFixable } = isMultiLine && primary === `never-multi-line`
 					? getNeverFixability(syntax, { declValue, valueNode, checkBefore, checkAfter, firstIndex, measuredBefore, measuredAfter, comments, reading })
 					: { isOpeningFixable: false, isClosingFixable: false }
-				let twinRead = { ruleName, decl, result, syntax, valueNode: functionNode, comments, functionString }
-				// The space twin writes the run right behind the `(`, which is the one written here where nothing stands between the `(` and the first significant thing: `always` writes into the last stretch measured, and `never-multi-line` empties them all, the first among them. The twin passes over a call holding nothing ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)).
-				let writesOpeningRun = valueNode.nodes.length === 0 || (primary !== `never-multi-line` && measuredBefore.length > 1) || writesParenthesisRun(twinRead, `after`, openingIndex)
 				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` inside, or a `{` in a custom property's value, is then a group nothing closes: the file stops parsing, so the `always` fixes are refused there and the warnings stand; a multi-line call holds a break inside its parentheses already, so `always-multi-line` never meets the token
 				let breaksAToken = breakRereadsParentheses(declValue, openingIndex - 1, isCustomProperty(decl.prop))
 				// The break the `always` options write behind the `(` stands where the tokenizer decides whether parentheses it takes for an address's are one token, and the name it reads there is not the one the walk read ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)); the break in front of the `)` moves no such character, so only this one is asked about. Read under those two options alone: `fixBeforeForAlways` takes the last stretch the walk measured, and `never-multi-line` is the option that can meet a call with none.
@@ -302,40 +269,38 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				checkClosing()
 
-				/** Reports the whitespace behind the `(`, fixing it where the run is this rule's to write. */
+				/** Reports the whitespace behind the `(`, fixing it where no guard refuses the write. */
 				function checkOpening (): void {
 					if (primary === `always` && !LINE_BREAK.test(checkBefore)) {
-						fix = writesOpeningRun && !breaksAToken && !alwaysRereadsAnAddress ? fixWith(() => openingWrite) : undefined
+						fix = !breaksAToken && !alwaysRereadsAnAddress ? fixWith(() => openingWrite) : undefined
 						complain(messages.expectedOpening, openingIndex)
 					}
 
 					if (isMultiLine && primary === `always-multi-line` && !LINE_BREAK.test(checkBefore)) {
-						fix = writesOpeningRun && !alwaysRereadsAnAddress ? fixWith(() => openingWrite) : undefined
+						fix = alwaysRereadsAnAddress ? undefined : fixWith(() => openingWrite)
 						complain(messages.expectedOpeningMultiLine, openingIndex)
 					}
 
 					if (isMultiLine && primary === `never-multi-line` && checkBefore !== ``) {
-						fix = isOpeningFixable && writesOpeningRun ? fixWith(() => fixBeforeForNever(measuredBefore)) : undefined
+						fix = isOpeningFixable ? fixWith(() => fixBeforeForNever(measuredBefore)) : undefined
 						complain(messages.rejectedOpeningMultiLine, openingIndex)
 					}
 				}
 
-				/** Reports the whitespace in front of the `)`; every closing fix writes the `after` span, which is the run the space twin writes, so the run is always shared. */
+				/** Reports the whitespace in front of the `)`; every closing fix writes the `after` span. */
 				function checkClosing (): void {
-					let writesClosingRun = writesParenthesisRun(twinRead, `before`, closingIndex + 1)
-
 					if (primary === `always` && !LINE_BREAK.test(checkAfter)) {
-						fix = writesClosingRun && !breaksAToken ? fixWith(() => fixAfterForAlways(functionNode, getLineBreak(root, result))) : undefined
+						fix = breaksAToken ? undefined : fixWith(() => fixAfterForAlways(functionNode, getLineBreak(root, result)))
 						complain(messages.expectedClosing, closingIndex)
 					}
 
 					if (isMultiLine && primary === `always-multi-line` && !LINE_BREAK.test(checkAfter)) {
-						fix = writesClosingRun ? fixWith(() => fixAfterForAlways(functionNode, getLineBreak(root, result))) : undefined
+						fix = fixWith(() => fixAfterForAlways(functionNode, getLineBreak(root, result)))
 						complain(messages.expectedClosingMultiLine, closingIndex)
 					}
 
 					if (isMultiLine && primary === `never-multi-line` && checkAfter !== ``) {
-						fix = isClosingFixable && writesClosingRun ? fixWith(() => fixAfterForNever(measuredAfter)) : undefined
+						fix = isClosingFixable ? fixWith(() => fixAfterForNever(measuredAfter)) : undefined
 						complain(messages.rejectedClosingMultiLine, closingIndex)
 					}
 				}

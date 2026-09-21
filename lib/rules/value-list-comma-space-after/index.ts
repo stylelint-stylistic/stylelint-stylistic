@@ -1,16 +1,16 @@
 import type { Declaration } from "postcss"
 import stylelint from "stylelint"
 
-import { LEADING_CSS_WHITESPACE, SPACES_THEN_BLOCK_COMMENT, SPACES_THEN_INLINE_COMMENT } from "../../regexps.ts"
+import { LEADING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { rereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runBehind } from "../../utils/runBehind/index.ts"
 import { valueListCommaWhitespaceChecker } from "../../utils/valueListCommaWhitespaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
-import { runBehind, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -60,22 +60,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.after,
 			checkedRuleName: ruleName,
 			// Declined here, since Stylelint counts a fixer as applied whatever it does: a comma in the property name is out of reach, one opening the value is not.
-			isFixable: (declNode, index, declString, indices) => {
+			isFixable: (declNode, index, declString) => {
 				let run = runBehind(declString, index)
-				let behindRun = declString.slice(index + 1 + run.length)
 
 				// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses
 				if (rereadsAnAddress(declString, { start: index + 1, end: index + 1 + run.length, text: primary.startsWith(`always`) ? ` ` : `` }, syntax.inlineComments(declNode, result))) return false
 
-				return index >= declarationValueIndex(declNode) && writesTwinRun(shortName, ruleName, declNode, result, {
-					side: `after`,
-					run,
-					lineText: declString,
-					runs: () => indices.map((each) => runBehind(declString, each)),
-					line: declNode.rangeBy({ index }).start.line,
-					// The break twin reads past a block comment behind the comma and passes over one a `//` comment follows, and a write can move either against the comma or off it (#704)
-					twinWrites: (_option, _secondary, over) => !SPACES_THEN_INLINE_COMMENT.test(over + behindRun) && !SPACES_THEN_BLOCK_COMMENT.test(over + behindRun),
-				})
+				return index >= declarationValueIndex(declNode)
 			},
 			fix: (declNode, index) => {
 				fixData = fixData || (new Map())
