@@ -775,6 +775,17 @@ testRule({
 			description: `an interpolation holding a break in front of a node on a line at its level, the break inside a string of the host`,
 			code: `function f () {\n\tconst a = styled.div\`\n\t\t\${\`\n\`}; color: red;\n\t\`;\n}`,
 		},
+		{
+			// The interpolation stands on the brace's line and is no part of the run the brace's level is read off
+			description: `a closing brace standing at its level behind an interpolation on its line`,
+			code: `
+				const a = styled.div\`
+					a {
+						color: red;
+					\${x}}
+				\`;
+			`,
+		},
 	],
 
 	reject: [
@@ -908,6 +919,27 @@ testRule({
 			`,
 			line: 3,
 			column: 4,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			// The run in front of the interpolation is the brace's indentation, and the fix writes it alone
+			description: `a closing brace indented a level too deep behind an interpolation on its line`,
+			code: `
+				const a = styled.div\`
+					a {
+						color: red;
+						\${x}}
+				\`;
+			`,
+			fixed: `
+				const a = styled.div\`
+					a {
+						color: red;
+					\${x}}
+				\`;
+			`,
+			line: 4,
+			column: 7,
 			message: messages.expected(`1 tab`),
 		},
 	],
