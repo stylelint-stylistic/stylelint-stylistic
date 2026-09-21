@@ -1,3 +1,5 @@
+import { messages as spaceAfterMessages } from "../declaration-block-semicolon-space-after/index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -591,6 +593,93 @@ testRule({
 			line: 1,
 			column: 25,
 			message: messages.expectedAfter(),
+		},
+	],
+})
+
+// The space twin reads and writes the run behind the semicolon too, and the library lists it behind this rule, so its write would be the file's last (1789508663)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-block-semicolon-space-after": `always` },
+
+	reject: [
+		{
+			// The two options disagree over the run, and the twin behind writes it
+			description: `no whitespace behind a semicolon, where the twin behind this rule would write its space: the break is not written, and the file rests on the twin's space with this rule's warning`,
+			code: `a { b: c;d: e }`,
+			fixed: `a { b: c; d: e }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 11,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 11,
+					message: spaceAfterMessages.expectedAfter(),
+				},
+			],
+		},
+		{
+			// Behind a comment the twins read two runs, and each writes its own
+			description: `a comment against the semicolon, whose run the twin reads while this rule reads the one behind the comment: both are written`,
+			code: `a { b: c;/* x */d: e }`,
+			fixed: `
+				a { b: c; /* x */
+				d: e }
+			`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 11,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 11,
+					message: spaceAfterMessages.expectedAfter(),
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-block-semicolon-space-after": `never` },
+
+	reject: [
+		{
+			// A twin behind may not write over a run this rule took as it stood
+			description: `a break behind a semicolon, which this rule asks for and the twin behind it wants gone: the break is not taken away, since this rule reported nothing about the run as it stood, and the twin's warning stands`,
+			code: `
+				a {
+					b: c;
+					d: e
+				}
+			`,
+			fixed: `
+				a {
+					b: c;
+					d: e
+				}
+			`,
+			line: 2,
+			column: 7,
+			endLine: 2,
+			endColumn: 8,
+			message: spaceAfterMessages.rejectedAfter(),
 		},
 	],
 })

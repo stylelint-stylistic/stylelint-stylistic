@@ -13,8 +13,10 @@ import { nextNonCommentNode } from "../../utils/nextNonCommentNode/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
+import { semicolonClosedDeclarations } from "../../utils/semicolonClosedDeclarations/index.ts"
 import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { runBehind, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -29,6 +31,17 @@ const MESSAGES = defineMessages({
 export let meta = {
 	url: getRuleDocUrl(shortName),
 	fixable: true,
+}
+
+/**
+ * Reads the raw the rule writes behind a declaration's semicolon, that of the first node behind it that is no comment: `never-multi-line` takes the whole of it, a stray semicolon and the breaks behind one included, so the block's lines are counted without it.
+ * @param decl - The declaration.
+ * @returns The raw, or nothing where comments alone stand behind the semicolon.
+ */
+function rawBehindSemicolon (decl: ChildNode): string[] {
+	let node = nextNonCommentNode(decl.next())
+
+	return node ? [runInFrontOf(node)] : []
 }
 
 /** `always` a newline after the semicolon; `always-multi-line` asks it, and `never-multi-line` refuses whitespace there, in a multi-line rule only. */
@@ -72,10 +85,30 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!nodeToCheck) return
 
+			// The narrowing does not reach into the function below
+			let [block, checked] = [parentRule, nodeToCheck]
 			let problemIndex = nodeString(decl, result).length + 1
 			let previousNode = nodeToCheck.prev() as ChildNode
 			// Under `never-multi-line` the fix takes the whitespace in front of the checked node, and the break opening it may close an inline comment, so the block is left alone; the `always` options keep the break. The semicolon is handed in with the declaration, since the write lands behind it; behind a comment node there is none
 			let isFixable = primary.startsWith(`always`) || !syntax.writesIntoInlineComment(previousNode, result, previousNode === decl ? `;` : ``)
+
+			/**
+			 * Asks whether this rule writes the run, which the space twin reads and writes too: the whitespace opening the checked node's raw, which a stray semicolon in that raw ends. Behind a comment the twin reads the comment's run and this rule another (1789508663).
+			 * @returns True where it does.
+			 */
+			function writesTheRun (): boolean {
+				if (checked !== nextNode) return true
+
+				return writesTwinRun(shortName, ruleName, decl, result, {
+					side: `after`,
+					run: runBehind(runInFrontOf(checked), -1),
+					lineText: blockString(block, result),
+					runs: () => semicolonClosedDeclarations(block).flatMap((each) => rawBehindSemicolon(each)),
+					line: decl.rangeBy({ index: problemIndex }).start.line,
+					// The twin's fix has no guard
+					twinWrites: () => true,
+				})
+			}
 
 			checker.afterOneOnly({
 				source: runInFrontOf(nodeToCheck) + nodeString(nodeToCheck, result),
@@ -89,7 +122,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						endIndex: problemIndex,
 						result,
 						ruleName,
-						...(isFixable && {
+						...(isFixable && writesTheRun() && {
 							fix: (): void => {
 								if (primary.startsWith(`always`)) {
 									// Trim up to the break already there, and add one only where none is; a node carrying no raw is written the run PostCSS would have printed in front of it, trimmed or opened as the option asks (#693)
