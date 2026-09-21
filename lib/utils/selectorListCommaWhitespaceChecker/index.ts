@@ -31,7 +31,7 @@ export interface SelectorListCommaWhitespaceCheckerOptions {
 	fix?: ((rule: Rule, index: number, runString: string) => void),
 
 	/** Whether a problem can be fixed, since Stylelint counts a fixer as applied whatever it does; the rule, the comma's index in its source, every comma of the list and the copy the runs are read over come along. */
-	isFixable?: ((selector: string, index: number, inlineComments: InlineComment[], rule: Rule, sourceIndex: number, commaIndices: number[], runString: string) => boolean),
+	isFixable?: ((selector: string, index: number, inlineComments: InlineComment[], rule: Rule, runString: string) => boolean),
 }
 
 /**
@@ -63,7 +63,7 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 			},
 		)
 
-		for (let index of commaIndices) checkDelimiter(selector, runString, index, rule, copies, commaIndices, textBefore)
+		for (let index of commaIndices) checkDelimiter(selector, runString, index, rule, copies, textBefore)
 	})
 
 	/**
@@ -73,10 +73,9 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 	 * @param index - The delimiter's index.
 	 * @param node - The rule the warning is reported on.
 	 * @param copies - The selector, opened by the syntax.
-	 * @param commaIndices - Every comma of the list.
 	 * @param textBefore - What the file holds in front of the selector, where a comma opening it has its run (1789593917).
 	 */
-	function checkDelimiter (source: string, runString: string, index: number, node: Rule, copies: SelectorCopies, commaIndices: number[], textBefore: string): void {
+	function checkDelimiter (source: string, runString: string, index: number, node: Rule, copies: SelectorCopies, textBefore: string): void {
 		opts.locationChecker({
 			source: runString,
 			index,
@@ -84,7 +83,7 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 			err: (message) => {
 				let sourceIndex = copies.toSourceIndex(index)
 				// Before the report, since Stylelint counts a fixer as applied whatever it does
-				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, copies.comments, node, sourceIndex, commaIndices, runString))
+				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, copies.comments, node, runString))
 
 				report({
 					message,

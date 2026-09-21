@@ -13,11 +13,8 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
 import { escapeHeadLength, maskEscapes } from "../../utils/maskEscapes/index.ts"
-import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
-import { runInFront, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -117,20 +114,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let isFixable = !(primary.startsWith(`never`) && headEndsWithInlineComment)
 						// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: emptying the run of `a\⏎{` would leave `a\{`, which the parser reads no block in (1789664271)
 						&& editKeepsEscapedCharacter(`${source}{`, { start: source.length - run.length, end: source.length, text: written })
-						// The space twin writes the same run (#704)
-						&& writesTwinRun(shortName, ruleName, statement, result, {
-							side: `before`,
-							// The run is the check's, read over the copy with its escapes masked, so the space of `a\ {` is no whitespace at all (1789661964)
-							run: runInFront(maskedSource, maskedSource.length),
-							lineText: blockString(statement, result),
-							// The run stands in front of the block whose lines both twins count, so no write of theirs moves it a line
-							runs: () => [],
-							line: statement.rangeBy({ index }).start.line,
-							// Behind an inline comment the brace cannot join its line, so the twin writes nothing there whatever its option; `ignoreAtRules` and `ignoreSelectors` pass it over the statement
-							twinWrites: (_twinOption, secondary) => !headEndsWithInlineComment
-								&& !(isAtRule(statement) && optionsMatches(secondary, `ignoreAtRules`, statement.name))
-								&& !(isRule(statement) && optionsMatches(secondary, `ignoreSelectors`, statement.selector)),
-						})
 
 					report({
 						message: m,

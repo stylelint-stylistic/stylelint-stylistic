@@ -8,7 +8,7 @@ import { declarationValueAsSpelled } from "../declarationValueAsSpelled/index.ts
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
 import { findEscapeSpans } from "../findCommentSpans/index.ts"
 import { maskEscapes } from "../maskEscapes/index.ts"
-import { runInFront } from "../writesTwinRun/index.ts"
+import { runInFront } from "../runInFront/index.ts"
 
 let { utils: { report } } = stylelint
 

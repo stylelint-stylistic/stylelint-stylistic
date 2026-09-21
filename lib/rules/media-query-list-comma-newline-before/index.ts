@@ -11,8 +11,8 @@ import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { mediaQueryListCommaWhitespaceChecker } from "../../utils/mediaQueryListCommaWhitespaceChecker/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runInFront } from "../../utils/runInFront/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
-import { runInFront, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -61,7 +61,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.beforeAllowingIndentation,
 			checkedRuleName: ruleName,
 			// `never-multi-line` may take away the break closing a `//` comment and put the comma into it; report and leave the parameters. `always` only adds a break.
-			isFixable: (params, index, atRule, commas, runString) => {
+			isFixable: (params, index, atRule, runString) => {
 				// The run in front of a comma opening the parameters is `raws.afterName`, the at-rule name rules' to write; a break written into the parameters goes into that raw and is asked for again
 				if (index === 0) return false
 
@@ -77,15 +77,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎,b` would come out as `a\,b`, one identifier, so the warning stands; `always` leaves the break the backslash stands in front of (1789661965)
 				if (primary === `never-multi-line` && !editKeepsEscapedCharacter(params, { start: index - run.length, end: index, text: `` })) return false
 
-				// The space twin writes the same run, save over a comment's closing break (#704)
-				return writesTwinRun(shortName, ruleName, atRule, result, {
-					side: `before`,
-					run,
-					lineText: params,
-					runs: () => commas.map(({ comma }) => runInFront(runString, comma)),
-					line: atRule.rangeBy({ index: index + atRuleParamIndex(atRule) }).start.line,
-					twinWrites: () => !closesInlineComment,
-				})
+				return true
 			},
 			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ ,b` is not cut and no break parts it from its backslash (1789657288)
 			fix: (atRule, index, runString) => {
