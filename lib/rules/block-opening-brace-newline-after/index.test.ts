@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 
 import { pick } from "../../../vitest.helpers.ts"
 import plugins from "../../index.ts"
+import { messages as openingSpaceAfterMessages } from "../block-opening-brace-space-after/index.ts"
 
 import { messages, ruleName } from "./index.ts"
 
@@ -983,6 +984,38 @@ describe(`${ruleName} on the whitespace it carries past a comment`, () => {
 
 		expect(await fixQuietly(code, `always`)).toEqual({ code, warnings: 0 })
 	})
+})
+
+// The space twin writes the run behind the brace too, and the library lists it behind this rule, so its write would be the file's last (#704)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/block-opening-brace-space-after": `always` },
+
+	reject: [
+		{
+			// The run behind the brace is one of the twins' to write, and the two options disagree over it
+			description: `a block opening on no whitespace at all, whose run the twin behind this rule would write its single space into: the break is not written, and the file rests on the twin's space with this rule's warning`,
+			code: `a{b:c;d:e}`,
+			fixed: `a{ b:c;d:e}`,
+			warnings: [
+				{
+					line: 1,
+					column: 3,
+					endLine: 1,
+					endColumn: 4,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 3,
+					endLine: 1,
+					endColumn: 4,
+					message: openingSpaceAfterMessages.expectedAfter(),
+				},
+			],
+		},
+	],
 })
 
 /**

@@ -15,6 +15,12 @@ type Run = `newline` | `space` | `none` | `other`
 
 /** The primaries of every rule that shares its run with a twin, by short name; the twin's name swaps `-newline-` and `-space-`. */
 const TWIN_OPTIONS: Record<string, string[]> = {
+	"block-closing-brace-newline-before": [`always`, `always-multi-line`, `never-multi-line`],
+	"block-closing-brace-space-before": [`always`, `never`, `always-single-line`, `never-single-line`, `always-multi-line`, `never-multi-line`],
+	"block-opening-brace-newline-after": [`always`, `always-multi-line`, `never-multi-line`],
+	"block-opening-brace-newline-before": [`always`, `always-single-line`, `never-single-line`, `always-multi-line`, `never-multi-line`],
+	"block-opening-brace-space-after": [`always`, `never`, `always-single-line`, `never-single-line`, `always-multi-line`, `never-multi-line`],
+	"block-opening-brace-space-before": [`always`, `never`, `always-single-line`, `never-single-line`, `always-multi-line`, `never-multi-line`],
 	"function-comma-newline-after": [`always`, `always-multi-line`, `never-multi-line`],
 	"function-comma-newline-before": [`always`, `always-multi-line`, `never-multi-line`],
 	"function-comma-space-after": [`always`, `never`, `always-single-line`, `never-single-line`],
@@ -77,8 +83,11 @@ export type TwinRun = {
 	/** The text both twins count lines of, the runs included. */
 	lineText: string,
 
-	/** The runs on the same side of every delimiter of that text, this one included, which the rule writes alike, so a write is judged by the lines it leaves once all are written. */
+	/** The runs on the same side of every delimiter of that text, this one included, which the rule writes alike, so a write is judged by the lines it leaves once all are written; none where the run stands outside that text, as the one in front of an opening brace stands in front of the block the twins judge. */
 	runs: () => string[],
+
+	/** The pattern the break twin's `always` reads a break by, where the side's own reading is not its: `block-closing-brace-newline-before` asks for the break to open the run standing in front of the brace, indentation and all behind it. */
+	breakPattern?: RegExp,
 
 	/** The line a fix would write on, for the disable comments. */
 	line: number | undefined,
@@ -91,13 +100,14 @@ export type TwinRun = {
  * Reads the spelling of the run as the twins' checks read it: the break rule's `always` takes a break opening the run behind the delimiter, or closing it in front with indentation behind, and the space rule's a single space.
  * @param side - The side of the delimiter.
  * @param run - The run.
+ * @param breakPattern - The break rule's own reading, where the side's is not it.
  * @returns The spelling.
  */
-function spellingOf (side: `after` | `before`, run: string): Run {
+function spellingOf (side: `after` | `before`, run: string, breakPattern: RegExp | undefined): Run {
 	if (run === ``) return `none`
 	if (run === ` `) return `space`
 
-	return (side === `after` ? LEADING_LINE_BREAK : TRAILING_LINE_BREAK_AND_INDENTATION).test(run) ? `newline` : `other`
+	return (breakPattern ?? (side === `after` ? LEADING_LINE_BREAK : TRAILING_LINE_BREAK_AND_INDENTATION)).test(run) ? `newline` : `other`
 }
 
 /**
@@ -175,22 +185,27 @@ export function writesTwinRun (shortName: string, ruleName: string, node: Node, 
 
 	if (position === -1) return true
 
-	let { side, run, lineText, runs, line, twinWrites } = twinRun
+	let { side, run, lineText, runs, breakPattern, line, twinWrites } = twinRun
 	let [asking, option] = settings[position] as [Twin, string, boolean, string]
 	let accepted = accepts(asking, option)
 	let writes: Run = option.startsWith(`always`) ? asking : `none`
-	let standing = spellingOf(side, run)
+	let standing = spellingOf(side, run, breakPattern)
 	let breaksOutsideTheRuns: number | undefined
+	let runsInTheText: string[] | undefined
 
 	/**
 	 * Asks whether the text is one line once a spelling stands over every run.
+	 *
+	 * A text holding none of the rule's runs is counted as it stands: a break written in front of an opening brace leaves the block that brace opens the lines it had.
 	 * @param written - The spelling over the runs.
 	 * @returns True where it is one line.
 	 */
 	function isSingleLineWith (written: Run): boolean {
-		if (written === `newline`) return false
+		runsInTheText ??= runs()
 
-		breaksOutsideTheRuns ??= breaksOf(lineText) - runs().reduce((sum, each) => sum + breaksOf(each), 0)
+		if (written === `newline` && runsInTheText.length > 0) return false
+
+		breaksOutsideTheRuns ??= breaksOf(lineText) - runsInTheText.reduce((sum, each) => sum + breaksOf(each), 0)
 
 		return breaksOutsideTheRuns === 0
 	}

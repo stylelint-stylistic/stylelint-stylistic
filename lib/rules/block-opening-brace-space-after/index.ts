@@ -10,7 +10,10 @@ import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
+import { isRule } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -89,7 +92,20 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: Prim
 		function check (statement: Rule | AtRule): void {
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 
+			let statementFirst = statement.first
+
+			if (statementFirst === undefined) return
+
 			let problemIndex = beforeBlockString(statement, result, { noRawBefore: true }).length + 1
+			// The break twin spells the run behind the brace, save where a comment opens the block: it then checks the run in front of the first node that is not one, and of this run its `never-multi-line` takes the breaks alone, which leaves the space or the nothing written here standing (#704)
+			let isFixable = writesTwinRun(shortName, ruleName, statement, result, {
+				side: `after`,
+				run: runInFrontOf(statementFirst),
+				lineText: blockString(statement, result),
+				runs: () => [runInFrontOf(statementFirst)],
+				line: statement.rangeBy({ index: problemIndex }).start.line,
+				twinWrites: (_twinOption, secondary) => !(isRule(statement) && optionsMatches(secondary, `ignore`, `rules`)) && statementFirst.type !== `comment`,
+			})
 
 			checker.after({
 				source: blockString(statement, result),
@@ -102,14 +118,12 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: Prim
 						endIndex: problemIndex,
 						result,
 						ruleName,
-						fix () {
-							let statementFirst = statement.first
-
-							if (statementFirst === undefined) return
-
-							if (primary.startsWith(`always`)) statementFirst.raws.before = ` `
-							else if (primary.startsWith(`never`)) statementFirst.raws.before = ``
-						},
+						...(isFixable && {
+							fix: (): void => {
+								if (primary.startsWith(`always`)) statementFirst.raws.before = ` `
+								else if (primary.startsWith(`never`)) statementFirst.raws.before = ``
+							},
+						}),
 					})
 				},
 			})

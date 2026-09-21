@@ -13,8 +13,11 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
 import { escapeHeadLength, maskEscapes } from "../../utils/maskEscapes/index.ts"
+import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { runInFront, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -100,17 +103,34 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// An escaped space is a character of the head and no run at all, so the run is read over the copy with the escapes masked (1789661964); PostCSS ends the head at the backslash and files the whitespace an escape covering one spells in `raws.between`, which the write keeps in front of the run it rewrites
 			let escapedHead = between.slice(0, escapeHeadLength(source, escapes, source.length - between.length))
 			let run = between.slice(escapedHead.length)
+			let maskedSource = maskEscapes(source, escapes, true)
+			// The parser may keep the comment in the selector or params, so they are asked too
+			let headEndsWithInlineComment = syntax.endsWithInlineComment(`${syntax.read(statement)}${between}`, syntax.inlineComments(statement, result))
 
 			checker.beforeAllowingIndentation({
 				lineCheckStr: blockString(statement, result),
-				source: maskEscapes(source, escapes, true),
+				source: maskedSource,
 				index: source.length,
 				err: (m) => {
 					let written = primary.startsWith(`always`) ? breakBeforeTheIndentation(run, getLineBreak(root, result)) : run.replace(TRAILING_WHITESPACE, ``)
-					// `never` would put the brace into a `//` comment ending the head, which the parser may keep in the selector or params: no fix
-					let isFixable = !(primary.startsWith(`never`) && syntax.endsWithInlineComment(`${syntax.read(statement)}${between}`, syntax.inlineComments(statement, result)))
+					// `never` would put the brace into a `//` comment ending the head: no fix
+					let isFixable = !(primary.startsWith(`never`) && headEndsWithInlineComment)
 						// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: emptying the run of `a\⏎{` would leave `a\{`, which the parser reads no block in (1789664271)
 						&& editKeepsEscapedCharacter(`${source}{`, { start: source.length - run.length, end: source.length, text: written })
+						// The space twin writes the same run (#704)
+						&& writesTwinRun(shortName, ruleName, statement, result, {
+							side: `before`,
+							// The run is the check's, read over the copy with its escapes masked, so the space of `a\ {` is no whitespace at all (1789661964)
+							run: runInFront(maskedSource, maskedSource.length),
+							lineText: blockString(statement, result),
+							// The run stands in front of the block whose lines both twins count, so no write of theirs moves it a line
+							runs: () => [],
+							line: statement.rangeBy({ index }).start.line,
+							// Behind an inline comment the brace cannot join its line, so the twin writes nothing there whatever its option; `ignoreAtRules` and `ignoreSelectors` pass it over the statement
+							twinWrites: (_twinOption, secondary) => !headEndsWithInlineComment
+								&& !(isAtRule(statement) && optionsMatches(secondary, `ignoreAtRules`, statement.name))
+								&& !(isRule(statement) && optionsMatches(secondary, `ignoreSelectors`, statement.selector)),
+						})
 
 					report({
 						message: m,
