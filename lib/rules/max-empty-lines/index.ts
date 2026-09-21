@@ -17,7 +17,7 @@ import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { takesTheOpeningLines } from "../../utils/takesTheOpeningLines/index.ts"
-import { isAtRule, isComment, isDeclaration } from "../../utils/typeGuards/index.ts"
+import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
 import { isNumber } from "../../utils/validateTypes/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -80,7 +80,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let getChars = replaceEmptyLines.bind(null, primary)
 		let openingLinesAreTaken = takesTheOpeningLines(root, result)
 
-		/** Collapses every run of empty lines to the maximum: `raws.before`, a comment's `left`, text and `right`, the raws between the parts of a statement and the node's own text, the run in front of a closing brace, and the root's first node and tail apart from the walk, where an empty line counts one short. */
+		/** Collapses every run of empty lines to the maximum: `raws.before`, a comment's `left`, text and `right`, the raws between the parts of a statement and the node's own text, the run in front of a closing brace, the run in front of a free semicolon behind one, and the root's first node and tail apart from the walk, where an empty line counts one short. */
 		function fix (): void {
 			let { first } = root
 
@@ -96,6 +96,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 					if (typeof blockAfter === `string`) setBlockAfter(syntax, node, getChars(blockAfter))
 				}
+
+				// The run in front of a free semicolon behind a closing brace stands in the rule's own raw, together with the semicolon, and reaches no other walk of the pass ([#584](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/584)). Written for a rule alone, since `freeSemicolon` hands the raw to a rule alone; elsewhere such a semicolon lands in the block's `raws.after` or in the next node's `raws.before`, both written already. Nothing but whitespace stands in front of the semicolon there, a comment in front of one being a node of its own, so the raw is written whole as any run is
+				if (isRule(node) && node.raws.ownSemicolon) node.raws.ownSemicolon = getChars(node.raws.ownSemicolon)
 			})
 
 			let { document } = root as { document?: Document }
