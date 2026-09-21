@@ -908,9 +908,23 @@ a {color: pink;}
 
 `,
 		},
+		{
+			// See #585
+			description: `a blank line opening a style attribute, whose run opens on the line the page's markup stands on`,
+			code: `<div style="\n\ncolor: pink"></div>`,
+		},
 	],
 
 	reject: [
+		{
+			// See #585
+			description: `two blank lines opening an embedded stylesheet, whose run opens on a line of its own`,
+			code: `<style>\n\n\na {}\n</style>`,
+			fixed: `<style>\n\na {}\n</style>`,
+			line: 3,
+			column: 1,
+			message: messages.expected(1),
+		},
 		{
 			description: `two blank lines closing an embedded stylesheet`,
 			code: `<div>
@@ -999,6 +1013,14 @@ testRule({
 	config: [0],
 	customSyntax: `postcss-html`,
 
+	accept: [
+		{
+			// See #585
+			description: `a style attribute opening on a line break, which ends the line of the page's markup and opens no empty one`,
+			code: `<div style="\ncolor: pink"></div>`,
+		},
+	],
+
 	reject: [
 		// See #731
 		{
@@ -1016,6 +1038,47 @@ testRule({
 			line: 2,
 			column: 1,
 			message: messages.expected(0),
+		},
+		{
+			// See #585
+			description: `a blank line opening an embedded stylesheet, whose run opens on a line of its own`,
+			code: `<style>\n\na {}\n</style>`,
+			fixed: `<style>\na {}\n</style>`,
+			line: 2,
+			column: 1,
+			message: messages.expected(0),
+		},
+		{
+			// See #585
+			description: `a blank line opening a style attribute, whose run opens on the line the page's markup stands on`,
+			code: `<div style="\n\ncolor: pink"></div>`,
+			fixed: `<div style="\ncolor: pink"></div>`,
+			line: 2,
+			column: 1,
+			message: messages.expected(0),
+		},
+		{
+			// See #585
+			description: `blank lines on both sides of a free semicolon holding an embedded stylesheet that gives the parser no node, whose whole text stands in one raw`,
+			code: `<style>\n\n\n;\n\n</style>`,
+			fixed: `<style>\n;\n</style>`,
+			warnings: [
+				{
+					line: 2,
+					column: 1,
+					message: messages.expected(0),
+				},
+				{
+					line: 3,
+					column: 1,
+					message: messages.expected(0),
+				},
+				{
+					line: 5,
+					column: 1,
+					message: messages.expected(0),
+				},
+			],
 		},
 	],
 })
