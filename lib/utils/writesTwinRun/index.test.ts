@@ -83,6 +83,11 @@ describe(`writesTwinRun`, () => {
 		expect(ask(`a,b {}`, { [SPACE]: `always`, [NEWLINE]: `always` }, SPACE, { twinWrites: () => false })).toBe(true)
 	})
 
+	it(`a neighbour whose own fix guards leave it no write, which gates nothing behind and still judged the run ahead`, () => {
+		expect(ask(`a,b {}`, { [SPACE]: `always`, [NEWLINE]: `always` }, SPACE, { twinFixes: () => false })).toBe(true)
+		expect(ask(`a,\nb {}`, { [NEWLINE]: `always`, [SPACE]: `always` }, SPACE, { twinFixes: () => false })).toBe(false)
+	})
+
 	it(`a neighbour that reads past a comment only while whitespace stands in front of it, which the write takes away`, () => {
 		let pastComment: Partial<TwinRun> = { twinWrites: (_option, _secondary, over) => over === `` }
 

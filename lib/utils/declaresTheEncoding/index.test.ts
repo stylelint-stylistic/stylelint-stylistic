@@ -43,6 +43,13 @@ describe(`declaresTheEncoding`, () => {
 		expect(answer(`a { @charset "UTF-8"; }`, 0, 0)).toBe(false)
 	})
 
+	it(`a respelling of the file, which answers in place of the text as parsed`, () => {
+		expect(declaresTheEncoding(parse(`@charset\n"UTF-8";`).first as AtRule, `@charset "UTF-8";`)).toBe(true)
+		expect(declaresTheEncoding(parse(`@charset "UTF-8";`).first as AtRule, `@charset\n"UTF-8";`)).toBe(false)
+		expect(declaresTheEncoding(parse(`a { }\n@charset\n"UTF-8";`).nodes[1] as AtRule, `@charset "UTF-8";`)).toBe(false)
+		expect(declaresTheEncoding(parse(`\uFEFF@charset\n"UTF-8";`).first as AtRule, `@charset "UTF-8";`)).toBe(true)
+	})
+
 	it(`the same head under another parser`, () => {
 		let root = parseScss(`@charset "UTF-8";\n// c\na { color: pink; }`)
 

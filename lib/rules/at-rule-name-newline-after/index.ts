@@ -50,6 +50,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			result,
 			syntax,
 			locationChecker: checker.afterOneOnly,
+			shortName,
 			checkedRuleName: ruleName,
 			// A neighbour respelling the head makes a `@charset` the encoding declaration within the same run, while the rule asks the text as parsed, which that repair does not change; a break behind the name is never the specification's spelling, so no `@charset` is written into, whatever its head is spelled like (#708)
 			isFixable: (atRule) => atRule.name.toLowerCase() !== `charset`,
