@@ -1,10 +1,11 @@
 import type { AtRule, ChildNode, Rule } from "postcss"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { EVERY_WHITESPACE, LEADING_LINE_BREAK, LINE_BREAK, SEMICOLON_RUN, TRAILING_WHITESPACE, WHITESPACE } from "../../regexps.ts"
+import { EVERY_WHITESPACE, LEADING_LINE_BREAK, SEMICOLON_RUN, TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
+import { closingBraceTwinReadings } from "../../utils/closingBraceTwinReadings/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { findEscapeSpans } from "../../utils/findCommentSpans/index.ts"
@@ -23,7 +24,7 @@ import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { statementString } from "../../utils/statementString/index.ts"
 import { isDeclaration } from "../../utils/typeGuards/index.ts"
 import { sharesRunWithBrace, writesSharedRun } from "../../utils/writesSharedRun/index.ts"
-import { writesTwinRun } from "../../utils/writesTwinRun/index.ts"
+import { type Twin, type TwinReading, writesTwinRun } from "../../utils/writesTwinRun/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -38,35 +39,6 @@ const MESSAGES = defineMessages({
 export let meta = {
 	url: getRuleDocUrl(shortName),
 	fixable: true,
-}
-
-/**
- * Spells the run in front of the closing brace as the `always` options ask: whatever stands in front of the run's first break with the whitespace taken out of it, then the run from that break; where the run holds no break, one in front of its first whitespace, or behind a run holding no whitespace either.
- *
- * A stray semicolon standing in front of the break is no whitespace and stays, since no option of the rule speaks of it ([#687](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/687)), and the check cuts it out of the run it measures, so the break behind it opens that run (1789520440).
- * @param raw - The run as it stands.
- * @param lineBreak - The break the file is written with.
- * @returns The run to write.
- */
-function spellTheRun (raw: string, lineBreak: string): string {
-	let breakIndex = raw.search(LINE_BREAK)
-
-	if (breakIndex >= 0) return raw.slice(0, breakIndex).replaceAll(EVERY_WHITESPACE, ``) + raw.slice(breakIndex)
-
-	let firstWhitespaceIndex = raw.search(WHITESPACE)
-
-	return firstWhitespaceIndex >= 0 ? raw.slice(0, firstWhitespaceIndex) + lineBreak + raw.slice(firstWhitespaceIndex) : raw + lineBreak
-}
-
-/**
- * The run the option writes in front of the closing brace: the `always` spelling, or nothing at all.
- * @param primary - The primary option.
- * @param raw - The run as it stands.
- * @param lineBreak - Returns the break the file is written with, called only where a break is written.
- * @returns The run to write.
- */
-function runToWrite (primary: PrimaryOption, raw: string, lineBreak: () => string): string {
-	return primary.startsWith(`always`) ? spellTheRun(raw, lineBreak()) : raw.replaceAll(EVERY_WHITESPACE, ``)
 }
 
 /**
@@ -91,13 +63,13 @@ function writesTheRun (text: string, raw: string, written: string): boolean {
  * @param read - What the check read of the run.
  * @param read.last - The block's last node.
  * @param read.run - The raw in front of the brace behind the escaped head.
- * @param read.after - That run with a stray semicolon cut out, which is what the options speak of.
  * @param read.escapedHead - The head an escape spells, which every write keeps.
  * @param read.index - Where the brace stands in the statement.
+ * @param read.readings - How the two twins read and write that raw.
  * @returns True where this rule writes it.
  */
-function writesTheRunInFrontOfTheBrace (syntax: Syntax, statement: Rule | AtRule, result: PostcssResult, ruleName: string, read: { last: ChildNode, run: string, after: string, escapedHead: string, index: number }): boolean {
-	let { last, run, after, escapedHead, index } = read
+function writesTheRunInFrontOfTheBrace (syntax: Syntax, statement: Rule | AtRule, result: PostcssResult, ruleName: string, read: { last: ChildNode, run: string, escapedHead: string, index: number, readings: Record<Twin, TwinReading> }): boolean {
+	let { last, run, escapedHead, index, readings } = read
 
 	if (isDeclaration(last)) {
 		if (!writesSharedRun(syntax, last, result, ruleName)) return false
@@ -105,19 +77,18 @@ function writesTheRunInFrontOfTheBrace (syntax: Syntax, statement: Rule | AtRule
 		if (sharesRunWithBrace(syntax, last, result, ruleName)) return true
 	}
 
-	// The twins spell one run between them, which a raw holding anything but whitespace is not: a stray semicolon stands in front of the space rule's write and behind the break rule's break, so the two write different parts of the raw (#687)
-	if (!isOnlyWhitespace(run)) return true
-
 	return writesTwinRun(shortName, ruleName, statement, result, {
 		side: `before`,
-		run: after,
+		run,
 		lineText: blockString(statement, result),
-		runs: () => [after],
+		runs: () => [run],
 		// The run is this rule's where a break opens it, the indentation behind the break being `indentation`'s
 		breakPattern: LEADING_LINE_BREAK,
 		line: statement.rangeBy({ index }).start.line,
 		// The twin writes over the whitespace ending the block's final raw whatever its option, and writes nothing where the brace would land in a `//` comment the last node left open
 		twinWrites: () => !syntax.writesIntoInlineComment(last, result, lastNodeHoldsTheBlockAfter(statement) ? undefined : `${escapedHead}${run.replace(TRAILING_WHITESPACE, ``)}`),
+		// The twins spell one run between them, which a raw holding anything but whitespace is not: around a stray semicolon the space rule writes the whitespace closing the raw and the break rule writes in front of the raw's first break, so each write is judged by the raw it leaves (#687, 1789979881)
+		...(!isOnlyWhitespace(run) && { readings }),
 	})
 }
 
@@ -141,6 +112,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		})
 
 		if (!validOptions) return
+
+		let readings = closingBraceTwinReadings(() => getLineBreak(root, result))
 
 		// Rules and at-rules alike
 		root.walkRules(check)
@@ -181,9 +154,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let isFixable = primary.startsWith(`always`) || !syntax.writesIntoInlineComment(last, result, lastNodeHoldsTheBlockAfter(statement) ? undefined : `${escapedHead}${run.replaceAll(EVERY_WHITESPACE, ``)}`)
 
 			// The rules that read this run with it settle who writes: the twin, and the colon rules behind a wordless declaration
-			if (isFixable) isFixable = writesTheRunInFrontOfTheBrace(syntax, statement, result, ruleName, { last, run, after, escapedHead, index })
+			if (isFixable) isFixable = writesTheRunInFrontOfTheBrace(syntax, statement, result, ruleName, { last, run, escapedHead, index, readings })
 
-			let writtenRun = runToWrite(primary, run, () => getLineBreak(root, result))
+			let writtenRun = readings.newline.writes(primary, run)
 			let written = `${escapedHead}${writtenRun}`
 
 			// A backslash the write would leave reading another character

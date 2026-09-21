@@ -2,10 +2,15 @@ import { parse, type Rule } from "postcss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
+import { LEADING_LINE_BREAK } from "../../regexps.ts"
+import { closingBraceTwinReadings } from "../closingBraceTwinReadings/index.ts"
+
 import { runBehind, runInFront, type TwinRun, writesTwinRun } from "./index.ts"
 
 const SPACE = `@stylistic/selector-list-comma-space-after`
 const NEWLINE = `@stylistic/selector-list-comma-newline-after`
+const CLOSING_SPACE = `@stylistic/block-closing-brace-space-before`
+const CLOSING_NEWLINE = `@stylistic/block-closing-brace-newline-before`
 
 describe(`writesTwinRun`, () => {
 	it(`a configuration listing the asking rule alone, or neither twin`, () => {
@@ -132,6 +137,48 @@ describe(`writesTwinRun`, () => {
 	})
 })
 
+// See 1789979881
+describe(`the twin gate over a run the readings judge`, () => {
+	it(`a break the twin behind would write over, leaving a run the asking rule refuses`, () => {
+		expect(askClosingBrace(`a { b: c; ;\n}`, { [CLOSING_NEWLINE]: `always`, [CLOSING_SPACE]: `always` }, CLOSING_NEWLINE)).toBe(false)
+		expect(askClosingBrace(`a { b: c; ;\n}`, { [CLOSING_NEWLINE]: `always`, [CLOSING_SPACE]: `never` }, CLOSING_NEWLINE)).toBe(false)
+	})
+
+	it(`a space the twin behind would put a break in front of, which the asking rule refuses behind a break`, () => {
+		expect(askClosingBrace(`a { b: c;;\n}`, { [CLOSING_SPACE]: `always`, [CLOSING_NEWLINE]: `always` }, CLOSING_SPACE)).toBe(false)
+	})
+
+	it(`a twin ahead that was content with the run as it stood and refuses what the write leaves`, () => {
+		expect(askClosingBrace(`a { b: c;;\n}`, { [CLOSING_NEWLINE]: `always`, [CLOSING_SPACE]: `always` }, CLOSING_SPACE)).toBe(false)
+		expect(askClosingBrace(`a { b: c;; }`, { [CLOSING_SPACE]: `always`, [CLOSING_NEWLINE]: `always` }, CLOSING_NEWLINE)).toBe(false)
+	})
+
+	it(`a twin ahead that warned about the run as it stood, which the write takes nothing from`, () => {
+		expect(askClosingBrace(`a { b: c; ;\n}`, { [CLOSING_NEWLINE]: `always`, [CLOSING_SPACE]: `always` }, CLOSING_SPACE)).toBe(true)
+	})
+
+	it(`a write both twins accept, the break standing in front of the semicolon and the space behind it`, () => {
+		expect(askClosingBrace(`a { b: c; ; }`, { [CLOSING_NEWLINE]: `always`, [CLOSING_SPACE]: `always` }, CLOSING_NEWLINE)).toBe(true)
+		expect(askClosingBrace(`a { b: c; ; }`, { [CLOSING_SPACE]: `always`, [CLOSING_NEWLINE]: `always` }, CLOSING_NEWLINE)).toBe(true)
+		expect(askClosingBrace(`a { b: c;\n ;\n}`, { [CLOSING_SPACE]: `always`, [CLOSING_NEWLINE]: `always` }, CLOSING_SPACE)).toBe(true)
+	})
+
+	it(`a twin behind that refuses the write and whose own write over it leaves a run the asking rule accepts`, () => {
+		// The space rule's never leaves the semicolon against the brace, and the break the twin then puts in front of the run's first whitespace stands in front of that semicolon
+		expect(askClosingBrace(`a { b: c; ; }`, { [CLOSING_SPACE]: `never`, [CLOSING_NEWLINE]: `always` }, CLOSING_SPACE)).toBe(true)
+	})
+
+	it(`a twin whose option says nothing of the block the write leaves`, () => {
+		expect(askClosingBrace(`a { b: c; ;\n}`, { [CLOSING_NEWLINE]: `always`, [CLOSING_SPACE]: `always-single-line` }, CLOSING_NEWLINE)).toBe(true)
+		expect(askClosingBrace(`a { b: c;; }`, { [CLOSING_SPACE]: `never`, [CLOSING_NEWLINE]: `always-multi-line` }, CLOSING_SPACE)).toBe(true)
+	})
+
+	it(`a twin whose fix is turned off, which rewrites nothing behind and still judges ahead`, () => {
+		expect(askClosingBrace(`a { b: c; ;\n}`, { [CLOSING_NEWLINE]: `always`, [CLOSING_SPACE]: [`always`, { disableFix: true }] }, CLOSING_NEWLINE)).toBe(true)
+		expect(askClosingBrace(`a { b: c;;\n}`, { [CLOSING_NEWLINE]: [`always`, { disableFix: true }], [CLOSING_SPACE]: `always` }, CLOSING_SPACE)).toBe(false)
+	})
+})
+
 /**
  * Describes the run behind the first comma of a selector list.
  * @param selector - The list.
@@ -166,6 +213,30 @@ function ask (code: string, rules: Record<string, unknown>, ruleName: string, ov
 	let shortName = ruleName.slice(ruleName.lastIndexOf(`/`) + 1)
 
 	return writesTwinRun(shortName, ruleName, node, result(rules, disabledRanges), twinRun(node.selector, overrides))
+}
+
+/**
+ * Asks the twin gate about the run in front of the closing brace of the first rule of a stylesheet, the way the two rules hand it over.
+ * @param code - The stylesheet.
+ * @param rules - The rules the configuration lists.
+ * @param ruleName - The asking rule's registered name.
+ * @returns What the gate answers.
+ */
+function askClosingBrace (code: string, rules: Record<string, unknown>, ruleName: string): boolean {
+	let node = parse(code).first as Rule
+	let run = node.raws.after ?? ``
+	let text = node.toString()
+
+	return writesTwinRun(ruleName.slice(ruleName.lastIndexOf(`/`) + 1), ruleName, node, result(rules), {
+		side: `before`,
+		run,
+		lineText: text.slice(text.indexOf(`{`)),
+		runs: () => [run],
+		breakPattern: LEADING_LINE_BREAK,
+		line: 1,
+		twinWrites: () => true,
+		readings: closingBraceTwinReadings(() => `\n`),
+	})
 }
 
 /**
