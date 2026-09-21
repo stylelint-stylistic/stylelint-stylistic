@@ -20,5 +20,14 @@ testRule({
 			column: 1,
 			message: messages.expected(1),
 		},
+		// See #584
+		{
+			description: `two blank lines in front of a stray semicolon standing behind the closing brace of a rule of a template`,
+			code: `const A = styled.div\`\n\ta {}\n\n\n;\n\`\n`,
+			fixed: `const A = styled.div\`\n\ta {}\n\n;\n\`\n`,
+			line: 4,
+			column: 1,
+			message: messages.expected(1),
+		},
 	],
 })

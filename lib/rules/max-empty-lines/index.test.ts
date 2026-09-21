@@ -397,6 +397,48 @@ testRule({
 			column: 1,
 			message: messages.expected(1),
 		},
+		// See #584
+		{
+			description: `two blank lines in front of a stray semicolon standing behind the closing brace of a rule, which the parser keeps in that rule's own raw together with the semicolon`,
+			code: `a {\n\tb {}\n\n\n;\n}\n`,
+			fixed: `a {\n\tb {}\n\n;\n}\n`,
+			line: 4,
+			column: 1,
+			message: messages.expected(1),
+		},
+		{
+			description: `the same blank lines written with carriage-return line breaks`,
+			code: `a {\r\n\tb {}\r\n\r\n\r\n;\r\n}\r\n`,
+			fixed: `a {\r\n\tb {}\r\n\r\n;\r\n}\r\n`,
+			line: 4,
+			column: 1,
+			message: messages.expected(1),
+		},
+		{
+			description: `blank lines on both sides of such a semicolon, the ones behind it standing in the block's own final raw`,
+			code: `a {\n\tb {}\n\n\n;\n\n\n}\n`,
+			fixed: `a {\n\tb {}\n\n;\n\n}\n`,
+			warnings: [
+				{
+					line: 4,
+					column: 1,
+					message: messages.expected(1),
+				},
+				{
+					line: 7,
+					column: 1,
+					message: messages.expected(1),
+				},
+			],
+		},
+		{
+			description: `two blank lines in front of a stray semicolon standing behind the closing brace of the last rule of the stylesheet`,
+			code: `a {}\n\n\n;\n`,
+			fixed: `a {}\n\n;\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(1),
+		},
 		// See #581
 		{
 			description: `two blank lines between a selector and its opening brace`,
