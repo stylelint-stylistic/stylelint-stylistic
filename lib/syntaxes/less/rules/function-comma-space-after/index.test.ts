@@ -41,3 +41,17 @@ testRule({
 		},
 	],
 })
+
+// The run behind the comma is the one in front of the comment, not the break that closes the comment's line
+testRule({
+	ruleName,
+	config: [`always`],
+	customSyntax: `postcss-less`,
+
+	accept: [
+		{
+			description: `a single space behind the comma and an end-of-line comment behind the space`,
+			code: `a {\n\tb: f(1, // c\n\t\t2);\n}\n`,
+		},
+	],
+})

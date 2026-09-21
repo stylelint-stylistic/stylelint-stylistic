@@ -64,20 +64,22 @@ export function functionCommaSpaceFix (params: {
 	if (expectation.startsWith(`never`)) {
 		let edits = [whitespaceEdit(div, index, functionNode, position, ``)]
 
-		// A comment behind the comma closes the div, and the whitespace after it becomes nodes of its own, emptied one by one. The run behind the comma is walked whichever side the option writes.
-		for (let i = index + 1; i < nodes.length; i += 1) {
-			let node = nodes[i]
+		// A `before` rule reads the run behind the comma with the comments taken out, so the whitespace standing past one is part of what it measured; a comment closes the div and that whitespace becomes nodes of its own, emptied one by one (1789508660)
+		if (position === `before`) {
+			for (let i = index + 1; i < nodes.length; i += 1) {
+				let node = nodes[i]
 
-			if (node === undefined) continue
+				if (node === undefined) continue
 
-			if (node.type === `comment`) continue
+				if (node.type === `comment`) continue
 
-			if (node.type === `space`) {
-				edits.push({ start: node.sourceIndex, end: node.sourceEndIndex, text: `` })
-				continue
+				if (node.type === `space`) {
+					edits.push({ start: node.sourceIndex, end: node.sourceEndIndex, text: `` })
+					continue
+				}
+
+				break
 			}
-
-			break
 		}
 
 		return edits
