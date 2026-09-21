@@ -66,15 +66,21 @@ Every one of these fails quietly, and the result looks like success — the
 
 - **A backtick inside a double-quoted string is command substitution.** An issue title went out with a hole in it. Single-quote any string holding backticks, or pass the text through a file.
 - **A search string of plain spaces does not match bound prose.** Everything through `beautypography` holds `U+00A0` between function words, so a `sed` or Python replacement written with ordinary spaces finds nothing and replaces nothing. This has bitten about eight times across five sessions, wearing a different coat each time: a no-break space typed into a heredoc arrives as a plain space; a character class `[  ]` typed with a literal one arrives as two plain spaces; `re.escape` in Python 3.7+ leaves a space unescaped, so `re.escape(old).replace(r"\ ", …)` never fires.
+- **`.encode().decode("unicode_escape")` rewrites every non-ASCII character** as its UTF-8 bytes read as latin-1: an em-dash lands as three characters, two of them C1 controls a terminal does not show and the Bash tool then refuses to carry. Write the paragraph to a file with real characters and splice it in by index; name a corrupted byte with `chr()` when repairing.
 - **A failing `python3 <<PY` heredoc does not stop the statements behind it.** The chain runs on and the commit is made with the edit unapplied — and a newline after the closing `PY` is not a join, so the `&&` has to join the heredoc itself to what follows.
 
 **The cheap way through all of it:** read the file, build `norm = text.replace(chr(160), " ")`, find `old` in `norm` asserting it occurs exactly once, and splice `new` into `text` at that index — the replacement is one character for one, so the offsets agree and neither the search string nor a character class needs a no-break space at all. Write the replacement with plain spaces and let `make prose` bind it.
 
 **Assert every match before replacing** — `assert old in text` costs one line and turns a silent no-op into a stack trace. Then read back what landed: `git log -1 --format=%B`, `gh issue view <n> --json title`, `gh pr view <n> --json body`.
 
+## Two spellings that act
+
+- **A closing keyword in front of an issue number closes it**, in prose as much as in a trailer, and written as a link as much as bare: "the branch that closed #427" in a pull request body made that pull request close it. Put the word `issue` between them, `closed issue #427`, wherever the sentence is history rather than the deliberate `Closes #NNN.`
+- **The organization is `stylelint-stylistic`**, and the swapped `stylistic-stylelint` names nothing. It made a dead Releases link and a site repository that had to be renamed, since an organization site is served from `<org>.github.io` alone.
+
 ## Binding
 
-`make prose` walks the repository's Markdown files, but the convention covers commit messages (subject line included), PR bodies and issue comments too. Write the text to a file first, run `beautypography <path>` on it — the command takes explicit paths, inside the repository or not, ending in `.md` or not — then `git commit -F <path>`, `gh pr create --body-file <path>`, `gh issue comment --body-file <path>`. Bind before sending; text already published is left as it is.
+`make prose` walks the repository's Markdown files, but the convention covers commit messages (subject line included), PR bodies and issue comments too. Write the text to a file first, run `./node_modules/.bin/beautypography <path>` on it, never behind a pipe, since only the `Makefile` puts the command on `PATH` and a pipe returns its last command's zero over `command not found` — the command takes explicit paths, inside the repository or not, ending in `.md` or not — then `git commit -F <path>`, `gh pr create --body-file <path>`, `gh issue comment --body-file <path>`. Bind before sending; text already published is left as it is.
 
 **Never pass a path under `.claude/`.** An explicit path bypasses the directory skip, and those files are written in Russian, where the function-word list does nothing and the number and dash rules do harm — 643 no-break spaces went into the plan that way. If it happens, the undo is exact: replace every `U+00A0` with a plain space, since those files hold none of their own.
 
