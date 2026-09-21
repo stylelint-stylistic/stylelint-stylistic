@@ -11,7 +11,7 @@
  * - `hard` — one order leaves a file the pair still warns on.
  * - `soft` — both orders rest on a clean file, and the two differ.
  *
- * A pair whose orders both rest on a file carrying warnings is a configuration contradicting itself and is dropped, but only where the fixer rests: a contradicting pair may take turns instead.
+ * A pair the plugin refuses as contradicting ([#743](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/743)) stops the run and is dropped as unusable. One it does not refuse, whose orders both rest on a file carrying warnings, is dropped too, but only where the fixer rests: such a pair may take turns instead.
  */
 
 import { stdout } from "node:process"

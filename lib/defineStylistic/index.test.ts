@@ -243,4 +243,11 @@ describe(`the types of defineStylistic`, () => {
 		// @ts-expect-error the namespace is `scss`
 		expect(() => defineStylistic({ syntax: `sass`, rules: {} })).toThrow()
 	})
+
+	// #743
+	it(`refuse two settings of one call that contradict each other, naming them under the namespace of the call`, () => {
+		expect(() => defineStylistic({ syntax: `scss`, rules: { "value-list-comma-newline-after": `always-multi-line`, "value-list-comma-space-after": [`always`, { severity: `warning` }] } })).toThrow(`Contradicting settings:\n  "@stylistic/scss/value-list-comma-newline-after": "always-multi-line"\n  "@stylistic/scss/value-list-comma-space-after": "always"\nSet the second to "always-single-line", or turn one of them off.`)
+		expect(() => defineStylistic({ rules: { "value-list-comma-newline-after": `always-multi-line`, "value-list-comma-space-after": null } })).not.toThrow()
+		expect(() => defineStylistic({ rules: { "value-list-comma-newline-after": `always-multi-line`, "value-list-comma-space-after": `always-single-line` } })).not.toThrow()
+	})
 })

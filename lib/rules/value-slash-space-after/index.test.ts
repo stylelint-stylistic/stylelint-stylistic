@@ -600,22 +600,3 @@ testRule({
 		},
 	],
 })
-
-// The break twin writes the run behind the solidus too, and the library lists it behind this rule, so its write would be the file's last (#704)
-testRule({
-	ruleName,
-	config: [`never`],
-	extraRules: { "@stylistic/value-slash-newline-after": `always` },
-
-	reject: [
-		{
-			// The run beside a solidus belongs to one of its two twin rules where their options disagree
-			description: `a break behind the solidus, which the twin behind this rule asks for and would write back, so the warning stands and nothing is written here`,
-			code: `a { b: 1 /\n2 }`,
-			fixed: `a { b: 1 /\n2 }`,
-			line: 1,
-			column: 10,
-			message: messages.rejectedAfter(),
-		},
-	],
-})

@@ -1,6 +1,3 @@
-import { messages as nameCaseMessages } from "../at-rule-name-case/index.ts"
-import { messages as spaceAfterMessages } from "../at-rule-name-space-after/index.ts"
-
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -371,6 +368,10 @@ testRule({
 			code: `@charset  "UTF-8";`,
 		},
 		{
+			description: `an at-rule whose block alone holds a break, the name and the params standing on one line`,
+			code: `@media  (min-width:1px) {\na {}\n}`,
+		},
+		{
 			description: `params abutting the name, on a single line`,
 			code: `@charset"UTF-8";`,
 		},
@@ -578,151 +579,6 @@ testRule({
 			line: 1,
 			column: 6,
 			message: messages.expectedAfter(`@media`),
-		},
-	],
-})
-
-// The space twin reads and writes the run behind the name too, and the library lists it behind this rule, so its write would be the file's last (1789508664)
-testRule({
-	ruleName,
-	config: [`always`],
-	extraRules: { "@stylistic/at-rule-name-space-after": `always` },
-
-	reject: [
-		{
-			// The two options disagree over the run, and the twin behind would write its space back over the break
-			description: `a single space behind the name, which the twin behind this rule asks for: the break is not written, and this rule's warning stands`,
-			code: `@media (a) { b { c: d } }`,
-			fixed: `@media (a) { b { c: d } }`,
-			line: 1,
-			column: 6,
-			endLine: 1,
-			endColumn: 7,
-			message: messages.expectedAfter(`@media`),
-		},
-		{
-			// The twin behind writes the run both rules refuse
-			description: `two spaces behind the name, which the twin behind writes as one: the file rests on that space with this rule's warning`,
-			code: `@media  (a) { b { c: d } }`,
-			fixed: `@media (a) { b { c: d } }`,
-			warnings: [
-				{
-					line: 1,
-					column: 6,
-					endLine: 1,
-					endColumn: 7,
-					message: messages.expectedAfter(`@media`),
-				},
-				{
-					line: 1,
-					column: 6,
-					endLine: 1,
-					endColumn: 7,
-					message: spaceAfterMessages.expectedAfter(`@media`),
-				},
-			],
-		},
-		{
-			// A twin behind may not write over a run this rule took as it stood, whether or not this rule could have written it
-			description: `a break behind the name of a charset rule that declares no encoding, which this rule took as it stood: the twin's space is not written over it, and the twin's warning stands`,
-			code: `
-				@CHARSET
-				"utf-8";
-			`,
-			fixed: `
-				@CHARSET
-				"utf-8";
-			`,
-			line: 1,
-			column: 8,
-			endLine: 1,
-			endColumn: 9,
-			message: spaceAfterMessages.expectedAfter(`@CHARSET`),
-		},
-		{
-			// The guard that keeps what the base did: the twin's write leaves this rule nothing to read
-			description: `a break behind the name of a charset rule opening the file, where the twin's space makes it the encoding declaration, which neither rule reads: the space is written`,
-			code: `
-				@charset
-				"utf-8";
-			`,
-			fixed: `@charset "utf-8";`,
-			line: 1,
-			column: 8,
-			endLine: 1,
-			endColumn: 9,
-			message: spaceAfterMessages.expectedAfter(`@charset`),
-		},
-		{
-			// PostCSS takes the mark off the text it parses and writes it back in front of the text it prints
-			description: `the same charset rule behind a byte-order mark, which the encoding question is put without`,
-			code: `\uFEFF@charset\n"utf-8";`,
-			fixed: `\uFEFF@charset "utf-8";`,
-			line: 1,
-			column: 8,
-			endLine: 1,
-			endColumn: 9,
-			message: spaceAfterMessages.expectedAfter(`@charset`),
-		},
-	],
-})
-
-testRule({
-	ruleName,
-	config: [`always-multi-line`],
-	extraRules: { "@stylistic/at-rule-name-space-after": `always` },
-
-	reject: [
-		{
-			// The second pair of options that spell one run two ways
-			description: `a single space behind the name of an at-rule with multi-line params, which the twin behind asks for whatever the lines: the break is not written, and this rule's warning stands`,
-			code: `
-				@media (a),
-				(b) { c { d: e } }
-			`,
-			fixed: `
-				@media (a),
-				(b) { c { d: e } }
-			`,
-			line: 1,
-			column: 6,
-			endLine: 1,
-			endColumn: 7,
-			message: messages.expectedAfter(`@media`),
-		},
-	],
-})
-
-testRule({
-	ruleName,
-	config: [`always`],
-	extraRules: { "@stylistic/at-rule-name-case": `lower`, "@stylistic/at-rule-name-space-after": `always` },
-
-	reject: [
-		{
-			// The encoding question is put to the file as the rules ahead left it, not as parsed
-			description: `a break behind the upper-case name of a charset rule opening the file, which a neighbour ahead of the twin lowers: the twin's space then makes it the encoding declaration, and is written`,
-			code: `
-				@CHARSET
-				"utf-8";
-			`,
-			fixed: `@charset "utf-8";`,
-			warnings: [
-				{
-					line: 1,
-					column: 1,
-					endLine: 2,
-					endColumn: 9,
-					message: nameCaseMessages.expected(`CHARSET`, `charset`),
-				},
-				{
-					line: 1,
-					column: 8,
-					endLine: 1,
-					endColumn: 9,
-					message: spaceAfterMessages.expectedAfter(`@CHARSET`),
-				},
-			],
 		},
 	],
 })

@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest"
 
 import plugins from "../../index.ts"
 import { messages as braceNewlineAfterMessages } from "../block-opening-brace-newline-after/index.ts"
-import { messages as braceSpaceAfterMessages } from "../block-opening-brace-space-after/index.ts"
 
 import { messages, ruleName } from "./index.ts"
 
@@ -533,27 +532,6 @@ describe(`the check behind the writers of the run`, () => {
 	})
 })
 
-describe(`two rules speaking of one run`, () => {
-	// The pair contradicts each other over any multi-line block, so the relint the library runs over the fixed file would report the loser; the outcome is asserted directly instead
-	let newlineRule = `@stylistic/block-opening-brace-newline-after`
-	let spaceRule = `@stylistic/block-opening-brace-space-after`
-
-	it.each([
-		[`the space rule listed first`, { [ruleName]: 1, [spaceRule]: `always`, [newlineRule]: `always-multi-line` }],
-		[`the newline rule listed first`, { [ruleName]: 1, [newlineRule]: `always-multi-line`, [spaceRule]: `always` }],
-	])(`writes what the one writing last asks, which is the deferred newline rule with %s, since the space rule's always has written before either`, async (_listing, rules) => {
-		let written = `a {\ncolor: pink;\ntop: 0;\n}\n`
-		let { code, results } = await stylelint.lint({ code: `a { color: pink; top: 0; }\n`, config: { plugins, rules }, fix: true })
-
-		expect(code).toBe(written)
-		expect(results[0]?.warnings).toEqual([])
-
-		let relint = await stylelint.lint({ code: written, config: { plugins, rules } })
-
-		expect(relint.results[0]?.warnings.map(({ rule, text }) => ({ rule, text }))).toEqual([{ rule: spaceRule, text: braceSpaceAfterMessages.expectedAfter() }])
-	})
-})
-
 describe(`the run in front of a comment`, () => {
 	// The neighbour reports and, its fix turned off, writes nothing, so the library's relint of the fixed file would disagree with the fixing run about that warning; the file is asserted directly
 	it(`is written as a space rule with its fix turned off asks, so the fixed file satisfies it`, async () => {
@@ -571,14 +549,13 @@ describe(`the run in front of a comment`, () => {
 
 // #713
 describe(`the check ahead of the lineness tier`, () => {
-	// The two brace rules contradict each other over a multi-line block, so the relint the library runs over the fixed file would report the loser; the outcome is asserted directly instead
-	it(`breaks the block before the lineness-conditioned rules read it, so the first run reports what it leaves`, async () => {
+	it(`breaks the block before the lineness-conditioned rules read it, so the first run writes the break its multi-line option asks for behind the brace`, async () => {
 		let { code, results } = await stylelint.lint({
 			code: `a { color: pink; top: 0; }b { color: red; left: 0; }\n`,
 			config: {
 				plugins,
 				rules: {
-					"@stylistic/block-closing-brace-space-after": `always`,
+					"@stylistic/block-closing-brace-space-after": `always-single-line`,
 					"@stylistic/block-closing-brace-newline-after": `always-multi-line`,
 					[ruleName]: 1,
 				},
@@ -586,8 +563,8 @@ describe(`the check ahead of the lineness tier`, () => {
 			fix: true,
 		})
 
-		expect(code).toBe(`a {\ncolor: pink;\ntop: 0;\n} b {\ncolor: red;\nleft: 0;\n}\n`)
-		expect(results[0]?.warnings.map(({ rule, line, column }) => ({ rule, line, column }))).toEqual([{ rule: `@stylistic/block-closing-brace-newline-after`, line: 1, column: 27 }])
+		expect(code).toBe(`a {\ncolor: pink;\ntop: 0;\n}\nb {\ncolor: red;\nleft: 0;\n}\n`)
+		expect(results[0]?.warnings).toEqual([])
 	})
 
 	it.each([
