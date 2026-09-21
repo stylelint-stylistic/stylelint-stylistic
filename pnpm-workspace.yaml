@@ -1,10 +1,4 @@
-gitBranchLockfile: true
-
 gitChecks: false
-
-mergeGitBranchLockfilesBranchPattern:
-  - main
-  - release-*
 
 registries:
   default: https://registry.npmjs.org/
