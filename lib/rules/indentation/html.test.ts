@@ -291,6 +291,13 @@ testRule({
 
 	accept: [
 		{
+			// See #634
+			description: `the file one run of the fix leaves over a tab-indented stylesheet opening on the line of the style tag, whose own line is two levels of the option deep, which the next run used to read a level lower`,
+			code: `<style>a {
+      b: c;
+    }</style>`,
+		},
+		{
 			description: `a stylesheet indented two spaces inside the style element`,
 			code: `
 <style>
@@ -323,6 +330,23 @@ a {
 		},
 	],
 	reject: [
+		{
+			// See #634
+			description: `a stylesheet opening on its own line four spaces deep with its declaration eight, whose own lines are two levels of the option deep, so the declaration is asked for three rather than the whole sheet being moved to a width voted off the page`,
+			code: `<style>
+    a {
+        b: c;
+    }
+</style>`,
+			fixed: `<style>
+    a {
+      b: c;
+    }
+</style>`,
+			line: 3,
+			column: 9,
+			message: messages.expected(`6 spaces`),
+		},
 		{
 			description: `a declaration indented by a single space`,
 			code: `
@@ -820,6 +844,57 @@ testRule({
 			line: 2,
 			column: 1,
 			message: messages.expected(`1 tab`),
+		},
+	],
+})
+
+// See #634
+testRule({
+	ruleName,
+	config: [4],
+	customSyntax: `postcss-html`,
+	autoStripIndent: false,
+
+	accept: [],
+
+	reject: [
+		{
+			description: `a stylesheet on a page indented two spaces, whose own lines six spaces deep are two levels of the option rounded, so the sheet is asked for eight and its declaration for twelve, where a width voted off the page read them as three levels of two and every run doubled the indentation`,
+			code: `<html>
+  <body>
+    <style>
+      a {
+        b: c;
+      }
+    </style>
+  </body>
+</html>`,
+			fixed: `<html>
+  <body>
+    <style>
+        a {
+            b: c;
+        }
+    </style>
+  </body>
+</html>`,
+			warnings: [
+				{
+					line: 4,
+					column: 7,
+					message: messages.expected(`8 spaces`),
+				},
+				{
+					line: 6,
+					column: 7,
+					message: messages.expected(`8 spaces`),
+				},
+				{
+					line: 5,
+					column: 9,
+					message: messages.expected(`12 spaces`),
+				},
+			],
 		},
 	],
 })

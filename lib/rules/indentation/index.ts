@@ -528,7 +528,8 @@ function getRootBaseIndentLevel (syntax: Syntax, root: Root, baseIndentLevel: nu
 
 	if (isNumber(indentLevel) && Number.isSafeInteger(indentLevel)) return indentLevel
 
-	let newIndentLevel = inferRootIndentLevel(syntax, root, baseIndentLevel, () => inferDocIndentSize(document, space), indentClosingBrace)
+	// A spaces option names the width of a level, so a root's own lines are measured in it; a width voted off the page's lines mixed two units, and after a fix the lines the rule had just written outvoted the page and read a level lower on the next run (#634). Under `tab` the width of a space-indented line has to be guessed, and the page is what it is guessed off
+	let newIndentLevel = inferRootIndentLevel(syntax, root, baseIndentLevel, () => (isNumber(space) ? space : inferDocIndentSize(document, space)), indentClosingBrace)
 
 	source.baseIndentLevel = newIndentLevel
 
