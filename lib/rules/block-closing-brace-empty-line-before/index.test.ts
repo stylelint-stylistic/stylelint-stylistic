@@ -136,9 +136,10 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			description: `a stray semicolon behind the break, the empty line belonging behind it rather than in front`,
+			// See #690
+			description: `a stray semicolon behind the break, which stays on its own line while the run's first break is doubled`,
 			code: `a { color: pink;;\n;\n}`,
-			fixed: `a { color: pink;;\n;\n\n}`,
+			fixed: `a { color: pink;;\n\n;\n}`,
 			line: 3,
 			column: 1,
 			message: messages.expected,
@@ -168,9 +169,10 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			description: `a stray semicolon standing where the empty line belongs`,
+			// See #690
+			description: `a stray semicolon glued to the brace behind the break, which stays glued while the break is doubled, so that a rule taking it out leaves the same file whichever side of this one it is listed`,
 			code: `a { color: pink;\n;}`,
-			fixed: `a { color: pink;\n;\n\n}`,
+			fixed: `a { color: pink;\n\n;}`,
 			line: 2,
 			column: 2,
 			message: messages.expected,
