@@ -548,3 +548,21 @@ testRule({
 		},
 	],
 })
+
+// The head run is the run in front of a comma opening the value too, which the `value-list-comma-*-before` rules write (#166): the rules asked settle who writes it, and a rule held by its neighbour reports and leaves the run (1789594574)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/value-list-comma-newline-before": `never-multi-line` },
+
+	reject: [
+		{
+			description: `nothing between the colon and a comma opening the value, where the comma rule behind this one would take the break this one asks for out of the multi-line list it makes, so the warning stands and nothing is written`,
+			code: `a { b:,c }`,
+			fixed: `a { b:,c }`,
+			line: 1,
+			column: 6,
+			message: messages.expectedAfter(),
+		},
+	],
+})

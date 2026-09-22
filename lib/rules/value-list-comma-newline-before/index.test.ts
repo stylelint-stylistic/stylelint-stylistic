@@ -1,3 +1,5 @@
+import { messages as colonSpaceAfterMessages } from "../declaration-colon-space-after/index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -376,6 +378,56 @@ testRule({
 			line: 2,
 			column: 1,
 			message: messages.rejectedBeforeMultiLine(),
+		},
+	],
+})
+
+// The run in front of a comma opening the value is the head run behind the colon, which the colon rules read too: the rules asked settle who writes it, and a rule held by its neighbour reports and leaves the run (1789594574)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-colon-space-after": `always` },
+
+	reject: [
+		{
+			description: `a comma opening the value with a space in front of it, where the colon rule behind this one asks for that space and not for the break this one asks for, so the warning stands and nothing is written`,
+			code: `a { b: ,c }`,
+			fixed: `a { b: ,c }`,
+			line: 1,
+			column: 8,
+			message: messages.expectedBefore(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-colon-space-after": `always-single-line` },
+
+	reject: [
+		{
+			// The breaks this rule writes in front of the list's other commas make the value multi-line, so the colon rule behind it says nothing once the pass is over, and nothing holds the head run (1789594574)
+			description: `a list opened by a comma and holding another, where the colon rule behind this one speaks of a single-line declaration in the check and is silenced by the breaks the fixing run writes, so both commas get their break in one pass`,
+			code: `a { b:,c,d }`,
+			fixed: `a { b:\n,c\n,d }`,
+			warnings: [
+				{
+					line: 1,
+					column: 7,
+					message: messages.expectedBefore(),
+				},
+				{
+					line: 1,
+					column: 9,
+					message: messages.expectedBefore(),
+				},
+				{
+					line: 1,
+					column: 7,
+					message: colonSpaceAfterMessages.expectedAfterSingleLine(),
+				},
+			],
 		},
 	],
 })

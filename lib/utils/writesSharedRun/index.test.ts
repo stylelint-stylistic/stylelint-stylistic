@@ -1,15 +1,26 @@
 import { type Declaration, parse, type Rule } from "postcss"
+import { parse as scssParse } from "postcss-scss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
 import { css } from "../../syntaxes/css/index.ts"
-import type { Syntax } from "../../syntaxes/index.ts"
+import { namespaces, type Syntax } from "../../syntaxes/index.ts"
 import { isDeclaration } from "../typeGuards/index.ts"
 
 import { sharesRunWithSemicolon, writesSharedRun } from "./index.ts"
 
 const COLON_SPACE = `@stylistic/declaration-colon-space-after`
 const COLON_NEWLINE = `@stylistic/declaration-colon-newline-after`
+const COMMA_SPACE = `@stylistic/value-list-comma-space-before`
+const SCSS_COLON_SPACE = `@stylistic/scss/declaration-colon-space-after`
+const SCSS_COMMA_SPACE = `@stylistic/scss/value-list-comma-space-before`
+const LESS_COLON_SPACE = `@stylistic/less/declaration-colon-space-after`
+const LESS_COMMA_SPACE = `@stylistic/less/value-list-comma-space-before`
+
+// The core imports no namespace's syntax; the two are read off the list the plugin builds
+const scssSyntax = namespaces.find((syntax) => syntax.namespace === `scss`) as Syntax
+const lessSyntax = namespaces.find((syntax) => syntax.namespace === `less`) as Syntax
+const COMMA_NEWLINE = `@stylistic/value-list-comma-newline-before`
 const SEMICOLON_SPACE = `@stylistic/declaration-block-semicolon-space-before`
 const SEMICOLON_NEWLINE = `@stylistic/declaration-block-semicolon-newline-before`
 const BRACE_SPACE = `@stylistic/block-closing-brace-space-before`
@@ -324,6 +335,61 @@ describe(`writesSharedRun`, () => {
 	})
 })
 
+describe(`writesSharedRun over a comma opening the value`, () => {
+	// The head run is the comma's too (#166), so the colon rules and the comma rules settle it the way the colon and semicolon rules settle a wordless value (1789594574)
+	it(`a pair asking for different things of the head run: the earlier-listed one is held by the rule behind it, and the later-listed one by a rule ahead that stayed content`, () => {
+		expect(ask(`a { b: ,c }`, { [COLON_SPACE]: `never`, [COMMA_SPACE]: `always` }, COLON_SPACE)).toBe(false)
+		expect(ask(`a { b: ,c }`, { [COLON_SPACE]: `never`, [COMMA_SPACE]: `always` }, COMMA_SPACE)).toBe(true)
+		expect(ask(`a { b: ,c }`, { [COMMA_SPACE]: `always`, [COLON_SPACE]: `never` }, COLON_SPACE)).toBe(false)
+		expect(ask(`a { b:,c }`, { [COMMA_SPACE]: `always`, [COLON_SPACE]: `never` }, COMMA_SPACE)).toBe(false)
+		expect(ask(`a { b:,c }`, { [COLON_NEWLINE]: `always`, [COMMA_SPACE]: `never` }, COLON_NEWLINE)).toBe(false)
+		expect(ask(`a { b:,c }`, { [COLON_NEWLINE]: `always`, [COMMA_SPACE]: `never` }, COMMA_SPACE)).toBe(true)
+	})
+
+	it(`a pair asking for the same thing, where both write`, () => {
+		expect(ask(`a { b:,c }`, { [COLON_SPACE]: `always`, [COMMA_SPACE]: `always` }, COLON_SPACE)).toBe(true)
+		expect(ask(`a { b:,c }`, { [COLON_SPACE]: `always`, [COMMA_SPACE]: `always` }, COMMA_SPACE)).toBe(true)
+		expect(ask(`a { b: ,c }`, { [COLON_NEWLINE]: `always`, [COMMA_NEWLINE]: `always` }, COLON_NEWLINE)).toBe(true)
+		expect(ask(`a { b: ,c }`, { [COLON_NEWLINE]: `always`, [COMMA_NEWLINE]: `always` }, COMMA_NEWLINE)).toBe(true)
+		expect(ask(`a { --b: ,c }`, { [COLON_SPACE]: `never`, [COMMA_SPACE]: `never` }, COMMA_SPACE)).toBe(true)
+	})
+
+	it(`a break with indentation or a space in front of it, which is a break to the comma newline rule and none to the colon's, so the content comma rule ahead holds the colon rule`, () => {
+		expect(ask(`a { b:\n\t,c }`, { [COMMA_NEWLINE]: `always`, [COLON_SPACE]: `never` }, COLON_SPACE)).toBe(false)
+		expect(ask(`a { b: \n,c }`, { [COMMA_NEWLINE]: `always`, [COLON_SPACE]: `never` }, COLON_SPACE)).toBe(false)
+		expect(ask(`a { b: \n,c }`, { [COMMA_NEWLINE]: `always`, [COLON_NEWLINE]: `always` }, COLON_NEWLINE)).toBe(true)
+	})
+
+	it(`a lineness option of a comma rule, which reads the whole declaration with the head run as written`, () => {
+		expect(ask(`a { b: ,c }`, { [COLON_NEWLINE]: `always`, [COMMA_SPACE]: `never-single-line` }, COLON_NEWLINE)).toBe(true)
+		expect(ask(`a { b:,c }`, { [COLON_NEWLINE]: `always`, [COMMA_NEWLINE]: `never-multi-line` }, COLON_NEWLINE)).toBe(false)
+		expect(ask(`a { b:\n,c }`, { [COLON_NEWLINE]: `always`, [COMMA_NEWLINE]: `never-multi-line` }, COMMA_NEWLINE)).toBe(false)
+		expect(ask(`a { b: ,c,\nd }`, { [COLON_SPACE]: `never`, [COMMA_SPACE]: `always-single-line` }, COLON_SPACE)).toBe(true)
+		expect(ask(`a { b: ,c }`, { [COLON_SPACE]: `never`, [COMMA_SPACE]: `always-single-line` }, COLON_SPACE)).toBe(false)
+	})
+
+	it(`a list with another comma behind the one opening the value, in front of which the comma newline rule writes a break in the same pass, so a deferred colon rule behind it reads a multi-line value and says nothing`, () => {
+		expect(ask(`a { b:,c,d }`, { [COLON_SPACE]: `always-single-line`, [COMMA_NEWLINE]: `always` }, COMMA_NEWLINE)).toBe(true)
+		expect(ask(`a { b:,c,d }`, { [COMMA_NEWLINE]: `always`, [COLON_SPACE]: `always-single-line` }, COMMA_NEWLINE)).toBe(true)
+		expect(ask(`a { b:,c }`, { [COLON_SPACE]: `always-single-line`, [COMMA_NEWLINE]: `always` }, COMMA_NEWLINE)).toBe(false)
+		expect(ask(`a { b:,f(c,d) }`, { [COLON_SPACE]: `always-single-line`, [COMMA_NEWLINE]: `always` }, COMMA_NEWLINE)).toBe(false)
+		expect(ask(`a { b:,c,d }`, { [COLON_SPACE]: `always-single-line`, [COMMA_SPACE]: `always` }, COMMA_SPACE)).toBe(true)
+	})
+
+	it(`a property the comma rules pass over, whose head run is the colon rules' alone`, () => {
+		expect(ask(`a { #{$p}: ,c }`, { [SCSS_COLON_SPACE]: `never`, [SCSS_COMMA_SPACE]: `always` }, SCSS_COLON_SPACE, scssSyntax, scssParse as typeof parse)).toBe(true)
+		expect(ask(`a { b+: ,c }`, { [LESS_COLON_SPACE]: `never`, [LESS_COMMA_SPACE]: `always` }, LESS_COLON_SPACE, lessSyntax)).toBe(true)
+		expect(ask(`a { b: ,c }`, { [SCSS_COLON_SPACE]: `never`, [SCSS_COMMA_SPACE]: `always` }, SCSS_COLON_SPACE, scssSyntax)).toBe(false)
+	})
+
+	it(`a comma that does not open the value, or a comment between the colon and the comma, whose runs are two`, () => {
+		expect(ask(`a { b: c ,d }`, { [COLON_SPACE]: `never`, [COMMA_SPACE]: `always` }, COLON_SPACE)).toBe(true)
+		expect(ask(`a { b: c ,d }`, { [COLON_SPACE]: `never`, [COMMA_SPACE]: `always` }, COMMA_SPACE)).toBe(true)
+		expect(ask(`a { b: /*c*/ ,d }`, { [COLON_SPACE]: `never`, [COMMA_SPACE]: `always` }, COLON_SPACE)).toBe(true)
+		expect(ask(`a { b: /*c*/ ,d }`, { [COLON_SPACE]: `never`, [COMMA_SPACE]: `always` }, COMMA_SPACE)).toBe(true)
+	})
+})
+
 describe(`sharesRunWithSemicolon`, () => {
 	it(`the run of a value that is nothing but whitespace, which both colon rules share with the semicolon`, () => {
 		expect(shares(`a { b: ; }`, COLON_SPACE)).toBe(true)
@@ -366,19 +432,21 @@ function shares (code: string, ruleName: string): boolean {
  * @param rules - The rules the configuration lists, in the order it lists them.
  * @param ruleName - The name of the asking rule.
  * @param syntax - The syntax the asking rule is built over.
+ * @param parser - The parser to read the stylesheet with, PostCSS's by default.
  * @returns What `writesSharedRun` answers.
  */
-function ask (code: string, rules: Record<string, unknown>, ruleName: string, syntax: Syntax = css): boolean {
-	return writesSharedRun(syntax, lastDeclarationOf(code), result(rules), ruleName)
+function ask (code: string, rules: Record<string, unknown>, ruleName: string, syntax: Syntax = css, parser: typeof parse = parse): boolean {
+	return writesSharedRun(syntax, lastDeclarationOf(code, parser), result(rules), ruleName)
 }
 
 /**
  * Parses a stylesheet and picks the last declaration of its first node, behind any comment, or that node where it is a top-level declaration.
  * @param code - The stylesheet.
+ * @param parser - The parser to read it with, PostCSS's by default.
  * @returns The declaration.
  */
-function lastDeclarationOf (code: string): Declaration {
-	let first = parse(code).first as Rule | Declaration
+function lastDeclarationOf (code: string, parser: typeof parse = parse): Declaration {
+	let first = parser(code).first as Rule | Declaration
 
 	return isDeclaration(first) ? first : first.nodes.findLast(isDeclaration) as Declaration
 }
