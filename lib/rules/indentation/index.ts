@@ -2,16 +2,16 @@ import type { AtRule, Declaration, Document, Node, Root, Rule, Source } from "po
 import styleSearch from "style-search"
 import stylelint from "stylelint"
 
-import { CRLF, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_IMPORTANT_FLAG_LINE, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, TRAILING_LINE_BREAK, TRAILING_WHITESPACE } from "../../regexps.ts"
+import { CRLF, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, TRAILING_LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
+import { atRuleHead } from "../../utils/atRuleHead/index.ts"
 import { carriesABlock } from "../../utils/carriesABlock/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
-import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
 import { fixIndentation, lastLineIndentation, lastLineStart, writeIndentationBefore } from "../../utils/lineIndentation/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { rootLevelIndents } from "../../utils/rootLevelIndents/index.ts"
@@ -246,11 +246,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		 * @param ruleLevel - The indent level the at-rule stands at.
 		 */
 		function checkAtRuleParams (atRule: AtRule, ruleLevel: number): void {
-			let head = `@${atRule.name}${atRule.raws.afterName || ``}${syntax.read(atRule)}`
-
-			// With neither block nor semicolon an at-rule runs to its block's closing brace, and PostCSS puts everything in between into `raws.between`. Such a line is the block's, asked for the at-rule's own level whatever `except` and `ignore` say; measured with the params, `--fix` put a comment there a level deeper (#510). The tree is read as it stands, so a neighbour's semicolon moves the comment at once. The trailing whitespace is the run in front of the brace, `getBlockAfter`'s (#509)
-			// Behind a Less mixin call's flag those lines are in `raws.important`, printed behind `raws.between` (#374); the flag's line is blanked, since it is measured behind a semicolon neither. Behind a stylesheet's last at-rule the parser files them into the root's `raws.after`, printed behind both, where no line was measured (#592)
-			let swallowedLines = !hasBlock(atRule) && isLastNodeWithoutSemicolon(atRule) ? `${atRule.raws.between || ``}${`${atRule.raws.important ?? ``}${atRule.parent && isRoot(atRule.parent) ? atRule.parent.raws.after || `` : ``}`.replace(LEADING_IMPORTANT_FLAG_LINE, (line) => ` `.repeat(line.length))}`.replace(TRAILING_WHITESPACE, ``) : ``
+			// The head ends where the params' code does; a comment the parser left behind it in the params opens the swallowed lines (1788576696), which are the block's, asked for the at-rule's own level whatever `except` and `ignore` say: measured with the params, `--fix` put a comment there a level deeper (#510)
+			let { head, swallowedLines } = atRuleHead(syntax, atRule, result)
 
 			// `@nest` and `@at-root` params are selectors
 			let paramLevel = optionsMatches(secondaryOptions, `except`, `param`) || atRule.name === `nest` || atRule.name === `at-root` ? ruleLevel : ruleLevel + 1
