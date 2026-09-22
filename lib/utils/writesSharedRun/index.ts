@@ -82,9 +82,11 @@ const FROM_THE_STATEMENT: Set<Participant> = new Set([...FROM_THE_SEMICOLON, ...
 /** The comma rules read the head run where a comma opens the value; their lineness is the whole declaration's. */
 const FROM_THE_COMMA: Set<Participant> = new Set([`commaSpace`, `commaNewline`])
 
-/** The three runs and their readers; under two names a set settles nothing. `runIsTheText`: the semicolon's or the brace's run is the whole text behind the colon ([#50](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/50)). */
+/** The four runs and their readers; under two names a set settles nothing. `runIsTheText`: the semicolon's or the brace's run is the whole text behind the colon ([#50](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/50)). `tail`: the run behind a block comment on the colon's line, in front of a comma opening the value (1790072055). */
 type SharedRuns = {
 	head: Set<Participant>,
+	tail: Set<Participant>,
+	tailRun: string,
 	semicolon: Set<Participant>,
 	semicolonRun: string,
 	brace: Set<Participant>,
@@ -129,6 +131,8 @@ function tailBehindComment (text: string): string | undefined {
  *
  * The semicolon rules read the semicolon's run, both colon rules too on a whitespace-only text, the newline rule on whitespace alone behind a block comment. A flag, a missing semicolon, or a parent the semicolon rules do not read (the root, unless an inline style attribute) empties that set.
  *
+ * Behind a block comment on the colon's line the newline rule reads the run in front of the first word, and where that word is a comma opening the value the two comma rules read the same run as the comma's, the parser keeping it at the end of `raws.between` for all three to write (1790072055). The head run in front of the comment is the space rule's alone there.
+ *
  * The brace rules read the run in front of the closing brace the same way, where the declaration is the block's last node and no semicolon closes it or will: the parser files the run into the block's `raws.after` behind a plain property and keeps it in a custom property's value, and the colon rules write into either ([#387](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387), [#689](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/689)). A comment behind a plain property is a sibling holding the run, so the set is the custom property's alone there.
  * @param syntax - The syntax the declaration is read under.
  * @param decl - The declaration.
@@ -136,7 +140,7 @@ function tailBehindComment (text: string): string | undefined {
  * @returns The runs and their readers.
  */
 function sharedRunsOf (syntax: Syntax, decl: Declaration, result: PostcssResult): SharedRuns {
-	let runs: SharedRuns = { head: new Set(), semicolon: new Set(), semicolonRun: ``, brace: new Set(), braceRun: ``, commentBehindHead: false, runIsTheText: false }
+	let runs: SharedRuns = { head: new Set(), tail: new Set(), tailRun: ``, semicolon: new Set(), semicolonRun: ``, brace: new Set(), braceRun: ``, commentBehindHead: false, runIsTheText: false }
 
 	if (!syntax.isStandardDeclaration(decl)) return runs
 
@@ -172,19 +176,7 @@ function sharedRunsOf (syntax: Syntax, decl: Declaration, result: PostcssResult)
 
 	let tail = tailBehindComment(text)
 
-	if (tail !== undefined) {
-		if (WHITESPACE_OR_NOTHING.test(tail) && readBySemicolonRules) {
-			runs.semicolonRun = tail
-			for (let participant of [`colonNewline`, ...FROM_THE_SEMICOLON] as Participant[]) runs.semicolon.add(participant)
-		}
-
-		if (WHITESPACE_OR_NOTHING.test(tail) && readByBraceRules) {
-			runs.braceRun = tail + (runPastDeclaration(syntax, decl, result) ?? ``)
-			for (let participant of [`colonNewline`, ...FROM_THE_BRACE] as Participant[]) runs.brace.add(participant)
-		}
-
-		return runs
-	}
+	if (tail !== undefined) return readersBehindComment(syntax, decl, result, runs, tail, readBySemicolonRules, readByBraceRules)
 
 	// A space rule's write puts this on the colon's line, where a closed block comment moves the newline rule behind it
 	let behindHead = text.replace(LEADING_CSS_WHITESPACE, ``)
@@ -193,6 +185,51 @@ function sharedRunsOf (syntax: Syntax, decl: Declaration, result: PostcssResult)
 	for (let participant of readersOfTheHeadRun(syntax, decl, behindHead)) runs.head.add(participant)
 
 	return runs
+}
+
+/**
+ * Fills in the readers of the runs behind a block comment on the colon's line, which the newline rule of the colon reads past: the semicolon's or the brace's run where nothing but whitespace follows, the comma's where a comma opening the value does.
+ * @param syntax - The syntax the declaration is read under.
+ * @param decl - The declaration.
+ * @param result - The Stylelint result.
+ * @param runs - The runs found so far, filled in place.
+ * @param tail - The text behind the comment.
+ * @param readBySemicolonRules - Whether the semicolon rules read the declaration's end.
+ * @param readByBraceRules - Whether the brace rules do.
+ * @returns The runs.
+ */
+function readersBehindComment (syntax: Syntax, decl: Declaration, result: PostcssResult, runs: SharedRuns, tail: string, readBySemicolonRules: boolean, readByBraceRules: boolean): SharedRuns {
+	if (WHITESPACE_OR_NOTHING.test(tail) && readBySemicolonRules) {
+		runs.semicolonRun = tail
+		for (let participant of [`colonNewline`, ...FROM_THE_SEMICOLON] as Participant[]) runs.semicolon.add(participant)
+	}
+
+	if (WHITESPACE_OR_NOTHING.test(tail) && readByBraceRules) {
+		runs.braceRun = tail + (runPastDeclaration(syntax, decl, result) ?? ``)
+		for (let participant of [`colonNewline`, ...FROM_THE_BRACE] as Participant[]) runs.brace.add(participant)
+	}
+
+	let runInFrontOfComma = runInFrontOfCommaOpeningTheValue(syntax, decl, tail)
+
+	if (runInFrontOfComma !== undefined) {
+		runs.tailRun = runInFrontOfComma
+		for (let participant of [`colonNewline`, ...FROM_THE_COMMA] as Participant[]) runs.tail.add(participant)
+	}
+
+	return runs
+}
+
+/**
+ * Reads the run in front of a comma opening the value behind a block comment on the colon's line, which the comma rules read as the comma's where they read the property at all.
+ * @param syntax - The syntax the declaration is read under.
+ * @param decl - The declaration.
+ * @param tail - The text behind the comment.
+ * @returns The run, or nothing where no comma opens the value there or the comma rules pass the property over.
+ */
+function runInFrontOfCommaOpeningTheValue (syntax: Syntax, decl: Declaration, tail: string): string | undefined {
+	let run = (tail.match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0]
+
+	return tail.slice(run.length).startsWith(`,`) && syntax.isStandardProperty(decl.prop) ? run : undefined
 }
 
 /**
@@ -297,7 +334,7 @@ function spellingOf (run: string): Run {
 }
 
 /**
- * Asks whether the asking rule is the one to write a run more than one of the eight reads.
+ * Asks whether the asking rule is the one to write a run more than one of the eight reads: the head run, the run behind a comment on the colon's line in front of a comma opening the value, the semicolon's run or the brace's.
  *
  * On a whitespace-only value the run behind the colon is the one in front of the semicolon; the colon rules write `raws.between` and the semicolon rules the value, so a pair took it in turns across runs of `--fix` ([#416](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/416)).
  *
@@ -317,10 +354,10 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 
 	if (!asking) return true
 
-	let { head, semicolon, semicolonRun, brace, braceRun, commentBehindHead, runIsTheText } = sharedRunsOf(syntax, decl, result)
-	// The semicolon's and the brace's groups hold a colon rule only where the head run reaches it, so either is the head's readers too
-	let readers = semicolon.has(asking) ? semicolon : (brace.has(asking) ? brace : head)
-	let run = readers === brace ? braceRun : semicolonRun
+	let { head, tail, tailRun, semicolon, semicolonRun, brace, braceRun, commentBehindHead, runIsTheText } = sharedRunsOf(syntax, decl, result)
+	// The semicolon's and the brace's groups hold a colon rule only where the head run reaches it, so either is the head's readers too; the tail's group stands where the head's is empty
+	let groups: [Set<Participant>, string][] = [[semicolon, semicolonRun], [brace, braceRun], [tail, tailRun], [head, semicolonRun]]
+	let [readers, run] = groups.find(([group]) => group.has(asking)) ?? [head, semicolonRun]
 
 	if (!readers.has(asking)) return true
 
@@ -356,7 +393,7 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 	/**
 	 * Asks whether an option speaks of the declaration once `written` stands over the shared run.
 	 *
-	 * A semicolon or brace rule counts the block's lines. A comma rule counts the declaration's, the head run written over. A colon rule counts the value's lines as spelled, with the breaks a comma newline asker writes in front of the list's other commas, ([#389](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/389)) less the shared run wherever the parser keeps it in the value (a custom property's semicolon run, a wordless value's head run unless it is also an ordinary property's trailing run), plus a written break once it reaches the value; the brace's run is never a line of the declaration ([#689](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/689)).
+	 * A semicolon or brace rule counts the block's lines. A comma rule counts the declaration's, the head run written over. A colon rule counts the value's lines as spelled, with the breaks a comma newline asker writes in front of the list's other commas, and with the tail run behind a comment on the colon's line as written ([#389](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/389)) less the shared run wherever the parser keeps it in the value (a custom property's semicolon run, a wordless value's head run unless it is also an ordinary property's trailing run), plus a written break once it reaches the value; the brace's run is never a line of the declaration ([#689](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/689)).
 	 * @param participant - The rule.
 	 * @param option - The rule's primary option, `always` or `never` with any line suffix.
 	 * @param written - The run written over the shared one.
@@ -382,6 +419,10 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 			}
 
 			let value = declarationValueAsSpelled(syntax, decl, result)
+
+			// The tail run behind a comment on the colon's line is in the value as spelled, comment and all, so its breaks are the standing run's, and the written run stands in their place at once (1790072055)
+			if (readers === tail) return breaksOf(value) - breaksOf(run) + (written === `newline` ? 1 : 0) === 0 && !askerBreaksTheList
+
 			let fromTheSemicolon = readers === semicolon
 			let counted = fromTheSemicolon ? (isCustomProperty(decl.prop) ? value.replace(TRAILING_CSS_WHITESPACE, ``) : value) : value.replace(LEADING_CSS_WHITESPACE, ``)
 			// A wordless value keeps the head run, save an ordinary property's that is the trailing run too; `decl.value` drops comments, so it is whitespace-only there

@@ -14,6 +14,7 @@ const COLON_NEWLINE = `@stylistic/declaration-colon-newline-after`
 const COMMA_SPACE = `@stylistic/value-list-comma-space-before`
 const SCSS_COLON_SPACE = `@stylistic/scss/declaration-colon-space-after`
 const SCSS_COMMA_SPACE = `@stylistic/scss/value-list-comma-space-before`
+const SCSS_COLON_NEWLINE = `@stylistic/scss/declaration-colon-newline-after`
 const LESS_COLON_SPACE = `@stylistic/less/declaration-colon-space-after`
 const LESS_COMMA_SPACE = `@stylistic/less/value-list-comma-space-before`
 
@@ -387,6 +388,30 @@ describe(`writesSharedRun over a comma opening the value`, () => {
 		expect(ask(`a { b: c ,d }`, { [COLON_SPACE]: `never`, [COMMA_SPACE]: `always` }, COMMA_SPACE)).toBe(true)
 		expect(ask(`a { b: /*c*/ ,d }`, { [COLON_SPACE]: `never`, [COMMA_SPACE]: `always` }, COLON_SPACE)).toBe(true)
 		expect(ask(`a { b: /*c*/ ,d }`, { [COLON_SPACE]: `never`, [COMMA_SPACE]: `always` }, COMMA_SPACE)).toBe(true)
+	})
+
+	// The run behind a block comment on the colon's line, which the newline rule of the colon reads past the comment and the comma rules read as the comma's (1790072055)
+	it(`a comma opening the value behind a comment on the colon's line, whose run the colon newline rule shares with the comma rules: a pair asking for different things is held as over the head run, and a rule ahead that has warned frees the write`, () => {
+		expect(ask(`a { b: /*c*/ ,d }`, { [COLON_NEWLINE]: `always`, [COMMA_SPACE]: `always` }, COLON_NEWLINE)).toBe(false)
+		expect(ask(`a { b: /*c*/ ,d }`, { [COLON_NEWLINE]: `always`, [COMMA_SPACE]: `never` }, COLON_NEWLINE)).toBe(false)
+		expect(ask(`a { b: /*c*/ ,d }`, { [COLON_NEWLINE]: `always`, [COMMA_SPACE]: `never` }, COMMA_SPACE)).toBe(true)
+		expect(ask(`a { b: /*c*/ ,d }`, { [COMMA_SPACE]: `never`, [COLON_NEWLINE]: `always` }, COMMA_SPACE)).toBe(false)
+		expect(ask(`a { b: /*c*/ ,d }`, { [COMMA_SPACE]: `never`, [COLON_NEWLINE]: `always` }, COLON_NEWLINE)).toBe(true)
+		expect(ask(`a { b:/*c*/,d }`, { [COLON_NEWLINE]: `always`, [COMMA_NEWLINE]: `never-multi-line` }, COLON_NEWLINE)).toBe(false)
+	})
+
+	it(`the same, where the two ask for the same thing or the standing run satisfies one, so both write or the content one holds nothing`, () => {
+		expect(ask(`a { b: /*c*/ ,d }`, { [COLON_NEWLINE]: `always`, [COMMA_NEWLINE]: `always` }, COLON_NEWLINE)).toBe(true)
+		expect(ask(`a { b: /*c*/ ,d }`, { [COLON_NEWLINE]: `always`, [COMMA_NEWLINE]: `always` }, COMMA_NEWLINE)).toBe(true)
+		expect(ask(`a { b: /*c*/\n,d }`, { [COMMA_NEWLINE]: `always`, [COLON_NEWLINE]: `always` }, COLON_NEWLINE)).toBe(true)
+		expect(ask(`a { b: /*c*/ ,d }`, { [COLON_SPACE]: `never`, [COMMA_SPACE]: `never` }, COMMA_SPACE)).toBe(true)
+	})
+
+	it(`a comment the head run's break keeps off the colon's line, behind which the colon newline rule does not read, and a comment in front of a word that is no comma`, () => {
+		expect(ask(`a { b:\n/*c*/ ,d }`, { [COLON_NEWLINE]: `always`, [COMMA_SPACE]: `never` }, COMMA_SPACE)).toBe(true)
+		expect(ask(`a { b:\n/*c*/ ,d }`, { [COLON_NEWLINE]: `always`, [COMMA_SPACE]: `never` }, COLON_NEWLINE)).toBe(true)
+		expect(ask(`a { b: /*c*/ d }`, { [COLON_NEWLINE]: `always`, [COMMA_SPACE]: `never` }, COLON_NEWLINE)).toBe(true)
+		expect(ask(`a { #{$p}: /*c*/ ,d }`, { [SCSS_COLON_NEWLINE]: `always`, [SCSS_COMMA_SPACE]: `never` }, SCSS_COLON_NEWLINE, scssSyntax, scssParse as typeof parse)).toBe(true)
 	})
 })
 
