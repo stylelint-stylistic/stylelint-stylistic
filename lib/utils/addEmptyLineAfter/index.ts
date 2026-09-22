@@ -19,26 +19,15 @@ export function addEmptyLineAfter<T extends Rule | AtRule> (syntax: Syntax, node
 
 	if (typeof blockAfter !== `string`) return node
 
-	// Behind a stray semicolon
-	let start = blockAfter.lastIndexOf(`;`) + 1
-	let after = blockAfter.slice(start)
-
-	// Doubling keeps the brace's indentation
-	if (LINE_BREAK.test(after)) {
-		setBlockAfter(syntax, node, blockAfter.slice(0, start) + after.replace(CAPTURED_LINE_BREAK, `$1$1`))
+	// Doubling the run's first break keeps the brace's indentation and leaves everything else of the run where it stands, a stray semicolon behind the break included: the readers measure the run with its first run of semicolons taken out, so the empty line counts wherever the semicolon is, and a rule taking the semicolon out leaves the same file whichever side of this one it is listed ([#690](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/690))
+	if (LINE_BREAK.test(blockAfter)) {
+		setBlockAfter(syntax, node, blockAfter.replace(CAPTURED_LINE_BREAK, `$1$1`))
 
 		return node
 	}
 
 	// The break `linebreaks` asks for, or the file's, twice
 	let lines = getLineBreak(node, result).repeat(2)
-
-	// A run spelling a break in front of a stray semicolon keeps the lines behind it, where the empty line the option asks for already stands
-	if (LINE_BREAK.test(blockAfter)) {
-		setBlockAfter(syntax, node, blockAfter + lines)
-
-		return node
-	}
 
 	// Otherwise the run's whitespace is the closing brace's own indentation and the lines go in front of it, spelled as `block-closing-brace-newline-before` spells its own break into this raw: what stands in front of the run's first whitespace character stays there, so that a rule taking a stray semicolon out leaves the same file whichever side of this one it is listed ([#678](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/678))
 	let index = blockAfter.search(WHITESPACE)

@@ -48,16 +48,16 @@ describe(`addEmptyLineAfter`, () => {
 		expect(run(`a {color: pink;;}`)).toBe(`a {color: pink;;\n\n}`)
 	})
 
-	it(`adds two newlines if there aren't any newlines after semicolon`, () => {
-		expect(run(`a {\n;}`)).toBe(`a {\n;\n\n}`)
+	it(`doubles the break in front of a stray semicolon glued to the brace, which stays glued (#690)`, () => {
+		expect(run(`a {\n;}`)).toBe(`a {\n\n;}`)
 	})
 
-	it(`adds two newlines if there aren't any newlines after semicolon with CRLF`, () => {
-		expect(run(`a {\r\n;}`)).toBe(`a {\r\n;\r\n\r\n}`)
+	it(`doubles the same break spelled as a Windows pair`, () => {
+		expect(run(`a {\r\n;}`)).toBe(`a {\r\n\r\n;}`)
 	})
 
-	it(`writes behind a stray semicolon rather than in front of it`, () => {
-		expect(run(`a {color: pink;;\n;\n}`)).toBe(`a {color: pink;;\n;\n\n}`)
+	it(`doubles the run's first break, leaving a stray semicolon on its own line behind it (#690)`, () => {
+		expect(run(`a {color: pink;;\n;\n}`)).toBe(`a {color: pink;;\n\n;\n}`)
 	})
 
 	it(`writes the break the file ends its lines with where the whitespace in front of the brace holds none`, () => {

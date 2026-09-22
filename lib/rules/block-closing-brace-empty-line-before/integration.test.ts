@@ -49,3 +49,14 @@ describe(`the empty line this rule writes beside a rule that writes the same run
 		await expectBothOrders(`a {/*c*/\t}\n`, { "@stylistic/block-closing-brace-newline-before": `always` }, `a {/*c*/\n\n\t}\n`)
 	})
 })
+
+// See #690
+describe(`the empty line this rule writes where a stray semicolon stands behind the break, beside a rule taking the semicolon out`, () => {
+	it(`leaves one file in both orders of no-extra-semicolons, the semicolon gone and one empty line before the brace`, async () => {
+		await expectBothOrders(`a {/*c*/\n;}\n`, { "@stylistic/no-extra-semicolons": true }, `a {/*c*/\n\n}\n`)
+	})
+
+	it(`leaves one file in both orders of no-extra-semicolons where a tab stands between the break and the semicolon`, async () => {
+		await expectBothOrders(`a {/*c*/\n\t;}\n`, { "@stylistic/no-extra-semicolons": true }, `a {/*c*/\n\n\t}\n`)
+	})
+})
