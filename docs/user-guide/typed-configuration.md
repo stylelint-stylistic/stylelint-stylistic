@@ -6,7 +6,7 @@ A JavaScript configuration can name this plugin's rules through two exported 
 - **The namespace is named once.** You write the short names, `color-hex-case` rather than `@stylistic/scss/color-hex-case`, and the syntax once for the whole block.
 - **What several rules take alike is set once.** A list of functions to ignore, a severity for this plugin's rules alone, or a ban on autofixing goes into every rule that takes it.
 
-Both functions return plain objects, so Stylelint knows nothing of them. Both refuse two settings of one call that [contradict each other](contradicting-settings.md), as the plugin does at the run for a configuration put together any other way. A JSON or YAML configuration goes on naming the rules itself.
+Both functions return plain objects, so Stylelint knows nothing of them. Both refuse two settings of one call that [contradict each other](contradicting-settings.md), as the plugin does at the run for a configuration put together any other way, and their types refuse such a pair in the editor: each of the two settings is typed with a message naming the other. A JSON or YAML configuration goes on naming the rules itself.
 
 ## `defineStylistic`
 
