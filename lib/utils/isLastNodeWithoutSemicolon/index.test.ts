@@ -1,4 +1,5 @@
 import { type AtRule, type Declaration, parse, type Rule } from "postcss"
+import { parse as parseScss } from "postcss-scss"
 import { describe, expect, it } from "vitest"
 
 import { isLastNodeWithoutSemicolon } from "./index.ts"
@@ -30,6 +31,20 @@ function firstAtRule (css: string): AtRule {
 }
 
 describe(`isLastNodeWithoutSemicolon`, () => {
+	// See #437
+	it(`a Sass nested property in front of another declaration, which its own block closes wherever it stands`, () => {
+		let nested = (parseScss(`a { font: 12px { family: serif; } top: 0; }`).first as Rule).first as Declaration
+
+		expect(isLastNodeWithoutSemicolon(nested)).toBe(true)
+	})
+
+	// See #437
+	it(`the same nested property with a stray semicolon behind its block, which is the next declaration's raw`, () => {
+		let nested = (parseScss(`a { font: 12px { family: serif; }; top: 0; }`).first as Rule).first as Declaration
+
+		expect(isLastNodeWithoutSemicolon(nested)).toBe(true)
+	})
+
 	it(`the only declaration, no semicolon`, () => {
 		expect(isLastNodeWithoutSemicolon(firstDeclaration(`a { color: pink }`))).toBe(true)
 	})
