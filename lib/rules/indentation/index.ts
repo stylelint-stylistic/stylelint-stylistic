@@ -16,6 +16,7 @@ import { nodeString } from "../../utils/nodeString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { rootLevelIndents } from "../../utils/rootLevelIndents/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { semicolonLineChecker } from "../../utils/semicolonLineChecker/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { isAtRule, isDeclaration, isRoot, isRule } from "../../utils/typeGuards/index.ts"
@@ -118,7 +119,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let nodeLevel = indentationLevel(node)
 			let { hostLevel, embeddedLevel } = embeddingLevel(syntax, node, indentChar)
 
-			let before = node.raws.before || ``
+			// The raw where the parser filed one, and otherwise the run PostCSS prints in front of a node a rule of another plugin built without one, which is what the file will hold ([#694](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/694))
+			let before = runInFrontOf(node)
 			let parent = node.parent
 
 			if (!parent) throw new Error(`A parent node must be present`)
@@ -134,7 +136,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let expectedOpeningBraceLevel = opensTheStylesheetsLine ? nodeLevel - embeddedLevel : nodeLevel
 			let expectedOpeningBraceIndentation = indentChar.repeat(expectedOpeningBraceLevel)
 
-			if ((beforeBreaks || (isFirstChild && (!getDocument(parent) || (parent.raws.codeBefore && TRAILING_LINE_BREAK.test(parent.raws.codeBefore))))) && lastLineIndentation(before, beforeSpans) !== expectedOpeningBraceIndentation) {
+			// A node built with no source has no place to report at, and is passed over as it was when its missing raw read as no run (1790090148)
+			if (node.source && (beforeBreaks || (isFirstChild && (!getDocument(parent) || (parent.raws.codeBefore && TRAILING_LINE_BREAK.test(parent.raws.codeBefore))))) && lastLineIndentation(before, beforeSpans) !== expectedOpeningBraceIndentation) {
 				report({
 					message: messages.expected,
 					messageArgs: [legibleExpectation(expectedOpeningBraceLevel - (opensTheStylesheetsLine ? 0 : hostLevel))],
@@ -142,9 +145,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					result,
 					ruleName,
 					fix () {
-						if (!isString(node.raws.before)) return
-
-						node.raws.before = writeIndentationBefore(node.raws.before, expectedOpeningBraceIndentation, beforeSpans, isFirstChild)
+						// Written into the raw whichever way the run was read, so a missing raw stops being a run nobody wrote
+						node.raws.before = writeIndentationBefore(before, expectedOpeningBraceIndentation, beforeSpans, isFirstChild)
 					},
 				})
 			}

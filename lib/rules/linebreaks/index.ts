@@ -6,6 +6,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -85,7 +86,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (typeof node.raws.between === `string` && node.raws.between) node.raws.between = fixData(node.raws.between)
 
-				if (node.raws.before) node.raws.before = fixData(node.raws.before)
+				// The raw where the parser filed one, and otherwise the run PostCSS prints in front of a node a rule of another plugin built without one, written into the raw so that the file the fix leaves spells the option's break there too (#694)
+				let before = runInFrontOf(node)
+
+				if (before) node.raws.before = fixData(before)
 
 				if (typeof node.raws.after === `string`) node.raws.after = fixData(node.raws.after)
 			})
@@ -107,6 +111,20 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				reportNewlineError(lineNum, colNum)
 			}
 		}
+
+		// A node a rule of another plugin built without a `raws.before` gets a run PostCSS prints in front of it, what its neighbours carry or a break with the default indent where they carry none, which no line of the file holds yet and the file the fix leaves will; it is reported on the node, whose place is the one it was built with ([#694](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/694)). One built with no source has no place to report at, and is passed over as it was (1790090148)
+		root.walk((node) => {
+			if (typeof node.raws.before === `string` || !node.source || !hasError(runInFrontOf(node))) return
+
+			report({
+				message: messages.expected,
+				messageArgs: [primary],
+				node,
+				result,
+				ruleName,
+				fix,
+			})
+		})
 
 		/**
 		 * Checks whether a string's line breaks are not the option's.
