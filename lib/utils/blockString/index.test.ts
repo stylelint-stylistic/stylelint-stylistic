@@ -39,6 +39,12 @@ describe(`blockString`, () => {
 		expect(postcssCheck(`a { color: pink } ;\n`, less)).toBe(`{ color: pink }`)
 	})
 
+	it(`a Sass nested property written with a value, which this syntax parses as a declaration with a block, whose head spans lines while its block is one (#570)`, () => {
+		expect(postcssCheck(`a { font: 12px { family: x; } }`, scss)).toBe(`{ font: 12px { family: x; } }`)
+		expect(postcssCheck(`font: 12px\n\tserif { family: x; }`, scss)).toBe(`{ family: x; }`)
+		expect(postcssCheck(`font: 12px // c\n{ family: x; }`, scss)).toBe(`{ family: x; }`)
+	})
+
 	it(`a block ending in a Less mixin call, whose leading dot the syntax keeps in a raw`, () => {
 		expect(postcssCheck(`a { .m(); }`, less)).toBe(`{ .m(); }`)
 	})

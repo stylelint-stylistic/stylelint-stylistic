@@ -277,6 +277,7 @@ testRule({
 			message: messages.expected,
 		},
 		{
+			// The outer block's brace is reported first, the walk visiting the nodes in document order (#570)
 			description: `a comment closing a nested block, whose own brace has no empty line`,
 			code: `
 				@media print {
@@ -298,13 +299,13 @@ testRule({
 			`,
 			warnings: [
 				{
-					line: 5,
-					column: 3,
+					line: 6,
+					column: 1,
 					message: messages.expected,
 				},
 				{
-					line: 6,
-					column: 1,
+					line: 5,
+					column: 3,
 					message: messages.expected,
 				},
 			],
@@ -568,6 +569,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
+			// The outer block's brace is reported first, the walk visiting the nodes in document order (#570)
 			description: `nested blocks, each closing behind an empty line`,
 			code: `
 				@media print {
@@ -587,13 +589,13 @@ testRule({
 			`,
 			warnings: [
 				{
-					line: 5,
-					column: 3,
+					line: 7,
+					column: 1,
 					message: messages.rejected,
 				},
 				{
-					line: 7,
-					column: 1,
+					line: 5,
+					column: 3,
 					message: messages.rejected,
 				},
 			],
@@ -848,6 +850,7 @@ testRule({
 			],
 		},
 		{
+			// The outer block's brace is reported first, the walk visiting the nodes in document order (#570)
 			description: `an empty line in front of the inner brace, and none in front of the outer one`,
 			code: `
 				@media print {
@@ -866,14 +869,14 @@ testRule({
 				`@media print {\n\n\ta {\n\t\tcolor: aquamarine;\n\t}\n\n\tb {\n\t\tcolor: hotpink;\n\t}\n\n}`,
 			warnings: [
 				{
-					line: 10,
-					column: 2,
-					message: messages.rejected,
-				},
-				{
 					line: 11,
 					column: 1,
 					message: messages.expected,
+				},
+				{
+					line: 10,
+					column: 2,
+					message: messages.rejected,
 				},
 			],
 		},

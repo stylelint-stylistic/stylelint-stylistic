@@ -1,10 +1,11 @@
-import type { AtRule, ChildNode, Rule } from "postcss"
+import type { ChildNode, Container } from "postcss"
 import stylelint, { type PostcssResult } from "stylelint"
 
 import { TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
+import { carriesABlock } from "../../utils/carriesABlock/index.ts"
 import { closingBraceRunWrites } from "../../utils/closingBraceRunWrites/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
@@ -85,15 +86,16 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		let writes = closingBraceRunWrites(() => getLineBreak(root, result))
 
-		// Rules and at-rules alike
-		root.walkRules(check)
-		root.walkAtRules(check)
+		// Every node carrying a block, a Sass nested property written with a value among them (#570)
+		root.walk((node) => {
+			if (carriesABlock(node)) check(node)
+		})
 
 		/**
 		 * Checks one statement.
-		 * @param statement - The rule or at-rule.
+		 * @param statement - The node carrying the block.
 		 */
-		function check (statement: Rule | AtRule): void {
+		function check (statement: ChildNode & Container): void {
 			// Blockless, or an empty block
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 
