@@ -77,12 +77,12 @@ describe(`writesBlockAfter`, () => {
 		expect(ask(`never-multi-line`, { [`@stylistic/scss/block-closing-brace-empty-line-before`]: `always-multi-line` }, false)).toBe(false)
 	})
 
-	// See #715
-	it(`a neighbour listed under two namespaces, where either copy refusing gates the write`, () => {
-		expect(ask(`always`, { [CLOSING_NEWLINE]: `always`, [`@stylistic/scss/block-closing-brace-newline-before`]: `never-multi-line` })).toBe(false)
-		expect(ask(`always`, { [`@stylistic/scss/block-closing-brace-empty-line-before`]: `always-multi-line`, [CLOSING_EMPTY_LINE]: [`never`, { except: [`after-closing-brace`] }] }, true)).toBe(true)
-		expect(ask(`never-multi-line`, { [`@stylistic/scss/block-closing-brace-empty-line-before`]: [`never`, { except: [`after-closing-brace`] }], [CLOSING_EMPTY_LINE]: `never` }, true)).toBe(false)
-		expect(ask(`always`, { [CLOSING_NEWLINE]: `always`, [`@stylistic/scss/block-closing-brace-newline-before`]: [`never-multi-line`, { disableFix: true }] })).toBe(true)
+	it(`a neighbour listed under two namespaces, where the copy reading the plain CSS root alone gates the write: the core's, or the first listed without it`, () => {
+		expect(ask(`always`, { [CLOSING_NEWLINE]: `always`, [`@stylistic/scss/block-closing-brace-newline-before`]: `never-multi-line` })).toBe(true)
+		expect(ask(`always`, { [`@stylistic/scss/block-closing-brace-newline-before`]: `always`, [CLOSING_NEWLINE]: `never-multi-line` })).toBe(false)
+		expect(ask(`never-multi-line`, { [`@stylistic/scss/block-closing-brace-empty-line-before`]: `always-multi-line`, [CLOSING_EMPTY_LINE]: [`never`, { except: [`after-closing-brace`] }] }, true)).toBe(false)
+		expect(ask(`never-multi-line`, { [`@stylistic/scss/block-closing-brace-empty-line-before`]: [`never`, { except: [`after-closing-brace`] }], [CLOSING_EMPTY_LINE]: `always-multi-line` }, false)).toBe(false)
+		expect(ask(`never-multi-line`, { [`@stylistic/scss/block-closing-brace-empty-line-before`]: [`never`, { except: [`after-closing-brace`] }], [`@stylistic/less/block-closing-brace-empty-line-before`]: `always-multi-line` }, true)).toBe(false)
 	})
 })
 

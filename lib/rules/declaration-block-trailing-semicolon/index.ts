@@ -408,7 +408,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								parent.raws.semicolon = true
 
 								if (bodilessAtRule) {
-									// The trailing whitespace goes to the block first, so the space lands in front of the semicolon; where a semicolon closed the at-rule at the parse, the at-rule holds none of that run and the block's raw holds it already, and the move took it off the file ([#684](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/684))
+									// The trailing whitespace goes to the block first, so the space lands in front of the semicolon; where a semicolon closed the at-rule at the parse, the at-rule holds none of that run and the block's raw holds it already ([#684](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/684)) — a shape one copy of the rule reaches no longer, since the semicolon it cleared in the same pass was a second copy's
 									if (atRuleHoldsTheBlockAfter) {
 										bodilessAtRule.raws.between = beforeWhitespace
 										parent.raws.after = between.slice(beforeWhitespace.length)

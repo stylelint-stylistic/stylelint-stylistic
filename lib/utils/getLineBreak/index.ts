@@ -36,14 +36,13 @@ function lineBreakOfFile (node: Node): string | undefined {
 /**
  * The line break a fix writes where none stood.
  *
- * In order: what `linebreaks` asks for where configured, or a break written the other way would never be respelled ([#352](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/352)); the file's; a line feed. Never the machine's, which `context.newline` falls back on. The rule is read under every namespace reading the root, since a copy under another one respells the same file ([#716](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/716)); of the copies, the last with its fix on respells it last, and a copy whose fix is off is heard only where none is on, as it still reports the other break ([#485](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/485)).
+ * In order: what `linebreaks` asks for where configured, or a break written the other way would never be respelled ([#352](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/352)); the file's; a line feed. Never the machine's, which `context.newline` falls back on. The rule is read under whichever namespace its copy reading the root is configured ([#716](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/716)), one whose fix is off included, as it still reports the other break ([#485](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/485)).
  * @param node - A node of the file.
  * @param result - The result, with the configuration.
  * @returns The break to write.
  */
 export function getLineBreak (node: Node, result: PostcssResult): string {
-	let copies = neighbourCopies(node, result, LINEBREAKS_RULE)
-	let option = (copies.findLast(({ fixDisabled }) => !fixDisabled) ?? copies.at(-1))?.option
+	let option = neighbourCopies(node, result, LINEBREAKS_RULE)[0]?.option
 
 	if (option !== undefined) return BREAK_OF_OPTION[option as keyof typeof BREAK_OF_OPTION]
 

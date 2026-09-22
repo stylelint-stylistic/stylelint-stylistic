@@ -254,16 +254,14 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { b: ; }`, { "@stylistic/scss/declaration-colon-space-after": `always`, "@stylistic/scss/declaration-block-semicolon-space-before": `never` }, `@stylistic/scss/declaration-colon-space-after`, scss)).toBe(false)
 	})
 
-	// See #710
-	it(`a rule listed under another namespace that reads the same plain CSS root, the asking rule's own copy included`, () => {
+	it(`a rule listed under another namespace that reads the same plain CSS root, which yields to the core's copy where one is configured`, () => {
 		let scss: Syntax = { ...css, namespace: `scss` }
 		let scssSemicolonSpace = `@stylistic/scss/declaration-block-semicolon-space-before`
 		let scssColonSpace = `@stylistic/scss/declaration-colon-space-after`
 
 		expect(ask(`a { b: ; }`, { [COLON_SPACE]: `always`, [scssSemicolonSpace]: `never` }, COLON_SPACE)).toBe(false)
 		expect(ask(`a { b: ; }`, { [COLON_SPACE]: `always`, [scssSemicolonSpace]: `never` }, scssSemicolonSpace, scss)).toBe(false)
-		expect(ask(`a { b: ; }`, { [COLON_SPACE]: `always`, [scssColonSpace]: `never` }, COLON_SPACE)).toBe(false)
-		expect(ask(`a { b: ; }`, { [COLON_SPACE]: `always`, [scssColonSpace]: `never` }, scssColonSpace, scss)).toBe(false)
+		expect(ask(`a { b: ; }`, { [COLON_SPACE]: `always`, [scssColonSpace]: `never` }, COLON_SPACE)).toBe(true)
 		expect(ask(`a { b:; }`, { [COLON_SPACE]: `always`, [scssColonSpace]: `always` }, COLON_SPACE)).toBe(true)
 	})
 

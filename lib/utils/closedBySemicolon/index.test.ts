@@ -101,19 +101,17 @@ describe(`trailingSemicolonAsked`, () => {
 		expect(asked(`a { b: ; }`, { [SCSS_TRAILING]: `never` })).toBe(false)
 	})
 
-	// See #715
-	it(`the rule listed under two namespaces, where the copy writing last in run order decides`, () => {
-		expect(asked(`a { b: }`, { [TRAILING]: `always`, [SCSS_TRAILING]: `never` })).toBe(false)
+	it(`the copy reading the root, where the rule is listed under two namespaces: the core's over plain CSS, listed first or second, else the first listed`, () => {
+		expect(asked(`a { b: }`, { [TRAILING]: `always`, [SCSS_TRAILING]: `never` })).toBe(true)
 		expect(asked(`a { b: }`, { [SCSS_TRAILING]: `never`, [TRAILING]: `always` })).toBe(true)
-		expect(asked(`a { b: }`, { [TRAILING]: `always`, [SCSS_TRAILING]: [`never`, { disableFix: true }] })).toBe(true)
+		expect(asked(`a { b: }`, { [SCSS_TRAILING]: `never`, "@stylistic/less/declaration-block-trailing-semicolon": `always` })).toBe(false)
 	})
 
-	// See #715
-	it(`a disable comment silencing one copy of two, read under that copy's name`, () => {
+	it(`a disable comment silencing the copy reading the root, which no other copy takes over`, () => {
 		let rules = { [TRAILING]: `always`, [SCSS_TRAILING]: `never` }
 
 		expect(trailingSemicolonAsked(declarationOf(`a { b: }`, -1), disabled(rules, { [SCSS_TRAILING]: [{ start: 1 }] }))).toBe(true)
-		expect(trailingSemicolonAsked(declarationOf(`a { b: }`, -1), disabled(rules, { [TRAILING]: [{ start: 1 }] }))).toBe(false)
+		expect(trailingSemicolonAsked(declarationOf(`a { b: }`, -1), disabled(rules, { [TRAILING]: [{ start: 1 }] }))).toBeUndefined()
 	})
 })
 
@@ -151,11 +149,10 @@ describe(`valueAsClosed`, () => {
 		expect(value(`a { b: x !important ; }`, { [TRAILING]: `never` })).toBe(`x`)
 	})
 
-	// See #715
-	it(`the run a never listed under another namespace takes away, a later always copy writing back the semicolon alone`, () => {
+	it(`the run a never under another namespace takes away over plain CSS only where no core copy reads the root`, () => {
 		expect(value(`a { b: ; }`, { [SCSS_TRAILING]: `never` })).toBe(``)
-		expect(value(`a { b: ; }`, { [SCSS_TRAILING]: `never`, [TRAILING]: `always` })).toBe(``)
-		expect(value(`a { b: ; }`, { [SCSS_TRAILING]: [`never`, { disableFix: true }], [TRAILING]: `always` })).toBe(` `)
+		expect(value(`a { b: ; }`, { [SCSS_TRAILING]: `never`, [TRAILING]: `always` })).toBe(` `)
+		expect(value(`a { b: ; }`, { [SCSS_TRAILING]: `never`, [TRAILING]: [`always`, { disableFix: true }] })).toBe(` `)
 	})
 })
 

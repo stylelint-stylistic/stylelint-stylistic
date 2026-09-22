@@ -22,9 +22,9 @@ describe(`takesTheOpeningLines`, () => {
 		expect(ask(`\n;\n`, { "@stylistic/no-empty-first-line": [true, { disableFix: true }] })).toBe(false)
 	})
 
-	it(`a copy under the namespace of another syntax, which reads a plain CSS file too`, () => {
+	it(`a copy under the namespace of another syntax, which reads a plain CSS file too, the first listed where two are`, () => {
 		expect(ask(`\n;\n`, { "@stylistic/scss/no-empty-first-line": true })).toBe(true)
-		expect(ask(`\n;\n`, { "@stylistic/less/no-empty-first-line": [true, { disableFix: true }], "@stylistic/scss/no-empty-first-line": true })).toBe(true)
+		expect(ask(`\n;\n`, { "@stylistic/less/no-empty-first-line": [true, { disableFix: true }], "@stylistic/scss/no-empty-first-line": true })).toBe(false)
 	})
 
 	it(`a file opening on something other than an empty line, which the rule passes over`, () => {

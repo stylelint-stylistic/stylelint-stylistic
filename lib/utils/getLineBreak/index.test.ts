@@ -28,16 +28,14 @@ describe(`getLineBreak`, () => {
 		expect(ask(`a {}\r\nb {}`, { "@stylistic/less/linebreaks": [`unix`] })).toBe(`\n`)
 	})
 
-	// See #716
-	it(`the copy listed last, where the rule is listed under two names, since its fix respells the file last`, () => {
-		expect(ask(`a {}\nb {}`, { "@stylistic/linebreaks": `unix`, "@stylistic/scss/linebreaks": `windows` })).toBe(`\r\n`)
+	it(`the copy reading the file, where the rule is listed under two names: the core's over plain CSS whichever is listed first, and the first listed where the core's is not configured`, () => {
+		expect(ask(`a {}\nb {}`, { "@stylistic/linebreaks": `unix`, "@stylistic/scss/linebreaks": `windows` })).toBe(`\n`)
 		expect(ask(`a {}\nb {}`, { "@stylistic/scss/linebreaks": `windows`, "@stylistic/linebreaks": `unix` })).toBe(`\n`)
+		expect(ask(`a {}\nb {}`, { "@stylistic/scss/linebreaks": `windows`, "@stylistic/less/linebreaks": `unix` })).toBe(`\r\n`)
 	})
 
-	// See #716
-	it(`the last copy whose fix is on, where a later one's fix is off, and the last copy of all where no copy's fix is on`, () => {
-		expect(ask(`a {}\nb {}`, { "@stylistic/linebreaks": `windows`, "@stylistic/scss/linebreaks": [`unix`, { disableFix: true }] })).toBe(`\r\n`)
-		expect(ask(`a {}\nb {}`, { "@stylistic/linebreaks": [`unix`, { disableFix: true }], "@stylistic/scss/linebreaks": [`windows`, { disableFix: true }] })).toBe(`\r\n`)
+	it(`a copy whose fix is off, which still reports the other break`, () => {
+		expect(ask(`a {}\nb {}`, { "@stylistic/linebreaks": [`windows`, { disableFix: true }] })).toBe(`\r\n`)
 		expect(ask(`a {}\r\nb {}`, { "@stylistic/linebreaks": [`unix`, { disableFix: true }] })).toBe(`\n`)
 	})
 

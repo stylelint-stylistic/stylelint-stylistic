@@ -4,6 +4,7 @@ import type { PostcssResult } from "stylelint"
 import { css } from "../../syntaxes/css/index.ts"
 import { namespaces, type Syntax } from "../../syntaxes/index.ts"
 import { addNamespace } from "../addNamespace/index.ts"
+import { copyReadingTheRoot } from "../copyReadingTheRoot/index.ts"
 import { compareRanks, defersToRunEnd, linenessRank } from "../defersToRunEnd/index.ts"
 
 /** A neighbouring rule: its directory name and the primaries it accepts. */
@@ -29,7 +30,7 @@ type Listed<Key extends string, Option extends string | true> = { key: Key, opti
 /**
  * Lists the copies of some neighbours the configuration holds, in run order: configuration order, then the lineness-conditioned rules, which wait for the run's writers ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)) in the plugin's order ([#502](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/502)).
  *
- * Stylelint runs rules in configuration order, so the key order of `result.stylelint.config` is the run's. A neighbour is listed under any namespace that reads the node's root, since every namespace reads plain CSS and a copy under another one writes the same file ([#710](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/710)); so one key may come more than once, told apart by the name. A copy refusing its option is passed over.
+ * Stylelint runs rules in configuration order, so the key order of `result.stylelint.config` is the run's. A neighbour is listed under the one name whose copy reads the node's root (`copyReadingTheRoot`), whichever namespace that is, since every namespace reads plain CSS and a copy under another one writes the same file ([#710](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/710)). A copy refusing its option is passed over.
  * @param node - A node of the root the rules read.
  * @param result - The PostCSS result carrying the configuration.
  * @param rules - The neighbours by the caller's keys; a key may stand empty.
@@ -50,7 +51,7 @@ function listedInRunOrder<Key extends string, Option extends string | true> (nod
 		let setting = settings[name]
 		let option = primaryOf(setting)
 
-		if (option === undefined || !rule.options.includes(option as Option) || !syntax.accepts(root, result)) continue
+		if (option === undefined || !rule.options.includes(option as Option) || copyReadingTheRoot(rule.name, root, result) !== name) continue
 
 		found.push({ key, option: option as Option, setting, name, syntax })
 	}
@@ -155,11 +156,11 @@ export type NeighbourCopy = {
 let tablesByRule: WeakMap<NeighbourRuleSetting, { copy: NeighbourRuleSetting }> = new WeakMap()
 
 /**
- * Reads every copy of one neighbour whole, secondaries included, in run order and under every namespace that reads the root, as {@link neighbourSettings} finds them ([#715](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/715)); which copy counts is each caller's to decide.
+ * Reads the copy of one neighbour that reads the root whole, secondaries included, under whichever namespace it is configured, as {@link neighbourSettings} finds it ([#715](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/715)).
  * @param node - A node of the root the rules read.
  * @param result - The PostCSS result carrying the configuration.
  * @param rule - The neighbour and the primaries it accepts.
- * @returns The copies, none where the neighbour is unlisted, refuses its primary, or is listed only under namespaces refusing the root.
+ * @returns The copy, in a list of one; none where the neighbour is unlisted, refuses its primary, or is listed only under namespaces refusing the root.
  */
 export function neighbourCopies (node: Node, result: PostcssResult, rule: NeighbourRuleSetting): NeighbourCopy[] {
 	let table = tablesByRule.get(rule)

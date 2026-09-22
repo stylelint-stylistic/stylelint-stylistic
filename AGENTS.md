@@ -54,7 +54,7 @@ Follow `lib/rules/color-hex-case/index.ts` as the canonical example. Every rul
 - reports via `report({ message, messageArgs, node, index, endIndex, result, ruleName, fix() { … } })` — autofix is the `fix` callback on `report`, not a separate `context.fix` branch;
 - ends with `export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })`, the factory the registry takes, and `export let { ruleName, messages } = createRule(css)`, the core's instance of both for the tests beside the module to import.
 
-`defineRule` (`lib/utils/defineRule/index.ts`) turns the definition into a factory over a `Syntax`: it names the rule under the syntax's namespace, closes the messages, and gates the check, so a root the syntax does not accept is answered by one warning per root and read by no rule.
+`defineRule` (`lib/utils/defineRule/index.ts`) turns the definition into a factory over a `Syntax`: it names the rule under the syntax's namespace, closes the messages, and gates the check, so a root the syntax does not accept is answered by one warning per root and read by no rule, and a root two configured copies of one rule accept is read by one of them — the root's own family's, else the first listed (`lib/utils/copyReadingTheRoot/`) — the other yielding without a word.
 
 ### Tests
 

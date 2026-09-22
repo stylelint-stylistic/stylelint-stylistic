@@ -19,6 +19,8 @@ The core is now written for plain CSS alone, so a construct only a preproce
 
 The new `defineStylistic` and `defineStylisticOverride` functions (see below) name the syntax once for the whole block, so the rules stay under their short names and you write no namespace at all.
 
+A rule listed under two of these names over one stylesheet is now read once, by the copy of the stylesheet's own family — the core's over plain CSS, the namespace's over its syntax — and the other copies yield without a word; where the family's copy is not configured, the first listed copy whose namespace accepts the stylesheet reads it. A configuration listing the core and a namespace over the same files used to run every rule twice there and report every problem twice.
+
 #### Expanding the scope of the rules
 
 - The [`named-grid-areas-alignment`](https://stylelint-stylistic.github.io/rules/named-grid-areas-alignment) rule now applies to the `grid-template` and `grid` properties too, and not only to `grid-template-areas` (see [#45](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/45)). Where your code spells those shorthands, the rule may start asking for corrections or writing them under `--fix`. For finer control use its new option (see below).
