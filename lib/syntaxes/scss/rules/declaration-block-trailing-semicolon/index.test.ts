@@ -12,6 +12,22 @@ testRule({
 
 	accept: [
 		{
+			// See #336
+			description: `a Sass nested property with a value already carrying the semicolon the option asks for, which this syntax parses into the trailing raw of the block around it rather than into the flag, and which the rule reads there`,
+			code: `a { font: 12px { family: serif; }; }`,
+		},
+		{
+			// See #336
+			description: `the same nested property broken over lines, the semicolon closing its brace on the brace's line`,
+			code: `
+				a {
+					font: 12px {
+						family: serif;
+					};
+				}
+			`,
+		},
+		{
 			description: `a nested at-rule closing behind its semicolon`,
 			code: `a { @includes foo; }`,
 		},
@@ -251,15 +267,6 @@ testRule({
 			`,
 			line: 3,
 			column: 19,
-			message: messages.expected,
-		},
-		{
-			// See #336
-			description: `the same nested property already carrying the semicolon the option asks for, which this syntax parses into the trailing raw of the block around it rather than into the flag the rule reads`,
-			code: `a { font: 12px { family: serif; }; }`,
-			fixed: `a { font: 12px { family: serif; }; }`,
-			line: 1,
-			column: 33,
 			message: messages.expected,
 		},
 		{

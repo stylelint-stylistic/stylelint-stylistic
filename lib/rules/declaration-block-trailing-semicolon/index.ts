@@ -147,14 +147,14 @@ function spellsSemicolon (raw: HeldRaw): boolean {
 /**
  * Asks whether a semicolon closes the node ending the block.
  *
- * A flag set by a comment's text leaves the node closed only by a semicolon of code behind that comment ([#359](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/359)).
+ * A flag set by a comment's text leaves the node closed only by a semicolon of code behind that comment ([#359](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/359)). A Sass nested property with a value closes on its own brace, and `postcss-scss` files the semicolon behind that brace in a raw behind it, the block's tail or a following comment's `raws.before`, rather than in the flag, so it too is closed by a semicolon of code behind it ([#336](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/336)).
  * @param node - The node closing the block.
  * @param raws - The raws behind the node.
  * @param flagIsCommentText - Whether the flag's semicolon is the text of a `//` comment.
  * @returns True where one does.
  */
 function endsOnSemicolon (node: ChildNode, raws: HeldRaw[], flagIsCommentText: boolean): boolean {
-	if (flagIsCommentText) return raws.some((raw) => spellsSemicolon(raw))
+	if (flagIsCommentText || hasBlock(node)) return raws.some((raw) => spellsSemicolon(raw))
 
 	return Boolean(node.parent?.raws.semicolon)
 }

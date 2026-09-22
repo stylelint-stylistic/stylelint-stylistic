@@ -12,6 +12,24 @@ testRule({
 
 	accept: [
 		{
+			// See #437
+			description: `a Sass nested property standing in front of another declaration, which its own block closes and no semicolon of its own, so the run between its value and its block is the block's and not the rule's`,
+			code: `
+				a {
+					font: 12px
+					{ family: serif; }
+					top: 0
+					;
+				}
+			`,
+		},
+		{
+			// See #437
+			description: `the same nested property with a stray semicolon behind its block, which is the next declaration's raw and no semicolon of the property's`,
+			code: `a { font: 12px { family: serif; }; top: 0
+; }`,
+		},
+		{
 			description: `Sass variables at the top level of a file, which are no declaration block`,
 			code: `$a: 1;$b: 2;`,
 		},
@@ -21,6 +39,20 @@ testRule({
 	ruleName,
 	config: [`never-multi-line`],
 	customSyntax: `postcss-scss`,
+
+	accept: [
+		{
+			// See #437
+			description: `a Sass nested property standing in front of another declaration, which its own block closes and no semicolon of its own, so the run between its value and its block is the block's and not the rule's`,
+			code: `
+				a {
+					font: 12px
+					{ family: serif; }
+					top: 0;
+				}
+			`,
+		},
+	],
 
 	reject: [
 		{
