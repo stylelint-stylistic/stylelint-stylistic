@@ -2,9 +2,9 @@ import stylelint from "stylelint"
 
 import { css } from "../../syntaxes/css/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
+import { collapseBreakRuns, holdsLongerBreakRun } from "../../utils/collapseBreakRuns/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { replaceRuns } from "../../utils/replaceRuns/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isNumber } from "../../utils/validateTypes/index.ts"
 
@@ -44,11 +44,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		let violatedCRLFNewLinesRegex = new RegExp(`(?:\r\n){${maxAdjacentNewlines + 1},}`, `u`)
-		let violatedLFNewLinesRegex = new RegExp(`\n{${maxAdjacentNewlines + 1},}`, `u`)
-		let allowedLFNewLinesString = `\n`.repeat(maxAdjacentNewlines)
-		let allowedCRLFNewLinesString = `\r\n`.repeat(maxAdjacentNewlines)
-
 		root.walkRules((ruleNode) => {
 			let copies = syntax.selectorCopies(ruleNode)
 			let { selector } = copies
@@ -59,7 +54,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Read in a copy of the same length with every comment blanked, so a run inside a comment is reported by no warning and collapsed by no fix (#503); a `//` comment holds no run, since the break closing it ends it, and that break survives the fix, which leaves the first break of every run
 			let blankedSelector = blankComments(selector, comments)
 
-			if (violatedLFNewLinesRegex.test(blankedSelector) || violatedCRLFNewLinesRegex.test(blankedSelector)) {
+			if (holdsLongerBreakRun(blankedSelector, maxAdjacentNewlines)) {
 				report({
 					message: messages.expected,
 					messageArgs: [primary],
@@ -69,11 +64,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					result,
 					ruleName,
 					fix () {
-						// The second pass reads what the first wrote
-						let [blankedWithoutLFRuns, withoutLFRuns] = replaceRuns(blankedSelector, selector, violatedLFNewLinesRegex, allowedLFNewLinesString)
-						let [, newSelectorString] = replaceRuns(blankedWithoutLFRuns, withoutLFRuns, violatedCRLFNewLinesRegex, allowedCRLFNewLinesString)
-
-						copies.write(newSelectorString)
+						copies.write(collapseBreakRuns(selector, blankedSelector, maxAdjacentNewlines))
 					},
 				})
 			}

@@ -2,9 +2,9 @@ import stylelint from "stylelint"
 
 import { css } from "../../syntaxes/css/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
+import { collapseBreakRuns, holdsLongerBreakRun } from "../../utils/collapseBreakRuns/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { replaceRuns } from "../../utils/replaceRuns/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isNumber } from "../../utils/validateTypes/index.ts"
 
@@ -44,11 +44,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		let violatedCRLFNewLinesRegex = new RegExp(`(?:\r\n){${maxAdjacentNewlines + 1},}`, `u`)
-		let violatedLFNewLinesRegex = new RegExp(`\n{${maxAdjacentNewlines + 1},}`, `u`)
-		let allowedLFNewLinesString = `\n`.repeat(maxAdjacentNewlines)
-		let allowedCRLFNewLinesString = `\r\n`.repeat(maxAdjacentNewlines)
-
 		root.walkDecls((decl) => {
 			let value = syntax.read(decl)
 
@@ -58,7 +53,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Read in a copy of the same length with every comment blanked, so a run inside a comment is reported by no warning and collapsed by no fix (#503)
 			let blankedValue = blankComments(value, comments)
 
-			if (violatedLFNewLinesRegex.test(blankedValue) || violatedCRLFNewLinesRegex.test(blankedValue)) {
+			if (holdsLongerBreakRun(blankedValue, maxAdjacentNewlines)) {
 				report({
 					message: messages.expected,
 					messageArgs: [primary],
@@ -68,11 +63,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					result,
 					ruleName,
 					fix () {
-						// The second pass reads what the first wrote
-						let [blankedWithoutLFRuns, withoutLFRuns] = replaceRuns(blankedValue, value, violatedLFNewLinesRegex, allowedLFNewLinesString)
-						let [, newValueString] = replaceRuns(blankedWithoutLFRuns, withoutLFRuns, violatedCRLFNewLinesRegex, allowedCRLFNewLinesString)
-
-						syntax.write(decl, newValueString)
+						syntax.write(decl, collapseBreakRuns(value, blankedValue, maxAdjacentNewlines))
 					},
 				})
 			}

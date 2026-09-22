@@ -28,19 +28,7 @@ const SKIPPED = /(?:^|\/)regexps\.ts$|\.test\.ts$/u
 
 /** Lines that write a break or spell one in a stylesheet written as data. */
 const ALLOWED: Record<string, string[]> = {
-	"lib/rules/function-max-empty-lines/index.ts": [
-		`let allowedLFNewLinesString = \`\\n\`.repeat(maxAdjacentNewlines)`,
-		`let allowedCRLFNewLinesString = \`\\r\\n\`.repeat(maxAdjacentNewlines)`,
-	],
 	"lib/rules/linebreaks/index.ts": [`if (data) return data.replaceAll(EVERY_LINE_BREAK, shouldHaveCR ? \`\\r\\n\` : \`\\n\`)`],
-	"lib/rules/selector-max-empty-lines/index.ts": [
-		`let allowedLFNewLinesString = \`\\n\`.repeat(maxAdjacentNewlines)`,
-		`let allowedCRLFNewLinesString = \`\\r\\n\`.repeat(maxAdjacentNewlines)`,
-	],
-	"lib/rules/value-list-max-empty-lines/index.ts": [
-		`let allowedLFNewLinesString = \`\\n\`.repeat(maxAdjacentNewlines)`,
-		`let allowedCRLFNewLinesString = \`\\r\\n\`.repeat(maxAdjacentNewlines)`,
-	],
 	"lib/utils/contradictingSettings/index.ts": [`const MESSAGE_LINE_BREAK = \`\\n\``],
 	"lib/utils/getLineBreak/index.ts": [
 		`const BREAK_OF_OPTION = { unix: \`\\n\`, windows: \`\\r\\n\` }`,
@@ -59,10 +47,6 @@ const DEBT: Record<string, string[]> = {
 	"lib/rules/block-closing-brace-space-before/index.ts": [`if (text[index - 1] === \`\\r\`) index -= 1`],
 	"lib/rules/block-opening-brace-newline-before/index.ts": [`if (beforeBraceNoRaw[index - 1] === \`\\r\`) index -= 1`],
 	"lib/rules/block-opening-brace-space-before/index.ts": [`if (beforeBraceNoRaw[index - 1] === \`\\r\`) index -= 1`],
-	"lib/rules/function-max-empty-lines/index.ts": [
-		`let violatedCRLFNewLinesRegex = new RegExp(\`(?:\\r\\n){\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
-		`let violatedLFNewLinesRegex = new RegExp(\`\\n{\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
-	],
 	"lib/rules/function-whitespace-after/index.ts": [
 		`if (nextChar === \`\\n\`) return`,
 		`if (source.slice(index, index + 2) === \`\\r\\n\`) return`,
@@ -84,14 +68,6 @@ const DEBT: Record<string, string[]> = {
 	],
 	"lib/rules/no-extra-semicolons/index.ts": [`if (string[i] === \`\\n\`) {`],
 	"lib/rules/no-multiple-whitespaces/index.ts": [`return char === \`\\n\` || char === \`\\r\``],
-	"lib/rules/selector-max-empty-lines/index.ts": [
-		`let violatedCRLFNewLinesRegex = new RegExp(\`(?:\\r\\n){\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
-		`let violatedLFNewLinesRegex = new RegExp(\`\\n{\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
-	],
-	"lib/rules/value-list-max-empty-lines/index.ts": [
-		`let violatedCRLFNewLinesRegex = new RegExp(\`(?:\\r\\n){\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
-		`let violatedLFNewLinesRegex = new RegExp(\`\\n{\${maxAdjacentNewlines + 1},}\`, \`u\`)`,
-	],
 	"lib/utils/isWhitespace/index.ts": [`return [\` \`, \`\\n\`, \`\\t\`, \`\\r\`, \`\\f\`].includes(char)`],
 	"lib/utils/whitespaceChecker/index.ts": [
 		`return char === \`\\n\``,

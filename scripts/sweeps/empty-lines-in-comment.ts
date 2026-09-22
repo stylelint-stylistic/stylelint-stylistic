@@ -1,14 +1,14 @@
 /**
  * A comment inside the text each rule of the `max-empty-lines` family reads, beside that text's own empty lines. Written for [#503](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/503): `function-max-empty-lines` read a call as one string, so `--fix` collapsed the empty lines inside a comment; the places outside a call and the two neighbouring rules came with 1789898200, which read the same string for a value and a selector.
  *
- * The main axis is what the comment holds, which no earlier sweep varied (`slash-star-slash`, [#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378)). The others are where the comment stands, what the text around it holds, and the comment's spelling: `/*\/` closes on its own star to `postcss-value-parser`, and `//` opens no comment it knows. Breaks are spelled three ways because the fix runs a pass per spelling and the second reads what the first wrote.
+ * The main axis is what the comment holds, which no earlier sweep varied (`slash-star-slash`, [#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378)). The others are where the comment stands, what the text around it holds, and the comment's spelling: `/*\/` closes on its own star to `postcss-value-parser`, and `//` opens no comment it knows. Breaks are spelled three ways because the fix ran a pass per spelling until #732, the second reading what the first wrote.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** A run violating either option; the mixed one is what the fix's second pass meets after its first. */
+/** A run violating either option; the mixed one is what the fix's second pass met after its first, until #732. */
 const RUNS: Record<string, string> = {
 	lf: `\n\n\n`,
 	crlf: `\r\n\r\n\r\n`,

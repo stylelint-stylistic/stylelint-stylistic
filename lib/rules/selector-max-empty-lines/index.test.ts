@@ -695,6 +695,24 @@ testRule({
 	],
 
 	reject: [
+		// See #732
+		{
+			description: `an empty line whose two breaks are spelled a line feed and then a Windows pair, which is one empty line to PostCSS and none to a search for either spelling alone`,
+			code: `.foo\n\r\n.bar { }`,
+			fixed: `.foo\n.bar { }`,
+			line: 1,
+			column: 1,
+			message: messages.expected(0),
+		},
+		// See #732
+		{
+			description: `three empty lines spelled a line feed and then Windows pairs, cut to the first break as it is spelled`,
+			code: `.foo\n\r\n\r\n\r\n.bar { }`,
+			fixed: `.foo\n.bar { }`,
+			line: 1,
+			column: 1,
+			message: messages.expected(0),
+		},
 		// The control of the two above: the delimiters inside the string open no comment, so the run in front of the real one is still the selector's
 		{
 			description: `a blank line of the selector in front of a comment, behind an attribute selector whose string spells the delimiters of a comment`,
@@ -1305,6 +1323,11 @@ testRule({
 	config: [1],
 
 	accept: [
+		// See #732
+		{
+			description: `one empty line spelled a line feed and then a Windows pair, which is the most the option allows`,
+			code: `.foo\n\r\n.bar { }`,
+		},
 		{
 			description: `a line break in front of the selector`,
 			code: `\n.foo { }`,
@@ -2120,6 +2143,15 @@ testRule({
 	],
 
 	reject: [
+		// See #732
+		{
+			description: `two empty lines spelled a line feed and then Windows pairs, cut to the first two breaks as they are spelled`,
+			code: `.foo\n\r\n\r\n.bar { }`,
+			fixed: `.foo\n\r\n.bar { }`,
+			line: 1,
+			column: 1,
+			message: messages.expected(1),
+		},
 		{
 			description: `two blank lines inside the selector`,
 			code: `.foo\n\n\n.bar { }`,
