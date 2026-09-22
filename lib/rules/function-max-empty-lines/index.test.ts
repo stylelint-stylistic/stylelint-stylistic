@@ -88,6 +88,24 @@ testRule({
 	],
 
 	reject: [
+		// See #732
+		{
+			description: `an empty line whose two breaks are spelled a line feed and then a Windows pair, which is one empty line to PostCSS and none to a search for either spelling alone`,
+			code: `a { transform: translate(\n\r\n1, 1); }`,
+			fixed: `a { transform: translate(\n1, 1); }`,
+			line: 1,
+			column: 15,
+			message: messages.expected(0),
+		},
+		// See #732
+		{
+			description: `three empty lines spelled a line feed and then Windows pairs, cut to the first break as it is spelled`,
+			code: `a { transform: translate(\n\r\n\r\n\r\n1, 1); }`,
+			fixed: `a { transform: translate(\n1, 1); }`,
+			line: 1,
+			column: 15,
+			message: messages.expected(0),
+		},
 		{
 			description: `two empty lines behind a comment that opens the arguments`,
 			code: `a { transform: translate(/*c*/\n\n\n1,1); }`,
@@ -450,6 +468,11 @@ testRule({
 	config: [1],
 
 	accept: [
+		// See #732
+		{
+			description: `one empty line spelled a line feed and then a Windows pair, which is the most the option allows`,
+			code: `a { transform: translate(\n\r\n1, 1); }`,
+		},
 		{
 			description: `a call broken across lines with no empty line in it`,
 			code: `a { transform: translate(\n1\n,\n1\n); }`,
@@ -498,6 +521,15 @@ testRule({
 	],
 
 	reject: [
+		// See #732
+		{
+			description: `two empty lines spelled a line feed and then Windows pairs, cut to the first two breaks as they are spelled`,
+			code: `a { transform: translate(\n\r\n\r\n1, 1); }`,
+			fixed: `a { transform: translate(\n\r\n1, 1); }`,
+			line: 1,
+			column: 15,
+			message: messages.expected(1),
+		},
 		// See #503
 		{
 			description: `three empty lines of the call standing beside a comment holding three of its own, of which only the call's are collapsed`,

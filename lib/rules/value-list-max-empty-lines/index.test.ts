@@ -83,6 +83,24 @@ testRule({
 	],
 
 	reject: [
+		// See #732
+		{
+			description: `an empty line whose two breaks are spelled a line feed and then a Windows pair, which is one empty line to PostCSS and none to a search for either spelling alone`,
+			code: `a { padding: 10px\n\r\n10px 10px 10px }`,
+			fixed: `a { padding: 10px\n10px 10px 10px }`,
+			line: 1,
+			column: 5,
+			message: messages.expected(0),
+		},
+		// See #732
+		{
+			description: `three empty lines spelled a line feed and then Windows pairs, cut to the first break as it is spelled`,
+			code: `a { padding: 10px\n\r\n\r\n\r\n10px 10px 10px }`,
+			fixed: `a { padding: 10px\n10px 10px 10px }`,
+			line: 1,
+			column: 5,
+			message: messages.expected(0),
+		},
 		// The run inside the comment stands where it was while the one behind it is collapsed
 		{
 			description: `a blank line of the value behind a comment whose text holds blank lines of its own`,
@@ -210,6 +228,11 @@ testRule({
 	config: [1],
 
 	accept: [
+		// See #732
+		{
+			description: `one empty line spelled a line feed and then a Windows pair, which is the most the option allows`,
+			code: `a { padding: 10px\n\r\n10px 10px 10px }`,
+		},
 		{
 			description: `a value broken over four lines, with no blank line among them`,
 			code: `a { padding: 10px\n10px\n10px\n10px }`,
@@ -245,6 +268,15 @@ testRule({
 	],
 
 	reject: [
+		// See #732
+		{
+			description: `two empty lines spelled a line feed and then Windows pairs, cut to the first two breaks as they are spelled`,
+			code: `a { padding: 10px\n\r\n\r\n10px 10px 10px }`,
+			fixed: `a { padding: 10px\n\r\n10px 10px 10px }`,
+			line: 1,
+			column: 5,
+			message: messages.expected(1),
+		},
 		{
 			description: `two blank lines inside the value`,
 			code: `a { padding: 10px\n\n\n10px 10px 10px }`,

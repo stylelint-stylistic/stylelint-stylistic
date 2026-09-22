@@ -4,9 +4,9 @@ import stylelint from "stylelint"
 
 import { css } from "../../syntaxes/css/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
+import { collapseBreakRuns, holdsLongerBreakRun } from "../../utils/collapseBreakRuns/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { replaceRuns } from "../../utils/replaceRuns/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { assertString, isNumber } from "../../utils/validateTypes/index.ts"
 
@@ -57,11 +57,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		let violatedCRLFNewLinesRegex = new RegExp(`(?:\r\n){${maxAdjacentNewlines + 1},}`, `u`)
-		let violatedLFNewLinesRegex = new RegExp(`\n{${maxAdjacentNewlines + 1},}`, `u`)
-		let allowedLFNewLinesString = `\n`.repeat(maxAdjacentNewlines)
-		let allowedCRLFNewLinesString = `\r\n`.repeat(maxAdjacentNewlines)
-
 		root.walkDecls((decl) => {
 			if (!decl.value.includes(`(`)) return
 
@@ -84,7 +79,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let nodeString = stringValue.slice(node.sourceIndex, node.sourceEndIndex)
 				let blankedNodeString = blankedValue.slice(node.sourceIndex, node.sourceEndIndex)
 
-				if (!violatedLFNewLinesRegex.test(blankedNodeString) && !violatedCRLFNewLinesRegex.test(blankedNodeString)) return
+				if (!holdsLongerBreakRun(blankedNodeString, maxAdjacentNewlines)) return
 
 				let problemIndex = placeIndexOnValueStart(decl) + node.sourceIndex
 				let isFixed = false
@@ -98,13 +93,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					result,
 					ruleName,
 					fix () {
-						// The second pass reads what the first wrote
-						let [blankedWithoutLFRuns, withoutLFRuns] = replaceRuns(blankedNodeString, nodeString, violatedLFNewLinesRegex, allowedLFNewLinesString)
-						let [, newNodeString] = replaceRuns(blankedWithoutLFRuns, withoutLFRuns, violatedCRLFNewLinesRegex, allowedCRLFNewLinesString)
-
 						splittedValue.push([
 							stringValue.slice(sourceIndexStart, node.sourceIndex),
-							newNodeString,
+							collapseBreakRuns(nodeString, blankedNodeString, maxAdjacentNewlines),
 						])
 						sourceIndexStart = node.sourceEndIndex
 						isFixed = true
