@@ -665,3 +665,21 @@ testRule({
 		},
 	],
 })
+
+// Behind a block comment on the colon's line the run in front of a comma opening the value is the one `declaration-colon-newline-after` reads past the comment: the rules asked settle who writes it (1790072055)
+testRule({
+	ruleName,
+	config: [`never`],
+	extraRules: { "@stylistic/declaration-colon-newline-after": `always` },
+
+	reject: [
+		{
+			description: `a break with indentation between a comment on the colon's line and a comma opening the value, where the colon rule behind this one asks for that break, so the warning stands and nothing is written`,
+			code: `a { b: /*c*/\n ,d }`,
+			fixed: `a { b: /*c*/\n ,d }`,
+			line: 2,
+			column: 2,
+			message: messages.rejectedBefore(),
+		},
+	],
+})

@@ -1,3 +1,5 @@
+import { messages as commaNewlineBeforeMessages } from "../value-list-comma-newline-before/index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -563,6 +565,50 @@ testRule({
 			line: 1,
 			column: 6,
 			message: messages.expectedAfter(),
+		},
+	],
+})
+
+// Behind a block comment on the colon's line this rule reads the run in front of the value's first word, and where that word is a comma opening the value the `value-list-comma-*-before` rules read the same run: the rules asked settle who writes it (1790072055)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/value-list-comma-space-before": `always` },
+
+	reject: [
+		{
+			description: `a space between a comment on the colon's line and a comma opening the value, where the comma rule behind this one asks for that space and not for the break this one asks for, so the warning stands and nothing is written`,
+			code: `a { b: /*c*/ ,d }`,
+			fixed: `a { b: /*c*/ ,d }`,
+			line: 1,
+			column: 12,
+			message: messages.expectedAfter(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/value-list-comma-newline-before": `always` },
+
+	reject: [
+		{
+			description: `the same run, where the comma rule behind this one asks for a break too, so both write it`,
+			code: `a { b: /*c*/ ,d }`,
+			fixed: `a { b: /*c*/\n ,d }`,
+			warnings: [
+				{
+					line: 1,
+					column: 12,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 14,
+					message: commaNewlineBeforeMessages.expectedBefore(),
+				},
+			],
 		},
 	],
 })
