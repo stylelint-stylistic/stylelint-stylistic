@@ -38,9 +38,6 @@ export let meta = {
 	fixable: true,
 }
 
-/** Stands in for the first argument, which may open on a Unicode separator `trimEnd` would strip with the break in front of it. */
-const ARGUMENT_STAND_IN = `x`
-
 /**
  * Asks whether the function the value parser returned is one the file writes.
  *
@@ -57,24 +54,6 @@ function isFunctionParsedAsWritten (syntax: Syntax, valueNode: FunctionNode, com
 
 	// After `unclosed`: an unclosed node's end index is no `)`
 	return !findCommentSpanAt(valueNode.sourceEndIndex - 1, comments)
-}
-
-/**
- * Asks whether the fix puts the first argument into a `//` comment the line break behind the `(` closes. The stand-in replaces the argument: {@link movesEndIntoInlineComment} reads a text's last character.
- * @param syntax - The syntax the rule is built over.
- * @param declValue - The whole value the function stands in.
- * @param valueNode - The function.
- * @param reading - The `//` comment reading.
- * @returns True where the argument lands in a comment.
- */
-function movesOpeningIntoComment (syntax: Syntax, declValue: string, valueNode: FunctionNode, reading: InlineCommentReading): boolean {
-	let openingIndex = valueNode.sourceIndex + valueNode.value.length + 1
-	let firstIndex = openingIndex + valueNode.before.length
-	let standingText = declValue.slice(0, firstIndex)
-	// Same for both options: a single space closes no comment
-	let fixedText = declValue.slice(0, openingIndex)
-
-	return syntax.movesEndIntoInlineComment(`${standingText}${ARGUMENT_STAND_IN}`, `${fixedText}${ARGUMENT_STAND_IN}`, reading)
 }
 
 /**
@@ -190,12 +169,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let openingIndex = valueNode.sourceIndex + valueNode.value.length + 1
 
 				/**
-				 * Asks whether the line break behind the `(` closes a `//` comment, which no option can satisfy without commenting the argument out; the warning then stands unfixed ([#114](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/114)). Under a parser whose tokenizer reads the parentheses behind `url(` as one token, a write opening a comment, as taking away the whitespace in front of a quotation mark there does, is refused too; outside it the question is not asked, since a name glued to a sign, `1!url(`, is an address to the walk and a call to the parser, and a refusal there would take away a write the parser reads the same. A write switching how the tokenizer reads parentheses it takes for an address's is refused as well: this run holds the character that decides it, and the name the parser reads there is not the one the walk read ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)).
+				 * Asks whether the fix may write the run behind the `(`. Under a parser whose tokenizer reads the parentheses behind `url(` as one token, a write opening a comment, as taking away the whitespace in front of a quotation mark there does, is refused; outside it the question is not asked, since a name glued to a sign, `1!url(`, is an address to the walk and a call to the parser, and a refusal there would take away a write the parser reads the same. A write switching how the tokenizer reads parentheses it takes for an address's is refused as well: this run holds the character that decides it, and the name the parser reads there is not the one the walk read ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)). Whether the break the run holds closes a `//` comment is not asked: the `(` would stand in that comment's text, and the walk turns such a call away before the question is put ([#393](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/393)).
 				 * @param write - The whitespace the fix writes.
-				 * @returns True if the argument stays outside a comment, no comment opens where that question is asked, and the parentheses keep their reading.
+				 * @returns True if no comment opens where that question is asked and the parentheses keep their reading.
 				 */
 				function isOpeningFixable (write: string): boolean {
-					return !movesOpeningIntoComment(syntax, declValue, functionNode, reading) && (!reading.tokenizes || editsOpenNoComment(declValue, [openingEdit(functionNode, write)], reading)) && !editsRereadAnAddress(declValue, openingIndex - 1, [openingEdit(functionNode, write)], reading)
+					return (!reading.tokenizes || editsOpenNoComment(declValue, [openingEdit(functionNode, write)], reading)) && !editsRereadAnAddress(declValue, openingIndex - 1, [openingEdit(functionNode, write)], reading)
 				}
 
 				if (primary === `always` && valueNode.before !== ` `) {
@@ -223,7 +202,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let closingIndex = closingParenthesisIndex(valueNode) - 1
 
 				/**
-				 * Asks whether the line break in front of the `)` closes a `//` comment, which no option can satisfy without commenting it out; the warning then stands unfixed.
+				 * Asks whether the line break in front of the `)` closes a `//` comment, which no option can satisfy without commenting it out; the warning then stands unfixed ([#114](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/114)).
 				 * @returns True if the `)` stays outside a comment.
 				 */
 				function isClosingFixable (): boolean {

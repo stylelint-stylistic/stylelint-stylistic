@@ -78,26 +78,6 @@ function withoutRanges (text: string, ranges: [number, number][]): string {
 }
 
 /**
- * Folds lists of stretches into one ascending, non-overlapping list.
- *
- * The stretches of the two `never` fixes interleave, and {@link withoutRanges} cuts in the order given.
- * @param lists - The lists to fold, in any order.
- * @returns The one list.
- */
-function mergeRanges (lists: [number, number][][]): [number, number][] {
-	let merged: [number, number][] = []
-
-	for (let [start, end] of lists.flat().toSorted(([one], [other]) => one - other)) {
-		let last = merged.at(-1)
-
-		if (last && start <= last[1]) last[1] = Math.max(last[1], end)
-		else merged.push([start, end])
-	}
-
-	return merged
-}
-
-/**
  * Asks whether a whitespace stretch opens on the break closing an inline comment, which no fix may take.
  * @param stretch - The start and end of the whitespace run.
  * @param comments - The comment spans of the value, both kinds.
@@ -152,7 +132,7 @@ function findFirstCharacterIndex (declValue: string, firstIndex: number): number
 /**
  * Says which of the two `never` fixes of one function may be written.
  *
- * A fix is refused where it carries a character of the function into an inline comment: the opening one asks about the first significant thing, the closing one about the `)`. Under a parser whose tokenizer reads the parentheses behind `url(` as one token, the opening one is refused too where it opens a comment, as taking away the whitespace in front of a quotation mark there does, and under either tokenizer where emptying the run switches how it reads parentheses it takes for an address's ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)). Where both pass alone, both are asked again over the union of what either empties, since two writes safe apart destroyed the value together ([#312](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/312)); where the union fails, neither is written.
+ * A fix is refused where it carries a character of the function into an inline comment: the opening one asks about the first significant thing, the closing one about the `)`. Under a parser whose tokenizer reads the parentheses behind `url(` as one token, the opening one is refused too where it opens a comment, as taking away the whitespace in front of a quotation mark there does, and under either tokenizer where emptying the run switches how it reads parentheses it takes for an address's ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)). The two are not weighed together: two writes safe apart destroyed the value together only where a call was opened inside a `//` comment ([#312](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/312)), and the walk turns such a call away before either is asked ([#393](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/393)).
  * @param syntax - The syntax the rule is built over.
  * @param read - What the walk read of the function, and the value.
  * @returns Whether each fix may be written.
@@ -180,13 +160,6 @@ function getNeverFixability (syntax: Syntax, read: {
 	let emptiedAfter = checkAfter === `` ? [] : measuredAfter.filter((stretch) => !closesAnInlineComment(stretch, comments))
 	let isOpeningFixable = checkBefore !== `` && reachesEveryStretch(measuredBefore, emptiedBefore) && !movesIntoComment(syntax, declValue, firstCharacterIndex, emptiedBefore, reading) && (!reading.tokenizes || editsOpenNoComment(declValue, fixBeforeForNever(emptiedBefore), reading)) && !editsRereadAnAddress(declValue, valueNode.sourceIndex + valueNode.value.length, fixBeforeForNever(emptiedBefore), reading)
 	let isClosingFixable = checkAfter !== `` && reachesEveryStretch(measuredAfter, emptiedAfter) && !movesIntoComment(syntax, declValue, closingParenthesisIndex, emptiedAfter, reading)
-
-	if (isOpeningFixable && isClosingFixable) {
-		let emptied = mergeRanges([emptiedBefore, emptiedAfter])
-		let movesTogether = movesIntoComment(syntax, declValue, firstCharacterIndex, emptied, reading) || movesIntoComment(syntax, declValue, closingParenthesisIndex, emptied, reading)
-
-		if (movesTogether) return { isOpeningFixable: false, isClosingFixable: false }
-	}
 
 	return { isOpeningFixable, isClosingFixable }
 }
