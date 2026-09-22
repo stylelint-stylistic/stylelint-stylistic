@@ -246,8 +246,20 @@ describe(`the types of defineStylistic`, () => {
 
 	// #743
 	it(`refuse two settings of one call that contradict each other, naming them under the namespace of the call`, () => {
+		// @ts-expect-error the two contradict each other, which the type says too
 		expect(() => defineStylistic({ syntax: `scss`, rules: { "value-list-comma-newline-after": `always-multi-line`, "value-list-comma-space-after": [`always`, { severity: `warning` }] } })).toThrow(`Contradicting settings:\n  "@stylistic/scss/value-list-comma-newline-after": "always-multi-line"\n  "@stylistic/scss/value-list-comma-space-after": "always"\nSet the second to "always-single-line", or turn one of them off.`)
 		expect(() => defineStylistic({ rules: { "value-list-comma-newline-after": `always-multi-line`, "value-list-comma-space-after": null } })).not.toThrow()
 		expect(() => defineStylistic({ rules: { "value-list-comma-newline-after": `always-multi-line`, "value-list-comma-space-after": `always-single-line` } })).not.toThrow()
+	})
+
+	// #743
+	it(`refuse a contradicting pair in the editor, typing each of the two settings with the message naming the other, which the run refuses too`, () => {
+		// @ts-expect-error the space twin asks for a space where the break rule asks for a break
+		expect(() => defineStylistic({ rules: { "selector-list-comma-newline-after": `always`, "selector-list-comma-space-after": `always` } })).toThrow()
+		// @ts-expect-error the empty line the first asks for is one the second forbids
+		expect(() => defineStylistic({ rules: { "block-closing-brace-empty-line-before": `always-multi-line`, "max-empty-lines": 0 } })).toThrow()
+		// @ts-expect-error the whitespace the second asks for in front of the solidus stands behind a call
+		expect(() => defineStylistic({ rules: { "function-whitespace-after": `never`, "value-slash-space-before": [`always`, { ignoreFunctions: [`f`] }] } })).toThrow()
+		expect(() => defineStylistic({ rules: { "selector-list-comma-newline-after": `always-multi-line`, "selector-list-comma-space-after": `always-single-line`, "block-closing-brace-empty-line-before": `always-multi-line`, "max-empty-lines": 1, "function-whitespace-after": `always`, "value-slash-space-before": `always` } })).not.toThrow()
 	})
 })

@@ -4,7 +4,7 @@ import rules from "../rules/index.ts"
 import { namespaces } from "../syntaxes/index.ts"
 import { addNamespace } from "../utils/addNamespace/index.ts"
 import { configurationError } from "../utils/configurationError/index.ts"
-import { configuredSetting, contradictionsAmong, contradictionsError } from "../utils/contradictingSettings/index.ts"
+import { configuredSetting, type ContradictionOf, contradictionsAmong, contradictionsError } from "../utils/contradictingSettings/index.ts"
 import type { RuleFactory } from "../utils/defineRule/index.ts"
 
 /** The registry, whose type carries every rule's name and options. */
@@ -50,8 +50,8 @@ type ExactSetting<K extends RuleName, Given> = Given extends readonly [infer P, 
 	? readonly [P, S & Record<Exclude<keyof S, keyof SecondaryOfRule<K>>, never>]
 	: Given
 
-/** The rules as given, each checked against the rule it names. */
-type Exact<R> = { [K in keyof R]: K extends RuleName ? ExactSetting<K, R[K]> : never }
+/** The rules as given, each checked against the rule it names, and a setting contradicting another of the call typed with the message naming that other, so that the editor refuses it ([#743](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/743)). */
+type Exact<R> = { [K in keyof R]: K extends RuleName ? (K extends string & keyof R ? ([ContradictionOf<K, R>] extends [never] ? ExactSetting<K, R[K]> : R[K] & ContradictionOf<K, R>) : never) : never }
 
 /** The name an entry comes back under. */
 type Prefixed<S extends SyntaxName | undefined, K extends string> = S extends Namespace ? `@stylistic/${S}/${K}` : `@stylistic/${K}`
@@ -164,7 +164,7 @@ function namespaceOf (syntax: SyntaxName | undefined): string | undefined {
 }
 
 /**
- * Names the rules for a JavaScript configuration: `{ "@stylistic/scss/color-hex-case": "lower" }` for `{ syntax: "scss", rules: { "color-hex-case": "lower" } }`, typed off the rules themselves ([#624](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/624)). A name or a syntax the plugin does not know stops the run with a configuration error, and so do two settings of the call that contradict each other ([#743](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/743)); what an option holds is the rule's to check at its turn.
+ * Names the rules for a JavaScript configuration: `{ "@stylistic/scss/color-hex-case": "lower" }` for `{ syntax: "scss", rules: { "color-hex-case": "lower" } }`, typed off the rules themselves ([#624](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/624)). A name or a syntax the plugin does not know stops the run with a configuration error, and so do two settings of the call that contradict each other, which the types refuse in the editor already ([#743](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/743)); what an option holds is the rule's to check at its turn.
  * @param options - The syntax and the rules.
  * @param options.syntax - `scss`, `less` or `styled`; `css`, or nothing, for the core.
  * @param options.rules - The settings by short name, as `rules` takes them.

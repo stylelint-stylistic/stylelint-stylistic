@@ -56,21 +56,21 @@ const TWIN_OPTIONS: Record<string, string[]> = {
 }
 
 /** The break rules whose run stands outside the text its lines are counted of — in front of a block, behind one, in front of a value — so a break written there leaves a single-line construct single-line. */
-const NEWLINE_RULES_OUTSIDE_THE_COUNTED_TEXT = new Set([`block-opening-brace-newline-before`, `block-closing-brace-newline-after`, `declaration-colon-newline-after`])
+const NEWLINE_RULES_OUTSIDE_THE_COUNTED_TEXT = [`block-opening-brace-newline-before`, `block-closing-brace-newline-after`, `declaration-colon-newline-after`] as const
 
 /** The rule asking for an empty line in front of a closing brace, and what no such line satisfies. */
 const EMPTY_LINE_RULE = `block-closing-brace-empty-line-before`
 const EMPTY_LINE_OPTION = `always-multi-line`
-const EMPTY_LINE_REFUSERS: Record<string, unknown[]> = {
+const EMPTY_LINE_REFUSERS = {
 	"block-closing-brace-newline-before": [`never-multi-line`],
 	"block-closing-brace-space-before": [`always`, `never`, `always-multi-line`, `never-multi-line`],
 	"max-empty-lines": [0],
-}
+} as const
 
 /** The rule forbidding whitespace behind a call's closing parenthesis, and the rules asking for some in front of what stands there. */
 const FUNCTION_WHITESPACE_RULE = `function-whitespace-after`
 const FUNCTION_WHITESPACE_OPTION = `never`
-const RULES_BEHIND_A_FUNCTION = new Set([`declaration-block-semicolon-newline-before`, `declaration-block-semicolon-space-before`, `function-comma-newline-before`, `function-comma-space-before`, `function-parentheses-newline-inside`, `function-parentheses-space-inside`, `value-list-comma-newline-before`, `value-list-comma-space-before`, `value-slash-newline-before`, `value-slash-space-before`])
+const RULES_BEHIND_A_FUNCTION = [`declaration-block-semicolon-newline-before`, `declaration-block-semicolon-space-before`, `function-comma-newline-before`, `function-comma-space-before`, `function-parentheses-newline-inside`, `function-parentheses-space-inside`, `value-list-comma-newline-before`, `value-list-comma-space-before`, `value-slash-newline-before`, `value-slash-space-before`] as const
 
 /** A rule of the plugin as a configuration sets it: the name it is configured under, the rule behind the namespace, and its primary option. */
 export type ConfiguredSetting = {
@@ -130,7 +130,7 @@ function twinsContradict (newlineRule: string, newlineOption: string, spaceOptio
 	let spaceLines = linesOf(spaceOption)
 
 	if (newlineLines !== `any` && spaceLines !== `any`) return newlineLines === spaceLines
-	if (newlineLines === `any` && spaceLines === `single`) return NEWLINE_RULES_OUTSIDE_THE_COUNTED_TEXT.has(newlineRule)
+	if (newlineLines === `any` && spaceLines === `single`) return (NEWLINE_RULES_OUTSIDE_THE_COUNTED_TEXT as readonly string[]).includes(newlineRule)
 
 	return true
 }
@@ -205,9 +205,9 @@ function areContradictingTwins (newline: ConfiguredSetting, space: ConfiguredSet
  * @returns True where they do.
  */
 function leaveNoRoom (asker: ConfiguredSetting, refuser: ConfiguredSetting): boolean {
-	if (asker.shortName === EMPTY_LINE_RULE && asker.primary === EMPTY_LINE_OPTION) return Boolean(EMPTY_LINE_REFUSERS[refuser.shortName]?.includes(refuser.primary))
+	if (asker.shortName === EMPTY_LINE_RULE && asker.primary === EMPTY_LINE_OPTION) return Boolean((EMPTY_LINE_REFUSERS as Record<string, readonly unknown[] | undefined>)[refuser.shortName]?.includes(refuser.primary))
 
-	if (asker.shortName === FUNCTION_WHITESPACE_RULE && asker.primary === FUNCTION_WHITESPACE_OPTION) return RULES_BEHIND_A_FUNCTION.has(refuser.shortName) && typeof refuser.primary === `string` && refuser.primary.startsWith(`always`)
+	if (asker.shortName === FUNCTION_WHITESPACE_RULE && asker.primary === FUNCTION_WHITESPACE_OPTION) return (RULES_BEHIND_A_FUNCTION as readonly string[]).includes(refuser.shortName) && typeof refuser.primary === `string` && refuser.primary.startsWith(`always`)
 
 	return false
 }
@@ -308,3 +308,53 @@ export function refuseContradictingSettings (root: Root, result: PostcssResult):
 
 	read.add(key)
 }
+
+/** The lines a whitespace option speaks of, as {@link linesOf} reads them. */
+type LinesOfOption<O extends string> = O extends `${string}-single-line` ? `single` : O extends `${string}-multi-line` ? `multi` : `any`
+
+/** Whether a whitespace option takes whitespace away, as {@link forbids} reads it. */
+type ForbidsOption<O extends string> = O extends `never${string}` ? true : false
+
+/** Whether a break rule under one option and its space twin under another contradict each other, as {@link twinsContradict} answers. */
+type TwinsContradict<NewlineRule extends string, N extends string, S extends string> = [ForbidsOption<N>, ForbidsOption<S>] extends [true, true] ? false
+	: LinesOfOption<N> extends `any` ? (LinesOfOption<S> extends `single` ? (NewlineRule extends typeof NEWLINE_RULES_OUTSIDE_THE_COUNTED_TEXT[number] ? true : false) : true)
+		: LinesOfOption<S> extends `any` ? true
+			: LinesOfOption<N> extends LinesOfOption<S> ? true : false
+
+/** The primary option a configured value holds: a keyword, or the first item of the array a configuration lists a rule's options in. */
+type PrimaryOfValue<V> = V extends readonly [infer P, ...unknown[]] ? P : V
+
+/** The message a contradicting setting is typed with, so that the editor names the other setting. */
+type ContradictionMessage<Other extends string, Option> = { contradicts: `"${Other}": ${Option extends string ? `"${Option}"` : Option extends number ? `${Option}` : `…`}` }
+
+/** The setting of the space twin that contradicts a break rule's, or `never`. */
+type ContradictingTwin<K extends string & keyof R, R> = K extends `${infer Head}-newline-${infer Tail}`
+	? `${Head}-space-${Tail}` extends infer Twin extends string & keyof R
+		? PrimaryOfValue<R[K]> extends infer N extends string ? PrimaryOfValue<R[Twin]> extends infer S extends string ? TwinsContradict<K, N, S> extends true ? ContradictionMessage<Twin, S> : never : never : never
+		: never
+	: K extends `${infer Head}-space-${infer Tail}`
+		? `${Head}-newline-${Tail}` extends infer Twin extends string & keyof R
+			? PrimaryOfValue<R[K]> extends infer S extends string ? PrimaryOfValue<R[Twin]> extends infer N extends string ? TwinsContradict<Twin, N, S> extends true ? ContradictionMessage<Twin, N> : never : never : never
+			: never
+		: never
+
+/** The setting leaving no room for the empty line in front of a closing brace that another asks for, or the reverse, or `never`. */
+type ContradictingEmptyLine<K extends string & keyof R, R> = K extends typeof EMPTY_LINE_RULE
+	? PrimaryOfValue<R[K]> extends typeof EMPTY_LINE_OPTION
+		? { [Refuser in keyof typeof EMPTY_LINE_REFUSERS & keyof R]: PrimaryOfValue<R[Refuser]> extends typeof EMPTY_LINE_REFUSERS[Refuser][number] ? ContradictionMessage<Refuser, PrimaryOfValue<R[Refuser]>> : never }[keyof typeof EMPTY_LINE_REFUSERS & keyof R]
+		: never
+	: K extends keyof typeof EMPTY_LINE_REFUSERS
+		? typeof EMPTY_LINE_RULE extends keyof R ? PrimaryOfValue<R[typeof EMPTY_LINE_RULE]> extends typeof EMPTY_LINE_OPTION ? PrimaryOfValue<R[K]> extends typeof EMPTY_LINE_REFUSERS[K][number] ? ContradictionMessage<typeof EMPTY_LINE_RULE, typeof EMPTY_LINE_OPTION> : never : never : never
+		: never
+
+/** The setting asking for whitespace behind a call that another forbids, or the reverse, or `never`. */
+type ContradictingFunctionWhitespace<K extends string & keyof R, R> = K extends typeof FUNCTION_WHITESPACE_RULE
+	? PrimaryOfValue<R[K]> extends typeof FUNCTION_WHITESPACE_OPTION
+		? { [Asker in typeof RULES_BEHIND_A_FUNCTION[number] & keyof R]: PrimaryOfValue<R[Asker]> extends `always${string}` ? ContradictionMessage<Asker, PrimaryOfValue<R[Asker]>> : never }[typeof RULES_BEHIND_A_FUNCTION[number] & keyof R]
+		: never
+	: K extends typeof RULES_BEHIND_A_FUNCTION[number]
+		? typeof FUNCTION_WHITESPACE_RULE extends keyof R ? PrimaryOfValue<R[typeof FUNCTION_WHITESPACE_RULE]> extends typeof FUNCTION_WHITESPACE_OPTION ? PrimaryOfValue<R[K]> extends `always${string}` ? ContradictionMessage<typeof FUNCTION_WHITESPACE_RULE, typeof FUNCTION_WHITESPACE_OPTION> : never : never : never
+		: never
+
+/** What the setting of rule `K` in a configuration `R` by short names contradicts, as {@link contradictionsAmong} finds it at the run: the message naming the other setting, or `never` where nothing does. */
+export type ContradictionOf<K extends string & keyof R, R> = ContradictingTwin<K, R> | ContradictingEmptyLine<K, R> | ContradictingFunctionWhitespace<K, R>

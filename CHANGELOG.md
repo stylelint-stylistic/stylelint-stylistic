@@ -47,7 +47,7 @@ The plugin now reads a line break the way PostCSS and Stylelint do: a line 
 
 #### Contradicting settings
 
-The plugin now refuses a configuration holding two settings that [contradict each other](https://stylelint-stylistic.github.io/user-guide/contradicting-settings), such as `value-list-comma-newline-after: "always-multi-line"` beside `value-list-comma-space-after: "always"`: the run stops with a configuration error naming both settings and what to change (see [#743](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/743)). Where your configuration holds such a pair, change one of the two as the message says, or turn one of them off.
+The plugin now refuses a configuration holding two settings that [contradict each other](https://stylelint-stylistic.github.io/user-guide/contradicting-settings), such as `value-list-comma-newline-after: "always-multi-line"` beside `value-list-comma-space-after: "always"`: the run stops with a configuration error naming both settings and what to change (see [#743](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/743)). Where your configuration holds such a pair, change one of the two as the message says, or turn one of them off. The types of [`defineStylistic`](https://stylelint-stylistic.github.io/user-guide/typed-configuration) refuse such a pair in the editor.
 
 ### Added
 
