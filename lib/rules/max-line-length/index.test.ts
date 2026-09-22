@@ -966,6 +966,46 @@ testRule({
 			column: 29,
 			message: messages.expected(20),
 		},
+		{
+			// See #657
+			description: `the six letters of an import standing in the value of a declaration, where no at-rule opens, so the string behind them is the value's and counts: 28`,
+			code: `a { b: @import "aaaaaaaa"; }`,
+			line: 1,
+			column: 28,
+			message: messages.expected(20),
+		},
+		{
+			// See #657
+			description: `the same six letters glued to the string, which the pattern of the old reading asked a space in front of and the walk does not: 27`,
+			code: `a { b: @import"aaaaaaaa"; }`,
+			line: 1,
+			column: 27,
+			message: messages.expected(20),
+		},
+	],
+})
+
+// See #657
+// The six letters of an import name an at-rule where a statement opens and nowhere else; the maximum stands between what the old reading measured of these lines and their length.
+testRule({
+	ruleName,
+	config: [30],
+
+	accept: [
+		{
+			description: `an import behind a closing brace on the same line, which opens an at-rule there, so its address comes off the line: 35 - 10 = 25, where the whole line is over the maximum`,
+			code: `a { b: 1; } @import "aaaaaaaa"; c{}`,
+		},
+	],
+
+	reject: [
+		{
+			description: `the six letters standing in a selector, inside the parentheses of a pseudo-class, where no at-rule opens, so the string behind them is the selector's and counts: 36`,
+			code: `a:not(@import"aaaaaaaa") { b: 1px; }`,
+			line: 1,
+			column: 36,
+			message: messages.expected(30),
+		},
 	],
 })
 
