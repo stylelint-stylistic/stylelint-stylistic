@@ -3,6 +3,7 @@ import stylelint, { type PostcssResult, type Rule, type RuleMessages, type RuleM
 
 import { namespaces, type Syntax } from "../../syntaxes/index.ts"
 import { addNamespace } from "../addNamespace/index.ts"
+import { copyReadingTheRoot } from "../copyReadingTheRoot/index.ts"
 import { deferCheck, deferFinalCheck, deferHeadCheck, defersToRunEnd, flushDeferredChecks, lastConfiguredPluginRule, linenessRank, registerPluginRule } from "../defersToRunEnd/index.ts"
 import type { RuleCheck } from "../ruleCheck/index.ts"
 
@@ -75,6 +76,9 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 			 */
 			function guarded (root: Root, result: PostcssResult): void {
 				if (syntax.accepts(root, result)) {
+					// A root is read by one copy of a rule, the other copies of it yielding without a word
+					if (copyReadingTheRoot(shortName, root, result) !== ruleName) return
+
 					syntax.restore(root, result)
 					check(root, result)
 

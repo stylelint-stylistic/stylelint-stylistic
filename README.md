@@ -76,7 +76,7 @@ The rules above read plain CSS. A stylesheet written in SCSS (`postcss-scss`)
 }
 ```
 
-What each namespace answers differently is written in its own README: [`scss`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/scss/README.md), [`less`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/less/README.md), [`styled`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/styled/README.md). Configure one family of names per file: a namespace reads plain CSS too, so listing the core and a namespace over the same files would run every rule twice.
+What each namespace answers differently is written in its own README: [`scss`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/scss/README.md), [`less`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/less/README.md), [`styled`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/styled/README.md). A rule listed under two of these names over one stylesheet is read once, by the copy of the stylesheet's own family: the core's over plain CSS, the namespace's over its syntax, each block of an HTML page by its own; the other copies yield without a word. Where the family's copy is not configured, the first listed copy whose namespace accepts the stylesheet reads it.
 
 ## Typed configuration
 

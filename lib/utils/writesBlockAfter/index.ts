@@ -77,7 +77,7 @@ function writingCopies (node: Node, result: PostcssResult, rule: NeighbourRuleSe
  *
  * It writes only where every one of the three that speaks of the block as the write leaves it accepts a spelling it accepts too; otherwise the run would be taken straight back out, and the two rules would take it in turns for as long as `--fix` ran. Sharing a spelling rather than accepting the written one is what lets `block-closing-brace-empty-line-before` double the break this rule writes ([#416](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/416)).
  *
- * Run order is not asked: one rule asks and the three write whatever the configuration lists, so no order changes the answer. Every copy of the three under a namespace reading the root writes the same run, so each is asked ([#715](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/715)).
+ * Run order is not asked: one rule asks and the three write whatever the configuration lists, so no order changes the answer. The copy of each of the three reading the root is asked ([#715](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/715)).
  * @param node - A node of the root the rules read.
  * @param result - The Stylelint result, which holds the configuration.
  * @param primary - The asking rule's primary option.

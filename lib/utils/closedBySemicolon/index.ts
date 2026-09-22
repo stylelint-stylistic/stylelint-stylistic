@@ -131,23 +131,16 @@ function writtenBy (copy: NeighbourCopy, decl: Declaration, result: PostcssResul
 }
 
 /**
- * Reads what the last copy of `declaration-block-trailing-semicolon` to write behind a declaration leaves there, and the syntax that copy reads through.
- *
- * Every copy under a namespace reading the root writes the same file, so the one writing last in run order decides whether a semicolon stands ([#715](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/715)); a later copy whose fix cannot write leaves an earlier one's write standing.
+ * Reads what the copy of `declaration-block-trailing-semicolon` reading the root leaves behind a declaration, and the syntax that copy reads through ([#715](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/715)).
  * @param decl - The declaration.
  * @param result - The Stylelint result, which holds the configuration.
  * @returns The semicolon and the syntax, or nothing where no copy writes.
  */
 function lastWrite (decl: Declaration, result: PostcssResult): { semicolon: boolean, syntax: Syntax } | undefined {
-	let last: { semicolon: boolean, syntax: Syntax } | undefined
+	let [copy] = neighbourCopies(decl, result, TRAILING_SEMICOLON_RULE)
+	let semicolon = copy && writtenBy(copy, decl, result)
 
-	for (let copy of neighbourCopies(decl, result, TRAILING_SEMICOLON_RULE)) {
-		let semicolon = writtenBy(copy, decl, result)
-
-		if (semicolon !== undefined) last = { semicolon, syntax: copy.syntax }
-	}
-
-	return last
+	return copy && semicolon !== undefined ? { semicolon, syntax: copy.syntax } : undefined
 }
 
 /**
@@ -175,7 +168,7 @@ export function closedBySemicolon (decl: Declaration, result: PostcssResult): bo
 /**
  * Reads a declaration's printed value as `declaration-block-trailing-semicolon` will leave it.
  *
- * Its `never` takes the whitespace in front of the semicolon too ([#479](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/479)) where no flag or inline comment closes the declaration. The copies write in run order, so a `never` copy finding a semicolon takes the run even where a later `always` copy writes the semicolon back ([#715](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/715)).
+ * Its `never` takes the whitespace in front of the semicolon too ([#479](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/479)) where no flag or inline comment closes the declaration. A `never` copy finding a semicolon takes the run ([#715](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/715)).
  * @param syntax - The asking rule's syntax, which reads the value.
  * @param decl - The declaration.
  * @param result - The Stylelint result, which holds the configuration.
@@ -186,14 +179,9 @@ export function valueAsClosed (syntax: Syntax, decl: Declaration, result: Postcs
 
 	if (decl.important) return value
 
-	let semicolon = Boolean(decl.parent?.raws.semicolon)
+	let [copy] = neighbourCopies(decl, result, TRAILING_SEMICOLON_RULE)
 
-	for (let copy of neighbourCopies(decl, result, TRAILING_SEMICOLON_RULE)) {
-		let written = writtenBy(copy, decl, result)
-
-		if (written === false && semicolon && !copy.syntax.writesIntoInlineComment(decl, result)) return value.replace(TRAILING_CSS_WHITESPACE, ``)
-		if (written !== undefined) semicolon = written
-	}
+	if (copy && decl.parent?.raws.semicolon && writtenBy(copy, decl, result) === false && !copy.syntax.writesIntoInlineComment(decl, result)) return value.replace(TRAILING_CSS_WHITESPACE, ``)
 
 	return value
 }

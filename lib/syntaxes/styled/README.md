@@ -17,6 +17,6 @@ The rules of the core under `@stylistic/styled/<rule>`, for stylesheets emb
 }
 ```
 
-Every rule of the core is here, with the same options and the same documentation, and plain CSS is read exactly as the core reads it. One rule answers a styled template differently:
+Every rule of the core is here, with the same options and the same documentation, and plain CSS is read exactly as the core reads it; where the core's copy of a rule is configured as well, a plain stylesheet is read by that copy and this namespace's yields without a word, its options unchecked there. One rule answers a styled template differently:
 
 - [`indentation`](../../rules/indentation/README.md) counts its levels from the line the template's expression opens on rather than from the start of the line, and a template broken over lines holds its content one level deeper — save for a first node standing on the line of the backtick itself, which hangs from neither and is asked for no indentation at all; a declaration whose value embeds an expression of the host language (`${…}`) is not checked, since its lines are the host's rather than the stylesheet's.

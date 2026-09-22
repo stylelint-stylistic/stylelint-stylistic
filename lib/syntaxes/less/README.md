@@ -17,7 +17,7 @@ The rules of the core under `@stylistic/less/<rule>`, for stylesheets writt
 }
 ```
 
-Every rule of the core is here, with the same options and the same documentation, and plain CSS is read exactly as the core reads it — a plain block of an HTML page beside a `lang="less"` one included, so a mixed page is configured with these rules alone. What the namespace reads beyond the core:
+Every rule of the core is here, with the same options and the same documentation, and plain CSS is read exactly as the core reads it — a plain block of an HTML page beside a `lang="less"` one included, so a mixed page is configured with these rules alone. Where the core's copy of a rule is configured as well, a plain block is read by that copy and this namespace's yields without a word, its options unchecked there. What the namespace reads beyond the core:
 
 - the constructs `postcss-less` hands over — mixins and their calls, variables (`@foo: bar;`), detached rulesets, `:extend`, CSS guards (`when`), maps — are passed over the way the core passes over what is not standard CSS, rather than misread as code;
 - an inline comment (`//`) is a comment of the text a rule reads, and every fix keeps out of one;

@@ -1,7 +1,3 @@
-import stylelint from "stylelint"
-import { describe, expect, it } from "vitest"
-
-import plugins from "../../index.ts"
 import { messages as declarationBlockSemicolonNewlineBeforeMessages } from "../declaration-block-semicolon-newline-before/index.ts"
 import { messages as declarationBlockSemicolonSpaceBeforeMessages } from "../declaration-block-semicolon-space-before/index.ts"
 import { messages as trailingSemicolonMessages } from "../declaration-block-trailing-semicolon/index.ts"
@@ -565,25 +561,6 @@ testRule({
 			],
 		},
 	],
-})
-
-// See #715. The two copies of the neighbour contradict each other, so the fixed file keeps a warning the library would read as swallowed; convergence is asserted through the linter instead
-describe(`a value that is nothing, beside the neighbour listed under two names with opposite options`, () => {
-	it(`gets the space in front of the brace as the one behind the colon, and no further space on a second run, where the copy taking the semicolon away is listed last`, async () => {
-		let rules = { "@stylistic/declaration-block-trailing-semicolon": `always`, "@stylistic/scss/declaration-block-trailing-semicolon": `never`, [ruleName]: `always` }
-		let first = await stylelint.lint({ code: `a { color:; }`, config: { plugins, rules }, fix: true })
-		let second = await stylelint.lint({ code: first.code ?? ``, config: { plugins, rules }, fix: true })
-
-		expect([first.code, second.code]).toEqual([`a { color: }`, `a { color: }`])
-	})
-
-	it(`settles where the copy taking the semicolon away runs between this rule and the copy writing it back`, async () => {
-		let rules = { [ruleName]: `always`, "@stylistic/declaration-block-trailing-semicolon": `never`, "@stylistic/scss/declaration-block-trailing-semicolon": `always` }
-		let first = await stylelint.lint({ code: `a { color:; }`, config: { plugins, rules }, fix: true })
-		let second = await stylelint.lint({ code: first.code ?? ``, config: { plugins, rules }, fix: true })
-
-		expect([first.code, second.code]).toEqual([`a { color: ; }`, `a { color: ; }`])
-	})
 })
 
 testRule({
