@@ -7,8 +7,8 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isInlineStyleAttribute } from "../../utils/isInlineStyleAttribute/index.ts"
 import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
-import { rawNodeString } from "../../utils/rawNodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
@@ -65,8 +65,9 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: Prim
 
 			let problemIndex = nodeString(decl, result).length + 1
 
+			// The run behind the semicolon is the next node's leading run: the raw where the parser filed one, and otherwise the run PostCSS prints in front of a node a rule of another plugin built without one ([#694](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/694))
 			checker.after({
-				source: rawNodeString(nextDecl, result),
+				source: runInFrontOf(nextDecl) + nodeString(nextDecl, result),
 				index: -1,
 				lineCheckStr: blockString(parentRule, result),
 				err: (m) => {
