@@ -78,7 +78,7 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			description: `an inline comment ending the value, which a space would take the semicolon into, so the code is left alone and the warning stands`,
+			description: `an inline comment ending the value, which moves behind the semicolon with its run, so the space the neighbour asks for lands in front of the semicolon`,
 			code: `
 				a {
 					b: c // x
@@ -86,7 +86,7 @@ testRule({
 			`,
 			fixed: `
 				a {
-					b: c // x
+					b: c ; // x
 				}
 			`,
 			line: 2,
