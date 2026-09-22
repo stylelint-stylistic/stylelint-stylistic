@@ -878,3 +878,223 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`tab`],
+	customSyntax: `postcss-less`,
+
+	accept: [
+		{
+			// See #593
+			description: `an inline comment on its own line behind a mixin call carrying no semicolon, which the parser keeps in the call's params and Less reads to the end of its line, standing at the level of the block it is a line of`,
+			code: `
+				a {
+					.m()
+					// c
+				}
+			`,
+		},
+		{
+			description: `the same comment holding a semicolon, on which the parser closes the call`,
+			code: `
+				a {
+					.m()
+					// c;
+				}
+			`,
+		},
+		{
+			description: `such a comment under one on the call's own line, which opens no line to measure, so the line under it is the block's`,
+			code: `
+				a {
+					.m() // c
+					// d
+				}
+			`,
+		},
+		{
+			description: `such a comment behind a call whose params span lines, each of which is the call's`,
+			code: `
+				a {
+					.m(
+						1
+					)
+					// c
+				}
+			`,
+		},
+		{
+			description: `such a comment behind a call written without parentheses, whose params the parser makes of the comment alone, the break in front of them filed behind the name`,
+			code: `
+				a {
+					.m
+					// c
+				}
+			`,
+		},
+		{
+			description: `an inline comment between a query's params and its opening brace, a line of the params rather than of the block, as it is where the parser files it in front of the brace`,
+			code: `
+				@media (min-width: 1px)
+					// c
+				{
+					a { color: pink; }
+				}
+			`,
+		},
+	],
+
+	reject: [
+		{
+			// See #593
+			description: `an inline comment on its own line behind a mixin call carrying no semicolon, indented a level past the block it is a line of`,
+			code: `
+				a {
+					.m()
+						// c
+				}
+			`,
+			fixed: `
+				a {
+					.m()
+					// c
+				}
+			`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `two such comments, each a line of the block`,
+			code: `
+				a {
+					.m()
+						// c
+						// d
+				}
+			`,
+			fixed: `
+				a {
+					.m()
+					// c
+					// d
+				}
+			`,
+			warnings: [
+				{
+					line: 3,
+					column: 3,
+					message: messages.expected(`1 tab`),
+				},
+				{
+					line: 4,
+					column: 3,
+					message: messages.expected(`1 tab`),
+				},
+			],
+		},
+		{
+			description: `the same comment written with a Windows line break`,
+			code: `a {\r\n\t.m()\r\n\t\t// c\r\n}\r\n`,
+			fixed: `a {\r\n\t.m()\r\n\t// c\r\n}\r\n`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `such a comment behind a call whose params span lines, the comment's line the block's and the params' line the call's, so that both fixes land in the params`,
+			code: `
+				a {
+					.m(
+					1
+					)
+						// c
+				}
+			`,
+			fixed: `
+				a {
+					.m(
+						1
+					)
+					// c
+				}
+			`,
+			warnings: [
+				{
+					line: 5,
+					column: 3,
+					message: messages.expected(`1 tab`),
+				},
+				{
+					line: 3,
+					column: 2,
+					message: messages.expected(`2 tabs`),
+				},
+			],
+		},
+		{
+			description: `such a comment behind a call written without parentheses, the fix written into the break the parser filed behind the name`,
+			code: `
+				a {
+					.m
+						// c
+				}
+			`,
+			fixed: `
+				a {
+					.m
+					// c
+				}
+			`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			description: `such a comment behind a detached ruleset call, a line of the block as behind a mixin call`,
+			code: `
+				a {
+					@r()
+						// c
+				}
+			`,
+			fixed: `
+				a {
+					@r()
+					// c
+				}
+			`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`tab`, { ignore: [`param`] }],
+	customSyntax: `postcss-less`,
+
+	reject: [
+		{
+			description: `an inline comment on its own line behind a mixin call carrying no semicolon, indented a level past the block it is a line of, which the option, being about params, has no say over`,
+			code: `
+				a {
+					.m()
+						// c
+				}
+			`,
+			fixed: `
+				a {
+					.m()
+					// c
+				}
+			`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+	],
+})
