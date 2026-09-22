@@ -185,18 +185,6 @@ testRule({
 		},
 		{
 			// See #349
-			description: `the whitespace between the opening parenthesis and a comma that opens the arguments, which is what this option replaces and not a place to write beside`,
-			code: `a { b: f( ,a); }`,
-			fixed: `
-				a { b: f(
-				,a); }
-			`,
-			line: 1,
-			column: 11,
-			message: messages.expectedBefore(),
-		},
-		{
-			// See #349
 			description: `the whitespace between two commas of the arguments, which is what this option replaces and not a place to write beside`,
 			code: `a { b: f(a, ,c); }`,
 			fixed: `
@@ -505,18 +493,6 @@ testRule({
 		},
 		{
 			// See #349
-			description: `the break between the opening parenthesis and a comma that opens the arguments, which the parser hands to the function`,
-			code: `
-				a { b: f(
-				,a); }
-			`,
-			fixed: `a { b: f(,a); }`,
-			line: 2,
-			column: 1,
-			message: messages.rejectedBeforeMultiLine(),
-		},
-		{
-			// See #349
 			description: `a break between a divider that is no comma and the comma behind it, which the parser hands to that divider just the same`,
 			code: `
 				a { b: f(1 /
@@ -652,6 +628,31 @@ testRule({
 			line: 3,
 			column: 2,
 			message: messages.rejectedBeforeMultiLine(),
+		},
+	],
+})
+
+// The run between the opening parenthesis and a comma opening the arguments is the parentheses rules' to judge and write, as the run in front of a closing brace is the brace rules' and not the semicolon rules'; a comma rule judging it beside a parentheses rule asking the opposite left a warning no `--fix` could take away (1790021150, undoing that part of #349)
+testRule({
+	ruleName,
+	config: [`always`],
+
+	accept: [
+		{
+			description: `a comma opening the arguments with a space in front of it, whose run from the opening parenthesis is not this rule's`,
+			code: `a { b: f( ,a); }`,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never-multi-line`],
+
+	accept: [
+		{
+			description: `a comma opening the arguments of a multi-line call with a break in front of it`,
+			code: `a { b: f(\n,a); }`,
 		},
 	],
 })

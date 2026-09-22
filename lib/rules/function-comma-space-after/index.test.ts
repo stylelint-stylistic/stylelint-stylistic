@@ -251,15 +251,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #349
-			description: `a break behind a comma that closes the arguments, which is the whitespace this option replaces and not a place to write beside`,
-			code: `a { b: f(a,\n); }`,
-			fixed: `a { b: f(a, ); }`,
-			line: 1,
-			column: 11,
-			message: messages.expectedAfter(),
-		},
-		{
 			// See #508
 			description: `a comma in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and the comma its text holds is no comma of the arguments`,
 			code: `a { b: f(1,2) /*/ " */ "f(1,2)"; }`,
@@ -464,15 +455,6 @@ testRule({
 			message: messages.rejectedAfter(),
 		},
 		{
-			// See #349
-			description: `the whitespace between a comma that closes the arguments and the closing parenthesis, which the parser hands to the function`,
-			code: `a { b: f(a, ); }`,
-			fixed: `a { b: f(a,); }`,
-			line: 1,
-			column: 11,
-			message: messages.rejectedAfter(),
-		},
-		{
 			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads its parentheses
 			description: `a run between a comma and the name of a bare address holding a quotation mark nothing closes, which taking the run away would make the tokenizer read as a string`,
 			code: `a { b: f(1, url(a"b)); }`,
@@ -569,15 +551,6 @@ testRule({
 			column: 11,
 			message: messages.expectedAfterSingleLine(),
 		},
-		{
-			// See #349
-			description: `a run of tabs between a comma that closes the arguments and the closing parenthesis, which the parser hands to the function and this option replaces with one space`,
-			code: `a { b: f(a,\t\t); }`,
-			fixed: `a { b: f(a, ); }`,
-			line: 1,
-			column: 11,
-			message: messages.expectedAfterSingleLine(),
-		},
 	],
 })
 
@@ -660,15 +633,6 @@ testRule({
 			fixed: `a { transform: lightness(50%)\ncolor(rgb(0 ,0 ,0) ); }`,
 			line: 2,
 			column: 13,
-			message: messages.rejectedAfterSingleLine(),
-		},
-		{
-			// See #349
-			description: `the whitespace between a comma that closes the arguments and the closing parenthesis, which the parser hands to the function`,
-			code: `a { b: f(a, ); }`,
-			fixed: `a { b: f(a,); }`,
-			line: 1,
-			column: 11,
 			message: messages.rejectedAfterSingleLine(),
 		},
 	],
@@ -761,6 +725,86 @@ testRule({
 			line: 1,
 			column: 23,
 			message: messages.rejectedAfter(),
+		},
+	],
+})
+
+// The run between a comma closing the arguments and the closing parenthesis is the parentheses rules' to judge and write, as the run in front of a closing brace is the brace rules' and not the semicolon rules'; a comma rule judging it beside a parentheses rule asking the opposite left a warning no `--fix` could take away (1790021150, undoing that part of #349)
+testRule({
+	ruleName,
+	config: [`always`],
+
+	accept: [
+		{
+			description: `a comma closing the arguments with nothing behind it, and one with a break behind it, whose run to the closing parenthesis is not this rule's`,
+			code: `a { b: f(a,); c: f(a,\n); }`,
+		},
+		{
+			description: `the same comma with two spaces behind it, and the empty fallback of a custom property`,
+			code: `a { b: f(a,  ); c: var(--x,); }`,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never`],
+
+	accept: [
+		{
+			description: `a comma closing the arguments with a space behind it, which the run to the closing parenthesis holds, and one with a break`,
+			code: `a { b: f(a, ); c: f(a,\n); }`,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always-single-line`],
+
+	accept: [
+		{
+			description: `a comma closing the arguments of a single-line call with a run of tabs behind it`,
+			code: `a { b: f(a,\t\t); }`,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never-single-line`],
+
+	accept: [
+		{
+			description: `a comma closing the arguments of a single-line call with a space behind it`,
+			code: `a { b: f(a, ); }`,
+		},
+	],
+})
+
+// The pair that used to leave a warning standing whatever the order: the comma rule now leaves the run to the parentheses rule, which writes its space
+testRule({
+	ruleName,
+	config: [`never`],
+	extraRules: { "@stylistic/function-parentheses-space-inside": `always` },
+
+	reject: [
+		{
+			description: `the empty fallback of a custom property with no whitespace inside the parentheses, which the parentheses rule spaces on both sides while this rule says nothing of the comma closing the arguments`,
+			code: `a { b: var(--x,); }`,
+			fixed: `a { b: var( --x, ); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 12,
+					message: `Expected single space after "(" (@stylistic/function-parentheses-space-inside)`,
+				},
+				{
+					line: 1,
+					column: 15,
+					message: `Expected single space before ")" (@stylistic/function-parentheses-space-inside)`,
+				},
+			],
 		},
 	],
 })
