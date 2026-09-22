@@ -98,7 +98,7 @@ testRule({
 		},
 		{
 			// See #232
-			description: `an inline comment behind the value, which this syntax keeps inside it: the semicolon cannot leave the comment's line, so the code is left alone and the warning stands`,
+			description: `an inline comment behind the value, which this syntax keeps inside it: the semicolon closes the code in front of the comment, which moves behind it with its run`,
 			code: `
 				a {
 					color: pink // keep me
@@ -106,7 +106,7 @@ testRule({
 			`,
 			fixed: `
 				a {
-					color: pink // keep me
+					color: pink; // keep me
 				}
 			`,
 			line: 2,
@@ -115,7 +115,7 @@ testRule({
 		},
 		{
 			// See #232
-			description: `the same comment standing behind the flag, whose raw the guard reads along with the value`,
+			description: `the same comment standing behind the flag, which this syntax reads as a word of the value, so the semicolon closes the flag`,
 			code: `
 				a {
 					color: pink !important // keep me
@@ -123,11 +123,222 @@ testRule({
 			`,
 			fixed: `
 				a {
-					color: pink !important // keep me
+					color: pink !important; // keep me
 				}
 			`,
 			line: 2,
 			column: 34,
+			message: messages.expected,
+		},
+		{
+			// See #423
+			description: `an inline comment on its own line behind the value, which this syntax swallows into the value along with the break in front of it: the semicolon closes the value on its own line and the comment keeps its line`,
+			code: `
+				a {
+					color: pink
+					// c
+				}
+			`,
+			fixed: `
+				a {
+					color: pink;
+					// c
+				}
+			`,
+			line: 3,
+			column: 5,
+			message: messages.expected,
+		},
+		{
+			// See #423
+			description: `an extend at-rule with an inline comment behind its params, which Less refuses without the semicolon and compiles with it in front of the comment`,
+			code: `
+				a {
+					@extend .b // c
+				}
+			`,
+			fixed: `
+				a {
+					@extend .b; // c
+				}
+			`,
+			line: 2,
+			column: 16,
+			message: messages.expected,
+		},
+		{
+			// See #423
+			description: `the same at-rule with the comment on its own line, swallowed into the params with the break in front of it`,
+			code: `
+				a {
+					@extend .b
+					// c
+				}
+			`,
+			fixed: `
+				a {
+					@extend .b;
+					// c
+				}
+			`,
+			line: 3,
+			column: 5,
+			message: messages.expected,
+		},
+		{
+			description: `a mixin call with an inline comment behind it, kept in its params`,
+			code: `
+				a {
+					.m() // c
+				}
+			`,
+			fixed: `
+				a {
+					.m(); // c
+				}
+			`,
+			line: 2,
+			column: 10,
+			message: messages.expected,
+		},
+		{
+			description: `a mixin call written without parentheses and a comment on the line under it, which the parser makes the whole of the params, the break in front of them filed behind the name: the semicolon closes the name`,
+			code: `
+				a {
+					.m
+					// c
+				}
+			`,
+			fixed: `
+				a {
+					.m;
+					// c
+				}
+			`,
+			line: 3,
+			column: 5,
+			message: messages.expected,
+		},
+		{
+			description: `a variable with an inline comment behind its value, which the parser keeps in the params and prints from a second copy the write keeps in step`,
+			code: `
+				a {
+					@v: 1 // c
+				}
+			`,
+			fixed: `
+				a {
+					@v: 1; // c
+				}
+			`,
+			line: 2,
+			column: 11,
+			message: messages.expected,
+		},
+		{
+			description: `two inline comments behind the value, each on its line, which move together`,
+			code: `
+				a {
+					color: pink // c
+					// d
+				}
+			`,
+			fixed: `
+				a {
+					color: pink; // c
+					// d
+				}
+			`,
+			line: 3,
+			column: 5,
+			message: messages.expected,
+		},
+		{
+			description: `a block comment in front of the inline one, which stays with the code in front of the semicolon, where Less prints it`,
+			code: `
+				a {
+					color: pink /* b */ // c
+				}
+			`,
+			fixed: `
+				a {
+					color: pink /* b */; // c
+				}
+			`,
+			line: 2,
+			column: 25,
+			message: messages.expected,
+		},
+		{
+			description: `the run of spaces in front of the comment, which moves behind the semicolon with it`,
+			code: `
+				a {
+					color: pink   // c
+				}
+			`,
+			fixed: `
+				a {
+					color: pink;   // c
+				}
+			`,
+			line: 2,
+			column: 19,
+			message: messages.expected,
+		},
+		{
+			description: `the same comment behind a Windows line break, which closes it as a line feed does`,
+			code: `a {\r\n\tcolor: pink // c\r\n}\r\n`,
+			fixed: `a {\r\n\tcolor: pink; // c\r\n}\r\n`,
+			line: 2,
+			column: 17,
+			message: messages.expected,
+		},
+		{
+			description: `a block on one line whose value ends in an inline comment, which no break closes in front of the brace, so the semicolon has nowhere to stand and the code is left alone; Less refuses the file either way`,
+			code: `a { color: pink // c }`,
+			fixed: `a { color: pink // c }`,
+			line: 1,
+			column: 20,
+			message: messages.expected,
+		},
+		{
+			description: `a block comment behind the inline one on its line, which the parser files in front of the brace and Less reads as the inline comment's text: the run moves whole, the semicolon in front of both`,
+			code: `
+				a {
+					@extend .b // c /* d */
+				}
+			`,
+			fixed: `
+				a {
+					@extend .b; // c /* d */
+				}
+			`,
+			line: 2,
+			column: 24,
+			message: messages.expected,
+		},
+		{
+			description: `the same two comments behind a value, the block one a node of its own a space in front of, so no break closes the inline comment in front of it and the code is left alone`,
+			code: `
+				a {
+					color: pink // c /* d */
+				}
+			`,
+			fixed: `
+				a {
+					color: pink // c /* d */
+				}
+			`,
+			line: 2,
+			column: 17,
+			message: messages.expected,
+		},
+		{
+			description: `the same comment closed by a bare carriage return, which Less reads as a line feed and this syntax does not, so the code is left alone`,
+			code: `a {\n\tcolor: pink // c\r}\n`,
+			fixed: `a {\n\tcolor: pink // c\r}\n`,
+			line: 2,
+			column: 17,
 			message: messages.expected,
 		},
 		{
@@ -149,7 +360,7 @@ testRule({
 		},
 		{
 			// See #232
-			description: `a bodiless at-rule whose parameters this syntax keeps the comment inside, rather than the raw standing where the closing brace would be`,
+			description: `a bodiless at-rule whose parameters this syntax keeps the comment inside, so the semicolon closes the parameters in front of it`,
 			code: `
 				a {
 					@include x // keep me
@@ -157,7 +368,7 @@ testRule({
 			`,
 			fixed: `
 				a {
-					@include x // keep me
+					@include x; // keep me
 				}
 			`,
 			line: 2,

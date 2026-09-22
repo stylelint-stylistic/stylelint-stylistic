@@ -146,7 +146,7 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			description: `inline comment: the semicolon cannot leave its line, so the code is left alone and the warning stands`,
+			description: `an inline comment behind the params, which this syntax keeps in the raw in front of the brace: the semicolon closes the params in front of the comment, which moves behind it with its run`,
 			code: `
 				a {
 					@includes foo // keep me
@@ -154,11 +154,30 @@ testRule({
 			`,
 			fixed: `
 				a {
-					@includes foo // keep me
+					@includes foo; // keep me
 				}
 			`,
 			line: 2,
 			column: 25,
+			message: messages.expected,
+		},
+		{
+			// See #423
+			description: `the same comment on its own line, swallowed into that raw with the break in front of it, so the semicolon closes the params on their line`,
+			code: `
+				a {
+					@includes foo
+					// keep me
+				}
+			`,
+			fixed: `
+				a {
+					@includes foo;
+					// keep me
+				}
+			`,
+			line: 3,
+			column: 11,
 			message: messages.expected,
 		},
 		{
