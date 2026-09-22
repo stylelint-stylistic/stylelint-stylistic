@@ -507,6 +507,21 @@ describe(`findAddressSpans`, () => {
 		expect(findAddressSpans(`@import url("a.css")`)).toEqual([{ start: 12, end: 19 }])
 	})
 
+	it(`an import standing where a statement opens: at the start, behind a brace either way, behind a semicolon, and behind a comment or whitespace there (#657)`, () => {
+		expect(findAddressSpans(`@import "a.css"; @import "b.css"`)).toEqual([{ start: 8, end: 15 }, { start: 25, end: 32 }])
+		expect(findAddressSpans(`a{}@import "a.css"`)).toEqual([{ start: 11, end: 18 }])
+		expect(findAddressSpans(`@media x { @import "a.css" }`)).toEqual([{ start: 19, end: 26 }])
+		expect(findAddressSpans(`a { b: 1 } /* c */ @import "a.css"`)).toEqual([{ start: 27, end: 34 }])
+	})
+
+	it(`an import standing where no statement opens, in a value or a selector, which is a word there and names no address (#657)`, () => {
+		expect(findAddressSpans(`a { b: @import "a.css"; }`)).toEqual([])
+		expect(findAddressSpans(`a { b: @import"a.css"; }`)).toEqual([])
+		expect(findAddressSpans(`a:not(@import"a.css") { b: 1px; }`)).toEqual([])
+		expect(findAddressSpans(`a { b: "x" @import "a.css"; }`)).toEqual([])
+		expect(findAddressSpans(`a { b: url(x) @import "a.css"; }`)).toEqual([{ start: 11, end: 12 }])
+	})
+
 	it(`an import written inside a comment or a string, which names none`, () => {
 		expect(findAddressSpans(`/* @import "a.css" */`)).toEqual([])
 		expect(findAddressSpans(`"@import 'a.css'"`)).toEqual([])

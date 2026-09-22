@@ -11,13 +11,19 @@ import { readEscapedCharacter } from "../readEscapedCharacter/index.ts"
 import { readIdentifierCharacter } from "../readIdentifierCharacter/index.ts"
 import { skipString } from "../skipString/index.ts"
 
+/** The last character of code in front of an `@` that opens a statement, whitespace and comments aside: a brace either way, a semicolon, or nothing at the start of the text; behind anything else the six letters of an `@import` are a word of a value, a selector or another at-rule's params ([#657](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/657)). The closing brace of an interpolation counts as one too, which the walk cannot tell from a block's. */
+const OPENS_A_STATEMENT = new Set([``, `{`, `}`, `;`])
+
 /**
- * Skips the name of an `@import`, whose letters may be escapes as a `url(`'s are: `@\69 mport` and `@IMPORT` name the same at-rule, `@imports` another word. Nothing in front is asked about, since `@` is no identifier code point and ends whatever name stands there.
+ * Skips the name of an `@import`, whose letters may be escapes as a `url(`'s are: `@\69 mport` and `@IMPORT` name the same at-rule, `@imports` another word. The name is read where a statement can open, {@link OPENS_A_STATEMENT}, and is a word of the value, the selector or the params anywhere else ([#657](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/657)).
  * @param text - The text the name is read out of.
  * @param openIndex - The `@`.
+ * @param lastCode - The last character of code in front of it that was no whitespace, or nothing.
  * @returns Behind the name, or `openIndex`.
  */
-function skipImportName (text: string, openIndex: number): number {
+function skipImportName (text: string, openIndex: number, lastCode: string): number {
+	if (!OPENS_A_STATEMENT.has(lastCode)) return openIndex
+
 	let index = openIndex + 1
 
 	for (let letter of `import`) {
@@ -212,7 +218,7 @@ export type EscapeSpan = {
 /**
  * Walks a text once for its comments and addresses, each the other's exception: a protocol's `//` opens no comment, a `url(` inside a comment no address ([#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427)). A block comment's span holds its delimiters, a `//` comment's stops at the break.
  *
- * The address of an `@import` is the string standing behind the name, which only the walk can find: a pattern over the text cannot say where that string closes, nor whether the `@import` it matched is code rather than the text of a comment or of another string ([#552](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/552)). Whitespace and comments stand between the name and the string; anything else ends the wait.
+ * The address of an `@import` is the string standing behind the name, which only the walk can find: a pattern over the text cannot say where that string closes, nor whether the `@import` it matched is code rather than the text of a comment or of another string ([#552](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/552)). The name is read where a statement can open, {@link OPENS_A_STATEMENT}, and is a word of the value, the selector or the params anywhere else ([#657](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/657)). Whitespace and comments stand between the name and the string; anything else ends the wait.
  * @param text - The value, selector or params walked.
  * @param reading - What the syntax makes of a `//` comment ({@link inlineCommentReading}).
  * @returns The spans of both, and of the strings the walk stepped over.
@@ -227,6 +233,8 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 	let behindIdentifier = false
 	// Whether an `@import` name has been read and its address not yet
 	let awaitsImportAddress = false
+	// The last character of code stepped over that was no whitespace, or nothing, which says whether an `@` opens a statement
+	let lastCode = ``
 	// Where the step just taken opened, which says whether a `url` read next is a word of its own to the tokenizer
 	let previousStep = -1
 	// Where the url token the walk stands in ends, a backslash inside it covering the solidus of a `//`, as it does to Sass
@@ -257,6 +265,7 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 			}
 
 			awaitsImportAddress = false
+			lastCode = character
 		}
 		else if (character === `"` || character === `'`) {
 			let end = skipStringInUrlToken(text, index, urlTokenEnd)
@@ -268,6 +277,7 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 			index = end
 			behindIdentifier = false
 			awaitsImportAddress = false
+			lastCode = character
 		}
 		else if (character === `u` || character === `U`) {
 			// `\61 url(` and `url( a(b) \//c )` are one token to `postcss-scss`, which reads no comment inside it, and Sass reads `\/` there as an escape
@@ -287,13 +297,15 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 			}
 
 			awaitsImportAddress = false
+			lastCode = character
 		}
 		else if (character === `@`) {
-			let behindName = skipImportName(text, index)
+			let behindName = skipImportName(text, index, lastCode)
 
 			awaitsImportAddress = behindName !== index
 			index = awaitsImportAddress ? behindName : index + 1
 			behindIdentifier = false
+			lastCode = character
 		}
 		else if (character === `/` && next === `*`) {
 			let closeIndex = text.indexOf(`*/`, index + 2)
@@ -316,7 +328,10 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 			behindIdentifier = character === `}` || IDENTIFIER_CODE_POINT.test(character)
 			index += 1
 
-			if (!WHITESPACE_ONLY.test(character)) awaitsImportAddress = false
+			if (!WHITESPACE_ONLY.test(character)) {
+				awaitsImportAddress = false
+				lastCode = character
+			}
 		}
 
 		previousStep = step
