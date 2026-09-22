@@ -192,6 +192,9 @@ export function functionCommaSpaceChecker (opts: {
 			}
 
 			for (let comma of commaDataList) {
+				// The run between the opening parenthesis and a comma opening the arguments, and the one between a comma closing them and the closing parenthesis, is the parentheses rules' to judge and to write, as the run in front of a closing brace is the brace rules' and not the semicolon rules' (1790021150)
+				if (readsBehind ? comma.nodeIndex === functionNode.nodes.length - 1 : comma.nodeIndex === 0) continue
+
 				let readIndex = readIndexOf(comma)
 
 				opts.locationChecker({

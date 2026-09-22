@@ -211,15 +211,6 @@ testRule({
 		},
 		{
 			// See #349
-			description: `a break between the opening parenthesis and a comma that opens the arguments, which is the whitespace this option replaces and not a place to write beside`,
-			code: `a { b: f(\n,a); }`,
-			fixed: `a { b: f( ,a); }`,
-			line: 2,
-			column: 1,
-			message: messages.expectedBefore(),
-		},
-		{
-			// See #349
 			description: `a break between a divider that is no comma and the comma behind it, which is the whitespace this option replaces and not a place to write beside`,
 			code: `
 				a { b: f(1 /
@@ -394,15 +385,6 @@ testRule({
 		},
 		{
 			// See #349
-			description: `the whitespace between the opening parenthesis and a comma that opens the arguments, which the parser hands to the function`,
-			code: `a { b: f( ,a); }`,
-			fixed: `a { b: f(,a); }`,
-			line: 1,
-			column: 11,
-			message: messages.rejectedBefore(),
-		},
-		{
-			// See #349
 			description: `the whitespace between a divider that is no comma and the comma behind it, which the parser hands to that divider just the same`,
 			code: `a { b: f(1 / ,2); }`,
 			fixed: `a { b: f(1 /,2); }`,
@@ -518,15 +500,6 @@ testRule({
 		},
 		{
 			// See #349
-			description: `a run of tabs between the opening parenthesis and a comma that opens the arguments, which the parser hands to the function and this option replaces with one space`,
-			code: `a { b: f(\t\t,a); }`,
-			fixed: `a { b: f( ,a); }`,
-			line: 1,
-			column: 12,
-			message: messages.expectedBeforeSingleLine(),
-		},
-		{
-			// See #349
 			description: `a run of tabs between a divider that is no comma and the comma behind it, which this option replaces with one space`,
 			code: `a { b: f(1 /\t\t,2); }`,
 			fixed: `a { b: f(1 / ,2); }`,
@@ -617,15 +590,6 @@ testRule({
 			fixed: `a { b: f(a,,c); }`,
 			line: 1,
 			column: 13,
-			message: messages.rejectedBeforeSingleLine(),
-		},
-		{
-			// See #349
-			description: `the whitespace between the opening parenthesis and a comma that opens the arguments, which the parser hands to the function`,
-			code: `a { b: f( ,a); }`,
-			fixed: `a { b: f(,a); }`,
-			line: 1,
-			column: 11,
 			message: messages.rejectedBeforeSingleLine(),
 		},
 		{
@@ -727,6 +691,55 @@ testRule({
 			line: 1,
 			column: 24,
 			message: messages.rejectedBefore(),
+		},
+	],
+})
+
+// The run between the opening parenthesis and a comma opening the arguments is the parentheses rules' to judge and write, as the run in front of a closing brace is the brace rules' and not the semicolon rules'; a comma rule judging it beside a parentheses rule asking the opposite left a warning no `--fix` could take away (1790021150, undoing that part of #349)
+testRule({
+	ruleName,
+	config: [`always`],
+
+	accept: [
+		{
+			description: `a comma opening the arguments with nothing in front of it, and one with a break in front, whose run from the opening parenthesis is not this rule's`,
+			code: `a { b: f(,a); c: f(\n,a); }`,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never`],
+
+	accept: [
+		{
+			description: `a comma opening the arguments with a space in front of it, which the run from the opening parenthesis holds`,
+			code: `a { b: f( ,a); }`,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always-single-line`],
+
+	accept: [
+		{
+			description: `a comma opening the arguments of a single-line call with a run of tabs in front of it`,
+			code: `a { b: f(\t\t,a); }`,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never-single-line`],
+
+	accept: [
+		{
+			description: `a comma opening the arguments of a single-line call with a space in front of it`,
+			code: `a { b: f( ,a); }`,
 		},
 	],
 })

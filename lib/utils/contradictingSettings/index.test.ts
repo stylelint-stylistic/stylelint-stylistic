@@ -256,11 +256,11 @@ describe(`a configuration holding contradicting settings`, () => {
 		}
 	})
 
-	it(`passes two settings that meet over a delimiter at the edge of its container alone, and lets both report there`, async () => {
+	it(`passes two settings that meet over a delimiter at the edge of its container alone, where the comma rule leaves the run to the parentheses rule`, async () => {
 		let rules = { "@stylistic/function-comma-space-after": `never`, "@stylistic/function-parentheses-space-inside": `always` }
 		let { results } = await stylelint.lint({ code: `a { b: var( --x, ) }`, config: { plugins, rules } })
 
-		expect(results[0]?.warnings.map(({ rule }) => rule)).toEqual([`@stylistic/function-comma-space-after`])
+		expect(results[0]?.warnings).toEqual([])
 	})
 
 	it(`asks only the copy of each rule that reads the stylesheet, so two copies of one rule never meet, and a twin under another namespace meets the core's only where it reads the root`, async () => {

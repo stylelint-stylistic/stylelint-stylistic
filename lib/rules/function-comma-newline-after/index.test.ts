@@ -268,18 +268,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #349
-			description: `the whitespace between a comma that closes the arguments and the closing parenthesis, which is what this option replaces and not a place to write beside`,
-			code: `a { b: f(a, ); }`,
-			fixed: `
-				a { b: f(a,
-				); }
-			`,
-			line: 1,
-			column: 11,
-			message: messages.expectedAfter(),
-		},
-		{
 			// See #508
 			description: `a comma in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and the comma its text holds is no comma of the arguments`,
 			code: `a { b: f(1,2) /*/ " */ "f(1,2)"; }`,
@@ -654,18 +642,6 @@ testRule({
 			message: messages.rejectedAfterMultiLine(),
 		},
 		{
-			// See #349
-			description: `the break between a comma that closes the arguments and the closing parenthesis, which the parser hands to the function`,
-			code: `
-				a { b: f(a,
-				); }
-			`,
-			fixed: `a { b: f(a,); }`,
-			line: 1,
-			column: 11,
-			message: messages.rejectedAfterMultiLine(),
-		},
-		{
 			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads its parentheses
 			description: `a run between a comma and the name of a bare address holding a quotation mark nothing closes, which taking the run away would make the tokenizer read as a string`,
 			code: `a { b: f(1,\nurl(a"b)); }`,
@@ -800,6 +776,43 @@ testRule({
 			line: 3,
 			column: 2,
 			message: messages.rejectedAfterMultiLine(),
+		},
+	],
+})
+
+// The run between a comma closing the arguments and the closing parenthesis is the parentheses rules' to judge and write, as the run in front of a closing brace is the brace rules' and not the semicolon rules'; a comma rule judging it beside a parentheses rule asking the opposite left a warning no `--fix` could take away (1790021150, undoing that part of #349)
+testRule({
+	ruleName,
+	config: [`always`],
+
+	accept: [
+		{
+			description: `a comma closing the arguments with a space behind it, and the empty fallback of a custom property, whose run to the closing parenthesis is not this rule's`,
+			code: `a { b: f(a, ); c: var(--x,); }`,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always-multi-line`],
+
+	accept: [
+		{
+			description: `a comma closing the arguments of a multi-line call with a space behind it`,
+			code: `a { b: f(\n\ta, ); }`,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never-multi-line`],
+
+	accept: [
+		{
+			description: `a comma closing the arguments of a multi-line call with a break behind it`,
+			code: `a { b: f(a,\n); }`,
 		},
 	],
 })
