@@ -10,7 +10,24 @@ testRule({
 	config: [`never-multi-line`],
 	customSyntax: `postcss-scss`,
 
+	accept: [
+		{
+			// See #570
+			description: `a Sass nested property whose value spans lines while its block is one, the block alone deciding the block's lineness, in an outer block closed against its last node as the option asks`,
+			code: `a {\n\tfont: 12px\n\t\tserif { family: x; }}`,
+		},
+	],
+
 	reject: [
+		{
+			// See #570
+			description: `a Sass nested property written with a value, which this syntax parses as a declaration with a block, whose brace stands behind a break and an indent`,
+			code: `a { font: 12px { color: red;\n\t}}`,
+			fixed: `a { font: 12px { color: red;}}`,
+			line: 2,
+			column: 1,
+			message: messages.rejectedBeforeMultiLine,
+		},
 		{
 			// See #231
 			description: `a block whose last declaration carries an inline comment behind its value, so the brace has nowhere to go`,

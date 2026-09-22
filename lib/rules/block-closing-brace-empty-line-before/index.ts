@@ -1,10 +1,11 @@
-import type { AtRule, Rule } from "postcss"
+import type { ChildNode, Container } from "postcss"
 import stylelint from "stylelint"
 
 import { SEMICOLON_RUN } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { addEmptyLineAfter } from "../../utils/addEmptyLineAfter/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
+import { carriesABlock } from "../../utils/carriesABlock/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -71,14 +72,16 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		root.walkRules(check)
-		root.walkAtRules(check)
+		// Every node carrying a block, a Sass nested property written with a value among them (#570)
+		root.walk((node) => {
+			if (carriesABlock(node)) check(node)
+		})
 
 		/**
 		 * Checks one statement.
-		 * @param statement - The rule or at-rule.
+		 * @param statement - The node carrying the block.
 		 */
-		function check (statement: Rule | AtRule): void {
+		function check (statement: ChildNode & Container): void {
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 
 			// Minus a stray semicolon

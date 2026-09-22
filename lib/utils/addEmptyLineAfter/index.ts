@@ -1,4 +1,4 @@
-import type { AtRule, Rule } from "postcss"
+import type { Container } from "postcss"
 import type { PostcssResult } from "stylelint"
 
 import { CAPTURED_LINE_BREAK, LINE_BREAK, WHITESPACE } from "../../regexps.ts"
@@ -10,11 +10,11 @@ import { setBlockAfter } from "../setBlockAfter/index.ts"
 /**
  * Adds an empty line after a node's last child, into the block's final raw ({@link getBlockAfter}).
  * @param syntax - The syntax the rule is built over, which the raw is read and written through.
- * @param node - The rule or at-rule whose block gets the empty line.
+ * @param node - The node whose block gets the empty line.
  * @param result - The Stylelint result.
  * @returns The node, mutated.
  */
-export function addEmptyLineAfter<T extends Rule | AtRule> (syntax: Syntax, node: T, result: PostcssResult): T {
+export function addEmptyLineAfter<T extends Container> (syntax: Syntax, node: T, result: PostcssResult): T {
 	let blockAfter = getBlockAfter(syntax, node)
 
 	if (typeof blockAfter !== `string`) return node

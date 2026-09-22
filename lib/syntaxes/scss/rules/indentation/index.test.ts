@@ -12,6 +12,24 @@ testRule({
 
 	reject: [
 		{
+			// See #570
+			description: `the closing brace of a Sass nested property written with a value, which this syntax parses as a declaration with a block, at three tabs where one is asked`,
+			code: `a {\n\tfont: 12px {\n\t\tcolor: red;\n\t\t\t}\n}`,
+			fixed: `a {\n\tfont: 12px {\n\t\tcolor: red;\n\t}\n}`,
+			line: 4,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			// See #570
+			description: `the same brace closing the property's block behind an at-rule with neither block nor semicolon of its own, whose run the at-rule holds`,
+			code: `a {\n\tfont: 12px {\n\t\t@include m\n\t\t\t}\n}`,
+			fixed: `a {\n\tfont: 12px {\n\t\t@include m\n\t}\n}`,
+			line: 4,
+			column: 4,
+			message: messages.expected(`1 tab`),
+		},
+		{
 			// See #237
 			description: `the same query read as Sass, which asks the same of it as plain CSS does`,
 			code: `

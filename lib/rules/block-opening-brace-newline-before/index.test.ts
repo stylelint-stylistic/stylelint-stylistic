@@ -845,7 +845,7 @@ testRule({
 
 	reject: [
 		{
-			// See #502
+			// See #502. The outer block's closing brace is reported first, the walk of the closing-brace rule visiting the nodes in document order (#570)
 			description: `an outer block this rule's break puts over lines, the neighbour listed behind it: the file as it stands draws a warning from each rule about each brace, and under the fix the break goes in first, so no space stands in front of the outer closing brace`,
 			code: `@media(min-width:100px){a{b:c}}\n`,
 			fixed: `@media(min-width:100px){a\n{b:c }}\n`,
@@ -866,16 +866,16 @@ testRule({
 				},
 				{
 					line: 1,
-					column: 29,
+					column: 30,
 					endLine: 1,
-					endColumn: 30,
+					endColumn: 31,
 					message: closingSpaceBeforeMessages.expectedBeforeSingleLine(),
 				},
 				{
 					line: 1,
-					column: 30,
+					column: 29,
 					endLine: 1,
-					endColumn: 31,
+					endColumn: 30,
 					message: closingSpaceBeforeMessages.expectedBeforeSingleLine(),
 				},
 			],

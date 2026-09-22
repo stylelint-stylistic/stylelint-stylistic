@@ -5,6 +5,7 @@ import stylelint from "stylelint"
 import { CRLF, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_IMPORTANT_FLAG_LINE, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, TRAILING_LINE_BREAK, TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
+import { carriesABlock } from "../../utils/carriesABlock/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
@@ -155,12 +156,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let closingBraceLevel = indentClosingBrace ? nodeLevel + 1 : nodeLevel
 			let expectedClosingBraceIndentation = indentChar.repeat(closingBraceLevel)
 			// Read wherever the parser filed the run: behind an at-rule with neither block nor semicolon it is in `raws.between`, trimmed by `checkAtRuleParams`, so nobody measured the brace's line (#509)
-			let blockAfter = isRule(node) || isAtRule(node) ? getBlockAfter(syntax, node) ?? `` : ``
+			let blockAfter = carriesABlock(node) ? getBlockAfter(syntax, node) ?? `` : ``
 			let blockAfterSpans = syntax.hostCodeSpans(blockAfter, node)
-			let afterLineStart = lastLineStart(blockAfter, blockAfterSpans)
 
 			// The brace's indentation is the whitespace opening the last line of that run, as a node's is the whitespace opening the last line of `raws.before` (#452, #516). What stands behind it is on the brace's line: a styled template's interpolation, or a free semicolon wherever the run reaches the brace at all — behind a block the parser takes such a semicolon into the last node's `raws.ownSemicolon` instead
-			if ((isRule(node) || isAtRule(node)) && hasBlock(node) && afterLineStart >= 0 && lastLineIndentation(blockAfter, blockAfterSpans) !== expectedClosingBraceIndentation) {
+			if (carriesABlock(node) && lastLineStart(blockAfter, blockAfterSpans) >= 0 && lastLineIndentation(blockAfter, blockAfterSpans) !== expectedClosingBraceIndentation) {
 				// The statement's own text ends on the brace, where the printed copy ends on a stray `raws.ownSemicolon` (#568)
 				let problemIndex = statementString(node, result).length - 1
 
@@ -205,7 +205,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			calculatedLevel = indentationLevel(node.parent, calculatedLevel + 1)
 
 			// Under `except: ["block"]` a block stands at its parent's level
-			if (optionsMatches(secondaryOptions, `except`, `block`) && (isRule(node) || isAtRule(node)) && hasBlock(node)) calculatedLevel -= 1
+			if (optionsMatches(secondaryOptions, `except`, `block`) && hasBlock(node)) calculatedLevel -= 1
 
 			return calculatedLevel
 		}
