@@ -606,6 +606,24 @@ testRule({
 
 	reject: [
 		{
+			// See #568
+			description: `a closing brace indented a level too deep with a stray semicolon behind it, marked on the brace rather than on the semicolon PostCSS prints behind it`,
+			code: `a {\n\tcolor: pink;\n\t\t};`,
+			fixed: `a {\n\tcolor: pink;\n};`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`0 tabs`),
+		},
+		{
+			// See #568
+			description: `the same brace closing a block whose last node is an at-rule with neither block nor semicolon of its own, which reaches the brace since #509`,
+			code: `a {\n\t@include m\n\t\t};`,
+			fixed: `a {\n\t@include m\n};`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`0 tabs`),
+		},
+		{
 			// The escape is masked in the copy the breaks are found over, its closing break left standing (1789649818)
 			description: `a value continued on the line behind the line break closing a hexadecimal escape, which is a line of the file`,
 			code: `
