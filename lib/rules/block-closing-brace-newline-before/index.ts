@@ -17,7 +17,6 @@ import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { lastNodeHoldsTheBlockAfter } from "../../utils/lastNodeHoldsTheBlockAfter/index.ts"
 import { escapeHeadLength } from "../../utils/maskEscapes/index.ts"
-import { nodeString } from "../../utils/nodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { statementString } from "../../utils/statementString/index.ts"
@@ -108,11 +107,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let after = run.replace(SEMICOLON_RUN, ``)
 
 			let blockIsMultiLine = !isSingleLineString(blockString(statement, result))
-			let printed = nodeString(statement, result)
+			// The index too, since the printed copy ends on that raw (#735)
+			let index = text.length - 2
 
-			let index = printed.length - 2
-
-			if (printed[index - 1] === `\r`) index -= 1
+			if (text[index - 1] === `\r`) index -= 1
 
 			// `never-multi-line` empties the final raw, so a `//` comment the last node left open is closed only by a break in the node's own trailing whitespace; where none is, the brace would land in the comment, so no fix. An `always` break closes the comment anyway
 			//

@@ -100,6 +100,15 @@ testRule({
 
 	reject: [
 		{
+			// See #735
+			description: `a nested block closed on its declaration's line with a stray semicolon on the line behind its brace, marked in front of the brace rather than inside the raw the semicolon stands in`,
+			code: `a {\n\tb {\n\t\tc: d }\n\t;\n}`,
+			fixed: `a {\n\tb {\n\t\tc: d\n }\n\t;\n}`,
+			line: 3,
+			column: 7,
+			message: messages.expectedBefore,
+		},
+		{
 			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
 			description: `a space behind a backslash ending the value, which spells a character of the value, so the break goes behind it`,
 			code: `a { b: c\\ }`,
@@ -506,11 +515,12 @@ testRule({
 
 	reject: [
 		{
-			description: `a free semicolon behind the brace, which the text the guard reads ends on unless it is read through the brace`,
+			// See #562, #735
+			description: `a free semicolon behind the brace, which the text the guard reads ends on unless it is read through the brace, the mark standing in front of the brace as everywhere`,
 			code: `a { b: c\\\n};`,
 			fixed: `a { b: c\\\n};`,
-			line: 2,
-			column: 1,
+			line: 1,
+			column: 10,
 			message: messages.rejectedBeforeMultiLine,
 		},
 		{

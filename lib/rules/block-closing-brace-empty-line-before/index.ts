@@ -12,10 +12,10 @@ import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
 import { hasEmptyLine } from "../../utils/hasEmptyLine/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
-import { nodeString } from "../../utils/nodeString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { removeEmptyLinesAfter } from "../../utils/removeEmptyLinesAfter/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { statementString } from "../../utils/statementString/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
 
@@ -84,10 +84,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Minus a stray semicolon
 			let before = (getBlockAfter(syntax, statement) || ``).replace(SEMICOLON_RUN, ``)
 
-			let statementString = nodeString(statement, result)
-			let index = statementString.length - 1
+			// Counted from the text through the brace: the printed copy ends on a stray `raws.ownSemicolon`, and the index landed inside that raw (#735)
+			let text = statementString(statement, result)
+			let index = text.length - 1
 
-			if (statementString[index - 1] === `\r`) index -= 1
+			if (text[index - 1] === `\r`) index -= 1
 
 			let expectEmptyLineBefore = ((): boolean => {
 				let childNodeTypes = statement.nodes.map((item) => item.type)

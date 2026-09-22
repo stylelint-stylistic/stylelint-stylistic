@@ -120,6 +120,24 @@ testRule({
 
 	reject: [
 		{
+			// See #735
+			description: `a nested block with a stray semicolon on the line behind its brace, marked on the brace rather than inside the raw the semicolon stands in`,
+			code: `a {\n\tb {\n\t\tc: d\n\t}\n\t;\n}`,
+			fixed: `a {\n\tb {\n\t\tc: d\n\n\t}\n\t;\n\n}`,
+			warnings: [
+				{
+					line: 6,
+					column: 1,
+					message: messages.expected,
+				},
+				{
+					line: 4,
+					column: 2,
+					message: messages.expected,
+				},
+			],
+		},
+		{
 			description: `a break in front of the brace where an empty line belongs`,
 			code: `a { color: pink;\n}`,
 			fixed: `a { color: pink;\n\n}`,
