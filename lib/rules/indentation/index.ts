@@ -12,13 +12,13 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
 import { fixIndentation, lastLineIndentation, lastLineStart, writeIndentationBefore } from "../../utils/lineIndentation/index.ts"
-import { nodeString } from "../../utils/nodeString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { rootLevelIndents } from "../../utils/rootLevelIndents/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { semicolonLineChecker } from "../../utils/semicolonLineChecker/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
+import { statementString } from "../../utils/statementString/index.ts"
 import { isAtRule, isDeclaration, isRoot, isRule } from "../../utils/typeGuards/index.ts"
 import { assertString, isBoolean, isNumber, isString } from "../../utils/validateTypes/index.ts"
 
@@ -161,7 +161,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// The brace's indentation is the whitespace opening the last line of that run, as a node's is the whitespace opening the last line of `raws.before` (#452, #516). What stands behind it is on the brace's line: a styled template's interpolation, or a free semicolon wherever the run reaches the brace at all — behind a block the parser takes such a semicolon into the last node's `raws.ownSemicolon` instead
 			if ((isRule(node) || isAtRule(node)) && hasBlock(node) && afterLineStart >= 0 && lastLineIndentation(blockAfter, blockAfterSpans) !== expectedClosingBraceIndentation) {
-				let problemIndex = nodeString(node, result).length - 1
+				// The statement's own text ends on the brace, where the printed copy ends on a stray `raws.ownSemicolon` (#568)
+				let problemIndex = statementString(node, result).length - 1
 
 				report({
 					message: messages.expected,
