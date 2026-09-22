@@ -647,3 +647,21 @@ testRule({
 		},
 	],
 })
+
+// The run in front of a comma opening the value is the head run behind the colon, which the colon rules read too: the rules asked settle who writes it, and a rule held by its neighbour reports and leaves the run (1789594574)
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-colon-space-after": `never` },
+
+	reject: [
+		{
+			description: `a comma opening the value with nothing in front of it, where the colon rule behind this one forbids the space this one asks for, so the warning stands and nothing is written`,
+			code: `a { b:,c }`,
+			fixed: `a { b:,c }`,
+			line: 1,
+			column: 7,
+			message: messages.expectedBefore(),
+		},
+	],
+})

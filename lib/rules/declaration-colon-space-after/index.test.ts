@@ -1,3 +1,5 @@
+import { messages as commaSpaceBeforeMessages } from "../value-list-comma-space-before/index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -1203,6 +1205,50 @@ testRule({
 			endLine: 1,
 			endColumn: 8,
 			message: messages.rejectedAfter(),
+		},
+	],
+})
+
+// The head run is the run in front of a comma opening the value too, which the `value-list-comma-*-before` rules write (#166): the rules asked settle who writes it, and a rule held by its neighbour reports and leaves the run (1789594574)
+testRule({
+	ruleName,
+	config: [`never`],
+	extraRules: { "@stylistic/value-list-comma-space-before": `always` },
+
+	reject: [
+		{
+			description: `a space between the colon and a comma opening the value, where the comma rule behind this one asks for that space, so the warning stands and nothing is written`,
+			code: `a { b: ,c }`,
+			fixed: `a { b: ,c }`,
+			line: 1,
+			column: 7,
+			message: messages.rejectedAfter(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/value-list-comma-space-before": `always` },
+
+	reject: [
+		{
+			description: `nothing between the colon and a comma opening the value, where the comma rule behind this one asks for the same space, so both write it`,
+			code: `a { b:,c }`,
+			fixed: `a { b: ,c }`,
+			warnings: [
+				{
+					line: 1,
+					column: 7,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 7,
+					message: commaSpaceBeforeMessages.expectedBefore(),
+				},
+			],
 		},
 	],
 })

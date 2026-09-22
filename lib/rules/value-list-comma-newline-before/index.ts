@@ -14,6 +14,7 @@ import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFront } from "../../utils/runInFront/index.ts"
 import { valueListCommaWhitespaceChecker } from "../../utils/valueListCommaWhitespaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { writesSharedRun } from "../../utils/writesSharedRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -77,6 +78,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Refused before the report: a comma in front of the value is the property name's, and under `never-multi-line` a comma behind a `//` comment keeps the break closing it, while `always` only adds one
 			isFixable: (declNode, index, declString, runString) => {
 				if (index < declarationValueIndex(declNode)) return false
+
+				// The run in front of a comma opening the value is the head run behind the colon, which the colon rules read too, and the rules asked settle who writes it (1789594574)
+				if (index === declarationValueIndex(declNode) && !writesSharedRun(syntax, declNode, result, ruleName)) return false
 
 				let closesInlineComment = syntax.endsWithInlineComment(declString.slice(0, index), syntax.inlineComments(declNode, result))
 
