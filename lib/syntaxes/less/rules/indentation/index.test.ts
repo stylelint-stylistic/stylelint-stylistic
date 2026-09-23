@@ -1098,3 +1098,96 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`tab`],
+	customSyntax: `postcss-less`,
+
+	accept: [
+		{
+			// See #651
+			description: `a mixin definition whose guard stands on a line of its own, a level deeper, as a line continuing an at-rule's parameters does`,
+			code: `
+				.m(@a; @b)
+					when (@a > 0) { c: d; }
+			`,
+		},
+		{
+			// See #651
+			description: `a mixin definition whose parameter list, opened in the middle of the first line, goes on at the rule's own level, as a mixin call's arguments do`,
+			code: `
+				.m(@a: 1px;
+				@b: 2px) { c: d; }
+			`,
+		},
+	],
+
+	reject: [
+		{
+			// See #651
+			description: `a mixin definition whose guard stands on a line of its own at the rule's level`,
+			code: `
+				.m(@a; @b)
+				when (@a > 0) { c: d; }
+			`,
+			fixed: `
+				.m(@a; @b)
+					when (@a > 0) { c: d; }
+			`,
+			line: 2,
+			column: 1,
+			message: messages.expected(`1 tab`),
+		},
+		{
+			// See #651
+			description: `the parameter list of the issue, a line inside it indented a level deeper than the parentheses opened in the middle of the first line ask`,
+			code: `
+				.m(@a: 1px;
+					@b: 2px) { c: d; }
+			`,
+			fixed: `
+				.m(@a: 1px;
+				@b: 2px) { c: d; }
+			`,
+			line: 2,
+			column: 2,
+			message: messages.expected(`0 tabs`),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`tab`, { except: [`param`] }],
+	customSyntax: `postcss-less`,
+
+	accept: [
+		{
+			// See #651
+			description: `a mixin definition whose guard stands on a line of its own at the rule's level, as an at-rule's parameters do under this option`,
+			code: `
+				.m(@a; @b)
+				when (@a > 0) { c: d; }
+			`,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`tab`, { ignore: [`param`] }],
+	customSyntax: `postcss-less`,
+
+	accept: [
+		{
+			// See #651
+			description: `a mixin definition whose head goes on over lines at any level, as an at-rule's parameters do under this option`,
+			code: `
+				.m(@a;
+						@b)
+				when (@a > 0) { c: d; }
+			`,
+		},
+	],
+})

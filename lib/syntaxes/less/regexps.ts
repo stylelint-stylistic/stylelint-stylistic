@@ -12,6 +12,9 @@ export const LESS_DETACHED_RULESET_NAME = /^[\w-]+$/u
 /** The `when` of a Less guard, lower case only, as Less reads its keywords. */
 export const LESS_GUARD = /\swhen\s*(?:not\s*)?\(/u
 
+/** The head of a Less mixin definition's selector: one class or id name, escapes included, and the parenthesis opening its parameter list, whitespace allowed in front; the pattern Less's `mixin.definition` reads, but for an escaped character outside the Basic Multilingual Plane, which this reads whole and Less refuses ([#651](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/651)). */
+export const LESS_MIXIN_DEFINITION_HEAD = /^[#.](?:[\w-]|\\(?:[\dA-Fa-f]{1,6} ?|[^\dA-Fa-f]))+\s*\(/u
+
 /** The parameter list closing a Less parametric mixin's selector. */
 export const LESS_PARAMETRIC_MIXIN = /\(@.*\)$/u
 

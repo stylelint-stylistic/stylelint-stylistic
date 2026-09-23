@@ -17,6 +17,7 @@ import { readsWhitespaceBehindAtRuleName } from "./readsWhitespaceBehindAtRuleNa
 import { requiresTrailingSemicolon } from "./requiresTrailingSemicolon/index.ts"
 import { restoreMixinFlagRuns } from "./restoreMixinFlagRuns/index.ts"
 import { syncLessVariableValue } from "./syncLessVariableValue/index.ts"
+import { LESS_MIXIN_DEFINITION_HEAD } from "./regexps.ts"
 
 /** The syntax of the `less` namespace: Less parsed with `postcss-less`. A superset of the core, plain CSS included, so a project holding both configures these rules alone for the Less files. */
 export let less: Syntax = {
@@ -37,7 +38,8 @@ export let less: Syntax = {
 	closingSemicolonIsCommentText,
 	commentTextHead,
 	inlineCommentCode,
-	readsRuleParams: (rule: PostcssRule) => `params` in rule && Boolean(rule.params),
+	// `postcss-less` keeps a mixin definition's parameter list in the selector and gives the rule no `params` (#651)
+	readsRuleParams: (rule: PostcssRule) => LESS_MIXIN_DEFINITION_HEAD.test(rule.selector),
 	atRuleVariableValue,
 	// Under its default `math` mode Less divides only inside parentheses (`@a/2` prints `4/2`), a nameless call the rules pass over, so a solidus outside is the separator it is to the core
 	readsSlashAsOperator: () => false,

@@ -236,8 +236,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		 * @param ruleLevel - The indent level the rule stands at.
 		 */
 		function checkSelector (ruleNode: Rule, ruleLevel: number): void {
-			// Less mixin params stand a level deeper; the fix writes to the file's copy
-			checkMultilineBit(syntax.read(ruleNode), syntax.readsRuleParams(ruleNode) ? ruleLevel + 1 : ruleLevel, ruleNode, ruleLevel)
+			// A Less mixin definition's head is measured as an at-rule's params are, `except` and `ignore` of `param` included (#651); the fix writes to the file's copy
+			if (!(syntax.readsRuleParams(ruleNode) && optionsMatches(secondaryOptions, `ignore`, `param`))) checkMultilineBit(syntax.read(ruleNode), syntax.readsRuleParams(ruleNode) && !optionsMatches(secondaryOptions, `except`, `param`) ? ruleLevel + 1 : ruleLevel, ruleNode, ruleLevel)
 		}
 
 		/**
