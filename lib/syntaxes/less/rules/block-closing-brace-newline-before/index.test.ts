@@ -29,6 +29,23 @@ testRule({
 			message: messages.rejectedBeforeMultiLine,
 		},
 		{
+			// Pins the writers kept off the comment behind every node, not only where Less reads it as one
+			description: `the same comment behind an extend, where Less refuses a brace written onto the comment line, so the brace is kept off it`,
+			code: `
+				a {
+					@extend .b // ; /* c */ ;
+				}
+			`,
+			fixed: `
+				a {
+					@extend .b // ; /* c */ ;
+				}
+			`,
+			line: 2,
+			column: 27,
+			message: messages.rejectedBeforeMultiLine,
+		},
+		{
 			description: `a block whose last declaration carries an inline comment behind its value, so the brace has nowhere to go`,
 			code: `
 				a {

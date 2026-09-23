@@ -238,7 +238,7 @@ export type Syntax = {
 	closingSemicolonIsCommentText (node: Node, result: PostcssResult): boolean,
 
 	/**
-	 * Reads the head of a node's `raws.before`, or of a block's `raws.after`, that is the text of a `//` comment behind a node the parser closed on a semicolon of that text, up to the break closing the comment.
+	 * Reads the head of a node's `raws.before`, or of a block's `raws.after`, that may be the text of a `//` comment behind a node the parser closed on a semicolon of that text, up to the break closing the comment, for a writer to keep off.
 	 * @param owner - The node whose `raws.before` is read, or the container whose `raws.after` is.
 	 * @param key - Which of the two raws.
 	 * @param result - The lint result naming the syntax the file was parsed with.

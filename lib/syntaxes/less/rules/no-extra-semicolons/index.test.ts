@@ -59,6 +59,16 @@ testRule({
 				}
 			`,
 		},
+		{
+			// Pins the semicolon Less closes on kept behind every node, not only where Less reads the comment as one
+			description: `the semicolon of code Less closes an at-rule on behind a comment holding a semicolon, which the rule leaves whatever Less makes of the comment`,
+			code: `
+				a {
+					@include x // ;
+					;
+				}
+			`,
+		},
 	],
 
 	reject: [

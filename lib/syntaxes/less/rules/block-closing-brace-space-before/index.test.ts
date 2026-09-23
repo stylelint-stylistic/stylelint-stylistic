@@ -134,6 +134,23 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
+			// Pins the writers kept off the comment behind every node, not only where Less reads it as one
+			description: `the same comment behind a variable, whose text Less may read as the comment or as code by what follows, so the brace is kept off it`,
+			code: `
+				a {
+					@v: pink // ; /* c */ ;
+				}
+			`,
+			fixed: `
+				a {
+					@v: pink // ; /* c */ ;
+				}
+			`,
+			line: 2,
+			column: 25,
+			message: messages.rejectedBefore(),
+		},
+		{
 			description: `a block whose last declaration carries an inline comment behind its value, so the brace has nowhere to go`,
 			code: `
 				a {

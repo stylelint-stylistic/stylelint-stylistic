@@ -4,7 +4,7 @@ import scss from "postcss-scss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
-import { closingSemicolonIsCommentText } from "./index.ts"
+import { closingSemicolonIsCommentText, closingSemicolonMayBeCommentText } from "./index.ts"
 
 /**
  * Asks about the last node of the one block of a stylesheet.
@@ -19,6 +19,17 @@ function closing (code: string, syntax: { parse: Parser } = less): boolean {
 	if (!node) throw new Error(`The block holds no node`)
 
 	return closingSemicolonIsCommentText(node, { opts: { syntax } } as unknown as PostcssResult)
+}
+
+/**
+ * Asks the wider reading about the last node of the one block.
+ * @param code - The node closing the block, spelled inside it.
+ * @returns What the reading makes of that node.
+ */
+function mayBe (code: string): boolean {
+	let block = less.parse(`a {\n\t${code}\n}`, { from: undefined }).first as Container
+
+	return closingSemicolonMayBeCommentText(block.last as ChildNode, { opts: { syntax: less } } as unknown as PostcssResult)
 }
 
 describe(`closingSemicolonIsCommentText`, () => {
@@ -65,6 +76,17 @@ describe(`closingSemicolonIsCommentText`, () => {
 
 		expect(closingSemicolonIsCommentText(block.first as ChildNode, result)).toBe(true)
 		expect(closing(`color: pink // c\n/* d */`)).toBe(false)
+	})
+
+	it(`a semicolon that may be comment text behind every declaration and bodiless at-rule the comment is open behind, those the strict reading believes the flag of included, and behind no comment and no node the parser closed on code`, () => {
+		expect(mayBe(`@v: pink // ;`)).toBe(true)
+		expect(mayBe(`@extend .b // ;`)).toBe(true)
+		expect(mayBe(`@include x // ;`)).toBe(true)
+		expect(mayBe(`--x: pink !important // ;`)).toBe(true)
+		expect(mayBe(`color: pink // ;`)).toBe(true)
+		expect(mayBe(`@v: pink // c\n;`)).toBe(false)
+		expect(mayBe(`@v: pink;`)).toBe(false)
+		expect(mayBe(`color: pink; // ;`)).toBe(false)
 	})
 
 	it(`the same comment read by a parser that cuts it out of the node itself`, () => {

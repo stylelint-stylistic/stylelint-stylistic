@@ -83,17 +83,27 @@ function readsTheComment (node: Node, result: PostcssResult): boolean {
 }
 
 /**
- * Asks whether the semicolon `postcss-less` closed the node on is the text of a `//` comment behind it.
+ * Asks whether the semicolon `postcss-less` closed a declaration or a bodiless at-rule on may be the text of a `//` comment behind it, whatever Less makes of the node.
  *
  * The parser closes a node at the first semicolon behind it, one inside such a comment included ([#359](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/359), [#720](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/720)). A semicolon closes every node a node of code follows, and the block's last one where `raws.semicolon` is set; the stringifier prints it right behind the node's text, which is where an empty spelled run puts the guard's written character. A parser keeping no such comment in that text cut it out itself, so its semicolon is code.
+ * @param node - The node asked about.
+ * @param result - The Stylelint result, whose syntax says what opens a comment.
+ * @returns True where it may be.
+ */
+export function closingSemicolonMayBeCommentText (node: Node, result: PostcssResult): boolean {
+	let container = node.parent as Container | undefined
+
+	if (!container || !(isDeclaration(node) || isAtRule(node)) || (lastNonCommentNode(container) === node && !container.raws.semicolon)) return false
+
+	return inlineCommentReading(node, result).keeps && writesIntoInlineComment(node, result, ``)
+}
+
+/**
+ * Asks whether the semicolon `postcss-less` closed the node on is the text of a `//` comment behind it: one {@link closingSemicolonMayBeCommentText} names, behind a node Less reads the comment behind whatever it spells.
  * @param node - The node asked about.
  * @param result - The Stylelint result, whose syntax says what opens a comment.
  * @returns True where the semicolon is comment text.
  */
 export function closingSemicolonIsCommentText (node: Node, result: PostcssResult): boolean {
-	let container = node.parent as Container | undefined
-
-	if (!container || (lastNonCommentNode(container) === node && !container.raws.semicolon) || !readsTheComment(node, result)) return false
-
-	return inlineCommentReading(node, result).keeps && writesIntoInlineComment(node, result, ``)
+	return closingSemicolonMayBeCommentText(node, result) && readsTheComment(node, result)
 }
