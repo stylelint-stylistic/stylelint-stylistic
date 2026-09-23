@@ -147,3 +147,30 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	customSyntax: `postcss-less`,
+	config: [`windows`],
+
+	reject: [
+		{
+			// See #650
+			description: `three lines, the first a Less variable whose value opens with a colon of its own and holds a block comment between its words, which every warning's fix writes over again`,
+			code: `@v: : 1PX /* c */ 2PX;\nb { c: @v; }\nc { d: e; }`,
+			fixed: `@v: : 1PX /* c */ 2PX;\r\nb { c: @v; }\r\nc { d: e; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 23,
+					message: messages.expected(`windows`),
+				},
+				{
+					line: 2,
+					column: 13,
+					message: messages.expected(`windows`),
+				},
+			],
+		},
+	],
+})

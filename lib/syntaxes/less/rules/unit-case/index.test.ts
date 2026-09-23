@@ -1792,3 +1792,39 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`lower`],
+	customSyntax: `postcss-less`,
+
+	reject: [
+		{
+			// See #650; the column stands two too far right
+			description: `a Less variable whose value opens with a colon of its own, which the parser keeps in front of the value and out of the copy it prints`,
+			code: `@v: : 10PX;`,
+			fixed: `@v: : 10px;`,
+			line: 1,
+			column: 11,
+			message: messages.expected(`PX`, `px`),
+		},
+		{
+			// See #650; the column stands two too far right
+			description: `the same variable with a block comment between the words of its value, which only the printed copy holds`,
+			code: `@v: : 10PX /* c */ 2PX;`,
+			fixed: `@v: : 10px /* c */ 2px;`,
+			warnings: [
+				{
+					line: 1,
+					column: 11,
+					message: messages.expected(`PX`, `px`),
+				},
+				{
+					line: 1,
+					column: 23,
+					message: messages.expected(`PX`, `px`),
+				},
+			],
+		},
+	],
+})
