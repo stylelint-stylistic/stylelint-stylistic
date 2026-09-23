@@ -83,10 +83,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (root.raws.after && root.raws.after.trim().length > 0) {
 			let rawAfterRoot = root.raws.after
+			let readsAsNoExtra = noExtraUnderComment(root, `after`)
 
 			let fixSemiIndices: number[] = []
 
 			styleSearch({ source: rawAfterRoot, target: `;` }, (match) => {
+				if (readsAsNoExtra(match.startIndex)) return
+
 				fix = (): void => {
 					fixSemiIndices.push(match.startIndex)
 				}
@@ -109,11 +112,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let allowedSemi = 0
 
 				let rawBeforeIndexStart = 0
+				let readsAsNoExtra = noExtraUnderComment(node, `before`)
 
 				let fixSemiIndices: number[] = []
 
 				styleSearch({ source: rawBeforeNode, target: `;` }, (match, count) => {
-					if (count === allowedSemi) return
+					if (count === allowedSemi || readsAsNoExtra(match.startIndex)) return
 
 					fix = (): void => {
 						fixSemiIndices.push(match.startIndex - rawBeforeIndexStart)
@@ -131,9 +135,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A Less mixin last child puts its extra semicolon in `node.raws.after`; mixins are passed over
 				if (`last` in node && node.last && node.last.type === `atrule` && !syntax.isStandardAtRule(node.last)) return
 
+				let readsAsNoExtra = noExtraUnderComment(node, `after`)
 				let fixSemiIndices: number[] = []
 
 				styleSearch({ source: rawAfterNode, target: `;` }, (match) => {
+					if (readsAsNoExtra(match.startIndex)) return
+
 					fix = (): void => {
 						fixSemiIndices.push(match.startIndex)
 					}
@@ -167,6 +174,23 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (fixSemiIndices.length > 0) node.raws.ownSemicolon = removeIndices(rawOwnSemicolon, fixSemiIndices)
 			}
 		})
+
+		/**
+		 * Reads which semicolons of a raw are no extra ones where `postcss-less` closed the node in front on a semicolon of a `//` comment's text: those of the head that is more of that text, and the first behind the break closing it, which Less closes the node on (#720).
+		 * @param owner - The node whose `raws.before` is read, or the container whose `raws.after` is.
+		 * @param key - Which of the two raws.
+		 * @returns A test of a semicolon's index in the raw.
+		 */
+		function noExtraUnderComment (owner: Node, key: `before` | `after`): (index: number) => boolean {
+			let raw = owner.raws[key]
+			let head = syntax.commentTextHead(owner, key, result)
+
+			if (head === null || typeof raw !== `string`) return () => false
+
+			let closing = raw.indexOf(`;`, head.length)
+
+			return (index) => index < head.length || index === closing
+		}
 
 		/**
 		 * Reports an extra semicolon.

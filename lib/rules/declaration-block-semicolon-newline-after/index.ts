@@ -63,6 +63,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (isLastNodeWithoutSemicolon(decl)) return
 
+			// Under `postcss-less` a semicolon of a `//` comment's text closed the declaration; the one Less closes it on, if any, stands past the comment's break, where the rule does not look (#720)
+			if (syntax.closingSemicolonIsCommentText(decl, result)) return
+
 			let nextNode = decl.next()
 
 			if (!nextNode) return

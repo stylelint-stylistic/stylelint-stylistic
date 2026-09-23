@@ -1,10 +1,10 @@
-import type { Container, Parser } from "postcss"
+import type { ChildNode, Container, Parser } from "postcss"
 import less from "postcss-less"
 import scss from "postcss-scss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
-import { semicolonFlagIsCommentText } from "./index.ts"
+import { closingSemicolonIsCommentText } from "./index.ts"
 
 /**
  * Asks about the last node of the one block of a stylesheet.
@@ -18,10 +18,10 @@ function closing (code: string, syntax: { parse: Parser } = less): boolean {
 
 	if (!node) throw new Error(`The block holds no node`)
 
-	return semicolonFlagIsCommentText(node, { opts: { syntax } } as unknown as PostcssResult)
+	return closingSemicolonIsCommentText(node, { opts: { syntax } } as unknown as PostcssResult)
 }
 
-describe(`semicolonFlagIsCommentText`, () => {
+describe(`closingSemicolonIsCommentText`, () => {
 	it(`a declaration of an ordinary property, its important flag included, a mixin call and a detached ruleset call, the semicolon in the text of the comment behind each`, () => {
 		expect(closing(`color: pink // ;`)).toBe(true)
 		expect(closing(`color: pink !important // ;`)).toBe(true)
@@ -57,6 +57,14 @@ describe(`semicolonFlagIsCommentText`, () => {
 		expect(closing(`background: url(//a) ;`)).toBe(false)
 		expect(closing(`color: pink;`)).toBe(false)
 		expect(closing(`color: pink // c`)).toBe(false)
+	})
+
+	it(`a node a declaration follows, which the semicolon closes whatever the block's flag says, and the last node of a block the semicolon leaves unclosed with a comment behind it`, () => {
+		let block = less.parse(`a {\n\tcolor: pink // ;\n\t;\n\ttop: 0\n}`, { from: undefined }).first as Container
+		let result = { opts: { syntax: less } } as unknown as PostcssResult
+
+		expect(closingSemicolonIsCommentText(block.first as ChildNode, result)).toBe(true)
+		expect(closing(`color: pink // c\n/* d */`)).toBe(false)
 	})
 
 	it(`the same comment read by a parser that cuts it out of the node itself`, () => {

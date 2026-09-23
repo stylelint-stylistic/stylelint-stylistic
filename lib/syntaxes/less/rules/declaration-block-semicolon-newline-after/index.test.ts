@@ -10,6 +10,29 @@ testRule({
 	config: [`never-multi-line`],
 	customSyntax: `postcss-less`,
 
+	accept: [
+		{
+			// See #720
+			description: `a declaration a semicolon of the text of its inline comment closed, a block comment carved out of that text behind it and the semicolon Less closes it on at the head of the next line`,
+			code: `
+				a {
+					color: pink // ; /* c */
+					;
+					top: 0;
+				}
+			`,
+		},
+		{
+			// See #248 and #720
+			description: `a flag this syntax reads out of the text of an inline comment, the semicolon behind it that text as well, which Less reads no semicolon in`,
+			code: `
+				a { color: red // c !important;
+				top: 0;
+				}
+			`,
+		},
+	],
+
 	reject: [
 		{
 			// See #248
@@ -45,23 +68,6 @@ testRule({
 			`,
 			line: 1,
 			column: 17,
-			message: messages.rejectedAfterMultiLine(),
-		},
-		{
-			// See #248
-			description: `a flag this syntax reads out of the text of an inline comment, which leaves the comment open across the semicolon, so the declaration behind it cannot join that line`,
-			code: `
-				a { color: red // c !important;
-				top: 0;
-				}
-			`,
-			fixed: `
-				a { color: red // c !important;
-				top: 0;
-				}
-			`,
-			line: 1,
-			column: 32,
 			message: messages.rejectedAfterMultiLine(),
 		},
 		{
@@ -106,20 +112,13 @@ testRule({
 	config: [`always`],
 	customSyntax: `postcss-less`,
 
-	reject: [
+	accept: [
 		{
-			// See #248
-			description: `a flag this syntax reads out of the text of an inline comment, where the break this option writes is what closes that comment`,
+			// See #248 and #720
+			description: `a flag this syntax reads out of the text of an inline comment, the semicolon behind it and the declaration after that text as well, which Less reads no semicolon in`,
 			code: `
 				a { color: red // c !important; top: 0; }
 			`,
-			fixed: `
-				a { color: red // c !important;
-				 top: 0; }
-			`,
-			line: 1,
-			column: 32,
-			message: messages.expectedAfter(),
 		},
 	],
 })

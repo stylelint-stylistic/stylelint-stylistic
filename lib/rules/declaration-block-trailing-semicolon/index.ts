@@ -383,7 +383,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!parent) throw new Error(`A parent node must be present`)
 
-			let flagIsCommentText = syntax.semicolonFlagIsCommentText(node, result)
+			let flagIsCommentText = syntax.closingSemicolonIsCommentText(node, result)
 			let raws = rawsBehind(syntax, node, result, flagIsCommentText)
 			let hasSemicolon = endsOnSemicolon(node, raws, flagIsCommentText)
 			// `never` asks for the semicolon's place, since the block can end on one the flag does not cover
