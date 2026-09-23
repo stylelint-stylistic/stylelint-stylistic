@@ -13,6 +13,7 @@ import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { pastEndOfLineComment } from "../../utils/pastEndOfLineComment/index.ts"
 import { rawNodeString } from "../../utils/rawNodeString/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runBehindBrace } from "../../utils/runBehindBrace/index.ts"
 import { isString } from "../../utils/validateTypes/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesRunBehindBrace } from "../../utils/writesRunBehindBrace/index.ts"
@@ -116,8 +117,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				reportIndex += 1
 			}
 
+			// The run the check reads opens behind that one semicolon, so the fix writes behind it too and keeps whatever stands behind the run; `never` would leave a further semicolon abutting the brace and a new run behind it to judge, so there the warning stands
+			let { semicolon, run, holdsASemicolon } = runBehindBrace(nodeToCheck)
 			// The space twin writes this raw too, and where the two accept no spelling in common only the one that runs last may write it (#698)
-			let isFixable = writesRunBehindBrace(syntax, statement, result, ruleName)
+			let isFixable = typeof nodeToCheck.raws.before === `string`
+				&& (primary.startsWith(`always`) || !holdsASemicolon)
+				&& writesRunBehindBrace(syntax, statement, result, ruleName)
 
 			// One character only; the rest is `indentation`'s
 			checker.afterOneOnly({
@@ -134,17 +139,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						ruleName,
 						...(isFixable && {
 							fix (): void {
-								let nodeToCheckRaws = nodeToCheck.raws
-
-								if (typeof nodeToCheckRaws.before !== `string`) return
+								let rest = (nodeToCheck.raws.before as string).slice(semicolon.length + run.length)
 
 								if (primary.startsWith(`always`)) {
 									// Keep an existing break, add one where none is
-									let index = nodeToCheckRaws.before.search(LINE_BREAK)
+									let index = run.search(LINE_BREAK)
 
-									nodeToCheckRaws.before = index >= 0 ? nodeToCheckRaws.before.slice(index) : getLineBreak(root, result) + nodeToCheckRaws.before
+									nodeToCheck.raws.before = semicolon + (index >= 0 ? run.slice(index) : getLineBreak(root, result) + run) + rest
 								}
-								else if (primary.startsWith(`never`)) nodeToCheckRaws.before = ``
+								else if (primary.startsWith(`never`)) nodeToCheck.raws.before = semicolon + rest
 							},
 						}),
 					})

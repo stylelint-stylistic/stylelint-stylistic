@@ -81,7 +81,7 @@ function writtenNodeOf (participant: Participant, configuredName: string, result
 /**
  * Asks whether the asking rule is the one to write the run behind a closing brace, which both `block-closing-brace-*-after` rules write into a node's `raws.before` ([#698](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/698)).
  *
- * A rule writes only where every rule behind it in run order that would write the very same raw accepts a spelling it accepts too; otherwise that rule's write would be the file's last and this one's warning would be dropped as fixed over a run it does not accept ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)). Where the two accept a spelling in common both may write, since what either leaves the other accepts; the texts are not identical, the space rule keeping a stray semicolon the break rule takes away with the rest of the raw ([#687](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/687)).
+ * A rule writes only where every rule behind it in run order that would write the very same raw accepts a spelling it accepts too; otherwise that rule's write would be the file's last and this one's warning would be dropped as fixed over a run it does not accept ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)). Where the two accept a spelling in common both may write, since what either leaves the other accepts.
  *
  * A neighbour that would write nothing gates nothing, so its `disableFix`, its disable ranges and its own guards — the at-rules it passes over, the raw it writes, the semicolon the space rule refuses to write over — are asked before it is counted in ([#536](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/536)).
  *
