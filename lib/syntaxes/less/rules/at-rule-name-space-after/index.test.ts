@@ -135,3 +135,21 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`always`],
+	customSyntax: `postcss-less`,
+
+	accept: [
+		{
+			// See #724
+			description: `the shape of a detached ruleset call under a name Less reads shorter than the parser, whose name no whitespace can be written behind without landing in the at-rule's options`,
+			code: `
+				a {
+					@dr$();
+				}
+			`,
+		},
+	],
+})
