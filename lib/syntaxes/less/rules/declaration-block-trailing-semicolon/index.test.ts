@@ -540,6 +540,24 @@ testRule({
 			`,
 		},
 		{
+			// See #722
+			description: `a semicolon in the text of an inline comment behind a custom property's bare value, which Less's comment-and-entity loop consumes together with the comment`,
+			code: `
+				a {
+					--x: pink // ;
+				}
+			`,
+		},
+		{
+			// See #722
+			description: `the same comment behind a custom property's value written as a bracketed group, another entity that loop consumes whole`,
+			code: `
+				a {
+					--x: [a] // ;
+				}
+			`,
+		},
+		{
 			// See #359
 			description: `the same comment behind a mixin call`,
 			code: `
@@ -915,6 +933,15 @@ testRule({
 			fixed: `a { --x: !important }`,
 			line: 1,
 			column: 20,
+			message: messages.rejected,
+		},
+		{
+			// Spelled with escapes because the fix leaves nothing but a trailing space behind the comment, which an indented block would leave to whatever trims the file. See #722
+			description: `a semicolon in the text of an inline comment behind a custom property's bare parenthesised group, which is no call and no entity that loop consumes whole, so the flag is believed as it was before this option had a bare entity to tell it from`,
+			code: `a {\n\t--x: (a) // ;\n}\n`,
+			fixed: `a {\n\t--x: (a) // \n}\n`,
+			line: 2,
+			column: 14,
 			message: messages.rejected,
 		},
 		{
