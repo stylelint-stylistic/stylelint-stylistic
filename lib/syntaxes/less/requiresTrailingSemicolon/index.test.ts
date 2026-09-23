@@ -153,8 +153,8 @@ describe(`requiresTrailingSemicolon`, () => {
 			expect(closingALessBlock(`.b() !important`)).toBe(false)
 		})
 
-		it(`a declaration, whose semicolon Less parts with`, () => {
-			expect(closingALessBlock(`color: pink`)).toBe(false)
+		it(`a declaration carrying a value, which Less reads through a grammar this plugin does not carry, so the semicolon stays whatever the value is`, () => {
+			expect(closingALessBlock(`color: pink`)).toBe(true)
 		})
 
 		it(`a declaration spelling no value, which Less reads to the semicolon exactly as it reads a bodiless at-rule`, () => {
@@ -177,8 +177,8 @@ describe(`requiresTrailingSemicolon`, () => {
 			expect(closingALessBlock(`color: !important`)).toBe(true)
 		})
 
-		it(`the same flag behind a value, which the value answers for`, () => {
-			expect(closingALessBlock(`color: pink !important`)).toBe(false)
+		it(`the same flag behind a value, no narrower a reading than the bare value gets`, () => {
+			expect(closingALessBlock(`color: pink !important`)).toBe(true)
 		})
 
 		it(`a custom property spelling no value`, () => {
