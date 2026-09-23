@@ -130,6 +130,40 @@ testRule({
 			column: 6,
 			message: messages.expectedAfter(),
 		},
+		{
+			// The semicolon stands in the next node's leading raw, and the fix writes behind it rather than putting the break in front of it
+			description: `a stray semicolon behind the brace of an at-rule, which the parser keeps in the next node's leading raw, with a space behind it`,
+			code: `@media print { a {} }; b {}`,
+			fixed: `@media print { a {} };\n b {}`,
+			line: 1,
+			column: 23,
+			message: messages.expectedAfter(),
+		},
+		{
+			// The break goes into the run in front of the semicolon, which stays with the break behind it
+			description: `the same semicolon with a space in front of it and a break behind it`,
+			code: `@media print { a {} } ;\nb {}`,
+			fixed: `@media print { a {} }\n ;\nb {}`,
+			line: 1,
+			column: 22,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `the same semicolon with a space in front of it and the rule abutting it`,
+			code: `@media print { a {} } ;b {}`,
+			fixed: `@media print { a {} }\n ;b {}`,
+			line: 1,
+			column: 22,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `two stray semicolons behind the brace of an at-rule, the run behind the first opening on the second`,
+			code: `@media print { a {} };;\nb {}`,
+			fixed: `@media print { a {} };\n;\nb {}`,
+			line: 1,
+			column: 23,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
@@ -631,6 +665,53 @@ testRule({
 				@media print { a {
 				color: pink; }}@media screen { b {
 				color: red; }}
+			`,
+			line: 2,
+			column: 16,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		{
+			// The semicolon stands in the next node's leading raw, and the fix takes the break behind it and keeps it
+			description: `a stray semicolon behind the brace of a multi-line at-rule, which the parser keeps in the next node's leading raw`,
+			code: `
+				@media print { a {
+				color: pink; }};
+				b {}
+			`,
+			fixed: `
+				@media print { a {
+				color: pink; }};b {}
+			`,
+			line: 2,
+			column: 17,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		{
+			description: `two stray semicolons behind a multi-line rule, the parser keeping the first in the rule and the second in the next node`,
+			code: `
+				a {
+				color: pink; };;
+				b {}
+			`,
+			fixed: `
+				a {
+				color: pink; };;b {}
+			`,
+			line: 2,
+			column: 17,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		{
+			description: `a stray semicolon with a space in front of it behind a multi-line at-rule, where taking the space away leaves the break behind the semicolon to report, so the warning stands`,
+			code: `
+				@media print { a {
+				color: pink; }} ;
+				b {}
+			`,
+			fixed: `
+				@media print { a {
+				color: pink; }} ;
+				b {}
 			`,
 			line: 2,
 			column: 16,

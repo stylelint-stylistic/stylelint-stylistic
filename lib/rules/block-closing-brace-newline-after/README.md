@@ -29,7 +29,7 @@ This rule allows a trailing semicolon after the closing brace of a block. F
 }
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule. It writes nothing where `block-closing-brace-space-after` asks for something else of the same run and either writes it last or was already content with the run as it stands; the warning stands there instead.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule. It writes nothing where `block-closing-brace-space-after` asks for something else of the same run and either writes it last or was already content with the run as it stands, nor, under the `never` options, where a stray semicolon stands inside the run itself rather than behind the brace. The warning stands in both.
 
 ## Options
 
