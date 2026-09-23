@@ -324,7 +324,7 @@ export type Syntax = {
 	interpolationSpans (text: string, node: Node, result: PostcssResult): InterpolationSpan[],
 
 	/**
-	 * Asks whether the rule carries a parameter list, a Less mixin definition, which `indentation` holds a level deeper than the selector.
+	 * Asks whether the rule carries a parameter list, a Less mixin definition, whose head `indentation` measures as it measures an at-rule's parameters.
 	 * @param rule - The rule whose selector may carry a parameter list.
 	 * @returns True where it does.
 	 */
