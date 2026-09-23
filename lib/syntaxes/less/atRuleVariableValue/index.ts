@@ -23,8 +23,8 @@ export function atRuleVariableValue (atRule: AtRule): AtRuleVariableValue | null
 			text: printedText(atRule),
 			index: atRuleParamIndex(atRule),
 			write (fixed: string): void {
-				writePrintedText(atRule, fixed)
 				syncLessVariableValue(atRule, fixed)
+				writePrintedText(atRule, fixed)
 			},
 		}
 	}

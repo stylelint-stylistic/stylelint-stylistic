@@ -54,9 +54,10 @@ export let less: Syntax = {
 	readsWhitespaceBehindAtRuleName,
 	// A Less variable keeps one copy more than the core writes, the `value` its stringifier prints
 	write (node: AtRule | Declaration | PostcssRule, text: string): void {
-		css.write(node, text)
-
+		// The mirror reads the head of the params as they stand, so it goes first (#650)
 		if (isAtRule(node)) syncLessVariableValue(node, text)
+
+		css.write(node, text)
 	},
 	// A styled template is the styled namespace's, a file opened with no custom syntax plain CSS; the rest are told apart by a `//`: Less spells such a comment and keeps it in the text a rule reads, `postcss-scss` keeps none, a syntax spelling none reads the probe as plain CSS
 	accepts (root: Root, result: PostcssResult): boolean {

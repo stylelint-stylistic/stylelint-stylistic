@@ -165,3 +165,21 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`always`],
+	customSyntax: `postcss-less`,
+
+	reject: [
+		{
+			// See #650; the column stands two too far right
+			description: `a Less variable whose value opens with a colon of its own, which the parser keeps in front of the value and out of the copy it prints`,
+			code: `@v: : .5px;`,
+			fixed: `@v: : 0.5px;`,
+			line: 1,
+			column: 9,
+			message: messages.expected,
+		},
+	],
+})
