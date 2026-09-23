@@ -7,6 +7,7 @@ import rules from "../../lib/rules/index.ts"
 import { css } from "../../lib/syntaxes/css/index.ts"
 import { namespaces } from "../../lib/syntaxes/index.ts"
 import { buildRegistry, lintDirect } from "../harness/lint.ts"
+import { namespaceTakes } from "../oracles/options.ts"
 
 import { DEFAULT_SYNTAXES, type Sweep } from "./measure.ts"
 
@@ -57,7 +58,7 @@ describe(`the configurations the sweeps measure under`, () => {
 
 		for (let [file, sweep] of sweeps) {
 			for (let syntaxName of sweep.syntaxes ?? DEFAULT_SYNTAXES) {
-				for (let config of sweep.configs) {
+				for (let config of sweep.configs.filter((setting) => namespaceTakes(syntaxName, setting.rule, setting.primary))) {
 					let name = nameOf(syntaxName, config.rule)
 					// The text is read as plain CSS whichever namespace is asked: a rule refuses an option before reading anything of the file, and a stylesheet opened with no custom syntax is one every namespace accepts, so no syntax package is loaded to put the question
 					// eslint-disable-next-line no-await-in-loop

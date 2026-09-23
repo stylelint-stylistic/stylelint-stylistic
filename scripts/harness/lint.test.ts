@@ -4,7 +4,7 @@ import { assert, describe, expect, it } from "vitest"
 import rules from "../../lib/rules/index.ts"
 import { css } from "../../lib/syntaxes/css/index.ts"
 import { namespaces } from "../../lib/syntaxes/index.ts"
-import { RULE_OPTIONS } from "../oracles/options.ts"
+import { NAMESPACE_REFUSALS, namespaceTakes, RULE_OPTIONS } from "../oracles/options.ts"
 
 import { buildRegistry, lint, lintDirect, type RuleSetting } from "./lint.ts"
 
@@ -73,7 +73,7 @@ describe(`the option list the oracles read`, () => {
 
 		for (let [syntaxName, syntax] of SYNTAXES) {
 			for (let [rule, primaries] of Object.entries(RULE_OPTIONS)) {
-				for (let primary of primaries) {
+				for (let primary of primaries.filter((option) => namespaceTakes(syntaxName, rule, option))) {
 					let name = syntaxName === `css` ? rule : `${syntaxName}/${rule}`
 					// An array in the list is a whole setting, primary first and secondary options behind, as `runs.ts` hands it to a configuration
 					// eslint-disable-next-line no-await-in-loop
@@ -85,5 +85,24 @@ describe(`the option list the oracles read`, () => {
 		}
 
 		expect(refused).toStrictEqual([])
+	})
+
+	it(`leaves out options each of which its namespace refuses`, async () => {
+		let taken: string[] = []
+
+		for (let [syntaxName, refusals] of Object.entries(NAMESPACE_REFUSALS)) {
+			let syntax = SYNTAXES.find(([name]) => name === syntaxName)?.[1]
+
+			for (let [rule, primaries] of Object.entries(refusals)) {
+				for (let primary of primaries) {
+					// eslint-disable-next-line no-await-in-loop
+					let answer = await lintDirect({ code: CODE, rules: [[`${syntaxName}/${rule}`, primary]], registry: REGISTRY, syntax })
+
+					if (answer.unparsable || answer.invalidOptions.length === 0) taken.push(`${syntaxName}/${rule}: ${JSON.stringify(primary)}`)
+				}
+			}
+		}
+
+		expect(taken).toStrictEqual([])
 	})
 })

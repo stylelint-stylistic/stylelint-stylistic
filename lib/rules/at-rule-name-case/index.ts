@@ -34,9 +34,10 @@ export type PrimaryOption = `lower` | `upper`
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
 	return (root, result) => {
+		// A syntax refusing an upper-case name leaves `upper` no file to write, so it is no option there (#578)
 		let validOptions = validateOptions(result, ruleName, {
 			actual: primary,
-			possible: [`lower`, `upper`],
+			possible: syntax.readsUpperCaseAtRuleName() ? [`lower`, `upper`] : [`lower`],
 		})
 
 		if (!validOptions) return

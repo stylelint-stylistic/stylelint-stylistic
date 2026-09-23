@@ -18,6 +18,7 @@ import { digestOf, keyOf, measuredTreeOf, read, readDigest, write } from "../har
 import { defaultBase, libAt, ROOT, type Side } from "../harness/checkout.ts"
 import { diff, render } from "../harness/diff.ts"
 import { lintDirect, loadRules, type Registry } from "../harness/lint.ts"
+import { namespaceTakes } from "../oracles/options.ts"
 
 import { inputsOf } from "./key.ts"
 import { configKeyOf, expand, flatten, type Nested, type Row, settingOf, type Sweep, syntaxesOf, tasksOf } from "./measure.ts"
@@ -114,6 +115,8 @@ async function refusalsOf (registry: Registry): Promise<string[]> {
 
 	for (let syntaxName of syntaxesOf(sweep)) {
 		for (let config of sweep.configs) {
+			if (!namespaceTakes(syntaxName, config.rule, config.primary)) continue
+
 			// eslint-disable-next-line no-await-in-loop
 			let answer = await lintDirect({ code: PROBE, rules: [settingOf(syntaxName, config)], registry })
 

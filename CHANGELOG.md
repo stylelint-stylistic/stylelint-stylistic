@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 #### Namespaces for custom syntaxes
 
-The rules under their core names no longer read an SCSS or Less stylesheet, or a styled template: such a file now gets one warning naming the namespace that holds the same rules with the same options and documentation, and nothing else of it is checked.
+The rules under their core names no longer read an SCSS or Less stylesheet, or a styled template: such a file now gets one warning naming the namespace that holds the same rules with the same options and documentation, and nothing else of it is checked. An option a namespace's syntax cannot carry is refused there instead: Less refuses an at-rule name in upper case, so `upper` is an invalid option of `@stylistic/less/at-rule-name-case`, since a stylistic fix must never leave a file its compiler refuses.
 
 Rename the rules in the `overrides` block that sets `customSyntax` — `@stylistic/scss/indentation` in place of `@stylistic/indentation`, and `less` or `styled` in place of `scss` for the other two. Nothing else in the configuration changes, and a namespace reads plain CSS exactly as the core does.
 

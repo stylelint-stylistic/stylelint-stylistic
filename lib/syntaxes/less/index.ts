@@ -45,6 +45,8 @@ export let less: Syntax = {
 	readsNumberWithExponent: () => false,
 	// Less reads a unit as `%` or a run of ASCII letters and underscores, so `10px\#fff` is a dimension and an escaped value (#527), `10PX-2REM` two dimensions it subtracts (#633) and `10PX9` a dimension and a number (#646). Answered for the whole namespace, since the units it reads are substrings of the one the core reads, on the same positions, so this half of the reading costs at most a warning
 	readsUnitAsIdentifier: () => false,
+	// Less reads an at-rule name with an upper-case letter as something else, and refuses `@PAGE` and `@Media` alike (#578)
+	readsUpperCaseAtRuleName: () => false,
 	// Less refuses a file with a quotation mark inside a bare address under every spelling of the name, `Expected ')'`, so nothing is written into one (1789604002)
 	readsQuoteInsideAddressAsString: () => false,
 	readsWhitespaceBehindAtRuleName,
