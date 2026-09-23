@@ -1099,3 +1099,48 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`never`],
+	customSyntax: `postcss-less`,
+
+	reject: [
+		{
+			// See #724
+			description: `the shape of a detached ruleset call under a name Less does not call a ruleset by, which Less reads as an at-rule closed on its semicolon`,
+			code: `
+				a {
+					@dr$() // c
+					;
+				}
+			`,
+			fixed: `
+				a {
+					@dr$() // c
+					;
+				}
+			`,
+			line: 3,
+			column: 2,
+			message: messages.rejected,
+		},
+		{
+			// See #724
+			description: `the same at-rule with its semicolon right behind it`,
+			code: `
+				a {
+					@dr$();
+				}
+			`,
+			fixed: `
+				a {
+					@dr$();
+				}
+			`,
+			line: 2,
+			column: 8,
+			message: messages.rejected,
+		},
+	],
+})

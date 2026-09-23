@@ -12,7 +12,7 @@ import { isCustomProperty } from "../../../utils/isCustomProperty/index.ts"
 import { lastNonCommentNode } from "../../../utils/lastNonCommentNode/index.ts"
 import { isAtRule, isDeclaration } from "../../../utils/typeGuards/index.ts"
 import { isLessDetachedRulesetCall } from "../isLessDetachedRulesetCall/index.ts"
-import { LESS_CALL_OPENING, LESS_CUSTOM_PROPERTY_BARE_ENTITY, LESS_DETACHED_RULESET_NAME } from "../regexps.ts"
+import { LESS_CALL_OPENING, LESS_CUSTOM_PROPERTY_BARE_ENTITY } from "../regexps.ts"
 
 /**
  * Returns a custom property's value with its trailing `//` comment blanked out and the whitespace that stood beside it trimmed.
@@ -79,7 +79,7 @@ function readsTheComment (node: Node, result: PostcssResult): boolean {
 		return LESS_CUSTOM_PROPERTY_BARE_ENTITY.test(value) || isBalancedCall(value)
 	}
 
-	return isAtRule(node) && (Boolean((node as AtRule).mixin) || (isLessDetachedRulesetCall(node) && LESS_DETACHED_RULESET_NAME.test(node.name)))
+	return isAtRule(node) && (Boolean((node as AtRule).mixin) || isLessDetachedRulesetCall(node))
 }
 
 /**

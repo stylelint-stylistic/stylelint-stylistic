@@ -6,7 +6,7 @@ import { LEADING_OPERATOR } from "../../../regexps.ts"
 import { isStandardSyntaxProperty } from "../../../utils/isStandardSyntaxProperty/index.ts"
 import { isRule } from "../../../utils/typeGuards/index.ts"
 import { withoutQuotedTextAndComments } from "../../../utils/withoutQuotedTextAndComments/index.ts"
-import { isLessDetachedRulesetCall } from "../isLessDetachedRulesetCall/index.ts"
+import { hasLessDetachedRulesetCallShape } from "../isLessDetachedRulesetCall/index.ts"
 import { isLessVariableDeclaration } from "../isLessVariableDeclaration/index.ts"
 import { LESS_EXTEND, LESS_EXTEND_CALL, LESS_GUARD, LESS_PARAMETRIC_MIXIN, LESS_RESOLVED_MIXIN } from "../regexps.ts"
 
@@ -21,8 +21,8 @@ export function isStandardLessAtRule (atRule: AtRule | LessAtRule): boolean {
 	// Ignore Less mixins
 	if (`mixin` in atRule && atRule.mixin) return false
 
-	// A variable declaration or a detached ruleset call, `@dr();`
-	if (isLessVariableDeclaration(atRule) || isLessDetachedRulesetCall(atRule)) return false
+	// A variable declaration or a detached ruleset call, `@dr();`, and the same shape under a name Less reads shorter than the parser does, `@dr$()` being `@dr` in front of `$()`, whose name no rule can write beside (#724)
+	if (isLessVariableDeclaration(atRule) || hasLessDetachedRulesetCallShape(atRule)) return false
 
 	return true
 }
