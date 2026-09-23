@@ -31,7 +31,7 @@ describe(`commentTextHead`, () => {
 		expect(commentTextHead(bareReturn.rule, `after`, bareReturn.result)).toBe(`;`)
 	})
 
-	it(`the text on through a block comment carved out of the comment, and an empty head where the break opens the raw, behind an inline comment carved out of it too`, () => {
+	it(`the text on through a block comment carved out of the comment, and an empty head where the break opens the raw, behind an inline comment carved out of it too, and behind a node Less may read the comment behind or not`, () => {
 		let { rule, result } = block(`color: pink // ; /* c */ ;`)
 
 		expect(commentTextHead(rule.last as ChildNode, `before`, result)).toBe(` `)
@@ -40,6 +40,10 @@ describe(`commentTextHead`, () => {
 		let opened = block(`color: pink // ;`)
 
 		expect(commentTextHead(opened.rule, `after`, opened.result)).toBe(``)
+
+		let variable = block(`@v: pink // ; /* c */ ;`)
+
+		expect(commentTextHead(variable.rule, `after`, variable.result)).toBe(` ;`)
 
 		let inline = block(`color: pink // ; // c ;\n\t;`)
 
