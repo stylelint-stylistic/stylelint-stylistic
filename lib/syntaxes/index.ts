@@ -6,7 +6,7 @@ import type { PostcssResult } from "stylelint"
 import type { InlineComment } from "../preprocessor/findSelectorInlineComments/index.ts"
 import type { InlineCommentReading } from "../preprocessor/readsInlineComments/index.ts"
 import type { Edit } from "../utils/applyEditsFromEnd/index.ts"
-import type { AddressSpan, CommentSpan } from "../utils/findCommentSpans/index.ts"
+import type { AddressAtRules, AddressSpan, CommentSpan } from "../utils/findCommentSpans/index.ts"
 import type { InterpolationSpan } from "../utils/findInterpolationSpans/index.ts"
 
 import { less } from "./less/index.ts"
@@ -304,6 +304,12 @@ export type Syntax = {
 	 * @returns True where a string opens there, false where the mark is a character of the address.
 	 */
 	readsQuoteInsideAddressAsString (): boolean,
+
+	/**
+	 * Names the at-rules the syntax reads an address behind, which `max-line-length` takes off a line: CSS an `@import`, Sass its `@use` and `@forward` as well, Less its `@plugin` as well, with the group of options or arguments it allows in front of the address ([#656](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/656)).
+	 * @returns The names and whether a group may stand in front of the address.
+	 */
+	addressAtRules (): AddressAtRules,
 
 	/**
 	 * Asks whether whitespace written behind an at-rule's name changes what the syntax reads the at-rule as.

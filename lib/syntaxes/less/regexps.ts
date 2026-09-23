@@ -15,6 +15,18 @@ export const LESS_GUARD = /\swhen\s*(?:not\s*)?\(/u
 /** The head of a Less mixin definition's selector: one class or id name, escapes included, and the parenthesis opening its parameter list, whitespace allowed in front; the pattern Less's `mixin.definition` reads, but for an escaped character outside the Basic Multilingual Plane, which this reads whole and Less refuses ([#651](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/651)). */
 export const LESS_MIXIN_DEFINITION_HEAD = /^[#.](?:[\w-]|\\(?:[\dA-Fa-f]{1,6} ?|[^\dA-Fa-f]))+\s*\(/u
 
+/** An option Less reads in the parentheses between `@import` and its address, as its `importOption` reads one: the word at the start of the text, whatever follows it (#656). */
+export const LESS_IMPORT_OPTION = /^(?:less|css|multiple|once|inline|reference|optional)/u
+
+/** The arguments Less reads in the parentheses between `@plugin` and its address, as its `pluginArgs` reads them: everything up to the closing parenthesis, one character at least, no semicolon (#656). */
+export const LESS_PLUGIN_ARGUMENTS = /^[^);]+\)/u
+
+/** The whitespace Less asks for right behind the name of an `@import` or a `@plugin`, as its `\s+` there reads one. */
+export const LESS_LEADING_WHITESPACE = /^\s/u
+
+/** A character Less's `skipWhitespace` steps over between the tokens of such a group. */
+export const LESS_SKIPPED_WHITESPACE = /^[\t\n\r ]$/u
+
 /** The parameter list closing a Less parametric mixin's selector. */
 export const LESS_PARAMETRIC_MIXIN = /\(@.*\)$/u
 

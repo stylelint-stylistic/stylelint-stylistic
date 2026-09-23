@@ -32,3 +32,41 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	customSyntax: `postcss-scss`,
+	config: [10],
+
+	accept: [
+		{
+			// See #656
+			description: `a use whose line is its module's address and little more, which Sass loads as an import loads its file: 37 - 31 = 6`,
+			code: `@use "aaaaaaaaaaaaaaaaaaaaaaaa.scss";`,
+		},
+		{
+			// See #656
+			description: `a forward in the same shape: 37 - 27 = 10`,
+			code: `@forward "aaaaaaaaaaaaaaaaaaaa.scss";`,
+		},
+	],
+
+	reject: [
+		{
+			// See #656
+			description: `a use spelled in upper case, which dart-sass passes through as plain CSS and loads nothing by`,
+			code: `@USE "aaaaaaaaaaaaaaaaaaaaaaaa.scss";`,
+			line: 1,
+			column: 37,
+			message: messages.expected(10),
+		},
+		{
+			// See #656
+			description: `an at-rule whose name only begins with the letters of a use, whose string names no module`,
+			code: `@usex "aaaaaaaaaaaaaaaaaaaa.scss";`,
+			line: 1,
+			column: 34,
+			message: messages.expected(10),
+		},
+	],
+})

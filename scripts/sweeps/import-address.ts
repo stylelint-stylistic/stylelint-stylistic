@@ -1,5 +1,5 @@
 /**
- * The address of an `@import`, under every spelling of the at-rule's name, of what stands between the name and the address, and of where the at-rule itself stands ([#552](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/552)).
+ * The address of an `@import`, and of the at-rules a namespace reads one behind — Sass's `@use` and `@forward`, Less's `@plugin` ([#656](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/656)) —, under every spelling of the at-rule's name, of what stands between the name and the address, and of where the at-rule itself stands ([#552](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/552)).
  *
  * `max-line-length` is the one reader of such an address, and no oracle carries an `@import` naming a string at all: the `atRule` place of `address-in-a-text` names a `url()` and nothing else. A row says which lines the rule speaks about. The controls are a name six letters long that goes on, another at-rule taking a string, and a word between the name and the address; a branch moving one of those has read something it should not.
  */
@@ -8,16 +8,19 @@ import { keysOf, multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** The spellings CSS reads as `import`, a name that merely opens with them, and another at-rule taking a string. */
+/** The spellings CSS reads as `import`, the other names a namespace reads an address behind, a name that merely opens with them, and another at-rule taking a string. */
 const NAMES: Record<string, string> = {
 	plain: `@import`,
 	upper: `@IMPORT`,
 	hexEscaped: `@\\69 mport`,
 	longer: `@imports`,
+	use: `@use`,
+	forward: `@forward`,
+	plugin: `@plugin`,
 	otherAtRule: `@charset`,
 }
 
-/** What stands between the name and the address; the grammar asks for none of it, and a word ends the wait for an address. */
+/** What stands between the name and the address; the grammar asks for none of it, a word ends the wait for an address, and a group of words in parentheses ends it everywhere but under Less. */
 const SEPARATORS: Record<string, string> = {
 	none: ``,
 	space: ` `,
@@ -26,6 +29,8 @@ const SEPARATORS: Record<string, string> = {
 	blockComment: ` /*c*/ `,
 	inlineComment: ` //c\n`,
 	word: ` a `,
+	group: ` (reference) `,
+	groupList: ` (reference, optional) `,
 }
 
 /** The string the at-rule names, with characters a reader may misread inside it, and the two spellings that are no address of a line: an address written as a call, and one reaching past its line. */

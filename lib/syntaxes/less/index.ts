@@ -3,10 +3,12 @@ import type { PostcssResult } from "stylelint"
 
 import { isStandardPreprocessorComment } from "../../preprocessor/guards/index.ts"
 import { inlineCommentReading } from "../../preprocessor/readsInlineComments/index.ts"
+import type { AddressAtRules } from "../../utils/findCommentSpans/index.ts"
 import { isAtRule } from "../../utils/typeGuards/index.ts"
 import { css } from "../css/index.ts"
 import type { Syntax } from "../index.ts"
 
+import { addressGroupLength } from "./addressGroupLength/index.ts"
 import { atRuleVariableValue } from "./atRuleVariableValue/index.ts"
 import { closingSemicolonIsCommentText } from "./closingSemicolonIsCommentText/index.ts"
 import { commentTextHead } from "./commentTextHead/index.ts"
@@ -18,6 +20,9 @@ import { requiresTrailingSemicolon } from "./requiresTrailingSemicolon/index.ts"
 import { restoreMixinFlagRuns } from "./restoreMixinFlagRuns/index.ts"
 import { syncLessVariableValue } from "./syncLessVariableValue/index.ts"
 import { LESS_MIXIN_DEFINITION_HEAD } from "./regexps.ts"
+
+/** The at-rules Less reads an address behind, a group of options or arguments allowed in front of it. `@plugin` is read in lower case alone, since Less refuses the name in any other. */
+const LESS_ADDRESS_AT_RULES: AddressAtRules = { names: [{ name: `import`, anyCase: true }, { name: `plugin`, anyCase: false }], skipGroup: addressGroupLength }
 
 /** The syntax of the `less` namespace: Less parsed with `postcss-less`. A superset of the core, plain CSS included, so a project holding both configures these rules alone for the Less files. */
 export let less: Syntax = {
@@ -51,6 +56,8 @@ export let less: Syntax = {
 	readsUpperCaseAtRuleName: () => false,
 	// Less refuses a file with a quotation mark inside a bare address under every spelling of the name, `Expected ')'`, so nothing is written into one (1789604002)
 	readsQuoteInsideAddressAsString: () => false,
+	// Less reads `(reference)` and its other import options between `@import` and the address, and the arguments of a `@plugin` in the same place (#656)
+	addressAtRules: () => LESS_ADDRESS_AT_RULES,
 	readsWhitespaceBehindAtRuleName,
 	// A Less variable keeps one copy more than the core writes, the `value` its stringifier prints
 	write (node: AtRule | Declaration | PostcssRule, text: string): void {

@@ -14,7 +14,7 @@ import { searchCopy } from "../../preprocessor/searchCopy/index.ts"
 import { toSelectorSourceIndex } from "../../preprocessor/toSelectorSourceIndex/index.ts"
 import { writesIntoInlineComment } from "../../preprocessor/writesIntoInlineComment/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
-import { type CommentSpan, findCommentSpans } from "../../utils/findCommentSpans/index.ts"
+import { type CommentSpan, CSS_ADDRESS_AT_RULES, findCommentSpans } from "../../utils/findCommentSpans/index.ts"
 import { findInterpolationSpans } from "../../utils/findInterpolationSpans/index.ts"
 import { isStandardSyntaxCombinator } from "../../utils/isStandardSyntaxCombinator/index.ts"
 import { isStandardSyntaxDeclaration } from "../../utils/isStandardSyntaxDeclaration/index.ts"
@@ -102,6 +102,7 @@ export let css: Syntax = {
 	readsUpperCaseAtRuleName: () => true,
 	// A quotation mark inside a bare address is a character of it: `URL(a"b"c)` is a bad-url token to the first `)`, as lightningcss reads it (1789604002)
 	readsQuoteInsideAddressAsString: () => false,
+	addressAtRules: () => CSS_ADDRESS_AT_RULES,
 	// Whitespace behind an at-rule's name only parts it from the prelude: `@import"x"` is `@import "x"`
 	readsWhitespaceBehindAtRuleName: () => false,
 	// A preprocessor's interpolations are read over plain CSS too, since a rule reading the inside of a `#{…}` as CSS would rewrite it (#298)

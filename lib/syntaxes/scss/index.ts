@@ -3,10 +3,14 @@ import type { PostcssResult } from "stylelint"
 
 import { isStandardPreprocessorAtRule, isStandardPreprocessorComment, isStandardPreprocessorDeclaration, isStandardPreprocessorRule, isStandardPreprocessorSelector, isStandardPreprocessorValue } from "../../preprocessor/guards/index.ts"
 import { inlineCommentReading } from "../../preprocessor/readsInlineComments/index.ts"
+import type { AddressAtRules } from "../../utils/findCommentSpans/index.ts"
 import { css } from "../css/index.ts"
 import type { Syntax } from "../index.ts"
 
 import { readsSlashAsOperator } from "./readsSlashAsOperator/index.ts"
+
+/** The at-rules Sass reads an address behind: its own two in lower case alone, since dart-sass passes `@USE` through as plain CSS. */
+const SCSS_ADDRESS_AT_RULES: AddressAtRules = { names: [{ name: `import`, anyCase: true }, { name: `use`, anyCase: false }, { name: `forward`, anyCase: false }] }
 
 /** The syntax of the `scss` namespace: SCSS parsed with `postcss-scss`. A superset of the core, plain CSS included, so a project holding both configures these rules alone for the SCSS files. */
 export let scss: Syntax = {
@@ -31,4 +35,6 @@ export let scss: Syntax = {
 	readsSlashAsOperator,
 	// Sass reads the parentheses of a `url()` holding a quotation mark as code: `URL(a"b"c)` compiles to `URL(a "b" c)`, the string printed double-quoted (1789604002)
 	readsQuoteInsideAddressAsString: () => true,
+	// Sass loads a module by the string behind `@use` and `@forward` as it does behind `@import` (#656)
+	addressAtRules: () => SCSS_ADDRESS_AT_RULES,
 }
