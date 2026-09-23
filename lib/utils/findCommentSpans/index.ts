@@ -11,25 +11,38 @@ import { readEscapedCharacter } from "../readEscapedCharacter/index.ts"
 import { readIdentifierCharacter } from "../readIdentifierCharacter/index.ts"
 import { skipString } from "../skipString/index.ts"
 
-/** The last character of code in front of an `@` that opens a statement, whitespace and comments aside: a brace either way, a semicolon, or nothing at the start of the text; behind anything else the six letters of an `@import` are a word of a value, a selector or another at-rule's params ([#657](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/657)). The closing brace of an interpolation counts as one too, which the walk cannot tell from a block's. */
+/** The last character of code in front of an `@` that opens a statement, whitespace and comments aside: a brace either way, a semicolon, or nothing at the start of the text; behind anything else the name of an at-rule naming an address is a word of a value, a selector or another at-rule's params ([#657](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/657)). The closing brace of an interpolation counts as one too, which the walk cannot tell from a block's. */
 const OPENS_A_STATEMENT = new Set([``, `{`, `}`, `;`])
 
+/** A name an at-rule is read to name an address by, and whether any case spells it: CSS reads `@import` ASCII case-insensitively, where Sass and Less read the at-rules of their own in lower case alone. */
+export type AddressAtRuleName = {
+	name: string,
+	anyCase: boolean,
+}
+
+/** The at-rules a syntax reads an address behind, and the reader of a group the syntax allows between one's name and its address: the text behind the name and the name in, the length of the group out, nothing where none stands there. */
+export type AddressAtRules = {
+	names: readonly AddressAtRuleName[],
+	skipGroup?: (text: string, name: string) => number,
+}
+
+/** The core's: the string an `@import` names. */
+export const CSS_ADDRESS_AT_RULES: AddressAtRules = { names: [{ name: `import`, anyCase: true }] }
+
 /**
- * Skips the name of an `@import`, whose letters may be escapes as a `url(`'s are: `@\69 mport` and `@IMPORT` name the same at-rule, `@imports` another word. The name is read where a statement can open, {@link OPENS_A_STATEMENT}, and is a word of the value, the selector or the params anywhere else ([#657](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/657)).
+ * Skips one name, whose letters may be escapes as a `url(`'s are: `@\69 mport` names an `@import`, `@imports` another word, and `@IMPORT` the same at-rule where any case spells it.
  * @param text - The text the name is read out of.
  * @param openIndex - The `@`.
- * @param lastCode - The last character of code in front of it that was no whitespace, or nothing.
+ * @param spelling - The name, in lower case, and whether any case spells it.
  * @returns Behind the name, or `openIndex`.
  */
-function skipImportName (text: string, openIndex: number, lastCode: string): number {
-	if (!OPENS_A_STATEMENT.has(lastCode)) return openIndex
-
+function skipName (text: string, openIndex: number, spelling: AddressAtRuleName): number {
 	let index = openIndex + 1
 
-	for (let letter of `import`) {
+	for (let letter of spelling.name) {
 		let { character, end } = readIdentifierCharacter(text, index)
 
-		if (character?.toLowerCase() !== letter) return openIndex
+		if ((spelling.anyCase ? character?.toLowerCase() : character) !== letter) return openIndex
 
 		index = end
 	}
@@ -39,6 +52,26 @@ function skipImportName (text: string, openIndex: number, lastCode: string): num
 	if (next === `\\` || (next !== undefined && IDENTIFIER_CODE_POINT.test(next))) return openIndex
 
 	return index
+}
+
+/**
+ * Skips the name of an at-rule that names an address, and the group behind it the syntax's reader finds there, Less's `(reference)` ([#656](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/656)). The name is read where a statement can open, {@link OPENS_A_STATEMENT}, and is a word of the value, the selector or the params anywhere else ([#657](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/657)).
+ * @param text - The text the name is read out of.
+ * @param openIndex - The `@`.
+ * @param lastCode - The last character of code in front of it that was no whitespace, or nothing.
+ * @param addressing - The at-rules the syntax reads an address behind.
+ * @returns Behind the name and the group, or `openIndex`.
+ */
+function skipAddressAtRuleName (text: string, openIndex: number, lastCode: string, addressing: AddressAtRules): number {
+	if (!OPENS_A_STATEMENT.has(lastCode)) return openIndex
+
+	for (let spelling of addressing.names) {
+		let behindName = skipName(text, openIndex, spelling)
+
+		if (behindName !== openIndex) return behindName + (addressing.skipGroup?.(text.slice(behindName), spelling.name) ?? 0)
+	}
+
+	return openIndex
 }
 
 /**
@@ -218,12 +251,13 @@ export type EscapeSpan = {
 /**
  * Walks a text once for its comments and addresses, each the other's exception: a protocol's `//` opens no comment, a `url(` inside a comment no address ([#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427)). A block comment's span holds its delimiters, a `//` comment's stops at the break.
  *
- * The address of an `@import` is the string standing behind the name, which only the walk can find: a pattern over the text cannot say where that string closes, nor whether the `@import` it matched is code rather than the text of a comment or of another string ([#552](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/552)). The name is read where a statement can open, {@link OPENS_A_STATEMENT}, and is a word of the value, the selector or the params anywhere else ([#657](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/657)). Whitespace and comments stand between the name and the string; anything else ends the wait.
+ * The address of an `@import`, and of the other at-rules the syntax names ({@link AddressAtRules}), is the string standing behind the name, which only the walk can find: a pattern over the text cannot say where that string closes, nor whether the name it matched is code rather than the text of a comment or of another string ([#552](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/552)). The name is read where a statement can open, {@link OPENS_A_STATEMENT}, and is a word of the value, the selector or the params anywhere else ([#657](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/657)). Whitespace, comments and the group the syntax reads there stand between the name and the string; anything else ends the wait.
  * @param text - The value, selector or params walked.
  * @param reading - What the syntax makes of a `//` comment ({@link inlineCommentReading}).
+ * @param addressing - The at-rules the syntax reads an address behind.
  * @returns The spans of both, and of the strings the walk stepped over.
  */
-function scan (text: string, reading: CommentReading): { comments: CommentSpan[], addresses: AddressSpan[], strings: StringSpan[], escapes: EscapeSpan[] } {
+function scan (text: string, reading: CommentReading, addressing: AddressAtRules): { comments: CommentSpan[], addresses: AddressSpan[], strings: StringSpan[], escapes: EscapeSpan[] } {
 	let spans: CommentSpan[] = []
 	let addresses: AddressSpan[] = []
 	let strings: StringSpan[] = []
@@ -231,8 +265,8 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 	let index = 0
 	// Whether the run just stepped over is part of a name
 	let behindIdentifier = false
-	// Whether an `@import` name has been read and its address not yet
-	let awaitsImportAddress = false
+	// Whether the name of an at-rule naming an address has been read and its address not yet
+	let awaitsAddress = false
 	// The last character of code stepped over that was no whitespace, or nothing, which says whether an `@` opens a statement
 	let lastCode = ``
 	// Where the step just taken opened, which says whether a `url` read next is a word of its own to the tokenizer
@@ -264,7 +298,7 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 				behindIdentifier = false
 			}
 
-			awaitsImportAddress = false
+			awaitsAddress = false
 			lastCode = character
 		}
 		else if (character === `"` || character === `'`) {
@@ -272,11 +306,11 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 
 			strings.push({ start: index, end: Math.min(end, text.length) })
 
-			if (awaitsImportAddress) pushQuotedAddress(text, index, end, addresses)
+			if (awaitsAddress) pushQuotedAddress(text, index, end, addresses)
 
 			index = end
 			behindIdentifier = false
-			awaitsImportAddress = false
+			awaitsAddress = false
 			lastCode = character
 		}
 		else if (character === `u` || character === `U`) {
@@ -296,14 +330,14 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 				behindIdentifier = false
 			}
 
-			awaitsImportAddress = false
+			awaitsAddress = false
 			lastCode = character
 		}
 		else if (character === `@`) {
-			let behindName = skipImportName(text, index, lastCode)
+			let behindName = skipAddressAtRuleName(text, index, lastCode, addressing)
 
-			awaitsImportAddress = behindName !== index
-			index = awaitsImportAddress ? behindName : index + 1
+			awaitsAddress = behindName !== index
+			index = awaitsAddress ? behindName : index + 1
 			behindIdentifier = false
 			lastCode = character
 		}
@@ -329,7 +363,7 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
 			index += 1
 
 			if (!WHITESPACE_ONLY.test(character)) {
-				awaitsImportAddress = false
+				awaitsAddress = false
 				lastCode = character
 			}
 		}
@@ -347,17 +381,18 @@ function scan (text: string, reading: CommentReading): { comments: CommentSpan[]
  * @returns The spans.
  */
 export function findCommentSpans (text: string, reading: CommentReading = SPELLS_INLINE_COMMENTS): CommentSpan[] {
-	return scan(text, reading).comments
+	return scan(text, reading, CSS_ADDRESS_AT_RULES).comments
 }
 
 /**
- * Finds the spans of a text's addresses — a `url()`'s as {@link pushBareAddress} and {@link pushQuotedAddress} measure it, an `@import`'s as {@link pushQuotedAddress} does. The comment walk finds them, since one inside a comment is no address and each letter of a name may be an escape ([#344](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/344), [#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427), [#552](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/552)).
+ * Finds the spans of a text's addresses — a `url()`'s as {@link pushBareAddress} and {@link pushQuotedAddress} measure it, the string an at-rule naming an address holds as {@link pushQuotedAddress} does. The comment walk finds them, since one inside a comment is no address and each letter of a name may be an escape ([#344](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/344), [#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427), [#552](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/552)).
  * @param text - The raw walked for addresses.
  * @param reading - What the syntax makes of a `//` comment ({@link inlineCommentReading}).
+ * @param addressing - The at-rules the syntax reads an address behind, the core's `@import` alone unless told.
  * @returns The spans, in source order.
  */
-export function findAddressSpans (text: string, reading: CommentReading = SPELLS_INLINE_COMMENTS): AddressSpan[] {
-	return scan(text, reading).addresses
+export function findAddressSpans (text: string, reading: CommentReading = SPELLS_INLINE_COMMENTS, addressing: AddressAtRules = CSS_ADDRESS_AT_RULES): AddressSpan[] {
+	return scan(text, reading, addressing).addresses
 }
 
 /**
@@ -367,7 +402,7 @@ export function findAddressSpans (text: string, reading: CommentReading = SPELLS
  * @returns The spans, in source order.
  */
 export function findStringSpans (text: string, reading: CommentReading = SPELLS_INLINE_COMMENTS): StringSpan[] {
-	return scan(text, reading).strings
+	return scan(text, reading, CSS_ADDRESS_AT_RULES).strings
 }
 
 /**
@@ -377,7 +412,7 @@ export function findStringSpans (text: string, reading: CommentReading = SPELLS_
  * @returns The spans, in source order.
  */
 export function findEscapeSpans (text: string, reading: CommentReading = SPELLS_INLINE_COMMENTS): EscapeSpan[] {
-	return scan(text, reading).escapes
+	return scan(text, reading, CSS_ADDRESS_AT_RULES).escapes
 }
 
 /**

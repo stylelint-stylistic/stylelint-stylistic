@@ -105,7 +105,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let tabSize = secondaryOptions?.tabSize ?? 1
 		let rootString = root.source.input.css
 		// The spans left out of the count, in the source order the line queue reads them in; the comment-finding walk alone can say where an address closes and whether the text around it is code (#427, #552)
-		let skippedSubStrings: Array<[number, number]> = findAddressSpans(rootString, syntax.inlineComments(root, result)).map(({ start, end }) => [start, end])
+		let skippedSubStrings: Array<[number, number]> = findAddressSpans(rootString, syntax.inlineComments(root, result), syntax.addressAtRules()).map(({ start, end }) => [start, end])
 		let skippedSubStringsIndex = 0
 
 		// Check first line
