@@ -81,9 +81,9 @@ describe(`trailingSemicolonAsked`, () => {
 		expect(asked(`a { b: ; c: red }`, { [TRAILING]: `never` }, 0)).toBeUndefined()
 	})
 
-	it(`a declaration behind which a Less inline comment holds a declaration past a bare carriage return, which the rule passes over, and one holding a semicolon there, which it takes away`, () => {
+	it(`a declaration behind which a Less inline comment holds a declaration past a bare carriage return, which the rule passes over, and one holding a semicolon there, which the value's own semicolon now keeps the rule from touching (#688)`, () => {
 		expect(askedUnderLess(`a {\n\tcolor: pink; // c\r top: 0;\n}`)).toBeUndefined()
-		expect(askedUnderLess(`a {\n\tcolor: pink; // c\r;\n}`)).toBe(false)
+		expect(askedUnderLess(`a {\n\tcolor: pink; // c\r;\n}`)).toBeUndefined()
 	})
 
 	it(`a declaration standing at the top level of a stylesheet, which ends no declaration block`, () => {

@@ -86,7 +86,7 @@ function spellsNoValue (decl: Declaration, result: PostcssResult): boolean {
 /**
  * Asks whether the syntax refuses to part with the semicolon behind a node.
  *
- * CSS and Sass make a block's trailing semicolon optional behind every node, which `never` of `declaration-block-trailing-semicolon` rests on; Less reads every blockless at-rule to its semicolon and refuses `a { @extend .b }` without one, and reads a declaration to it wherever {@link spellsNoValue}. {@link isLessAtRule} says which nodes are at-rules to Less; a disagreement costs a warning its fix, never a file Less refuses.
+ * CSS and Sass make a block's trailing semicolon optional behind every node, which `never` of `declaration-block-trailing-semicolon` rests on; Less reads every blockless at-rule to its semicolon and refuses `a { @extend .b }` without one. A plain declaration's value is read the same way Less reads any other expression, through a grammar this plugin does not carry, so whether the value in front of the semicolon still compiles once it is gone is not a question asked here at all — the semicolon stays behind every plain declaration, the same safe answer a Less at-rule already gets, rather than a guess a written value could turn out wrong ([#688](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/688)). A custom property's value is read permissively enough that only {@link spellsNoValue} still costs it the semicolon ([#358](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/358)). {@link isLessAtRule} says which nodes are at-rules to Less; a disagreement costs a warning its fix, never a file Less refuses.
  *
  * An embedded stylesheet is asked under its own block's syntax.
  * @param node - The node whose trailing semicolon is asked about.
@@ -97,7 +97,9 @@ export function requiresTrailingSemicolon (node: Node, result: PostcssResult): b
 	// A block's own closing brace ends the node, whatever stands in front of it
 	if (hasBlock(node)) return false
 
-	let asked = isDeclaration(node) ? spellsNoValue(node, result) : isAtRule(node) && isLessAtRule(node)
+	let asked = isDeclaration(node)
+		? !isCustomProperty(node.prop) || spellsNoValue(node, result)
+		: isAtRule(node) && isLessAtRule(node)
 
 	if (!asked) return false
 

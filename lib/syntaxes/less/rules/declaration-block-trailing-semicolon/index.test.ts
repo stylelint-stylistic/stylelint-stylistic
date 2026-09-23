@@ -604,79 +604,79 @@ testRule({
 
 	reject: [
 		{
-			// Pins that a semicolon Less reads in the text of a comment is taken away with the one behind the declaration
-			description: `a semicolon behind a bare carriage return in an inline comment behind the semicolon closing the declaration, which this syntax keeps as the text of the comment and Less reads as code, so both are taken away`,
+			// A real value keeps the semicolon under Less now (#688), so this stray one, formerly taken with the comment's, is left standing along with the file's warning
+			description: `a semicolon behind a bare carriage return in an inline comment behind the semicolon closing the declaration, which this syntax keeps as the text of the comment and Less reads as code`,
 			code: `a {\n\tcolor: pink; // c\r;\n}\n`,
-			fixed: `a {\n\tcolor: pink // c\r\n}\n`,
+			fixed: `a {\n\tcolor: pink; // c\r;\n}\n`,
 			line: 2,
 			column: 20,
 			message: messages.rejected,
 		},
 		{
-			// Pins the same for a comment holding no text in front of the carriage return
+			// A real value keeps the semicolon under Less now (#688); formerly the same reading with the comment holding no text in front of the carriage return
 			description: `the same semicolon in a comment holding no text in front of the carriage return`,
 			code: `a {\n\tcolor: pink; // \r;\n}\n`,
-			fixed: `a {\n\tcolor: pink // \r\n}\n`,
+			fixed: `a {\n\tcolor: pink; // \r;\n}\n`,
 			line: 2,
 			column: 19,
 			message: messages.rejected,
 		},
 		{
-			// Pins that a comment Less reads behind the carriage return is no node closing the block
+			// A real value keeps the semicolon under Less now (#688); formerly pinned that a comment Less reads behind the carriage return is no node closing the block
 			description: `a second inline comment behind the carriage return, which Less reads as a comment, so the declaration closes the block`,
 			code: `a {\n\tcolor: pink; // c\r // d\n}\n`,
-			fixed: `a {\n\tcolor: pink // c\r // d\n}\n`,
+			fixed: `a {\n\tcolor: pink; // c\r // d\n}\n`,
 			line: 2,
 			column: 13,
 			message: messages.rejected,
 		},
 		{
-			// Pins that a semicolon in such a comment stays while the one in front of it is taken away
-			description: `a semicolon behind the carriage return with a second inline comment holding one behind it, which alone stays`,
+			// A real value keeps the semicolon under Less now (#688); formerly pinned that a semicolon in such a comment stays while the one in front of it is taken away
+			description: `a semicolon behind the carriage return with a second inline comment holding one behind it`,
 			code: `a {\n\tcolor: pink; // c\r; // d;\n}\n`,
-			fixed: `a {\n\tcolor: pink // c\r // d;\n}\n`,
+			fixed: `a {\n\tcolor: pink; // c\r; // d;\n}\n`,
 			line: 2,
 			column: 20,
 			message: messages.rejected,
 		},
 		{
-			// Pins that the semicolon behind a flag set by the text of a comment is found in a comment behind it
-			description: `a semicolon in the text of an inline comment behind the value, with a second comment on the line holding a semicolon behind a bare carriage return, which Less reads as the one closing the declaration and alone is taken away`,
+			// A real value keeps the semicolon under Less now (#688); formerly pinned that the semicolon behind a flag set by the text of a comment is found in a comment behind it
+			description: `a semicolon in the text of an inline comment behind the value, with a second comment on the line holding a semicolon behind a bare carriage return, which Less reads as the one closing the declaration`,
 			code: `a {\n\tcolor: pink // x; // c\r;\n}\n`,
-			fixed: `a {\n\tcolor: pink // x; // c\r\n}\n`,
+			fixed: `a {\n\tcolor: pink // x; // c\r;\n}\n`,
 			line: 2,
 			column: 25,
 			message: messages.rejected,
 		},
 		{
-			// Spelled with escapes because the line the semicolon leaves behind holds a tab and nothing else, which an indented block would leave to whatever trims the file. See #232
-			description: `an inline comment behind the value, with the semicolon on the line under it: this option takes the semicolon away rather than writing one, so it has nowhere to write and the fix goes through`,
+			// A real value keeps the semicolon under Less now (#688), so there is nothing left for the fix to write. Spelled with escapes because the line the semicolon leaves behind holds a tab and nothing else, which an indented block would leave to whatever trims the file. See #232
+			description: `an inline comment behind the value, with the semicolon on the line under it`,
 			code: `a {\n\tcolor: pink // keep me\n\t;\n}\n`,
-			fixed: `a {\n\tcolor: pink // keep me\n\t\n}\n`,
+			fixed: `a {\n\tcolor: pink // keep me\n\t;\n}\n`,
 			line: 3,
 			column: 2,
 			message: messages.rejected,
 		},
 		{
-			// See #721
+			// A real value keeps the semicolon under Less now (#688); formerly a case for #721, where Less reads a bare carriage return ending an inline comment as a line feed, so the semicolon is code
 			description: `a semicolon behind a bare carriage return ending an inline comment, which Less reads as a line feed, so the semicolon is code`,
 			code: `a {\n\tcolor: pink // c\r;\n}\n`,
-			fixed: `a {\n\tcolor: pink // c\r\n}\n`,
+			fixed: `a {\n\tcolor: pink // c\r;\n}\n`,
 			line: 2,
 			column: 19,
 			message: messages.rejected,
 		},
 		{
-			// See #721
+			// A real value keeps the semicolon under Less now (#688); formerly a case for #721, on the same break behind a semicolon in the text of the comment
 			description: `the same break behind a semicolon in the text of the comment, which this syntax reads as the one closing the declaration and Less as the text of the comment`,
 			code: `a {\n\tcolor: pink // ;\r\t;\n}\n`,
-			fixed: `a {\n\tcolor: pink // ;\r\t\n}\n`,
+			fixed: `a {\n\tcolor: pink // ;\r\t;\n}\n`,
 			line: 2,
 			column: 20,
 			message: messages.rejected,
 		},
 		{
-			// See #217
+			// A real value keeps the semicolon under Less now (#688); formerly a case for #217, on the comment standing behind the semicolon instead
 			description: `the same comment standing behind the semicolon instead, where this syntax reads it as a node of its own rather than as part of the value`,
 			code: `
 				a {
@@ -685,7 +685,7 @@ testRule({
 			`,
 			fixed: `
 				a {
-					color: pink // keep me
+					color: pink; // keep me
 				}
 			`,
 			line: 2,
@@ -693,19 +693,19 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// Spelled with escapes for the line holding a tab alone, as above. See #359
-			description: `a semicolon of code on the line under an inline comment whose text holds two, which alone is taken away`,
+			// A real value keeps the semicolon under Less now (#688). Spelled with escapes for the line holding a tab alone, as above. See #359
+			description: `a semicolon of code on the line under an inline comment whose text holds two`,
 			code: `a {\n\tcolor: pink // ;;\n\t;\n}\n`,
-			fixed: `a {\n\tcolor: pink // ;;\n\t\n}\n`,
+			fixed: `a {\n\tcolor: pink // ;;\n\t;\n}\n`,
 			line: 3,
 			column: 2,
 			message: messages.rejected,
 		},
 		{
-			// See #325
+			// A real value keeps the semicolon under Less now (#688); formerly a case for #325, on a second semicolon standing behind the one that closes the declaration
 			description: `a second semicolon standing behind the one that closes the declaration, which this syntax keeps in the same raw plain CSS keeps it in`,
 			code: `a { color: pink;; }`,
-			fixed: `a { color: pink }`,
+			fixed: `a { color: pink;; }`,
 			line: 1,
 			column: 17,
 			message: messages.rejected,
@@ -855,6 +855,15 @@ testRule({
 			message: messages.rejected,
 		},
 		{
+			// See #688
+			description: `an ordinary declaration whose value Less itself refuses without the semicolon, which telling apart from a value it reads costs Less's own expression grammar, so this option leaves every such declaration's semicolon in place`,
+			code: `a { color: pink !IMPORTANT; }`,
+			fixed: `a { color: pink !IMPORTANT; }`,
+			line: 1,
+			column: 27,
+			message: messages.rejected,
+		},
+		{
 			// See #309
 			description: `a Less variable spelling no value, which Less reads as a directive rather than as a declaration and asks the semicolon of`,
 			code: `a { @v:; }`,
@@ -981,10 +990,10 @@ testRule({
 
 	reject: [
 		{
-			// See #479
-			description: `an inline comment ending the declaration, whose closing break the strip leaves where it stands, taking the semicolon alone`,
+			// A real value keeps the semicolon under Less now (#688); formerly a case for #479, on an inline comment ending the declaration
+			description: `an inline comment ending the declaration, whose closing break stands in front of the semicolon`,
 			code: `a { b: c // x\n; }`,
-			fixed: `a { b: c // x\n }`,
+			fixed: `a { b: c // x\n; }`,
 			line: 2,
 			column: 1,
 			endLine: 2,
