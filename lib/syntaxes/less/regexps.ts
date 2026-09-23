@@ -17,3 +17,9 @@ export const LESS_PARAMETRIC_MIXIN = /\(@.*\)$/u
 
 /** A Less mixin call with something behind it, as `.foo().bar` is. */
 export const LESS_RESOLVED_MIXIN = /\.[\w-]+\(.*\).+/u
+
+/** A single entity, no call, a Less custom property's value may spell alone in front of a `//` comment and still have `permissiveValue` read that comment whole: a bare word, a quoted string, or a bracketed group. */
+export const LESS_CUSTOM_PROPERTY_BARE_ENTITY = /^(?:[\w-]+|(["'])[^"']*\1|\[[^[\]]*\])$/u
+
+/** A call's name and opening parenthesis, at the start of a text. */
+export const LESS_CALL_OPENING = /^[\w-]+\(/u
