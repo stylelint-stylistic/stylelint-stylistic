@@ -122,3 +122,33 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`always`],
+	customSyntax: `postcss-less`,
+
+	accept: [
+		{
+			// See #723
+			description: `two declarations standing in the rest of the text of an inline comment a semicolon of that text closed a declaration in, whose semicolon is no semicolon of code`,
+			code: `
+				a {
+					color: pink // ; top: 0; left: 0
+				}
+			`,
+		},
+	],
+
+	reject: [
+		{
+			// See #723
+			description: `a declaration behind a flagged custom property whose double slash Less reads as the value's text, so the semicolon behind it is code and the declaration is one`,
+			code: `a {\n\t--x: pink !important // ; top: 0;\n\tright: 0;\n}`,
+			fixed: `a {\n\t--x: pink !important // ;\n top: 0;\n\tright: 0;\n}`,
+			line: 2,
+			column: 27,
+			message: messages.expectedAfter(),
+		},
+	],
+})

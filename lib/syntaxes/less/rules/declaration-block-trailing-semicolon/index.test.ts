@@ -1029,3 +1029,73 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`always`],
+	customSyntax: `postcss-less`,
+
+	reject: [
+		{
+			// See #723
+			description: `a declaration a semicolon in the text of its inline comment closed, a declaration standing in the rest of that text, the rest of whose line Less reads as the comment: no semicolon closes the block, and the comment is left alone`,
+			code: `
+				a {
+					color: pink // ; top: 0
+				}
+			`,
+			fixed: `
+				a {
+					color: pink // ; top: 0
+				}
+			`,
+			line: 2,
+			column: 15,
+			message: messages.expected,
+		},
+		{
+			// See #723
+			description: `the same comment holding a rule in place of the declaration`,
+			code: `
+				a {
+					color: pink // ; .b { c: d }
+				}
+			`,
+			fixed: `
+				a {
+					color: pink // ; .b { c: d }
+				}
+			`,
+			line: 2,
+			column: 15,
+			message: messages.expected,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never`],
+	customSyntax: `postcss-less`,
+
+	accept: [
+		{
+			// See #723
+			description: `a declaration a semicolon in the text of its inline comment closed, a declaration closed by a semicolon standing in the rest of that text`,
+			code: `
+				a {
+					color: pink // ; top: 0;
+				}
+			`,
+		},
+		{
+			// See #723
+			description: `the same comment holding a mixin call closed by a semicolon`,
+			code: `
+				a {
+					color: pink // ; .m();
+				}
+			`,
+		},
+	],
+})

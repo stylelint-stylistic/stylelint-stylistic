@@ -10,6 +10,7 @@ import type { Syntax } from "../index.ts"
 import { atRuleVariableValue } from "./atRuleVariableValue/index.ts"
 import { closingSemicolonIsCommentText } from "./closingSemicolonIsCommentText/index.ts"
 import { commentTextHead } from "./commentTextHead/index.ts"
+import { foldCommentTextNodes } from "./foldCommentTextNodes/index.ts"
 import { isStandardLessAtRule, isStandardLessDeclaration, isStandardLessProperty, isStandardLessRule, isStandardLessSelector, isStandardLessValue } from "./guards/index.ts"
 import { inlineCommentCode } from "./inlineCommentCode/index.ts"
 import { readsWhitespaceBehindAtRuleName } from "./readsWhitespaceBehindAtRuleName/index.ts"
@@ -21,7 +22,10 @@ import { syncLessVariableValue } from "./syncLessVariableValue/index.ts"
 export let less: Syntax = {
 	...css,
 	namespace: `less`,
-	restore: restoreMixinFlagRuns,
+	restore (root: Root, result: PostcssResult): void {
+		restoreMixinFlagRuns(root, result)
+		foldCommentTextNodes(root, result)
+	},
 	isStandardAtRule: isStandardLessAtRule,
 	isStandardRule: isStandardLessRule,
 	isStandardSelector: isStandardLessSelector,
