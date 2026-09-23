@@ -123,7 +123,7 @@ function reaches (copy: NeighbourCopy, decl: Declaration, result: PostcssResult)
 function writtenBy (copy: NeighbourCopy, decl: Declaration, result: PostcssResult): boolean | undefined {
 	let { syntax } = copy
 
-	if (!reaches(copy, decl, result) || syntax.semicolonFlagIsCommentText(decl, result)) return undefined
+	if (!reaches(copy, decl, result) || syntax.closingSemicolonIsCommentText(decl, result)) return undefined
 
 	if (copy.option === `always`) return !hasBlock(decl) && !syntax.writesIntoInlineComment(decl, result, whitespaceBeforeSemicolon(syntax, decl, result)) ? true : undefined
 

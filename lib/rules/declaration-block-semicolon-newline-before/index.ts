@@ -66,6 +66,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (isLastNodeWithoutSemicolon(decl)) return
 
+			// Under `postcss-less` a semicolon of a `//` comment's text closed the declaration; the one Less closes it on, if any, stands past the comment's break, where the rule does not look (#720)
+			if (syntax.closingSemicolonIsCommentText(decl, result)) return
+
 			let value = syntax.read(decl)
 			let isCustomPropertyWithOnlyHorizontalSpaces = isCustomProperty(decl.prop) && SPACES_AND_TABS_ONLY.test(value)
 

@@ -12,6 +12,23 @@ testRule({
 
 	reject: [
 		{
+			// See #720
+			description: `a block whose last declaration a semicolon of the text of its inline comment closed, and a block comment carved out of that text standing last, so the brace still has nowhere to go`,
+			code: `
+				a {
+					color: pink // ; /* c */ ;
+				}
+			`,
+			fixed: `
+				a {
+					color: pink // ; /* c */ ;
+				}
+			`,
+			line: 2,
+			column: 28,
+			message: messages.rejectedBeforeMultiLine,
+		},
+		{
 			description: `a block whose last declaration carries an inline comment behind its value, so the brace has nowhere to go`,
 			code: `
 				a {
@@ -118,6 +135,18 @@ testRule({
 	ruleName,
 	config: [`always`],
 	customSyntax: `postcss-less`,
+
+	accept: [
+		{
+			// See #720
+			description: `a block whose last declaration a semicolon of the text of its inline comment closed, the rest of that text spelling a space and another semicolon in front of the break`,
+			code: `
+				a {
+					color: pink // ; ;
+				}
+			`,
+		},
+	],
 
 	reject: [
 		{

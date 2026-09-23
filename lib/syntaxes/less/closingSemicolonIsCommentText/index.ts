@@ -1,4 +1,4 @@
-import type { Declaration, Node } from "postcss"
+import type { Container, Declaration, Node } from "postcss"
 import type { AtRule } from "postcss-less"
 import type { PostcssResult } from "stylelint"
 
@@ -9,6 +9,7 @@ import { LEADING_CSS_WHITESPACE, TRAILING_CSS_WHITESPACE } from "../../../regexp
 import { blankComments } from "../../../utils/blankComments/index.ts"
 import { findCommentSpans, findStringSpans } from "../../../utils/findCommentSpans/index.ts"
 import { isCustomProperty } from "../../../utils/isCustomProperty/index.ts"
+import { lastNonCommentNode } from "../../../utils/lastNonCommentNode/index.ts"
 import { isAtRule, isDeclaration } from "../../../utils/typeGuards/index.ts"
 import { isLessDetachedRulesetCall } from "../isLessDetachedRulesetCall/index.ts"
 import { LESS_CALL_OPENING, LESS_CUSTOM_PROPERTY_BARE_ENTITY, LESS_DETACHED_RULESET_NAME } from "../regexps.ts"
@@ -65,7 +66,7 @@ function isBalancedCall (text: string): boolean {
  * Asks whether Less reads a `//` comment behind the node as a comment whatever the node spells.
  *
  * A declaration of an ordinary property and a call to a mixin or a detached ruleset are read with the reader that skips such a comment, the call's name spelled as Less reads one, so a semicolon in its text closes nothing or the file is refused. A custom property's permissive reader parts the same way behind {@link LESS_CUSTOM_PROPERTY_BARE_ENTITY} or {@link isBalancedCall}, one entity its comment-and-entity loop consumes whole before it would ever fall back to a reader that knows no `//`; behind anything else — `pink !important`, a bare `(a)`, `a=b`, `1 / 2`, `{a}`, `[[a]]` — that loop cannot finish, so the flag is believed as it was before ([#722](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/722)). A variable and any other at-rule fall back to the reader with no `//` outright, and which of the two Less takes turns on its expression grammar, so their flag is believed too.
- * @param node - The node closing the block.
+ * @param node - The node the semicolon closes.
  * @param result - The Stylelint result, whose syntax says what opens a comment.
  * @returns True where the comment is one.
  */
@@ -82,15 +83,17 @@ function readsTheComment (node: Node, result: PostcssResult): boolean {
 }
 
 /**
- * Asks whether the semicolon a block's `raws.semicolon` stands for is the text of a `//` comment behind the node.
+ * Asks whether the semicolon `postcss-less` closed the node on is the text of a `//` comment behind it.
  *
- * `postcss-less` closes a node at the first semicolon behind it, one inside such a comment included ([#359](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/359)). The stringifier prints the flag's semicolon right behind the node's text, which is where an empty spelled run puts the guard's written character. A parser keeping no such comment in that text cut it out itself, so its flag is code.
- * @param node - The node closing the block.
+ * The parser closes a node at the first semicolon behind it, one inside such a comment included ([#359](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/359), [#720](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/720)). A semicolon closes every node a node of code follows, and the block's last one where `raws.semicolon` is set; the stringifier prints it right behind the node's text, which is where an empty spelled run puts the guard's written character. A parser keeping no such comment in that text cut it out itself, so its semicolon is code.
+ * @param node - The node asked about.
  * @param result - The Stylelint result, whose syntax says what opens a comment.
- * @returns True where the flag is set by comment text.
+ * @returns True where the semicolon is comment text.
  */
-export function semicolonFlagIsCommentText (node: Node, result: PostcssResult): boolean {
-	if (!node.parent?.raws.semicolon || !readsTheComment(node, result)) return false
+export function closingSemicolonIsCommentText (node: Node, result: PostcssResult): boolean {
+	let container = node.parent as Container | undefined
+
+	if (!container || (lastNonCommentNode(container) === node && !container.raws.semicolon) || !readsTheComment(node, result)) return false
 
 	return inlineCommentReading(node, result).keeps && writesIntoInlineComment(node, result, ``)
 }

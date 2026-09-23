@@ -8,12 +8,13 @@ import { css } from "../css/index.ts"
 import type { Syntax } from "../index.ts"
 
 import { atRuleVariableValue } from "./atRuleVariableValue/index.ts"
+import { closingSemicolonIsCommentText } from "./closingSemicolonIsCommentText/index.ts"
+import { commentTextHead } from "./commentTextHead/index.ts"
 import { isStandardLessAtRule, isStandardLessDeclaration, isStandardLessProperty, isStandardLessRule, isStandardLessSelector, isStandardLessValue } from "./guards/index.ts"
 import { inlineCommentCode } from "./inlineCommentCode/index.ts"
 import { readsWhitespaceBehindAtRuleName } from "./readsWhitespaceBehindAtRuleName/index.ts"
 import { requiresTrailingSemicolon } from "./requiresTrailingSemicolon/index.ts"
 import { restoreMixinFlagRuns } from "./restoreMixinFlagRuns/index.ts"
-import { semicolonFlagIsCommentText } from "./semicolonFlagIsCommentText/index.ts"
 import { syncLessVariableValue } from "./syncLessVariableValue/index.ts"
 
 /** The syntax of the `less` namespace: Less parsed with `postcss-less`. A superset of the core, plain CSS included, so a project holding both configures these rules alone for the Less files. */
@@ -29,7 +30,8 @@ export let less: Syntax = {
 	isStandardValue: isStandardLessValue,
 	isStandardComment: isStandardPreprocessorComment,
 	requiresTrailingSemicolon,
-	semicolonFlagIsCommentText,
+	closingSemicolonIsCommentText,
+	commentTextHead,
 	inlineCommentCode,
 	readsRuleParams: (rule: PostcssRule) => `params` in rule && Boolean(rule.params),
 	atRuleVariableValue,

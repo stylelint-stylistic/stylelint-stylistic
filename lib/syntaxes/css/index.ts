@@ -83,7 +83,8 @@ export let css: Syntax = {
 	},
 	requiresTrailingSemicolon: () => false,
 	// A parser leaving a `//` comment in a node's text is `postcss-less`, read by the less namespace
-	semicolonFlagIsCommentText: () => false,
+	closingSemicolonIsCommentText: () => false,
+	commentTextHead: () => null,
 	// Only `postcss-less` ends a `//` comment short of the break the language closes it on
 	inlineCommentCode: () => null,
 	// Both marks are `postcss-less`'s, read by the less namespace

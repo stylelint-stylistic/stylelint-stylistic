@@ -36,10 +36,11 @@ export type PrimaryOption = `always` | `never` | `always-single-line` | `never-s
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
+ * @param scope.syntax - The syntax the rule is built over.
  * @param primary - The primary option.
  * @returns The check.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
 	let checker = whitespaceChecker(`space`, primary, messages)
 
 	return (root, result) => {
@@ -58,6 +59,9 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: Prim
 			if (!isAtRule(parentRule) && !isRule(parentRule) && !isInlineStyleAttribute(parentRule)) return
 
 			if (isLastNodeWithoutSemicolon(decl)) return
+
+			// Under `postcss-less` a semicolon of a `//` comment's text closed the declaration; the one Less closes it on, if any, stands past the comment's break, where the rule does not look (#720)
+			if (syntax.closingSemicolonIsCommentText(decl, result)) return
 
 			let nextDecl = decl.next()
 

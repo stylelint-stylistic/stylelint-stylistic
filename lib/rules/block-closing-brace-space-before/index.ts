@@ -1,7 +1,7 @@
 import type { ChildNode, Container } from "postcss"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { TRAILING_WHITESPACE } from "../../regexps.ts"
+import { INLINE_COMMENT_BREAK, TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
@@ -109,7 +109,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let escapes = findEscapeSpans(source, syntax.inlineComments(statement, result))
 			// An escaped space is the last character of the block's final node and no run at all, so the run is read over the copy with the escapes masked (1789661964); PostCSS ends the node at the backslash and files the whitespace an escape covering one spells in the raw behind it, which the write keeps in front of the run it rewrites
-			let escapedHead = blockAfter.slice(0, escapeHeadLength(source, escapes, source.length - 1 - blockAfter.length))
+			// Under `postcss-less` the raw may open with more of a `//` comment a semicolon of its text closed the last node in, and the run opens at the break closing it, which the write has to keep (#720)
+			let commentHead = syntax.commentTextHead(statement, `after`, result)
+			let escapedHead = commentHead ?? blockAfter.slice(0, escapeHeadLength(source, escapes, source.length - 1 - blockAfter.length))
 			let run = blockAfter.slice(escapedHead.length)
 
 			// The fix writes over only the whitespace ending the block's final raw, so the guard is asked about the whole surviving run: a break anywhere in it closes a `//` comment the last node left open; where none survives the brace would land in the comment, and the warning stands unfixed. Where the last node has swallowed the final raw the write lands on its own trailing whitespace, which the guard reads when told nothing of the run
@@ -123,6 +125,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (isFixable) isFixable = writesTheRunInFrontOfTheBrace(syntax, result, ruleName, last)
 
 			let written = writes.space(primary, run)
+
+			if (isFixable && commentHead !== null) isFixable = INLINE_COMMENT_BREAK.test(written)
 
 			// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `c \⏎}` would come out as `c \}`, which the parser reads no block's end in, or `c \ }`, an escaped space (1789664271)
 			if (isFixable) isFixable = editKeepsEscapedCharacter(source, { start: source.length - 1 - run.length, end: source.length - 1, text: written })

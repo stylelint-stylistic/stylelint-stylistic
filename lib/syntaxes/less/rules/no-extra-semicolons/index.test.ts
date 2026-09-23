@@ -28,6 +28,37 @@ testRule({
 			description: `the semicolon closing the declaration of a detached ruleset in front of a call to it, which the rule passes over`,
 			code: `@dr: { color: red; }; @dr();`,
 		},
+		{
+			// See #720
+			description: `a second semicolon in the text of the inline comment behind a declaration a semicolon of that text closed`,
+			code: `
+				a {
+					color: pink // ;;
+				}
+			`,
+		},
+		{
+			// See #720
+			description: `the semicolon of code Less closes such a declaration on, heading the next line`,
+			code: `
+				a {
+					color: pink // ;
+					;
+					top: 0;
+				}
+			`,
+		},
+		{
+			// See #720
+			description: `the same semicolon behind a second inline comment standing in the text of the first`,
+			code: `
+				a {
+					color: pink // ; // d ;
+					;
+					top: 0;
+				}
+			`,
+		},
 	],
 
 	reject: [
@@ -46,6 +77,27 @@ testRule({
 			fixed: `@dr: { color: red; } @import(reference) "x";`,
 			line: 1,
 			column: 21,
+			message: messages.rejected,
+		},
+		{
+			// See #720
+			description: `a second semicolon of code behind the one Less closes such a declaration on`,
+			code: `
+				a {
+					color: pink // ;
+					;;
+					top: 0;
+				}
+			`,
+			fixed: `
+				a {
+					color: pink // ;
+					;
+					top: 0;
+				}
+			`,
+			line: 3,
+			column: 3,
 			message: messages.rejected,
 		},
 	],

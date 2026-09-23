@@ -1,7 +1,7 @@
 import type { ChildNode, Container } from "postcss"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { EVERY_WHITESPACE, LEADING_LINE_BREAK, SEMICOLON_RUN } from "../../regexps.ts"
+import { EVERY_WHITESPACE, INLINE_COMMENT_BREAK, LEADING_LINE_BREAK, SEMICOLON_RUN } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
@@ -103,7 +103,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// The text is read through the brace, since a free semicolon behind it is printed too (#562)
 			let text = statementString(statement, result)
 			// An escaped space is the last character of the block's final node and no run at all: PostCSS ends the node at the backslash and files the whitespace an escape covering one spells in the raw behind it, and the run the options speak of opens behind that character, which the write keeps (1789661964)
-			let escapedHead = blockAfter.slice(0, escapeHeadLength(text, findEscapeSpans(text, syntax.inlineComments(statement, result)), text.length - 1 - blockAfter.length))
+			// Under `postcss-less` the raw may open with more of a `//` comment a semicolon of its text closed the last node in, and the run opens at the break closing it, which the write has to keep (#720)
+			let commentHead = syntax.commentTextHead(statement, `after`, result)
+			let escapedHead = commentHead ?? blockAfter.slice(0, escapeHeadLength(text, findEscapeSpans(text, syntax.inlineComments(statement, result)), text.length - 1 - blockAfter.length))
 			let run = blockAfter.slice(escapedHead.length)
 
 			// Ignore extra semicolon
@@ -129,6 +131,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let writtenRun = writes.newline(primary, run)
 			let written = `${escapedHead}${writtenRun}`
+
+			if (isFixable && commentHead !== null) isFixable = INLINE_COMMENT_BREAK.test(writtenRun)
 
 			// A backslash the write would leave reading another character
 			if (isFixable) isFixable = writesTheRun(text, run, writtenRun)

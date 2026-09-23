@@ -230,12 +230,21 @@ export type Syntax = {
 	requiresTrailingSemicolon (node: Node, result: PostcssResult): boolean,
 
 	/**
-	 * Asks whether the semicolon the node's block is flagged as closing on is the text of a `//` comment behind the node, which the parser read as code.
-	 * @param node - The node closing the block.
+	 * Asks whether the semicolon the parser closed the node on, its block's `raws.semicolon` where it is the last, is the text of a `//` comment behind the node, which the parser read as code.
+	 * @param node - The node asked about.
 	 * @param result - The lint result naming the syntax the file was parsed with.
 	 * @returns True where it is.
 	 */
-	semicolonFlagIsCommentText (node: Node, result: PostcssResult): boolean,
+	closingSemicolonIsCommentText (node: Node, result: PostcssResult): boolean,
+
+	/**
+	 * Reads the head of a node's `raws.before`, or of a block's `raws.after`, that is the text of a `//` comment behind a node the parser closed on a semicolon of that text, up to the break closing the comment.
+	 * @param owner - The node whose `raws.before` is read, or the container whose `raws.after` is.
+	 * @param key - Which of the two raws.
+	 * @param result - The lint result naming the syntax the file was parsed with.
+	 * @returns The head, empty where the break opens the raw, or null where no such comment runs into it.
+	 */
+	commentTextHead (owner: Node, key: `before` | `after`, result: PostcssResult): string | null,
 
 	/**
 	 * Reads the code a `//` comment node holds, which the parser read as the comment's where the language has closed the comment: a copy of its `raws.left` and text, as long as the two, with all but the code blanked.
