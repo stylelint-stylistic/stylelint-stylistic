@@ -51,3 +51,22 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`always`],
+	customSyntax: `postcss-less`,
+
+	accept: [
+		{
+			// See #723
+			description: `a rule standing in the rest of the text of an inline comment a semicolon of that text closed a declaration in, whose brace is no brace of code`,
+			code: `
+				a
+				{
+					color: pink // ; .b { c: d }
+				}
+			`,
+		},
+	],
+})

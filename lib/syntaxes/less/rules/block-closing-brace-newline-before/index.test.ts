@@ -222,3 +222,29 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`never-multi-line`],
+	customSyntax: `postcss-less`,
+
+	reject: [
+		{
+			// See #723
+			description: `a mixin call standing in the rest of the text of an inline comment a semicolon of that text closed the last declaration in, so the brace has nowhere to go`,
+			code: `
+				a {
+					color: pink // ; .n()
+				}
+			`,
+			fixed: `
+				a {
+					color: pink // ; .n()
+				}
+			`,
+			line: 2,
+			column: 23,
+			message: messages.rejectedBeforeMultiLine,
+		},
+	],
+})
