@@ -290,6 +290,14 @@ export type Syntax = {
 	readsUnitAsIdentifier (): boolean,
 
 	/**
+	 * Asks whether the syntax reads an at-rule name spelled with an upper-case letter as the at-rule it names.
+	 *
+	 * CSS reads an at-rule name ASCII case-insensitively; Less reads a name holding an upper-case letter as something else, a variable call it refuses (`@MEDIA`, `@Media`, `@PAGE`), a variable in front of a word (`@mEdia` prints as `@m Edia`) or a name torn off its `@` (`@-WEBKIT-KEYFRAMES` prints as `@- WEBKIT-KEYFRAMES`) ([#578](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/578)), so a rule asking for an upper-case name has no file to leave behind.
+	 * @returns True where such a name is read.
+	 */
+	readsUpperCaseAtRuleName (): boolean,
+
+	/**
 	 * Asks whether the syntax reads a quotation mark inside the parentheses of a `url()` that open on no quotation mark as opening a string.
 	 *
 	 * To CSS such parentheses are a bad-url token to the first `)` under every spelling of the name, the mark a character of it, and Less refuses the file; Sass reads the parentheses as code and the string as a string, which it prints double-quoted (1789604002).

@@ -5,6 +5,7 @@
  */
 
 import { lintDirect, type Registry, type RuleSetting } from "../harness/lint.ts"
+import { namespaceTakes } from "../oracles/options.ts"
 
 /** The syntax each name is read under, plain CSS under none. */
 const SYNTAXES: Record<string, string | undefined> = { css: undefined, scss: `postcss-scss`, less: `postcss-less`, styled: `postcss-styled-syntax` }
@@ -174,6 +175,11 @@ function tasksOf (sweep: Sweep, workers: number): Task[] {
 
 	for (let syntaxName of syntaxes) {
 		for (let config = 0; config < sweep.configs.length; config += 1) {
+			let setting = sweep.configs[config]
+
+			// A namespace refusing the primary on purpose is put nothing
+			if (!setting || !namespaceTakes(syntaxName, setting.rule, setting.primary)) continue
+
 			for (let from = 0; from < sweep.corpus.length; from += size) tasks.push({ syntaxName, config, from, to: Math.min(from + size, sweep.corpus.length) })
 		}
 	}

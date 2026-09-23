@@ -98,6 +98,8 @@ export let css: Syntax = {
 	readsNumberWithExponent: () => true,
 	// An escape and a hyphen are both code points of an identifier: `10PX\*2REM` has the unit `PX\*2REM` (#414) and `10PX-2REM` the unit `PX-2REM`
 	readsUnitAsIdentifier: () => true,
+	// CSS reads an at-rule name ASCII case-insensitively
+	readsUpperCaseAtRuleName: () => true,
 	// A quotation mark inside a bare address is a character of it: `URL(a"b"c)` is a bad-url token to the first `)`, as lightningcss reads it (1789604002)
 	readsQuoteInsideAddressAsString: () => false,
 	// Whitespace behind an at-rule's name only parts it from the prelude: `@import"x"` is `@import "x"`

@@ -1,3 +1,7 @@
+import stylelint from "stylelint"
+import { describe, expect, it } from "vitest"
+
+import plugins from "../../../../index.ts"
 import { createRule } from "../../../../rules/at-rule-name-case/index.ts"
 import { less } from "../../index.ts"
 
@@ -85,37 +89,13 @@ testRule({
 	],
 })
 
-testRule({
-	ruleName,
-	customSyntax: `postcss-less`,
-	config: [`upper`],
+// See #578
+describe(`the upper option`, () => {
+	it(`is refused, since Less reads no at-rule name holding an upper-case letter, and the file is left as it is`, async () => {
+		let { code, results } = await stylelint.lint({ code: `@page :first { margin: 0; }\n`, customSyntax: `postcss-less`, config: { plugins, rules: { [ruleName]: `upper` } }, fix: true })
 
-	accept: [
-		// See #394
-		{
-			description: `a Less variable declared with a space in front of its colon, which the parser leaves unmarked`,
-			code: `
-				@v : pink;
-				span { background-color: @v; }
-			`,
-		},
-		{
-			description: `a Less detached ruleset declared with a space in front of its colon`,
-			code: `
-				@dr : { margin: 0; };
-				span { @dr(); }
-			`,
-		},
-	],
-
-	reject: [
-		{
-			description: `a page rule whose selector opens on a colon, which is an at-rule to Less`,
-			code: `@page :first { margin: 0; }`,
-			fixed: `@PAGE :first { margin: 0; }`,
-			line: 1,
-			column: 1,
-			message: messages.expected(`page`, `PAGE`),
-		},
-	],
+		expect(results[0]?.invalidOptionWarnings).toHaveLength(1)
+		expect(results[0]?.warnings).toEqual([])
+		expect(code).toBe(`@page :first { margin: 0; }\n`)
+	})
 })

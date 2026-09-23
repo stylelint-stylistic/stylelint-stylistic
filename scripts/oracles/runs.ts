@@ -4,7 +4,7 @@ import { env } from "node:process"
 import type { Config } from "../harness/lint.ts"
 
 import { FIXTURES, INLINE_FIXTURES } from "./fixtures.ts"
-import { RULE_OPTIONS } from "./options.ts"
+import { namespaceTakes, RULE_OPTIONS } from "./options.ts"
 
 /** Loaded by path, so an oracle runs from any directory and over the `lib/` `HARNESS_LIB` names. */
 const PLUGIN = path.join(env.HARNESS_LIB || new URL(`../../lib`, import.meta.url).pathname, `index.ts`)
@@ -28,7 +28,7 @@ function buildRuns (corpus?: [string, string][]): Run[] {
 		? [[`scss`, `postcss-scss`, corpus], [`less`, `postcss-less`, corpus]]
 		: [[`css`, null, FIXTURES], [`scss`, `postcss-scss`, [...FIXTURES, ...INLINE_FIXTURES]], [`less`, `postcss-less`, [...FIXTURES, ...INLINE_FIXTURES]]]
 
-	return Object.entries(RULE_OPTIONS).flatMap(([rule, primaries]) => primaries.flatMap((primary) => syntaxes.flatMap(([syntaxName, customSyntax, fixtures]) => fixtures.map(([name, code]) => ({
+	return Object.entries(RULE_OPTIONS).flatMap(([rule, primaries]) => primaries.flatMap((primary) => syntaxes.filter(([syntaxName]) => namespaceTakes(syntaxName, rule, primary)).flatMap(([syntaxName, customSyntax, fixtures]) => fixtures.map(([name, code]) => ({
 		rule,
 		primary,
 		syntaxName,

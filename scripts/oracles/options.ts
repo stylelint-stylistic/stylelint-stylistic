@@ -88,4 +88,22 @@ const RULE_OPTIONS: Record<string, unknown[]> = {
 	"value-slash-space-before": [`always`, `never`, `always-single-line`, `never-single-line`],
 }
 
-export { RULE_OPTIONS }
+/** The primaries a namespace refuses on purpose, since its language leaves the rule no file to write under them: Less reads no at-rule name holding an upper-case letter as one ([#578](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/578)). The oracles and the sweeps put none of them to that namespace, and `scripts/harness/lint.test.ts` holds each to being refused. */
+const NAMESPACE_REFUSALS: Record<string, Record<string, unknown[]>> = {
+	less: { "at-rule-name-case": [`upper`] },
+}
+
+/**
+ * Asks whether a namespace's copy of a rule takes a primary, as {@link NAMESPACE_REFUSALS} tells it.
+ * @param syntaxName - The namespace, `css` for the core.
+ * @param rule - The rule's short name.
+ * @param primary - The primary, or a whole setting with the primary first.
+ * @returns False where the namespace refuses it.
+ */
+function namespaceTakes (syntaxName: string, rule: string, primary: unknown): boolean {
+	let asked = JSON.stringify(Array.isArray(primary) ? primary[0] : primary)
+
+	return !(NAMESPACE_REFUSALS[syntaxName]?.[rule] ?? []).some((refused) => JSON.stringify(refused) === asked)
+}
+
+export { NAMESPACE_REFUSALS, namespaceTakes, RULE_OPTIONS }
