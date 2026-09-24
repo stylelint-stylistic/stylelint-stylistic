@@ -937,7 +937,7 @@ testRule({
 	],
 })
 
-// Two checks deferred for their lineness options run in the plugin's own order rather than the configuration's (#502): the neighbour's subject is a line break, so it speaks first whichever order the configuration lists, and both orders rest on one file.
+// Two checks deferred for their lineness options run in the plugin's own order rather than the configuration's (#502): the neighbor's subject is a line break, so it speaks first whichever order the configuration lists, and both orders rest on one file.
 testRule({
 	ruleName,
 	config: [`always-single-line`],
@@ -946,7 +946,7 @@ testRule({
 	reject: [
 		{
 			// See #502. The outer block's closing brace is reported first, the walk of the closing-brace rule visiting the nodes in document order (#570)
-			description: `an outer block the neighbour's break puts over lines, the neighbour listed behind this rule: the file as it stands is single-line and draws a warning from each rule about each brace, and under the fix the neighbour goes first all the same, so the space in front of the outer closing brace is written no more`,
+			description: `an outer block the neighbor's break puts over lines, the neighbor listed behind this rule: the file as it stands is single-line and draws a warning from each rule about each brace, and under the fix the neighbor goes first all the same, so the space in front of the outer closing brace is written no more`,
 			code: `@media(min-width:100px){a{b:c}}\n`,
 			fixed: `@media(min-width:100px){a\n{b:c }}\n`,
 			warnings: [

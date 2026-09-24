@@ -652,7 +652,7 @@ testRule({
 	reject: [
 		{
 			// See #355
-			description: `a block the neighbour's break puts over lines within the same run: the option speaks of the finished block and writes its space, and the file is the one the other order always left`,
+			description: `a block the neighbor's break puts over lines within the same run: the option speaks of the finished block and writes its space, and the file is the one the other order always left`,
 			code: `@media screen{\na{b:c;d:e}\n}\n`,
 			fixed: `@media screen{ a{ b:c;d:e\n}\n}\n`,
 			warnings: [
@@ -675,7 +675,7 @@ testRule({
 	],
 })
 
-// Two checks put off for their lineness options run in the plugin's order rather than the configuration's (#502): the neighbour's subject is a line break, so it speaks first whichever is listed first, and both orders rest on one file.
+// Two checks put off for their lineness options run in the plugin's order rather than the configuration's (#502): the neighbor's subject is a line break, so it speaks first whichever is listed first, and both orders rest on one file.
 testRule({
 	ruleName,
 	config: [`always-single-line`],
@@ -684,7 +684,7 @@ testRule({
 	reject: [
 		{
 			// See #502
-			description: `an outer block the neighbour's break puts over lines, the neighbour listed behind this rule: the file as it stands is single-line and draws a warning from each rule about each brace, and under the fix the neighbour goes first all the same, so the space behind the outer opening brace is written no more`,
+			description: `an outer block the neighbor's break puts over lines, the neighbor listed behind this rule: the file as it stands is single-line and draws a warning from each rule about each brace, and under the fix the neighbor goes first all the same, so the space behind the outer opening brace is written no more`,
 			code: `@media(min-width:100px){a{b:c}}\n`,
 			fixed: `@media(min-width:100px){a\n{ b:c}}\n`,
 			warnings: [

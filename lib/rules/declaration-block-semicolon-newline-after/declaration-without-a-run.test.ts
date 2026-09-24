@@ -81,7 +81,7 @@ describe(`the run PostCSS prints in front of a declaration the file spells none 
 	})
 
 	// See #693
-	it(`is short of the break always asks for where the run PostCSS prints is the space its neighbour carries, and the fix writes it`, async () => {
+	it(`is short of the break always asks for where the run PostCSS prints is the space its neighbor carries, and the fix writes it`, async () => {
 		expect(await fixAndRead(`b { color: red;\n top: 0 }\na {color: pink;top: 0 }`, `always`)).toEqual({
 			warnings: [`3:16 ${messages.expectedAfter()}`],
 			fixed: `b { color: red;\n top: 0 }\na { color: pink;\n top: 0 }`,

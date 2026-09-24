@@ -51,7 +51,7 @@ describe(`runInFrontOf`, () => {
 		expect(printed).toBe(`a {\n    color: pink;\n}`)
 	})
 
-	it(`takes that run from what the node's neighbours carry`, () => {
+	it(`takes that run from what the node's neighbors carry`, () => {
 		expect(headRun(`a { color: pink; top: 0 }`, { withoutTheRaw: true }).run).toBe(` `)
 		expect(headRun(`a { color: pink;top: 0 }`, { withoutTheRaw: true }).run).toBe(``)
 		expect(headRun(`a {\n\tcolor: pink;\n\ttop: 0;\n}`, { withoutTheRaw: true }).run).toBe(`\n\t`)

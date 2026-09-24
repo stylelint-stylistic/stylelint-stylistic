@@ -279,7 +279,7 @@ testRule({
 		},
 		{
 			// The stack of words carries across the nodes, so the `(` of the at-rule pops the `url` of the rule in front of it, which the spans read from the node's own start do not see; the string nothing closes is refused all the same
-			description: `a value the parser never closed a string in, behind parentheses a neighbour's word made a token of`,
+			description: `a value the parser never closed a string in, behind parentheses a neighbor's word made a token of`,
 			code: `a { b: url } @media (c "d) { e: f } g { h: "i" }`,
 			fixed: `a { b: url } @media (c "d) { e: f } g { h: 'i' }`,
 			line: 1,

@@ -382,7 +382,7 @@ testRule({
 	],
 })
 
-// The run in front of a comma opening the value is the head run behind the colon, which the colon rules read too: the rules asked settle who writes it, and a rule held by its neighbour reports and leaves the run (1789594574)
+// The run in front of a comma opening the value is the head run behind the colon, which the colon rules read too: the rules asked settle who writes it, and a rule held by its neighbor reports and leaves the run (1789594574)
 testRule({
 	ruleName,
 	config: [`always`],

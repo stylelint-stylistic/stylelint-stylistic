@@ -47,7 +47,7 @@ const OPERANDS: Record<string, [string, string]> = {
 const PLACES: Record<string, (pair: string) => string> = {
 	value: (pair) => `a { b: ${pair}; }\n`,
 	customProperty: (pair) => `a { --b: ${pair}; }\n`,
-	colour: (pair) => `a { b: rgb(0 0 0 ${pair}); }\n`,
+	color: (pair) => `a { b: rgb(0 0 0 ${pair}); }\n`,
 	call: (pair) => `a { b: g(${pair}); }\n`,
 	math: (pair) => `a { b: calc(${pair}); }\n`,
 	mathMin: (pair) => `a { b: min(${pair}, 3px); }\n`,

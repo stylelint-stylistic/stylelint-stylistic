@@ -1,6 +1,6 @@
 # Prose typography
 
-Prose binds function words to their neighbours with a non-breaking space (`U+00A0`), so that none of them is left dangling at the end of a line — the point of the whole convention is comfortable reading.
+Prose binds function words to their neighbors with a non-breaking space (`U+00A0`), so that none of them is left dangling at the end of a line — the point of the whole convention is comfortable reading.
 
 Bind to the word that *follows*:
 

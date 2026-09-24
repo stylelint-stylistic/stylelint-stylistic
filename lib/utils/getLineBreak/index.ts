@@ -2,7 +2,7 @@ import type { Input, Node } from "postcss"
 import type { PostcssResult } from "stylelint"
 
 import { CAPTURED_LINE_BREAK } from "../../regexps.ts"
-import { neighbourCopies } from "../neighbourSettings/index.ts"
+import { neighborCopies } from "../neighborSettings/index.ts"
 
 /** The rule about the spelling of a break and the options it accepts. */
 const LINEBREAKS_RULE = { name: `linebreaks`, options: [`unix`, `windows`] }
@@ -42,7 +42,7 @@ function lineBreakOfFile (node: Node): string | undefined {
  * @returns The break to write.
  */
 export function getLineBreak (node: Node, result: PostcssResult): string {
-	let option = neighbourCopies(node, result, LINEBREAKS_RULE)[0]?.option
+	let option = neighborCopies(node, result, LINEBREAKS_RULE)[0]?.option
 
 	if (option !== undefined) return BREAK_OF_OPTION[option as keyof typeof BREAK_OF_OPTION]
 

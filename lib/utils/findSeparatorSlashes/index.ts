@@ -81,9 +81,9 @@ export function findSeparatorSlashes (text: string, syntax: Syntax, node: AtRule
 				let index = valueNode.sourceIndex + valueNode.before.length
 
 				// `//` separates nothing, but the parser returns two dividers for it (#548)
-				let pairsWithANeighbour = blanked.charAt(index - 1) === `/` || blanked.charAt(index + 1) === `/`
+				let pairsWithANeighbor = blanked.charAt(index - 1) === `/` || blanked.charAt(index + 1) === `/`
 
-				if (valueNode.value === `/` && !pairsWithANeighbour && !syntax.readsSlashAsOperator(nodes[at - 1], nodes[at + 1])) slashes.push({ index })
+				if (valueNode.value === `/` && !pairsWithANeighbor && !syntax.readsSlashAsOperator(nodes[at - 1], nodes[at + 1])) slashes.push({ index })
 
 				continue
 			}

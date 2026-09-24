@@ -7,7 +7,7 @@ import { addNamespace } from "../addNamespace/index.ts"
 import { blockString } from "../blockString/index.ts"
 import { fixDisabledOnLine } from "../fixDisabledOnLine/index.ts"
 import { isSingleLineString } from "../isSingleLineString/index.ts"
-import { type NeighbourRule, neighbourSettings, speaksOf } from "../neighbourSettings/index.ts"
+import { type NeighborRule, neighborSettings, speaksOf } from "../neighborSettings/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
 import { pastEndOfLineComment } from "../pastEndOfLineComment/index.ts"
 import { runBehindBrace } from "../runBehindBrace/index.ts"
@@ -20,7 +20,7 @@ type Participant = `newline` | `space`
 type Run = `newline` | `space` | `none` | `other`
 
 /** The two rules and the whitespace each writes where its option is an `always` one. */
-const PARTICIPANTS: Record<Participant, NeighbourRule & { writes: Run }> = {
+const PARTICIPANTS: Record<Participant, NeighborRule & { writes: Run }> = {
 	newline: {
 		name: `block-closing-brace-newline-after`,
 		options: [`always`, `always-single-line`, `never-single-line`, `always-multi-line`, `never-multi-line`],
@@ -83,10 +83,10 @@ function writtenNodeOf (participant: Participant, configuredName: string, result
  *
  * A rule writes only where every rule behind it in run order that would write the very same raw accepts a spelling it accepts too; otherwise that rule's write would be the file's last and this one's warning would be dropped as fixed over a run it does not accept ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)). Where the two accept a spelling in common both may write, since what either leaves the other accepts.
  *
- * A neighbour that would write nothing gates nothing, so its `disableFix`, its disable ranges and its own guards — the at-rules it passes over, the raw it writes, the semicolon the space rule refuses to write over — are asked before it is counted in ([#536](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/536)).
+ * A neighbor that would write nothing gates nothing, so its `disableFix`, its disable ranges and its own guards — the at-rules it passes over, the raw it writes, the semicolon the space rule refuses to write over — are asked before it is counted in ([#536](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/536)).
  *
  * A rule ahead ran before the write and judged the run as it stood, so where it was content with that and refuses what the write leaves, the write would put the file in breach of a rule that reported nothing ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)). Both judge the lineness of the block whose brace it is, and a write behind a brace nested inside that block does move it, so the two answer about the block as each of them finds it.
- * @param syntax - The asking rule's syntax, whose namespace names the neighbour.
+ * @param syntax - The asking rule's syntax, whose namespace names the neighbor.
  * @param statement - The rule or at-rule whose closing brace the run stands behind.
  * @param result - The Stylelint result, which holds the configuration.
  * @param ruleName - The asking rule's registered name.
@@ -97,7 +97,7 @@ export function writesRunBehindBrace (syntax: Syntax, statement: AtRule | Rule, 
 
 	if (!asking) return true
 
-	let settings = neighbourSettings(statement, result, PARTICIPANTS)
+	let settings = neighborSettings(statement, result, PARTICIPANTS)
 	let position = settings.findIndex(([, , , name]) => name === ruleName)
 
 	if (position === -1) return true
@@ -124,19 +124,19 @@ export function writesRunBehindBrace (syntax: Syntax, statement: AtRule | Rule, 
 	let parted = runBehindBrace(askingNode)
 
 	/**
-	 * Asks whether a neighbour would write this very raw, so that its option gates the asking rule at all.
-	 * @param neighbour - The rule.
-	 * @param neighbourOption - Its primary option.
-	 * @param neighbourName - The name the configuration lists it under.
+	 * Asks whether a neighbor would write this very raw, so that its option gates the asking rule at all.
+	 * @param neighbor - The rule.
+	 * @param neighborOption - Its primary option.
+	 * @param neighborName - The name the configuration lists it under.
 	 * @returns True where it speaks of this block, writes this raw, and no disable comment keeps it off the line.
 	 */
-	function contends (neighbour: Participant, neighbourOption: string, neighbourName: string): boolean {
-		if (!speaksOf(neighbourOption, isSingleLine)) return false
-		if (writtenNodeOf(neighbour, neighbourName, result, statement) !== askingNode) return false
+	function contends (neighbor: Participant, neighborOption: string, neighborName: string): boolean {
+		if (!speaksOf(neighborOption, isSingleLine)) return false
+		if (writtenNodeOf(neighbor, neighborName, result, statement) !== askingNode) return false
 		// The space rule writes nothing where a further semicolon stands inside the run, so it contends for nothing there
-		if (neighbour === `space` && parted.holdsASemicolon) return false
+		if (neighbor === `space` && parted.holdsASemicolon) return false
 
-		return line === undefined || !fixDisabledOnLine(result, neighbourName, line)
+		return line === undefined || !fixDisabledOnLine(result, neighborName, line)
 	}
 
 	let restsBehind = settings.slice(position + 1).every(([behind, behindOption, behindFixTurnedOff, behindName]) => {

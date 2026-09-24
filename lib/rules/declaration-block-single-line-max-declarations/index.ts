@@ -13,7 +13,7 @@ import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
-import type { NeighbourRule } from "../../utils/neighbourSettings/index.ts"
+import type { NeighborRule } from "../../utils/neighborSettings/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
@@ -34,7 +34,7 @@ export let meta = {
 }
 
 /** The two rules about a run the fix writes, by the whitespace each writes, with every option each takes; the lineness-conditioned ones speak of the block as the fix leaves it, save the pair behind a nested block, which speaks of that block. */
-type RunRules = Record<Whitespace, NeighbourRule>
+type RunRules = Record<Whitespace, NeighborRule>
 
 /** The run behind the opening brace: the newline rule reads the first node that is no comment, the space rule the first node whatever it is. */
 const OPENING_BRACE: RunRules = {

@@ -8,7 +8,7 @@ import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
 
-// The library lists the block's rule first and its extra rule behind it: the order in which an undeferred check would have reported a block the neighbour was about to break over two lines
+// The library lists the block's rule first and its extra rule behind it: the order in which an undeferred check would have reported a block the neighbor was about to break over two lines
 testRule({
 	ruleName,
 	config: [1],
@@ -16,7 +16,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a single-line block holding two declarations, reported behind the neighbour in the check and not at all in the fixing run, where the neighbour has broken the block over two lines before the rule reads it`,
+			description: `a single-line block holding two declarations, reported behind the neighbor in the check and not at all in the fixing run, where the neighbor has broken the block over two lines before the rule reads it`,
 			code: `a { color: pink; top: 0; }`,
 			fixed: `
 				a {
@@ -42,7 +42,7 @@ testRule({
 	],
 })
 
-// The fix spells each run as the rules about it ask (#641). The rule's write lands ahead of every lineness-conditioned neighbour and behind every `always` and `never` one, wherever the configuration lists them, so the order the library fixes is the only order there is; a probe over both confirmed it
+// The fix spells each run as the rules about it ask (#641). The rule's write lands ahead of every lineness-conditioned neighbor and behind every `always` and `never` one, wherever the configuration lists them, so the order the library fixes is the only order there is; a probe over both confirmed it
 testRule({
 	ruleName,
 	config: [1],
@@ -50,7 +50,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a single-line block holding two declarations, broken everywhere but behind the opening brace, where the neighbour refuses whitespace in a multi-line block`,
+			description: `a single-line block holding two declarations, broken everywhere but behind the opening brace, where the neighbor refuses whitespace in a multi-line block`,
 			code: `a { color: pink; top: 0; }`,
 			fixed: `
 				a {color: pink;
@@ -73,7 +73,7 @@ testRule({
 
 	reject: [
 		{
-			description: `the same block beside the same neighbour with its fix turned off, which still says what it wants behind the brace`,
+			description: `the same block beside the same neighbor with its fix turned off, which still says what it wants behind the brace`,
 			code: `a { color: pink; top: 0; }`,
 			fixed: `
 				a {color: pink;
@@ -96,7 +96,7 @@ testRule({
 
 	reject: [
 		{
-			description: `the same block where the neighbour asks for a single space behind the opening brace, which the fix keeps`,
+			description: `the same block where the neighbor asks for a single space behind the opening brace, which the fix keeps`,
 			code: `a { color: pink; top: 0; }`,
 			fixed: `
 				a { color: pink;
@@ -119,7 +119,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a block spelled without whitespace behind the opening brace, which the neighbour refuses there and the fix leaves out`,
+			description: `a block spelled without whitespace behind the opening brace, which the neighbor refuses there and the fix leaves out`,
 			code: `a {color: pink; top: 0; }`,
 			fixed: `
 				a {color: pink;
@@ -142,7 +142,7 @@ testRule({
 
 	reject: [
 		{
-			description: `the block where the neighbour refuses whitespace behind a semicolon in a multi-line block, so the two declarations share a line`,
+			description: `the block where the neighbor refuses whitespace behind a semicolon in a multi-line block, so the two declarations share a line`,
 			code: `a { color: pink; top: 0; }`,
 			fixed: `
 				a {
@@ -165,7 +165,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a comment behind the semicolon beside the neighbour asking for a break behind it in a multi-line block, which reads past the comment, so the comment keeps its run and the break goes behind it`,
+			description: `a comment behind the semicolon beside the neighbor asking for a break behind it in a multi-line block, which reads past the comment, so the comment keeps its run and the break goes behind it`,
 			code: `a { color: pink; /* c */ top: 0; }`,
 			fixed: `
 				a {
@@ -189,7 +189,7 @@ testRule({
 
 	reject: [
 		{
-			description: `the block where the neighbour asks for a single space behind a semicolon, which the fix keeps`,
+			description: `the block where the neighbor asks for a single space behind a semicolon, which the fix keeps`,
 			code: `a { color: pink; top: 0; }`,
 			fixed: `
 				a {
@@ -212,7 +212,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a block spelled without whitespace behind the semicolon, which the neighbour refuses there and the fix leaves out`,
+			description: `a block spelled without whitespace behind the semicolon, which the neighbor refuses there and the fix leaves out`,
 			code: `a { color: pink;top: 0; }`,
 			fixed: `
 				a {
@@ -226,7 +226,7 @@ testRule({
 			message: messages.expected(1),
 		},
 		{
-			description: `a comment behind the semicolon, whose run the neighbour reads and the fix spells as it asks, the break going behind the comment`,
+			description: `a comment behind the semicolon, whose run the neighbor reads and the fix spells as it asks, the break going behind the comment`,
 			code: `a { color: pink;/* c */ top: 0; }`,
 			fixed: `
 				a {
@@ -250,7 +250,7 @@ testRule({
 
 	reject: [
 		{
-			description: `the block where the neighbour refuses whitespace in front of the closing brace of a multi-line block`,
+			description: `the block where the neighbor refuses whitespace in front of the closing brace of a multi-line block`,
 			code: `a { color: pink; top: 0; }`,
 			fixed: `
 				a {
@@ -273,7 +273,7 @@ testRule({
 
 	reject: [
 		{
-			description: `the block where the neighbour asks for a single space in front of the closing brace, which the fix keeps`,
+			description: `the block where the neighbor asks for a single space in front of the closing brace, which the fix keeps`,
 			code: `a { color: pink; top: 0; }`,
 			fixed: `
 				a {
@@ -296,7 +296,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a block spelled without whitespace in front of the closing brace, which the neighbour refuses there and the fix leaves out`,
+			description: `a block spelled without whitespace in front of the closing brace, which the neighbor refuses there and the fix leaves out`,
 			code: `a { color: pink; top: 0;}`,
 			fixed: `
 				a {
@@ -319,7 +319,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a nested single-line block in front of the two declarations, behind whose closing brace the neighbour refuses whitespace, asked about that block's lineness rather than the broken one's`,
+			description: `a nested single-line block in front of the two declarations, behind whose closing brace the neighbor refuses whitespace, asked about that block's lineness rather than the broken one's`,
 			code: `a { & b { x: 1; }color: pink; top: 0; }`,
 			fixed: `
 				a {
@@ -343,7 +343,7 @@ testRule({
 
 	reject: [
 		{
-			description: `the same nested block beside the neighbour's multi-line option, which is silent about a single-line block, so the run behind its brace gets the break`,
+			description: `the same nested block beside the neighbor's multi-line option, which is silent about a single-line block, so the run behind its brace gets the break`,
 			code: `a { & b { x: 1; } color: pink; top: 0; }`,
 			fixed: `
 				a {
@@ -368,7 +368,7 @@ testRule({
 
 	reject: [
 		{
-			description: `the same nested block where the neighbour asks for a single space behind its closing brace, which the fix keeps`,
+			description: `the same nested block where the neighbor asks for a single space behind its closing brace, which the fix keeps`,
 			code: `a { & b { x: 1; } color: pink; top: 0; }`,
 			fixed: `
 				a {
@@ -533,7 +533,7 @@ describe(`the check behind the writers of the run`, () => {
 })
 
 describe(`the run in front of a comment`, () => {
-	// The neighbour reports and, its fix turned off, writes nothing, so the library's relint of the fixed file would disagree with the fixing run about that warning; the file is asserted directly
+	// The neighbor reports and, its fix turned off, writes nothing, so the library's relint of the fixed file would disagree with the fixing run about that warning; the file is asserted directly
 	it(`is written as a space rule with its fix turned off asks, so the fixed file satisfies it`, async () => {
 		let rules = { [ruleName]: 1, "@stylistic/declaration-block-semicolon-space-after": [`never`, { disableFix: true }] }
 		let written = `a {\ncolor: pink;/* c */\ntop: 0;\n}\n`

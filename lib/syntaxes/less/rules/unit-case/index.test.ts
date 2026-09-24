@@ -166,7 +166,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// Less refuses such a name (`less.render` answers `Unrecognised input`) while Sass and every browser read the address, so the reading is CSS's rather than this syntax's; it is pinned here because `postcss-less` is the only syntax reaching the scan with this shape: plain CSS spells no `//` comment, and `postcss-scss` reads the file the same way on either side of the branch. See #321
+			// Less refuses such a name (`less.render` answers `Unrecognized input`) while Sass and every browser read the address, so the reading is CSS's rather than this syntax's; it is pinned here because `postcss-less` is the only syntax reaching the scan with this shape: plain CSS spells no `//` comment, and `postcss-scss` reads the file the same way on either side of the branch. See #321
 			description: `an upper-case unit behind an address whose name an escape spells in a letter that is not its first`,
 			code: `a { b: u\\rl(http://a/b.png) 1PX; }`,
 			fixed: `a { b: u\\rl(http://a/b.png) 1px; }`,

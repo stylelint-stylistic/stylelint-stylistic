@@ -9,7 +9,7 @@ let { ruleName: newlineBeforeRuleName } = createNewlineBefore(scss)
 let { ruleName: spaceBeforeRuleName } = createSpaceBefore(scss)
 let { ruleName: atRuleSpaceBeforeRuleName } = createAtRuleSpaceBefore(scss)
 
-// The neighbour is named and this rule listed behind it, as in the core's integration test (#354); these blocks add that the settings read are the namespace's own, and that a `//` comment closing the block is a node of its own here, which the semicolon is written in front of.
+// The neighbor is named and this rule listed behind it, as in the core's integration test (#354); these blocks add that the settings read are the namespace's own, and that a `//` comment closing the block is a node of its own here, which the semicolon is written in front of.
 let testRule = createTestRule({ ruleName, extraRules: { [ruleName]: `always` }, customSyntax: `postcss-scss` })
 
 testRule({

@@ -38,7 +38,7 @@ testRule({
 	accept: [
 		{
 			// See #694
-			description: `the break and the tab PostCSS prints in front of a declaration the file spells no run in front of, which are what its neighbour carries`,
+			description: `the break and the tab PostCSS prints in front of a declaration the file spells no run in front of, which are what its neighbor carries`,
 			code: `b {\n\tcolor: red }\na {color: pink;top: 0 }`,
 		},
 	],
@@ -48,7 +48,7 @@ testRule({
 
 describe(`the run PostCSS prints in front of a declaration the file spells none in front of`, () => {
 	// See #694
-	it(`is the break with the four spaces PostCSS prints where the neighbours carry nothing, which tab refuses, and the fix writes the tab`, async () => {
+	it(`is the break with the four spaces PostCSS prints where the neighbors carry nothing, which tab refuses, and the fix writes the tab`, async () => {
 		expect(await fixAndRead(`a {\ncolor: pink;\ntop: 0;\n}`, `tab`)).toEqual({
 			warnings: [`2:1 ${messages.expected(`1 tab`)}`, `3:1 ${messages.expected(`1 tab`)}`],
 			fixed: `a {\n\tcolor: pink;\n\ttop: 0;\n}`,

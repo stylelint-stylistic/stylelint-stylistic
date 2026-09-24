@@ -1063,18 +1063,18 @@ describe(`${ruleName} on the whitespace it carries past a comment`, () => {
  * Fixes a stylesheet under two rules, once in each order the configuration can list them, and reports what is left.
  * @param code - The stylesheet.
  * @param option - This rule's primary option.
- * @param neighbour - The other rule's configured name.
+ * @param neighbor - The other rule's configured name.
  * @param setting - The other rule's configured value.
  * @returns What each order wrote, and the warnings the first order left over its own output.
  */
-async function race (code: string, option: string, neighbour: string, setting: unknown): Promise<{
+async function race (code: string, option: string, neighbor: string, setting: unknown): Promise<{
 	ours: string | undefined,
 	theirs: string | undefined,
 	left: string[],
 }> {
-	let ours = await stylelint.lint({ code, config: { plugins, rules: { [ruleName]: option, [neighbour]: setting } }, fix: true })
-	let theirs = await stylelint.lint({ code, config: { plugins, rules: { [neighbour]: setting, [ruleName]: option } }, fix: true })
-	let again = await stylelint.lint({ code: ours.code ?? code, config: { plugins, rules: { [ruleName]: option, [neighbour]: setting } } })
+	let ours = await stylelint.lint({ code, config: { plugins, rules: { [ruleName]: option, [neighbor]: setting } }, fix: true })
+	let theirs = await stylelint.lint({ code, config: { plugins, rules: { [neighbor]: setting, [ruleName]: option } }, fix: true })
+	let again = await stylelint.lint({ code: ours.code ?? code, config: { plugins, rules: { [ruleName]: option, [neighbor]: setting } } })
 
 	return { ours: ours.code, theirs: theirs.code, left: pick(again.results).warnings.map((warning) => warning.text) }
 }

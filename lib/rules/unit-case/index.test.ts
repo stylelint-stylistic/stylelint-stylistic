@@ -12,7 +12,7 @@ testRule({
 			code: `a { line-height: 1; }`,
 		},
 		{
-			description: `a hex colour, whose digits carry no unit`,
+			description: `a hex color, whose digits carry no unit`,
 			code: `a { color: #000; }`,
 		},
 		{
@@ -102,7 +102,7 @@ testRule({
 		},
 		{
 			// The parser hands the divider back inside the word in front of the escape, and the name is read welded across the space closing it
-			description: `an address spelling its name by a hexadecimal escape a space closes, behind a colour and a divider glued to it`,
+			description: `an address spelling its name by a hexadecimal escape a space closes, behind a color and a divider glued to it`,
 			code: `a { background: #FFF\\\n\\75 rl(1PX); }`,
 		},
 		{
@@ -1005,7 +1005,7 @@ testRule({
 			message: messages.expected(`PX9`, `px9`),
 		},
 		{
-			// The whole word is a number to the tokenizer and holds no unit at all, the neighbour carrying the fixer; Less reads the dimension `1E` there. See #646
+			// The whole word is a number to the tokenizer and holds no unit at all, the neighbor carrying the fixer; Less reads the dimension `1E` there. See #646
 			description: `a word of digits and an exponent beside an upper-case unit`,
 			code: `a { width: 1E5 2PX; }`,
 			fixed: `a { width: 1E5 2px; }`,
@@ -1260,7 +1260,7 @@ testRule({
 			code: `a { line-height: 1; }`,
 		},
 		{
-			description: `a hex colour, whose digits carry no unit`,
+			description: `a hex color, whose digits carry no unit`,
 			code: `a { color: #000; }`,
 		},
 		{

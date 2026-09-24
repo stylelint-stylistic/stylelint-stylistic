@@ -9,7 +9,7 @@ import { isCustomProperty } from "../isCustomProperty/index.ts"
 import { isInlineStyleAttribute } from "../isInlineStyleAttribute/index.ts"
 import { isLastNodeWithoutSemicolon } from "../isLastNodeWithoutSemicolon/index.ts"
 import { lastNonCommentNode } from "../lastNonCommentNode/index.ts"
-import { neighbourCopies, type NeighbourCopy } from "../neighbourSettings/index.ts"
+import { neighborCopies, type NeighborCopy } from "../neighborSettings/index.ts"
 import { nextNonCommentNode } from "../nextNonCommentNode/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
 import { isAtRule, isComment, isDeclaration, isRoot } from "../typeGuards/index.ts"
@@ -92,12 +92,12 @@ export function semicolonOutlivesTheFlag (node: Node): boolean {
 
 /**
  * Asks whether a copy of `declaration-block-trailing-semicolon` can fix a declaration: fix on, secondaries it takes, no disable on the line under its name, closing a block, not alone under `ignore: single-declaration`.
- * @param copy - The copy, as `neighbourCopies` reads it.
+ * @param copy - The copy, as `neighborCopies` reads it.
  * @param decl - The declaration.
  * @param result - The Stylelint result, whose disable ranges are read.
  * @returns True where the fix reaches the declaration.
  */
-function reaches (copy: NeighbourCopy, decl: Declaration, result: PostcssResult): boolean {
+function reaches (copy: NeighborCopy, decl: Declaration, result: PostcssResult): boolean {
 	if (copy.fixDisabled || !takesSecondary(copy.secondary)) return false
 
 	let { parent } = decl
@@ -120,7 +120,7 @@ function reaches (copy: NeighbourCopy, decl: Declaration, result: PostcssResult)
  * @param result - The Stylelint result, which holds the configuration.
  * @returns True for a semicolon, false for none, nothing where the copy leaves it.
  */
-function writtenBy (copy: NeighbourCopy, decl: Declaration, result: PostcssResult): boolean | undefined {
+function writtenBy (copy: NeighborCopy, decl: Declaration, result: PostcssResult): boolean | undefined {
 	let { syntax } = copy
 
 	if (!reaches(copy, decl, result) || syntax.closingSemicolonIsCommentText(decl, result)) return undefined
@@ -137,7 +137,7 @@ function writtenBy (copy: NeighbourCopy, decl: Declaration, result: PostcssResul
  * @returns The semicolon and the syntax, or nothing where no copy writes.
  */
 function lastWrite (decl: Declaration, result: PostcssResult): { semicolon: boolean, syntax: Syntax } | undefined {
-	let [copy] = neighbourCopies(decl, result, TRAILING_SEMICOLON_RULE)
+	let [copy] = neighborCopies(decl, result, TRAILING_SEMICOLON_RULE)
 	let semicolon = copy && writtenBy(copy, decl, result)
 
 	return copy && semicolon !== undefined ? { semicolon, syntax: copy.syntax } : undefined
@@ -179,7 +179,7 @@ export function valueAsClosed (syntax: Syntax, decl: Declaration, result: Postcs
 
 	if (decl.important) return value
 
-	let [copy] = neighbourCopies(decl, result, TRAILING_SEMICOLON_RULE)
+	let [copy] = neighborCopies(decl, result, TRAILING_SEMICOLON_RULE)
 
 	if (copy && decl.parent?.raws.semicolon && writtenBy(copy, decl, result) === false && !copy.syntax.writesIntoInlineComment(decl, result)) return value.replace(TRAILING_CSS_WHITESPACE, ``)
 

@@ -5,7 +5,7 @@ let { ruleName, messages } = createRule(scss)
 
 let testRule = createTestRule({ ruleName })
 
-// The neighbours are read under the namespace's own names (#550), so an SCSS file configured with the namespace's slash rules gets its solidus spelled as they ask.
+// The neighbors are read under the namespace's own names (#550), so an SCSS file configured with the namespace's slash rules gets its solidus spelled as they ask.
 testRule({
 	ruleName,
 	config: [`ratio`],
@@ -17,7 +17,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a whole number written on its own, whose second number is written behind a solidus spelled tight as both neighbours ask`,
+			description: `a whole number written on its own, whose second number is written behind a solidus spelled tight as both neighbors ask`,
 			code: `a { aspect-ratio: 2; }`,
 			fixed: `a { aspect-ratio: 2/1; }`,
 			line: 1,

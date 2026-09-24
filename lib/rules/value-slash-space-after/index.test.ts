@@ -24,7 +24,7 @@ testRule({
 			code: `a { font: 12px / 1.5 serif; }`,
 		},
 		{
-			description: `the solidus in front of the alpha of a colour function`,
+			description: `the solidus in front of the alpha of a color function`,
 			code: `a { color: rgb(0 0 0 / 50%); }`,
 		},
 		{
@@ -171,7 +171,7 @@ testRule({
 			],
 		},
 		{
-			description: `no space behind the solidus of a colour function`,
+			description: `no space behind the solidus of a color function`,
 			code: `a { color: rgb(0 0 0 /50%); }`,
 			fixed: `a { color: rgb(0 0 0 / 50%); }`,
 			line: 1,
@@ -309,7 +309,7 @@ testRule({
 			code: `a { grid-area: 1/2; }`,
 		},
 		{
-			description: `the solidus in front of the alpha of a colour function`,
+			description: `the solidus in front of the alpha of a color function`,
 			code: `a { color: rgb(0 0 0 /50%); }`,
 		},
 		{
@@ -384,7 +384,7 @@ testRule({
 			message: messages.rejectedAfter(),
 		},
 		{
-			description: `a space behind the solidus of a colour function`,
+			description: `a space behind the solidus of a color function`,
 			code: `a { color: rgb(0 0 0/ 50%); }`,
 			fixed: `a { color: rgb(0 0 0/50%); }`,
 			line: 1,

@@ -9,7 +9,7 @@ The pattern this exists for: **the code is clean from round one and every fi
 
 ## Every sentence is a checkable claim
 
-Before writing a sentence that names a behaviour, an option or a number, run it. If it was not run, either run it or leave it out.
+Before writing a sentence that names a behavior, an option or a number, run it. If it was not run, either run it or leave it out.
 
 - **A number reached by arithmetic on a measured one is not measured.** "312 × 3, because the corpus tripled" gave 936; the run gave 312.
 - **A pair of numbers must be in one unit.** "378 warnings gone, 108 new" counted rows on one side and warnings on the other; in warnings it was 1 404 against 324.
@@ -38,7 +38,7 @@ Treat every sentence inside an edited block as newly written, whoever wrote i
 
 Whenever a JSDoc, a README, a changelog entry or a commit message says a rule leaves something alone *because the syntax requires it* — or forbids it, or reads it a certain way — that is a testable claim about a language, and it lands in four places at once. Run it past dart-sass, `lightningcss` or the Less compiler before writing it anywhere. One narrowing was right and its stated reason false, and the reason had already been copied into the JSDoc, the README, the changelog and the commit before review caught it.
 
-Write the behaviour first and the justification last, after the probe. A reason phrased as "this rule is named for X, and this is not an X" needs only the rule's own name and docs, and is usually the stronger of the two. When a claim is disproved, grep for it — it is never in one place.
+Write the behavior first and the justification last, after the probe. A reason phrased as "this rule is named for X, and this is not an X" needs only the rule's own name and docs, and is usually the stronger of the two. When a claim is disproved, grep for it — it is never in one place.
 
 **Keep the engine survey in the spec.** A claim quantified over the positions of somebody else's grammar leaks on every round: "Less refuses it at the double slash" → it refuses at the colon, one character earlier → "in an at-rule's parameters Less takes such a name" → `@import` refuses both spellings → "`@media` is the one place" → `@supports` takes it too, and the opposite way. Nine findings over three rounds, none a defect in the fix. Ask what the fix would still be right without, say that, and stop; the survey stays in the spec beside the table of runs that produced it. When a witness has two sufficient causes, swap it for one that isolates the question.
 

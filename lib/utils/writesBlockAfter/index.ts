@@ -1,7 +1,7 @@
 import type { Node } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { neighbourCopies, type NeighbourRuleSetting, speaksOf } from "../neighbourSettings/index.ts"
+import { neighborCopies, type NeighborRuleSetting, speaksOf } from "../neighborSettings/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
 
 /** A spelling of the whitespace run in front of a closing brace. */
@@ -14,19 +14,19 @@ const OPENS_WITH_A_BREAK: Run[] = [`newline`, `emptyLine`]
 const WITHOUT_AN_EMPTY_LINE: Run[] = [`newline`, `space`, `none`, `other`]
 
 /** The rule about a break in front of the closing brace. */
-const CLOSING_NEWLINE: NeighbourRuleSetting = {
+const CLOSING_NEWLINE: NeighborRuleSetting = {
 	name: `block-closing-brace-newline-before`,
 	options: [`always`, `always-multi-line`, `never-multi-line`],
 }
 
 /** The rule about a space in front of the closing brace. */
-const CLOSING_SPACE: NeighbourRuleSetting = {
+const CLOSING_SPACE: NeighborRuleSetting = {
 	name: `block-closing-brace-space-before`,
 	options: [`always`, `never`, `always-single-line`, `never-single-line`, `always-multi-line`, `never-multi-line`],
 }
 
 /** The rule about an empty line in front of the closing brace. */
-const CLOSING_EMPTY_LINE: NeighbourRuleSetting = {
+const CLOSING_EMPTY_LINE: NeighborRuleSetting = {
 	name: `block-closing-brace-empty-line-before`,
 	options: [`always-multi-line`, `never`],
 }
@@ -61,15 +61,15 @@ function acceptedByEmptyLine (option: string, secondary: Record<string, unknown>
 }
 
 /**
- * Reads the copies of a neighbour that are listed with an option they accept and a fix that would rewrite the run.
+ * Reads the copies of a neighbor that are listed with an option they accept and a fix that would rewrite the run.
  * @param node - A node of the root the rules read.
  * @param result - The Stylelint result, which holds the configuration.
- * @param rule - The neighbour and the primaries it accepts.
- * @returns The primary and the secondaries per writing copy, none where the neighbour gates nothing.
+ * @param rule - The neighbor and the primaries it accepts.
+ * @returns The primary and the secondaries per writing copy, none where the neighbor gates nothing.
  */
-function writingCopies (node: Node, result: PostcssResult, rule: NeighbourRuleSetting): { option: string, secondary: Record<string, unknown> }[] {
+function writingCopies (node: Node, result: PostcssResult, rule: NeighborRuleSetting): { option: string, secondary: Record<string, unknown> }[] {
 	// A turned-off fix rewrites nothing, so it gates nothing (#485)
-	return neighbourCopies(node, result, rule).flatMap(({ option, fixDisabled, secondary }) => !fixDisabled && typeof option === `string` ? [{ option, secondary }] : [])
+	return neighborCopies(node, result, rule).flatMap(({ option, fixDisabled, secondary }) => !fixDisabled && typeof option === `string` ? [{ option, secondary }] : [])
 }
 
 /**
@@ -88,12 +88,12 @@ export function writesBlockAfter (node: Node, result: PostcssResult, primary: st
 	let accepted = acceptedByWhitespace(primary, true)
 
 	/**
-	 * Asks whether a neighbour leaves the asking rule a spelling they both accept.
-	 * @param neighbourAccepts - The spellings the neighbour accepts.
+	 * Asks whether a neighbor leaves the asking rule a spelling they both accept.
+	 * @param neighborAccepts - The spellings the neighbor accepts.
 	 * @returns True where the two sets meet.
 	 */
-	function agrees (neighbourAccepts: Run[]): boolean {
-		return neighbourAccepts.some((run) => accepted.includes(run))
+	function agrees (neighborAccepts: Run[]): boolean {
+		return neighborAccepts.some((run) => accepted.includes(run))
 	}
 
 	if (writingCopies(node, result, CLOSING_NEWLINE).some(({ option }) => speaksOf(option, () => isSingleLine) && !agrees(acceptedByWhitespace(option, true)))) return false

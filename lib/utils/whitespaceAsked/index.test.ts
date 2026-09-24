@@ -2,7 +2,7 @@ import { type Declaration, parse, type Rule } from "postcss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
-import type { NeighbourRule } from "../neighbourSettings/index.ts"
+import type { NeighborRule } from "../neighborSettings/index.ts"
 
 import { type Whitespace, whitespaceAsked } from "./index.ts"
 
@@ -10,7 +10,7 @@ const NEWLINE_AFTER = `@stylistic/function-comma-newline-after`
 const SPACE_AFTER = `@stylistic/function-comma-space-after`
 
 /** The two rules about the run behind a call's comma, which is the run the tests below ask about. */
-const RULES: Partial<Record<Whitespace, NeighbourRule>> = {
+const RULES: Partial<Record<Whitespace, NeighborRule>> = {
 	newline: {
 		name: `function-comma-newline-after`,
 		options: [`always`, `always-multi-line`, `never-multi-line`],

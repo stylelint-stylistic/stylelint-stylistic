@@ -43,17 +43,17 @@ describe(`writesRunBehindBrace`, () => {
 		expect(ask(SINGLE_LINE, { [NEWLINE]: `always`, [SPACE]: `never` }, SPACE)).toBe(true)
 	})
 
-	it(`a neighbour whose option says nothing of this block's lineness, which gates nothing`, () => {
+	it(`a neighbor whose option says nothing of this block's lineness, which gates nothing`, () => {
 		expect(ask(SINGLE_LINE, { [SPACE]: `always`, [NEWLINE]: `always-multi-line` }, SPACE)).toBe(true)
 		expect(ask(MULTI_LINE, { [SPACE]: `always`, [NEWLINE]: `always-multi-line` }, SPACE)).toBe(false)
 		expect(ask(MULTI_LINE, { [SPACE]: `always`, [NEWLINE]: `always-single-line` }, SPACE)).toBe(true)
 	})
 
-	it(`a neighbour whose fix the configuration turned off, which rewrites nothing and so gates nothing`, () => {
+	it(`a neighbor whose fix the configuration turned off, which rewrites nothing and so gates nothing`, () => {
 		expect(ask(SINGLE_LINE, { [SPACE]: `always`, [NEWLINE]: [`always`, { disableFix: true }] }, SPACE)).toBe(true)
 	})
 
-	it(`a neighbour deferred to the run's end, which writes behind an undeferred rule whatever the configuration's order`, () => {
+	it(`a neighbor deferred to the run's end, which writes behind an undeferred rule whatever the configuration's order`, () => {
 		expect(ask(SINGLE_LINE, { [SPACE]: `always`, [NEWLINE]: `always-single-line` }, SPACE)).toBe(false)
 		expect(ask(SINGLE_LINE, { [NEWLINE]: `always-single-line`, [SPACE]: `always` }, SPACE)).toBe(false)
 		expect(ask(SINGLE_LINE, { [NEWLINE]: `always-single-line`, [SPACE]: `always` }, NEWLINE)).toBe(true)
@@ -65,7 +65,7 @@ describe(`writesRunBehindBrace`, () => {
 		expect(ask(SINGLE_LINE, { [SPACE]: `always-single-line`, [NEWLINE]: `always-single-line` }, SPACE)).toBe(true)
 	})
 
-	it(`a neighbour listed under an option it does not accept, which is no neighbour at all`, () => {
+	it(`a neighbor listed under an option it does not accept, which is no neighbor at all`, () => {
 		expect(ask(SINGLE_LINE, { [SPACE]: `always`, [NEWLINE]: `never` }, SPACE)).toBe(true)
 	})
 
@@ -85,12 +85,12 @@ describe(`writesRunBehindBrace`, () => {
 		expect(ask(`a {} /* c */`, { [SPACE]: `never`, [NEWLINE]: `always` }, SPACE)).toBe(true)
 	})
 
-	it(`an at-rule the neighbour's secondary option passes over, which writes nothing there either`, () => {
+	it(`an at-rule the neighbor's secondary option passes over, which writes nothing there either`, () => {
 		expect(ask(`@media print { a { color: red; } }b {}`, { [SPACE]: `always`, [NEWLINE]: [`always`, { ignoreAtRules: [`media`] }] }, SPACE)).toBe(true)
 		expect(ask(`@media print { a { color: red; } }b {}`, { [SPACE]: `always`, [NEWLINE]: [`always`, { ignoreAtRules: [`supports`] }] }, SPACE)).toBe(false)
 	})
 
-	it(`a disable comment keeping the neighbour's fix off the line, which leaves it writing nothing`, () => {
+	it(`a disable comment keeping the neighbor's fix off the line, which leaves it writing nothing`, () => {
 		let rules = { [SPACE]: `never`, [NEWLINE]: `always` }
 
 		expect(ask(SINGLE_LINE, rules, SPACE, { [NEWLINE]: [{ start: 1 }] })).toBe(true)

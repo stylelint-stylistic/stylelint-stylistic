@@ -94,10 +94,10 @@ testRule({
 			code: `
 				const Option = styled.div\`
 				  &:hover {
-				    background-color: \${({ colours, isOptionSelected }) => (
+				    background-color: \${({ colors, isOptionSelected }) => (
 				      isOptionSelected
-				        ? colours.backgroundColour
-				        : colours.backgroundColourOnHover
+				        ? colors.backgroundColor
+				        : colors.backgroundColorOnHover
 				    )};
 				    gap: 8px \${({ isWide }) => (
 				      isWide
@@ -282,10 +282,10 @@ testRule({
 				  )};
 
 				  &:hover {
-				    background-color: \${({ colours, isOptionSelected }) => (
+				    background-color: \${({ colors, isOptionSelected }) => (
 				    	isOptionSelected
-				                          ? colours.backgroundColour
-				      : colours.backgroundColourOnHover
+				                          ? colors.backgroundColor
+				      : colors.backgroundColorOnHover
 				    )};
 				    gap: 8px \${({ isWide }) => (
 				      isWide
@@ -313,10 +313,10 @@ testRule({
 				  )};
 
 				  &:hover {
-				    background-color: \${({ colours, isOptionSelected }) => (
+				    background-color: \${({ colors, isOptionSelected }) => (
 				    	isOptionSelected
-				                          ? colours.backgroundColour
-				      : colours.backgroundColourOnHover
+				                          ? colors.backgroundColor
+				      : colors.backgroundColorOnHover
 				    )};
 				    gap: 8px \${({ isWide }) => (
 				      isWide
@@ -407,10 +407,10 @@ testRule({
 			code: `
 				const Option = styled.div\`
 					&:hover {
-						background-color: \${({ colours, isOptionSelected }) => (
+						background-color: \${({ colors, isOptionSelected }) => (
 							isOptionSelected
-								? colours.backgroundColour
-								: colours.backgroundColourOnHover
+								? colors.backgroundColor
+								: colors.backgroundColorOnHover
 						)};
 						gap: 8px \${({ isWide }) => (
 							isWide
@@ -627,10 +627,10 @@ testRule({
 					)};
 
 					&:hover {
-						background-color: \${({ colours, isOptionSelected }) => (
+						background-color: \${({ colors, isOptionSelected }) => (
 							isOptionSelected
-											     ? colours.backgroundColour
-							: colours.backgroundColourOnHover
+											     ? colors.backgroundColor
+							: colors.backgroundColorOnHover
 						)};
 							gap: 8px \${({ isWide }) => (
 							isWide
@@ -658,10 +658,10 @@ testRule({
 					)};
 
 					&:hover {
-						background-color: \${({ colours, isOptionSelected }) => (
+						background-color: \${({ colors, isOptionSelected }) => (
 							isOptionSelected
-											     ? colours.backgroundColour
-							: colours.backgroundColourOnHover
+											     ? colors.backgroundColor
+							: colors.backgroundColorOnHover
 						)};
 						gap: 8px \${({ isWide }) => (
 							isWide

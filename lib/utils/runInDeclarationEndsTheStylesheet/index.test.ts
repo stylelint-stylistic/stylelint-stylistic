@@ -49,7 +49,7 @@ describe(`runInDeclarationEndsTheStylesheet`, () => {
 		expect(endsTheStylesheet(`a { c: red }\n--b: \n`, 1)).toBe(true)
 	})
 
-	it(`a run a fix of the neighbouring rule has moved onto the tail of the raw between the property and the value`, () => {
+	it(`a run a fix of the neighboring rule has moved onto the tail of the raw between the property and the value`, () => {
 		let decl = declarationOf(`--b: \n`)
 
 		decl.raws.between = `:\n`

@@ -3,7 +3,7 @@ import { messages as colonSpaceAfterMessages } from "../declaration-colon-space-
 
 import { messages, ruleName } from "./index.ts"
 
-// Where a value is nothing but whitespace, the run in front of the semicolon is the run the `declaration-colon-*-after` rules read behind the colon (#416). The library lists the block's rule first and its extra rules behind, so the neighbour runs last in every block below and has the last word.
+// Where a value is nothing but whitespace, the run in front of the semicolon is the run the `declaration-colon-*-after` rules read behind the colon (#416). The library lists the block's rule first and its extra rules behind, so the neighbor runs last in every block below and has the last word.
 let testRule = createTestRule({ ruleName })
 
 testRule({
@@ -14,7 +14,7 @@ testRule({
 	reject: [
 		{
 			// See #416
-			description: `a value that is nothing but a break, which the neighbour asks to stand behind the colon: the neighbour is listed last and has the last word, so the break is not taken away and the warning stands`,
+			description: `a value that is nothing but a break, which the neighbor asks to stand behind the colon: the neighbor is listed last and has the last word, so the break is not taken away and the warning stands`,
 			code: `
 				a {
 					color:
@@ -34,7 +34,7 @@ testRule({
 			message: messages.rejectedBeforeMultiLine(),
 		},
 		{
-			description: `a block the break alone puts over two lines, which taking it away would put back on one and this rule would fall silent about — where the neighbour would write it again`,
+			description: `a block the break alone puts over two lines, which taking it away would put back on one and this rule would fall silent about — where the neighbor would write it again`,
 			code: `
 				a { color:
 				; }
@@ -90,7 +90,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a value that is nothing but a space, which the neighbour asks to stand behind the colon and this rule asks to be a break: the neighbour is listed last and has the last word, so the break is not written and the warning stands`,
+			description: `a value that is nothing but a space, which the neighbor asks to stand behind the colon and this rule asks to be a break: the neighbor is listed last and has the last word, so the break is not written and the warning stands`,
 			code: `a { color: ; }`,
 			fixed: `a { color: ; }`,
 			line: 1,
@@ -109,7 +109,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a custom property, whose value the break this rule writes puts over two lines, so that the neighbour's single-line option falls silent and the break is written`,
+			description: `a custom property, whose value the break this rule writes puts over two lines, so that the neighbor's single-line option falls silent and the break is written`,
 			code: `a { --a: ; }`,
 			fixed: `
 				a { --a:
@@ -133,7 +133,7 @@ testRule({
 	reject: [
 		{
 			// See #487
-			description: `a single-line declaration missing its space, which the neighbour used to fall silent about once the written break polluted the value's copy: both fixes land in one run now`,
+			description: `a single-line declaration missing its space, which the neighbor used to fall silent about once the written break polluted the value's copy: both fixes land in one run now`,
 			code: `a { color:red; }`,
 			fixed: `
 				a { color: red
@@ -166,7 +166,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a single-line declaration whose written break used to wake the neighbour's multi-line option, which the next parse never would have: the neighbour stays silent now, and both orders rest on one file`,
+			description: `a single-line declaration whose written break used to wake the neighbor's multi-line option, which the next parse never would have: the neighbor stays silent now, and both orders rest on one file`,
 			code: `a { color: red; }`,
 			fixed: `
 				a { color: red

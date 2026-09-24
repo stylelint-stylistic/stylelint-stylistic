@@ -37,7 +37,7 @@ const LENGTHS: Record<string, number> = {
 }
 
 /** What stands beside the run in the same text: a comment or a string carrying a run of its own, which is the text no fix writes the run of the stylesheet into, and an indentation on every empty line, which makes them no empty lines to the rule. */
-const NEIGHBOURS: Record<string, (text: string) => string> = {
+const NEIGHBORS: Record<string, (text: string) => string> = {
 	nothing: (text) => text,
 	comment: (text) => `/* n⏎⏎⏎⏎m */⏎${text}`,
 	string: (text) => `x {⏎\ty: "n⏎⏎⏎⏎m";⏎}⏎${text}`,
@@ -61,10 +61,10 @@ const BREAKS: Record<string, (text: string) => string> = {
 
 const name: Sweep[`name`] = `node-text-run`
 
-const corpus: Sweep[`corpus`] = multiply({ place: keysOf(PLACES), length: keysOf(LENGTHS), neighbour: keysOf(NEIGHBOURS), lineBreak: keysOf(BREAKS) }, ({ place, length, neighbour, lineBreak }) => {
+const corpus: Sweep[`corpus`] = multiply({ place: keysOf(PLACES), length: keysOf(LENGTHS), neighbor: keysOf(NEIGHBORS), lineBreak: keysOf(BREAKS) }, ({ place, length, neighbor, lineBreak }) => {
 	let template = PLACES[place ?? ``]
 	let breaks = LENGTHS[length ?? ``]
-	let stand = NEIGHBOURS[neighbour ?? ``]
+	let stand = NEIGHBORS[neighbor ?? ``]
 	let spell = BREAKS[lineBreak ?? ``]
 
 	if (template === undefined || breaks === undefined || !stand || !spell) throw new Error(`Every axis names a value`)

@@ -40,7 +40,7 @@ async function fixTwice (code: string, rules: object, customSyntax?: string): Pr
  * @param code - The snippet.
  * @param expected - What the runs are to leave.
  * @param expected.once - The file both orders leave.
- * @param expected.onceWarnings - How many warnings the pair has about that file, one wherever the neighbour's own write has left an empty line where the semicolon stood.
+ * @param expected.onceWarnings - How many warnings the pair has about that file, one wherever the neighbor's own write has left an empty line where the semicolon stood.
  * @param expected.twice - The file the run after that leaves, which the pair has nothing to say about.
  * @param customSyntax - The syntax to parse the snippet with, where it is not a plain stylesheet.
  * @returns Nothing.

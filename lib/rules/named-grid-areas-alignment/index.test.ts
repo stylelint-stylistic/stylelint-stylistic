@@ -690,7 +690,7 @@ testRule({
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
-			description: `a line break inside the wider of two rows, whose narrower neighbour is therefore left as it stands`,
+			description: `a line break inside the wider of two rows, whose narrower neighbor is therefore left as it stands`,
 			code: `a { grid-template-areas: "aaa\naaa" "b b"; }`,
 			fixed: `a { grid-template-areas: "aaa aaa" "b b"; }`,
 			line: 1,

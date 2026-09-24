@@ -6,7 +6,7 @@ import { messages, ruleName } from "./index.ts"
 
 let testRuleListedFirst = createTestRule({ ruleName })
 
-// A `declaration-block-semicolon-*-before` rule listed ahead of this one formats no semicolon this rule writes (#354), and the same holds of `at-rule-semicolon-space-before` and the one written behind an at-rule (#477). The library lists the block's rule first and its extra rules behind, so every block below names the neighbour and lists this rule as the extra: the order the fix has to answer for, since in the other the neighbour respells whatever this rule wrote; the at-rule blocks keep it for uniformity.
+// A `declaration-block-semicolon-*-before` rule listed ahead of this one formats no semicolon this rule writes (#354), and the same holds of `at-rule-semicolon-space-before` and the one written behind an at-rule (#477). The library lists the block's rule first and its extra rules behind, so every block below names the neighbor and lists this rule as the extra: the order the fix has to answer for, since in the other the neighbor respells whatever this rule wrote; the at-rule blocks keep it for uniformity.
 let testRule = createTestRule({ ruleName, extraRules: { [ruleName]: `always` } })
 
 testRule({
@@ -16,7 +16,7 @@ testRule({
 	reject: [
 		{
 			// See #354
-			description: `the block of the issue, whose last semicolon is written behind a line break like the one the neighbour puts in front of the other`,
+			description: `the block of the issue, whose last semicolon is written behind a line break like the one the neighbor puts in front of the other`,
 			code: `
 				@media screen{
 				a{b:c;d:e}
@@ -152,7 +152,7 @@ testRule({
 	reject: [
 		{
 			// See #354
-			description: `the block of the issue, whose last semicolon is written behind a space like the one the neighbour puts in front of the other`,
+			description: `the block of the issue, whose last semicolon is written behind a space like the one the neighbor puts in front of the other`,
 			code: `
 				@media screen{
 				a{b:c;d:e}
@@ -311,7 +311,7 @@ testRule({
 	],
 })
 
-// The whitespace in front of the semicolon `never` takes away goes with it (#479). The two blocks below run the neighbour first, the order in which the run it wrote used to outlive the semicolon, and the third runs this rule first, pinning that both orders rest on one file.
+// The whitespace in front of the semicolon `never` takes away goes with it (#479). The two blocks below run the neighbor first, the order in which the run it wrote used to outlive the semicolon, and the third runs this rule first, pinning that both orders rest on one file.
 testRule({
 	ruleName: spaceBeforeRuleName,
 	config: [`always`],
@@ -320,7 +320,7 @@ testRule({
 	reject: [
 		{
 			// See #479
-			description: `the space the neighbour writes in front of the semicolon, which the strip takes along instead of leaving it in front of the brace`,
+			description: `the space the neighbor writes in front of the semicolon, which the strip takes along instead of leaving it in front of the brace`,
 			code: `a { aspect-ratio: 2; }`,
 			fixed: `a { aspect-ratio: 2 }`,
 			warnings: [
@@ -350,7 +350,7 @@ testRule({
 
 	reject: [
 		{
-			description: `the break the newline neighbour writes there, which goes the same way`,
+			description: `the break the newline neighbor writes there, which goes the same way`,
 			code: `a { aspect-ratio: 2; }`,
 			fixed: `a { aspect-ratio: 2 }`,
 			warnings: [
@@ -419,7 +419,7 @@ testRuleListedFirst({
 
 	reject: [
 		{
-			description: `the same pair the other way round, resting on the same file: the semicolon goes first, and the run the neighbour asked for goes unwritten with it`,
+			description: `the same pair the other way round, resting on the same file: the semicolon goes first, and the run the neighbor asked for goes unwritten with it`,
 			code: `a { aspect-ratio: 2; }`,
 			fixed: `a { aspect-ratio: 2 }`,
 			warnings: [
@@ -450,7 +450,7 @@ testRuleListedFirst({
 	reject: [
 		{
 			// See #485
-			description: `a neighbour whose fix is turned off and no live one speaking, whose ask the written semicolon still honours: the write is this rule's own text, not the turned-off fix`,
+			description: `a neighbor whose fix is turned off and no live one speaking, whose ask the written semicolon still honors: the write is this rule's own text, not the turned-off fix`,
 			code: `a { b: c }`,
 			fixed: `a { b: c ; }`,
 			line: 1,

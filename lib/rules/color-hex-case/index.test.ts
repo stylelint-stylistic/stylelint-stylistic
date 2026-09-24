@@ -8,15 +8,15 @@ testRule({
 
 	accept: [
 		{
-			description: `an interpolation in a property name, whose hash opens no colour`,
+			description: `an interpolation in a property name, whose hash opens no color`,
 			code: `a { border-#$side: 0; }`,
 		},
 		{
-			description: `an interpolation in a value, whose hash opens no colour`,
+			description: `an interpolation in a value, whose hash opens no color`,
 			code: `a { box-sizing: #$type-box; }`,
 		},
 		{
-			description: `a fragment reference in a url(), whose hash opens no colour either`,
+			description: `a fragment reference in a url(), whose hash opens no color either`,
 			code: `a { stroke: url(#gradientA) }`,
 		},
 		{
@@ -29,36 +29,36 @@ testRule({
 			code: `a { color: pink; }`,
 		},
 		{
-			description: `a colour already in lower case`,
+			description: `a color already in lower case`,
 			code: `a { color: #000; }`,
 		},
 		{
-			description: `three colours in one value, all in lower case`,
+			description: `three colors in one value, all in lower case`,
 			code: `a { something: #000, #fff, #ababab; }`,
 		},
 		{
-			description: `a colour of eight digits, alpha and all`,
+			description: `a color of eight digits, alpha and all`,
 			code: `a { color: #0000ffcc; }`,
 		},
 		{
-			description: `a colour of four digits`,
+			description: `a color of four digits`,
 			code: `a { color: #00fc; }`,
 		},
 		{
-			description: `a number that only looks like a colour, with no hash in front of it`,
+			description: `a number that only looks like a color, with no hash in front of it`,
 			code: `a { padding: 000; }`,
 		},
 		{
-			description: `a hash standing in a string, which spells no colour`,
+			description: `a hash standing in a string, which spells no color`,
 			code: `a::before { content: "#ABABA"; }`,
 		},
 		{
-			description: `a hash standing in a comment, which spells no colour`,
+			description: `a hash standing in a comment, which spells no color`,
 			code: `a { color: white /* #FFF */; }`,
 		},
 		{
 			// A name is ASCII case-insensitive, so a code point outside ASCII is part of it as it stands; recasing it made another name
-			description: `a hash whose one hex digit is lower-case already, the capital I with a dot behind it having no lower case of one code point; no colour, but read as one past its digit`,
+			description: `a hash whose one hex digit is lower-case already, the capital I with a dot behind it having no lower case of one code point; no color, but read as one past its digit`,
 			code: `a { color: #f\u0130; }`,
 		},
 	],
@@ -83,8 +83,8 @@ testRule({
 			message: messages.expected(`#FFF`, `#fff`),
 		},
 		{
-			// The backslash ends the colour, and the parser read the colour as part of the address's name
-			description: `a colour glued to a backslash and a break in front of an address, which end the colour`,
+			// The backslash ends the color, and the parser read the color as part of the address's name
+			description: `a color glued to a backslash and a break in front of an address, which end the color`,
 			code: `a { background: #FFF\\\nurl(a.png); }`,
 			fixed: `a { background: #fff\\\nurl(a.png); }`,
 			line: 1,
@@ -92,7 +92,7 @@ testRule({
 			message: messages.expected(`#FFF`, `#fff`),
 		},
 		{
-			description: `a capital letter in a colour of five digits, which is no valid length but is lowered all the same`,
+			description: `a capital letter in a color of five digits, which is no valid length but is lowered all the same`,
 			code: `a { color: #Ababa; }`,
 			fixed: `a { color: #ababa; }`,
 			line: 1,
@@ -100,7 +100,7 @@ testRule({
 			message: messages.expected(`#Ababa`, `#ababa`),
 		},
 		{
-			description: `the first of three colours in upper case`,
+			description: `the first of three colors in upper case`,
 			code: `a { something: #000F, #fff, #ababab; }`,
 			fixed: `a { something: #000f, #fff, #ababab; }`,
 			line: 1,
@@ -108,7 +108,7 @@ testRule({
 			message: messages.expected(`#000F`, `#000f`),
 		},
 		{
-			description: `a colour holding a letter no colour can hold, lowered as the rest are`,
+			description: `a color holding a letter no color can hold, lowered as the rest are`,
 			code: `a { something: #000, #FFFFAZ, #ababab; }`,
 			fixed: `a { something: #000, #ffffaz, #ababab; }`,
 			line: 1,
@@ -116,7 +116,7 @@ testRule({
 			message: messages.expected(`#FFFFAZ`, `#ffffaz`),
 		},
 		{
-			description: `a colour of seven digits, which is no valid length but is lowered all the same`,
+			description: `a color of seven digits, which is no valid length but is lowered all the same`,
 			code: `a { something: #000, #fff, #12345AA; }`,
 			fixed: `a { something: #000, #fff, #12345aa; }`,
 			line: 1,
@@ -125,7 +125,7 @@ testRule({
 		},
 		{
 			// See #378
-			description: `a colour standing beside a comment opening with a solidus, a star and a solidus, whose text spells a colour of its own that the value parser hands back as a word`,
+			description: `a color standing beside a comment opening with a solidus, a star and a solidus, whose text spells a color of its own that the value parser hands back as a word`,
 			code: `a { b: #ABC /*/ #FFF */ 3; }`,
 			fixed: `a { b: #abc /*/ #FFF */ 3; }`,
 			line: 1,
@@ -134,7 +134,7 @@ testRule({
 		},
 		{
 			// See #508
-			description: `a colour in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no colour`,
+			description: `a color in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no color`,
 			code: `a { b: #FFF /*/ " */ "#FFF"; }`,
 			fixed: `a { b: #fff /*/ " */ "#FFF"; }`,
 			line: 1,
@@ -159,15 +159,15 @@ testRule({
 
 	accept: [
 		{
-			description: `an interpolation in a property name, whose hash opens no colour`,
+			description: `an interpolation in a property name, whose hash opens no color`,
 			code: `a { border-#$side: 0; }`,
 		},
 		{
-			description: `an interpolation in a value, whose hash opens no colour`,
+			description: `an interpolation in a value, whose hash opens no color`,
 			code: `a { box-sizing: #$type-box; }`,
 		},
 		{
-			description: `a fragment reference in a url(), whose hash opens no colour either`,
+			description: `a fragment reference in a url(), whose hash opens no color either`,
 			code: `a { stroke: url(#gradientA) }`,
 		},
 		{
@@ -175,43 +175,43 @@ testRule({
 			code: `a { color: pink; }`,
 		},
 		{
-			description: `a colour of digits alone, which has no case to be wrong`,
+			description: `a color of digits alone, which has no case to be wrong`,
 			code: `a { color: #000; }`,
 		},
 		{
-			description: `three colours in one value, all in upper case`,
+			description: `three colors in one value, all in upper case`,
 			code: `a { something: #000, #FFF, #ABABAB; }`,
 		},
 		{
-			description: `a colour of eight digits, alpha and all`,
+			description: `a color of eight digits, alpha and all`,
 			code: `a { color: #0000FFCC; }`,
 		},
 		{
-			description: `a colour of four digits`,
+			description: `a color of four digits`,
 			code: `a { color: #00FC; }`,
 		},
 		{
-			description: `a number that only looks like a colour, with no hash in front of it`,
+			description: `a number that only looks like a color, with no hash in front of it`,
 			code: `a { padding: 000; }`,
 		},
 		{
-			description: `a hash standing in a string, which spells no colour`,
+			description: `a hash standing in a string, which spells no color`,
 			code: `a::before { content: "#ababa"; }`,
 		},
 		{
-			description: `a hash standing in a comment, which spells no colour`,
+			description: `a hash standing in a comment, which spells no color`,
 			code: `a { color: white /* #fff */; }`,
 		},
 		{
 			// A name is ASCII case-insensitive, so a code point outside ASCII is part of it as it stands; recasing it made another name
-			description: `a hash whose one hex digit is upper-case already, the sharp s behind it having no upper case of its own length; no colour, but read as one past its digit`,
+			description: `a hash whose one hex digit is upper-case already, the sharp s behind it having no upper case of its own length; no color, but read as one past its digit`,
 			code: `a { color: #F\u00DF; }`,
 		},
 	],
 
 	reject: [
 		{
-			description: `a lower-case letter in a colour of five digits, which is no valid length but is raised all the same`,
+			description: `a lower-case letter in a color of five digits, which is no valid length but is raised all the same`,
 			code: `a { color: #aBABA; }`,
 			fixed: `a { color: #ABABA; }`,
 			line: 1,
@@ -219,7 +219,7 @@ testRule({
 			message: messages.expected(`#aBABA`, `#ABABA`),
 		},
 		{
-			description: `the first of three colours in lower case`,
+			description: `the first of three colors in lower case`,
 			code: `a { something: #000f, #FFF, #ABABAB; }`,
 			fixed: `a { something: #000F, #FFF, #ABABAB; }`,
 			line: 1,
@@ -227,7 +227,7 @@ testRule({
 			message: messages.expected(`#000f`, `#000F`),
 		},
 		{
-			description: `a colour holding a letter no colour can hold, raised as the rest are`,
+			description: `a color holding a letter no color can hold, raised as the rest are`,
 			code: `a { something: #000, #ffffaz, #ABABAB; }`,
 			fixed: `a { something: #000, #FFFFAZ, #ABABAB; }`,
 			line: 1,
@@ -235,7 +235,7 @@ testRule({
 			message: messages.expected(`#ffffaz`, `#FFFFAZ`),
 		},
 		{
-			description: `a colour of seven digits, which is no valid length but is raised all the same`,
+			description: `a color of seven digits, which is no valid length but is raised all the same`,
 			code: `a { something: #000, #FFF, #12345aa; }`,
 			fixed: `a { something: #000, #FFF, #12345AA; }`,
 			line: 1,
@@ -244,7 +244,7 @@ testRule({
 		},
 		{
 			// See #272
-			description: `a colour standing behind a comment the value parser does not give back as it read it`,
+			description: `a color standing behind a comment the value parser does not give back as it read it`,
 			code: `a { b: x/*/*a*/#aabbcc; }`,
 			fixed: `a { b: x/*/*a*/#AABBCC; }`,
 			line: 1,

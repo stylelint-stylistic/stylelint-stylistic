@@ -25,7 +25,7 @@ const RULES_AGAINST_EVERY_OTHER = new Set([`function-whitespace-after`, `block-c
 /** The options `RULE_OPTIONS` leaves out that the table names. */
 const EXTRA_OPTIONS: Record<string, unknown[]> = { "max-empty-lines": [0] }
 
-/** The compiler's options, the project's own spelled out, since the file stands outside the project; `--pretty false` keeps the `file(line,column): error` shape the count reads, which `tsc` gives up for the coloured one wherever `FORCE_COLOR` is set, as CI sets it. */
+/** The compiler's options, the project's own spelled out, since the file stands outside the project; `--pretty false` keeps the `file(line,column): error` shape the count reads, which `tsc` gives up for the colored one wherever `FORCE_COLOR` is set, as CI sets it. */
 const COMPILER_OPTIONS = [`--noEmit`, `--pretty`, `false`, `--ignoreConfig`, `--module`, `esnext`, `--moduleResolution`, `bundler`, `--target`, `esnext`, `--strict`, `--exactOptionalPropertyTypes`, `--noUncheckedIndexedAccess`, `--allowImportingTsExtensions`, `--erasableSyntaxOnly`, `--skipLibCheck`]
 
 /**

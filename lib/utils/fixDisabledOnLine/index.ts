@@ -13,7 +13,7 @@ type DisabledRange = {
 /**
  * Asks whether a `stylelint-disable` comment keeps a rule's fix off a line.
  *
- * Stylelint drops the report and fix inside such a range unless `ignoreDisables` is set, so a reader counting a neighbour's write in must ask this too, or it writes on every `--fix` run ([#536](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/536)). The ranges are read as `report` reads them: the rule's own, else every rule's.
+ * Stylelint drops the report and fix inside such a range unless `ignoreDisables` is set, so a reader counting a neighbor's write in must ask this too, or it writes on every `--fix` run ([#536](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/536)). The ranges are read as `report` reads them: the rule's own, else every rule's.
  * @param result - The Stylelint result.
  * @param ruleName - The registered name.
  * @param line - The line the fix would write on, counted from one.

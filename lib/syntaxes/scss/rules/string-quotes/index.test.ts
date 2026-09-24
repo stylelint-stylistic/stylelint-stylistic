@@ -380,7 +380,7 @@ describe(`${ruleName} beside a rule fixing the same value`, () => {
 	})
 
 	it(`fixes a value another rule has written inside`, async () => {
-		// The hexadecimal colour is lowered by the rule that asks for it, and both fixes reach the file
+		// The hexadecimal color is lowered by the rule that asks for it, and both fixes reach the file
 		expect(await fix(`a {\n  b: #FFF 'x', // c\n     'y';\n}\n`, {
 			"@stylistic/scss/color-hex-case": `lower`,
 			"@stylistic/scss/string-quotes": `double`,

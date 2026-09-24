@@ -7,7 +7,7 @@ import registry from "../../rules/index.ts"
 import { deferCheck, deferFinalCheck, deferHeadCheck, defersToRunEnd, flushDeferredChecks, lastConfiguredPluginRule, LINENESS_RULES, linenessRank, registerPluginRule } from "./index.ts"
 
 /**
- * Builds the slice of a Stylelint result the util reads: the normalised rule settings of a configuration.
+ * Builds the slice of a Stylelint result the util reads: the normalized rule settings of a configuration.
  * @param rules - The settings by rule name, in the order a configuration spells them.
  * @returns What passes for the result.
  */

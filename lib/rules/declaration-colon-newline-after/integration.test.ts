@@ -3,7 +3,7 @@ import { messages as trailingSemicolonMessages } from "../declaration-block-trai
 
 import { messages, ruleName } from "./index.ts"
 
-// Where a declaration's value is nothing but whitespace, the run this rule reads behind the colon is the run the `declaration-block-semicolon-*-before` rules read in front of the semicolon (#416). The library lists the rule a block names first and its extra rules behind it, so every block below has the neighbour run last, the order in which the neighbour used to be blind to what this rule wrote and the two took the run in turns.
+// Where a declaration's value is nothing but whitespace, the run this rule reads behind the colon is the run the `declaration-block-semicolon-*-before` rules read in front of the semicolon (#416). The library lists the rule a block names first and its extra rules behind it, so every block below has the neighbor run last, the order in which the neighbor used to be blind to what this rule wrote and the two took the run in turns.
 let testRule = createTestRule({ ruleName })
 
 testRule({
@@ -14,7 +14,7 @@ testRule({
 	reject: [
 		{
 			// See #416
-			description: `a value that is nothing but a space, which the neighbour asks to stand in front of the semicolon and this rule asks to stand behind a break: the neighbour is listed last and has the last word, so the break is not written and the warning stands`,
+			description: `a value that is nothing but a space, which the neighbor asks to stand in front of the semicolon and this rule asks to stand behind a break: the neighbor is listed last and has the last word, so the break is not written and the warning stands`,
 			code: `a { color: ; }`,
 			fixed: `a { color: ; }`,
 			line: 1,
@@ -43,7 +43,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a value that is nothing at all, which the neighbour asks to stay nothing`,
+			description: `a value that is nothing at all, which the neighbor asks to stay nothing`,
 			code: `a { color:; }`,
 			fixed: `a { color:; }`,
 			line: 1,
@@ -62,7 +62,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a block on one line, which the neighbour is silent about as it stands and speaks of the moment this rule's break puts it over two`,
+			description: `a block on one line, which the neighbor is silent about as it stands and speaks of the moment this rule's break puts it over two`,
 			code: `a { color:; }`,
 			fixed: `a { color:; }`,
 			line: 1,
@@ -114,7 +114,7 @@ testRule({
 	reject: [
 		{
 			// See #417
-			description: `a neighbour asking for a break of its own, which the one this rule writes answers as well: the run is written down to the bare break the neighbour's fix spells, so both orders rest on one file`,
+			description: `a neighbor asking for a break of its own, which the one this rule writes answers as well: the run is written down to the bare break the neighbor's fix spells, so both orders rest on one file`,
 			code: `a { color: ; }`,
 			fixed: `a { color:\n; }`,
 			warnings: [

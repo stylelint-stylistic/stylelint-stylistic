@@ -10,7 +10,7 @@ a { grid-area: 1/ 2; }
 
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule.
 
-The solidus this rule reads is the separator CSS spells between the numbers of a ratio (`aspect-ratio: 16 / 9`), the sizes of a font shorthand (`font: 12px / 1.5 serif`), the lines of a grid area (`grid-area: 1 / 3`) and the colour and the alpha of a colour function (`rgb(0 0 0 / 50%)`). A solidus inside the arguments of a math function is the division operator and is not read, and neither is one inside a `url()` address, a string or a comment. The solidus of a media feature is read by [`media-feature-slash-space-after`](../media-feature-slash-space-after/README.md).
+The solidus this rule reads is the separator CSS spells between the numbers of a ratio (`aspect-ratio: 16 / 9`), the sizes of a font shorthand (`font: 12px / 1.5 serif`), the lines of a grid area (`grid-area: 1 / 3`) and the color and the alpha of a color function (`rgb(0 0 0 / 50%)`). A solidus inside the arguments of a math function is the division operator and is not read, and neither is one inside a `url()` address, a string or a comment. The solidus of a media feature is read by [`media-feature-slash-space-after`](../media-feature-slash-space-after/README.md).
 
 Where a comment stands right behind the whitespace under a preprocessor, `"never"` reports the problem and leaves the value as it stands: closing the solidus up against the `/` that opens the comment would spell a `//` comment running to the end of the line, and the solidus would be its first character.
 

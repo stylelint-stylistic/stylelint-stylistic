@@ -55,7 +55,7 @@ export function runPastDeclaration (syntax: Syntax, decl: Declaration, result: P
 /**
  * Asks whether the run past a declaration is the raw the stylesheet ends on.
  *
- * The raw is `no-missing-end-of-source-newline`'s; an inline `style` attribute's root is passed over as there, and a one-line `<style>` element keeps the run outside the stylesheet. `declaration-colon-space-after` has no spelling keeping the closing break, so it passes the declaration over; its newline neighbour writes its break in front of the run, leaving the last line whitespace ([#537](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537)).
+ * The raw is `no-missing-end-of-source-newline`'s; an inline `style` attribute's root is passed over as there, and a one-line `<style>` element keeps the run outside the stylesheet. `declaration-colon-space-after` has no spelling keeping the closing break, so it passes the declaration over; its newline neighbor writes its break in front of the run, leaving the last line whitespace ([#537](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537)).
  * @param syntax - The rule's syntax.
  * @param decl - The declaration.
  * @param result - The Stylelint result.

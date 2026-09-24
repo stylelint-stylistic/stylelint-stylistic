@@ -211,4 +211,4 @@ div {
 }
 ```
 
-The rule writes no `[]` itself: it writes whitespace and nothing else, and whether the column of the names is worth an empty list is the author's to decide. **Less does not read an empty list**: Less 4.9.1 refuses `[]` and `[ ]` alike as unrecognised input, so a stylesheet written in Less keeps such a row at the indentation, and the [`less` namespace](../../syntaxes/less/README.md) says so.
+The rule writes no `[]` itself: it writes whitespace and nothing else, and whether the column of the names is worth an empty list is the author's to decide. **Less does not read an empty list**: Less 4.9.1 refuses `[]` and `[ ]` alike as unrecognized input, so a stylesheet written in Less keeps such a row at the indentation, and the [`less` namespace](../../syntaxes/less/README.md) says so.

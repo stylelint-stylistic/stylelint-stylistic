@@ -74,10 +74,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let colonIndex = declarationValueIndex(decl) - decl.raws.between.length + indexInBetween
 			// A whitespace-only run behind the colon is the run in front of the semicolon too, and the semicolon rules settle who writes it (#416)
 			let isFixable = writesSharedRun(syntax, decl, result, ruleName)
-			// Where `declaration-block-semicolon-newline-before` asks the shared run for a break, the fix writes the bare break the neighbour would, so either order ends on one file (#417)
+			// Where `declaration-block-semicolon-newline-before` asks the shared run for a break, the fix writes the bare break the neighbor would, so either order ends on one file (#417)
 			let finishesTheRun = isFixable && sharesRunWithSemicolon(syntax, decl, result, ruleName) && LINE_BREAK.test(whitespaceBeforeSemicolon(syntax, decl, result))
 
-			/** Trims the shared run to the bare break the neighbour asks for; a bare carriage return and a form feed go too, since the neighbour replaces the whole run ([#488](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/488)). */
+			/** Trims the shared run to the bare break the neighbor asks for; a bare carriage return and a form feed go too, since the neighbor replaces the whole run ([#488](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/488)). */
 			function finishTheRun (): void {
 				if (!finishesTheRun) return
 

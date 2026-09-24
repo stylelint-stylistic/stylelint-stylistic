@@ -11,7 +11,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { gridTableLines, type Span } from "../../utils/gridTableLines/index.ts"
 import { isWhitespace } from "../../utils/isWhitespace/index.ts"
 import { maskEscapes } from "../../utils/maskEscapes/index.ts"
-import { neighbourCopies } from "../../utils/neighbourSettings/index.ts"
+import { neighborCopies } from "../../utils/neighborSettings/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -163,7 +163,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		if (!validOptions) return
 
 		// The runs between a grid row's tokens are `named-grid-areas-alignment`'s where it is configured with `alignColumns`: collapsing them would take turns with its padding on each `--fix` (#45). Its fix being live makes no difference, since it reports a hand-written table too
-		let laysTablesOut = neighbourCopies(root, result, GRID_ALIGNMENT).some(({ secondary }) => secondary.alignColumns === true)
+		let laysTablesOut = neighborCopies(root, result, GRID_ALIGNMENT).some(({ secondary }) => secondary.alignColumns === true)
 
 		root.walkDecls((decl) => {
 			let value = syntax.read(decl)

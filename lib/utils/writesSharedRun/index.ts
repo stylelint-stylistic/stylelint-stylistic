@@ -15,7 +15,7 @@ import { declarationValueIndex } from "../declarationValueIndex/index.ts"
 import { isCustomProperty } from "../isCustomProperty/index.ts"
 import { isInlineStyleAttribute } from "../isInlineStyleAttribute/index.ts"
 import { isSingleLineString } from "../isSingleLineString/index.ts"
-import { type NeighbourRule, neighbourSettings, speaksOf } from "../neighbourSettings/index.ts"
+import { type NeighborRule, neighborSettings, speaksOf } from "../neighborSettings/index.ts"
 import { runInDeclarationEndsTheStylesheet } from "../runInDeclarationEndsTheStylesheet/index.ts"
 import { runPastDeclaration } from "../runPastDeclaration/index.ts"
 import { isAtRule, isRule } from "../typeGuards/index.ts"
@@ -27,7 +27,7 @@ type Participant = `colonSpace` | `colonNewline` | `commaSpace` | `commaNewline`
 type Run = `space` | `newline` | `none` | `other`
 
 /** The eight rules and the whitespace their `always` options write; `block-closing-brace-empty-line-before` reads the brace's run too, but its two options ask about an empty line, which no colon rule writes, and its pairs with the colon rules rest the same way in either order, so it stays out. */
-const PARTICIPANTS: Record<Participant, NeighbourRule & { writes: Run }> = {
+const PARTICIPANTS: Record<Participant, NeighborRule & { writes: Run }> = {
 	colonSpace: {
 		name: `declaration-colon-space-after`,
 		options: [`always`, `never`, `always-single-line`],
@@ -153,7 +153,7 @@ function sharedRunsOf (syntax: Syntax, decl: Declaration, result: PostcssResult)
 	let text = between.slice(colonIndex + 1) + valueAsClosed(syntax, decl, result)
 
 	if (WHITESPACE_OR_NOTHING.test(text)) {
-		// Not the space rule's where the stylesheet ends on it (#546), or it would gate an `always` neighbour for good; a run that left the declaration is neither rule's (#537)
+		// Not the space rule's where the stylesheet ends on it (#546), or it would gate an `always` neighbor for good; a run that left the declaration is neither rule's (#537)
 		if (!runInDeclarationEndsTheStylesheet(syntax, decl, result)) runs.head.add(`colonSpace`)
 
 		runs.head.add(`colonNewline`)
@@ -338,7 +338,7 @@ function spellingOf (run: string): Run {
  *
  * On a whitespace-only value the run behind the colon is the one in front of the semicolon; the colon rules write `raws.between` and the semicolon rules the value, so a pair took it in turns across runs of `--fix` ([#416](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/416)).
  *
- * A rule writes only where every rule behind it (in `neighbourSettings` order) that speaks with its fix on accepts a spelling it accepts too or is silenced by the write; otherwise it reports and leaves the run. It also needs each rule ahead of it in run order — a deferred rule waits behind every undeferred one ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)) — to accept what the write leaves, to have warned, or to be silenced; a turned-off fix exempts nothing there.
+ * A rule writes only where every rule behind it (in `neighborSettings` order) that speaks with its fix on accepts a spelling it accepts too or is silenced by the write; otherwise it reports and leaves the run. It also needs each rule ahead of it in run order — a deferred rule waits behind every undeferred one ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)) — to accept what the write leaves, to have warned, or to be silenced; a turned-off fix exempts nothing there.
  *
  * A `-single-line` or `-multi-line` option speaks as its rule judges over the text as it sees it: a colon rule's break stays in `raws.between` within the pass and reaches the value on the reparsed run after; a comma rule reads the whole declaration, `raws.between` included, so a break written into the head run is its line at once.
  *
@@ -361,7 +361,7 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 
 	if (!readers.has(asking)) return true
 
-	let settings = neighbourSettings(decl, result, PARTICIPANTS)
+	let settings = neighborSettings(decl, result, PARTICIPANTS)
 	let position = settings.findIndex(([, , , name]) => name === ruleName)
 
 	if (position === -1) return true

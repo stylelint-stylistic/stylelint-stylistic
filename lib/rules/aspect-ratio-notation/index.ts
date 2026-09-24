@@ -14,7 +14,7 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { findMediaFeatureValues } from "../../utils/findMediaFeatureNames/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
-import type { NeighbourRule } from "../../utils/neighbourSettings/index.ts"
+import type { NeighborRule } from "../../utils/neighborSettings/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isBoolean } from "../../utils/validateTypes/index.ts"
@@ -33,10 +33,10 @@ export let meta = {
 	fixable: true,
 }
 
-/** The solidus's neighbour rules by the whitespace they write, and the text whose lines they count. */
-type SolidusNeighbours = {
-	before: Partial<Record<Whitespace, NeighbourRule>>,
-	after: Partial<Record<Whitespace, NeighbourRule>>,
+/** The solidus's neighbor rules by the whitespace they write, and the text whose lines they count. */
+type SolidusNeighbors = {
+	before: Partial<Record<Whitespace, NeighborRule>>,
+	after: Partial<Record<Whitespace, NeighborRule>>,
 	isSingleLine: () => boolean,
 }
 
@@ -50,24 +50,24 @@ const VALUE_SLASH_NEWLINE_OPTIONS = [`always`, `always-multi-line`, `never-multi
 const MEDIA_SLASH_SPACE_OPTIONS = [`always`, `never`]
 
 /** Rules about the run in front of a value's solidus ([#550](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/550), [#622](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/622)). */
-const RULES_BEFORE_THE_SOLIDUS: Partial<Record<Whitespace, NeighbourRule>> = {
+const RULES_BEFORE_THE_SOLIDUS: Partial<Record<Whitespace, NeighborRule>> = {
 	space: { name: `value-slash-space-before`, options: VALUE_SLASH_SPACE_OPTIONS },
 	newline: { name: `value-slash-newline-before`, options: VALUE_SLASH_NEWLINE_OPTIONS },
 }
 
 /** The rules about the run behind it. */
-const RULES_AFTER_THE_SOLIDUS: Partial<Record<Whitespace, NeighbourRule>> = {
+const RULES_AFTER_THE_SOLIDUS: Partial<Record<Whitespace, NeighborRule>> = {
 	space: { name: `value-slash-space-after`, options: VALUE_SLASH_SPACE_OPTIONS },
 	newline: { name: `value-slash-newline-after`, options: VALUE_SLASH_NEWLINE_OPTIONS },
 }
 
 /** The same for a media feature. */
-const MEDIA_RULES_BEFORE_THE_SOLIDUS: Partial<Record<Whitespace, NeighbourRule>> = {
+const MEDIA_RULES_BEFORE_THE_SOLIDUS: Partial<Record<Whitespace, NeighborRule>> = {
 	space: { name: `media-feature-slash-space-before`, options: MEDIA_SLASH_SPACE_OPTIONS },
 }
 
 /** The rule about the run behind it. */
-const MEDIA_RULES_AFTER_THE_SOLIDUS: Partial<Record<Whitespace, NeighbourRule>> = {
+const MEDIA_RULES_AFTER_THE_SOLIDUS: Partial<Record<Whitespace, NeighborRule>> = {
 	space: { name: `media-feature-slash-space-after`, options: MEDIA_SLASH_SPACE_OPTIONS },
 }
 
@@ -138,7 +138,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (!syntax.isStandardAtRule(atRule)) return
 
 				let params = syntax.read(atRule)
-				let neighbours: SolidusNeighbours = {
+				let neighbors: SolidusNeighbors = {
 					before: MEDIA_RULES_BEFORE_THE_SOLIDUS,
 					after: MEDIA_RULES_AFTER_THE_SOLIDUS,
 					isSingleLine: () => isSingleLineString(params),
@@ -150,7 +150,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						let current = syntax.read(atRule)
 
 						syntax.write(atRule, current.slice(0, start) + fixed + current.slice(end))
-					}, neighbours)
+					}, neighbors)
 				}
 			})
 		}
@@ -161,9 +161,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		 * @param text - The value or media feature value a ratio may stand in.
 		 * @param textIndex - Its offset in the node.
 		 * @param write - Writes the fixed text.
-		 * @param neighbours - The solidus's neighbour rules.
+		 * @param neighbors - The solidus's neighbor rules.
 		 */
-		function check (node: Node, text: string, textIndex: number, write: (fixed: string) => void, neighbours: SolidusNeighbours): void {
+		function check (node: Node, text: string, textIndex: number, write: (fixed: string) => void, neighbors: SolidusNeighbors): void {
 			let comments = syntax.commentSpans(text, node, result)
 			// The value parser has no `//` comment node
 			let ratio = findRatio(valueParser(blankComments(text, comments)).nodes)
@@ -181,8 +181,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// Each side: its rule's whitespace, the later-listed rule where two speak, else the fallback
 			if (writesHeight && !height) {
-				let before = whitespaceAsked(node, result, neighbours.before, neighbours.isSingleLine, SOLIDUS_WHITESPACE_FALLBACK)
-				let after = whitespaceAsked(node, result, neighbours.after, neighbours.isSingleLine, SOLIDUS_WHITESPACE_FALLBACK)
+				let before = whitespaceAsked(node, result, neighbors.before, neighbors.isSingleLine, SOLIDUS_WHITESPACE_FALLBACK)
+				let after = whitespaceAsked(node, result, neighbors.after, neighbors.isSingleLine, SOLIDUS_WHITESPACE_FALLBACK)
 
 				edits.push({ start: width.sourceEndIndex, end: width.sourceEndIndex, text: `${before}/${after}${expectedHeight}` })
 			}

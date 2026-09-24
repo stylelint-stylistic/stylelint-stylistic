@@ -9,7 +9,7 @@ import { RULE_OPTIONS } from "../oracles/options.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** Every rule importing `blockString`; the rules reaching it through `whitespaceBeforeSemicolon` or `writesSharedRun` read it only about a configured neighbour, which a sweep of one rule cannot show. */
+/** Every rule importing `blockString`; the rules reaching it through `whitespaceBeforeSemicolon` or `writesSharedRun` read it only about a configured neighbor, which a sweep of one rule cannot show. */
 const RULES = [
 	`block-closing-brace-empty-line-before`,
 	`block-closing-brace-newline-after`,

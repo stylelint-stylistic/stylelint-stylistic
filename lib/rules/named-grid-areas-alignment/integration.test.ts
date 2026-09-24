@@ -4,7 +4,7 @@ import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
 
-// Under `alignColumns` the runs between the tokens of a line of the table are this rule's, and `no-multiple-whitespaces` leaves them alone (#45); the run in front of the solidus is no run of the table, and that rule collapses it as before. The library lists the rule a block names first, so here the neighbour runs last; its own integration test has it run first.
+// Under `alignColumns` the runs between the tokens of a line of the table are this rule's, and `no-multiple-whitespaces` leaves them alone (#45); the run in front of the solidus is no run of the table, and that rule collapses it as before. The library lists the rule a block names first, so here the neighbor runs last; its own integration test has it run first.
 testRule({
 	ruleName,
 	config: [true, { alignColumns: true }],
@@ -47,7 +47,7 @@ testRule({
 	],
 })
 
-// A table an author wrote by hand stands where this rule's fix is off, since the runs are this rule's whether it writes or not, and the neighbour has nothing to say.
+// A table an author wrote by hand stands where this rule's fix is off, since the runs are this rule's whether it writes or not, and the neighbor has nothing to say.
 testRule({
 	ruleName,
 	config: [true, { alignColumns: true, disableFix: true }],
@@ -55,7 +55,7 @@ testRule({
 
 	accept: [
 		{
-			description: `a table laid out by hand, which the neighbour leaves alone`,
+			description: `a table laid out by hand, which the neighbor leaves alone`,
 			code: `
 				a {
 					grid-template:
@@ -92,7 +92,7 @@ testRule({
 	],
 })
 
-// Without the option the runs are the neighbour's, as they always were.
+// Without the option the runs are the neighbor's, as they always were.
 testRule({
 	ruleName,
 	config: [true],
@@ -100,7 +100,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a table laid out by hand under a configuration without the option, whose padding the neighbour collapses`,
+			description: `a table laid out by hand under a configuration without the option, whose padding the neighbor collapses`,
 			code: `
 				a {
 					grid-template:

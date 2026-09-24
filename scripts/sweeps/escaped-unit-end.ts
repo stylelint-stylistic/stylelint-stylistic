@@ -81,7 +81,7 @@ const corpus: Sweep[`corpus`] = place(
 	{
 		declaration: (value) => `a { width: ${value}; }`,
 		calc: (value) => `a { width: calc(${value} + 1px); }`,
-		neighbours: (value) => `a { margin: 1PX ${value} 2PX; }`,
+		neighbors: (value) => `a { margin: 1PX ${value} 2PX; }`,
 		media: (value) => `@media (min-width: ${value}) { a { b: c; } }`,
 		customProperty: (value) => `a { --x: ${value}; }`,
 		inlineComment: (value) => `a { width: 1PX // ${value}\n2REM; }`,

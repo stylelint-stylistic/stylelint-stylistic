@@ -161,7 +161,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			description: `a colour whose every comma abuts its argument`,
+			description: `a color whose every comma abuts its argument`,
 			code: `a { color: rgba(0,0,0,0); }`,
 			fixed: `a { color: rgba(0, 0, 0, 0); }`,
 			warnings: [
@@ -508,11 +508,11 @@ testRule({
 			code: `a { transform: translate(1,\r\n1); }`,
 		},
 		{
-			description: `a colour broken in front of its last comma`,
+			description: `a color broken in front of its last comma`,
 			code: `a { color: rgba(0,0\n,0); }`,
 		},
 		{
-			description: `the same colour broken in front of its first`,
+			description: `the same color broken in front of its first`,
 			code: `a { color: rgba(0\n,0,0); }`,
 		},
 		{
@@ -596,11 +596,11 @@ testRule({
 			code: `a { transform: translate(1\r\n, 1); }`,
 		},
 		{
-			description: `a colour broken in front of its last comma`,
+			description: `a color broken in front of its last comma`,
 			code: `a { color: rgba(0, 0\n, 0); }`,
 		},
 		{
-			description: `the same colour broken in front of its first`,
+			description: `the same color broken in front of its first`,
 			code: `a { color: rgba(0\n, 0, 0); }`,
 		},
 		{

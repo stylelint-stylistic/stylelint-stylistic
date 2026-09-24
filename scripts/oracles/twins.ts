@@ -8,11 +8,11 @@
  * Rows, reported on the first failing:
  *
  * - `warns-differently` — other warnings.
- * - `writes-differently` — another fix output, breaks normalised.
+ * - `writes-differently` — another fix output, breaks normalized.
  * - `position-differs` — elsewhere; PostCSS counts a pair as one line.
  * - `parses-differently` — the syntax reads the original alone, once per fixture.
  *
- * The fixture is normalised to line feeds first: a `\r\n` would double, and skipping it would drop the only shapes with whitespace before a break ([#247](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/247)).
+ * The fixture is normalized to line feeds first: a `\r\n` would double, and skipping it would drop the only shapes with whitespace before a break ([#247](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/247)).
  */
 
 import { stdout } from "node:process"
@@ -47,11 +47,11 @@ function respell (code: string, spelling: string): string {
 }
 
 /**
- * Normalises every break to a line feed.
+ * Normalizes every break to a line feed.
  * @param code - The text.
  * @returns The text.
  */
-function normalise (code: string): string {
+function normalize (code: string): string {
 	return code.replaceAll(EVERY_BREAK, `\n`)
 }
 
@@ -92,7 +92,7 @@ async function ask (code: string, config: Config): Promise<{
 		read: true,
 		warnings: first.warnings.map((warning) => warning.text),
 		positions: first.warnings.map((warning) => `${warning.line}:${warning.column}`),
-		output: normalise(fixed.code ?? code),
+		output: normalize(fixed.code ?? code),
 	}
 }
 
@@ -113,8 +113,8 @@ function label (run: Run): object {
 async function probe (run: Run): Promise<object[]> {
 	if (SPELLING_IS_THE_SUBJECT.has(run.rule)) return []
 
-	// Normalised first, or `\r\n` would double (#247)
-	let source = normalise(run.code)
+	// Normalized first, or `\r\n` would double (#247)
+	let source = normalize(run.code)
 
 	if (!source.includes(`\n`)) return []
 

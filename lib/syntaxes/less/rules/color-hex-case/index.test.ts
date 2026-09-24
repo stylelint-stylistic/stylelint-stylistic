@@ -13,17 +13,17 @@ testRule({
 	accept: [
 		{
 			// Sass and `lightningcss` both read the escaped name as `url`, so what stands inside the parentheses is an address no rule may write to. See #344
-			description: `an upper-case hex colour inside an address whose name an escape spells`,
+			description: `an upper-case hex color inside an address whose name an escape spells`,
 			code: `a { b: u\\rl(#AABBCC); }`,
 		},
 		{
 			// See #344
-			description: `the same colour inside an address whose name a hexadecimal escape spells, which the value parser hands the rule as a word and a call of two letters`,
+			description: `the same color inside an address whose name a hexadecimal escape spells, which the value parser hands the rule as a word and a call of two letters`,
 			code: `a { b: \\75 rl(#AABBCC); }`,
 		},
 		{
 			// See #271
-			description: `an upper-case hex colour standing in the text of an inline comment the value holds`,
+			description: `an upper-case hex color standing in the text of an inline comment the value holds`,
 			code: `
 				a { b: #aabbcc // #DDEEFF
 					#00112a; }
@@ -42,7 +42,7 @@ testRule({
 	reject: [
 		{
 			// See #271
-			description: `an upper-case hex colour on either side of an inline comment whose text holds one as well`,
+			description: `an upper-case hex color on either side of an inline comment whose text holds one as well`,
 			code: `
 				a { b: #AABBCC // #DDEEFF
 					#00112A; }
@@ -66,7 +66,7 @@ testRule({
 		},
 		{
 			// See #271
-			description: `an upper-case hex colour a line below such a comment, gathered by a call the parser opened inside its text: the call is left alone and what it gathered is read where it stands`,
+			description: `an upper-case hex color a line below such a comment, gathered by a call the parser opened inside its text: the call is left alone and what it gathered is read where it stands`,
 			code: `
 				a { b: f(#AABBCC // c) calc(
 					#DDEEFF); }

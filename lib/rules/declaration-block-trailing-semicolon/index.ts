@@ -44,7 +44,7 @@ type HeldRaw = {
 /**
  * Returns a node's start and end offsets.
  *
- * Where a closing brace ends an at-rule, PostCSS ends it on the last of its parameter tokens that is not whitespace, and a bodiless at-rule with nothing but whitespace in front of that brace has no such token, so it is handed over with `source.end` unset ([#630](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/630)). The end is taken from the node's printed text there, since it holds that whitespace as its own trailing run wherever the `always` fix of a neighbouring namespace has moved the run to.
+ * Where a closing brace ends an at-rule, PostCSS ends it on the last of its parameter tokens that is not whitespace, and a bodiless at-rule with nothing but whitespace in front of that brace has no such token, so it is handed over with `source.end` unset ([#630](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/630)). The end is taken from the node's printed text there, since it holds that whitespace as its own trailing run wherever the `always` fix of a neighboring namespace has moved the run to.
  * @param node - The node whose source is read.
  * @param result - The Stylelint result, whose syntax prints a node the parser gave no end.
  * @returns The offsets.

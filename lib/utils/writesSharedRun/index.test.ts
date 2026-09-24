@@ -175,7 +175,7 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { b: ; }`, { [SEMICOLON_SPACE]: `never`, [COLON_SPACE]: `always` }, SEMICOLON_SPACE, { ...css, isStandardDeclaration: () => false })).toBe(true)
 	})
 
-	it(`a block the asking rule's break puts over several lines, which wakes the neighbour's multi-line option — a neighbour behind the asker in either spelling, since a lineness-conditioned check waits for the run's writers (#355)`, () => {
+	it(`a block the asking rule's break puts over several lines, which wakes the neighbor's multi-line option — a neighbor behind the asker in either spelling, since a lineness-conditioned check waits for the run's writers (#355)`, () => {
 		expect(ask(`a { b:; }`, { [COLON_NEWLINE]: `always`, [SEMICOLON_NEWLINE]: `never-multi-line` }, COLON_NEWLINE)).toBe(false)
 		expect(ask(`a { b:; }`, { [SEMICOLON_NEWLINE]: `never-multi-line`, [COLON_NEWLINE]: `always` }, COLON_NEWLINE)).toBe(false)
 	})
@@ -224,13 +224,13 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { --b: x\n b; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `always-single-line` }, COLON_NEWLINE)).toBe(true)
 	})
 
-	it(`a value holding a comment beside the shared run, which is counted without that run — the run the write replaces — so a neighbour's multi-line option is silent about what the write leaves: the run in front of a custom property's semicolon, and the run at the head of a wordless value of either kind`, () => {
+	it(`a value holding a comment beside the shared run, which is counted without that run — the run the write replaces — so a neighbor's multi-line option is silent about what the write leaves: the run in front of a custom property's semicolon, and the run at the head of a wordless value of either kind`, () => {
 		expect(ask(`a { --b: /*c*/\n; }`, { [SEMICOLON_SPACE]: `always`, [COLON_NEWLINE]: `always-multi-line` }, SEMICOLON_SPACE)).toBe(true)
 		expect(ask(`a { --b:\n/*c*/; }`, { [COLON_SPACE]: `always`, [COLON_NEWLINE]: `always-multi-line` }, COLON_SPACE)).toBe(true)
 		expect(ask(`a { b:\n/*c*/; }`, { [COLON_SPACE]: `always`, [COLON_NEWLINE]: `always-multi-line` }, COLON_SPACE)).toBe(true)
 	})
 
-	it(`a neighbour silent about the block as the asking rule leaves it`, () => {
+	it(`a neighbor silent about the block as the asking rule leaves it`, () => {
 		expect(ask(`a { b:\n; }`, { [COLON_SPACE]: `always`, [SEMICOLON_SPACE]: `never-single-line` }, COLON_SPACE)).toBe(false)
 		expect(ask(`a { b:\n; top: 0;\n}`, { [COLON_SPACE]: `always`, [SEMICOLON_SPACE]: `never-single-line` }, COLON_SPACE)).toBe(true)
 	})

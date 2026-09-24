@@ -125,7 +125,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			description: `the solidus of a colour function`,
+			description: `the solidus of a color function`,
 			code: `a { color: rgb(0 0 0 / 50%); }`,
 			fixed: `a { color: rgb(0 0 0 /\n 50%); }`,
 			line: 1,

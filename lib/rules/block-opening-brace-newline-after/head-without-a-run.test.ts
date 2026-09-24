@@ -170,7 +170,7 @@ describe(`the run PostCSS prints in front of a head node the file spells none in
 		})
 	})
 
-	it(`is short of that break where the run PostCSS prints is the empty one its neighbour carries, and the fix writes it`, async () => {
+	it(`is short of that break where the run PostCSS prints is the empty one its neighbor carries, and the fix writes it`, async () => {
 		expect(await fixAndRead(`a { color: pink;top: 0 }`, `always`)).toEqual({
 			warnings: [`1:4 ${messages.expectedAfter()}`],
 			fixed: `a {\ncolor: pink;top: 0 }`,

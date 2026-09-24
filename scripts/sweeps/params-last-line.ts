@@ -1,7 +1,7 @@
 /**
  * The last line of an at-rule's params, held by characters the tokenizer reads as words though JavaScript reads them as whitespace, and by nothing else.
  *
- * Written for 1789421331: `indentation` trimmed the params as JavaScript reads whitespace, so a line holding a vertical tab or a no-break space alone was cut off with the break in front of it and never measured. The runs of the tokenizer's own whitespace and a line with a word on it are the controls, and the rule's selector the neighbour it is compared with.
+ * Written for 1789421331: `indentation` trimmed the params as JavaScript reads whitespace, so a line holding a vertical tab or a no-break space alone was cut off with the break in front of it and never measured. The runs of the tokenizer's own whitespace and a line with a word on it are the controls, and the rule's selector the neighbor it is compared with.
  */
 
 import { multiply } from "../harness/matrix.ts"
@@ -27,7 +27,7 @@ const LINES: Record<string, string> = {
 	nothing: ``,
 }
 
-/** The statement whose params end at `§`: a block's head spaced from the brace and tight on it, a statement closed by a semicolon, one closed by nothing, one at the root, and a rule's selector as the neighbour. */
+/** The statement whose params end at `§`: a block's head spaced from the brace and tight on it, a statement closed by a semicolon, one closed by nothing, one at the root, and a rule's selector as the neighbor. */
 const PLACES: Record<string, string> = {
 	block: `a {\n\t@media print,\n§ {}\n}\n`,
 	blockTight: `a {\n\t@media print,\n§{}\n}\n`,

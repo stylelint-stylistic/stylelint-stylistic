@@ -13,7 +13,7 @@ testRule({
 	accept: [
 		{
 			// See #271
-			description: `an upper-case hex colour standing in the text of an inline comment the value holds`,
+			description: `an upper-case hex color standing in the text of an inline comment the value holds`,
 			code: `
 				a { b: #aabbcc // #DDEEFF
 					#00112a; }
@@ -24,7 +24,7 @@ testRule({
 	reject: [
 		{
 			// See #271
-			description: `an upper-case hex colour on either side of an inline comment whose text holds one as well`,
+			description: `an upper-case hex color on either side of an inline comment whose text holds one as well`,
 			code: `
 				a { b: #AABBCC // #DDEEFF
 					#00112A; }

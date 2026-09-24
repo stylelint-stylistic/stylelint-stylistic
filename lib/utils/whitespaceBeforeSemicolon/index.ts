@@ -7,12 +7,12 @@ import { blockString } from "../blockString/index.ts"
 import { type CommentReading, findEscapeSpans } from "../findCommentSpans/index.ts"
 import { isSingleLineString } from "../isSingleLineString/index.ts"
 import { maskEscapes } from "../maskEscapes/index.ts"
-import type { NeighbourRule } from "../neighbourSettings/index.ts"
+import type { NeighborRule } from "../neighborSettings/index.ts"
 import { isAtRule } from "../typeGuards/index.ts"
 import { type Whitespace, whitespaceAsked } from "../whitespaceAsked/index.ts"
 
 /** The rules about the whitespace in front of a semicolon, by node type and whitespace. */
-const RULES_OF_WHITESPACE: Record<`decl` | `atrule`, Partial<Record<Whitespace, NeighbourRule>>> = {
+const RULES_OF_WHITESPACE: Record<`decl` | `atrule`, Partial<Record<Whitespace, NeighborRule>>> = {
 	decl: {
 		newline: {
 			name: `declaration-block-semicolon-newline-before`,

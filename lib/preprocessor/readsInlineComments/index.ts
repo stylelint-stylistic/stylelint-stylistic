@@ -24,7 +24,7 @@ const FORM_FEED_PROBE = `a {}\n// c\fb {}\n`
 /**
  * Asks a syntax whether a form feed closes a `//` comment in it, by handing it one such comment with a rule behind the character.
  *
- * It is the one break the two languages disagree about: `postcss-scss` reads a line in it, as dart-sass does, while Less normalises `\r\n?` to `\n` before parsing and reads no line in the character at all, so `postcss-less` keeps it as the comment's text. A syntax that makes nothing of this stylesheet is answered no, which is the reading every syntax got before they were told apart; so is one that made nothing of the first probe, whose answer about a form feed would be the only thing it had said.
+ * It is the one break the two languages disagree about: `postcss-scss` reads a line in it, as dart-sass does, while Less normalizes `\r\n?` to `\n` before parsing and reads no line in the character at all, so `postcss-less` keeps it as the comment's text. A syntax that makes nothing of this stylesheet is answered no, which is the reading every syntax got before they were told apart; so is one that made nothing of the first probe, whose answer about a form feed would be the only thing it had said.
  * @param syntax - What parsed the file.
  * @returns True where a form feed closes such a comment.
  */

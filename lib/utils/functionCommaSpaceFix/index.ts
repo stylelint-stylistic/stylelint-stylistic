@@ -9,9 +9,9 @@ import type { Edit } from "../applyEditsFromEnd/index.ts"
  * @param index - The comma's place among the arguments.
  * @param functionNode - The call holding the arguments.
  * @param position - The side of the comma.
- * @returns The length of the run the neighbour holds, or zero.
+ * @returns The length of the run the neighbor holds, or zero.
  */
-function runHeldByNeighbour (index: number, functionNode: ValueParserFunctionNode, position: `before` | `after`): number {
+function runHeldByNeighbor (index: number, functionNode: ValueParserFunctionNode, position: `before` | `after`): number {
 	let { nodes } = functionNode
 
 	if (position === `before`) {
@@ -26,7 +26,7 @@ function runHeldByNeighbour (index: number, functionNode: ValueParserFunctionNod
 }
 
 /**
- * Names the span one side of a comma stands in, and what goes there. The span grows away from the comma by what {@link runHeldByNeighbour} measures; an unclosed function has an empty `after`.
+ * Names the span one side of a comma stands in, and what goes there. The span grows away from the comma by what {@link runHeldByNeighbor} measures; an unclosed function has an empty `after`.
  * @param div - The comma node.
  * @param index - The comma's place among the arguments.
  * @param functionNode - The call holding the comma.
@@ -36,7 +36,7 @@ function runHeldByNeighbour (index: number, functionNode: ValueParserFunctionNod
  */
 function whitespaceEdit (div: ValueParserDivNode, index: number, functionNode: ValueParserFunctionNode, position: `before` | `after`, text: string): Edit {
 	let commaIndex = div.sourceIndex + div.before.length
-	let held = runHeldByNeighbour(index, functionNode, position)
+	let held = runHeldByNeighbor(index, functionNode, position)
 
 	if (position === `before`) return { start: div.sourceIndex - held, end: commaIndex, text }
 

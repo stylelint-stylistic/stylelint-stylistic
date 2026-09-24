@@ -1,6 +1,6 @@
 import { messages, ruleName } from "./index.ts"
 
-// Behind a wordless declaration the brace alone closes, the run in front of the brace is the run the `declaration-colon-*-after` rules read behind the colon. The library lists the rule a block names first and its extra rules behind it, so the neighbour has the last word.
+// Behind a wordless declaration the brace alone closes, the run in front of the brace is the run the `declaration-colon-*-after` rules read behind the colon. The library lists the rule a block names first and its extra rules behind it, so the neighbor has the last word.
 let testRule = createTestRule({ ruleName })
 
 testRule({
@@ -11,7 +11,7 @@ testRule({
 	reject: [
 		{
 			// See 1789420319
-			description: `a wordless custom property in front of the brace, whose break the neighbour asks to stand behind the colon, so the space is not written and the warning stands`,
+			description: `a wordless custom property in front of the brace, whose break the neighbor asks to stand behind the colon, so the space is not written and the warning stands`,
 			code: `
 				a {
 					--x:

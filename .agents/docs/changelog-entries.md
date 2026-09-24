@@ -29,7 +29,7 @@ Where every entry of a group would say the same thing to the user, say it o
 
 **Until the next release, a fix gets an entry only where a user of the plugin reported the bug.** A defect found by a sweep, an oracle, a tool or an agent gets none: such a list runs to hundreds, and almost nothing in it tells a user something they could act on. The groups that hold those fixes end with one sentence saying there are many more, and that is the whole record of them. False negatives are under the same rule. What such a fix may still owe the file is a correction: where it changes what an entry already standing in `Unreleased` says, or brings a breaking change of its own, that entry is corrected, and a fix of a false negative is not a breaking change in this sense.
 
-A fix for a **false negative** belongs under `Changed`, not `Fixed`: the user meets it as new warnings on code that used to pass, which is a change in behaviour rather than a repair they asked for. Purely internal changes — build tooling, test layout, CI — get no entry at all, since any entry forces a release.
+A fix for a **false negative** belongs under `Changed`, not `Fixed`: the user meets it as new warnings on code that used to pass, which is a change in behavior rather than a repair they asked for. Purely internal changes — build tooling, test layout, CI — get no entry at all, since any entry forces a release.
 
 ## When the entry is committed
 
@@ -38,7 +38,7 @@ Until the next release the entry is **not** written in the commit that ma
 1. Fix the bug and commit the fix without an entry. Draft no text: read `Unreleased` and say whether anything standing there needs correcting because of the fix, and where.
 2. Where the bug was reported by a user of the plugin, or the maintainer asks for an entry or a correction, write it and add one more fixup carrying it, after the fixups that correct the fix, targeted at the commit whose change it describes. Several user-visible commits mean several such fixups.
 3. The maintainer, before giving the go-ahead for the finishing stage, judges whether the entry is wanted and corrects it where it is.
-4. `git rebase --autosquash` folds the fixups in before the push, and the entry — where it survived that judgement — lands in the commit it belongs to.
+4. `git rebase --autosquash` folds the fixups in before the push, and the entry — where it survived that judgment — lands in the commit it belongs to.
 
 ## Groups inside `Unreleased`
 

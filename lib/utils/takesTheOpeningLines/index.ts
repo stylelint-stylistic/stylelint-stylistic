@@ -2,11 +2,11 @@ import type { Root } from "postcss"
 import type { PostcssResult } from "stylelint"
 
 import { OPENS_WITH_LINE_BREAK } from "../../regexps.ts"
-import { neighbourCopies, type NeighbourRuleSetting } from "../neighbourSettings/index.ts"
+import { neighborCopies, type NeighborRuleSetting } from "../neighborSettings/index.ts"
 import type { EmbeddedSource } from "../typeGuards/index.ts"
 
 /** The rule that takes the empty lines a file opens with off the raw they stand in. */
-const NO_EMPTY_FIRST_LINE: NeighbourRuleSetting = {
+const NO_EMPTY_FIRST_LINE: NeighborRuleSetting = {
 	name: `no-empty-first-line`,
 	options: [true],
 }
@@ -30,5 +30,5 @@ export function takesTheOpeningLines (root: Root, result: PostcssResult): boolea
 
 	if (!text.trim() || !OPENS_WITH_LINE_BREAK.test(text)) return false
 
-	return neighbourCopies(root, result, NO_EMPTY_FIRST_LINE).some(({ fixDisabled }) => !fixDisabled)
+	return neighborCopies(root, result, NO_EMPTY_FIRST_LINE).some(({ fixDisabled }) => !fixDisabled)
 }

@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 
 import { css } from "../../syntaxes/css/index.ts"
 
-import { neighbourCopies, neighbourSettings, speaksOf } from "./index.ts"
+import { neighborCopies, neighborSettings, speaksOf } from "./index.ts"
 
 /** A plain CSS root, which every namespace reads. */
 const NODE = parse(`a {}`)
@@ -18,13 +18,13 @@ const RULES = {
 	newline: { name: `declaration-block-semicolon-newline-before`, options: [`always`] },
 }
 
-describe(`neighbourSettings`, () => {
-	it(`nothing where the configuration lists none of the neighbours`, () => {
+describe(`neighborSettings`, () => {
+	it(`nothing where the configuration lists none of the neighbors`, () => {
 		expect(read({})).toEqual([])
 		expect(read({ "@stylistic/color-hex-case": `lower` })).toEqual([])
 	})
 
-	it(`each neighbour under the caller's key with its primary option, in the order the configuration lists them`, () => {
+	it(`each neighbor under the caller's key with its primary option, in the order the configuration lists them`, () => {
 		expect(read({ "@stylistic/declaration-block-semicolon-space-before": `always`, "@stylistic/declaration-block-semicolon-newline-before": `always` })).toEqual([[`space`, `always`, false, SPACE], [`newline`, `always`, false, NEWLINE]])
 		expect(read({ "@stylistic/declaration-block-semicolon-newline-before": `always`, "@stylistic/declaration-block-semicolon-space-before": `never` })).toEqual([[`newline`, `always`, false, NEWLINE], [`space`, `never`, false, SPACE]])
 	})
@@ -48,28 +48,28 @@ describe(`neighbourSettings`, () => {
 		expect(read({ "@stylistic/declaration-block-semicolon-space-before": [`never`, { severity: `warning` }] })).toEqual([[`space`, `never`, false, SPACE]])
 	})
 
-	it(`a table with a key left empty, as a table shared by callers with unlike neighbours leaves some`, () => {
-		expect(neighbourSettings<`space` | `newline`>(NODE, result({ "@stylistic/declaration-block-semicolon-space-before": `always` }), { space: RULES.space })).toEqual([[`space`, `always`, false, SPACE]])
+	it(`a table with a key left empty, as a table shared by callers with unlike neighbors leaves some`, () => {
+		expect(neighborSettings<`space` | `newline`>(NODE, result({ "@stylistic/declaration-block-semicolon-space-before": `always` }), { space: RULES.space })).toEqual([[`space`, `always`, false, SPACE]])
 	})
 
-	it(`a neighbour under the one namespace reading the root: the core's over plain CSS where its copy is configured, else the first listed`, () => {
+	it(`a neighbor under the one namespace reading the root: the core's over plain CSS where its copy is configured, else the first listed`, () => {
 		expect(read({ "@stylistic/scss/declaration-block-semicolon-space-before": `always` })).toEqual([[`space`, `always`, false, `@stylistic/scss/declaration-block-semicolon-space-before`]])
 		expect(read({ "@stylistic/less/declaration-block-semicolon-space-before": `never`, "@stylistic/declaration-block-semicolon-space-before": `always` })).toEqual([[`space`, `always`, false, `@stylistic/declaration-block-semicolon-space-before`]])
 		expect(read({ "@stylistic/less/declaration-block-semicolon-space-before": `never`, "@stylistic/scss/declaration-block-semicolon-space-before": `always` })).toEqual([[`space`, `never`, false, `@stylistic/less/declaration-block-semicolon-space-before`]])
 	})
 
-	it(`no neighbour under a namespace refusing the root`, () => {
+	it(`no neighbor under a namespace refusing the root`, () => {
 		let scssResult = { opts: { syntax: postcssScss }, stylelint: { config: { customSyntax: `postcss-scss`, rules: { "@stylistic/less/declaration-block-semicolon-space-before": `always`, "@stylistic/scss/declaration-block-semicolon-space-before": `never` } } } } as unknown as PostcssResult
 
-		expect(neighbourSettings(parseScss(`a {}`), scssResult, RULES)).toEqual([[`space`, `never`, false, `@stylistic/scss/declaration-block-semicolon-space-before`]])
+		expect(neighborSettings(parseScss(`a {}`), scssResult, RULES)).toEqual([[`space`, `never`, false, `@stylistic/scss/declaration-block-semicolon-space-before`]])
 	})
 
 	it(`nothing where the result carries no configuration`, () => {
-		expect(neighbourSettings(NODE, {} as PostcssResult, RULES)).toEqual([])
+		expect(neighborSettings(NODE, {} as PostcssResult, RULES)).toEqual([])
 	})
 
-	it(`the lineness-conditioned neighbours behind the rest, and among themselves in the plugin's own order rather than the configuration's`, () => {
-		let neighbours = {
+	it(`the lineness-conditioned neighbors behind the rest, and among themselves in the plugin's own order rather than the configuration's`, () => {
+		let neighbors = {
 			plain: { name: `declaration-block-semicolon-space-before`, options: [`always`] },
 			space: { name: `declaration-colon-space-after`, options: [`always-single-line`] },
 			newline: { name: `declaration-block-semicolon-newline-before`, options: [`always-multi-line`] },
@@ -77,38 +77,38 @@ describe(`neighbourSettings`, () => {
 		}
 		let expected = [[`plain`, `always`, false, SPACE], [`space`, `always-single-line`, false, `@stylistic/declaration-colon-space-after`], [`newline`, `always-multi-line`, false, NEWLINE], [`semicolonAfter`, `never-single-line`, false, `@stylistic/declaration-block-semicolon-space-after`]]
 
-		expect(neighbourSettings(NODE, result({
+		expect(neighborSettings(NODE, result({
 			"@stylistic/declaration-block-semicolon-space-after": `never-single-line`,
 			"@stylistic/declaration-block-semicolon-newline-before": `always-multi-line`,
 			"@stylistic/declaration-colon-space-after": `always-single-line`,
 			"@stylistic/declaration-block-semicolon-space-before": `always`,
-		}), neighbours)).toEqual(expected)
-		expect(neighbourSettings(NODE, result({
+		}), neighbors)).toEqual(expected)
+		expect(neighborSettings(NODE, result({
 			"@stylistic/declaration-colon-space-after": `always-single-line`,
 			"@stylistic/declaration-block-semicolon-space-before": `always`,
 			"@stylistic/declaration-block-semicolon-space-after": `never-single-line`,
 			"@stylistic/declaration-block-semicolon-newline-before": `always-multi-line`,
-		}), neighbours)).toEqual(expected)
+		}), neighbors)).toEqual(expected)
 	})
 })
 
-describe(`neighbourCopies`, () => {
+describe(`neighborCopies`, () => {
 	let grid = { name: `named-grid-areas-alignment`, options: [true] as (string | true)[] }
 	let trailing = { name: `declaration-block-trailing-semicolon`, options: [`always`, `never`] }
 
-	it(`nothing where the neighbour is unlisted, or listed with a primary it refuses`, () => {
-		expect(neighbourCopies(NODE, result({}), grid)).toEqual([])
-		expect(neighbourCopies(NODE, result({ "@stylistic/named-grid-areas-alignment": false }), grid)).toEqual([])
-		expect(neighbourCopies(NODE, result({ "@stylistic/declaration-block-trailing-semicolon": `sometimes` }), trailing)).toEqual([])
+	it(`nothing where the neighbor is unlisted, or listed with a primary it refuses`, () => {
+		expect(neighborCopies(NODE, result({}), grid)).toEqual([])
+		expect(neighborCopies(NODE, result({ "@stylistic/named-grid-areas-alignment": false }), grid)).toEqual([])
+		expect(neighborCopies(NODE, result({ "@stylistic/declaration-block-trailing-semicolon": `sometimes` }), trailing)).toEqual([])
 	})
 
 	it(`a copy read whole, true as its primary, its secondaries and whether its fix is off`, () => {
-		expect(neighbourCopies(NODE, result({ "@stylistic/named-grid-areas-alignment": [true, { alignColumns: true, disableFix: true }] }), grid)).toMatchObject([{ option: true, fixDisabled: true, secondary: { alignColumns: true, disableFix: true }, name: `@stylistic/named-grid-areas-alignment`, syntax: css }])
-		expect(neighbourCopies(NODE, result({ "@stylistic/declaration-block-trailing-semicolon": `never` }), trailing)).toMatchObject([{ option: `never`, fixDisabled: false, secondary: {} }])
+		expect(neighborCopies(NODE, result({ "@stylistic/named-grid-areas-alignment": [true, { alignColumns: true, disableFix: true }] }), grid)).toMatchObject([{ option: true, fixDisabled: true, secondary: { alignColumns: true, disableFix: true }, name: `@stylistic/named-grid-areas-alignment`, syntax: css }])
+		expect(neighborCopies(NODE, result({ "@stylistic/declaration-block-trailing-semicolon": `never` }), trailing)).toMatchObject([{ option: `never`, fixDisabled: false, secondary: {} }])
 	})
 
 	it(`the one copy reading the root, with its namespace's syntax: the core's over plain CSS, listed second`, () => {
-		let copies = neighbourCopies(NODE, result({ "@stylistic/scss/declaration-block-trailing-semicolon": `never`, "@stylistic/declaration-block-trailing-semicolon": `always` }), trailing)
+		let copies = neighborCopies(NODE, result({ "@stylistic/scss/declaration-block-trailing-semicolon": `never`, "@stylistic/declaration-block-trailing-semicolon": `always` }), trailing)
 
 		expect(copies.map(({ option, name, syntax }) => [option, name, syntax.namespace])).toEqual([[`always`, `@stylistic/declaration-block-trailing-semicolon`, undefined]])
 	})
@@ -116,7 +116,7 @@ describe(`neighbourCopies`, () => {
 	it(`no copy under a namespace refusing the root`, () => {
 		let scssResult = { opts: { syntax: postcssScss }, stylelint: { config: { customSyntax: `postcss-scss`, rules: { "@stylistic/less/declaration-block-trailing-semicolon": `always`, "@stylistic/scss/declaration-block-trailing-semicolon": `never` } } } } as unknown as PostcssResult
 
-		expect(neighbourCopies(parseScss(`a {}`), scssResult, trailing).map(({ name }) => name)).toEqual([`@stylistic/scss/declaration-block-trailing-semicolon`])
+		expect(neighborCopies(parseScss(`a {}`), scssResult, trailing).map(({ name }) => name)).toEqual([`@stylistic/scss/declaration-block-trailing-semicolon`])
 	})
 })
 
@@ -148,12 +148,12 @@ describe(`speaksOf`, () => {
 })
 
 /**
- * Reads the two neighbours' settings out of a configuration.
+ * Reads the two neighbors' settings out of a configuration.
  * @param rules - The rules the configuration lists, in the order it lists them.
- * @returns What `neighbourSettings` answers.
+ * @returns What `neighborSettings` answers.
  */
 function read (rules: Record<string, unknown>): [string, string, boolean, string][] {
-	return neighbourSettings(NODE, result(rules), RULES)
+	return neighborSettings(NODE, result(rules), RULES)
 }
 
 /**

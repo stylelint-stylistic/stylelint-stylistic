@@ -2,7 +2,7 @@ import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
 
-// The solidus the fix adds is spelled as the two `value-slash-space-*` rules ask (#550). The library lists a block's rule first and its extra rules behind it, so the neighbours run last in every block below: the order in which a solidus written bare would have waited for the run after.
+// The solidus the fix adds is spelled as the two `value-slash-space-*` rules ask (#550). The library lists a block's rule first and its extra rules behind it, so the neighbors run last in every block below: the order in which a solidus written bare would have waited for the run after.
 testRule({
 	ruleName,
 	config: [`ratio`],
@@ -14,7 +14,7 @@ testRule({
 	reject: [
 		{
 			// See #550
-			description: `a whole number written on its own, whose second number is written behind a solidus spelled tight as both neighbours ask`,
+			description: `a whole number written on its own, whose second number is written behind a solidus spelled tight as both neighbors ask`,
 			code: `a { aspect-ratio: 2; }`,
 			fixed: `a { aspect-ratio: 2/1; }`,
 			line: 1,
@@ -36,7 +36,7 @@ testRule({
 
 	reject: [
 		{
-			description: `the same number where the two neighbours ask for different things on their two sides, each side written as its own rule asks`,
+			description: `the same number where the two neighbors ask for different things on their two sides, each side written as its own rule asks`,
 			code: `a { aspect-ratio: 2; }`,
 			fixed: `a { aspect-ratio: 2/ 1; }`,
 			line: 1,
@@ -58,7 +58,7 @@ testRule({
 
 	reject: [
 		{
-			description: `the same number with the two neighbours the other way round`,
+			description: `the same number with the two neighbors the other way round`,
 			code: `a { aspect-ratio: 2; }`,
 			fixed: `a { aspect-ratio: 2 /1; }`,
 			line: 1,
@@ -80,7 +80,7 @@ testRule({
 
 	reject: [
 		{
-			description: `the same number where both neighbours ask for the space the fix writes on its own, so that the file is the same either way`,
+			description: `the same number where both neighbors ask for the space the fix writes on its own, so that the file is the same either way`,
 			code: `a { aspect-ratio: 2; }`,
 			fixed: `a { aspect-ratio: 2 / 1; }`,
 			line: 1,
@@ -92,7 +92,7 @@ testRule({
 	],
 })
 
-// A neighbour whose fix is turned off still wins where no live rule speaks of the run: the whitespace it asks for is written, the write being this rule's own text (#485).
+// A neighbor whose fix is turned off still wins where no live rule speaks of the run: the whitespace it asks for is written, the write being this rule's own text (#485).
 testRule({
 	ruleName,
 	config: [`ratio`],
@@ -103,7 +103,7 @@ testRule({
 
 	reject: [
 		{
-			description: `the same number where both neighbours ask for nothing and have no fix to write with: the solidus is written tight all the same, and neither neighbour has anything left to report`,
+			description: `the same number where both neighbors ask for nothing and have no fix to write with: the solidus is written tight all the same, and neither neighbor has anything left to report`,
 			code: `a { aspect-ratio: 2; }`,
 			fixed: `a { aspect-ratio: 2/1; }`,
 			line: 1,
@@ -115,7 +115,7 @@ testRule({
 	],
 })
 
-// A `-single-line` option speaks of the declaration as printed, property to end of value, which is the text the two neighbours count the lines of.
+// A `-single-line` option speaks of the declaration as printed, property to end of value, which is the text the two neighbors count the lines of.
 testRule({
 	ruleName,
 	config: [`ratio`],
@@ -126,7 +126,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a single-line declaration, which both neighbours speak of`,
+			description: `a single-line declaration, which both neighbors speak of`,
 			code: `a { aspect-ratio: 2; }`,
 			fixed: `a { aspect-ratio: 2/1; }`,
 			line: 1,
@@ -136,7 +136,7 @@ testRule({
 			message: messages.expected(`2`, `2/1`),
 		},
 		{
-			description: `a multi-line declaration, which neither neighbour speaks of: the solidus is written with a space on either side, as it is where the configuration lists neither`,
+			description: `a multi-line declaration, which neither neighbor speaks of: the solidus is written with a space on either side, as it is where the configuration lists neither`,
 			code: `
 				a {
 					aspect-ratio:
@@ -168,7 +168,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a fractional number the reduction writes a second number behind, spelled tight as both neighbours ask`,
+			description: `a fractional number the reduction writes a second number behind, spelled tight as both neighbors ask`,
 			code: `a { aspect-ratio: 1.5; }`,
 			fixed: `a { aspect-ratio: 3/2; }`,
 			line: 1,
@@ -191,7 +191,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a feature whose ratio is one number, its second number written behind a solidus spelled tight as both neighbours ask`,
+			description: `a feature whose ratio is one number, its second number written behind a solidus spelled tight as both neighbors ask`,
 			code: `@media (aspect-ratio: 2) {}`,
 			fixed: `@media (aspect-ratio: 2/1) {}`,
 			line: 1,
@@ -234,7 +234,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a feature and a declaration, of which the neighbours speak of the declaration alone: its solidus is written tight, the feature's with a space on either side`,
+			description: `a feature and a declaration, of which the neighbors speak of the declaration alone: its solidus is written tight, the feature's with a space on either side`,
 			code: `@media (aspect-ratio: 2) { a { aspect-ratio: 2; } }`,
 			fixed: `@media (aspect-ratio: 2 / 1) { a { aspect-ratio: 2/1; } }`,
 			warnings: [
@@ -268,7 +268,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a whole number written on its own, whose second number is written behind a solidus opening a line of its own, as the neighbour about the break asks, and closed up on the other side`,
+			description: `a whole number written on its own, whose second number is written behind a solidus opening a line of its own, as the neighbor about the break asks, and closed up on the other side`,
 			code: `a { aspect-ratio: 2; }`,
 			fixed: `a { aspect-ratio: 2\n/1; }`,
 			line: 1,
@@ -291,7 +291,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a whole number written on its own in a declaration on a line, whose second number goes behind a solidus and the break the neighbour about the break asks for`,
+			description: `a whole number written on its own in a declaration on a line, whose second number goes behind a solidus and the break the neighbor about the break asks for`,
 			code: `a { aspect-ratio: 2; }`,
 			fixed: `a { aspect-ratio: 2 /\n1; }`,
 			line: 1,
@@ -310,7 +310,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a multi-line declaration, whose neighbour asks for a break behind the solidus`,
+			description: `a multi-line declaration, whose neighbor asks for a break behind the solidus`,
 			code: `a { aspect-ratio:\n\t2; }`,
 			fixed: `a { aspect-ratio:\n\t2 /\n1; }`,
 			line: 2,
@@ -320,7 +320,7 @@ testRule({
 			message: messages.expected(`2`, `2 /\n1`),
 		},
 		{
-			description: `a single-line declaration, which that neighbour does not speak of: the solidus is written with a space on either side`,
+			description: `a single-line declaration, which that neighbor does not speak of: the solidus is written with a space on either side`,
 			code: `a { aspect-ratio: 2; }`,
 			fixed: `a { aspect-ratio: 2 / 1; }`,
 			line: 1,

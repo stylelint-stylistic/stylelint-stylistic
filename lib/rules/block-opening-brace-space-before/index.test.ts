@@ -794,7 +794,7 @@ testRule({
 	reject: [
 		{
 			// See #355
-			description: `a block the neighbour's break puts over lines within the same run: the option speaks of the finished block and writes its space, where it used to stay silent about a block that was about to stop being single-line`,
+			description: `a block the neighbor's break puts over lines within the same run: the option speaks of the finished block and writes its space, where it used to stay silent about a block that was about to stop being single-line`,
 			code: `@media screen{\na{b:c;d:e}\n}\n`,
 			fixed: `@media screen {\na {b:c;\nd:e}\n}\n`,
 			warnings: [

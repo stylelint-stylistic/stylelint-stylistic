@@ -153,7 +153,7 @@ testRule({
 	],
 })
 
-// Where a value is nothing but whitespace, the run behind the colon is the run the `declaration-block-semicolon-*-before` rules read in front of the semicolon (#416). The library lists the block's rule first and its extra rules behind, so the neighbour runs last in every block below: the order in which it used to be blind to what this rule wrote, and the two took the run in turns.
+// Where a value is nothing but whitespace, the run behind the colon is the run the `declaration-block-semicolon-*-before` rules read in front of the semicolon (#416). The library lists the block's rule first and its extra rules behind, so the neighbor runs last in every block below: the order in which it used to be blind to what this rule wrote, and the two took the run in turns.
 testRule({
 	ruleName,
 	config: [`always`],
@@ -162,7 +162,7 @@ testRule({
 	reject: [
 		{
 			// See #416
-			description: `a value that is nothing at all, which the neighbour asks to stay nothing and this rule asks to open with a space: the neighbour is listed last and has the last word, so the space is not written and the warning stands`,
+			description: `a value that is nothing at all, which the neighbor asks to stay nothing and this rule asks to open with a space: the neighbor is listed last and has the last word, so the space is not written and the warning stands`,
 			code: `a { color:; }`,
 			fixed: `a { color:; }`,
 			line: 1,
@@ -172,7 +172,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			description: `a custom property whose value is nothing at all, where the neighbour leaves a single space alone and the space is written`,
+			description: `a custom property whose value is nothing at all, where the neighbor leaves a single space alone and the space is written`,
 			code: `a { --a:; }`,
 			fixed: `a { --a: ; }`,
 			line: 1,
@@ -182,8 +182,8 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// The neighbour listed behind used to take away the space this rule accepts, and the fixing run came back clean (1789508665)
-			description: `a value that is nothing but the single space this rule asks for, which the neighbour asks to take away: the space stays, and the file rests with the neighbour's warning`,
+			// The neighbor listed behind used to take away the space this rule accepts, and the fixing run came back clean (1789508665)
+			description: `a value that is nothing but the single space this rule asks for, which the neighbor asks to take away: the space stays, and the file rests with the neighbor's warning`,
 			code: `a { color: ; }`,
 			fixed: `a { color: ; }`,
 			line: 1,
@@ -221,7 +221,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a value that is nothing but a space, which the neighbour asks to stay in front of the semicolon and this rule asks to take away`,
+			description: `a value that is nothing but a space, which the neighbor asks to stay in front of the semicolon and this rule asks to take away`,
 			code: `a { color: ; }`,
 			fixed: `a { color: ; }`,
 			line: 1,
@@ -240,7 +240,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a neighbour asking for the same single space, which is written once and answers both`,
+			description: `a neighbor asking for the same single space, which is written once and answers both`,
 			code: `a { color:; }`,
 			fixed: `a { color: ; }`,
 			warnings: [
@@ -263,7 +263,7 @@ testRule({
 	],
 })
 
-// A neighbour whose fix the configuration turned off reports the run and cannot rewrite it, so this rule writes past it instead of deferring (#485).
+// A neighbor whose fix the configuration turned off reports the run and cannot rewrite it, so this rule writes past it instead of deferring (#485).
 testRule({
 	ruleName,
 	config: [`always`],
@@ -272,7 +272,7 @@ testRule({
 	reject: [
 		{
 			// See #485
-			description: `a value that is nothing but a break, which the neighbour asks to take away and cannot: the space is written, and the neighbour's report stands over it as the configuration asked`,
+			description: `a value that is nothing but a break, which the neighbor asks to take away and cannot: the space is written, and the neighbor's report stands over it as the configuration asked`,
 			code: `
 				a { color:
 				; }
@@ -326,7 +326,7 @@ testRule({
 	reject: [
 		{
 			// See #494
-			description: `a vertical tab behind the colon with a space of its own: the space this rule writes opens the value's word, the neighbour's \`never\` takes the run in front of the semicolon, and the character stands between them`,
+			description: `a vertical tab behind the colon with a space of its own: the space this rule writes opens the value's word, the neighbor's \`never\` takes the run in front of the semicolon, and the character stands between them`,
 			code: `a { color:\v ; }`,
 			fixed: `a { color: \v; }`,
 			warnings: [
@@ -357,7 +357,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a value that is nothing but a space, with a space in front of the brace behind the semicolon the neighbour listed behind is to take away: the run in front of the brace is the one this rule takes, and the neighbour takes the semicolon and the space in front of it`,
+			description: `a value that is nothing but a space, with a space in front of the brace behind the semicolon the neighbor listed behind is to take away: the run in front of the brace is the one this rule takes, and the neighbor takes the semicolon and the space in front of it`,
 			code: `a { color: ; }`,
 			fixed: `a { color:}`,
 			warnings: [
@@ -418,7 +418,7 @@ testRule({
 	reject: [
 		{
 			// See 1789420319
-			description: `a wordless declaration the brace alone closes, whose run behind the colon is the run in front of the brace: the neighbour is listed last and asks for the break that stands, so the space is not written and the warning stands`,
+			description: `a wordless declaration the brace alone closes, whose run behind the colon is the run in front of the brace: the neighbor is listed last and asks for the break that stands, so the space is not written and the warning stands`,
 			code: `
 				a {
 					x:

@@ -1209,7 +1209,7 @@ testRule({
 	],
 })
 
-// The head run is the run in front of a comma opening the value too, which the `value-list-comma-*-before` rules write (#166): the rules asked settle who writes it, and a rule held by its neighbour reports and leaves the run (1789594574)
+// The head run is the run in front of a comma opening the value too, which the `value-list-comma-*-before` rules write (#166): the rules asked settle who writes it, and a rule held by its neighbor reports and leaves the run (1789594574)
 testRule({
 	ruleName,
 	config: [`never`],

@@ -76,7 +76,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				}
 
 				if (isComment(node)) {
-					// A `//` comment's text is respelled too: `postcss-less` keeps a carriage return behind one as text, but Less normalises line endings first, so the printed file then says what Less reads.
+					// A `//` comment's text is respelled too: `postcss-less` keeps a carriage return behind one as text, but Less normalizes line endings first, so the printed file then says what Less reads.
 					node.text = fixData(node.text)
 
 					if (node.raws.left) node.raws.left = fixData(node.raws.left)
@@ -112,7 +112,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			}
 		}
 
-		// A node a rule of another plugin built without a `raws.before` gets a run PostCSS prints in front of it, what its neighbours carry or a break with the default indent where they carry none, which no line of the file holds yet and the file the fix leaves will; it is reported on the node, whose place is the one it was built with ([#694](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/694)). One built with no source has no place to report at, and is passed over as it was (1790090148)
+		// A node a rule of another plugin built without a `raws.before` gets a run PostCSS prints in front of it, what its neighbors carry or a break with the default indent where they carry none, which no line of the file holds yet and the file the fix leaves will; it is reported on the node, whose place is the one it was built with ([#694](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/694)). One built with no source has no place to report at, and is passed over as it was (1790090148)
 		root.walk((node) => {
 			if (typeof node.raws.before === `string` || !node.source || !hasError(runInFrontOf(node))) return
 

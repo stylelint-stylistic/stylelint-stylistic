@@ -36,7 +36,7 @@ const RUNS: Record<string, string> = {
 	comma: `,`,
 }
 
-/** Where the pair stands: alone, nested, beside a neighbour holding nodes, and inside a text that is multi-line without it. */
+/** Where the pair stands: alone, nested, beside a neighbor holding nodes, and inside a text that is multi-line without it. */
 const PLACES: Record<string, (run: string) => string> = {
 	value: (run) => `a { b: f(${run}); }\n`,
 	nestedInside: (run) => `a { b: g(1, f(${run})); }\n`,

@@ -10,7 +10,7 @@ export const ASPECT_RATIO_PROPERTY = /^aspect-ratio$/iu
 /** The first line break, captured. */
 export const CAPTURED_LINE_BREAK = /(\r?\n)/u
 
-/** A hex colour anywhere. */
+/** A hex color anywhere. */
 export const CONTAINS_HEX_COLOR = /#[\da-z]+/iu
 
 /** A Windows break alone; narrow since `max-empty-lines` and `indentation` ask about the pair. */
@@ -106,7 +106,7 @@ export const FRACTION_WITH_LEADING_ZEROS = /(?:\D|^)(0+)(\.\d+)/u
 /** A fraction ending in zeros, the kept digits captured apart. */
 export const FRACTION_WITH_TRAILING_ZEROS = /\.(\d{0,100}?)(0+)(?:\D|$)/u
 
-/** A leading hex colour. */
+/** A leading hex color. */
 export const HEX_COLOR = /^#[\da-z]+/iu
 
 /** The one whitespace character closing a hexadecimal escape; a Windows pair counts as one. */

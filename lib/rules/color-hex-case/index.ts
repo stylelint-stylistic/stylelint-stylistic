@@ -71,7 +71,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (!isHexColor(node)) return
 
-				// The ASCII letters alone: `ß` has no upper case of its own length, and a hash spelling such a code point is no colour to recase past its digits
+				// The ASCII letters alone: `ß` has no upper case of its own length, and a hash spelling such a code point is no color to recase past its digits
 				let expected = recaseAscii(value, primary)
 
 				if (value === expected) return

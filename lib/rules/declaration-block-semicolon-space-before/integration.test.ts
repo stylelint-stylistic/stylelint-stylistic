@@ -3,7 +3,7 @@ import { messages as colonSpaceAfterMessages } from "../declaration-colon-space-
 
 import { messages, ruleName } from "./index.ts"
 
-// Where a declaration's value is nothing but whitespace, the run this rule reads in front of the semicolon is the run the `declaration-colon-*-after` rules read behind the colon (#416). The library lists the rule a block names first and its extra rules behind it, so in every block below the neighbour runs last and has the last word.
+// Where a declaration's value is nothing but whitespace, the run this rule reads in front of the semicolon is the run the `declaration-colon-*-after` rules read behind the colon (#416). The library lists the rule a block names first and its extra rules behind it, so in every block below the neighbor runs last and has the last word.
 let testRule = createTestRule({ ruleName })
 
 testRule({
@@ -14,7 +14,7 @@ testRule({
 	reject: [
 		{
 			// See #416
-			description: `a value that is nothing but a space, which the neighbour asks to stand behind the colon: the neighbour is listed last and has the last word, so the space is not taken away and the warning stands`,
+			description: `a value that is nothing but a space, which the neighbor asks to stand behind the colon: the neighbor is listed last and has the last word, so the space is not taken away and the warning stands`,
 			code: `a { color: ; }`,
 			fixed: `a { color: ; }`,
 			line: 1,
@@ -33,7 +33,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a custom property whose value is a break and two spaces, which this rule would have cut down to the one space it leaves alone, and which the neighbour asks to keep opening with the break`,
+			description: `a custom property whose value is a break and two spaces, which this rule would have cut down to the one space it leaves alone, and which the neighbor asks to keep opening with the break`,
 			code: `
 				a { --a:
 				  ; }
@@ -58,7 +58,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a value that is a break and two spaces, which the neighbour is content with and this rule would have cut down to a single space, taking the neighbour's break with it`,
+			description: `a value that is a break and two spaces, which the neighbor is content with and this rule would have cut down to a single space, taking the neighbor's break with it`,
 			code: `
 				a { color:
 				  ; }
@@ -83,7 +83,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a single-line option asked at the run's end, of the block the neighbour's break has finished (#355): the unfixed file draws both warnings, and under \`--fix\` the option is silenced by the break the neighbour wrote, so the run before the semicolon stays as it stands`,
+			description: `a single-line option asked at the run's end, of the block the neighbor's break has finished (#355): the unfixed file draws both warnings, and under \`--fix\` the option is silenced by the break the neighbor wrote, so the run before the semicolon stays as it stands`,
 			code: `a { color: ; }`,
 			fixed: `
 				a { color:
@@ -155,7 +155,7 @@ testRule({
 	reject: [
 		{
 			// See #355
-			description: `an empty custom property the neighbour finishes as \`--x: ;\` in the same run: the space stands on the tail of the raw between until the file is read back, the exception of #50 reads it there, and the deferred check stays silent about the finished form`,
+			description: `an empty custom property the neighbor finishes as \`--x: ;\` in the same run: the space stands on the tail of the raw between until the file is read back, the exception of #50 reads it there, and the deferred check stays silent about the finished form`,
 			code: `a { --bar:; x: y; }`,
 			fixed: `a { --bar: ; x: y; }`,
 			line: 1,
@@ -175,7 +175,7 @@ testRule({
 	reject: [
 		{
 			// See #710
-			description: `a value that is nothing but a space, with the neighbour listed under the namespace of another syntax, which reads the same plain CSS file and so is listed last all the same`,
+			description: `a value that is nothing but a space, with the neighbor listed under the namespace of another syntax, which reads the same plain CSS file and so is listed last all the same`,
 			code: `a { color: ; }`,
 			fixed: `a { color: ; }`,
 			line: 1,
