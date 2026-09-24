@@ -7,9 +7,10 @@ import { asksForTheCharsetRule, CHARSET_RULE_MESSAGE } from "../asksForTheCharse
 import { refuseContradictingSettings } from "../contradictingSettings/index.ts"
 import { copyReadingTheRoot } from "../copyReadingTheRoot/index.ts"
 import { deferCheck, deferFinalCheck, deferHeadCheck, defersToRunEnd, flushDeferredChecks, lastConfiguredPluginRule, linenessRank, registerPluginRule } from "../defersToRunEnd/index.ts"
+import { report } from "../report/index.ts"
 import type { RuleCheck } from "../ruleCheck/index.ts"
 
-let { utils: { report, ruleMessages } } = stylelint
+let { utils: { ruleMessages } } = stylelint
 
 /** What the namespace hands a rule: its name, its messages closing with that name, and the syntax. */
 export type RuleScope<M extends RuleMessages> = {

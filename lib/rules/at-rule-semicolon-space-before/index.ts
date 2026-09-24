@@ -8,11 +8,12 @@ import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
 import { maskEscapes } from "../../utils/maskEscapes/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { keepsEscapedCharacter, writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `at-rule-semicolon-space-before`
 

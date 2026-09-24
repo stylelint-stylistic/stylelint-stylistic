@@ -8,12 +8,13 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { rawNodeString } from "../../utils/rawNodeString/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runBehindBrace } from "../../utils/runBehindBrace/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesRunBehindBrace } from "../../utils/writesRunBehindBrace/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `block-closing-brace-space-after`
 

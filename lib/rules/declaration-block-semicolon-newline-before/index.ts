@@ -13,13 +13,14 @@ import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
 import { isInlineStyleAttribute } from "../../utils/isInlineStyleAttribute/index.ts"
 import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
 import { maskEscapes } from "../../utils/maskEscapes/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
 import { keepsEscapedCharacter, writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesSharedRun } from "../../utils/writesSharedRun/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `declaration-block-semicolon-newline-before`
 

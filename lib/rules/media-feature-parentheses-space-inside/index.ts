@@ -12,11 +12,12 @@ import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStr
 import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import { quotesItsAddress } from "../../utils/quotesItsAddress/index.ts"
+import { report } from "../../utils/report/index.ts"
 import { editsRereadAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { splitSpaceNodesAtWords } from "../../utils/splitSpaceNodesAtWords/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `media-feature-parentheses-space-inside`
 

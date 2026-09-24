@@ -15,13 +15,14 @@ import { nodeString } from "../../utils/nodeString/index.ts"
 import { nodeSyntax } from "../../utils/nodeSyntax/index.ts"
 import { opensALine } from "../../utils/opensALine/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { takesTheOpeningLines } from "../../utils/takesTheOpeningLines/index.ts"
 import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
 import { isNumber } from "../../utils/validateTypes/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `max-empty-lines`
 

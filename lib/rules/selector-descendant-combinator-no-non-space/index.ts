@@ -9,11 +9,12 @@ import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter
 import { findSelectorBlockComments } from "../../utils/findSelectorBlockComments/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFront } from "../../utils/runInFront/index.ts"
 import { selectorSearchCopy } from "../../utils/selectorSearchCopy/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `selector-descendant-combinator-no-non-space`
 

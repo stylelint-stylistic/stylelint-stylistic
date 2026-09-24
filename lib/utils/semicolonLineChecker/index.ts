@@ -1,5 +1,5 @@
 import type { ChildNode, Container, Node, Root } from "postcss"
-import stylelint, { type PostcssResult, type RuleMessage } from "stylelint"
+import type { PostcssResult, RuleMessage } from "stylelint"
 
 import { EVERY_LINE_BREAK, LEADING_WHITESPACE_WITHOUT_BREAK } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
@@ -10,13 +10,12 @@ import { hasBlock } from "../hasBlock/index.ts"
 import { isLastNodeWithoutSemicolon } from "../isLastNodeWithoutSemicolon/index.ts"
 import { fixIndentation, lastLineIndentation, lastLineStart, lineStarts, replaceIndentation } from "../lineIndentation/index.ts"
 import { opensALine } from "../opensALine/index.ts"
+import { report } from "../report/index.ts"
 import { runInFrontOf } from "../runInFrontOf/index.ts"
 import { setBlockAfter } from "../setBlockAfter/index.ts"
 import { statementString } from "../statementString/index.ts"
 import { isAtRule, isDeclaration, isRoot, isRule } from "../typeGuards/index.ts"
 import { readWhitespaceBeforeSemicolon, writeWhitespaceBeforeSemicolon } from "../whitespaceBeforeSemicolon/index.ts"
-
-let { utils: { report } } = stylelint
 
 /**
  * Checks the line a statement's semicolon opens, for `indentation`.

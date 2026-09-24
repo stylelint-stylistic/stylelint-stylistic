@@ -13,9 +13,10 @@ import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import { quotesItsAddress } from "../../utils/quotesItsAddress/index.ts"
 import { recaseAscii } from "../../utils/recaseAscii/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `color-hex-case`
 

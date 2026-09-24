@@ -1,14 +1,13 @@
 import type { AtRule, Root } from "postcss"
 import styleSearch from "style-search"
-import stylelint, { type PostcssResult } from "stylelint"
+import type { PostcssResult } from "stylelint"
 
 import { MEDIA_QUERY_COMBINATORS } from "../../reference/mediaQueries.ts"
 import { MEDIA_AT_RULE } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { atRuleParamIndex } from "../atRuleParamIndex/index.ts"
 import { findFunctionArgumentSpans } from "../findFunctionArgumentSpans/index.ts"
-
-let { utils: { report } } = stylelint
+import { report } from "../report/index.ts"
 
 /**
  * Checks whitespace around the colons of media features.

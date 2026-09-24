@@ -5,11 +5,12 @@ import { CRLF, EVERY_LINE_BREAK, EVERY_LINE_WITH_BREAK, LINE_BREAK } from "../..
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `linebreaks`
 
@@ -112,7 +113,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			}
 		}
 
-		// A node a rule of another plugin built without a `raws.before` gets a run PostCSS prints in front of it, what its neighbors carry or a break with the default indent where they carry none, which no line of the file holds yet and the file the fix leaves will; it is reported on the node, whose place is the one it was built with ([#694](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/694)). One built with no source has no place to report at, and is passed over as it was (1790090148)
+		// A node a rule of another plugin built without a `raws.before` gets a run PostCSS prints in front of it, what its neighbors carry or a break with the default indent where they carry none, which no line of the file holds yet and the file the fix leaves will; it is reported on the node, whose place is the one it was built with ([#694](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/694)). One built with no source is passed over, as it was before `report` could place a problem on one (1790090148)
 		root.walk((node) => {
 			if (typeof node.raws.before === `string` || !node.source || !hasError(runInFrontOf(node))) return
 

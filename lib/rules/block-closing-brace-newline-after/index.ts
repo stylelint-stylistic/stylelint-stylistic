@@ -12,13 +12,14 @@ import { nodeString } from "../../utils/nodeString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { pastEndOfLineComment } from "../../utils/pastEndOfLineComment/index.ts"
 import { rawNodeString } from "../../utils/rawNodeString/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runBehindBrace } from "../../utils/runBehindBrace/index.ts"
 import { isString } from "../../utils/validateTypes/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesRunBehindBrace } from "../../utils/writesRunBehindBrace/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `block-closing-brace-newline-after`
 

@@ -1,5 +1,5 @@
 import type { Declaration, Root } from "postcss"
-import stylelint, { type PostcssResult } from "stylelint"
+import type { PostcssResult } from "stylelint"
 
 import type { Syntax } from "../../syntaxes/index.ts"
 import { colonIndexInBetween } from "../colonIndexInBetween/index.ts"
@@ -8,9 +8,8 @@ import { declarationValueAsSpelled } from "../declarationValueAsSpelled/index.ts
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
 import { findEscapeSpans } from "../findCommentSpans/index.ts"
 import { maskEscapes } from "../maskEscapes/index.ts"
+import { report } from "../report/index.ts"
 import { runInFront } from "../runInFront/index.ts"
-
-let { utils: { report } } = stylelint
 
 /** Checks the whitespace at one index. */
 export type LocationChecker = (args: {

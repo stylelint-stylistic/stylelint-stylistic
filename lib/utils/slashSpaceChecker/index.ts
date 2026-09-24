@@ -1,5 +1,5 @@
 import type { AtRule, Declaration, Root } from "postcss"
-import stylelint, { type PostcssResult } from "stylelint"
+import type { PostcssResult } from "stylelint"
 
 import { LEADING_CSS_WHITESPACE, MEDIA_AT_RULE, SPACES_THEN_BLOCK_COMMENT, SPACES_THEN_INLINE_COMMENT, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import type { InlineCommentReading, Syntax } from "../../syntaxes/index.ts"
@@ -14,10 +14,9 @@ import { getLineBreak } from "../getLineBreak/index.ts"
 import { maskEscapes } from "../maskEscapes/index.ts"
 import { matchesStringOrRegExp } from "../matchesStringOrRegExp/index.ts"
 import { rawInFrontOfText } from "../rawInFrontOfText/index.ts"
+import { report } from "../report/index.ts"
 import { rereadsAnAddress } from "../rereadsAnAddress/index.ts"
 import type { WhitespaceChecker } from "../whitespaceChecker/index.ts"
-
-let { utils: { report } } = stylelint
 
 /** The solidus rules' options. */
 export type SlashSpaceCheckerOptions = {

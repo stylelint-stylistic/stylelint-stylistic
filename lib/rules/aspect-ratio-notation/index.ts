@@ -16,11 +16,12 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import type { NeighborRule } from "../../utils/neighborSettings/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isBoolean } from "../../utils/validateTypes/index.ts"
 import { type Whitespace, whitespaceAsked } from "../../utils/whitespaceAsked/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `aspect-ratio-notation`
 

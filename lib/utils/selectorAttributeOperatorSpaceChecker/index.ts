@@ -1,15 +1,14 @@
 import type { Node, Root } from "postcss"
 import type { Attribute } from "postcss-selector-parser"
 import styleSearch from "style-search"
-import stylelint, { type PostcssResult } from "stylelint"
+import type { PostcssResult } from "stylelint"
 
 import type { Syntax } from "../../syntaxes/index.ts"
 import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import { editKeepsEscapedCharacter } from "../editKeepsEscapedCharacter/index.ts"
 import { parseSelector } from "../parseSelector/index.ts"
+import { report } from "../report/index.ts"
 import { selectorSearchCopy } from "../selectorSearchCopy/index.ts"
-
-let { utils: { report } } = stylelint
 
 /**
  * Checks whitespace around attribute operators in selectors.

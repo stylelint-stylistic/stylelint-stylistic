@@ -14,6 +14,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { fixIndentation, lastLineIndentation, lastLineStart, replaceIndentation, writeIndentationBefore } from "../../utils/lineIndentation/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
+import { report } from "../../utils/report/index.ts"
 import { rootLevelIndents } from "../../utils/rootLevelIndents/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
@@ -23,7 +24,7 @@ import { statementString } from "../../utils/statementString/index.ts"
 import { isAtRule, isDeclaration, isRoot, isRule } from "../../utils/typeGuards/index.ts"
 import { assertString, isBoolean, isNumber, isString } from "../../utils/validateTypes/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `indentation`
 
@@ -137,7 +138,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let expectedOpeningBraceLevel = opensTheStylesheetsLine ? nodeLevel - embeddedLevel : nodeLevel
 			let expectedOpeningBraceIndentation = indentChar.repeat(expectedOpeningBraceLevel)
 
-			// A node built with no source has no place to report at, and is passed over as it was when its missing raw read as no run (1790090148)
+			// A node built with no source is passed over, as it was when its missing raw read as no run and before `report` could place a problem on one (1790090148)
 			if (node.source && (beforeBreaks || (isFirstChild && (!getDocument(parent) || (parent.raws.codeBefore && TRAILING_LINE_BREAK.test(parent.raws.codeBefore))))) && lastLineIndentation(before, beforeSpans) !== expectedOpeningBraceIndentation) {
 				report({
 					message: messages.expected,

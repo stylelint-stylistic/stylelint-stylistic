@@ -12,6 +12,9 @@ const ALLOWED = new Set([`syntaxes/index.ts`, `syntaxes/css/index.ts`])
 /** A line that opens a comment, or carries one on from the line above. */
 const OPENS_A_COMMENT = /^\s*(?:\/\/|\/\*|\*)/u
 
+/** Stylelint's own `report`, taken out of `stylelint.utils` or called through it. */
+const STYLELINT_REPORT = /\butils\s*:\s*\{[^}]*\breport\b|\breport\b[^{}=]*\}\s*=\s*stylelint\.utils\b|\butils\s*(?:\.\s*report\b|\[\s*["'`]report["'`]\s*\])/u
+
 /** Every import specifier of a module, relative or not. */
 const EVERY_IMPORT_PATH = /^import\b[^"\n]*"([^"]+)"/gmu
 
@@ -43,6 +46,18 @@ describe(`the core`, () => {
 
 				if (optional.some((name) => line.includes(`"${name}`) || line.includes(`\`${name}`))) offending.push(`${file} → ${line.trim()}`)
 			}
+		}
+
+		expect(offending).toEqual([])
+	})
+
+	it(`reports through lib/utils/report alone, which places a problem on a node another rule built with no source (1790090148)`, async () => {
+		let offending: string[] = []
+
+		for (let [file, text] of await modulesOf(`.`)) {
+			if (file.endsWith(`.test.ts`) || file === path.join(`utils`, `report`, `index.ts`)) continue
+
+			if (STYLELINT_REPORT.test(text)) offending.push(file)
 		}
 
 		expect(offending).toEqual([])

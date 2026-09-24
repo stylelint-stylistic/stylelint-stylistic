@@ -7,12 +7,13 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runBehind } from "../../utils/runBehind/index.ts"
 import { runInFront } from "../../utils/runInFront/index.ts"
 import { selectorSearchCopy } from "../../utils/selectorSearchCopy/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `selector-attribute-brackets-space-inside`
 

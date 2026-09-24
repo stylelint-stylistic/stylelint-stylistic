@@ -8,10 +8,11 @@ import { findAddressSpans } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { maskStrings } from "../../utils/maskStrings/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isNumber, isRegExp, isString } from "../../utils/validateTypes/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `max-line-length`
 

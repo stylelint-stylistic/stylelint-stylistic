@@ -9,9 +9,10 @@ import { findMediaFeatureNames } from "../../utils/findMediaFeatureNames/index.t
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isCustomMediaQuery } from "../../utils/isCustomMediaQuery/index.ts"
 import { recaseAscii } from "../../utils/recaseAscii/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `media-feature-name-case`
 

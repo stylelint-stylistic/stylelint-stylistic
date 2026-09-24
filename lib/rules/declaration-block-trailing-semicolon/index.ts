@@ -13,12 +13,13 @@ import { lastNodeHoldsTheBlockAfter } from "../../utils/lastNodeHoldsTheBlockAft
 import { nextNonCommentNode } from "../../utils/nextNonCommentNode/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { type TrailingCommentRun, trailingCommentRun } from "../../utils/trailingCommentRun/index.ts"
 import { isAtRule, isComment, isDeclaration, isRoot } from "../../utils/typeGuards/index.ts"
 import { keepsEscapedCharacter, readWhitespaceBeforeSemicolon, takingTheSemicolonKeepsEscapedCharacter, whitespaceBeforeSemicolon, writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `declaration-block-trailing-semicolon`
 
@@ -32,11 +33,11 @@ export let meta = {
 	fixable: true,
 }
 
-/** A raw behind the node closing a block, or the `raws.left` and text of a `//` comment holding code: owner, key, file offset, text, and a copy of the text as long as it with all but its code blanked. */
+/** A raw behind the node closing a block, or the `raws.left` and text of a `//` comment holding code: owner, key, file offset, which a raw of a node another rule built without a source has none of, text, and a copy of the text as long as it with all but its code blanked. */
 type HeldRaw = {
 	owner: Node,
 	key: string,
-	start: number,
+	start: number | undefined,
 	text: string,
 	code: string,
 }
@@ -47,15 +48,15 @@ type HeldRaw = {
  * Where a closing brace ends an at-rule, PostCSS ends it on the last of its parameter tokens that is not whitespace, and a bodiless at-rule with nothing but whitespace in front of that brace has no such token, so it is handed over with `source.end` unset ([#630](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/630)). The end is taken from the node's printed text there, since it holds that whitespace as its own trailing run wherever the `always` fix of a neighboring namespace has moved the run to.
  * @param node - The node whose source is read.
  * @param result - The Stylelint result, whose syntax prints a node the parser gave no end.
- * @returns The offsets.
+ * @returns The offsets, or nothing for a node another rule built without a source, which holds no place in the file (1790090148).
  */
 function offsetsOf (node: Node, result?: PostcssResult): {
 	start: number,
 	end: number,
-} {
+} | undefined {
 	let { source } = node
 
-	if (!source?.start) throw new Error(`The node must carry a source with a start`)
+	if (!source?.start) return undefined
 
 	let start = source.start.offset
 
@@ -69,16 +70,26 @@ function offsetsOf (node: Node, result?: PostcssResult): {
  *
  * A free semicolon behind the brace goes into `raws.ownSemicolon`, and PostCSS ends the container at its offset plus the raw's length, so the brace is twice that length back. An inline `style` root has no brace and ends where the root does.
  * @param container - The container the block belongs to.
- * @returns The offset in the file the block ends at.
+ * @returns The offset in the file the block ends at, or nothing for a block with no place in it.
  */
-function blockEnd (container: Container): number {
-	let { end } = offsetsOf(container)
+function blockEnd (container: Container): number | undefined {
+	let end = offsetsOf(container)?.end
 
-	if (isRoot(container)) return end
+	if (end === undefined || isRoot(container)) return end
 
 	let ownSemicolon = container.raws.ownSemicolon
 
 	return ownSemicolon ? end - (2 * ownSemicolon.length) : end - 1
+}
+
+/**
+ * Moves an offset by a length, where there is an offset to move.
+ * @param offset - The offset, or nothing where the node holds no place in the file.
+ * @param by - The length.
+ * @returns The offset moved, or nothing.
+ */
+function placedAt (offset: number | undefined, by: number): number | undefined {
+	return offset === undefined ? undefined : offset + by
 }
 
 /**
@@ -119,19 +130,19 @@ function rawsBehind (syntax: Syntax, node: ChildNode, result: PostcssResult, fla
 	for (let sibling of container.nodes.slice(container.index(node) + 1)) {
 		let text = sibling.raws.before
 
-		if (typeof text === `string`) raws.push({ owner: sibling, key: `before`, start: offsetsOf(sibling).start - text.length, text, code: codeOf(text) })
+		if (typeof text === `string`) raws.push({ owner: sibling, key: `before`, start: placedAt(offsetsOf(sibling)?.start, -text.length), text, code: codeOf(text) })
 
 		let code = isComment(sibling) ? syntax.inlineCommentCode(sibling) : null
 
 		// The break ends every comment it stands in, so the syntax's copy is the code whatever came in front
-		if (code !== null && isComment(sibling)) raws.push({ owner: sibling, key: `text`, start: offsetsOf(sibling).start + `//`.length, text: `${sibling.raws.left ?? ``}${sibling.text}`, code })
+		if (code !== null && isComment(sibling)) raws.push({ owner: sibling, key: `text`, start: placedAt(offsetsOf(sibling)?.start, `//`.length), text: `${sibling.raws.left ?? ``}${sibling.text}`, code })
 
 		if (inComment && INLINE_COMMENT_BREAK.test(nodeString(sibling, result))) inComment = false
 	}
 
 	let after = container.raws.after
 
-	if (typeof after === `string`) raws.push({ owner: container, key: `after`, start: blockEnd(container) - after.length, text: after, code: codeOf(after) })
+	if (typeof after === `string`) raws.push({ owner: container, key: `after`, start: placedAt(blockEnd(container), -after.length), text: after, code: codeOf(after) })
 
 	return raws
 }
@@ -171,13 +182,17 @@ function endsOnSemicolon (node: ChildNode, raws: HeldRaw[], flagIsCommentText: b
  * @returns The index from the node's start, or undefined without a semicolon.
  */
 function trailingSemicolonIndex (node: ChildNode, result: PostcssResult, raws: HeldRaw[], flagIsCommentText: boolean): number | undefined {
-	let { start, end } = offsetsOf(node, result)
+	let offsets = offsetsOf(node, result)
 	let holder = raws.findLast((raw) => spellsSemicolon(raw))
+	// A semicolon with no place in the file, or behind a node with none, is reported at the node's end, as a missing one is
+	let nodeEnd = nodeString(node, result).trim().length - 1
 
-	if (holder) return holder.start + holder.code.lastIndexOf(`;`) - start
+	if (holder) return offsets && holder.start !== undefined ? holder.start + holder.code.lastIndexOf(`;`) - offsets.start : nodeEnd
 
 	// The flag's semicolon is the first behind the node, so it is asked last; the node's span ends on it
-	return node.parent?.raws.semicolon && !flagIsCommentText ? end - 1 - start : undefined
+	if (!node.parent?.raws.semicolon || flagIsCommentText) return undefined
+
+	return offsets ? offsets.end - 1 - offsets.start : nodeEnd
 }
 
 /**

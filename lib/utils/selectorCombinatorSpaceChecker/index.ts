@@ -1,15 +1,14 @@
 import type { Node, Root } from "postcss"
 import type { Combinator, Node as SelectorParserNode } from "postcss-selector-parser"
-import stylelint, { type PostcssResult } from "stylelint"
+import type { PostcssResult } from "stylelint"
 
 import { WHITESPACE } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import { editKeepsEscapedCharacter } from "../editKeepsEscapedCharacter/index.ts"
 import { parseSelector } from "../parseSelector/index.ts"
+import { report } from "../report/index.ts"
 import { selectorSearchCopy } from "../selectorSearchCopy/index.ts"
-
-let { utils: { report } } = stylelint
 
 /** Checks whitespace at one location. */
 export type LocationChecker = (args: {

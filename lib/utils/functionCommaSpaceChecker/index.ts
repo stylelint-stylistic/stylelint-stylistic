@@ -1,6 +1,6 @@
 import type { Root } from "postcss"
 import valueParser, { type DivNode as ValueParserDivNode, type FunctionNode as ValueParserFunctionNode } from "postcss-value-parser"
-import stylelint, { type PostcssResult } from "stylelint"
+import type { PostcssResult } from "stylelint"
 
 import { LINE_BREAK } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
@@ -16,11 +16,10 @@ import { maskEscapes } from "../maskEscapes/index.ts"
 import { opensAnAddress } from "../opensAnAddress/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
 import { quotesItsAddress } from "../quotesItsAddress/index.ts"
+import { report } from "../report/index.ts"
 import { rereadsAnAddress } from "../rereadsAnAddress/index.ts"
 import { isValueFunction } from "../typeGuards/index.ts"
 import { commentsRemovedBefore, withoutComments } from "../withoutComments/index.ts"
-
-let { utils: { report } } = stylelint
 
 /** Checks the whitespace at one index of a source, counting the lines of another text. */
 export type LocationChecker = (args: {

@@ -6,9 +6,10 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
 import { recaseAscii } from "../../utils/recaseAscii/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `selector-pseudo-class-case`
 

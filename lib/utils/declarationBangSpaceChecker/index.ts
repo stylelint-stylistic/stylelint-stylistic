@@ -1,6 +1,6 @@
 import type { Declaration, Root } from "postcss"
 import styleSearch from "style-search"
-import stylelint, { type PostcssResult } from "stylelint"
+import type { PostcssResult } from "stylelint"
 
 import { TRAILING_BACKSLASHES } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
@@ -9,9 +9,8 @@ import { declarationString } from "../declarationString/index.ts"
 import { declarationValueIndex } from "../declarationValueIndex/index.ts"
 import { editKeepsEscapedCharacter } from "../editKeepsEscapedCharacter/index.ts"
 import { findAddressSpans, findCommentSpanAt } from "../findCommentSpans/index.ts"
+import { report } from "../report/index.ts"
 import { rereadsAnAddress } from "../rereadsAnAddress/index.ts"
-
-let { utils: { report } } = stylelint
 
 /** The declaration as printed, and the index of one bang in it. */
 export type BangTarget = {

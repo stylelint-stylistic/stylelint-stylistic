@@ -14,13 +14,14 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import type { NeighborRule } from "../../utils/neighborSettings/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
 import { isNumber } from "../../utils/validateTypes/index.ts"
 import { type Whitespace, whitespaceAsked } from "../../utils/whitespaceAsked/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `declaration-block-single-line-max-declarations`
 

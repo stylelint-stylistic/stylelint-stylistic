@@ -15,10 +15,11 @@ import { hasEmptyLine } from "../../utils/hasEmptyLine/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { removeEmptyLinesAfter } from "../../utils/removeEmptyLinesAfter/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { statementString } from "../../utils/statementString/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `block-closing-brace-empty-line-before`
 

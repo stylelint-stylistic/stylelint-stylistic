@@ -12,9 +12,10 @@ import { gridTableLines, type Span } from "../../utils/gridTableLines/index.ts"
 import { isWhitespace } from "../../utils/isWhitespace/index.ts"
 import { maskEscapes } from "../../utils/maskEscapes/index.ts"
 import { neighborCopies } from "../../utils/neighborSettings/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `no-multiple-whitespaces`
 

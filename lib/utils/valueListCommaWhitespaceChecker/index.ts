@@ -1,11 +1,10 @@
 import type { Declaration, Root } from "postcss"
 import styleSearch, { type StyleSearchMatch } from "style-search"
-import stylelint, { type PostcssResult } from "stylelint"
+import type { PostcssResult } from "stylelint"
 
 import type { Syntax } from "../../syntaxes/index.ts"
 import { declarationString } from "../declarationString/index.ts"
-
-let { utils: { report } } = stylelint
+import { report } from "../report/index.ts"
 
 export interface ValueListCommaWhitespaceCheckerOptions {
 

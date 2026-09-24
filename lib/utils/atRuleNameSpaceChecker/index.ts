@@ -1,9 +1,8 @@
 import type { AtRule, Root } from "postcss"
-import stylelint, { type PostcssResult } from "stylelint"
+import type { PostcssResult } from "stylelint"
 
 import type { Syntax } from "../../syntaxes/index.ts"
-
-let { utils: { report } } = stylelint
+import { report } from "../report/index.ts"
 
 /**
  * Checks whitespace around at-rule names.

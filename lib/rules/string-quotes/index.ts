@@ -13,10 +13,11 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { assertString, isBoolean } from "../../utils/validateTypes/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `string-quotes`
 

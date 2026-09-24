@@ -1,6 +1,6 @@
 import type { AtRule, Root } from "postcss"
 import styleSearch from "style-search"
-import stylelint, { type PostcssResult } from "stylelint"
+import type { PostcssResult } from "stylelint"
 
 import { MEDIA_QUERY_COMBINATORS } from "../../reference/mediaQueries.ts"
 import { LEADING_BLOCK_COMMENT, MEDIA_AT_RULE, OPENS_WITH_INLINE_COMMENT } from "../../regexps.ts"
@@ -8,10 +8,9 @@ import type { Syntax } from "../../syntaxes/index.ts"
 import { atRuleParamIndex } from "../atRuleParamIndex/index.ts"
 import { findFunctionArgumentSpans } from "../findFunctionArgumentSpans/index.ts"
 import { rawInFrontOfText } from "../rawInFrontOfText/index.ts"
+import { report } from "../report/index.ts"
 import { assertString } from "../validateTypes/index.ts"
 import type { WhitespaceChecker } from "../whitespaceChecker/index.ts"
-
-let { utils: { report } } = stylelint
 
 /** A comma of a media query list: its index in the params, and the index the check moves to past the comments trailing it on its line. */
 type MediaQueryListComma = {

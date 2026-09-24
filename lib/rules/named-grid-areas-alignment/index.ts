@@ -9,10 +9,11 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { type GridColumn, type GridTableLine, gridTableLines, spansLinesOutsideRows } from "../../utils/gridTableLines/index.ts"
 import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isBoolean, isNumber } from "../../utils/validateTypes/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `named-grid-areas-alignment`
 

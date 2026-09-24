@@ -8,10 +8,11 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isOnlyWhitespace } from "../../utils/isOnlyWhitespace/index.ts"
 import { maskStrings } from "../../utils/maskStrings/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `no-eol-whitespace`
 

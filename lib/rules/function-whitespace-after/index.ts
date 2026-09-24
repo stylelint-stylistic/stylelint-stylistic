@@ -9,9 +9,10 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { findFunctionArgumentSpans } from "../../utils/findFunctionArgumentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isWhitespace } from "../../utils/isWhitespace/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `function-whitespace-after`
 

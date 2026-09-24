@@ -6,11 +6,12 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { recaseAscii } from "../../utils/recaseAscii/index.ts"
+import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { isRule } from "../../utils/typeGuards/index.ts"
 import { isRegExp, isString } from "../../utils/validateTypes/index.ts"
 
-let { utils: { report, validateOptions } } = stylelint
+let { utils: { validateOptions } } = stylelint
 
 let shortName = `property-case`
 

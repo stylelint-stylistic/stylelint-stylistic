@@ -1,14 +1,13 @@
 import type { Root, Rule } from "postcss"
 import styleSearch from "style-search"
-import stylelint, { type PostcssResult } from "stylelint"
+import type { PostcssResult } from "stylelint"
 
 import type { SelectorCopies, Syntax } from "../../syntaxes/index.ts"
 import type { InlineComment } from "../../syntaxes/index.ts"
 import { rawInFrontOfText } from "../rawInFrontOfText/index.ts"
+import { report } from "../report/index.ts"
 import { selectorSearchCopy } from "../selectorSearchCopy/index.ts"
 import type { WhitespaceChecker } from "../whitespaceChecker/index.ts"
-
-let { utils: { report } } = stylelint
 
 export interface SelectorListCommaWhitespaceCheckerOptions {
 
