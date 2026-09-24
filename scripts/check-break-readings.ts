@@ -51,7 +51,7 @@ const DEBT: Record<string, string[]> = {
 		`if (nextChar === \`\\n\`) return`,
 		`if (source.slice(index, index + 2) === \`\\r\\n\`) return`,
 	],
-	"lib/rules/indentation/index.ts": [`target: \`\\n\`,`],
+	"lib/rules/indentation/lines.ts": [`target: \`\\n\`,`],
 	"lib/rules/max-empty-lines/index.ts": [`target: \`\\n\`,`],
 	"lib/preprocessor/findRewrittenCommentSpans/index.ts": [
 		`let lineBreakIndex = spelled.indexOf(\`\\n\`, spelledIndex)`,

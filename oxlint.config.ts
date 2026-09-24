@@ -21,36 +21,13 @@ export default defineConfig({
 	},
 	"overrides": [
 		{
-			// Three walkers written before the rule was on: the callback of `root.walk` and the one of `styleSearch` in `indentation`, and the callback of `parsedValue.walk` in the two `function-parentheses-*-inside` rules, where eight all but identical branches of `primary` stand one after another. The ceiling is what the worst of them counts today, so none of the three may grow, and it comes down as each is taken apart. The worst is `root.walk` in `indentation` since #280 took the ternaries out of `function-parentheses-space-inside`, whose walker set the ceiling before that.
+			// Walkers written before the rule was on: the callback of `parsedValue.walk` in the two `function-parentheses-*-inside` rules, where eight all but identical branches of `primary` stand one after another. The ceiling is what the worst of them counts today, the one of `function-parentheses-space-inside`, so neither may grow, and it comes down as each is taken apart; `indentation` left the list when its walker was taken apart into modules.
 			files: [
 				`lib/rules/function-parentheses-newline-inside/index.ts`,
 				`lib/rules/function-parentheses-space-inside/index.ts`,
-				`lib/rules/indentation/index.ts`,
 			],
 			rules: {
 				complexity: [`error`, 27],
-			},
-		},
-		{
-			// The one rule that is long in code rather than in prose. The ceiling is what it counts today, so it may not grow, and it comes down if the file is ever taken apart the way its tests already are.
-			files: [`lib/rules/indentation/index.ts`],
-			rules: {
-				"max-lines": [
-					`error`,
-					{
-						max: 405,
-						skipComments: true,
-						skipBlankLines: true,
-					},
-				],
-				"max-lines-per-function": [
-					`error`,
-					{
-						max: 214,
-						skipComments: true,
-						skipBlankLines: true,
-					},
-				],
 			},
 		},
 		{
