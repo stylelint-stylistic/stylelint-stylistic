@@ -133,6 +133,31 @@ testRule({
 			message: messages.expected(`2 tabs`),
 		},
 		{
+			// The params were trimmed as JavaScript reads whitespace, which took the line of a lone vertical tab off before it was measured (1789421331)
+			description: `a last params line holding a vertical tab alone, which is content to the tokenizer and no indentation`,
+			code: `a {\n\t@media print,\n\v {}\n}`,
+			fixed: `a {\n\t@media print,\n\t\t\v {}\n}`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`2 tabs`),
+		},
+		{
+			description: `the same line holding a no-break space alone`,
+			code: `a {\n\t@media print,\n  {}\n}`,
+			fixed: `a {\n\t@media print,\n\t\t  {}\n}`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`2 tabs`),
+		},
+		{
+			description: `the same vertical tab closing the params of an at-rule with neither block nor semicolon`,
+			code: `a {\n\t@include print,\n\v\n}`,
+			fixed: `a {\n\t@include print,\n\t\t\v\n}`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`2 tabs`),
+		},
+		{
 			description: `a closing brace inside a value behind a bare carriage return, which lowers its own line the same way`,
 			code: `a {\n\tb: fn({\n\t\tc: d\n\r\t\t});\n}`,
 			fixed: `a {\n\tb: fn({\n\t\tc: d\n\t});\n}`,

@@ -2,7 +2,7 @@ import type { AtRule, Declaration, Document, Node, Root, Rule, Source } from "po
 import styleSearch from "style-search"
 import stylelint from "stylelint"
 
-import { CRLF, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, TRAILING_LINE_BREAK } from "../../regexps.ts"
+import { CRLF, EVERY_LINE_INDENT_WITH_CONTENT, EVERY_LINE_SPACE_INDENT, EVERY_SPACE, EVERY_TAB, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_INDENT_AND_CONTENT, LEADING_SPACES_AND_TABS, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, OPENS_WITH_TAG, TRAILING_CSS_WHITESPACE, TRAILING_LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { atRuleHead } from "../../utils/atRuleHead/index.ts"
@@ -255,8 +255,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Positions are counted from the at-rule's start, filed into the raws by the head's length. Swallowed lines first, since a re-indented params line would move that boundary
 			if (swallowedLines) checkMultilineBit(swallowedLines, ruleLevel, atRule, ruleLevel, head.length)
 
-			// With nothing swallowed, `raws.between` is measured with the params, trimmed
-			if (!optionsMatches(secondaryOptions, `ignore`, `param`)) checkMultilineBit(`${head}${swallowedLines ? `` : atRule.raws.between || ``}`.trim(), paramLevel, atRule, ruleLevel)
+			// With nothing swallowed, `raws.between` is measured with the params, trimmed as the tokenizer reads whitespace, since a vertical tab or a no-break space alone on the last line is a word (1789421331)
+			if (!optionsMatches(secondaryOptions, `ignore`, `param`)) checkMultilineBit(`${head}${swallowedLines ? `` : atRule.raws.between || ``}`.replace(TRAILING_CSS_WHITESPACE, ``), paramLevel, atRule, ruleLevel)
 		}
 
 		/**

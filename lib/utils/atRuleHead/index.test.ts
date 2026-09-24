@@ -28,6 +28,11 @@ describe(`atRuleHead`, () => {
 		expect(check(`@media (a)\n\t// c\n{\n\tb { c: d; }\n}`, less)).toEqual({ head: `@media (a)\n\t// c`, swallowedLines: `` })
 	})
 
+	it(`a vertical tab and a no-break space closing the params, words to the tokenizer and kept in the head`, () => {
+		expect(check(`a {\n\t@include m,\n\v\n}`)).toEqual({ head: `@include m,\n\v`, swallowedLines: `` })
+		expect(check(`a {\n\t@include m,\n ;\n}`)).toEqual({ head: `@include m,\n `, swallowedLines: `` })
+	})
+
 	it(`a double slash that opens no comment in plain CSS, kept in the head`, () => {
 		expect(check(`a {\n\t@extend .b\n\t// c\n}`)).toEqual({ head: `@extend .b\n\t// c`, swallowedLines: `` })
 	})
