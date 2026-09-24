@@ -136,6 +136,11 @@ testRule({
 			code: `a {\n  b {\n    color: pink;\n  ;}\n}`,
 		},
 		{
+			// Behind a rule the stray semicolon and the run in front of it are that rule's own raw, and the brace stands on the semicolon's line
+			description: `a closing brace standing at its level behind a stray semicolon behind the block's last rule`,
+			code: `a {\n  b {}\n;}`,
+		},
+		{
 			description: `a universal selector on one line`,
 			code: `* { top: 0; }`,
 		},
@@ -309,6 +314,31 @@ testRule({
 			fixed: `a {\n  color: pink;\n;}`,
 			line: 3,
 			column: 4,
+			message: messages.expected(`0 spaces`),
+		},
+		{
+			// Behind a rule's brace the semicolon and the run in front of it are the rule's own raw, and the block's raw in front of the closing brace holds no break, so the brace's line went unmeasured
+			description: `the same closing brace behind a stray semicolon behind the block's last rule`,
+			code: `a {\n  b {}\n    ;}`,
+			fixed: `a {\n  b {}\n;}`,
+			line: 3,
+			column: 6,
+			message: messages.expected(`0 spaces`),
+		},
+		{
+			description: `the same closing brace inside a nested rule, with a second stray semicolon on the line`,
+			code: `a {\n  b {\n    c {}\n      ;;}\n}`,
+			fixed: `a {\n  b {\n    c {}\n  ;;}\n}`,
+			line: 4,
+			column: 9,
+			message: messages.expected(`2 spaces`),
+		},
+		{
+			description: `the same closing brace behind a carriage-return line break`,
+			code: `a {\n  b {}\r\n    ;}`,
+			fixed: `a {\n  b {}\r\n;}`,
+			line: 3,
+			column: 6,
 			message: messages.expected(`0 spaces`),
 		},
 		{
@@ -1109,6 +1139,15 @@ testRule({
 			line: 5,
 			column: 4,
 			message: messages.expected(`4 spaces`),
+		},
+		{
+			// The brace's line opens in the raw of the rule a stray semicolon stands behind
+			description: `a closing brace left at the left margin behind a stray semicolon on its line, the semicolon standing behind the closing brace of the block's last rule`,
+			code: `a {\n  b {}\n;}`,
+			fixed: `a {\n  b {}\n  ;}`,
+			line: 3,
+			column: 2,
+			message: messages.expected(`2 spaces`),
 		},
 	],
 })
