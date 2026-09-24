@@ -86,7 +86,7 @@ Indentation is stripped from every fixture, so multi-line `code` and `fixed` 
 
 ## Comments
 
-A comment is as short as it can be and still keep what a reader would otherwise get wrong: the mechanism, the reason, the issue number. One sentence that says it beats three that build up to it, so a second phrasing of the same idea, the history of how the code came to be, and an example of what a sentence already says are cut. The same holds for every small piece of prose, JSDoc, a changelog entry, a commit body and a test description alike, and it is no column limit: a sentence stays whole, however long, and a paragraph stays one line.
+A comment is as short as it can be and still keep what a reader would otherwise get wrong: the mechanism and the reason. It names no issue by its number, a reader of the code having no record at hand: the sentence says what the number stood for. A link to an upstream issue that settles what the code relies on is the exception. One sentence that says it beats three that build up to it, so a second phrasing of the same idea, the history of how the code came to be, and an example of what a sentence already says are cut. The same holds for every small piece of prose, JSDoc, a changelog entry, a commit body and a test description alike, and it is no column limit: a sentence stays whole, however long, and a paragraph stays one line.
 
 Nothing in a comment is ever wrapped by hand: a paragraph is one line, however long it turns out, and a blank comment line is all that separates one paragraph from the next. No column limit applies — where the text breaks is for the reader's window to decide, not for the author. Comments keep plain spaces, never the non-breaking ones of the section below.
 
