@@ -2,6 +2,7 @@ import type { AtRule, Declaration, Rule } from "postcss"
 import valueParser from "postcss-value-parser"
 import stylelint from "stylelint"
 
+import { CHARSET_AT_RULE_NAME } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex, atRuleParamPrefix } from "../../utils/atRuleParamIndex/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
@@ -13,7 +14,6 @@ import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStr
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { isAtRule } from "../../utils/typeGuards/index.ts"
 import { assertString, isBoolean } from "../../utils/validateTypes/index.ts"
 
 let { utils: { report, validateOptions } } = stylelint
@@ -146,7 +146,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		root.walk((node) => {
 			switch (node.type) {
 				case `atrule`:
-					checkDeclOrAtRule(node, syntax.read(node), atRuleParamIndex, atRuleParamPrefix)
+					// The params of a preprocessor's at-rule hold strings too, so the syntax is not asked; the one at-rule passed over is a `@charset`, whose quotes are the encoding declaration's and `at-charset-rule-no-invalid`'s to judge
+					if (!CHARSET_AT_RULE_NAME.test(node.name)) checkDeclOrAtRule(node, syntax.read(node), atRuleParamIndex, atRuleParamPrefix)
+
 					break
 				case `decl`:
 					checkDeclOrAtRule(node, syntax.read(node), declarationValueIndex, declarationValuePrefix)
@@ -275,13 +277,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// Blanked, since the value parser closes `/*/` on its own star and reads the rest as value nodes (#378)
 			let commentSpans = syntax.printedComments(node, value, result)
-
-			if (isAtRule(node) && node.name === `charset`) {
-				let hasValidQuotes = node.params.startsWith(`"`) && node.params.endsWith(`"`)
-
-				// Only a `double` option fixes it; `@charset` takes double quotes alone
-				if (hasValidQuotes || correctQuote === `'`) return
-			}
 
 			// The parentheses behind a `url` parted from its `(` are one token to the tokenizer, and the marks the value parser pairs across such a token's edge are masked, so that a fix rewrites the marks the tokenizer pairs (1789653630)
 			let addressTokens = syntax.addressTokenSpans(getPrefix(node), value, node, result)

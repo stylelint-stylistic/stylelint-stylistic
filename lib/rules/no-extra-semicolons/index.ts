@@ -2,6 +2,7 @@ import type { Node } from "postcss"
 import styleSearch from "style-search"
 import stylelint, { type FixCallback } from "stylelint"
 
+import { CHARSET_AT_RULE_NAME } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -103,7 +104,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		}
 
 		root.walk((node) => {
-			if (isAtRule(node) && !syntax.isStandardAtRule(node)) return
+			// A `@charset` is no at-rule to a reader of its own text, but the semicolons around it are the file's, and are read as around any node
+			if (isAtRule(node) && !syntax.isStandardAtRule(node) && !CHARSET_AT_RULE_NAME.test(node.name)) return
 
 			if (node.type === `rule` && !syntax.isStandardRule(node)) return
 
@@ -133,7 +135,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let rawAfterNode = node.raws.after
 
 				// A Less mixin last child puts its extra semicolon in `node.raws.after`; mixins are passed over
-				if (`last` in node && node.last && node.last.type === `atrule` && !syntax.isStandardAtRule(node.last)) return
+				if (`last` in node && node.last && node.last.type === `atrule` && !syntax.isStandardAtRule(node.last) && !CHARSET_AT_RULE_NAME.test(node.last.name)) return
 
 				let readsAsNoExtra = noExtraUnderComment(node, `after`)
 				let fixSemiIndices: number[] = []

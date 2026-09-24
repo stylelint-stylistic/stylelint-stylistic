@@ -1,3 +1,5 @@
+import { CHARSET_RULE_MESSAGE } from "../../utils/asksForTheCharsetRule/index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -25,15 +27,15 @@ testRule({
 		},
 		{
 			description: `a break between two at-rules`,
-			code: `@charset 'UTF-8';\na {}`,
+			code: `@layer base;\na {}`,
 		},
 		{
 			description: `a break in front of an at-rule that closes on nothing`,
-			code: `@charset 'UTF-8';\n@import 'x.css'`,
+			code: `@layer base;\n@import 'x.css'`,
 		},
 		{
 			description: `a break in front of an at-rule that closes on nothing, with a rule behind it`,
-			code: `@charset 'UTF-8';\n@import 'x.css'\na {}`,
+			code: `@layer base;\n@import 'x.css'\na {}`,
 		},
 		{
 			description: `a break behind a namespace declaration`,
@@ -66,7 +68,7 @@ testRule({
 		},
 		{
 			description: `a break in front of an at-rule carrying a block`,
-			code: `@charset 'UTF-8';\n@media {}`,
+			code: `@layer base;\n@media {}`,
 		},
 		{
 			autoStripIndent: false,
@@ -133,19 +135,36 @@ testRule({
 		},
 		{
 			description: `a space between two at-rules of the file's first line`,
-			code: `@import url("x.css"); @charset "UTF-8";`,
-			fixed: `@import url("x.css");\n @charset "UTF-8";`,
+			code: `@import url("x.css"); @layer base;`,
+			fixed: `@import url("x.css");\n @layer base;`,
 			line: 1,
 			column: 22,
 			message: messages.expectedAfter(),
 		},
 		{
 			description: `a space in front of a rule, whose own stray semicolon closes the file`,
-			code: `@charset "UTF-8"; a {};`,
-			fixed: `@charset "UTF-8";\n a {};`,
+			code: `@layer base; a {};`,
+			fixed: `@layer base;\n a {};`,
 			line: 1,
-			column: 18,
+			column: 13,
 			message: messages.expectedAfter(),
+		},
+		{
+			description: `a space behind the semicolon of a charset, which is no at-rule to the rules reading an at-rule's own text but whose semicolon is the file's, the file getting the warning asking for the core rule as well`,
+			code: `@charset "UTF-8"; a {}`,
+			fixed: `@charset "UTF-8";\n a {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 1,
+					message: `${CHARSET_RULE_MESSAGE} (${ruleName})`,
+				},
+				{
+					line: 1,
+					column: 18,
+					message: messages.expectedAfter(),
+				},
+			],
 		},
 		{
 			description: `a space between two nested at-rules`,

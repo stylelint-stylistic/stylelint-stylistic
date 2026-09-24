@@ -23,8 +23,8 @@ testRule({
 			`,
 		},
 		{
-			description: `the parameter of a charset rule, which this option asks for anyway`,
-			code: `@charset "utf-8"`,
+			description: `a single-quoted charset, which the rule passes over, and which Sass writes an encoding declaration of its own in place of`,
+			code: `@charset 'utf-8';`,
 		},
 		{
 			description: `a quotation mark inside an inline comment belongs to the text of that comment`,

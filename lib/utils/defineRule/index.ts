@@ -3,6 +3,7 @@ import stylelint, { type PostcssResult, type Rule, type RuleMessages, type RuleM
 
 import { namespaces, type Syntax } from "../../syntaxes/index.ts"
 import { addNamespace } from "../addNamespace/index.ts"
+import { asksForTheCharsetRule, CHARSET_RULE_MESSAGE } from "../asksForTheCharsetRule/index.ts"
 import { refuseContradictingSettings } from "../contradictingSettings/index.ts"
 import { copyReadingTheRoot } from "../copyReadingTheRoot/index.ts"
 import { deferCheck, deferFinalCheck, deferHeadCheck, defersToRunEnd, flushDeferredChecks, lastConfiguredPluginRule, linenessRank, registerPluginRule } from "../defersToRunEnd/index.ts"
@@ -42,6 +43,9 @@ export type RuleFactory<P, S, M extends RuleMessages> = (syntax: Syntax) => Rule
 /** The roots refused already: one warning per stylesheet, not one per rule. */
 let refused: WeakSet<Root> = new WeakSet()
 
+/** The roots asked for the `@charset` rule already: one warning per stylesheet, not one per rule. */
+let askedForTheCharsetRule: WeakSet<Root> = new WeakSet()
+
 /**
  * Turns a rule definition into a factory over a syntax, which names the rule under the syntax's namespace, closes the messages with that name, and refuses a root the syntax does not accept in front of the rule.
  * @param definition - The rule's definition.
@@ -56,8 +60,9 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 		registerPluginRule(ruleName)
 
 		let scopedMessages = ruleMessages(ruleName, messages) as M
-		let { refusal } = ruleMessages(ruleName, {
+		let { refusal, charset } = ruleMessages(ruleName, {
 			refusal: (names: string) => (names ? `The "${ruleName}" rule does not read a stylesheet parsed with this syntax; the ${names} rules do` : `The "${ruleName}" rule does not read a stylesheet parsed with this syntax`),
+			charset: CHARSET_RULE_MESSAGE,
 		})
 
 		/**
@@ -79,6 +84,12 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 				if (syntax.accepts(root, result)) {
 					// A root is read by one copy of a rule, the other copies of it yielding without a word
 					if (copyReadingTheRoot(shortName, root, result) !== ruleName) return
+
+					// No rule of the plugin judges the spelling of a `@charset`, and the core rule that does is not on: one warning per file, in front of the first rule reading it
+					if (!askedForTheCharsetRule.has(root) && asksForTheCharsetRule(root, result, syntax)) {
+						askedForTheCharsetRule.add(root)
+						report({ message: charset, node: root, index: 0, endIndex: 0, result, ruleName })
+					}
 
 					syntax.restore(root, result)
 					check(root, result)

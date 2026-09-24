@@ -1,3 +1,5 @@
+import { CHARSET_RULE_MESSAGE } from "../../utils/asksForTheCharsetRule/index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -50,10 +52,6 @@ testRule({
 		{
 			description: `double quotes inside a comment, which the rule does not read`,
 			code: `a { /* "horse" */ }`,
-		},
-		{
-			description: `the parameter of a charset rule, which the specification asks to be double-quoted`,
-			code: `@charset "utf-8"`,
 		},
 		{
 			description: `an attribute selector the parser cannot read, standing beside one it can`,
@@ -347,11 +345,12 @@ testRule({
 			message: messages.expected(`single`),
 		},
 		{
-			skip: true,
-			description: `should be covered by a new at-charset-rule-no-invalid rule
-			see stylelint/stylelint#7492`,
-			code: `@charset 'utf-8'`,
-			fixed: `@charset "utf-8"`,
+			description: `a charset in every spelling, which the rule passes over, the file getting the one warning asking for the core rule instead`,
+			code: `@charset "utf-8";\n@CHARSET 'utf-8';\n@charset  "utf-8" ;`,
+			fixed: `@charset "utf-8";\n@CHARSET 'utf-8';\n@charset  "utf-8" ;`,
+			line: 1,
+			column: 1,
+			message: `${CHARSET_RULE_MESSAGE} (${ruleName})`,
 		},
 	],
 })
@@ -404,10 +403,6 @@ testRule({
 		{
 			description: `single quotes inside a comment, which the rule does not read`,
 			code: `a { /* 'horse' */ }`,
-		},
-		{
-			description: `the parameter of a charset rule, which this option asks for anyway`,
-			code: `@charset "utf-8"`,
 		},
 	],
 
@@ -487,14 +482,6 @@ testRule({
 			fixed: `@import "base.css"`,
 			line: 1,
 			column: 9,
-			message: messages.expected(`double`),
-		},
-		{
-			description: `a single-quoted charset parameter`,
-			code: `@charset 'utf-8'`,
-			fixed: `@charset "utf-8"`,
-			line: 1,
-			column: 10,
 			message: messages.expected(`double`),
 		},
 		{

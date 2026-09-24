@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest"
 
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
+import { CHARSET_RULE_MESSAGE } from "../asksForTheCharsetRule/index.ts"
 import type { RuleCheck } from "../ruleCheck/index.ts"
 
 import { defineMessages, defineRule, type RuleScope } from "./index.ts"
@@ -34,19 +35,25 @@ let createRule = defineRule({ shortName: `property-found`, meta: { url: `https:/
 
 let core: Syntax = { ...css }
 let refusing: Syntax = { ...css, namespace: `never`, accepts: () => false }
+let namespaced: Syntax = { ...css, namespace: `scss` }
+
+const CHARSET_WARNING = { rule: `@stylistic/property-found`, text: `${CHARSET_RULE_MESSAGE} (@stylistic/property-found)` }
 
 /**
  * Lints a text under the rules, each registered as a plugin of its own and configured to look for `color`.
  * @param rules - The rules, as the factory builds them.
  * @param code - The text.
+ * @param others - Settings of other rules the configuration lists, the core's among them.
+ * @param [customSyntax] - The syntax the text is parsed with.
  * @returns The warnings, by rule and text.
  */
-async function lint (rules: ReturnType<typeof createRule>[], code: string): Promise<{ rule: string, text: string }[]> {
+async function lint (rules: ReturnType<typeof createRule>[], code: string, others: Record<string, unknown> = {}, customSyntax?: string): Promise<{ rule: string, text: string }[]> {
 	let { results } = await stylelint.lint({
 		code,
 		config: {
 			plugins: rules.map((built) => stylelint.createPlugin(built.ruleName, built)),
-			rules: Object.fromEntries(rules.map((built) => [built.ruleName, `color`])),
+			rules: { ...Object.fromEntries(rules.map((built) => [built.ruleName, `color`])), ...others },
+			...(customSyntax && { customSyntax }),
 		} as unknown as Config,
 	})
 
@@ -102,5 +109,37 @@ describe(`a rule built for a syntax`, () => {
 		check(root, {} as unknown as PostcssResult)
 
 		expect(seen).toEqual([root])
+	})
+})
+
+describe(`a stylesheet holding a charset`, () => {
+	it(`gets one warning asking for the core rule, in front of the first rule's own, however many rules are configured`, async () => {
+		let second = defineRule({ shortName: `property-found-too`, meta: { url: `https://example.test/property-found-too` }, messages: MESSAGES, rule })
+
+		await expect(lint([createRule(core), second(core)], `@charset "utf-8";\na { color: red; }`)).resolves.toEqual([
+			CHARSET_WARNING,
+			{ rule: `@stylistic/property-found`, text: `Found "color" (@stylistic/property-found)` },
+			{ rule: `@stylistic/property-found-too`, text: `Found "color" (@stylistic/property-found-too)` },
+		])
+	})
+
+	it(`gets the warning whatever the spelling and wherever the charset stands, since the core rule reports those too`, async () => {
+		await expect(lint([createRule(core)], `a { color: red; @CHARSET 'utf-8'; }`)).resolves.toEqual([CHARSET_WARNING, { rule: `@stylistic/property-found`, text: `Found "color" (@stylistic/property-found)` }])
+	})
+
+	it(`gets no such warning with the core rule on`, async () => {
+		await expect(lint([createRule(core)], `@charset "utf-8";\na { color: red; }`, { "at-charset-rule-no-invalid": true })).resolves.toEqual([{ rule: `@stylistic/property-found`, text: `Found "color" (@stylistic/property-found)` }])
+	})
+
+	it(`gets none without a charset`, async () => {
+		await expect(lint([createRule(core)], `@import "x.css";\na { color: red; }`)).resolves.toEqual([{ rule: `@stylistic/property-found`, text: `Found "color" (@stylistic/property-found)` }])
+	})
+
+	it(`gets none under a namespace, whose compiler stands between the file and its output`, async () => {
+		await expect(lint([createRule(namespaced)], `@charset "utf-8";\na { color: red; }`)).resolves.toEqual([{ rule: `@stylistic/scss/property-found`, text: `Found "color" (@stylistic/scss/property-found)` }])
+	})
+
+	it(`gets none in a block of a page, whose root is not the file's`, async () => {
+		await expect(lint([createRule(core)], `<style>@charset "utf-8";\na { color: red; }</style>`, {}, `postcss-html`)).resolves.toEqual([{ rule: `@stylistic/property-found`, text: `Found "color" (@stylistic/property-found)` }])
 	})
 })

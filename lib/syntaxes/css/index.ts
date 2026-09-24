@@ -16,6 +16,7 @@ import { writesIntoInlineComment } from "../../preprocessor/writesIntoInlineComm
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { type CommentSpan, CSS_ADDRESS_AT_RULES, findCommentSpans } from "../../utils/findCommentSpans/index.ts"
 import { findInterpolationSpans } from "../../utils/findInterpolationSpans/index.ts"
+import { isStandardSyntaxAtRule } from "../../utils/isStandardSyntaxAtRule/index.ts"
 import { isStandardSyntaxCombinator } from "../../utils/isStandardSyntaxCombinator/index.ts"
 import { isStandardSyntaxDeclaration } from "../../utils/isStandardSyntaxDeclaration/index.ts"
 import { isStandardSyntaxFunction } from "../../utils/isStandardSyntaxFunction/index.ts"
@@ -45,8 +46,7 @@ export let css: Syntax = {
 	embedding: () => ({ indent: ``, multiline: false }),
 	valueEmbedsHostCode: () => false,
 	hostCodeSpans: () => [],
-	// What the core once turned away was a preprocessor's, and such a file no longer reaches these rules
-	isStandardAtRule: () => true,
+	isStandardAtRule: isStandardSyntaxAtRule,
 	isStandardRule: isStandardSyntaxRule,
 	isStandardDeclaration: isStandardSyntaxDeclaration,
 	isStandardProperty: isStandardSyntaxProperty,

@@ -1,3 +1,5 @@
+import { CHARSET_RULE_MESSAGE } from "../../utils/asksForTheCharsetRule/index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -9,7 +11,7 @@ testRule({
 	accept: [
 		{
 			description: `a name already in lower case`,
-			code: `@charset 'UTF-8';`,
+			code: `@layer base;`,
 		},
 		{
 			description: `an at-rule closing on nothing, neither a semicolon nor a block`,
@@ -73,27 +75,35 @@ testRule({
 	reject: [
 		{
 			description: `a capital first letter`,
-			code: `@Charset 'UTF-8';`,
-			fixed: `@charset 'UTF-8';`,
+			code: `@Layer base;`,
+			fixed: `@layer base;`,
 			line: 1,
 			column: 1,
-			message: messages.expected(`Charset`, `charset`),
+			message: messages.expected(`Layer`, `layer`),
 		},
 		{
 			description: `alternating case`,
-			code: `@cHaRsEt 'UTF-8';`,
-			fixed: `@charset 'UTF-8';`,
+			code: `@lAyEr base;`,
+			fixed: `@layer base;`,
 			line: 1,
 			column: 1,
-			message: messages.expected(`cHaRsEt`, `charset`),
+			message: messages.expected(`lAyEr`, `layer`),
 		},
 		{
 			description: `the whole name in upper case`,
-			code: `@CHARSET 'UTF-8';`,
-			fixed: `@charset 'UTF-8';`,
+			code: `@LAYER base;`,
+			fixed: `@layer base;`,
 			line: 1,
 			column: 1,
-			message: messages.expected(`CHARSET`, `charset`),
+			message: messages.expected(`LAYER`, `layer`),
+		},
+		{
+			description: `a charset in every case of its name, which the rule passes over, the file getting the one warning asking for the core rule instead`,
+			code: `@Charset "utf-8";\n@CHARSET "utf-8";\n@charset 'utf-8';`,
+			fixed: `@Charset "utf-8";\n@CHARSET "utf-8";\n@charset 'utf-8';`,
+			line: 1,
+			column: 1,
+			message: `${CHARSET_RULE_MESSAGE} (${ruleName})`,
 		},
 		{
 			description: `a capital first letter on an at-rule carrying a block`,
@@ -197,14 +207,9 @@ testRule({
 	config: [`upper`],
 
 	accept: [
-		// See #703
-		{
-			description: `an encoding declaration, whose lower-case name the specification asks for`,
-			code: `@charset "UTF-8";`,
-		},
 		{
 			description: `a name already in upper case`,
-			code: `@CHARSET 'UTF-8';`,
+			code: `@LAYER base;`,
 		},
 		{
 			description: `an at-rule closing on nothing, neither a semicolon nor a block`,
@@ -268,36 +273,27 @@ testRule({
 	reject: [
 		{
 			description: `a capital first letter`,
-			code: `@Charset 'UTF-8';`,
-			fixed: `@CHARSET 'UTF-8';`,
+			code: `@Layer base;`,
+			fixed: `@LAYER base;`,
 			line: 1,
 			column: 1,
-			message: messages.expected(`Charset`, `CHARSET`),
+			message: messages.expected(`Layer`, `LAYER`),
 		},
 		{
 			description: `alternating case`,
-			code: `@cHaRsEt 'UTF-8';`,
-			fixed: `@CHARSET 'UTF-8';`,
+			code: `@lAyEr base;`,
+			fixed: `@LAYER base;`,
 			line: 1,
 			column: 1,
-			message: messages.expected(`cHaRsEt`, `CHARSET`),
+			message: messages.expected(`lAyEr`, `LAYER`),
 		},
 		{
-			description: `the whole name in lower case, on a charset rule whose single quotes declare no encoding`,
-			code: `@charset 'UTF-8';`,
-			fixed: `@CHARSET 'UTF-8';`,
+			description: `the whole name in lower case`,
+			code: `@layer base;`,
+			fixed: `@LAYER base;`,
 			line: 1,
 			column: 1,
-			message: messages.expected(`charset`, `CHARSET`),
-		},
-		// See #703
-		{
-			description: `the same name on a charset rule spelled with two spaces, which declares none either`,
-			code: `@charset  "UTF-8";`,
-			fixed: `@CHARSET  "UTF-8";`,
-			line: 1,
-			column: 1,
-			message: messages.expected(`charset`, `CHARSET`),
+			message: messages.expected(`layer`, `LAYER`),
 		},
 		{
 			description: `a capital first letter on an at-rule carrying a block`,

@@ -7,24 +7,29 @@ import { pick } from "../../../vitest.helpers.ts"
 import { isStandardPreprocessorAtRule, isStandardPreprocessorComment, isStandardPreprocessorDeclaration, isStandardPreprocessorRule, isStandardPreprocessorSelector, isStandardPreprocessorValue } from "./index.ts"
 
 describe(`isStandardPreprocessorAtRule`, () => {
+	it(`a charset, which the core passes over in every spelling`, () => {
+		expect(isStandardPreprocessorAtRule(atRule(`@charset "UTF-8";`))).toBe(false)
+		expect(isStandardPreprocessorAtRule(atRule(`@CHARSET 'UTF-8';`))).toBe(false)
+	})
+
 	it(`non nested at-rules without quotes`, () => {
-		expect(isStandardPreprocessorAtRule(atRule(`@charset UTF-8;`))).toBe(true)
+		expect(isStandardPreprocessorAtRule(atRule(`@namespace svg url(http://www.w3.org/2000/svg);`))).toBe(true)
 	})
 
 	it(`non nested at-rules with \`'\` quotes`, () => {
-		expect(isStandardPreprocessorAtRule(atRule(`@charset 'UTF-8';`))).toBe(true)
+		expect(isStandardPreprocessorAtRule(atRule(`@import 'x.css';`))).toBe(true)
 	})
 
 	it(`non nested at-rules with \`"\` quotes`, () => {
-		expect(isStandardPreprocessorAtRule(atRule(`@charset "UTF-8";`))).toBe(true)
+		expect(isStandardPreprocessorAtRule(atRule(`@import "x.css";`))).toBe(true)
 	})
 
 	it(`non nested at-rules with \`'\` quotes and without space after name`, () => {
-		expect(isStandardPreprocessorAtRule(atRule(`@charset'UTF-8';`))).toBe(true)
+		expect(isStandardPreprocessorAtRule(atRule(`@import'x.css';`))).toBe(true)
 	})
 
 	it(`non nested at-rules with \`"\` quotes and without space after name`, () => {
-		expect(isStandardPreprocessorAtRule(atRule(`@charset"UTF-8";`))).toBe(true)
+		expect(isStandardPreprocessorAtRule(atRule(`@import"x.css";`))).toBe(true)
 	})
 
 	it(`non nested at-rules with function and without space after name`, () => {

@@ -1,3 +1,5 @@
+import { CHARSET_RULE_MESSAGE } from "../../utils/asksForTheCharsetRule/index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -7,22 +9,13 @@ testRule({
 	config: [`always`],
 
 	accept: [
-		// See #703
-		{
-			description: `an encoding declaration, whose single space the specification asks for`,
-			code: `@charset "UTF-8";`,
-		},
-		{
-			description: `an encoding declaration behind which the stylesheet goes on`,
-			code: `@charset "UTF-8";\na { color: pink; }`,
-		},
 		{
 			description: `a line feed behind the name`,
-			code: `@charset\n"UTF-8";`,
+			code: `@layer\nbase;`,
 		},
 		{
 			description: `a carriage return and a line feed behind the name`,
-			code: `@charset\r\n"UTF-8";`,
+			code: `@layer\r\nbase;`,
 		},
 		{
 			description: `a quoted URL on the line behind the name`,
@@ -130,11 +123,11 @@ testRule({
 		},
 		{
 			description: `an empty line behind the name, which is a break all the same`,
-			code: `@charset\n\n"UTF-8";`,
+			code: `@layer\n\nbase;`,
 		},
 		{
 			description: `an empty line spelled with carriage returns`,
-			code: `@charset\r\n\r\n"UTF-8";`,
+			code: `@layer\r\n\r\nbase;`,
 		},
 		{
 			description: `an empty line behind the name of a range-syntax query`,
@@ -168,55 +161,13 @@ testRule({
 			column: 7,
 			message: messages.expectedAfter(`@import`),
 		},
-		// See #708
 		{
-			description: `a charset rule with nothing where the break belongs, which at-rule-name-space-after turns into the declaration`,
-			code: `@charset"UTF-8";`,
-			fixed: `@charset"UTF-8";`,
+			description: `a charset in every spelling, which the rule passes over, the file getting the one warning asking for the core rule instead`,
+			code: `@charset "utf-8";\n@CHARSET 'utf-8';\n@charset  "utf-8" ;\n@charset\n"utf-8";`,
+			fixed: `@charset "utf-8";\n@CHARSET 'utf-8';\n@charset  "utf-8" ;\n@charset\n"utf-8";`,
 			line: 1,
-			column: 8,
-			message: messages.expectedAfter(`@charset`),
-		},
-		{
-			description: `a charset rule with two spaces where the break belongs, which at-rule-name-space-after turns into the declaration`,
-			code: `@charset  "UTF-8";`,
-			fixed: `@charset  "UTF-8";`,
-			line: 1,
-			column: 8,
-			message: messages.expectedAfter(`@charset`),
-		},
-		{
-			description: `a charset rule whose name is spelled in upper case, which at-rule-name-case turns into the declaration`,
-			code: `@CHARSET "UTF-8";`,
-			fixed: `@CHARSET "UTF-8";`,
-			line: 1,
-			column: 8,
-			message: messages.expectedAfter(`@CHARSET`),
-		},
-		{
-			description: `a charset rule whose label is in single quotes, which string-quotes turns into the declaration`,
-			code: `@charset 'UTF-8';`,
-			fixed: `@charset 'UTF-8';`,
-			line: 1,
-			column: 8,
-			message: messages.expectedAfter(`@charset`),
-		},
-		{
-			autoStripIndent: false,
-			description: `a charset rule behind an empty first line, which no-empty-first-line turns into the declaration`,
-			code: `\n@charset "UTF-8";`,
-			fixed: `\n@charset "UTF-8";`,
-			line: 2,
-			column: 8,
-			message: messages.expectedAfter(`@charset`),
-		},
-		{
-			description: `a charset rule nested in a rule, which declares nothing and is left unwritten all the same`,
-			code: `a { @charset "UTF-8"; }`,
-			fixed: `a { @charset "UTF-8"; }`,
-			line: 1,
-			column: 12,
-			message: messages.expectedAfter(`@charset`),
+			column: 1,
+			message: `${CHARSET_RULE_MESSAGE} (${ruleName})`,
 		},
 		// See #696
 		{
@@ -357,31 +308,27 @@ testRule({
 	accept: [
 		{
 			description: `a single-line at-rule, whose params this option passes over`,
-			code: `@charset "UTF-8";`,
+			code: `@layer base;`,
 		},
 		{
 			description: `a break in front of the semicolon, which stands outside the params`,
-			code: `@charset "UTF-8"\n;`,
+			code: `@layer base\n;`,
 		},
 		{
 			description: `two spaces where the break would go, on params of a single line`,
-			code: `@charset  "UTF-8";`,
+			code: `@layer  base;`,
 		},
 		{
 			description: `an at-rule whose block alone holds a break, the name and the params standing on one line`,
 			code: `@media  (min-width:1px) {\na {}\n}`,
 		},
 		{
-			description: `params abutting the name, on a single line`,
-			code: `@charset"UTF-8";`,
-		},
-		{
 			description: `a break behind the name, which this option asks for only of multi-line params`,
-			code: `@charset\n"UTF-8";`,
+			code: `@layer\nbase;`,
 		},
 		{
 			description: `the same break spelled with a carriage return`,
-			code: `@charset\r\n"UTF-8";`,
+			code: `@layer\r\nbase;`,
 		},
 		{
 			description: `a quoted URL abutting the name`,
@@ -493,11 +440,11 @@ testRule({
 		},
 		{
 			description: `an empty line behind the name`,
-			code: `@charset\n\n"UTF-8";`,
+			code: `@layer\n\nbase;`,
 		},
 		{
 			description: `an empty line spelled with carriage returns`,
-			code: `@charset\r\n\r\n"UTF-8";`,
+			code: `@layer\r\n\r\nbase;`,
 		},
 		{
 			description: `an empty line behind the name of a single-line query`,
@@ -506,15 +453,6 @@ testRule({
 	],
 
 	reject: [
-		// See #708
-		{
-			description: `a charset rule whose params run over two lines, which this option writes no break into either`,
-			code: `@charset "UTF-8"\nscreen;`,
-			fixed: `@charset "UTF-8"\nscreen;`,
-			line: 1,
-			column: 8,
-			message: messages.expectedAfter(`@charset`),
-		},
 		// See #696
 		{
 			description: `a block comment behind the name carrying the head's only break, the params themselves standing on one line`,
