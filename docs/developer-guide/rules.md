@@ -47,7 +47,7 @@ You should use:
 You should:
 
 - vary column and line positions across your tests
-- include at least one test that has 2 warnings
+- include at least one test that has 2 warnings
 - test non-standard syntax in the `isStandardSyntax*` utilities, not in the rule itself
 
 #### Commonly overlooked edge-cases

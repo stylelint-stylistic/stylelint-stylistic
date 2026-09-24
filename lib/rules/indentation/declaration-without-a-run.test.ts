@@ -47,28 +47,6 @@ testRule({
 })
 
 describe(`the run PostCSS prints in front of a declaration the file spells none in front of`, () => {
-	/**
-	 * Fixes a stylesheet under the syntax that takes the raws off, then reads the file the fix left as a plain stylesheet, which is what the next run of the linter has in front of it.
-	 *
-	 * The testing library reads that file under the same syntax instead, which takes the raws off a second time; no run of the linter ever meets such a node twice, since only a rule building one puts it there, so these cases are written against the linter itself.
-	 * @param code - The stylesheet.
-	 * @param primary - The primary option.
-	 * @returns What the check said, the file the fix left, and how much the rule has to say about that file.
-	 */
-	async function fixAndRead (code: string, primary: string | number): Promise<{ warnings: string[], fixed: string, left: number }> {
-		let config = { plugins, rules: { [ruleName]: primary } }
-		let read = await stylelint.lint({ code, customSyntax: declarationsWithoutARun, config })
-		let run = await stylelint.lint({ code, customSyntax: declarationsWithoutARun, config, fix: true })
-		let fixed = run.code ?? code
-		let again = await stylelint.lint({ code: fixed, config })
-
-		return {
-			warnings: pick(read.results).warnings.map((warning) => `${warning.line}:${warning.column} ${warning.text}`),
-			fixed,
-			left: pick(again.results).warnings.length,
-		}
-	}
-
 	// See #694
 	it(`is the break with the four spaces PostCSS prints where the neighbours carry nothing, which tab refuses, and the fix writes the tab`, async () => {
 		expect(await fixAndRead(`a {\ncolor: pink;\ntop: 0;\n}`, `tab`)).toEqual({
@@ -87,3 +65,25 @@ describe(`the run PostCSS prints in front of a declaration the file spells none 
 		})
 	})
 })
+
+/**
+ * Fixes a stylesheet under the syntax that takes the raws off, then reads the file the fix left as a plain stylesheet, which is what the next run of the linter has in front of it.
+ *
+ * The testing library reads that file under the same syntax instead, which takes the raws off a second time; no run of the linter ever meets such a node twice, since only a rule building one puts it there, so these cases are written against the linter itself.
+ * @param code - The stylesheet.
+ * @param primary - The primary option.
+ * @returns What the check said, the file the fix left, and how much the rule has to say about that file.
+ */
+async function fixAndRead (code: string, primary: string | number): Promise<{ warnings: string[], fixed: string, left: number }> {
+	let config = { plugins, rules: { [ruleName]: primary } }
+	let read = await stylelint.lint({ code, customSyntax: declarationsWithoutARun, config })
+	let run = await stylelint.lint({ code, customSyntax: declarationsWithoutARun, config, fix: true })
+	let fixed = run.code ?? code
+	let again = await stylelint.lint({ code: fixed, config })
+
+	return {
+		warnings: pick(read.results).warnings.map((warning) => `${warning.line}:${warning.column} ${warning.text}`),
+		fixed,
+		left: pick(again.results).warnings.length,
+	}
+}

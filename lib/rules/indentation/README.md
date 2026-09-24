@@ -155,7 +155,7 @@ That outermost level is the level of the node itself wherever the text is m
 
 By default, the indent level of the CSS code block in non-CSS-like files is determined by the shortest indent of the lines standing at the block's own level — the lines its statements open on and, unless `indentClosingBrace` is on, the lines their blocks close on — and, where the block has no such line of its own, by the indent of the line of the tag it opens on; a line's indent is counted in levels of the width the primary option names, rounded to the nearest level, or, under `"tab"`, in a width read off the page's lines. The setting `baseIndentLevel` allows you to define a relative indent level based on CSS code block opening or closing line.
 
-For example, with `[ 2, { baseIndentLevel: 1 } ]`, CSS should be indented 1 levels higher than `<style>` tag:
+For example, with `[ 2, { baseIndentLevel: 1 } ]`, CSS should be indented 1 levels higher than `<style>` tag:
 
 ```html
 <!doctype html>

@@ -12,7 +12,7 @@ The pattern this exists for: **the code is clean from round one and every fi
 Before writing a sentence that names a behaviour, an option or a number, run it. If it was not run, either run it or leave it out.
 
 - **A number reached by arithmetic on a measured one is not measured.** "312 × 3, because the corpus tripled" gave 936; the run gave 312.
-- **A pair of numbers must be in one unit.** "378 warnings gone, 108 new" counted rows on one side and warnings on the other; in warnings it was 1 404 against 324.
+- **A pair of numbers must be in one unit.** "378 warnings gone, 108 new" counted rows on one side and warnings on the other; in warnings it was 1 404 against 324.
 - **A control is a claim of the same kind.** A fixture named as the control of a probe turned out to be a second face of the bug, measured and mislabelled in one line.
 - **A count goes stale the moment a later round adds cases.** "Eight accept cases" was right when written and wrong two edits later. Recount after *every* edit, not once.
 - **An enumeration is a claim of completeness**, and a closed list of characters, positions or shapes is where a round finds its finding. A class of two was named as one shape; twenty-one characters behaving alike were listed as five.
