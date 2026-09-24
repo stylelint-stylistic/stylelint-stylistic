@@ -1,7 +1,7 @@
 import type { AtRule } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { LEADING_IMPORTANT_FLAG_LINE, TRAILING_WHITESPACE } from "../../regexps.ts"
+import { LEADING_IMPORTANT_FLAG_LINE, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blankComments } from "../blankComments/index.ts"
 import { hasBlock } from "../hasBlock/index.ts"
@@ -23,11 +23,11 @@ export function atRuleHead (syntax: Syntax, atRule: AtRule, result: PostcssResul
 	let afterName = atRule.raws.afterName || ``
 	let params = syntax.read(atRule)
 	let rest = `${afterName}${params}`
-	let codeLength = hasBlock(atRule) ? rest.length : blankComments(rest, syntax.printedComments(atRule, params, result).map(({ start, end }) => ({ start: start + afterName.length, end: end + afterName.length }))).replace(TRAILING_WHITESPACE, ``).length
+	let codeLength = hasBlock(atRule) ? rest.length : blankComments(rest, syntax.printedComments(atRule, params, result).map(({ start, end }) => ({ start: start + afterName.length, end: end + afterName.length }))).replace(TRAILING_CSS_WHITESPACE, ``).length
 	let swallowedRaws = !hasBlock(atRule) && isLastNodeWithoutSemicolon(atRule) ? `${atRule.raws.between || ``}${`${atRule.raws.important ?? ``}${atRule.parent && isRoot(atRule.parent) ? atRule.parent.raws.after || `` : ``}`.replace(LEADING_IMPORTANT_FLAG_LINE, (line) => ` `.repeat(line.length))}` : ``
 
 	return {
 		head: `@${atRule.name}${rest.slice(0, codeLength)}`,
-		swallowedLines: `${rest.slice(codeLength)}${swallowedRaws}`.replace(TRAILING_WHITESPACE, ``),
+		swallowedLines: `${rest.slice(codeLength)}${swallowedRaws}`.replace(TRAILING_CSS_WHITESPACE, ``),
 	}
 }
