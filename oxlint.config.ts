@@ -21,16 +21,6 @@ export default defineConfig({
 	},
 	"overrides": [
 		{
-			// Walkers written before the rule was on: the callback of `parsedValue.walk` in the two `function-parentheses-*-inside` rules, where eight all but identical branches of `primary` stand one after another. The ceiling is what the worst of them counts today, the one of `function-parentheses-space-inside`, so neither may grow, and it comes down as each is taken apart; `indentation` left the list when its walker was taken apart into modules.
-			files: [
-				`lib/rules/function-parentheses-newline-inside/index.ts`,
-				`lib/rules/function-parentheses-space-inside/index.ts`,
-			],
-			rules: {
-				complexity: [`error`, 27],
-			},
-		},
-		{
 			// Five walkers that were long before the bar was set. The ceiling is what the longest of them counts today.
 			files: [
 				`lib/rules/function-parentheses-space-inside/index.ts`,

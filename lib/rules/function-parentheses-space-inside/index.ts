@@ -111,6 +111,22 @@ function closingEdit (valueNode: FunctionNode, text: string): Edit {
 /** `always` a single space inside the parentheses, `never` no whitespace; the `-single-line` forms in a single-line function only. */
 export type PrimaryOption = `always` | `never` | `always-single-line` | `never-single-line`
 
+/** The whitespace each option asks for on either side. */
+const ASKED: Record<PrimaryOption, string> = {
+	"always": ` `,
+	"never": ``,
+	"always-single-line": ` `,
+	"never-single-line": ``,
+}
+
+/** The message each option reports a side with, the `(` first. */
+const SIDE_MESSAGES: Record<PrimaryOption, [keyof typeof MESSAGES, keyof typeof MESSAGES]> = {
+	"always": [`expectedOpening`, `expectedClosing`],
+	"never": [`rejectedOpening`, `rejectedClosing`],
+	"always-single-line": [`expectedOpeningSingleLine`, `expectedClosingSingleLine`],
+	"never-single-line": [`rejectedOpeningSingleLine`, `rejectedClosingSingleLine`],
+}
+
 /**
  * Requires a single space or disallows whitespace inside the parentheses of functions.
  * @param scope - What the namespace hands the rule.
@@ -164,7 +180,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (valueNode.nodes.length === 0) return
 
 				let functionString = valueParser.stringify(valueNode)
-				let isSingleLine = isSingleLineString(functionString)
+				// The `-single-line` forms ask nothing of a function broken over lines
+				let asked = primary.endsWith(`-single-line`) && !isSingleLineString(functionString) ? undefined : ASKED[primary]
+				let [openingMessage, closingMessage] = SIDE_MESSAGES[primary]
 
 				// Check opening ...
 				let openingIndex = valueNode.sourceIndex + valueNode.value.length + 1
@@ -178,24 +196,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					return (!reading.tokenizes || editsOpenNoComment(declValue, [openingEdit(functionNode, write)], reading)) && !editsRereadAnAddress(declValue, openingIndex - 1, [openingEdit(functionNode, write)], reading)
 				}
 
-				if (primary === `always` && valueNode.before !== ` `) {
-					fix = fixBehind(() => isOpeningFixable(` `), () => openingEdit(valueNode, ` `))
-					complain(messages.expectedOpening, openingIndex)
-				}
-
-				if (primary === `never` && valueNode.before !== ``) {
-					fix = fixBehind(() => isOpeningFixable(``), () => openingEdit(valueNode, ``))
-					complain(messages.rejectedOpening, openingIndex)
-				}
-
-				if (isSingleLine && primary === `always-single-line` && valueNode.before !== ` `) {
-					fix = fixBehind(() => isOpeningFixable(` `), () => openingEdit(valueNode, ` `))
-					complain(messages.expectedOpeningSingleLine, openingIndex)
-				}
-
-				if (isSingleLine && primary === `never-single-line` && valueNode.before !== ``) {
-					fix = fixBehind(() => isOpeningFixable(``), () => openingEdit(valueNode, ``))
-					complain(messages.rejectedOpeningSingleLine, openingIndex)
+				if (asked !== undefined && valueNode.before !== asked) {
+					fix = fixBehind(() => isOpeningFixable(asked), () => openingEdit(valueNode, asked))
+					complain(messages[openingMessage], openingIndex)
 				}
 
 				// Check closing ...
@@ -210,24 +213,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					return !movesClosingIntoComment(syntax, declValue, functionNode, reading)
 				}
 
-				if (primary === `always` && valueNode.after !== ` `) {
-					fix = fixBehind(isClosingFixable, () => closingEdit(valueNode, ` `))
-					complain(messages.expectedClosing, closingIndex)
-				}
-
-				if (primary === `never` && valueNode.after !== ``) {
-					fix = fixBehind(isClosingFixable, () => closingEdit(valueNode, ``))
-					complain(messages.rejectedClosing, closingIndex)
-				}
-
-				if (isSingleLine && primary === `always-single-line` && valueNode.after !== ` `) {
-					fix = fixBehind(isClosingFixable, () => closingEdit(valueNode, ` `))
-					complain(messages.expectedClosingSingleLine, closingIndex)
-				}
-
-				if (isSingleLine && primary === `never-single-line` && valueNode.after !== ``) {
-					fix = fixBehind(isClosingFixable, () => closingEdit(valueNode, ``))
-					complain(messages.rejectedClosingSingleLine, closingIndex)
+				if (asked !== undefined && valueNode.after !== asked) {
+					fix = fixBehind(isClosingFixable, () => closingEdit(valueNode, asked))
+					complain(messages[closingMessage], closingIndex)
 				}
 			})
 
