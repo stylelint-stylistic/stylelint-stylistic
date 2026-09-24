@@ -118,6 +118,10 @@ testRule({
 			code: `a {\n  color: pink;\n  ; top: 1px;\n}`,
 		},
 		{
+			description: `a rule behind a free semicolon on its line, the semicolon standing behind the closing brace of the rule in front`,
+			code: `a {\n  b {}\n  ; c {}\n}`,
+		},
+		{
 			// The stray semicolon stands on the brace's line and is no part of the run the brace's level is read off
 			description: `a closing brace standing at its level behind a stray semicolon on its line`,
 			code: `a {\n  color: pink;\n;}`,
@@ -244,6 +248,23 @@ testRule({
 			line: 3,
 			column: 7,
 			message: messages.expected(`2 spaces`),
+		},
+		{
+			// Behind a rule's brace the semicolon and the run in front of it are the rule's own raw, and the next node's raw holds no break, so the line went unmeasured (1789424028)
+			description: `a rule behind a free semicolon on a line indented a level too deep, the semicolon standing behind the closing brace of the rule in front`,
+			code: `a {\n  b {}\n    ; c {}\n}`,
+			fixed: `a {\n  b {}\n  ; c {}\n}`,
+			line: 3,
+			column: 7,
+			message: messages.expected(`2 spaces`),
+		},
+		{
+			description: `the same line at the root, the node standing right behind the semicolon`,
+			code: `a {}\n  ;b {}`,
+			fixed: `a {}\n;b {}`,
+			line: 2,
+			column: 4,
+			message: messages.expected(`0 spaces`),
 		},
 		{
 			// The run in front of the stray semicolon is the brace's indentation, and the fix writes it alone

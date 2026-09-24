@@ -17,7 +17,7 @@ import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { rootLevelIndents } from "../../utils/rootLevelIndents/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
-import { semicolonLineChecker } from "../../utils/semicolonLineChecker/index.ts"
+import { ownSemicolonLineChecker, semicolonLineChecker } from "../../utils/semicolonLineChecker/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { statementString } from "../../utils/statementString/index.ts"
 import { isAtRule, isDeclaration, isRoot, isRule } from "../../utils/typeGuards/index.ts"
@@ -151,6 +151,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					},
 				})
 			}
+
+			// A node behind a free semicolon behind a rule's brace, whose line opens in the rule's raw
+			ownSemicolonLineChecker({ node, syntax, result, checkedRuleName: ruleName, message: messages.expected, expectedIndentation: expectedOpeningBraceIndentation, expectation: legibleExpectation(expectedOpeningBraceLevel - hostLevel) })
 
 			// `indentClosingBrace` puts the brace a level deeper
 			let closingBraceLevel = indentClosingBrace ? nodeLevel + 1 : nodeLevel
