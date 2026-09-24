@@ -1,7 +1,7 @@
 import type { ChildNode } from "postcss"
 import stylelint from "stylelint"
 
-import { LINE_BREAK } from "../../regexps.ts"
+import { LEADING_CSS_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -94,17 +94,21 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						ruleName,
 						...(isFixable && {
 							fix: (): void => {
+								// A free semicolon may stand in this raw with the whitespace around it, and the check reads it as the character behind the run, so the write spells the leading run alone
+								let standing = runInFrontOf(nodeToCheck)
+								let run = (standing.match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0]
+								let rest = standing.slice(run.length)
+
 								if (primary.startsWith(`always`)) {
 									// Trim up to the break already there, and add one only where none is; a node carrying no raw is written the run PostCSS would have printed in front of it, trimmed or opened as the option asks (#693)
-									let standing = runInFrontOf(nodeToCheck)
-									let index = standing.search(LINE_BREAK)
+									let index = run.search(LINE_BREAK)
 
-									nodeToCheck.raws.before = index >= 0 ? standing.slice(index) : getLineBreak(root, result) + standing
+									nodeToCheck.raws.before = (index >= 0 ? run.slice(index) : getLineBreak(root, result) + run) + rest
 
 									return
 								}
 
-								if (primary === `never-multi-line`) nodeToCheck.raws.before = ``
+								if (primary === `never-multi-line`) nodeToCheck.raws.before = rest
 							},
 						}),
 					})

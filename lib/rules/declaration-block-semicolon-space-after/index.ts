@@ -1,5 +1,6 @@
 import stylelint from "stylelint"
 
+import { LEADING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -83,13 +84,17 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						result,
 						ruleName,
 						fix: (): void => {
+							// A free semicolon may stand in this raw with the whitespace around it, and the check reads it as the character behind the run, so the write spells the leading run alone
+							let standing = runInFrontOf(nextDecl)
+							let rest = standing.slice((standing.match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0].length)
+
 							if (primary.startsWith(`always`)) {
-								nextDecl.raws.before = ` `
+								nextDecl.raws.before = ` ${rest}`
 
 								return
 							}
 
-							if (primary.startsWith(`never`)) nextDecl.raws.before = ``
+							if (primary.startsWith(`never`)) nextDecl.raws.before = rest
 						},
 					})
 				},
