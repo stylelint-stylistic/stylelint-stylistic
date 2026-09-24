@@ -61,6 +61,9 @@ export const EVERY_JS_LINE_TERMINATOR = /\r\n|[\n\r\u2028\u2029]/gu
 /** Every quotation mark, either kind. */
 export const EVERY_QUOTATION_MARK = /["']/gu
 
+/** A byte order mark opening a text, which PostCSS prints back in front of a root whose input carried one. */
+export const LEADING_BYTE_ORDER_MARK = /^\uFEFF/u
+
 /** Every parenthesis, either kind. */
 export const EVERY_PARENTHESIS = /[()]/gu
 

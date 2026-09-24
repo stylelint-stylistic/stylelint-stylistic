@@ -1,12 +1,14 @@
+import { type Node, type Root, type Stringifier, stringify as postcssStringify } from "postcss"
 import styleSearch, { type StyleSearchMatch } from "style-search"
-import stylelint from "stylelint"
+import stylelint, { type PostcssResult } from "stylelint"
 
-import { LEADING_WHITESPACE_RUN } from "../../regexps.ts"
+import { LEADING_BYTE_ORDER_MARK, LEADING_WHITESPACE_RUN } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findAddressSpans } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { maskStrings } from "../../utils/maskStrings/index.ts"
+import { nodeSyntax } from "../../utils/nodeSyntax/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -49,6 +51,44 @@ function measureLine (lineText: string, excludedSpans: Array<[number, number]>, 
 	}
 
 	return column - excluded
+}
+
+/** A stylesheet as the run leaves it: its text, and where each node opens in it, in print order. */
+type PrintedStylesheet = {
+	text: string,
+	starts: Array<[number, Node]>,
+}
+
+/**
+ * Prints a stylesheet as the run leaves it: the root printed by its syntax, less what the print adds around the stylesheet's own text — the byte order mark PostCSS writes back from the input's flag, and the host code a styled template's root prints around itself — so a root nothing wrote reads as its input does. Where each node opens is kept, so a line can be reported on the node it stands in.
+ * @param root - The stylesheet.
+ * @param result - The Stylelint result, which names the syntax.
+ * @returns The text and the starts.
+ */
+function printStylesheet (root: Root, result: PostcssResult): PrintedStylesheet {
+	let syntax = nodeSyntax(root, result)
+	let print: Stringifier = syntax?.stringify ?? postcssStringify
+	let text = ``
+	let starts: Array<[number, Node]> = []
+	let seen: Set<Node> = new Set()
+
+	print(root, (part, node, type) => {
+		if (node && node !== root && type !== `end` && !seen.has(node)) {
+			seen.add(node)
+			starts.push([text.length, node])
+		}
+
+		text += part
+	})
+
+	let { codeBefore, codeAfter } = root.raws
+	let prefix = LEADING_BYTE_ORDER_MARK.test(text) ? 1 : 0
+
+	if (codeBefore && text.startsWith(codeBefore, prefix)) prefix += codeBefore.length
+
+	let end = codeAfter && text.endsWith(codeAfter) ? text.length - codeAfter.length : text.length
+
+	return { text: text.slice(prefix, end), starts: starts.map(([start, node]) => [start - prefix, node]) }
 }
 
 /** The most characters allowed on a line. */
@@ -104,7 +144,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let ignoreNonComments = optionsMatches(secondaryOptions, `ignore`, `non-comments`)
 		let ignoreComments = optionsMatches(secondaryOptions, `ignore`, `comments`)
 		let tabSize = secondaryOptions?.tabSize ?? 1
-		let rootString = root.source.input.css
+		// The text the run leaves, printed as the syntax writes it: under `--fix` the file is written from the tree, so a line a fix lengthened or a node another rule built with no raw stands only there. The rule takes the last turn of the plugin's rules, so every write of theirs is in it; the rules of the core and of other plugins take theirs later
+		let { text: rootString, starts } = printStylesheet(root, result)
+		let anchor = 0
 		// The spans left out of the count, in the source order the line queue reads them in; the comment-finding walk alone can say where an address closes and whether the text around it is code
 		let skippedSubStrings: Array<[number, number]> = findAddressSpans(rootString, syntax.inlineComments(root, result), syntax.addressAtRules()).map(({ start, end }) => [start, end])
 		let skippedSubStringsIndex = 0
@@ -120,14 +162,20 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		 * @param index - The index reported.
 		 */
 		function complain (index: number): void {
+			// On the last node the print opened in front of the line's end, at the offset from that node's start, which Stylelint counts in the input from the node's place there: a file nothing wrote is reported where it always was, and under `--fix` the line stands where its node stood, so a `stylelint-disable` comment the file holds covers it. The lines are read in order, so the anchor only moves on
+			while (anchor + 1 < starts.length && (starts[anchor + 1]?.[0] ?? Infinity) <= index) anchor += 1
+
+			let held = starts[anchor]
+			let [start, node]: [number, Node] = held && held[0] <= index ? held : [0, root]
+
 			report({
-				index,
-				endIndex: index,
+				index: index - start,
+				endIndex: index - start,
 				result,
 				ruleName,
 				message: messages.expected,
 				messageArgs: [primary],
-				node: root,
+				node,
 			})
 		}
 
@@ -205,6 +253,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 	}
 }
 
-export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
+// Reads the text the plugin's writers leave, so it takes the last turn of the plugin's rules
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule, defersToRunEnd: true })
 
 export let { ruleName, messages } = createRule(css)
