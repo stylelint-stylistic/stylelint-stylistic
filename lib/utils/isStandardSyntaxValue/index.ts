@@ -18,7 +18,7 @@ export function isStandardSyntaxValue (value: string): boolean {
 	// SCSS or Less interpolation
 	if (hasInterpolation(normalizedValue)) return false
 
-	// A WebExtension `__MSG_…__` keyword (stylelint/stylelint#4707)
+	// A WebExtension `__MSG_…__` keyword
 	if (EXTENSION_MESSAGE.test(value)) return false
 
 	return true

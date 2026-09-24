@@ -1,7 +1,7 @@
 /**
  * The word a node leaves on the tokenizer's stack for the `(` of the node behind it, over what those parentheses hold.
  *
- * Written for 1789910265: the stack runs through the whole file and an at-rule's name pushes no word, so a `(` of its params pops what a node in front left there and holds the parentheses an address's token. `string-quotes` read the spans from the node's own start alone, saw no token and rewrote both marks of a pair the tokenizer pairs across the token's edge, and the stylesheet stopped parsing. The texts in front that leave no `url` on the stack are the control set, expected to move nowhere, and so are the writers of an at-rule's parentheses, which read no span of an address.
+ * The stack runs through the whole file and an at-rule's name pushes no word, so a `(` of its params pops what a node in front left there and holds the parentheses an address's token. `string-quotes` read the spans from the node's own start alone, saw no token and rewrote both marks of a pair the tokenizer pairs across the token's edge, and the stylesheet stopped parsing. The texts in front that leave no `url` on the stack are the control set, expected to move nowhere, and so are the writers of an at-rule's parentheses, which read no span of an address.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"

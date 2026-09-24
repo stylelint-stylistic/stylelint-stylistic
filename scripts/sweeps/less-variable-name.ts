@@ -1,7 +1,7 @@
 /**
  * A Less variable whose colon carries no whitespace in front of it, so that the parser welds the first word of the value into the at-rule's name.
  *
- * Written for [#649](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/649). What decides where the value is split is the character standing right behind the colon and the one that ends the at-word, so the heads cross a dimension with an address, an escaped string, a call, a reference, a second colon, a bang flag and a unit spelling a sharp s, whose recase moved the boundary the write splits at until #653 left it as it stands. The raw behind the head is spelled with nothing, a space, a tab, a break and a comment, and the tails are what the params then hold.
+ * What decides where the value is split is the character standing right behind the colon and the one that ends the at-word, so the heads cross a dimension with an address, an escaped string, a call, a reference, a second colon, a bang flag and a unit spelling a sharp s, whose recase moved the boundary the write splits at while recasing reached past ASCII. The raw behind the head is spelled with nothing, a space, a tab, a break and a comment, and the tails are what the params then hold.
  *
  * The spellings with whitespace in front of the colon are the control of the split: the parser keeps the whole value in the params there, and the branch must read them exactly as the base does. So are the at-rules that are no variable — a feature query, a media query, an import, a mixin call, and the page at-rule with a block and without one, which tells a node the reading answers no for from one it answers yes for.
  *
@@ -25,7 +25,7 @@ const HEADS = {
 	call: `e("10PX")`,
 	reference: `@a`,
 	keyword: `pink`,
-	// Its upper case is one character longer, which moved where the head ends until #653
+	// Its upper case is one character longer, which moved where the head ends while recasing reached past ASCII
 	sharpS: `10A\u00DF`,
 }
 

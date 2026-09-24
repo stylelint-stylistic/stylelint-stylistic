@@ -31,7 +31,7 @@ function textAWriteFollows (node: Node): string {
 /**
  * Asks whether a fix writing behind a node lands inside a `//` comment, which only a break closes.
  *
- * The caller names the node alone; picking a text is how [#211](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/211) came about. A fix over trailing whitespace spells no run, and that whitespace is room; a fix elsewhere spells the run between node and write, none of it room: a semicolon in front of what `never-multi-line` removes, or what a closing brace follows once a block's final raw is rewritten.
+ * The caller names the node alone; a caller picking the text picks it wrong. A fix over trailing whitespace spells no run, and that whitespace is room; a fix elsewhere spells the run between node and write, none of it room: a semicolon in front of what `never-multi-line` removes, or what a closing brace follows once a block's final raw is rewritten.
  * @param node - The node the fix writes behind.
  * @param result - Holds the syntax.
  * @param spelledBetween - The run between node and write after the fix, if not trailing whitespace.

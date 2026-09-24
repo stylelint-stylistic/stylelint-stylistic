@@ -1,7 +1,7 @@
 /**
  * A run of empty lines standing inside the text of a node, under `max-empty-lines`.
  *
- * Written for [#582](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/582): such a run is a rule's selector, an at-rule's parameters, a declaration's value or a comment's own text — the node's own text and no raw between the parts of the statement, which is [#581](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/581)'s. The fix wrote none of them, so `--fix` reported the run as fixed and handed the file back holding it.
+ * Such a run is a rule's selector, an at-rule's parameters, a declaration's value or a comment's own text — the node's own text and no raw between the parts of the statement, which `statement-part-run` holds. The fix wrote none of them, so `--fix` reported the run as fixed and handed the file back holding it.
  *
  * The axes: where the run stands; its length; what stands beside it in the text, a comment or a string holding a run of its own among it; and the break spelling, the fix running a pass per spelling. The controls are the run inside a string, which is text of the string and a line of no stylesheet, the run in front of a node, which the base wrote, and the run inside a comment, which the option ignoring comments keeps every fix off.
  */

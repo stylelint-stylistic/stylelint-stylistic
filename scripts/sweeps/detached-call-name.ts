@@ -1,7 +1,7 @@
 /**
  * The shape of a Less detached ruleset call, `@dr()`, under names Less calls a ruleset by and names it reads as an at-rule in front of the rest.
  *
- * Written for [#724](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/724): the namespace read the second kind as a call, and `declaration-block-trailing-semicolon` under `never` took away the semicolon Less closes it on. The name is a word, the control, or holds a dollar sign, an exclamation mark, an asterisk, a middle dot or a letter outside ASCII; the call stands bare, closed by a semicolon, behind a `//` comment with the semicolon on the next line, the same with a semicolon in the comment's text, and with whitespace in front of its semicolon; it ends the block or a declaration follows. Every rule under every primary option.
+ * The namespace read the second kind as a call, and `declaration-block-trailing-semicolon` under `never` took away the semicolon Less closes it on. The name is a word, the control, or holds a dollar sign, an exclamation mark, an asterisk, a middle dot or a letter outside ASCII; the call stands bare, closed by a semicolon, behind a `//` comment with the semicolon on the next line, the same with a semicolon in the comment's text, and with whitespace in front of its semicolon; it ends the block or a declaration follows. Every rule under every primary option.
  */
 
 import { multiply } from "../harness/matrix.ts"

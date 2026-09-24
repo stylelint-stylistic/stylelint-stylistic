@@ -1,9 +1,9 @@
 /**
  * A bare carriage return or a form feed where a line's indentation stands, in front of every kind of node, on a line inside a value, a selector or params, and beside the empty line of a Windows-broken file.
  *
- * Written for [#452](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/452): both are whitespace to PostCSS's tokenizer and no line to its counter, so `indentation` reported them, its writers, looking for spaces and tabs, wrote nothing, and `--fix` discarded the warning as fixed. The controls hold a line feed, a Windows pair or a space.
+ * Both are whitespace to PostCSS's tokenizer and no line to its counter, so `indentation` reported them, its writers, looking for spaces and tabs, wrote nothing, and `--fix` discarded the warning as fixed. The controls hold a line feed, a Windows pair or a space.
  *
- * Widened for [#513](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/513) to the lines inside a value, a selector and params, where the line's head was read as spaces and tabs and a line opened by either went unmeasured; a vertical tab, content to the tokenizer, stands where the run would, so its line is measured with none.
+ * Widened to the lines inside a value, a selector and params, where the line's head was read as spaces and tabs and a line opened by either went unmeasured; a vertical tab, content to the tokenizer, stands where the run would, so its line is measured with none.
  */
 
 import { multiply } from "../harness/matrix.ts"

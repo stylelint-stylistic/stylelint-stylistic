@@ -113,7 +113,7 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 
 				let last = lastConfiguredPluginRule(result)
 
-				// Deferred (#355 lineness, #353 every line) only where a flush is sure to come: under a configuration the plugin cannot read the check runs where it stands. Its place is the plugin's to decide, not the configuration's
+				// Deferred (to read lineness, or every line) only where a flush is sure to come: under a configuration the plugin cannot read the check runs where it stands. Its place is the plugin's to decide, not the configuration's
 				if (readsEveryLine && last !== undefined) {
 					if (checksAheadOfLineness) deferHeadCheck(root, rank, () => guarded(root, result))
 

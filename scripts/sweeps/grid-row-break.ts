@@ -1,7 +1,7 @@
 /**
  * A line break in the value of `grid-template-areas`: inside a row, outside every row, and both.
  *
- * Written for [#402](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/402): `named-grid-areas-alignment` padded a row's cells by whether the whole value spans lines, and every row fix collapses the breaks inside a row, so a value whose only break stood in a row flipped between runs. A bare carriage return and a form feed are no line to PostCSS, so they are the control for the reading of a break. The indented layout's break is `raws.between`'s, so it must move wherever the inline one does.
+ * `named-grid-areas-alignment` padded a row's cells by whether the whole value spans lines, and every row fix collapses the breaks inside a row, so a value whose only break stood in a row flipped between runs. A bare carriage return and a form feed are no line to PostCSS, so they are the control for the reading of a break. The indented layout's break is `raws.between`'s, so it must move wherever the inline one does.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"

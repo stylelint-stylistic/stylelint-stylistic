@@ -1,7 +1,7 @@
 /**
  * An interpolation of every spelling and text, welded to every head and tail a value word carries, under the two recasing rules.
  *
- * Written for [#298](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/298), where `unit-case` recased the name inside `10px#{$a != $b}`, which the parser had cut into words. The controls open no interpolation in plain CSS, since a corpus of interpolations alone is blind to a branch that stops checking where there is none.
+ * `unit-case` recased the name inside `10px#{$a != $b}`, which the parser had cut into words. The controls open no interpolation in plain CSS, since a corpus of interpolations alone is blind to a branch that stops checking where there is none.
  */
 
 import { multiply, place } from "../harness/matrix.ts"

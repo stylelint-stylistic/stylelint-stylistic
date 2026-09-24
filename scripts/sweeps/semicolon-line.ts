@@ -1,7 +1,7 @@
 /**
  * The run in front of a statement's semicolon, where it holds a break and so opens a line for the semicolon alone.
  *
- * Written for [#569](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/569): `indentation` measured that line nowhere, since `checkMultilineBit` passes over a line without content and `checkAtRuleParams` trims the run off the params. The runs short of a break are the controls, as are the vertical tab and the no-break space, which are words to the tokenizer and so stand on a line of the value or the params.
+ * `indentation` measured that line nowhere, since `checkMultilineBit` passes over a line without content and `checkAtRuleParams` trims the run off the params. The runs short of a break are the controls, as are the vertical tab and the no-break space, which are words to the tokenizer and so stand on a line of the value or the params.
  */
 
 import { multiply } from "../harness/matrix.ts"

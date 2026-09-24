@@ -1,7 +1,7 @@
 /**
  * A block holding nothing but comments, under every primary of the four rules that read the run in front of its closing brace.
  *
- * Written for [#676](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/676): such a block has no non-comment node, so the run `block-opening-brace-newline-after` reads is the block's own trailing raw, which the three `block-closing-brace-*-before` rules write. The oracle corpora carry no such block, and a sweep runs one rule at a time, so the three neighbors are listed to show that none of their rows moves.
+ * Such a block has no non-comment node, so the run `block-opening-brace-newline-after` reads is the block's own trailing raw, which the three `block-closing-brace-*-before` rules write. The oracle corpora carry no such block, and a sweep runs one rule at a time, so the three neighbors are listed to show that none of their rows moves.
  *
  * The axes: the run behind the opening brace, since a break there is carried past the comments onto the brace; what the block holds, an inline comment among it, which only the preprocessors read as a comment; and the run in front of the closing brace, a stray semicolon in it being the character the four rules read differently from one another.
  */

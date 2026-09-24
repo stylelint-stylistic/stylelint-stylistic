@@ -1,7 +1,7 @@
 /**
  * The run between a declaration's property and its value, where it holds a break and so opens a line of the declaration short of the value.
  *
- * Written for [#635](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/635): `indentation` measured a declaration's lines only where its value held a break, and PostCSS files the break in front of the value into `raws.between`. The runs holding no break outside a comment are the controls, as is a value holding a break of its own, whose lines were measured already.
+ * `indentation` measured a declaration's lines only where its value held a break, and PostCSS files the break in front of the value into `raws.between`. The runs holding no break outside a comment are the controls, as is a value holding a break of its own, whose lines were measured already.
  */
 
 import { multiply } from "../harness/matrix.ts"

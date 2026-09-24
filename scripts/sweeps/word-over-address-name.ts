@@ -1,7 +1,7 @@
 /**
  * A word standing between the name of a bare address and its parentheses, with parentheses of its own that pop it off the tokenizer's stack, in the places the rules below write in front of the name at.
  *
- * Written for 1789646980: the tokenizer pushes every word it reads and pops one at each `(`, so a word popped by parentheses of its own is gone from the next `(`, which then pops the name and opens a url token there. A rule parting the name from the sign in front of it switches that reading, and where the parentheses hold a string covering their `)` the output stops parsing. The middles holding no word, and the ones whose word no parentheses pop, are the control set, expected to move nowhere; `plainAddress` is the content whose two readings agree, expected to keep its fix. `selector-list-comma-space-after` and `-newline-after` ask the utility as well and are left out: a bare address in a selector list reaches no fix under any of these places.
+ * The tokenizer pushes every word it reads and pops one at each `(`, so a word popped by parentheses of its own is gone from the next `(`, which then pops the name and opens a url token there. A rule parting the name from the sign in front of it switches that reading, and where the parentheses hold a string covering their `)` the output stops parsing. The middles holding no word, and the ones whose word no parentheses pop, are the control set, expected to move nowhere; `plainAddress` is the content whose two readings agree, expected to keep its fix. `selector-list-comma-space-after` and `-newline-after` ask the utility as well and are left out: a bare address in a selector list reaches no fix under any of these places.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"

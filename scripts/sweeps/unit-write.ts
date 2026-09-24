@@ -1,7 +1,7 @@
 /**
  * Words holding a multiplication, built of every pair and triple of the parts a value word can carry, in every environment, under the two recasing rules.
  *
- * Written for [#413](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/413) and [#425](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/425), where `unit-case` decided a word's write by a second reading of the whole of it: a refused word kept its warning through every `--fix`, and an accepted one had its variables and exponents recased too.
+ * `unit-case` decided a word's write by a second reading of the whole of it: a refused word kept its warning through every `--fix`, and an accepted one had its variables and exponents recased too.
  */
 
 import { multiply, place } from "../harness/matrix.ts"

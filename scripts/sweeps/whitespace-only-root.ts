@@ -1,7 +1,7 @@
 /**
  * A run of line breaks a stylesheet opens with and ends on at once, under `max-empty-lines`.
  *
- * Written for [#404](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/404): the check counted the opening run and the closing one apart, a line over, and the fix wrote the run as a tail, which keeps a break, so the warning survived every `--fix`. The axes: what stands in front (nothing is the issue's shape), the run's length, what splits it, what follows, and the break's spelling.
+ * The check counted the opening run and the closing one apart, a line over, and the fix wrote the run as a tail, which keeps a break, so the warning survived every `--fix`. The axes: what stands in front (nothing is the shape that failed), the run's length, what splits it, what follows, and the break's spelling.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"

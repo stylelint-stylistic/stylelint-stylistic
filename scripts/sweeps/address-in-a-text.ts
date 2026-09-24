@@ -1,7 +1,7 @@
 /**
  * A `url()` in a text, under every spelling of its name, of what stands in front of it, and of what its parentheses hold.
  *
- * Written for [#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427) and [#398](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/398), when `max-line-length` and `endsWithInlineComment` were made to read a `url()` as `findCommentSpans` does; no oracle has an escaped name, one behind a non-ASCII code point or an interpolation, or one inside a comment or a string.
+ * It checks `max-line-length` and `endsWithInlineComment`, which were made to read a `url()` as `findCommentSpans` does; no oracle has an escaped name, one behind a non-ASCII code point or an interpolation, or one inside a comment or a string.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"

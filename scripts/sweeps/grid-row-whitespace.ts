@@ -1,7 +1,7 @@
 /**
  * A JavaScript whitespace character the tokenizer may not read as one, in every place a grid row has for it.
  *
- * Written for [#401](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/401): `named-grid-areas-alignment` cut a row with `trim` and `\s`, which take every Unicode separator, where the tokenizer reads five characters and `lightningcss` reads every non-ASCII code point as part of a name. The space is the control; the tab and the form feed must collapse like it.
+ * `named-grid-areas-alignment` cut a row with `trim` and `\s`, which take every Unicode separator, where the tokenizer reads five characters and `lightningcss` reads every non-ASCII code point as part of a name. The space is the control; the tab and the form feed must collapse like it.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"

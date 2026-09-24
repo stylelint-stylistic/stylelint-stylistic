@@ -1,7 +1,7 @@
 /**
  * Units spelling a code point outside ASCII, alone and beside an ASCII letter of either case, in six environments a unit stands in.
  *
- * Written for [#653](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/653), where `unit-case` recased a unit with `toUpperCase` and `toLowerCase`, so `Aß` became `ASS` and `İ` became `i̇`: another unit, since a unit identifier is ASCII case-insensitive and every other code point is part of it as it stands. The code points cross those whose mapping is not one to one (`ß`, `İ`, `ﬁ`), those whose mapping is one to one but not its own inverse (`ſ`, the Kelvin sign, `ı`) and those whose mapping is a plain pair (`é`, `É`, `Ω`), with a middle dot as the control: a code point of an identifier with no case at all. Each stands alone as the unit, and at the head, in the middle and at the tail of one beside a letter of each case.
+ * `unit-case` recased a unit with `toUpperCase` and `toLowerCase`, so `Aß` became `ASS` and `İ` became `i̇`: another unit, since a unit identifier is ASCII case-insensitive and every other code point is part of it as it stands. The code points cross those whose mapping is not one to one (`ß`, `İ`, `ﬁ`), those whose mapping is one to one but not its own inverse (`ſ`, the Kelvin sign, `ı`) and those whose mapping is a plain pair (`é`, `É`, `Ω`), with a middle dot as the control: a code point of an identifier with no case at all. Each stands alone as the unit, and at the head, in the middle and at the tail of one beside a letter of each case.
  *
  * The ASCII units are the control of the recase: the branch recases them exactly as the base did, so their rows must not move.
  */

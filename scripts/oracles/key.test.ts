@@ -83,7 +83,7 @@ afterAll(() => {
 	rmSync(objects, { recursive: true, force: true })
 })
 
-// #561: the builder of this key stood in `compare.ts`, which no case can import, so an input dropped from it turned nothing red
+// The builder of this key stands outside `compare.ts`, which no case can import: there an input dropped from it turned nothing red
 describe(`what an oracle result is kept under`, () => {
 	it(`names the oracle, so that six oracles over one side stand under six keys`, () => {
 		expect(inputsOf(`converge`, `HEAD`).oracle).toBe(`converge`)

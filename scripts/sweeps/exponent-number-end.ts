@@ -1,7 +1,7 @@
 /**
  * A word whose number holds an exponent, in every environment of a value.
  *
- * Written for [#646](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/646), where `unit-case` took the split of a word into a number and a unit from `postcss-value-parser` and Less ends the number at the first character that is no digit and no period. The number is spelled with and without a sign, a period and a leading zero, since the cut is a reading of all four; the exponent's letter stands in both cases, bare and with either sign, and twice over, since a second one opens a dimension of its own to Less.
+ * `unit-case` took the split of a word into a number and a unit from `postcss-value-parser` and Less ends the number at the first character that is no digit and no period. The number is spelled with and without a sign, a period and a leading zero, since the cut is a reading of all four; the exponent's letter stands in both cases, bare and with either sign, and twice over, since a second one opens a dimension of its own to Less.
  *
  * The tails cross the two readings the branch turns on: a unit closing the word (`PX`) is named under both, a unit a digit ends (`PX9`, `PX9PX`) is where the unit's own cut moved, and the rest are what a unit ends in front of under either reading. An empty tail leaves a number or a percentage where the tokenizer reads no dimension at all.
  *

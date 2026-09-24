@@ -1,7 +1,7 @@
 /**
  * A comment of every spelling wherever a rule measuring a printed node can meet one, in every block and syntax.
  *
- * Written for [#139](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/139): a position counted in `node.toString()` is off by as much as PostCSS's stringifier differs from the file's. Positions are `control.ts`'s question; this corpus asks whether the warnings and fixes differ, since the single-line options turn on a block's width. The controls carry no comment, since the rewritten utilities run for every statement.
+ * A position counted in `node.toString()` is off by as much as PostCSS's stringifier differs from the file's. Positions are `control.ts`'s question; this corpus asks whether the warnings and fixes differ, since the single-line options turn on a block's width. The controls carry no comment, since the rewritten utilities run for every statement.
  */
 
 import { place } from "../harness/matrix.ts"

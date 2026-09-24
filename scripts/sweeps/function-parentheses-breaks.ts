@@ -1,7 +1,7 @@
 /**
  * Every comment kind before every break kind inside a call's parentheses, under the seven configurations of the two rules about it.
  *
- * Written for [#282](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/282) and [#321](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/321). Ten comments, since a closed `//` comment, an open one, one holding `/*` and one in a string or an address differ to a fixer; ten breaks, differing to the syntaxes; six tails, deciding whether the parser closed the call; a second prefix reaches the `-multi-line` options.
+ * Ten comments, since a closed `//` comment, an open one, one holding `/*` and one in a string or an address differ to a fixer; ten breaks, differing to the syntaxes; six tails, deciding whether the parser closed the call; a second prefix reaches the `-multi-line` options.
  */
 
 import { multiply, place } from "../harness/matrix.ts"

@@ -1,7 +1,7 @@
 /**
  * The run a declaration's bang flag stands in, where it holds a break and so opens a line the value does not hold.
  *
- * Written for the spec 1789503160: `indentation` wrote such a line's indentation onto the end of the value, since PostCSS files the run in front of the flag, and the one inside it, into `raws.important`. The runs holding no break are the controls, as is a declaration carrying no flag at all.
+ * `indentation` wrote such a line's indentation onto the end of the value, since PostCSS files the run in front of the flag, and the one inside it, into `raws.important`. The runs holding no break are the controls, as is a declaration carrying no flag at all.
  */
 
 import { multiply } from "../harness/matrix.ts"

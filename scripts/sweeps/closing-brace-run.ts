@@ -1,7 +1,7 @@
 /**
  * A run of empty lines in front of a closing brace, under `max-empty-lines`.
  *
- * Written for [#481](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/481): the run between a block's last node and its closing brace is the block's `raws.after`, or the tail of an at-rule's `raws.between` where it has no semicolon, so the fix reported it and never wrote it, and `--fix` returned the file with the warnings gone.
+ * The run between a block's last node and its closing brace is the block's `raws.after`, or the tail of an at-rule's `raws.between` where it has no semicolon, so the fix reported it and never wrote it, and `--fix` returned the file with the warnings gone.
  *
  * The axes: where the block stands and what closes it, since the parser files the run by what is in front of the brace; the run's length; what stands inside it; and its break spelling. The controls are the mixed spelling and the run behind the opening brace, which the base wrote.
  */

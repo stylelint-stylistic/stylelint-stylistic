@@ -1,7 +1,7 @@
 /**
  * A node standing on the line of a free semicolon behind a closing brace, under `indentation`.
  *
- * Written for 1789424028: behind a rule's brace PostCSS files the semicolon, with the break and the run in front of it, into the rule's `raws.ownSemicolon`, so the node's own raw held no break and its line went unmeasured. A declaration and an at-rule's block in front are the controls, since there the semicolon lands in the node's `raws.before`; so are a node on a line of its own behind the semicolon's and a semicolon with nothing behind it.
+ * Behind a rule's brace PostCSS files the semicolon, with the break and the run in front of it, into the rule's `raws.ownSemicolon`, so the node's own raw held no break and its line went unmeasured. A declaration and an at-rule's block in front are the controls, since there the semicolon lands in the node's `raws.before`; so are a node on a line of its own behind the semicolon's and a semicolon with nothing behind it.
  */
 
 import { multiply } from "../harness/matrix.ts"
@@ -24,7 +24,7 @@ const PREVIOUS: Record<string, string> = {
 	declaration: `color: red;`,
 }
 
-/** The run opening the semicolon's line, the tokenizer whitespace of #452 and an empty line in front included. */
+/** The run opening the semicolon's line, a lone carriage return and a form feed, which the tokenizer reads as whitespace, and an empty line in front included. */
 const RUNS: Record<string, string> = {
 	none: `⏎`,
 	tab: `⏎\t`,

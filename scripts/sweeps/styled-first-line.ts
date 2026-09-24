@@ -1,7 +1,7 @@
 /**
  * A styled template whose first node stands on the backtick's line, under every host indentation and every tokenizer whitespace short of a break in the gap.
  *
- * Written for [#453](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/453): `indentation` adds the host's level to every node, and the first-child check wrote the host's tabs into a first node on the backtick's line. The controls, templates broken the ordinary way, must not move.
+ * `indentation` adds the host's level to every node, and the first-child check wrote the host's tabs into a first node on the backtick's line. The controls, templates broken the ordinary way, must not move.
  */
 
 import { multiply } from "../harness/matrix.ts"

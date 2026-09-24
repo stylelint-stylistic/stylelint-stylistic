@@ -1,14 +1,14 @@
 /**
  * Something standing on a node's line in front of it, which the parser files into the node's `raws.before`, behind every run of indentation.
  *
- * Written for [#516](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/516): `indentation` read the whole last line of `raws.before` as the node's indentation, so a stray semicolon there was reported at every level and its fix, writing the run in front of the semicolon, left the warning standing. The hacks and the bare runs are the controls.
+ * `indentation` read the whole last line of `raws.before` as the node's indentation, so a stray semicolon there was reported at every level and its fix, writing the run in front of the semicolon, left the warning standing. The hacks and the bare runs are the controls.
  */
 
 import { multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** The run opening the line: none, a level under `tab`, two levels, a level of two spaces, and the tokenizer whitespace of #452. */
+/** The run opening the line: none, a level under `tab`, two levels, a level of two spaces, and a lone carriage return and a form feed, which the tokenizer reads as whitespace. */
 const RUNS: Record<string, string> = {
 	none: ``,
 	tab: `\t`,

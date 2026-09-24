@@ -1,7 +1,7 @@
 /**
  * A Less variable declaration in every spelling of the whitespace around its colon, put to every rule reading at-rules.
  *
- * Written for [#394](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/394): `postcss-less` marks a declaration `variable` only where the colon closes the name, so `@v : pink` came over as an at-rule named `v`. Every text but the control's uses the variable, so a row whose input compiles under `less.render` while its output does not is the defect. The controls are at-rules Less reads a colon at the head of the parameters in.
+ * `postcss-less` marks a declaration `variable` only where the colon closes the name, so `@v : pink` came over as an at-rule named `v`. Every text but the control's uses the variable, so a row whose input compiles under `less.render` while its output does not is the defect. The controls are at-rules Less reads a colon at the head of the parameters in.
  */
 
 import { multiply } from "../harness/matrix.ts"

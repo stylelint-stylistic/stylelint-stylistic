@@ -1,7 +1,7 @@
 /**
  * A semicolon in the text of a `//` comment behind the last node of a block, which `postcss-less` reads as the semicolon closing that node. `postcss-scss` reads it as comment text; Less does behind an ordinary declaration and a call, and behind a custom property, a variable or an at-rule reads it either way by the value.
  *
- * Written for [#359](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/359). The comment's text holds one semicolon, two, two apart, one either side of a block comment, and one with a semicolon of code on the line under it; a bare carriage return and a form feed in front of the semicolon are the two breaks the readers part on. The controls hold no semicolon in the comment, or one of code under it; the node also stands in the middle of the block. Every rule under every primary option.
+ * The comment's text holds one semicolon, two, two apart, one either side of a block comment, and one with a semicolon of code on the line under it; a bare carriage return and a form feed in front of the semicolon are the two breaks the readers part on. The controls hold no semicolon in the comment, or one of code under it; the node also stands in the middle of the block. Every rule under every primary option.
  */
 
 import { multiply } from "../harness/matrix.ts"

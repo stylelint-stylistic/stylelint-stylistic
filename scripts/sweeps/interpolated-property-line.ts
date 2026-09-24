@@ -1,7 +1,7 @@
 /**
  * A property carrying a Sass interpolation, whose braces are the one place a line break reaches `decl.prop`.
  *
- * Written for the spec 1789503578: `indentation` counted such a line back from the property's end, got a negative offset and wrote the indentation into the head of `raws.between`. The interpolations holding no break are the controls, as are the properties spelling none; `property-case` and `no-multiple-whitespaces` are here because they write and read that same copy of the property.
+ * `indentation` counted such a line back from the property's end, got a negative offset and wrote the indentation into the head of `raws.between`. The interpolations holding no break are the controls, as are the properties spelling none; `property-case` and `no-multiple-whitespaces` are here because they write and read that same copy of the property.
  */
 
 import { multiply } from "../harness/matrix.ts"

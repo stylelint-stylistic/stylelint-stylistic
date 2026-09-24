@@ -1,7 +1,7 @@
 /**
  * A comma at either edge of a call's arguments — right behind the opening parenthesis, or right in front of the closing one — with every spelling of the run between it and the parenthesis, under every rule about a comma or a parenthesis of a call.
  *
- * Written for 1790021150: the comma rules judged that run where it held anything and, but for `function-comma-newline-before`, passed it over where it held nothing, while the parentheses rules judge it always, so a pair asking the opposite of each other over it left a warning no `--fix` could take away. No oracle corpus holds a comma at the edge. The control is the comma between two arguments, whose runs the comma rules keep.
+ * The comma rules judged that run where it held anything and, but for `function-comma-newline-before`, passed it over where it held nothing, while the parentheses rules judge it always, so a pair asking the opposite of each other over it left a warning no `--fix` could take away. No oracle corpus holds a comma at the edge. The control is the comma between two arguments, whose runs the comma rules keep.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"

@@ -464,7 +464,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// The same semicolon under `always` is #336: the flag is unset there too, so a property already carrying one is asked for another
+			// Under `always` the flag is unset too, so a property already carrying this semicolon is asked for another
 			description: `a Sass nested property carrying a semicolon behind its closing brace, which the parser keeps in the block's own trailing raw rather than in the flag, and the semicolon closing the nested block along with it`,
 			code: `a { font: 12px { family: serif; }; }`,
 			fixed: `a { font: 12px { family: serif } }`,

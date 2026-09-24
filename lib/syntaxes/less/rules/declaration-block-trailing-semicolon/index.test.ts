@@ -646,7 +646,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// A real value keeps the semicolon under Less now; formerly a case for #721, where Less reads a bare carriage return ending an inline comment as a line feed, so the semicolon is code
+			// A real value keeps the semicolon under Less
 			description: `a semicolon behind a bare carriage return ending an inline comment, which Less reads as a line feed, so the semicolon is code`,
 			code: `a {\n\tcolor: pink // c\r;\n}\n`,
 			fixed: `a {\n\tcolor: pink // c\r;\n}\n`,
@@ -655,7 +655,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// A real value keeps the semicolon under Less now; formerly a case for #721, on the same break behind a semicolon in the text of the comment
+			// A real value keeps the semicolon under Less
 			description: `the same break behind a semicolon in the text of the comment, which this syntax reads as the one closing the declaration and Less as the text of the comment`,
 			code: `a {\n\tcolor: pink // ;\r\t;\n}\n`,
 			fixed: `a {\n\tcolor: pink // ;\r\t;\n}\n`,
@@ -664,7 +664,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// A real value keeps the semicolon under Less now; formerly a case for #217, on the comment standing behind the semicolon instead
+			// A real value keeps the semicolon under Less
 			description: `the same comment standing behind the semicolon instead, where this syntax reads it as a node of its own rather than as part of the value`,
 			code: `
 				a {
@@ -690,7 +690,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// A real value keeps the semicolon under Less now; formerly a case for #325, on a second semicolon standing behind the one that closes the declaration
+			// A real value keeps the semicolon under Less
 			description: `a second semicolon standing behind the one that closes the declaration, which this syntax keeps in the same raw plain CSS keeps it in`,
 			code: `a { color: pink;; }`,
 			fixed: `a { color: pink;; }`,
@@ -966,7 +966,7 @@ testRule({
 
 	reject: [
 		{
-			// A real value keeps the semicolon under Less now; formerly a case for #479, on an inline comment ending the declaration
+			// A real value keeps the semicolon under Less
 			description: `an inline comment ending the declaration, whose closing break stands in front of the semicolon`,
 			code: `a { b: c // x\n; }`,
 			fixed: `a { b: c // x\n; }`,

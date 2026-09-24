@@ -1,4 +1,4 @@
-/** A character outside the Basic Multilingual Plane in every place a grid cell has for it. For [#520](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/520), where `named-grid-areas-alignment` measured columns in UTF-16 code units and a surrogate pair made its column a unit too wide. An ordinary letter is the control. */
+/** A character outside the Basic Multilingual Plane in every place a grid cell has for it. `named-grid-areas-alignment` measured columns in UTF-16 code units and a surrogate pair made its column a unit too wide. An ordinary letter is the control. */
 
 import { keysOf, multiply } from "../harness/matrix.ts"
 

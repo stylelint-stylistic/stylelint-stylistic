@@ -1,7 +1,7 @@
 /**
  * A comment in a declaration's value, with a line break or none, at its head, between two words, at its tail, in front of the flag, and as the whole value; with a break, a space or nothing behind it; over a plain and a custom property; behind a single space, two spaces and a break after the colon. The comment in front of the colon is the control.
  *
- * Written for [#389](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/389): the two `declaration-colon-*-after` rules counted the lines of `decl.value`, which PostCSS builds with every comment taken out. The controls are `declaration-colon-space-before`, with no lineness option, and the two `declaration-block-semicolon-*-before` rules, reading the run through `writesSharedRun`.
+ * The two `declaration-colon-*-after` rules counted the lines of `decl.value`, which PostCSS builds with every comment taken out. The controls are `declaration-colon-space-before`, with no lineness option, and the two `declaration-block-semicolon-*-before` rules, reading the run through `writesSharedRun`.
  */
 
 import { multiply } from "../harness/matrix.ts"

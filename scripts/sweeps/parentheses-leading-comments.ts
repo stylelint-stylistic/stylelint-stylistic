@@ -1,7 +1,7 @@
 /**
  * Two comments and the runs around them standing between a call's opening parenthesis and its first argument, under the seven configurations of the two rules about those parentheses.
  *
- * Written for [#505](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/505). The corpus of `function-parentheses-breaks` puts its comment behind the second argument alone, so the opening walk never reaches one; here both places are a comment, since it is the pairing that moves the walk — the value parser hangs the run in front of a `/` on the slash itself, so an end-of-line comment behind another comment opens a node standing in front of its own span. Four comment spellings, six runs between them, four behind the second and four arguments; a `/*\/` comment is the spelling the parser closes three characters in, and a vertical tab is the character the value parser calls whitespace and the tokenizer a word.
+ * The corpus of `function-parentheses-breaks` puts its comment behind the second argument alone, so the opening walk never reaches one; here both places are a comment, since it is the pairing that moves the walk — the value parser hangs the run in front of a `/` on the slash itself, so an end-of-line comment behind another comment opens a node standing in front of its own span. Four comment spellings, six runs between them, four behind the second and four arguments; a `/*\/` comment is the spelling the parser closes three characters in, and a vertical tab is the character the value parser calls whitespace and the tokenizer a word.
  */
 
 import { multiply, place } from "../harness/matrix.ts"

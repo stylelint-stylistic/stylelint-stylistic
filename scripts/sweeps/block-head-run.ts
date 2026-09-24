@@ -1,7 +1,7 @@
 /**
  * The run of line breaks a styled template opens with, behind the backtick the host code stands in front of.
  *
- * Written for [#585](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/585): `max-empty-lines` counted that run as a file's, where the first break closes an empty line, although here it closes the host's own line; the warning it added was one the fix then wrote away, joining the first node onto the host's line. The axes: the run's length, what splits it, what follows it inside the template, what closes the template, and the break's spelling. A template opening on its first node is the control, holding no such run.
+ * `max-empty-lines` counted that run as a file's, where the first break closes an empty line, although here it closes the host's own line; the warning it added was one the fix then wrote away, joining the first node onto the host's line. The axes: the run's length, what splits it, what follows it inside the template, what closes the template, and the break's spelling. A template opening on its first node is the control, holding no such run.
  *
  * The rules are the three that write the head raw of a root and `indentation`, which reads the run in front of a node as its level.
  */

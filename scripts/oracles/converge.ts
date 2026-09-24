@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Asks of every rule, primary and fixture whether `--fix` converges and its output parses; `testRule` runs the fixer once and cannot see [#131](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/131), [#196](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/196) or [#239](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/239).
+ * Asks of every rule, primary and fixture whether `--fix` converges and its output parses; `testRule` runs the fixer once and cannot see either.
  *
  * Rows: `broke` (no parse), `not-idempotent` (run two wrote) and `diverges` (run three wrote).
  */

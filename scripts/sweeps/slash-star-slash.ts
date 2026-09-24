@@ -1,7 +1,7 @@
 /**
  * A comment opening `/*\/` in every text a value-parser rule reads, beside code spelling the same thing as the comment's text.
  *
- * Written for [#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378). The parser looks for `*\/` from the opening slash itself, so such a comment closes three characters in and the rest comes back as code, which ten rules asking only about `//` comments rewrote. The same violation stands inside the comment and beside it, so a row says whether the text is passed over and the code still read. The controls are the same text in a block comment closed where the parser closes it, and the bare violation.
+ * The parser looks for `*\/` from the opening slash itself, so such a comment closes three characters in and the rest comes back as code, which ten rules asking only about `//` comments rewrote. The same violation stands inside the comment and beside it, so a row says whether the text is passed over and the code still read. The controls are the same text in a block comment closed where the parser closes it, and the bare violation.
  */
 
 import type { Sweep } from "./run.ts"
@@ -49,7 +49,7 @@ const name: Sweep[`name`] = `slash-star-slash`
 
 const corpus: Sweep[`corpus`] = Object.entries(PLACES).flatMap(([placeName, wrap]) => Object.entries(SPELLINGS).flatMap(([spellingName, spell]) => Object.entries(TEXTS).map(([textName, text]) => [`${placeName}|${spellingName}|${textName}`, wrap(text, spell(text))] as [string, string])))
 
-/** The ten rules of [#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378) under every primary in `scripts/oracles/options.ts`, and [#275](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/275)'s four comma rules as a control. */
+/** The ten rules under every primary in `scripts/oracles/options.ts`, and the four `function-comma-*` rules as a control. */
 const configs: Sweep[`configs`] = ([
 	[`color-hex-case`, [`lower`, `upper`]],
 	[`function-max-empty-lines`, [0, 1]],

@@ -1,7 +1,7 @@
 /**
  * An interpolation standing on a node's line in a styled template, in front of the node, under every host indentation and every run opening the line.
  *
- * Written for [#516](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/516): `postcss-styled-syntax` files such an interpolation into the node's `raws.before`, and `indentation` read the whole of that line as the node's indentation, so the line was reported at every level and the fix, writing the run in front of the interpolation, left the warning standing. An interpolation on a line of its own and a line holding the node alone are the controls.
+ * `postcss-styled-syntax` files such an interpolation into the node's `raws.before`, and `indentation` read the whole of that line as the node's indentation, so the line was reported at every level and the fix, writing the run in front of the interpolation, left the warning standing. An interpolation on a line of its own and a line holding the node alone are the controls.
  */
 
 import { multiply } from "../harness/matrix.ts"

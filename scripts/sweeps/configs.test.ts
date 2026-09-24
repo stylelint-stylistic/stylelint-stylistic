@@ -51,7 +51,7 @@ let sweeps = modules.filter(([, module]) => Array.isArray(module.corpus) && Arra
 /** Every name the sweeps spell a rule with, once each. */
 let names = [...new Set(sweeps.flatMap(([, sweep]) => (sweep.syntaxes ?? DEFAULT_SYNTAXES).flatMap((syntaxName) => sweep.configs.map((config) => nameOf(syntaxName, config.rule)))))].toSorted()
 
-// #543: `scripts/sweeps/colon-in-comment.ts` listed `never-single-line` among the primaries of `declaration-colon-space-after`, which does not take it, so 3 960 of that sweep's 59 400 rows stood under a configuration no run of Stylelint reaches; the runner wrote `{ usable: false }` for each and went on, and the counts a merged commit quoted held them all
+// `scripts/sweeps/colon-in-comment.ts` once listed `never-single-line` among the primaries of `declaration-colon-space-after`, which does not take it, so 3 960 of that sweep's 59 400 rows stood under a configuration no run of Stylelint reaches; the runner wrote `{ usable: false }` for each and went on, and the counts a merged commit quoted held them all
 describe(`the configurations the sweeps measure under`, () => {
 	it(`hold no option a rule of the plugin refuses, under any namespace a sweep is read under`, async () => {
 		let refused: string[] = []

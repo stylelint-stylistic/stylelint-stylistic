@@ -87,7 +87,7 @@ afterAll(() => {
 	rmSync(objects, { recursive: true, force: true })
 })
 
-// #553: the key carried neither `scripts/sweeps/run.ts`, where every row is measured, nor `scripts/oracles`, whose corpus and option list `eol.ts` imports, so an edit to either was answered out of the store by rows measured before it
+// The key once carried neither `scripts/sweeps/run.ts`, where every row is measured, nor `scripts/oracles`, whose corpus and option list `eol.ts` imports, so an edit to either was answered out of the store by rows measured before it
 describe(`what a sweep result is kept under`, () => {
 	it(`names the runner, where every row is measured, under a name of its own`, () => {
 		let inputs = inputsOf(SWEEP, `HEAD`)

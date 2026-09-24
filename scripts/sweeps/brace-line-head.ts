@@ -8,7 +8,7 @@ import { multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** The run opening the brace's line: none, a level under `tab`, two levels, a level of two spaces, and the tokenizer whitespace of #452. */
+/** The run opening the brace's line: none, a level under `tab`, two levels, a level of two spaces, and a bare carriage return and a form feed, whitespace to the tokenizer and no line to its counter. */
 const RUNS: Record<string, string> = {
 	none: ``,
 	tab: `\t`,

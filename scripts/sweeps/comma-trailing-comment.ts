@@ -1,7 +1,7 @@
 /**
  * A comment and the runs around it standing beside the comma of a call, under the fourteen configurations of the four rules about those commas.
  *
- * Written for 1789508660. The copy a call's commas are checked over has the comments taken out, and a comment followed by whitespace alone carries the whitespace in front of itself off with it, so the run read behind a comma was the one past the comment while the fix wrote the one in front of it. The comment stands on either side of the comma, since the rules of the two sides read it apart; six comment spellings, four runs on each side, and three tails, one of them a nested call, whose commas a rule writes in the same pass. A comment carrying a break of its own is there because taking it out of the copy changes how many lines the arguments have, and a pair of comments because the break rule is moved past the first of them alone.
+ * The copy a call's commas are checked over has the comments taken out, and a comment followed by whitespace alone carries the whitespace in front of itself off with it, so the run read behind a comma was the one past the comment while the fix wrote the one in front of it. The comment stands on either side of the comma, since the rules of the two sides read it apart; six comment spellings, four runs on each side, and three tails, one of them a nested call, whose commas a rule writes in the same pass. A comment carrying a break of its own is there because taking it out of the copy changes how many lines the arguments have, and a pair of comments because the break rule is moved past the first of them alone.
  */
 
 import { multiply, place } from "../harness/matrix.ts"

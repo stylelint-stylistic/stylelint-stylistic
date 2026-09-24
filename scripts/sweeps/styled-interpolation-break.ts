@@ -1,7 +1,7 @@
 /**
  * An interpolation holding a break in a styled template, in every place `indentation` reads a line's head behind it, under every run opening that line.
  *
- * Written for spec 1789424026: `postcss-styled-syntax` files an interpolation into a node's `raws.before` or a block's `raws.after` whole, and `indentation` took a break inside it for the one opening the node's line, so the check measured a line of JavaScript and the fix wrote into a string of the host file. An interpolation with no break is the control.
+ * `postcss-styled-syntax` files an interpolation into a node's `raws.before` or a block's `raws.after` whole, and `indentation` took a break inside it for the one opening the node's line, so the check measured a line of JavaScript and the fix wrote into a string of the host file. An interpolation with no break is the control.
  */
 
 import { multiply } from "../harness/matrix.ts"

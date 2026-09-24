@@ -1,7 +1,7 @@
 /**
  * A comment between the params of an at-rule with neither block nor semicolon and the closing brace, which the parser puts in `raws.between`.
  *
- * Written for [#375](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/375): `indentation` wrote the fix onto the end of the params, so the file grew a level every run. The controls (a semicolon, a declaration) make the comment a node of its own; the `tail` axis measured [#509](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/509).
+ * `indentation` wrote the fix onto the end of the params, so the file grew a level every run. The controls (a semicolon, a declaration) make the comment a node of its own; the `tail` axis measures the closing brace's line where the parser files the run in front of it into the at-rule's `raws.between`.
  */
 
 import { multiply } from "../harness/matrix.ts"

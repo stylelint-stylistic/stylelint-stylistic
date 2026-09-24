@@ -1,7 +1,7 @@
 /**
  * A line a free semicolon stands alone on, under `indentation`.
  *
- * Written for 1790234713: PostCSS files such a line in the leading raw of the node behind it, in the run in front of a closing brace, in a rule's `raws.ownSemicolon`, or in the root's `raws.after`, and none of the lines the rule measured was it. What stands in front picks the raw, and what stands behind picks whether the line closes on a break; a node, a comment or a brace on the semicolon's line are the controls, since that line is theirs.
+ * PostCSS files such a line in the leading raw of the node behind it, in the run in front of a closing brace, in a rule's `raws.ownSemicolon`, or in the root's `raws.after`, and none of the lines the rule measured was it. What stands in front picks the raw, and what stands behind picks whether the line closes on a break; a node, a comment or a brace on the semicolon's line are the controls, since that line is theirs.
  */
 
 import { multiply } from "../harness/matrix.ts"
@@ -26,7 +26,7 @@ const PREVIOUS: Record<string, string> = {
 	semicolon: `⏎\t;`,
 }
 
-/** The run opening the semicolon's line, the tokenizer whitespace of #452 and an empty line in front included. */
+/** The run opening the semicolon's line, a bare carriage return, a form feed and an empty line in front included. */
 const RUNS: Record<string, string> = {
 	none: `⏎`,
 	tab: `⏎\t`,

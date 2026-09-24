@@ -236,7 +236,7 @@ testRule({
 			message: messages.expected(`single`),
 		},
 		{
-			// 1789653630: the tokenizer pops the word `url` at the `(` whatever parts the two, and reads to the first `)` from there
+			// The tokenizer pops the word `url` at the `(` whatever parts the two, and reads to the first `)` from there
 			description: `a quotation mark nothing closes inside the parentheses the tokenizer takes as one token behind a url parted from them, which the value parser reads as a string running to the end of the value`,
 			code: `a { b: url (a "),b) 1px; c: "d" }`,
 			fixed: `a { b: url (a "),b) 1px; c: 'd' }`,
@@ -311,7 +311,7 @@ testRule({
 			message: messages.expected(`single`),
 		},
 		{
-			// 1789910265: the stack of words runs through the whole file, so the `(` of the at-rule pops the `url` of the node in front of it, whose name pushes no word of its own
+			// The stack of words runs through the whole file, so the `(` of the at-rule pops the `url` of the node in front of it, whose name pushes no word of its own
 			description: `a pair of marks parted by the edge of a token the word of the node in front opened, whose mark inside it is a character of the address`,
 			code: `a { b: url } @media (c "d) "e" { f: g }`,
 			fixed: `a { b: url } @media (c "d) 'e' { f: g }`,
@@ -458,7 +458,7 @@ testRule({
 			message: messages.expected(`double`),
 		},
 		{
-			// 1789653630: the mark inside the token is a character of the address under either option
+			// The mark inside the token is a character of the address under either option
 			description: `a quotation mark nothing closes inside the parentheses the tokenizer takes as one token behind a url parted from them`,
 			code: `a { b: url (a '),b) 1px; c: 'd' }`,
 			fixed: `a { b: url (a '),b) 1px; c: "d" }`,
@@ -467,7 +467,7 @@ testRule({
 			message: messages.expected(`double`),
 		},
 		{
-			// 1789910265: the mark inside such a token is a character of the address under either option
+			// The mark inside such a token is a character of the address under either option
 			description: `a pair of marks parted by the edge of a token the word of the node in front opened`,
 			code: `a { b: url } @media (c 'd) 'e' { f: g }`,
 			fixed: `a { b: url } @media (c 'd) "e" { f: g }`,

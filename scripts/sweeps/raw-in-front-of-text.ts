@@ -1,11 +1,11 @@
 /**
  * A delimiter opening the text a rule reads, where the run in front of it lies in the raw the parser filed it in rather than in that text.
  *
- * Written for spec 1789593917: `expectBeforeAllowingIndentation` walked back only through the text, met its head and warned, so `@media⏎,a`, `x {}⏎,a {}` and `a { grid-area:⏎/ 2 }` were asked for a break that stood in the file already. A row says what each rule of the three families makes of such a delimiter, and what the space twins and the `-after` rules make of the same file.
+ * `expectBeforeAllowingIndentation` walked back only through the text, met its head and warned, so `@media⏎,a`, `x {}⏎,a {}` and `a { grid-area:⏎/ 2 }` were asked for a break that stood in the file already. A row says what each rule of the three families makes of such a delimiter, and what the space twins and the `-after` rules make of the same file.
  *
  * The raw is spelled without whitespace, with one space, two, a tab, one break, two, a break with a tab or with spaces behind it, a lone carriage return, and with a comment on either side of the break and with no break at all, since an at-rule keeps a comment in `raws.afterName` and a declaration in `raws.between` while a rule leaves it a node of its own. The control is a text naming something in front of the delimiter, where the run lies in the text as it always did, so a branch moving its rows has done something else.
  *
- * A row is one fix pass, so a growth ended rather than a warning taken away does not show here: `value-slash-newline-before` writes at the head of a value and settles on this branch where the base grew the file every run, which is measured by `tmp/1789593917/probe-grow.mjs` instead.
+ * A row is one fix pass, so a growth ended rather than a warning taken away does not show here: `value-slash-newline-before` writes at the head of a value and settles on this branch where the base grew the file every run, which a probe measures instead.
  */
 
 import { multiply } from "../harness/matrix.ts"

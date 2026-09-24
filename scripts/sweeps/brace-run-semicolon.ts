@@ -1,7 +1,7 @@
 /**
  * A stray semicolon inside the run between a block's last node and its closing brace, under every rule reading that run.
  *
- * Written for [#687](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/687): the `always` fix of `block-closing-brace-newline-before` cut the run from its first break, so a semicolon standing between the run's first whitespace and that break went with the whitespace. The axes: where the block stands, since the parser files the run by what is in front of the brace; what closes it; and where the semicolon stands inside the run, which is what the writes part on. The runs holding no semicolon are the controls.
+ * The `always` fix of `block-closing-brace-newline-before` cut the run from its first break, so a semicolon standing between the run's first whitespace and that break went with the whitespace. The axes: where the block stands, since the parser files the run by what is in front of the brace; what closes it; and where the semicolon stands inside the run, which is what the writes part on. The runs holding no semicolon are the controls.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"

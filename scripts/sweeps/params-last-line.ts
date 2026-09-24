@@ -1,7 +1,7 @@
 /**
  * The last line of an at-rule's params, held by characters the tokenizer reads as words though JavaScript reads them as whitespace, and by nothing else.
  *
- * Written for 1789421331: `indentation` trimmed the params as JavaScript reads whitespace, so a line holding a vertical tab or a no-break space alone was cut off with the break in front of it and never measured. The runs of the tokenizer's own whitespace and a line with a word on it are the controls, and the rule's selector the neighbor it is compared with.
+ * `indentation` trimmed the params as JavaScript reads whitespace, so a line holding a vertical tab or a no-break space alone was cut off with the break in front of it and never measured. The runs of the tokenizer's own whitespace and a line with a word on it are the controls, and the rule's selector the neighbor it is compared with.
  */
 
 import { multiply } from "../harness/matrix.ts"

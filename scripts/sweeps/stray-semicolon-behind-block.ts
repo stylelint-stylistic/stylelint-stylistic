@@ -1,7 +1,7 @@
 /**
  * A stray semicolon behind a rule's closing brace, under every rule reading a block's text.
  *
- * Written for [#562](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/562): PostCSS files the semicolon and the whitespace in front of it in the rule's `raws.ownSemicolon` and prints that raw behind the brace, so a reading of the printed node ended on the semicolon rather than on the brace. The axes: where the rule stands, how its block is spelled, the run in front of the brace, which a break makes every block multi-line, and the run in front of the semicolon, which a break made a multi-line text of a single-line block. The shapes with no semicolon are the controls.
+ * PostCSS files the semicolon and the whitespace in front of it in the rule's `raws.ownSemicolon` and prints that raw behind the brace, so a reading of the printed node ended on the semicolon rather than on the brace. The axes: where the rule stands, how its block is spelled, the run in front of the brace, which a break makes every block multi-line, and the run in front of the semicolon, which a break made a multi-line text of a single-line block. The shapes with no semicolon are the controls.
  */
 
 import { multiply } from "../harness/matrix.ts"

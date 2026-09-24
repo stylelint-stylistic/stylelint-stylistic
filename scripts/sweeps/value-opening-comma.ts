@@ -1,7 +1,7 @@
 /**
  * A comma opening a declaration's value, with every spelling of the run between the colon and it, under every rule that reads that run alone.
  *
- * Written for 1789594574: the `declaration-colon-*-after` rules and the `value-list-comma-*-before` rules read and write one run there, and the branch has them ask `writesSharedRun` who writes it. Alone, a rule writes as it did, so this is the control: a row moving here is a single rule's reading changed. The pairs are measured by a probe, since the `pairs` oracle drops a pair both orders of which rest on a warning. The control place is a comma between two words, whose run the colon rules never read.
+ * The `declaration-colon-*-after` rules and the `value-list-comma-*-before` rules read and write one run there, and they ask `writesSharedRun` who writes it. Alone, a rule writes as it did, so this is the control: a row moving here is a single rule's reading changed. The pairs are measured by a probe, since the `pairs` oracle drops a pair both orders of which rest on a warning. The control place is a comma between two words, whose run the colon rules never read.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"

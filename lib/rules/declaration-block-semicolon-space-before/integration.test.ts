@@ -151,7 +151,7 @@ testRule({
 
 	reject: [
 		{
-			description: `an empty custom property the neighbor finishes as \`--x: ;\` in the same run: the space stands on the tail of the raw between until the file is read back, the exception of #50 reads it there, and the deferred check stays silent about the finished form`,
+			description: `an empty custom property the neighbor finishes as \`--x: ;\` in the same run: the space stands on the tail of the raw between until the file is read back, the exception for a custom property whose value is a single space reads it there, and the deferred check stays silent about the finished form`,
 			code: `a { --bar:; x: y; }`,
 			fixed: `a { --bar: ; x: y; }`,
 			line: 1,

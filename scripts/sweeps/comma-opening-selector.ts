@@ -1,7 +1,7 @@
 /**
  * A comma opening a selector, where the run in front of it lies in `raws.before` rather than in the text the selector rules read.
  *
- * Written for spec 1789594095: `selector-list-comma-newline-before` under `always` wrote the break into the selector, the next parse carried it into that raw, the comma opened the selector again, and every `--fix` run grew the file by a line. A row says what each rule of the two comma families makes of such a comma, and what the rules writing that raw make of the file around it.
+ * `selector-list-comma-newline-before` under `always` wrote the break into the selector, the next parse carried it into that raw, the comma opened the selector again, and every `--fix` run grew the file by a line. A row says what each rule of the two comma families makes of such a comma, and what the rules writing that raw make of the file around it.
  *
  * The control is a selector naming something in front of the comma, in every spelling of the run the options part — none, a space, a break, two tabs, a comment — so a branch moving its rows has done something else. The leads spell what the raw holds, from nothing through whitespace without a break to a break with indentation behind it, and each corpus text stands both at the root and inside a block, where the raw is the nested rule's.
  */

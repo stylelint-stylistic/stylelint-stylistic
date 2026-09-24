@@ -1,7 +1,7 @@
 /**
  * An opening brace behind a `//` comment ending a rule's selector or an at-rule's params, under both rules writing the run in front of the brace.
  *
- * Written for spec 1789508403: `postcss-less` keeps such a comment in the selector or params and only the break closing it in `raws.between`, so a guard reading `between` alone let the space or the brace be written into the comment. The block comment and the bare head are the control, and `postcss-scss`, which files the comment in `between`, is the control syntax.
+ * `postcss-less` keeps such a comment in the selector or params and only the break closing it in `raws.between`, so a guard reading `between` alone let the space or the brace be written into the comment. The block comment and the bare head are the control, and `postcss-scss`, which files the comment in `between`, is the control syntax.
  */
 
 import { multiply } from "../harness/matrix.ts"

@@ -1,7 +1,7 @@
 /**
  * A declaration with nothing but whitespace, comments and an important flag behind its colon, put to every rule reading that run or the semicolon behind it.
  *
- * Written for [#358](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/358): Less reads such a declaration to its semicolon, so `never` of `declaration-block-trailing-semicolon` used to leave a file the compiler refuses. No oracle corpus holds a declaration with no value, and a custom property parts from an ordinary one on the flag alone, hence the two properties. The last two runs are the controls, a value standing where the others spell none.
+ * Less reads such a declaration to its semicolon, so `never` of `declaration-block-trailing-semicolon` used to leave a file the compiler refuses. No oracle corpus holds a declaration with no value, and a custom property parts from an ordinary one on the flag alone, hence the two properties. The last two runs are the controls, a value standing where the others spell none.
  */
 
 import { multiply } from "../harness/matrix.ts"

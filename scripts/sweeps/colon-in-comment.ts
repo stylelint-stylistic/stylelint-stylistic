@@ -1,7 +1,7 @@
 /**
  * A colon inside what `raws.between` holds besides the declaration's own (a block comment, an inline comment, a string, a group), in front of every value shape the colon rules tell apart. Four block comments a reader may take unlike PostCSS: one opening `/*\/`, which `postcss-value-parser` closes on its own star; one ending in a backslash, which `style-search` never closes; two abutting, whose `*\/` and `/*` the search reads as a double slash; one behind a backslash, which the scan reads as an escape. The inline comment behind a backslash is the same divergence; one welded to a word opens no comment for either preprocessor; the string behind a bare double slash is code to the parser and a comment to `style-search`. The property is also spelled `url`, behind which the tokenizer takes a group whole.
  *
- * Written for [#388](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/388) and [#499](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/499), where `declaration-colon-newline-after` took a comment's colon for the declaration's. The controls carry no colon.
+ * `declaration-colon-newline-after` took a comment's colon for the declaration's. The controls carry no colon.
  *
  * The rules are every reader of the raw, the `declaration-colon-*` and `declaration-block-semicolon-*-before` rules, and `declaration-block-trailing-semicolon` as a control.
  */

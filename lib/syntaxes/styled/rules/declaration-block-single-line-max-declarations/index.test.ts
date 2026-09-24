@@ -48,7 +48,7 @@ testRule({
 			endColumn: 48,
 			message: messages.expected(1),
 		},
-		// #644; interpolations of unequal length, so the span's end moves where either is counted short
+		// Interpolations of unequal length, so the span's end moves where either is counted short
 		{
 			description: `a single-line block holding two interpolated declarations inside a template`,
 			code: `const A = styled.div\`a { color: \${c}; top: \${dd}; }\``,

@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest"
 import plugins from "../../index.ts"
 
 describe(`integration tests for linebrakes`, () => {
-	it(`should not be an error (issues/3635).`, async () => {
+	it(`should not be an error.`, async () => {
 		let { code } = await stylelint.lint({
 			code: `a{color:red;}`,
 			config: {

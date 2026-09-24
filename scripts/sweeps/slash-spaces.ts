@@ -1,7 +1,7 @@
 /**
  * A solidus between two parts of a value, in every spacing the four `*-slash-space-*` rules distinguish, beside every kind of operand a syntax may divide at, and in every place a rule reads one.
  *
- * Written for [#548](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/548). A vertical tab is a word to the tokenizer. The places put the pair where a rule reads a value and where it must not; inside `calc()` the parser returns the solidus as a word, inside `min()` as a divider.
+ * A vertical tab is a word to the tokenizer. The places put the pair where a rule reads a value and where it must not; inside `calc()` the parser returns the solidus as a word, inside `min()` as a divider.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"

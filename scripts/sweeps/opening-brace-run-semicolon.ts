@@ -1,7 +1,7 @@
 /**
  * A stray semicolon inside the run between a block's opening brace and its first node, under every rule reading that run.
  *
- * Written for 1789998855: the fixes of `block-opening-brace-newline-after` wrote the run in front of the first node that is no comment from its first break on, or emptied it, so a semicolon the parser files in that node's `raws.before` went with the whitespace; and where a comment's break was carried onto the node, the write copied a semicolon out of the comment's run. The axes: where the block stands; what opens it; whether a comment stands in the head, and what its own run holds, since its break is what gets carried; where the semicolon stands inside the node's run; and what closes the block, which decides its lineness. The runs holding no semicolon are the controls under a head that holds none. The mirror of `brace-run-semicolon`, which holds the run in front of the closing brace.
+ * The fixes of `block-opening-brace-newline-after` wrote the run in front of the first node that is no comment from its first break on, or emptied it, so a semicolon the parser files in that node's `raws.before` went with the whitespace; and where a comment's break was carried onto the node, the write copied a semicolon out of the comment's run. The axes: where the block stands; what opens it; whether a comment stands in the head, and what its own run holds, since its break is what gets carried; where the semicolon stands inside the node's run; and what closes the block, which decides its lineness. The runs holding no semicolon are the controls under a head that holds none. The mirror of `brace-run-semicolon`, which holds the run in front of the closing brace.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"

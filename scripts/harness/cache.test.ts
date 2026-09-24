@@ -120,7 +120,7 @@ afterAll(() => {
 	rmSync(objects, { recursive: true, force: true })
 })
 
-// #544: the key hashed the whole `scripts/harness` tree, where the runner's test stands since #540, so rewording a case there sent every oracle and sweep to measure both sides afresh
+// The key hashes the sources of `scripts/harness`, no test or document there: with the whole tree hashed, rewording a case sent every oracle and sweep to measure both sides afresh
 describe(`the hash of the sources of a directory`, () => {
 	it(`is the same where a test standing there is rewritten, and where the document beside them is`, () => {
 		expect(hashOf({ ...FILES, "lint.test.ts": `rewritten`, "deep/matrix.test.ts": `rewritten` })).toBe(baseline)
@@ -178,7 +178,7 @@ describe(`the listing a hash of sources is taken from`, () => {
 	})
 })
 
-// #555: the key hashed the whole `lib/` tree, tests and documents included, so rewording a case sent every oracle and sweep to measure that side afresh; the tree could not be dropped, since the collector reads it
+// The key hashes no whole `lib/` tree: with its tests and documents hashed, rewording a case sent every oracle and sweep to measure that side afresh; the tree is kept beside the key, since the collector reads it
 describe(`the tree a result was measured over`, () => {
 	it(`is the hash Git keeps of the side's \`lib/\` tree, which no input of the key is`, () => {
 		let { side, lib } = sideHoldingALib()
@@ -186,7 +186,7 @@ describe(`the tree a result was measured over`, () => {
 		expect(measuredTreeOf(side)).toEqual({ lib })
 	})
 
-	it(`stands under the name the collector has always read, so that a store written on either side of #555 is collected whole by either`, () => {
+	it(`stands under the name the collector has always read, so that a store written on either side of the change that took the \`lib/\` tree out of the key is collected whole by either`, () => {
 		// `gc.ts` collects as it loads, so it is read as text. The name is asked of the writer rather than spelled here, so that moving the field turns this red rather than the store empty
 		let script = readFileSync(path.join(ROOT, `scripts`, `harness`, `gc.ts`), `utf8`)
 
@@ -228,7 +228,7 @@ function emptyStore (): { store: ReturnType<typeof storeAt>, directory: string }
 }
 
 /**
- * Puts a file under the directory of `NAME`'s results by name, standing for what a run or the collector before [#554](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/554) left behind.
+ * Puts a file under the directory of `NAME`'s results by name, standing for what a run, or a collector that left a result's digest without its rows, left behind.
  * @param directory - Where `NAME`'s results stand in the store.
  * @param file - The name.
  */
@@ -237,7 +237,7 @@ function leave (directory: string, file: string): void {
 	writeFileSync(path.join(directory, file), `{}`)
 }
 
-// #554: the collector took out a result's rows and meta and left its digest, so a sweep meeting the digest went for the rows and died
+// The collector takes a result's digest out with its rows and meta: a digest left behind sent a sweep meeting it after the rows, and the sweep died
 describe(`the collector of the store`, () => {
 	let stores: string[] = []
 

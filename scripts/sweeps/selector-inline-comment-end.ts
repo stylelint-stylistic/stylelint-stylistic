@@ -1,7 +1,7 @@
 /**
  * A selector's `//` comment closed by each break `postcss-scss` closes one at, wherever a rule writing through the selector copies writes.
  *
- * Written for spec 1789508401: the copies were read to `\r?\n`, so a comment closed by a bare carriage return or a form feed took the selector behind it along: a fix in front of the comment wrote that part again, and one behind it was lost. The line feed and the Windows pair are the control, closed where they always were. Only `postcss-scss` keeps the two copies, so the sweep is read under it alone.
+ * The copies were read to `\r?\n`, so a comment closed by a bare carriage return or a form feed took the selector behind it along: a fix in front of the comment wrote that part again, and one behind it was lost. The line feed and the Windows pair are the control, closed where they always were. Only `postcss-scss` keeps the two copies, so the sweep is read under it alone.
  */
 
 import { place } from "../harness/matrix.ts"

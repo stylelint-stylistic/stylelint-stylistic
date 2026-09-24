@@ -1,7 +1,7 @@
 /**
  * A character an interpolation is spelled with, welded to a dimension where no interpolation stands, under the two rules that recase what they read.
  *
- * Written for [#426](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/426), where `unit-case` named `pxfff` the unit of `10px#fff`. The glue stands behind the dimension, in front of it, and inside a product; the empty glue is the control. The escaped hash is here on purpose: `10px\#fff` is one dimension token, which belongs to [#414](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/414).
+ * `unit-case` named `pxfff` the unit of `10px#fff`. The glue stands behind the dimension, in front of it, and inside a product; the empty glue is the control. The escaped hash is here on purpose: `10px\#fff` is one dimension token, which belongs to `escaped-unit-end`.
  */
 
 import { multiply, place } from "../harness/matrix.ts"

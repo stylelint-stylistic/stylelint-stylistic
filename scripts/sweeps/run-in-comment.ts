@@ -1,7 +1,7 @@
 /**
  * A whitespace run standing inside a comment of a value, and the runs standing beside that comment.
  *
- * Written for 1789885007, where `no-multiple-whitespaces` walked a value's characters with no reading of comments at all: it collapsed a run standing inside one, took the character a backslash covered there, which no escape span records, and opened a string of its own on a quotation mark of a comment, which moved the run it then wrote into out of a string of the value. A row says whether the comment's own text came back as it went in and whether the runs beside it are still read.
+ * `no-multiple-whitespaces` walked a value's characters with no reading of comments at all: it collapsed a run standing inside one, took the character a backslash covered there, which no escape span records, and opened a string of its own on a quotation mark of a comment, which moved the run it then wrote into out of a string of the value. A row says whether the comment's own text came back as it went in and whether the runs beside it are still read.
  *
  * The comment is spelled in every way the three syntaxes tell apart: a block comment, one opening `/*\/`, which `postcss-value-parser` closes on its own star, two abutting, whose `*\/` and `/*` a search reads as a double slash, and an inline comment, which plain CSS reads as code and both preprocessors as a comment. Each holds the run in the shapes the write turns on — bare, behind an escape, behind one quotation mark and between two — and the controls hold a single space, no whitespace at all, or are no comment.
  *

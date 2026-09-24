@@ -20,7 +20,7 @@ const CODE = `a {\n\tcolor: pink;\n}\n`
 /** The same stylesheet with a trailing space on its second line, which `no-eol-whitespace` takes away wherever it runs, so a rewrite shows the fix pass ran; it stands in a one-line literal, where no editor trims it. */
 const CODE_WITH_TRAILING_SPACE = `a {\n\tcolor: pink; \n}\n`
 
-// #540: the runner's configuration carried no `validate` flag, which `stylelint.utils.validateOptions` opens by reading, so it answered `true` for every option and every `if (!validOptions) return` of `lib/rules/` was dead
+// The runner's configuration carries the `validate` flag, which `stylelint.utils.validateOptions` opens by reading: without it every option was answered `true`, and every `if (!validOptions) return` of `lib/rules/` was dead
 describe(`a primary option the rule does not take`, () => {
 	it(`is refused in the words the linter refuses it with`, async () => {
 		let answer = await lintDirect({ code: CODE, rules: [[`max-empty-lines`, `abc`]], registry: REGISTRY })

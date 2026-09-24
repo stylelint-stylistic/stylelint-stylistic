@@ -1,7 +1,7 @@
 /**
  * A node standing wholly in the rest of the text of a `//` comment a semicolon of that text closed the node in front in, which `postcss-less` reads as a node of its own and Less as the comment.
  *
- * Written for [#723](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/723). The node in front is a declaration with and without an important flag, a bare custom property, a mixin call and a detached ruleset call; the rest of the line holds a declaration with and without its semicolon, two of them, one beside a block comment, a rule, and a mixin call with and without its semicolon; the line ends the block or a declaration follows it. Every rule under every primary option.
+ * The node in front is a declaration with and without an important flag, a bare custom property, a mixin call and a detached ruleset call; the rest of the line holds a declaration with and without its semicolon, two of them, one beside a block comment, a rule, and a mixin call with and without its semicolon; the line ends the block or a declaration follows it. Every rule under every primary option.
  */
 
 import { multiply } from "../harness/matrix.ts"

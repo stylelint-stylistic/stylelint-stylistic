@@ -1,7 +1,7 @@
 /**
  * A pair of parentheses holding nothing but whitespace, in every spelling of that run and in every place a rule about parentheses reaches.
  *
- * Written for [#329](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/329): the value parser hands such a pair's whole run back as `before` and leaves `after` empty, and no oracle carries the shape — `converge` reports nothing over a base where the fixer grows the run by a character every run. The runs that hold a node are the control set, expected to move nowhere; a no-break space is one of them, since the value parser reads it as a word.
+ * The value parser hands such a pair's whole run back as `before` and leaves `after` empty, and no oracle carries the shape — `converge` reports nothing over a base where the fixer grows the run by a character every run. The runs that hold a node are the control set, expected to move nowhere; a no-break space is one of them, since the value parser reads it as a word.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"

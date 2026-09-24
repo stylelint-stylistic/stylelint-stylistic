@@ -382,7 +382,7 @@ testRule({
 	],
 })
 
-// The expression of an interpolation is read only under the parser whose tokenizer reads one, and the escapes standing in it went unrecorded until 1789883888: the write took the character a backslash covers for whitespace of the run
+// The expression of an interpolation is read only under the parser whose tokenizer reads one, and the escapes standing in it have to be recorded: otherwise the write takes the character a backslash covers for whitespace of the run
 describe(`a run behind an escape inside an interpolation of a bare address`, () => {
 	let scssRule = `@stylistic/scss/no-multiple-whitespaces`
 

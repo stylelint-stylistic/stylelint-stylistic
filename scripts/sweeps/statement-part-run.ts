@@ -1,7 +1,7 @@
 /**
  * A run of empty lines between the parts of one statement, under `max-empty-lines`.
  *
- * Written for [#581](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/581): such a run is a rule's, a declaration's or an at-rule's `raws.between`, an at-rule's `raws.afterName`, the tail of the raw a flag stands in, or the tail of the printed value in front of the semicolon, and the fix wrote none of them, so `--fix` reported the run as fixed and returned the file with it.
+ * Such a run is a rule's, a declaration's or an at-rule's `raws.between`, an at-rule's `raws.afterName`, the tail of the raw a flag stands in, or the tail of the printed value in front of the semicolon, and the fix wrote none of them, so `--fix` reported the run as fixed and returned the file with it.
  *
  * The axes: which raw the run stands in; the run's length; what stands inside it, a comment carrying a run of its own among it; and the break spelling. The controls are the run in front of a node, which the base wrote, and the run inside a comment, which the option ignoring comments keeps every fix off.
  */

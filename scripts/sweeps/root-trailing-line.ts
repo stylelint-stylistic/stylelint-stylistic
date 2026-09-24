@@ -1,7 +1,7 @@
 /**
  * A comment behind a stylesheet's last statement, which the parser puts in the root's `raws.after` where that statement is an at-rule with params and neither block nor semicolon.
  *
- * Written for [#592](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/592): `indentation` measured no line of that raw. The controls (a semicolon, a rule) make the comment a node of its own, and an at-rule without params keeps it in its own `raws.between`, measured since [#510](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510).
+ * `indentation` measured no line of that raw. The controls (a semicolon, a rule) make the comment a node of its own, and an at-rule without params keeps it in its own `raws.between`, measured already.
  */
 
 import { multiply } from "../harness/matrix.ts"

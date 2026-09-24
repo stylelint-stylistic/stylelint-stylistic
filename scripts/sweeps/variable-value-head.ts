@@ -1,7 +1,7 @@
 /**
  * A Less variable under spellings of the run between its name and its value, among them a value opening with a colon of its own, which `postcss-less` keeps both in `raws.afterName` and at the head of the params but not in the `value` it prints.
  *
- * Written for [#650](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/650): a fix mirrored the whole params into `value`, so every run printed that colon once more. The head is a colon behind the name with and without a space, one, two or three colons, a comment behind the colon or in front of the second one, a break in front of it, and the unmarked spellings with a space in front of the first colon; the value holds a number with a unit, a list, a block comment between its words and an important flag. Every rule under every primary option.
+ * A fix mirrored the whole params into `value`, so every run printed that colon once more. The head is a colon behind the name with and without a space, one, two or three colons, a comment behind the colon or in front of the second one, a break in front of it, and the unmarked spellings with a space in front of the first colon; the value holds a number with a unit, a list, a block comment between its words and an important flag. Every rule under every primary option.
  */
 
 import { multiply } from "../harness/matrix.ts"

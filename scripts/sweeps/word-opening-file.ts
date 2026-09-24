@@ -1,7 +1,7 @@
 /**
  * A file's first content line opening on a character `\s` matches and the tokenizer reads as a word, behind the empty lines the file opens with.
  *
- * Written for spec 1788997844: `no-empty-first-line` read the opening run as `\s*\n`, so a vertical tab or a no-break space made it report a first line the parser had put into the first node's own text, and the fix wrote into a raw with nothing to take off. The axes: which character stands there, whether it holds the line alone or opens the line the file's content stands on, how many empty lines run in front of it, what the file holds, and the break's spelling. The openings the tokenizer reads as whitespace are the controls, and so is the opening that is nothing at all.
+ * `no-empty-first-line` read the opening run as `\s*\n`, so a vertical tab or a no-break space made it report a first line the parser had put into the first node's own text, and the fix wrote into a raw with nothing to take off. The axes: which character stands there, whether it holds the line alone or opens the line the file's content stands on, how many empty lines run in front of it, what the file holds, and the break's spelling. The openings the tokenizer reads as whitespace are the controls, and so is the opening that is nothing at all.
  *
  * The rules are the three that write the head of the file, plus `indentation`, which reads the run in front of a node as its level.
  */

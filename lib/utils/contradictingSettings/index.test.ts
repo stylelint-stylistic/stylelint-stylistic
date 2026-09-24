@@ -10,7 +10,7 @@ import plugins from "../../index.ts"
 
 import { type ConfiguredSetting, contradictionsAmong, contradictionsError } from "./index.ts"
 
-/** The break options each family's space options contradict, written out by hand from the measurements of #743 rather than derived from the module's own reading of the suffixes. */
+/** The break options each family's space options contradict, written out by hand from measurements rather than derived from the module's own reading of the suffixes. */
 const BEHIND_A_DELIMITER = {
 	"always": [`always`, `never`],
 	"always-multi-line": [`always`, `never`],

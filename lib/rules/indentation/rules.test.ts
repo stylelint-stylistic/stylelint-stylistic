@@ -671,7 +671,7 @@ testRule({
 			message: messages.expected(`0 tabs`),
 		},
 		{
-			description: `the same brace closing a block whose last node is an at-rule with neither block nor semicolon of its own, which reaches the brace since #509`,
+			description: `the same brace closing a block whose last node is an at-rule with neither block nor semicolon of its own, which reaches the brace`,
 			code: `a {\n\t@include m\n\t\t};`,
 			fixed: `a {\n\t@include m\n};`,
 			line: 3,

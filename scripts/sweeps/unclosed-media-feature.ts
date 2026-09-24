@@ -1,7 +1,7 @@
 /**
  * A media feature the file never closes, in every place such a feature stands, holding every kind of node, behind every spelling of the run its `(` opens on, and in front of every tail the file may end in.
  *
- * Written for [#575](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/575): PostCSS reads an at-rule's params past every brace while a `(` is open, so the value parser hands back an unclosed node holding the rest of the file, and no oracle carries the shape — `converge` reports nothing over a base where `always` writes a space at the end of the file every run. The closed features are the control set, expected to move only where what they hold leaves them open.
+ * PostCSS reads an at-rule's params past every brace while a `(` is open, so the value parser hands back an unclosed node holding the rest of the file, and no oracle carries the shape — `converge` reports nothing over a base where `always` writes a space at the end of the file every run. The closed features are the control set, expected to move only where what they hold leaves them open.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"

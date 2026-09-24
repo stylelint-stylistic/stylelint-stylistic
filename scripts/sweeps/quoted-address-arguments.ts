@@ -1,7 +1,7 @@
 /**
  * A `url()` whose parentheses a string opens, with arguments behind the string, under the spellings of its name that the value parser reads in and out of its url mode.
  *
- * Written for [#560](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/560), when the rules walking a value began to read those arguments; `address-in-a-text` holds one such form alone, and no oracle holds a comma, a solidus, a number or a nested call behind a quoted address.
+ * The rules walking a value read those arguments, yet `address-in-a-text` holds one such form alone, and no oracle holds a comma, a solidus, a number or a nested call behind a quoted address.
  */
 
 import { multiply } from "../harness/matrix.ts"

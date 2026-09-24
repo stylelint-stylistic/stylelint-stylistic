@@ -1,7 +1,7 @@
 /**
  * A comment behind a closing brace, and the run between it and the node behind, under `block-closing-brace-newline-after`.
  *
- * Written for spec 1789508404: the rule reads past a comment ending the brace's line, and where that comment is a `//` one a `never` fix took away the break that ends it and wrote the next node into the comment. The block comment is the control, and plain CSS, which reads no `//` comment, is the control syntax.
+ * The rule reads past a comment ending the brace's line, and where that comment is a `//` one a `never` fix took away the break that ends it and wrote the next node into the comment. The block comment is the control, and plain CSS, which reads no `//` comment, is the control syntax.
  */
 
 import { multiply } from "../harness/matrix.ts"

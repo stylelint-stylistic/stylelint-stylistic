@@ -33,7 +33,7 @@ function commentRemovalRuns (text: string, spans: CommentSpan[] = findCommentSpa
 /**
  * Takes the comments out of a text, each with what it carries off, so a rule does not measure a comment's whitespace.
  *
- * Until [#214](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/214) a regular expression backtracked past a `*\/` followed by code and swallowed a comma.
+ * No regular expression: one backtracked past a `*\/` followed by code and swallowed a comma.
  * @param text - The text the comments are taken out of.
  * @param spans - Its comment spans, where known.
  * @returns The text without them.

@@ -323,7 +323,7 @@ testRule({
 			],
 		},
 		{
-			// 1789653630: this tokenizer opens the token behind whitespace of the parenthesis too, and counts parentheses to its close, where PostCSS keeps such parentheses code and refuses the file over the mark
+			// This tokenizer opens the token behind whitespace of the parenthesis too, and counts parentheses to its close, where PostCSS keeps such parentheses code and refuses the file over the mark
 			description: `a quotation mark nothing closes inside the parentheses this syntax takes as one token behind a url parted from them and behind whitespace of their own`,
 			code: `a { b: url ( a '),b ) 1px; c: 'd' }`,
 			fixed: `a { b: url ( a '),b ) 1px; c: "d" }`,
@@ -340,7 +340,7 @@ testRule({
 			message: messages.expected(`double`),
 		},
 		{
-			// 1789910265: the stack of words runs through the whole file, and this tokenizer reads the comment behind the word, so what the at-rule's `(` pops is `url` itself
+			// The stack of words runs through the whole file, and this tokenizer reads the comment behind the word, so what the at-rule's `(` pops is `url` itself
 			description: `a pair of marks parted by the edge of a token the word of the node in front opened, with an end-of-line comment standing between that word and the parentheses`,
 			code: `
 				a { b: url // c

@@ -37,7 +37,7 @@ const SPELLINGS: Record<string, (mark: string) => string> = {
 	none: () => ``,
 }
 
-/** Where the comment and the string stand. The code goes first, so a rule reading the string's text reports two problems for one; `behindAddress` puts the mark in a bare address too, which the comment scan read as a string's until [#504](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504). */
+/** Where the comment and the string stand. The code goes first, so a rule reading the string's text reports two problems for one; `behindAddress` puts the mark in a bare address too, which the comment scan once read as a string's. */
 const PLACES: Record<string, (text: string, comment: string, mark: string) => string> = {
 	value: (text, comment, mark) => `a { b: ${text} ${comment} ${mark}${text}${mark}; }\n`,
 	call: (text, comment, mark) => `a { b: g(${text} ${comment} ${mark}${text}${mark}); }\n`,
@@ -57,7 +57,7 @@ const corpus: Sweep[`corpus`] = multiply({ place: keysOf(PLACES), spelling: keys
 	return wrap(text, spell(mark), mark)
 })
 
-/** The ten rules of [#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378) and the four comma rules of [#275](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/275), under every primary option. */
+/** The ten value rules and the four `function-comma-*` rules, under every primary option. */
 const configs: Sweep[`configs`] = ([
 	[`color-hex-case`, [`lower`, `upper`]],
 	[`function-max-empty-lines`, [0, 1]],

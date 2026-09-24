@@ -1,7 +1,7 @@
 /**
  * A run of empty lines in front of a free semicolon standing behind a rule's closing brace, under `max-empty-lines`.
  *
- * Written for [#584](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/584): PostCSS files such a semicolon, with the whitespace in front of it, in the rule's `raws.ownSemicolon`, a raw the fix's walk never read, so the run was reported and never written, and `--fix` returned the file with the warning gone.
+ * PostCSS files such a semicolon, with the whitespace in front of it, in the rule's `raws.ownSemicolon`, a raw the fix's walk never read, so the run was reported and never written, and `--fix` returned the file with the warning gone.
  *
  * The axes: where the rule stands and what follows the semicolon, since the run behind it lands in another raw and is the row's own control; what the rule's block holds; the run's length; what stands inside it; whether the semicolon is there at all, the shapes without one being the controls; and the break spelling.
  */

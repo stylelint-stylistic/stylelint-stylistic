@@ -770,7 +770,7 @@ testRule({
 	],
 })
 
-// The run between a comma closing the arguments and the closing parenthesis is the parentheses rules' to judge and write, as the run in front of a closing brace is the brace rules' and not the semicolon rules'; a comma rule judging it beside a parentheses rule asking the opposite left a warning no `--fix` could take away (1790021150, undoing that part of #349)
+// The run between a comma closing the arguments and the closing parenthesis is the parentheses rules' to judge and write, as the run in front of a closing brace is the brace rules' and not the semicolon rules'; a comma rule judging it beside a parentheses rule asking the opposite would leave a warning no `--fix` could take away
 testRule({
 	ruleName,
 	config: [`always`],

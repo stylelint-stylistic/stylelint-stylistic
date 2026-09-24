@@ -781,7 +781,7 @@ testRule({
 	],
 })
 
-// The example of issue #10: a line an editor with a tab size of 2 shows as 102 columns wide.
+// A line an editor with a tab size of 2 shows as 102 columns wide.
 testRule({
 	ruleName,
 	config: [100, { tabSize: 2 }],
