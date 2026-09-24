@@ -122,6 +122,11 @@ testRule({
 			code: `a {\n  b {}\n  ; c {}\n}`,
 		},
 		{
+			// A free semicolon alone on its line stands where a declaration of the block does
+			description: `a free semicolon alone on its line at the level of the block's statements`,
+			code: `a {\n  b {}\n  ;\n  color: pink;\n  ;\n}\n;\n`,
+		},
+		{
 			// The stray semicolon stands on the brace's line and is no part of the run the brace's level is read off
 			description: `a closing brace standing at its level behind a stray semicolon on its line`,
 			code: `a {\n  color: pink;\n;}`,
@@ -257,6 +262,39 @@ testRule({
 			line: 3,
 			column: 7,
 			message: messages.expected(`2 spaces`),
+		},
+		{
+			// A free semicolon alone on its line was measured by nobody, wherever the parser filed it (1790234713)
+			description: `a free semicolon alone on a line indented a level too deep, in the run in front of a closing brace`,
+			code: `a {\n  color: pink;\n    ;\n}`,
+			fixed: `a {\n  color: pink;\n  ;\n}`,
+			line: 3,
+			column: 5,
+			message: messages.expected(`2 spaces`),
+		},
+		{
+			description: `the same line in the run in front of a node`,
+			code: `a {\n  color: pink;\n    ;\n  top: 1px;\n}`,
+			fixed: `a {\n  color: pink;\n  ;\n  top: 1px;\n}`,
+			line: 3,
+			column: 5,
+			message: messages.expected(`2 spaces`),
+		},
+		{
+			description: `a free semicolon alone on a line indented too shallow behind the closing brace of a rule, which keeps the semicolon in a raw of its own`,
+			code: `a {\n  b {}\n;\n  c {}\n}`,
+			fixed: `a {\n  b {}\n  ;\n  c {}\n}`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`2 spaces`),
+		},
+		{
+			description: `the same line closing the stylesheet`,
+			code: `@import "a";\n  ;`,
+			fixed: `@import "a";\n;`,
+			line: 2,
+			column: 3,
+			message: messages.expected(`0 spaces`),
 		},
 		{
 			description: `the same line at the root, the node standing right behind the semicolon`,

@@ -1,4 +1,4 @@
-import type { AtRule, Declaration, Document, Node, Root, Rule, Source } from "postcss"
+import type { AtRule, Container, Declaration, Document, Node, Root, Rule, Source } from "postcss"
 import styleSearch from "style-search"
 import stylelint from "stylelint"
 
@@ -12,12 +12,12 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
-import { fixIndentation, lastLineIndentation, lastLineStart, writeIndentationBefore } from "../../utils/lineIndentation/index.ts"
+import { fixIndentation, lastLineIndentation, lastLineStart, replaceIndentation, writeIndentationBefore } from "../../utils/lineIndentation/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { rootLevelIndents } from "../../utils/rootLevelIndents/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
-import { ownSemicolonLineChecker, semicolonLineChecker } from "../../utils/semicolonLineChecker/index.ts"
+import { freeSemicolonLineChecker, ownSemicolonLineChecker, semicolonLineChecker } from "../../utils/semicolonLineChecker/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { statementString } from "../../utils/statementString/index.ts"
 import { isAtRule, isDeclaration, isRoot, isRule } from "../../utils/typeGuards/index.ts"
@@ -189,7 +189,22 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// The line a statement's semicolon opens closes the statement, so it stands at the statement's own level, as a closing brace stands at its block's (#569)
 			semicolonLineChecker({ node, syntax, result, checkedRuleName: ruleName, message: messages.expected, expectedIndentation: indentChar.repeat(nodeLevel), expectation: legibleExpectation(nodeLevel - hostLevel) })
+
+			// A line a free semicolon opens with nothing behind it is an empty statement of its container; last, since the node's and the brace's fixes write such a line at their own level (1790234713)
+			freeSemicolonLineChecker({ node, syntax, result, checkedRuleName: ruleName, message: messages.expected, statementIn })
 		})
+
+		/**
+		 * The indentation a statement with no block stands at in a container: one level into a block, and in a root the level of its nodes.
+		 * @param container - The container.
+		 * @returns The indentation and its wording, or nothing in a root with no node to read the embedding off.
+		 */
+		function statementIn (container: Container): { indentation: string, expectation: string } | undefined {
+			let level = isRoot(container) ? container.first && indentationLevel(container.first) : indentationLevel(container, 1)
+			let hostLevel = isRoot(container) && container.first ? embeddingLevel(syntax, container.first, indentChar).hostLevel : 0
+
+			return level === undefined ? undefined : { indentation: indentChar.repeat(level), expectation: legibleExpectation(level - hostLevel) }
+		}
 
 		/**
 		 * The level a node stands at.
@@ -707,22 +722,6 @@ function inferRootIndentLevel (syntax: Syntax, root: Root, baseIndentLevel: numb
 	if (indents.length > 0) return Math.max(...indents.map((indent) => getIndentLevel(indent))) + newBaseIndentLevel
 
 	return newBaseIndentLevel
-}
-
-/**
- * Replaces the indentation behind one break.
- * @param input - The text.
- * @param searchString - The indentation there.
- * @param replaceString - The replacement.
- * @param startIndex - The break's index.
- * @returns The text.
- */
-function replaceIndentation (input: string, searchString: string, replaceString: string, startIndex: number): string {
-	let offset = startIndex + 1
-	let stringStart = input.slice(0, offset)
-	let stringEnd = input.slice(offset + searchString.length)
-
-	return stringStart + replaceString + stringEnd
 }
 
 // Reads every line a run's writers touch, so it takes the run's last turn (#353)

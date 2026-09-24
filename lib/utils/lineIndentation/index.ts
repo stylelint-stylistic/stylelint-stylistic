@@ -2,19 +2,29 @@ import { EVERY_LINE_BREAK, EVERY_LINE_BREAK_AND_INDENT, LEADING_CSS_WHITESPACE, 
 import type { InterpolationSpan } from "../findInterpolationSpans/index.ts"
 
 /**
- * Finds where a text's last line opens: behind its last break standing outside the spans, since a break inside a styled template's interpolation ends a line of JavaScript and none of the stylesheet's.
+ * Finds where a text's lines open behind a break: behind every break standing outside the spans, since a break inside a styled template's interpolation ends a line of JavaScript and none of the stylesheet's.
  * @param text - The text.
  * @param spans - The spans of host code in the text.
- * @returns The index behind that break, or `-1` where the text holds none.
+ * @returns The index behind each such break, in order.
  */
-export function lastLineStart (text: string, spans: InterpolationSpan[] = []): number {
-	let start = -1
+export function lineStarts (text: string, spans: InterpolationSpan[] = []): number[] {
+	let starts = []
 
 	for (let { 0: lineBreak, index } of text.matchAll(EVERY_LINE_BREAK)) {
-		if (!spans.some((span) => span.start <= index && index < span.end)) start = index + lineBreak.length
+		if (!spans.some((span) => span.start <= index && index < span.end)) starts.push(index + lineBreak.length)
 	}
 
-	return start
+	return starts
+}
+
+/**
+ * Finds where a text's last line opens, as {@link lineStarts} reads the breaks.
+ * @param text - The text.
+ * @param spans - The spans of host code in the text.
+ * @returns The index behind the last break, or `-1` where the text holds none.
+ */
+export function lastLineStart (text: string, spans: InterpolationSpan[] = []): number {
+	return lineStarts(text, spans).at(-1) ?? -1
 }
 
 /**
@@ -54,4 +64,20 @@ export function writeIndentationBefore (before: string, indentation: string, spa
 	if (!writesHead || head === undefined || (lastLineStart(before, spans) >= 0 && spans.some((span) => span.start === head.length))) return written
 
 	return written.replace(WHITESPACE_WITHOUT_BREAK_BEFORE_CONTENT, indentation)
+}
+
+/**
+ * Replaces the indentation behind one break.
+ * @param input - The text.
+ * @param searchString - The indentation there.
+ * @param replaceString - The replacement.
+ * @param startIndex - The break's index; `-1` for a line the text opens with.
+ * @returns The text.
+ */
+export function replaceIndentation (input: string, searchString: string, replaceString: string, startIndex: number): string {
+	let offset = startIndex + 1
+	let stringStart = input.slice(0, offset)
+	let stringEnd = input.slice(offset + searchString.length)
+
+	return stringStart + replaceString + stringEnd
 }
