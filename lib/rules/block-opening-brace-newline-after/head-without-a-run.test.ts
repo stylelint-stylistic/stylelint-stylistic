@@ -135,28 +135,6 @@ testRule({
 })
 
 describe(`the run PostCSS prints in front of a head node the file spells none in front of`, () => {
-	/**
-	 * Fixes a stylesheet under the syntax that takes the raw off, then reads the file the fix left as a plain stylesheet, which is what the next run of the linter has in front of it.
-	 *
-	 * The testing library reads that file under the same syntax instead, which takes the raw off a second time; no run of the linter ever meets such a node twice, since only a rule building one puts it there, so these cases are written against the linter itself.
-	 * @param code - The stylesheet.
-	 * @param primary - The primary option.
-	 * @returns What the check said, the file the fix left, and how much the rule has to say about that file.
-	 */
-	async function fixAndRead (code: string, primary: string): Promise<{ warnings: string[], fixed: string, left: number }> {
-		let config = { plugins, rules: { [ruleName]: primary } }
-		let read = await stylelint.lint({ code, customSyntax: headWithoutARun, config })
-		let run = await stylelint.lint({ code, customSyntax: headWithoutARun, config, fix: true })
-		let fixed = run.code ?? code
-		let again = await stylelint.lint({ code: fixed, config })
-
-		return {
-			warnings: pick(read.results).warnings.map((warning) => `${warning.line}:${warning.column} ${warning.text}`),
-			fixed,
-			left: pick(again.results).warnings.length,
-		}
-	}
-
 	// See #411
 	it(`is the whitespace never-multi-line refuses over a block holding one comment, and the fix takes it out`, async () => {
 		expect(await fixAndRead(`a {/*1*/\n}`, `never-multi-line`)).toEqual({
@@ -200,3 +178,25 @@ describe(`the run PostCSS prints in front of a head node the file spells none in
 		})
 	})
 })
+
+/**
+ * Fixes a stylesheet under the syntax that takes the raw off, then reads the file the fix left as a plain stylesheet, which is what the next run of the linter has in front of it.
+ *
+ * The testing library reads that file under the same syntax instead, which takes the raw off a second time; no run of the linter ever meets such a node twice, since only a rule building one puts it there, so these cases are written against the linter itself.
+ * @param code - The stylesheet.
+ * @param primary - The primary option.
+ * @returns What the check said, the file the fix left, and how much the rule has to say about that file.
+ */
+async function fixAndRead (code: string, primary: string): Promise<{ warnings: string[], fixed: string, left: number }> {
+	let config = { plugins, rules: { [ruleName]: primary } }
+	let read = await stylelint.lint({ code, customSyntax: headWithoutARun, config })
+	let run = await stylelint.lint({ code, customSyntax: headWithoutARun, config, fix: true })
+	let fixed = run.code ?? code
+	let again = await stylelint.lint({ code: fixed, config })
+
+	return {
+		warnings: pick(read.results).warnings.map((warning) => `${warning.line}:${warning.column} ${warning.text}`),
+		fixed,
+		left: pick(again.results).warnings.length,
+	}
+}

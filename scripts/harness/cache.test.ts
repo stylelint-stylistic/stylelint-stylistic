@@ -180,16 +180,6 @@ describe(`the listing a hash of sources is taken from`, () => {
 
 // #555: the key hashed the whole `lib/` tree, tests and documents included, so rewording a case sent every oracle and sweep to measure that side afresh; the tree could not be dropped, since the collector reads it
 describe(`the tree a result was measured over`, () => {
-	/**
-	 * Fabricates a side holding a `lib/` of one source, since the database this file writes into holds no revision of this repository.
-	 * @returns The hash of the tree of the side, and the hash of the `lib/` tree inside it.
-	 */
-	function sideHoldingALib (): { side: string, lib: string } {
-		let lib = treeOfEntries([`100644 blob ${blobOf(`the rule`)}\tindex.ts`])
-
-		return { side: treeOfEntries([`040000 tree ${lib}\tlib`]), lib }
-	}
-
 	it(`is the hash Git keeps of the side's \`lib/\` tree, which no input of the key is`, () => {
 		let { side, lib } = sideHoldingALib()
 
@@ -210,6 +200,16 @@ describe(`the tree a result was measured over`, () => {
 		for (let [directory, file] of writers) expect(readFileSync(path.join(ROOT, `scripts`, directory, file), `utf8`)).toMatch(/\bmeasuredTreeOf\(/u)
 	})
 })
+
+/**
+ * Fabricates a side holding a `lib/` of one source, since the database this file writes into holds no revision of this repository.
+ * @returns The hash of the tree of the side, and the hash of the `lib/` tree inside it.
+ */
+function sideHoldingALib (): { side: string, lib: string } {
+	let lib = treeOfEntries([`100644 blob ${blobOf(`the rule`)}\tindex.ts`])
+
+	return { side: treeOfEntries([`040000 tree ${lib}\tlib`]), lib }
+}
 
 /** The oracle whose results directory the cases write into. */
 const NAME = `converge`

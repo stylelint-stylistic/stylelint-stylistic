@@ -27,14 +27,14 @@
 		"dist"
 	],
 	"peerDependencies": {
-		"stylelint": "^17.6.0"
+		"stylelint": "^17.15.0"
 	},
 	"dependencies": {
 		"@csstools/css-parser-algorithms": "^4.0.0",
-		"@csstools/css-tokenizer": "^4.0.0",
+		"@csstools/css-tokenizer": "^4.0.1",
 		"@csstools/media-query-list-parser": "^5.0.0",
-		"postcss": "^8.5.26",
-		"postcss-selector-parser": "^7.1.5",
+		"postcss": "^8.5.28",
+		"postcss-selector-parser": "^7.1.6",
 		"postcss-value-parser": "^4.2.0",
 		"style-search": "^0.1.0"
 	},
@@ -43,29 +43,29 @@
 		"prepare": "./scripts/prepare.sh"
 	},
 	"devDependencies": {
-		"@firefoxic/beautypography": "^0.1.0",
-		"@firefoxic/oxlint-config": "^0.5.0",
-		"@morev/stylelint-testing-library": "^1.1.1",
-		"@types/node": "^26.2.0",
-		"@vitest/coverage-v8": "4.1.10",
-		"oxlint": "^1.83.0",
-		"postcss-html": "^2.0.0",
-		"postcss-less": "^6.0.0",
-		"postcss-scss": "^4.0.9",
-		"postcss-styled-syntax": "^0.7.2",
-		"stylelint": "^17.6.0",
-		"typescript": "^7.0.2",
-		"vitest": "^4.1.10"
+		"@firefoxic/beautypography": "^0.1",
+		"@firefoxic/oxlint-config": "^0.5",
+		"@morev/stylelint-testing-library": "^1",
+		"@types/node": "^26",
+		"@vitest/coverage-v8": "4",
+		"oxlint": "^1",
+		"postcss-html": "^2",
+		"postcss-less": "^6",
+		"postcss-scss": "^4",
+		"postcss-styled-syntax": "^0.7",
+		"stylelint": "^17",
+		"typescript": "^7",
+		"vitest": "^4"
 	},
 	"devEngines": {
 		"runtime": {
 			"name": "node",
-			"version": ">=26.8",
+			"version": ">=26.10",
 			"onFail": "download"
 		},
 		"packageManager": {
 			"name": "pnpm",
-			"version": ">=12.3",
+			"version": ">=12.6",
 			"onFail": "download"
 		}
 	},

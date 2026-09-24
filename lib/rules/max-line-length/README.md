@@ -149,7 +149,7 @@ The option is named after the CSS `tab-size` property and counts the way it
 
 For example, with a maximum length of `20` and `tabSize: 4`.
 
-The following pattern is considered a problem, the second line being indented with two tabs and measuring 8 + 13 = 21 columns:
+The following pattern is considered a problem, the second line being indented with two tabs and measuring 8 + 13 = 21 columns:
 
 ```css
 a {
@@ -157,7 +157,7 @@ a {
 }
 ```
 
-The following patterns are _not_ considered problems, the first measuring 8 + 12 = 20 columns and the second 3 + 1 + 14 = 18, since its tab reaches the next tab stop after one column:
+The following patterns are _not_ considered problems, the first measuring 8 + 12 = 20 columns and the second 3 + 1 + 14 = 18, since its tab reaches the next tab stop after one column:
 
 ```css
 a {

@@ -332,20 +332,20 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// A fixed quote never stands inside a comment, so the old raw with the quotes replaced is written to every copy
 			syntax.write(node, replaceQuotes(value, fixPositions))
 		}
+	}
 
-		/**
-		 * Replaces the marks at the indexes with the correct one.
-		 * @param text - The value or params the marks stand in.
-		 * @param indexes - The mark indexes.
-		 * @returns The fixed text.
-		 */
-		function replaceQuotes (text: string, indexes: number[]): string {
-			let fixed = text
+	/**
+	 * Replaces the marks at the indexes with the correct one.
+	 * @param text - The value or params the marks stand in.
+	 * @param indexes - The mark indexes.
+	 * @returns The fixed text.
+	 */
+	function replaceQuotes (text: string, indexes: number[]): string {
+		let fixed = text
 
-			for (let index of indexes) fixed = replaceQuote(fixed, index, correctQuote)
+		for (let index of indexes) fixed = replaceQuote(fixed, index, correctQuote)
 
-			return fixed
-		}
+		return fixed
 	}
 }
 
