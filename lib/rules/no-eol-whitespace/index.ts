@@ -1,8 +1,10 @@
+import type { Root } from "postcss"
 import styleSearch from "style-search"
-import stylelint from "stylelint"
+import stylelint, { type PostcssResult } from "stylelint"
 
 import { EVERY_LINE_BREAK, LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import type { Syntax } from "../../syntaxes/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isOnlyWhitespace } from "../../utils/isOnlyWhitespace/index.ts"
@@ -96,6 +98,205 @@ export type SecondaryOptions = {
 	ignore?: `empty-lines` | `empty-lines`[],
 }
 
+/** What a run of the rule reads everywhere: the syntax, the root, the result, and whether empty lines are passed over. */
+type EolScope = {
+	syntax: Syntax,
+	root: Root,
+	result: PostcssResult,
+	ignoreEmptyLines: boolean,
+}
+
+/**
+ * Calls back with the index of each line's trailing whitespace.
+ * @param scope - The run.
+ * @param string - The text.
+ * @param callback - Takes the index.
+ * @param options - `isRootFirst` marks the root's first token, `isPlainText` prose.
+ */
+function eachEolWhitespace (scope: EolScope, string: string, callback: (index: number) => void, options: {
+	isRootFirst?: boolean,
+	isPlainText?: boolean,
+} = {}): void {
+	let { syntax, root, result, ignoreEmptyLines } = scope
+	let { isRootFirst = false, isPlainText = false } = options
+
+	/**
+	 * Reports the whitespace at a line ending.
+	 * @param startIndex - The line ending.
+	 */
+	function handleEol (startIndex: number): void {
+		let index = findErrorStartIndex(startIndex, string, {
+			ignoreEmptyLines,
+			isRootFirst,
+		})
+
+		if (index > -1) callback(index)
+	}
+
+	// A CSS scan of prose takes an apostrophe for an unclosed string
+	if (isPlainText) {
+		for (let { index } of string.matchAll(EVERY_LINE_BREAK)) handleEol(index)
+
+		return
+	}
+
+	styleSearch(
+		{
+			// The search reads a string by rules of its own, so it is handed none (#739)
+			source: maskStrings(string, syntax.commentSpans(string, root, result)),
+			target: LINE_BREAK_CHARACTERS,
+			comments: `check`,
+		},
+		(match) => {
+			handleEol(match.startIndex)
+		},
+	)
+}
+
+/**
+ * Trims the end of every line of a text.
+ * @param scope - The run.
+ * @param value - The text.
+ * @param fixFn - Takes the trimmed text.
+ * @param options - For `eachEolWhitespace`.
+ */
+function fixText (scope: EolScope, value: string | undefined, fixFn: (text: string) => void, options?: {
+	isRootFirst?: boolean,
+	isPlainText?: boolean,
+}): void {
+	if (!value) return
+
+	let fixed = ``
+	let lastIndex = 0
+
+	eachEolWhitespace(
+		scope,
+		value,
+		(index) => {
+			let newlineIndex = index + 1
+
+			fixed += fixString(value.slice(lastIndex, newlineIndex))
+			lastIndex = newlineIndex
+		},
+		options,
+	)
+
+	if (lastIndex) {
+		fixed += value.slice(lastIndex)
+		fixFn(fixed)
+	}
+}
+
+/**
+ * Trims the end of every line of every text a node holds.
+ * @param scope - The run.
+ */
+function fixRoot (scope: EolScope): void {
+	let { syntax, root } = scope
+	let isRootFirst = true
+
+	root.walk((node) => {
+		fixText(
+			scope,
+			node.raws.before,
+			(fixed) => {
+				node.raws.before = fixed
+			},
+			{ isRootFirst },
+		)
+		isRootFirst = false
+
+		if (isAtRule(node)) {
+			fixText(scope, node.raws.afterName, (fixed) => {
+				node.raws.afterName = fixed
+			})
+
+			fixText(scope, syntax.read(node), (fixed) => {
+				syntax.write(node, fixed)
+			})
+		}
+
+		// An inline comment in the selector may end in a space the raw hides
+		if (isRule(node)) {
+			fixText(scope, syntax.read(node), (fixed) => {
+				syntax.write(node, fixed)
+			})
+		}
+
+		if (isAtRule(node) || isRule(node) || isDeclaration(node)) {
+			fixText(scope, node.raws.between, (fixed) => {
+				node.raws.between = fixed
+			})
+		}
+
+		// The run behind a Less mixin call's flag, which the `less` namespace hands to the flag's raw (#374)
+		if (isAtRule(node) && typeof node.raws.important === `string`) {
+			fixText(scope, node.raws.important, (fixed) => {
+				node.raws.important = fixed
+			})
+		}
+
+		if (isDeclaration(node)) {
+			fixText(scope, syntax.read(node), (fixed) => {
+				syntax.write(node, fixed)
+			})
+		}
+
+		if (isComment(node)) {
+			fixText(scope, node.raws.left, (fixed) => {
+				node.raws.left = fixed
+			})
+
+			if (syntax.isStandardComment(node)) {
+				fixText(scope, node.raws.right, (fixed) => {
+					node.raws.right = fixed
+				})
+			}
+			else {
+				// An inline comment ends on a line feed only, so a bare carriage return or form feed at the file's end stays in `raws.right`
+				fixText(scope, node.raws.right, (fixed) => {
+					node.raws.right = fixed
+				})
+
+				// A whitespace-only inline comment is an empty text with the whitespace in `raws.left`; trimming `raws.left` under a text would close `// c` onto it
+				if (node.raws.right) node.raws.right = fixString(node.raws.right)
+				else if (!node.text && node.raws.left) node.raws.left = fixString(node.raws.left)
+			}
+
+			// The comment body is prose
+			fixText(
+				scope,
+				node.text,
+				(fixed) => {
+					node.text = fixed
+				},
+				{ isPlainText: true },
+			)
+		}
+
+		if (isAtRule(node) || isRule(node)) {
+			fixText(scope, node.raws.after, (fixed) => {
+				node.raws.after = fixed
+			})
+		}
+	})
+
+	fixText(
+		scope,
+		root.raws.after,
+		(fixed) => {
+			root.raws.after = fixed
+		},
+		{ isRootFirst },
+	)
+
+	if (typeof root.raws.after === `string`) {
+		let lastEOL = lastLineBreakIndex(root.raws.after)
+
+		if (lastEOL !== root.raws.after.length - 1) root.raws.after = root.raws.after.slice(0, lastEOL + 1) + fixString(root.raws.after.slice(lastEOL + 1))
+	}
+}
+
 /**
  * Disallows end-of-line whitespace.
  * @param scope - What the namespace hands the rule.
@@ -126,6 +327,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		if (!validOptions) return
 
 		let ignoreEmptyLines = optionsMatches(secondaryOptions, `ignore`, `empty-lines`)
+		let scope: EolScope = { syntax, root, result, ignoreEmptyLines }
 
 		let rootString = (root.source && root.source.input.css) || ``
 
@@ -141,11 +343,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				endIndex: index,
 				result,
 				ruleName,
-				fix,
+				fix: () => {
+					fixRoot(scope)
+				},
 			})
 		}
 
-		eachEolWhitespace(rootString, reportFromIndex, { isRootFirst: true })
+		eachEolWhitespace(scope, rootString, reportFromIndex, { isRootFirst: true })
 
 		let errorIndex = findErrorStartIndex(rootString.length, rootString, {
 			ignoreEmptyLines,
@@ -153,186 +357,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		})
 
 		if (errorIndex > -1) reportFromIndex(errorIndex)
-
-		/**
-		 * Calls back with the index of each line's trailing whitespace.
-		 * @param string - The text.
-		 * @param callback - Takes the index.
-		 * @param options - `isRootFirst` marks the root's first token, `isPlainText` prose.
-		 */
-		function eachEolWhitespace (string: string, callback: (index: number) => void, options: {
-			isRootFirst?: boolean,
-			isPlainText?: boolean,
-		} = {}): void {
-			let { isRootFirst = false, isPlainText = false } = options
-
-			/**
-			 * Reports the whitespace at a line ending.
-			 * @param startIndex - The line ending.
-			 */
-			function handleEol (startIndex: number): void {
-				let index = findErrorStartIndex(startIndex, string, {
-					ignoreEmptyLines,
-					isRootFirst,
-				})
-
-				if (index > -1) callback(index)
-			}
-
-			// A CSS scan of prose takes an apostrophe for an unclosed string
-			if (isPlainText) {
-				for (let { index } of string.matchAll(EVERY_LINE_BREAK)) handleEol(index)
-
-				return
-			}
-
-			styleSearch(
-				{
-					// The search reads a string by rules of its own, so it is handed none (#739)
-					source: maskStrings(string, syntax.commentSpans(string, root, result)),
-					target: LINE_BREAK_CHARACTERS,
-					comments: `check`,
-				},
-				(match) => {
-					handleEol(match.startIndex)
-				},
-			)
-		}
-
-		/** Trims the end of every line of every text a node holds. */
-		function fix (): void {
-			let isRootFirst = true
-
-			root.walk((node) => {
-				fixText(
-					node.raws.before,
-					(fixed) => {
-						node.raws.before = fixed
-					},
-					{ isRootFirst },
-				)
-				isRootFirst = false
-
-				if (isAtRule(node)) {
-					fixText(node.raws.afterName, (fixed) => {
-						node.raws.afterName = fixed
-					})
-
-					fixText(syntax.read(node), (fixed) => {
-						syntax.write(node, fixed)
-					})
-				}
-
-				// An inline comment in the selector may end in a space the raw hides
-				if (isRule(node)) {
-					fixText(syntax.read(node), (fixed) => {
-						syntax.write(node, fixed)
-					})
-				}
-
-				if (isAtRule(node) || isRule(node) || isDeclaration(node)) {
-					fixText(node.raws.between, (fixed) => {
-						node.raws.between = fixed
-					})
-				}
-
-				// The run behind a Less mixin call's flag, which the `less` namespace hands to the flag's raw (#374)
-				if (isAtRule(node) && typeof node.raws.important === `string`) {
-					fixText(node.raws.important, (fixed) => {
-						node.raws.important = fixed
-					})
-				}
-
-				if (isDeclaration(node)) {
-					fixText(syntax.read(node), (fixed) => {
-						syntax.write(node, fixed)
-					})
-				}
-
-				if (isComment(node)) {
-					fixText(node.raws.left, (fixed) => {
-						node.raws.left = fixed
-					})
-
-					if (syntax.isStandardComment(node)) {
-						fixText(node.raws.right, (fixed) => {
-							node.raws.right = fixed
-						})
-					}
-					else {
-						// An inline comment ends on a line feed only, so a bare carriage return or form feed at the file's end stays in `raws.right`
-						fixText(node.raws.right, (fixed) => {
-							node.raws.right = fixed
-						})
-
-						// A whitespace-only inline comment is an empty text with the whitespace in `raws.left`; trimming `raws.left` under a text would close `// c` onto it
-						if (node.raws.right) node.raws.right = fixString(node.raws.right)
-						else if (!node.text && node.raws.left) node.raws.left = fixString(node.raws.left)
-					}
-
-					// The comment body is prose
-					fixText(
-						node.text,
-						(fixed) => {
-							node.text = fixed
-						},
-						{ isPlainText: true },
-					)
-				}
-
-				if (isAtRule(node) || isRule(node)) {
-					fixText(node.raws.after, (fixed) => {
-						node.raws.after = fixed
-					})
-				}
-			})
-
-			fixText(
-				root.raws.after,
-				(fixed) => {
-					root.raws.after = fixed
-				},
-				{ isRootFirst },
-			)
-
-			if (typeof root.raws.after === `string`) {
-				let lastEOL = lastLineBreakIndex(root.raws.after)
-
-				if (lastEOL !== root.raws.after.length - 1) root.raws.after = root.raws.after.slice(0, lastEOL + 1) + fixString(root.raws.after.slice(lastEOL + 1))
-			}
-		}
-
-		/**
-		 * Trims the end of every line of a text.
-		 * @param value - The text.
-		 * @param fixFn - Takes the trimmed text.
-		 * @param options - For `eachEolWhitespace`.
-		 */
-		function fixText (value: string | undefined, fixFn: (text: string) => void, options?: {
-			isRootFirst?: boolean,
-			isPlainText?: boolean,
-		}): void {
-			if (!value) return
-
-			let fixed = ``
-			let lastIndex = 0
-
-			eachEolWhitespace(
-				value,
-				(index) => {
-					let newlineIndex = index + 1
-
-					fixed += fixString(value.slice(lastIndex, newlineIndex))
-					lastIndex = newlineIndex
-				},
-				options,
-			)
-
-			if (lastIndex) {
-				fixed += value.slice(lastIndex)
-				fixFn(fixed)
-			}
-		}
 	}
 }
 

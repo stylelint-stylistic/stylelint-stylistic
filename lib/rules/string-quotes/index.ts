@@ -1,6 +1,6 @@
 import type { AtRule, Declaration, Rule } from "postcss"
 import valueParser from "postcss-value-parser"
-import stylelint from "stylelint"
+import stylelint, { type PostcssResult } from "stylelint"
 
 import { CHARSET_AT_RULE_NAME } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
@@ -108,6 +108,203 @@ export type SecondaryOptions = {
 	avoidEscape?: boolean,
 }
 
+/** What a run of the rule reads everywhere: what the namespace hands it, the result, the option, the quote asked for and the other one, and whether a string holding the one asked for may keep the other. */
+type QuotesScope = RuleScope<typeof MESSAGES> & {
+	result: PostcssResult,
+	primary: PrimaryOption,
+	correctQuote: typeof SINGLE_QUOTE | typeof DOUBLE_QUOTE,
+	erroneousQuote: typeof SINGLE_QUOTE | typeof DOUBLE_QUOTE,
+	avoidEscape: boolean,
+}
+
+/**
+ * Checks the attribute selectors of a rule.
+ * @param scope - The run.
+ * @param ruleNode - The rule whose selector is checked.
+ */
+function checkRule (scope: QuotesScope, ruleNode: Rule): void {
+	let { ruleName, messages, syntax, result, primary, correctQuote, erroneousQuote, avoidEscape } = scope
+
+	if (!syntax.isStandardRule(ruleNode)) return
+
+	let copies = syntax.selectorCopies(ruleNode)
+
+	// `ruleNode.selector` lacks the comments, so a fix written to it drops them; the raw is parsed, positions translated back, and the fix written to both copies.
+	let { selector } = copies
+
+	if (!selector.includes(`[`) || !selector.includes(`=`)) return
+
+	let selectorFixed = false
+
+	let selectorTree = parseSelector(selector, result, ruleNode)
+
+	if (!selectorTree) return
+
+	selectorTree.walkAttributes((attributeNode) => {
+		if (!attributeNode.quoted) return
+
+		let maybeProblemIndex = copies.toSourceIndex(attributeNode.sourceIndex + attributeNode.offsetOf(`value`))
+
+		if (attributeNode.quoteMark === correctQuote && avoidEscape) {
+			assertString(attributeNode.value)
+
+			let needsCorrectEscape = attributeNode.value.includes(correctQuote)
+			let needsOtherEscape = attributeNode.value.includes(erroneousQuote)
+
+			if (needsOtherEscape) return
+
+			if (needsCorrectEscape) {
+				report({
+					message: messages.expected,
+					messageArgs: [primary === `single` ? `double` : primary],
+					node: ruleNode,
+					index: maybeProblemIndex,
+					endIndex: maybeProblemIndex,
+					result,
+					ruleName,
+					fix () {
+						selectorFixed = true
+						attributeNode.quoteMark = erroneousQuote
+					},
+				})
+			}
+		}
+
+		if (attributeNode.quoteMark === erroneousQuote) {
+			if (avoidEscape) {
+				assertString(attributeNode.value)
+
+				let needsCorrectEscape = attributeNode.value.includes(correctQuote)
+				let needsOtherEscape = attributeNode.value.includes(erroneousQuote)
+
+				if (needsOtherEscape) {
+					report({
+						message: messages.expected,
+						messageArgs: [primary],
+						node: ruleNode,
+						index: maybeProblemIndex,
+						endIndex: maybeProblemIndex,
+						result,
+						ruleName,
+						fix () {
+							selectorFixed = true
+							attributeNode.quoteMark = correctQuote
+						},
+					})
+
+					return
+				}
+
+				if (needsCorrectEscape) return
+			}
+
+			report({
+				message: messages.expected,
+				messageArgs: [primary],
+				node: ruleNode,
+				index: maybeProblemIndex,
+				endIndex: maybeProblemIndex,
+				result,
+				ruleName,
+				fix () {
+					selectorFixed = true
+					attributeNode.quoteMark = correctQuote
+				},
+			})
+		}
+	})
+
+	if (selectorFixed) {
+		let fixedSelector = String(selectorTree)
+
+		copies.write(fixedSelector)
+	}
+}
+
+/**
+ * Checks the strings of a value or of at-rule params.
+ * @param scope - The run.
+ * @param node - The declaration or at-rule the value or params belong to.
+ * @param rawValue - The value as the file spells it.
+ * @param getIndex - Returns the index the value starts at.
+ * @param getPrefix - Returns what the node spells in front of the value, which the tokenizer is read over too.
+ */
+function checkDeclOrAtRule<T extends AtRule | Declaration> (scope: QuotesScope, node: T, rawValue: string, getIndex: (node: T) => number, getPrefix: (node: T) => string): void {
+	let { ruleName, messages, syntax, result, primary, correctQuote, erroneousQuote, avoidEscape } = scope
+	let fixPositions: number[] = []
+	let value = rawValue
+
+	// No erroneous quote, nothing to do
+	if (!value.includes(erroneousQuote)) return
+
+	// Blanked, since the value parser closes `/*/` on its own star and reads the rest as value nodes (#378)
+	let commentSpans = syntax.printedComments(node, value, result)
+
+	// The parentheses behind a `url` parted from its `(` are one token to the tokenizer, and the marks the value parser pairs across such a token's edge are masked, so that a fix rewrites the marks the tokenizer pairs (1789653630)
+	let addressTokens = syntax.addressTokenSpans(getPrefix(node), value, node, result)
+
+	// The value is passed over where the parser's own tokenizer is out of reach: which marks of it are an address's cannot be said, and a fix written blind leaves a text that parser refuses
+	if (!addressTokens) return
+
+	valueParser(maskMisreadMarks(hideParenthesesInUrlStrings(blankComments(value, commentSpans), commentSpans), addressTokens)).walk((valueNode, index, siblings) => {
+		// A bare address is passed over whole where the syntax reads a quotation mark inside one as a character of it, since the parser opens an address behind the name spelled `url` alone and hands the strings behind `URL(`, `u\rl(` and `\75 rl(` back as strings (1789604002). A quoted address is the string, and is walked.
+		if (valueNode.type === `function` && !syntax.readsQuoteInsideAddressAsString() && opensAnAddress(valueNode, index, siblings) && valueNode.nodes[0]?.type !== `string`) return false
+
+		// A string the value never closes has no mark to replace, and a mark written where the parser read none leaves a text it refuses
+		if (valueNode.type === `string` && valueNode.unclosed) return
+
+		if (valueNode.type === `string` && valueNode.quote === erroneousQuote) {
+			let needsEscape = valueNode.value.includes(correctQuote)
+
+			if (avoidEscape && needsEscape) {
+				// Not an error
+				return
+			}
+
+			let openIndex = valueNode.sourceIndex
+			let problemIndex = getIndex(node) + openIndex
+
+			report({
+				message: messages.expected,
+				messageArgs: [primary],
+				node,
+				index: problemIndex,
+				endIndex: problemIndex,
+				result,
+				ruleName,
+				fix () {
+					// An escape is left as the file spells it
+					if (!needsEscape) {
+						let closeIndex = openIndex + valueNode.value.length + erroneousQuote.length
+
+						fixPositions.push(openIndex, closeIndex)
+					}
+				},
+			})
+		}
+	})
+
+	if (fixPositions.length === 0) return
+
+	// A fixed quote never stands inside a comment, so the old raw with the quotes replaced is written to every copy
+	syntax.write(node, replaceQuotes(value, fixPositions, correctQuote))
+}
+
+/**
+ * Replaces the marks at the indexes with the correct one.
+ * @param text - The value or params the marks stand in.
+ * @param indexes - The mark indexes.
+ * @param correctQuote - The mark written.
+ * @returns The fixed text.
+ */
+function replaceQuotes (text: string, indexes: number[], correctQuote: string): string {
+	let fixed = text
+
+	for (let index of indexes) fixed = replaceQuote(fixed, index, correctQuote)
+
+	return fixed
+}
+
 /**
  * Specifies single or double quotes around strings.
  * @param scope - What the namespace hands the rule.
@@ -143,205 +340,24 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		if (!validOptions) return
 
 		let avoidEscape = secondaryOptions && secondaryOptions.avoidEscape !== undefined ? secondaryOptions.avoidEscape : true
+		let scope: QuotesScope = { ruleName, messages, syntax, result, primary, correctQuote, erroneousQuote, avoidEscape }
 
 		root.walk((node) => {
 			switch (node.type) {
 				case `atrule`:
 					// The params of a preprocessor's at-rule hold strings too, so the syntax is not asked; the one at-rule passed over is a `@charset`, whose quotes are the encoding declaration's and `at-charset-rule-no-invalid`'s to judge
-					if (!CHARSET_AT_RULE_NAME.test(node.name)) checkDeclOrAtRule(node, syntax.read(node), atRuleParamIndex, atRuleParamPrefix)
+					if (!CHARSET_AT_RULE_NAME.test(node.name)) checkDeclOrAtRule(scope, node, syntax.read(node), atRuleParamIndex, atRuleParamPrefix)
 
 					break
 				case `decl`:
-					checkDeclOrAtRule(node, syntax.read(node), declarationValueIndex, declarationValuePrefix)
+					checkDeclOrAtRule(scope, node, syntax.read(node), declarationValueIndex, declarationValuePrefix)
 					break
 				case `rule`:
-					checkRule(node)
+					checkRule(scope, node)
 					break
 				// no default
 			}
 		})
-
-		/**
-		 * Checks the attribute selectors of a rule.
-		 * @param ruleNode - The rule whose selector is checked.
-		 */
-		function checkRule (ruleNode: Rule): void {
-			if (!syntax.isStandardRule(ruleNode)) return
-
-			let copies = syntax.selectorCopies(ruleNode)
-
-			// `ruleNode.selector` lacks the comments, so a fix written to it drops them; the raw is parsed, positions translated back, and the fix written to both copies.
-			let { selector } = copies
-
-			if (!selector.includes(`[`) || !selector.includes(`=`)) return
-
-			let selectorFixed = false
-
-			let selectorTree = parseSelector(selector, result, ruleNode)
-
-			if (!selectorTree) return
-
-			selectorTree.walkAttributes((attributeNode) => {
-				if (!attributeNode.quoted) return
-
-				let maybeProblemIndex = copies.toSourceIndex(attributeNode.sourceIndex + attributeNode.offsetOf(`value`))
-
-				if (attributeNode.quoteMark === correctQuote && avoidEscape) {
-					assertString(attributeNode.value)
-
-					let needsCorrectEscape = attributeNode.value.includes(correctQuote)
-					let needsOtherEscape = attributeNode.value.includes(erroneousQuote)
-
-					if (needsOtherEscape) return
-
-					if (needsCorrectEscape) {
-						report({
-							message: messages.expected,
-							messageArgs: [primary === `single` ? `double` : primary],
-							node: ruleNode,
-							index: maybeProblemIndex,
-							endIndex: maybeProblemIndex,
-							result,
-							ruleName,
-							fix () {
-								selectorFixed = true
-								attributeNode.quoteMark = erroneousQuote
-							},
-						})
-					}
-				}
-
-				if (attributeNode.quoteMark === erroneousQuote) {
-					if (avoidEscape) {
-						assertString(attributeNode.value)
-
-						let needsCorrectEscape = attributeNode.value.includes(correctQuote)
-						let needsOtherEscape = attributeNode.value.includes(erroneousQuote)
-
-						if (needsOtherEscape) {
-							report({
-								message: messages.expected,
-								messageArgs: [primary],
-								node: ruleNode,
-								index: maybeProblemIndex,
-								endIndex: maybeProblemIndex,
-								result,
-								ruleName,
-								fix () {
-									selectorFixed = true
-									attributeNode.quoteMark = correctQuote
-								},
-							})
-
-							return
-						}
-
-						if (needsCorrectEscape) return
-					}
-
-					report({
-						message: messages.expected,
-						messageArgs: [primary],
-						node: ruleNode,
-						index: maybeProblemIndex,
-						endIndex: maybeProblemIndex,
-						result,
-						ruleName,
-						fix () {
-							selectorFixed = true
-							attributeNode.quoteMark = correctQuote
-						},
-					})
-				}
-			})
-
-			if (selectorFixed) {
-				let fixedSelector = String(selectorTree)
-
-				copies.write(fixedSelector)
-			}
-		}
-
-		/**
-		 * Checks the strings of a value or of at-rule params.
-		 * @param node - The declaration or at-rule the value or params belong to.
-		 * @param rawValue - The value as the file spells it.
-		 * @param getIndex - Returns the index the value starts at.
-		 * @param getPrefix - Returns what the node spells in front of the value, which the tokenizer is read over too.
-		 */
-		function checkDeclOrAtRule<T extends AtRule | Declaration> (node: T, rawValue: string, getIndex: (node: T) => number, getPrefix: (node: T) => string): void {
-			let fixPositions: number[] = []
-			let value = rawValue
-
-			// No erroneous quote, nothing to do
-			if (!value.includes(erroneousQuote)) return
-
-			// Blanked, since the value parser closes `/*/` on its own star and reads the rest as value nodes (#378)
-			let commentSpans = syntax.printedComments(node, value, result)
-
-			// The parentheses behind a `url` parted from its `(` are one token to the tokenizer, and the marks the value parser pairs across such a token's edge are masked, so that a fix rewrites the marks the tokenizer pairs (1789653630)
-			let addressTokens = syntax.addressTokenSpans(getPrefix(node), value, node, result)
-
-			// The value is passed over where the parser's own tokenizer is out of reach: which marks of it are an address's cannot be said, and a fix written blind leaves a text that parser refuses
-			if (!addressTokens) return
-
-			valueParser(maskMisreadMarks(hideParenthesesInUrlStrings(blankComments(value, commentSpans), commentSpans), addressTokens)).walk((valueNode, index, siblings) => {
-				// A bare address is passed over whole where the syntax reads a quotation mark inside one as a character of it, since the parser opens an address behind the name spelled `url` alone and hands the strings behind `URL(`, `u\rl(` and `\75 rl(` back as strings (1789604002). A quoted address is the string, and is walked.
-				if (valueNode.type === `function` && !syntax.readsQuoteInsideAddressAsString() && opensAnAddress(valueNode, index, siblings) && valueNode.nodes[0]?.type !== `string`) return false
-
-				// A string the value never closes has no mark to replace, and a mark written where the parser read none leaves a text it refuses
-				if (valueNode.type === `string` && valueNode.unclosed) return
-
-				if (valueNode.type === `string` && valueNode.quote === erroneousQuote) {
-					let needsEscape = valueNode.value.includes(correctQuote)
-
-					if (avoidEscape && needsEscape) {
-						// Not an error
-						return
-					}
-
-					let openIndex = valueNode.sourceIndex
-					let problemIndex = getIndex(node) + openIndex
-
-					report({
-						message: messages.expected,
-						messageArgs: [primary],
-						node,
-						index: problemIndex,
-						endIndex: problemIndex,
-						result,
-						ruleName,
-						fix () {
-							// An escape is left as the file spells it
-							if (!needsEscape) {
-								let closeIndex = openIndex + valueNode.value.length + erroneousQuote.length
-
-								fixPositions.push(openIndex, closeIndex)
-							}
-						},
-					})
-				}
-			})
-
-			if (fixPositions.length === 0) return
-
-			// A fixed quote never stands inside a comment, so the old raw with the quotes replaced is written to every copy
-			syntax.write(node, replaceQuotes(value, fixPositions))
-		}
-	}
-
-	/**
-	 * Replaces the marks at the indexes with the correct one.
-	 * @param text - The value or params the marks stand in.
-	 * @param indexes - The mark indexes.
-	 * @returns The fixed text.
-	 */
-	function replaceQuotes (text: string, indexes: number[]): string {
-		let fixed = text
-
-		for (let index of indexes) fixed = replaceQuote(fixed, index, correctQuote)
-
-		return fixed
 	}
 }
 

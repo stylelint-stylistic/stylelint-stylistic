@@ -71,7 +71,7 @@ const DEBT: Record<string, string[]> = {
 	"lib/utils/isWhitespace/index.ts": [`return [\` \`, \`\\n\`, \`\\t\`, \`\\r\`, \`\\f\`].includes(char)`],
 	"lib/utils/whitespaceChecker/index.ts": [
 		`return char === \`\\n\``,
-		`if (oneCharAfter === \`\\r\` && twoCharsAfter === \`\\n\` && (activeArgs.onlyOneChar || isNullish(threeCharsAfter) || !isWhitespace(threeCharsAfter))) return`,
+		`if (oneCharAfter === \`\\r\` && twoCharsAfter === \`\\n\` && (args.onlyOneChar || isNullish(threeCharsAfter) || !isWhitespace(threeCharsAfter))) return`,
 	],
 }
 
