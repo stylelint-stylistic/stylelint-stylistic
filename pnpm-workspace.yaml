@@ -1,4 +1,8 @@
 gitChecks: false
 
+# stylelint is taken off the upstream `v18` branch until it ships, and pnpm refuses a Git dependency with a `prepare` script unless it is listed here by the commit the branch resolves to, so the key moves with the lockfile
+allowBuilds:
+  "stylelint@https://codeload.github.com/stylelint/stylelint/tar.gz/139c5931a1fc4ab2bc31026da67c58540e5ae265": true
+
 registries:
   default: https://registry.npmjs.org/

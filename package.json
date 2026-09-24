@@ -53,7 +53,7 @@
 		"postcss-less": "^6",
 		"postcss-scss": "^4",
 		"postcss-styled-syntax": "^0.7",
-		"stylelint": "^17",
+		"stylelint": "github:stylelint/stylelint#v18",
 		"typescript": "^7",
 		"vitest": "^4"
 	},
