@@ -1,3 +1,5 @@
+import { CHARSET_RULE_MESSAGE } from "../../utils/asksForTheCharsetRule/index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -9,7 +11,7 @@ testRule({
 	accept: [
 		{
 			description: `a space behind the name`,
-			code: `@charset "UTF-8";`,
+			code: `@layer base;`,
 		},
 		{
 			description: `a quoted URL behind the space`,
@@ -133,51 +135,59 @@ testRule({
 		},
 		{
 			description: `params abutting the name`,
-			code: `@charset"UTF-8";`,
-			fixed: `@charset "UTF-8";`,
+			code: `@import"x.css";`,
+			fixed: `@import "x.css";`,
 			line: 1,
-			column: 8,
-			message: messages.expectedAfter(`@charset`),
+			column: 7,
+			message: messages.expectedAfter(`@import`),
 		},
 		{
 			description: `two spaces where one belongs`,
-			code: `@charset  "UTF-8";`,
-			fixed: `@charset "UTF-8";`,
+			code: `@import  "x.css";`,
+			fixed: `@import "x.css";`,
 			line: 1,
-			column: 8,
-			message: messages.expectedAfter(`@charset`),
+			column: 7,
+			message: messages.expectedAfter(`@import`),
 		},
 		{
 			description: `a break where the space belongs`,
-			code: `@charset\n"UTF-8";`,
-			fixed: `@charset "UTF-8";`,
+			code: `@import\n"x.css";`,
+			fixed: `@import "x.css";`,
 			line: 1,
-			column: 8,
-			message: messages.expectedAfter(`@charset`),
+			column: 7,
+			message: messages.expectedAfter(`@import`),
 		},
 		{
 			description: `a carriage return where the space belongs`,
-			code: `@charset\r\n"UTF-8";`,
-			fixed: `@charset "UTF-8";`,
+			code: `@import\r\n"x.css";`,
+			fixed: `@import "x.css";`,
 			line: 1,
-			column: 8,
-			message: messages.expectedAfter(`@charset`),
+			column: 7,
+			message: messages.expectedAfter(`@import`),
 		},
 		{
 			description: `an empty line where the space belongs`,
-			code: `@charset\n\n"UTF-8";`,
-			fixed: `@charset "UTF-8";`,
+			code: `@import\n\n"x.css";`,
+			fixed: `@import "x.css";`,
 			line: 1,
-			column: 8,
-			message: messages.expectedAfter(`@charset`),
+			column: 7,
+			message: messages.expectedAfter(`@import`),
 		},
 		{
 			description: `the same empty line spelled with carriage returns`,
-			code: `@charset\r\n\r\n"UTF-8";`,
-			fixed: `@charset "UTF-8";`,
+			code: `@import\r\n\r\n"x.css";`,
+			fixed: `@import "x.css";`,
 			line: 1,
-			column: 8,
-			message: messages.expectedAfter(`@charset`),
+			column: 7,
+			message: messages.expectedAfter(`@import`),
+		},
+		{
+			description: `a charset in every spelling, which the rule passes over, the file getting the one warning asking for the core rule instead`,
+			code: `@charset "utf-8";\n@CHARSET 'utf-8';\n@charset  "utf-8" ;\n@charset\n"utf-8";`,
+			fixed: `@charset "utf-8";\n@CHARSET 'utf-8';\n@charset  "utf-8" ;\n@charset\n"utf-8";`,
+			line: 1,
+			column: 1,
+			message: `${CHARSET_RULE_MESSAGE} (${ruleName})`,
 		},
 		{
 			description: `a range-syntax query abutting the name`,
@@ -261,23 +271,23 @@ testRule({
 	accept: [
 		{
 			description: `a single-line at-rule with the space behind its name`,
-			code: `@charset "UTF-8";`,
+			code: `@layer base;`,
 		},
 		{
 			description: `a break behind the name, which makes the at-rule multi-line and puts it out of this option's reach`,
-			code: `@charset\n"UTF-8";`,
+			code: `@layer\nbase;`,
 		},
 		{
 			description: `the same break spelled with a carriage return`,
-			code: `@charset\r\n"UTF-8";`,
+			code: `@layer\r\nbase;`,
 		},
 		{
 			description: `an empty line behind the name, which makes the at-rule multi-line too`,
-			code: `@charset\n\n"UTF-8";`,
+			code: `@layer\n\nbase;`,
 		},
 		{
 			description: `the same empty line spelled with carriage returns`,
-			code: `@charset\r\n\r\n"UTF-8";`,
+			code: `@layer\r\n\r\nbase;`,
 		},
 		{
 			description: `a quoted URL behind the space`,
@@ -420,19 +430,19 @@ testRule({
 	reject: [
 		{
 			description: `params abutting the name of a single-line at-rule`,
-			code: `@charset"UTF-8";`,
-			fixed: `@charset "UTF-8";`,
+			code: `@import"x.css";`,
+			fixed: `@import "x.css";`,
 			line: 1,
-			column: 8,
-			message: messages.expectedAfter(`@charset`),
+			column: 7,
+			message: messages.expectedAfter(`@import`),
 		},
 		{
 			description: `two spaces where one belongs`,
-			code: `@charset  "UTF-8";`,
-			fixed: `@charset "UTF-8";`,
+			code: `@import  "x.css";`,
+			fixed: `@import "x.css";`,
 			line: 1,
-			column: 8,
-			message: messages.expectedAfter(`@charset`),
+			column: 7,
+			message: messages.expectedAfter(`@import`),
 		},
 		{
 			description: `a range-syntax query abutting the name`,

@@ -19,8 +19,8 @@ body:
       description: 'Provide the smallest possible reproducible example or steps.'
       placeholder: |
         ```css
-        @charset 'utf-8';
         @import 'test.css';
+        a { color:red; }
         ```
 
         Or
@@ -92,11 +92,11 @@ body:
     attributes:
       label: 'What actually happened?'
       placeholder: |
-        Quotes for `@charset` are not fixed and are not even considered an error:
+        The space behind the colon is not written by `--fix`, and no warning is reported:
 
         ```css
-        @charset 'utf-8';
-        @import "test.css";
+        @import 'test.css';
+        a { color:red; }
         ```
     validations:
       required: true

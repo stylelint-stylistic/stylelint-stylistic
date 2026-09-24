@@ -1,5 +1,6 @@
 import type { AtRule, Comment, Declaration, Rule } from "postcss"
 
+import { isStandardSyntaxAtRule } from "../../utils/isStandardSyntaxAtRule/index.ts"
 import { isStandardSyntaxDeclaration } from "../../utils/isStandardSyntaxDeclaration/index.ts"
 import { isStandardSyntaxSelectorCode } from "../../utils/isStandardSyntaxSelector/index.ts"
 import { isStandardSyntaxValue } from "../../utils/isStandardSyntaxValue/index.ts"
@@ -9,11 +10,13 @@ import { isInlineComment } from "../isInlineComment/index.ts"
 import { SCSS_MODULE_FUNCTION, SCSS_MODULE_VARIABLE } from "../regexps.ts"
 
 /**
- * Whether an at-rule is standard: Sass's bodiless, paramless `@content` is not.
+ * Whether an at-rule is standard: the core's answer, no for Sass's bodiless, paramless `@content`.
  * @param atRule - The at-rule.
  * @returns True where it is.
  */
 export function isStandardPreprocessorAtRule (atRule: AtRule): boolean {
+	if (!isStandardSyntaxAtRule(atRule)) return false
+
 	// Sass `@content`
 	if (!atRule.nodes && atRule.params === ``) return false
 

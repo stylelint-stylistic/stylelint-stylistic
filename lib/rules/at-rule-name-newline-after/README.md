@@ -9,9 +9,9 @@ Require a newline after at-rule names.
  * The newline after this at-rule name */
 ```
 
-The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule. It writes no break behind the name of a `@charset`, whatever its head is spelled like: a rule respelling that head can make it the encoding declaration within the same run, and a break there is never the spelling the specification reads. Under Less it writes no break behind an `@import` or `@plugin` with no whitespace behind the name either, since Less takes the two as directives only with whitespace there. The warning stands.
+The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule. Under Less it writes no break behind an `@import` or `@plugin` with no whitespace behind the name, since Less takes the two as directives only with whitespace there. The warning stands.
 
-The rule passes over an encoding declaration spelled as the specification reads it — `@charset "utf-8";` at the very start of the file, with one space and double quotes — since no other spelling of it declares an encoding at all.
+The rule passes over a `@charset` in any spelling: the encoding declaration is a byte sequence the browser reads before parsing rather than an at-rule, and Stylelint's [`at-charset-rule-no-invalid`](https://stylelint.io/user-guide/rules/at-charset-rule-no-invalid) rule judges its spelling. A CSS file holding one gets a single warning asking for that rule where the configuration leaves it off.
 
 ## Options
 

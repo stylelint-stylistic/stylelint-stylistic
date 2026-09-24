@@ -1,3 +1,5 @@
+import { CHARSET_RULE_MESSAGE } from "../../utils/asksForTheCharsetRule/index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName, autoStripIndent: false })
@@ -880,6 +882,23 @@ testRule({
 			line: 1,
 			column: 17,
 			message: messages.rejected,
+		},
+		{
+			description: `a second semicolon behind a charset, which is no at-rule to the rules reading an at-rule's own text but whose semicolons are the file's, the file getting the warning asking for the core rule as well`,
+			code: `@charset "utf-8";;`,
+			fixed: `@charset "utf-8";`,
+			warnings: [
+				{
+					line: 1,
+					column: 1,
+					message: `${CHARSET_RULE_MESSAGE} (${ruleName})`,
+				},
+				{
+					line: 1,
+					column: 18,
+					message: messages.rejected,
+				},
+			],
 		},
 		{
 			description: `the same semicolon behind a space`,

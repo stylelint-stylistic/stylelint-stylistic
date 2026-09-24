@@ -17,7 +17,7 @@ const NAMES: Record<string, string> = {
 	use: `@use`,
 	forward: `@forward`,
 	plugin: `@plugin`,
-	otherAtRule: `@charset`,
+	otherAtRule: `@namespace`,
 }
 
 /** What stands between the name and the address; the grammar asks for none of it, a word ends the wait for an address, and a group of words in parentheses ends it everywhere but under Less. */

@@ -1,5 +1,6 @@
 import stylelint from "stylelint"
 
+import { CHARSET_AT_RULE_NAME } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
@@ -54,7 +55,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (hasBlock(atRule)) return
 
-			if (!syntax.isStandardAtRule(atRule)) return
+			// A `@charset` is no at-rule to a reader of its own text, but the semicolon behind it is the file's, and the break behind that is read as behind any node
+			if (!syntax.isStandardAtRule(atRule) && !CHARSET_AT_RULE_NAME.test(atRule.name)) return
 
 			// Allow an end-of-line comment
 			let nodeToCheck = nextNonCommentNode(nextNode)

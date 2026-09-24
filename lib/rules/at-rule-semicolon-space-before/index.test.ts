@@ -1,3 +1,5 @@
+import { CHARSET_RULE_MESSAGE } from "../../utils/asksForTheCharsetRule/index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -7,11 +9,6 @@ testRule({
 	config: [`always`],
 
 	accept: [
-		// See #703
-		{
-			description: `an encoding declaration, whose semicolon the specification puts on the closing quotation mark`,
-			code: `@charset "UTF-8";`,
-		},
 		{
 			description: `a space in front of the semicolon`,
 			code: `@import "styles/mystyle" ;`,
@@ -94,30 +91,13 @@ testRule({
 			column: 12,
 			message: messages.expectedBefore(),
 		},
-		// See #703
 		{
-			description: `a charset rule whose single quotes declare no encoding, so the warning stands while a neighbour may still make it one`,
-			code: `@charset 'UTF-8';`,
-			fixed: `@charset 'UTF-8';`,
+			description: `a charset in every spelling, which the rule passes over, the file getting the one warning asking for the core rule instead`,
+			code: `@charset "utf-8";\n@CHARSET 'utf-8';\n@charset  "utf-8" ;\n@charset\n"utf-8";`,
+			fixed: `@charset "utf-8";\n@CHARSET 'utf-8';\n@charset  "utf-8" ;\n@charset\n"utf-8";`,
 			line: 1,
-			column: 16,
-			message: messages.expectedBefore(),
-		},
-		{
-			description: `the same rule with its name in upper case, which the at-rule name case rule under lower recases in the very same run`,
-			code: `@CHARSET "UTF-8";`,
-			fixed: `@CHARSET "UTF-8";`,
-			line: 1,
-			column: 16,
-			message: messages.expectedBefore(),
-		},
-		{
-			description: `the same rule spelled with two spaces, which declares none either`,
-			code: `@charset  "UTF-8";`,
-			fixed: `@charset  "UTF-8";`,
-			line: 1,
-			column: 17,
-			message: messages.expectedBefore(),
+			column: 1,
+			message: `${CHARSET_RULE_MESSAGE} (${ruleName})`,
 		},
 		{
 			// See #357
@@ -364,15 +344,6 @@ testRule({
 			fixed: `@import "styles/mystyle";`,
 			line: 1,
 			column: 25,
-			message: messages.rejectedBefore(),
-		},
-		{
-			// See #697
-			description: `a space in front of the semicolon of a charset rule, which the specification reads no whitespace in front of either`,
-			code: `@charset "UTF-8" ;`,
-			fixed: `@charset "UTF-8";`,
-			line: 1,
-			column: 17,
 			message: messages.rejectedBefore(),
 		},
 		{
