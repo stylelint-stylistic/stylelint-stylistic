@@ -20,7 +20,6 @@ testRule({
 			code: `a { stroke: url(#gradientA) }`,
 		},
 		{
-			// See #579
 			description: `an address behind a word ending in an escaped backslash and a digit, which open no escape to take the space between the word and the name`,
 			code: `a { b: \\\\9 url(#FFF); }`,
 		},
@@ -65,7 +64,6 @@ testRule({
 
 	reject: [
 		{
-			// See #560
 			description: `a call among the arguments behind a quoted address, which are those of any call`,
 			code: `a { b: url("x", f(#ABC)); }`,
 			fixed: `a { b: url("x", f(#abc)); }`,
@@ -124,7 +122,6 @@ testRule({
 			message: messages.expected(`#12345AA`, `#12345aa`),
 		},
 		{
-			// See #378
 			description: `a color standing beside a comment opening with a solidus, a star and a solidus, whose text spells a color of its own that the value parser hands back as a word`,
 			code: `a { b: #ABC /*/ #FFF */ 3; }`,
 			fixed: `a { b: #abc /*/ #FFF */ 3; }`,
@@ -133,7 +130,6 @@ testRule({
 			message: messages.expected(`#ABC`, `#abc`),
 		},
 		{
-			// See #508
 			description: `a color in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no color`,
 			code: `a { b: #FFF /*/ " */ "#FFF"; }`,
 			fixed: `a { b: #fff /*/ " */ "#FFF"; }`,
@@ -243,7 +239,6 @@ testRule({
 			message: messages.expected(`#12345aa`, `#12345AA`),
 		},
 		{
-			// See #272
 			description: `a color standing behind a comment the value parser does not give back as it read it`,
 			code: `a { b: x/*/*a*/#aabbcc; }`,
 			fixed: `a { b: x/*/*a*/#AABBCC; }`,

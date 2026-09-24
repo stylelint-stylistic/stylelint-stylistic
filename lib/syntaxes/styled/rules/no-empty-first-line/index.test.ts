@@ -20,7 +20,6 @@ testRule({
 	],
 	reject: [
 		{
-			// See #602
 			description: `an empty first line in front of a free semicolon, which leaves the template's root no node`,
 			code: `
 				const A = styled.div\`

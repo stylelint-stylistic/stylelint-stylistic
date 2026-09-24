@@ -6,7 +6,7 @@ import { lastNodeHoldsTheBlockAfter } from "../lastNodeHoldsTheBlockAfter/index.
 import { isDeclaration } from "../typeGuards/index.ts"
 
 /**
- * Sets the block's final raw where the parser filed it, the raw {@link lastNodeHoldsTheBlockAfter} names and `getBlockAfter` reads: the last node's `raws.between`, behind whatever else it holds, where that node swallowed the run. It stays there, since `declaration-block-trailing-semicolon` reads `raws.between` for it. A custom property's run is written behind its printed value through the syntax, so every copy of the value stays in step, or behind its `!important` raw ([#538](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/538)).
+ * Sets the block's final raw where the parser filed it, the raw {@link lastNodeHoldsTheBlockAfter} names and `getBlockAfter` reads: the last node's `raws.between`, behind whatever else it holds, where that node swallowed the run. It stays there, since `declaration-block-trailing-semicolon` reads `raws.between` for it. A custom property's run is written behind its printed value through the syntax, so every copy of the value stays in step, or behind its `!important` raw.
  * @param syntax - The syntax the rule is built over, which writes the value.
  * @param statement - The statement carrying the block.
  * @param after - The run to write.

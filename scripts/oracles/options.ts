@@ -88,7 +88,7 @@ const RULE_OPTIONS: Record<string, unknown[]> = {
 	"value-slash-space-before": [`always`, `never`, `always-single-line`, `never-single-line`],
 }
 
-/** The primaries a namespace refuses on purpose, since its language leaves the rule no file to write under them: Less reads no at-rule name holding an upper-case letter as one ([#578](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/578)). The oracles and the sweeps put none of them to that namespace, and `scripts/harness/lint.test.ts` holds each to being refused. */
+/** The primaries a namespace refuses on purpose, since its language leaves the rule no file to write under them: Less reads no at-rule name holding an upper-case letter as one. The oracles and the sweeps put none of them to that namespace, and `scripts/harness/lint.test.ts` holds each to being refused. */
 const NAMESPACE_REFUSALS: Record<string, Record<string, unknown[]>> = {
 	less: { "at-rule-name-case": [`upper`] },
 }

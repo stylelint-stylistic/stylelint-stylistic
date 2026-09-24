@@ -12,7 +12,6 @@ testRule({
 
 	accept: [
 		{
-			// See #437
 			description: `a Sass nested property standing in front of another declaration, which its own block closes and no semicolon of its own, so the run between its value and its block is the block's and not the rule's`,
 			code: `
 				a {
@@ -23,7 +22,6 @@ testRule({
 			`,
 		},
 		{
-			// See #437
 			description: `the same nested property with a stray semicolon behind its block, which is the next declaration's raw and no semicolon of the property's`,
 			code: `a { font: 12px { family: serif; }; top: 0; }`,
 		},
@@ -40,7 +38,6 @@ testRule({
 
 	accept: [
 		{
-			// See #437
 			description: `a Sass nested property standing in front of another declaration, which its own block closes and no semicolon of its own, so the run between its value and its block is the block's and not the rule's`,
 			code: `
 				a {
@@ -54,7 +51,6 @@ testRule({
 
 	reject: [
 		{
-			// See #248
 			description: `an inline comment abutting the semicolon, whose line break is what closes it, so the declaration behind it cannot join its line`,
 			code: `
 				a { color: pink;// c
@@ -71,7 +67,6 @@ testRule({
 			message: messages.rejectedAfterMultiLine(),
 		},
 		{
-			// See #248
 			description: `an inline comment on a line of its own behind the semicolon, which the declaration behind it cannot join either`,
 			code: `
 				a { color: pink;
@@ -90,7 +85,6 @@ testRule({
 			message: messages.rejectedAfterMultiLine(),
 		},
 		{
-			// See #248
 			description: `an inline comment held by the value, closed by the break the semicolon stands behind, which leaves the fix a line to pull the declaration onto`,
 			code: `
 				a { color: red // c

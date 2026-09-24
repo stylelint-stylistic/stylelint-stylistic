@@ -14,7 +14,7 @@ const NO_EMPTY_FIRST_LINE: NeighborRuleSetting = {
 /**
  * Asks whether `no-empty-first-line` takes the empty lines this file opens with off the raw they stand in, so that a rule writing the same raw leaves that run alone.
  *
- * The run is one both rules read and both take breaks out of. Where the file leaves the root no node the raw is the whole file, so the two of them took one break each where one stood, and which of the two got there first was the configuration's to decide ([#682](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/682)).
+ * The run is one both rules read and both take breaks out of. Where the file leaves the root no node the raw is the whole file, so the two of them took one break each where one stood, and which of the two got there first was the configuration's to decide.
  *
  * The question is put to the text handed to the parser, which is the text `no-empty-first-line` reads, so both rules answer it alike wherever either stands in the configuration and however far the tree has been written by then. The guards are that rule's own: an inline `style` attribute's root and a CSS-in-JS object literal are passed over, a file of whitespace alone is accepted, and a copy whose fix is off writes nothing. A styled template's root is passed over by neither guard, since no copy of the rule under a namespace reading such a root is listed here.
  * @param root - The stylesheet.

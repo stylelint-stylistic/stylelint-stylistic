@@ -35,7 +35,6 @@ async function expectBothOrders (code: string, partner: object, expected: string
 	expect(partnerFirst).toEqual({ code: expected, warnings: 0 })
 }
 
-// See #390
 describe(`the output of no-missing-end-of-source-newline beside a rule that writes into the end of the file`, () => {
 	it(`closes a file ending on a free semicolon the same way in both orders of no-extra-semicolons`, async () => {
 		await expectBothOrders(`@media all { a {} }\n;`, { "@stylistic/no-extra-semicolons": true }, `@media all { a {} }\n\n`)

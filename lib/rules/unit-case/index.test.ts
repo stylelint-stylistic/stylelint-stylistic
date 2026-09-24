@@ -96,7 +96,6 @@ testRule({
 			code: `a { margin: URL(13PX); }`,
 		},
 		{
-			// See #579
 			description: `an address behind a word ending in an escaped backslash and a digit, which open no escape to take the space between the word and the name`,
 			code: `a { b: x\\\\9 url(1PX); }`,
 		},
@@ -106,17 +105,17 @@ testRule({
 			code: `a { background: #FFF\\\n\\75 rl(1PX); }`,
 		},
 		{
-			// Less and Sass compile the same address behind such a group, and the value parser alone keeps the bracket in the name (1789894076)
+			// Less and Sass compile the same address behind such a group, and the value parser alone keeps the bracket in the name
 			description: `an address behind a square-bracket group, which ends the name to every tokenizer`,
 			code: `a { b: [c]url(1PX); }`,
 		},
 		{
-			// A sign between the number and the name ends it to `@csstools/css-tokenizer` and to lightningcss, and Less and Sass compile the address whole (1789895915)
+			// A sign between the number and the name ends it to `@csstools/css-tokenizer` and to lightningcss, and Less and Sass compile the address whole
 			description: `an address behind a number and a sign`,
 			code: `a { b: 1%url(1PX); }`,
 		},
 		{
-			// A closing brace closing no interpolation ends the name too, and `@csstools/css-tokenizer` reads `1}url(` as an address; PostCSS keeps the brace inside the parentheses of the call around it (1789899902)
+			// A closing brace closing no interpolation ends the name too, and `@csstools/css-tokenizer` reads `1}url(` as an address; PostCSS keeps the brace inside the parentheses of the call around it
 			description: `an address behind a number and a closing brace`,
 			code: `a { b: f(1}url(1PX)); }`,
 		},
@@ -169,37 +168,33 @@ testRule({
 			code: `@import 'foo.css'`,
 		},
 		{
-			// No at-rule is a variable to plain CSS, so the parameters of an unknown one are read by no rule of a value; the `@stylistic/less/` namespace reads the same text, parsed by `postcss-less`, as a declaration of `@v`. See #577
+			// No at-rule is a variable to plain CSS, so the parameters of an unknown one are read by no rule of a value; the `@stylistic/less/` namespace reads the same text, parsed by `postcss-less`, as a declaration of `@v`.
 			description: `an upper-case unit in the parameters of an unknown at-rule spelled as a Less variable`,
 			code: `@v: 10PX;`,
 		},
 		{
-			// See #577
 			description: `the same at-rule written with a space in front of its colon`,
 			code: `@v : 10PX;`,
 		},
 		{
-			// See #234
 			description: `a lower-case unit in front of each of two bang flags, one of them spelled in capitals`,
 			code: `a { b: 1px!IMPORTANT 2px!important; }`,
 		},
 		{
-			// See #297
 			description: `a capital in the part of a multiplication that carries no number, and so no unit either`,
 			code: `a { b: 1px*A; }`,
 		},
 		{
-			// See #297
 			description: `the capital of an exponent in a part of a multiplication, which is a number and no unit of it`,
 			code: `a { b: 10px*2E5; }`,
 		},
 		{
-			// The tokenizer reads the whole word as one identifier, and Sass, Less and `lightningcss` print it back as it stands: no dimension to recase. See #414
+			// The tokenizer reads the whole word as one identifier, and Sass, Less and `lightningcss` print it back as it stands: no dimension to recase.
 			description: `an upper-case unit inside a word an escape opens`,
 			code: `a { b: \\*10PX; }`,
 		},
 		{
-			// The whitespace closing a hexadecimal escape is the escape's, so this is one dimension token: `@csstools/css-tokenizer` reads its unit as `px`, a tab and `2PX`, and Sass, Less and `lightningcss` print the line back as it stands. The value parser parts the word at that space, and the rule used to read `2PX` as a dimension of its own; the `\9` hack is taken out of the unit and the space it leaves ends what the rule names, so `2PX` stands behind the unit like the name of a variable. See #526
+			// The whitespace closing a hexadecimal escape is the escape's, so this is one dimension token: `@csstools/css-tokenizer` reads its unit as `px`, a tab and `2PX`, and Sass, Less and `lightningcss` print the line back as it stands. The value parser parts the word at that space, and the rule used to read `2PX` as a dimension of its own; the `\9` hack is taken out of the unit and the space it leaves ends what the rule names, so `2PX` stands behind the unit like the name of a variable.
 			description: `a lower-case unit whose hack unit's escape swallows the whitespace in front of a second run of digits and letters`,
 			code: `a { width: 10px\\9 2PX; }`,
 		},
@@ -212,12 +207,10 @@ testRule({
 			code: `a { width: 10px\\9 2px\\9 3PX; }`,
 		},
 		{
-			// See #653
 			description: `a capital I with a dot, whose lower case is a plain i and a combining dot: no lower case of the same unit, so nothing to ask for`,
 			code: `a { width: 10\u0130; }`,
 		},
 		{
-			// See #653
 			description: `a Kelvin sign behind a lower-case letter, whose lower case is a plain k`,
 			code: `a { width: 10p\u212A; }`,
 		},
@@ -225,7 +218,7 @@ testRule({
 
 	reject: [
 		{
-			// `@csstools/css-tokenizer` reads the escaped bracket as a character of the name, and Less and Sass refuse such a text, so the parentheses stay a call's (1789894076)
+			// `@csstools/css-tokenizer` reads the escaped bracket as a character of the name, and Less and Sass refuse such a text, so the parentheses stay a call's
 			description: `a unit inside the parentheses of a call whose name stands behind an escaped square bracket`,
 			code: `a { b: \\]url(1PX); }`,
 			fixed: `a { b: \\]url(1px); }`,
@@ -236,7 +229,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// A hyphen is an identifier code point, so `1-url` is one dimension to `@csstools/css-tokenizer` and to lightningcss and the parentheses behind it are no address's (1789895915)
+			// A hyphen is an identifier code point, so `1-url` is one dimension to `@csstools/css-tokenizer` and to lightningcss and the parentheses behind it are no address's
 			description: `a unit inside the parentheses of a call whose name stands behind a number and a hyphen`,
 			code: `a { b: 1-url(1PX); }`,
 			fixed: `a { b: 1-url(1px); }`,
@@ -247,7 +240,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// The brace of `#{p}url(` closes the interpolation its own word opens, and Sass names one call there, so the parentheses stay a call's (1789899902)
+			// The brace of `#{p}url(` closes the interpolation its own word opens, and Sass names one call there, so the parentheses stay a call's
 			description: `a unit inside the parentheses of a call whose name stands behind an interpolation`,
 			code: `a { b: f(#{p}url(1PX)); }`,
 			fixed: `a { b: f(#{p}url(1px)); }`,
@@ -258,7 +251,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #560
 			description: `a unit among the arguments behind a quoted address, which are those of any call`,
 			code: `a { b: url("x", f(2PX)); }`,
 			fixed: `a { b: url("x", f(2px)); }`,
@@ -288,7 +280,6 @@ testRule({
 			message: messages.expected(`pX`, `px`),
 		},
 		{
-			// See #298
 			description: `an upper-case unit standing between two braces that open and close no interpolation, one in each of two quoted strings`,
 			code: `a { b: "{" 10PX "}"; }`,
 			fixed: `a { b: "{" 10px "}"; }`,
@@ -299,7 +290,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #298
 			description: `the same unit standing between two braces written in comments`,
 			code: `a { b: 1px /* { */ 10PX /* } */; }`,
 			fixed: `a { b: 1px /* { */ 10px /* } */; }`,
@@ -310,7 +300,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #298
 			description: `the same unit standing behind a brace written in a comment, in a set of media parameters`,
 			code: `@media (min-width: /* { */ 10PX /* } */) { a { b: c; } }`,
 			fixed: `@media (min-width: /* { */ 10px /* } */) { a { b: c; } }`,
@@ -321,7 +310,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #298
 			description: `an upper-case unit standing between the opening of a Sass interpolation written in one comment and the brace closing it in another, neither of which opens an interpolation of anything`,
 			code: `a { b: 1px /* #{ */ 10PX /* } */; }`,
 			fixed: `a { b: 1px /* #{ */ 10px /* } */; }`,
@@ -332,7 +320,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #298
 			description: `the same pair of comments written with the opening of a Less interpolation`,
 			code: `a { b: 1px /* @{ */ 10PX /* } */; }`,
 			fixed: `a { b: 1px /* @{ */ 10px /* } */; }`,
@@ -343,7 +330,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #298
 			description: `the same pair of comments written in a set of media parameters`,
 			code: `@media (min-width: /* #{ */ 10PX /* } */) { a { b: c; } }`,
 			fixed: `@media (min-width: /* #{ */ 10px /* } */) { a { b: c; } }`,
@@ -354,7 +340,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #298
 			description: `an upper-case unit in front of a text spelled the way postcss-simple-vars spells an interpolation, whitespace and all, and another unit inside that text`,
 			code: `a { b: 1PX $(a 2PX); }`,
 			fixed: `a { b: 1px $(a 2PX); }`,
@@ -365,7 +350,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #298
 			description: `an upper-case unit inside a block written as the value of a custom property, which is where plain CSS does let a bare brace stand in the code`,
 			code: `a { --x: 1px { 10PX } 2px; }`,
 			fixed: `a { --x: 1px { 10px } 2px; }`,
@@ -587,7 +571,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #234
 			description: `an upper-case unit in front of each of two bang flags`,
 			code: `a { b: 1PX!important 2PX!important; }`,
 			fixed: `a { b: 1px!important 2px!important; }`,
@@ -609,7 +592,6 @@ testRule({
 			],
 		},
 		{
-			// See #272
 			description: `a dimension standing behind a comment the value parser does not give back as it read it`,
 			code: `a { b: x/*/*a*/10PX; }`,
 			fixed: `a { b: x/*/*a*/10px; }`,
@@ -620,7 +602,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #296
 			description: `an upper-case unit behind a multiplication, in a word the rule reads dimension by dimension`,
 			code: `a { b: 10px*2REM; }`,
 			fixed: `a { b: 10px*2rem; }`,
@@ -631,7 +612,6 @@ testRule({
 			message: messages.expected(`REM`, `rem`),
 		},
 		{
-			// See #296
 			description: `an upper-case unit in the part of a multiplication that closes the word, the part in front of it carrying no unit`,
 			code: `a { b: 2*10PX; }`,
 			fixed: `a { b: 2*10px; }`,
@@ -642,7 +622,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #297
 			description: `three dimensions multiplied in one word, each of them carrying an upper-case unit`,
 			code: `a { b: 10PX*2REM*3EM; }`,
 			fixed: `a { b: 10px*2rem*3em; }`,
@@ -671,7 +650,6 @@ testRule({
 			],
 		},
 		{
-			// See #297
 			description: `four dimensions of one and the same upper-case unit multiplied in one word`,
 			code: `a { b: 1PX*2PX*3PX*4PX; }`,
 			fixed: `a { b: 1px*2px*3px*4px; }`,
@@ -707,7 +685,6 @@ testRule({
 			],
 		},
 		{
-			// See #297
 			description: `an upper-case unit in the part that closes a multiplication of three, both parts in front of it lower-case`,
 			code: `a { b: 1px*2px*3EM; }`,
 			fixed: `a { b: 1px*2px*3em; }`,
@@ -718,7 +695,6 @@ testRule({
 			message: messages.expected(`EM`, `em`),
 		},
 		{
-			// See #297
 			description: `an upper-case unit in each of the two dimensions a doubled star stands between, which leaves a part holding nothing at all`,
 			code: `a { b: 10PX**2REM; }`,
 			fixed: `a { b: 10px**2rem; }`,
@@ -740,7 +716,6 @@ testRule({
 			],
 		},
 		{
-			// See #297
 			description: `an upper-case unit in a word a star closes, whose second part holds nothing`,
 			code: `a { b: 10PX*; }`,
 			fixed: `a { b: 10px*; }`,
@@ -751,7 +726,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #297
 			description: `a multiplication no part of which holds a miscased unit, standing beside a word that does, whose fix writes every edit the value collected`,
 			code: `a { b: 1px*A 2PX; }`,
 			fixed: `a { b: 1px*A 2px; }`,
@@ -762,7 +736,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #297
 			description: `two dimensions multiplied in the parameters of a media at-rule, where a part is counted off the parameter list rather than off a value`,
 			code: `@media (min-width: 10PX*2REM) { a { b: c; } }`,
 			fixed: `@media (min-width: 10px*2rem) { a { b: c; } }`,
@@ -784,7 +757,6 @@ testRule({
 			],
 		},
 		{
-			// See #296
 			description: `an upper-case unit a hack unit stands behind, in front of a bang flag the value keeps`,
 			code: `a { b: 1PX\\9!important 2px; }`,
 			fixed: `a { b: 1px\\9!important 2px; }`,
@@ -795,7 +767,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #378
 			description: `a dimension standing beside a comment opening with a solidus, a star and a solidus, whose text spells a dimension of its own that the value parser hands back as a word`,
 			code: `a { b: 1PX /*/ 2PX */ 3; }`,
 			fixed: `a { b: 1px /*/ 2PX */ 3; }`,
@@ -806,7 +777,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #378
 			description: `dimensions behind a bare address holding a slash and a star, which every tokenizer reads as two characters of the address, so that the comment standing between the two dimensions is the only comment of the value`,
 			code: `a { background: url(http://x.y/*.png) 1PX /* fallback */ 3PX; }`,
 			fixed: `a { background: url(http://x.y/*.png) 1px /* fallback */ 3px; }`,
@@ -828,7 +798,6 @@ testRule({
 			],
 		},
 		{
-			// See #426
 			description: `an upper-case unit with a hash welded to it, which opens no interpolation and is no part of the unit`,
 			code: `a { b: 10PX#FFF; }`,
 			fixed: `a { b: 10px#FFF; }`,
@@ -839,7 +808,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #426
 			description: `the same hash welded to the first of two multiplied dimensions, each of them carrying an upper-case unit`,
 			code: `a { b: 1PX#FFF*2REM; }`,
 			fixed: `a { b: 1px#FFF*2rem; }`,
@@ -861,7 +829,6 @@ testRule({
 			],
 		},
 		{
-			// See #413
 			description: `an upper-case unit in the first part of a multiplication whose second part is a letter and no unit, which the fix leaves as it is`,
 			code: `a { b: 1PX*A; }`,
 			fixed: `a { b: 1px*A; }`,
@@ -872,7 +839,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #413
 			description: `an upper-case unit behind an exponent whose own capital is part of the number and stays as it is`,
 			code: `a { b: 1E5PX; }`,
 			fixed: `a { b: 1E5px; }`,
@@ -883,7 +849,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #414
 			// An escaped star is a code point of the identifier it stands in and parts no two dimensions: the tokenizer reads one dimension whose unit is `PX\*2REM`, Sass leaves the word whole where it multiplies the unescaped twin, and `lightningcss` prints it as it stands.
 			description: `an upper-case unit welded by an escaped star to a second one`,
 			code: `a { b: 10PX\\*2REM; }`,
@@ -895,7 +860,6 @@ testRule({
 			message: messages.expected(`PX\\*2REM`, `px\\*2rem`),
 		},
 		{
-			// See #414
 			description: `an upper-case unit with the name of a variable welded behind it, which is no part of the unit and stays as it was written`,
 			code: `a { b: 10PX$VAR; }`,
 			fixed: `a { b: 10px$VAR; }`,
@@ -906,7 +870,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// An escaped backslash and a digit are no hack unit: the tokenizer reads `10PX\\0` as one dimension whose unit is `PX\0` and the hash behind it as a hash of its own; cutting two characters out of the word would read every escape behind them from the wrong side and recase the hash with the unit. See #414
+			// An escaped backslash and a digit are no hack unit: the tokenizer reads `10PX\\0` as one dimension whose unit is `PX\0` and the hash behind it as a hash of its own; cutting two characters out of the word would read every escape behind them from the wrong side and recase the hash with the unit.
 			description: `an upper-case unit closing on an escaped backslash and a digit, with a hash welded behind it`,
 			code: `a { b: 10PX\\\\0#FFF; }`,
 			fixed: `a { b: 10px\\\\0#FFF; }`,
@@ -917,7 +881,6 @@ testRule({
 			message: messages.expected(`PX\\\\0`, `px\\\\0`),
 		},
 		{
-			// See #414
 			description: `the hack unit itself, one backslash and a digit, which is no part of the unit and stays where it is`,
 			code: `a { b: 10PX\\0#FFF; }`,
 			fixed: `a { b: 10px\\0#FFF; }`,
@@ -928,7 +891,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// A backslash in front of a line break opens no escape: the tokenizer reads the dimension `10PX`, a delimiter, the break and the identifier `\@VAR`, while `postcss-value-parser` hands the whole of it over as one word, so the unit has to end at the delimiter here. See #414
+			// A backslash in front of a line break opens no escape: the tokenizer reads the dimension `10PX`, a delimiter, the break and the identifier `\@VAR`, while `postcss-value-parser` hands the whole of it over as one word, so the unit has to end at the delimiter here.
 			description: `an upper-case unit closing on a backslash a line break stands behind`,
 			code: `a { b: 10PX\\\n\\@VAR; }`,
 			fixed: `a { b: 10px\\\n\\@VAR; }`,
@@ -939,7 +902,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #414
 			description: `the same word with a form feed in place of the line feed, which the grammar counts as the same break`,
 			code: `a { b: 10PX\\\f\\@VAR; }`,
 			fixed: `a { b: 10px\\\f\\@VAR; }`,
@@ -950,7 +912,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #414
 			description: `an upper-case unit with an escaped hash welded to it`,
 			code: `a { b: 10PX\\#FFF; }`,
 			fixed: `a { b: 10px\\#fff; }`,
@@ -961,7 +922,6 @@ testRule({
 			message: messages.expected(`PX\\#FFF`, `px\\#fff`),
 		},
 		{
-			// See #508
 			description: `an upper-case unit in front of a comment holding one quotation mark, and the same unit inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no dimension`,
 			code: `a { b: 2PX /*/ " */ "2PX"; }`,
 			fixed: `a { b: 2px /*/ " */ "2PX"; }`,
@@ -972,7 +932,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// A hyphen is a code point of an identifier, so the tokenizer reads one dimension whose unit is `PX-A` and `lightningcss` prints the word whole; the `@stylistic/less/` namespace reads it otherwise, Less parting the word there. See #633
+			// A hyphen is a code point of an identifier, so the tokenizer reads one dimension whose unit is `PX-A` and `lightningcss` prints the word whole; the `@stylistic/less/` namespace reads it otherwise, Less parting the word there.
 			description: `an upper-case unit a hyphen welds a word to, which is one identifier to the core`,
 			code: `a { width: 10PX-A; }`,
 			fixed: `a { width: 10px-a; }`,
@@ -983,7 +943,7 @@ testRule({
 			message: messages.expected(`PX-A`, `px-a`),
 		},
 		{
-			// Sass subtracts the two and refuses the line for the units being incompatible, while the tokenizer and `lightningcss` read one dimension; in either reading both halves want the same case, so the one name the core draws is the answer. See #633
+			// Sass subtracts the two and refuses the line for the units being incompatible, while the tokenizer and `lightningcss` read one dimension; in either reading both halves want the same case, so the one name the core draws is the answer.
 			description: `two upper-case units in one word, a hyphen between them, which is one identifier to the core`,
 			code: `a { width: 10PX-2REM; }`,
 			fixed: `a { width: 10px-2rem; }`,
@@ -994,7 +954,7 @@ testRule({
 			message: messages.expected(`PX-2REM`, `px-2rem`),
 		},
 		{
-			// A digit is a code point of an identifier, so the tokenizer reads one dimension whose unit is `PX9`; `lightningcss` recases the units it knows and prints this word as it stands. See #646
+			// A digit is a code point of an identifier, so the tokenizer reads one dimension whose unit is `PX9`; `lightningcss` recases the units it knows and prints this word as it stands.
 			description: `an upper-case unit closing on a digit, which is one identifier to the core`,
 			code: `a { width: 10PX9; }`,
 			fixed: `a { width: 10px9; }`,
@@ -1005,7 +965,7 @@ testRule({
 			message: messages.expected(`PX9`, `px9`),
 		},
 		{
-			// The whole word is a number to the tokenizer and holds no unit at all, the neighbor carrying the fixer; Less reads the dimension `1E` there. See #646
+			// The whole word is a number to the tokenizer and holds no unit at all, the neighbor carrying the fixer; Less reads the dimension `1E` there.
 			description: `a word of digits and an exponent beside an upper-case unit`,
 			code: `a { width: 1E5 2PX; }`,
 			fixed: `a { width: 1E5 2px; }`,
@@ -1016,7 +976,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// A percent sign is no code point of an identifier, so it ends the unit without parting the word the value parser hands over: `@csstools/css-tokenizer` reads the dimension `10PX`, a delimiter and the dimension `2REM`, and `lightningcss` recases both, printing `10px%2rem`. The rule used to read the word as one dimension and never reach the second. See #526
+			// A percent sign is no code point of an identifier, so it ends the unit without parting the word the value parser hands over: `@csstools/css-tokenizer` reads the dimension `10PX`, a delimiter and the dimension `2REM`, and `lightningcss` recases both, printing `10px%2rem`. The rule used to read the word as one dimension and never reach the second.
 			description: `two upper-case units in one word, a percent sign between them`,
 			code: `a { width: 10PX%2REM; }`,
 			fixed: `a { width: 10px%2rem; }`,
@@ -1038,7 +998,6 @@ testRule({
 			],
 		},
 		{
-			// See #526
 			// The period and the plus leave no delimiter at all: the tokenizer reads `10PX` and `.2REM` standing next to each other, and `lightningcss` prints `10px.2rem`.
 			description: `two upper-case units in one word, the second opening on the point of its fraction`,
 			code: `a { width: 10PX.2REM; }`,
@@ -1061,7 +1020,6 @@ testRule({
 			],
 		},
 		{
-			// See #526
 			description: `two upper-case units in one word, the second opening on the sign of its number`,
 			code: `a { width: 10PX+2REM; }`,
 			fixed: `a { width: 10px+2rem; }`,
@@ -1083,7 +1041,7 @@ testRule({
 			],
 		},
 		{
-			// A backslash in front of a line break opens no escape, and the value parser keeps the break inside the word: the tokenizer reads the dimension `10PX`, a delimiter, the break and the dimension `2REM`, and `lightningcss` recases both. The rule used to end the unit at the delimiter and never reach the second. See #526
+			// A backslash in front of a line break opens no escape, and the value parser keeps the break inside the word: the tokenizer reads the dimension `10PX`, a delimiter, the break and the dimension `2REM`, and `lightningcss` recases both. The rule used to end the unit at the delimiter and never reach the second.
 			description: `two upper-case units in one word, a backslash and a line break between them`,
 			code: `a { width: 10PX\\\n2REM; }`,
 			fixed: `a { width: 10px\\\n2rem; }`,
@@ -1105,7 +1063,7 @@ testRule({
 			],
 		},
 		{
-			// The escape spells `a` and the whitespace closing it is the escape's, so the identifier goes on behind it: the tokenizer reads one dimension whose unit is `PaX`, and Sass and `lightningcss` print `10PaX`. The value parser parts the word at that space, and the rule used to name `P\61` and leave the `X` as it stood. See #526
+			// The escape spells `a` and the whitespace closing it is the escape's, so the identifier goes on behind it: the tokenizer reads one dimension whose unit is `PaX`, and Sass and `lightningcss` print `10PaX`. The value parser parts the word at that space, and the rule used to name `P\61` and leave the `X` as it stood.
 			description: `an upper-case unit whose letters a hexadecimal escape and the whitespace closing it stand between`,
 			code: `a { width: 10P\\61 X; }`,
 			fixed: `a { width: 10p\\61 x; }`,
@@ -1116,7 +1074,7 @@ testRule({
 			message: messages.expected(`P\\61 X`, `p\\61 x`),
 		},
 		{
-			// The escape closes on one whitespace character and the second parts the word: the tokenizer reads `10PX\9 `, whitespace and `2PX`, and `lightningcss` prints `10PX\9  2px`, leaving the first unit, which it does not know. See #526
+			// The escape closes on one whitespace character and the second parts the word: the tokenizer reads `10PX\9 `, whitespace and `2PX`, and `lightningcss` prints `10PX\9  2px`, leaving the first unit, which it does not know.
 			description: `an upper-case unit whose hack unit's escape swallows the first of two spaces in front of a second upper-case unit`,
 			code: `a { width: 10PX\\9  2PX; }`,
 			fixed: `a { width: 10px\\9  2px; }`,
@@ -1138,7 +1096,7 @@ testRule({
 			],
 		},
 		{
-			// An escaped backslash in front of a digit opens no hexadecimal escape, so the space behind the digit is the text's and parts two dimensions: the tokenizer reads `10PX\\9`, whose unit is `PX\9`, whitespace and `2REM`, and `lightningcss` prints `10PX\\9 2rem`, leaving the unit it does not know. See #526
+			// An escaped backslash in front of a digit opens no hexadecimal escape, so the space behind the digit is the text's and parts two dimensions: the tokenizer reads `10PX\\9`, whose unit is `PX\9`, whitespace and `2REM`, and `lightningcss` prints `10PX\\9 2rem`, leaving the unit it does not know.
 			description: `an upper-case unit closing on an escaped backslash and a digit, in front of a space and a second upper-case unit`,
 			code: `a { width: 10PX\\\\9 2REM; }`,
 			fixed: `a { width: 10px\\\\9 2rem; }`,
@@ -1160,7 +1118,7 @@ testRule({
 			],
 		},
 		{
-			// A hexadecimal escape takes six digits at most, so the seventh is a letter of the unit and the space behind it is the text's: the tokenizer reads `10PX\0000611`, whose unit is `PXa1`, whitespace and `2REM`; Sass prints `10PXa1 2REM` and `lightningcss` `10PXa1 2rem`. See #526
+			// A hexadecimal escape takes six digits at most, so the seventh is a letter of the unit and the space behind it is the text's: the tokenizer reads `10PX\0000611`, whose unit is `PXa1`, whitespace and `2REM`; Sass prints `10PXa1 2REM` and `lightningcss` `10PXa1 2rem`.
 			description: `an upper-case unit closing on a hexadecimal escape of seven digits, in front of a space and a second upper-case unit`,
 			code: `a { width: 10PX\\0000611 2REM; }`,
 			fixed: `a { width: 10px\\0000611 2rem; }`,
@@ -1182,7 +1140,7 @@ testRule({
 			],
 		},
 		{
-			// The escape closes on the space, so the dimension token is `10PX\61 ` with it, but the warning names the unit without it: the space is the escape's, and `\61` spells `a` with or without it. See #526
+			// The escape closes on the space, so the dimension token is `10PX\61 ` with it, but the warning names the unit without it: the space is the escape's, and `\61` spells `a` with or without it.
 			description: `an upper-case unit closing on a hexadecimal escape whose closing whitespace stands in front of the name of a variable, which the warning names without that whitespace`,
 			code: `a { width: 10PX\\61 $VAR; }`,
 			fixed: `a { width: 10px\\61 $VAR; }`,
@@ -1193,7 +1151,7 @@ testRule({
 			message: messages.expected(`PX\\61`, `px\\61`),
 		},
 		{
-			// The space is the character the escape spells, not one it closes on, so it is a character of the unit and the warning names it: the tokenizer reads one dimension whose unit is `PX` and a space. See #526
+			// The space is the character the escape spells, not one it closes on, so it is a character of the unit and the warning names it: the tokenizer reads one dimension whose unit is `PX` and a space.
 			description: `an upper-case unit closing on an escaped space, which the warning names whole`,
 			code: `a { width: 10PX\\ ; }`,
 			fixed: `a { width: 10px\\ ; }`,
@@ -1204,7 +1162,7 @@ testRule({
 			message: messages.expected(`PX\\ `, `px\\ `),
 		},
 		{
-			// Every hack unit the word carries is taken out of it, the second as much as the first, so what stands behind the last of them is off the unit. See #526
+			// Every hack unit the word carries is taken out of it, the second as much as the first, so what stands behind the last of them is off the unit.
 			description: `an upper-case unit two hack units close, the escape of the second swallowing the whitespace in front of a second dimension`,
 			code: `a { width: 10PX\\9\\9 2REM; }`,
 			fixed: `a { width: 10px\\9\\9 2REM; }`,
@@ -1215,7 +1173,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #526
 			description: `a list of three upper-case units whose second carries a hack unit, whose escape welds the third dimension onto it and leaves it behind the unit`,
 			code: `a { margin: 1PX 10PX\\9 2PX; }`,
 			fixed: `a { margin: 1px 10px\\9 2PX; }`,
@@ -1237,7 +1194,7 @@ testRule({
 			],
 		},
 		{
-			// The ASCII letter is the only one with a lower case of the same unit, so it alone is asked for and written; `lightningcss` prints both spellings as they stand. See #653
+			// The ASCII letter is the only one with a lower case of the same unit, so it alone is asked for and written; `lightningcss` prints both spellings as they stand.
 			description: `an upper-case letter in front of a capital I with a dot`,
 			code: `a { width: 10P\u0130; }`,
 			fixed: `a { width: 10p\u0130; }`,
@@ -1268,12 +1225,10 @@ testRule({
 			code: `a { font-size: 100%; }`,
 		},
 		{
-			// See #298
 			description: `a lower-case unit in front of an interpolation whose text holds whitespace, in a custom property, which plain CSS carries as readily as either custom syntax does`,
 			code: `a { --x: 10px#{$aB != $b}; }`,
 		},
 		{
-			// See #298
 			description: `the same interpolation written in a set of media parameters`,
 			code: `@media (min-width: 10px#{$aB != $b}) { a { b: c; } }`,
 		},
@@ -1374,37 +1329,30 @@ testRule({
 			code: `a { margin: 13XPX; }`,
 		},
 		{
-			// See #234
 			description: `an upper-case unit in front of each of two bang flags, whose keyword is no unit`,
 			code: `a { b: 1PX!important 2PX!important; }`,
 		},
 		{
-			// See #234
 			description: `a unit inside a string that ends in a bang flag`,
 			code: `a::before { content: "10px!important"}`,
 		},
 		{
-			// See #297
 			description: `a lower-case letter in the part of a multiplication that carries no number, and so no unit either`,
 			code: `a { b: 1PX*a; }`,
 		},
 		{
-			// See #297
 			description: `the lower-case letter of an exponent in a part of a multiplication, which is a number and no unit of it`,
 			code: `a { b: 10PX*2e5; }`,
 		},
 		{
-			// See #426
 			description: `a lower-case hash welded to an upper-case unit, whose letters are no unit and belong to another rule`,
 			code: `a { b: 10PX#fff; }`,
 		},
 		{
-			// See #653
 			description: `a sharp s behind an upper-case letter, whose upper case is two letters: no upper case of the same unit, so nothing to ask for`,
 			code: `a { width: 10A\u00DF; }`,
 		},
 		{
-			// See #653
 			description: `a long s behind an upper-case letter, whose upper case is a plain S`,
 			code: `a { width: 10P\u017F; }`,
 		},
@@ -1412,7 +1360,6 @@ testRule({
 
 	reject: [
 		{
-			// See #297
 			description: `three dimensions multiplied in one word, each of them carrying a lower-case unit`,
 			code: `a { b: 10px*2rem*3em; }`,
 			fixed: `a { b: 10PX*2REM*3EM; }`,
@@ -1560,7 +1507,6 @@ testRule({
 			endColumn: 18,
 			message: messages.expected(`xpx`, `XPX`),
 		},
-		// See #233
 		{
 			description: `a lower-case unit on either side of a block comment the value holds`,
 			code: `a { b: 1px /* c */ 2px; }`,
@@ -1582,7 +1528,6 @@ testRule({
 				},
 			],
 		},
-		// See #233
 		{
 			description: `a lower-case unit in front of a block comment the parameters of a media query hold`,
 			code: `@media (min-width: 100px /* c */) { a { color: red; } }`,
@@ -1594,7 +1539,6 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			// See #234
 			description: `a lower-case unit in front of each of two bang flags`,
 			code: `a { b: 1px!important 2px!important; }`,
 			fixed: `a { b: 1PX!important 2PX!important; }`,
@@ -1616,7 +1560,6 @@ testRule({
 			],
 		},
 		{
-			// See #234
 			description: `a word whose whole unit is a bang flag, in front of a unit of the same declaration`,
 			code: `a { b: 1!important 1px!important; }`,
 			fixed: `a { b: 1!important 1PX!important; }`,
@@ -1627,7 +1570,7 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			// The whitespace closing the escape is the escape's, so `important\9 2px` is one identifier to the tokenizer and the second `px` is a unit of nothing: Less prints the line as it stands, and Sass refuses it. The value parser parts the word at that space, and the rule used to read `2px` as a dimension of its own (#526). See #234
+			// The whitespace closing the escape is the escape's, so `important\9 2px` is one identifier to the tokenizer and the second `px` is a unit of nothing: Less prints the line as it stands, and Sass refuses it. The value parser parts the word at that space, and the rule used to read `2px` as a dimension of its own.
 			description: `a lower-case unit in front of a bang flag whose keyword a hack unit closes, its escape welding the second dimension into the keyword`,
 			code: `a { b: 1px!important\\9 2px!important; }`,
 			fixed: `a { b: 1PX!important\\9 2px!important; }`,
@@ -1638,7 +1581,6 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			// See #296
 			description: `a lower-case unit in front of a hack unit`,
 			code: `a { b: 10px\\0; }`,
 			fixed: `a { b: 10PX\\0; }`,
@@ -1649,7 +1591,6 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			// See #426
 			description: `a lower-case unit with a hash welded to it, which opens no interpolation and is no part of the unit`,
 			code: `a { b: 10px#fff; }`,
 			fixed: `a { b: 10PX#fff; }`,
@@ -1660,7 +1601,6 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			// See #426
 			description: `the same hash welded to the first of two multiplied dimensions, each of them carrying a lower-case unit`,
 			code: `a { b: 1px#fff*2rem; }`,
 			fixed: `a { b: 1PX#fff*2REM; }`,
@@ -1682,7 +1622,6 @@ testRule({
 			],
 		},
 		{
-			// See #413
 			description: `a lower-case unit in the first part of a multiplication whose second part is a letter and no unit, which the fix leaves as it is`,
 			code: `a { b: 1px*a; }`,
 			fixed: `a { b: 1PX*a; }`,
@@ -1693,7 +1632,6 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			// See #413
 			description: `a lower-case unit behind an exponent whose own letter is part of the number and stays as it is`,
 			code: `a { b: 1e5px; }`,
 			fixed: `a { b: 1e5PX; }`,
@@ -1704,7 +1642,6 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			// See #414
 			description: `a lower-case unit welded by an escaped star to a second one`,
 			code: `a { b: 10px\\*2rem; }`,
 			fixed: `a { b: 10PX\\*2REM; }`,
@@ -1715,7 +1652,7 @@ testRule({
 			message: messages.expected(`px\\*2rem`, `PX\\*2REM`),
 		},
 		{
-			// An escape is a backslash and the one character behind it, so `\\` is an escaped backslash and the star behind it is the file's own, parting two dimensions; Sass multiplies this one and leaves the twin above whole. See #414
+			// An escape is a backslash and the one character behind it, so `\\` is an escaped backslash and the star behind it is the file's own, parting two dimensions; Sass multiplies this one and leaves the twin above whole.
 			description: `the same star behind an escaped backslash, which parts two dimensions`,
 			code: `a { b: 10px\\\\*2rem; }`,
 			fixed: `a { b: 10PX\\\\*2REM; }`,
@@ -1737,7 +1674,6 @@ testRule({
 			],
 		},
 		{
-			// See #414
 			// An escaped hash opens no interpolation and is a code point of the unit: `lightningcss` prints the word as it stands, and the tokenizer reads one dimension whose unit is `px\#fff`.
 			description: `a lower-case unit with an escaped hash welded to it`,
 			code: `a { b: 10px\\#fff; }`,
@@ -1749,7 +1685,6 @@ testRule({
 			message: messages.expected(`px\\#fff`, `PX\\#FFF`),
 		},
 		{
-			// See #414
 			description: `a lower-case unit with a percent sign welded behind it, which is no code point of an identifier and no part of the unit`,
 			code: `a { b: 10px%; }`,
 			fixed: `a { b: 10PX%; }`,
@@ -1760,7 +1695,6 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			// See #414
 			// The bang is escaped, so it opens no flag and is a code point of the unit: `@csstools/css-tokenizer` reads one dimension, and Sass, Less and `lightningcss` all print the word exactly as it stands.
 			description: `a lower-case unit with an escaped bang and a keyword welded behind it`,
 			code: `a { b: 10px\\!important; }`,
@@ -1772,7 +1706,7 @@ testRule({
 			message: messages.expected(`px\\!important`, `PX\\!IMPORTANT`),
 		},
 		{
-			// The other option over the word the `lower` block accepts: the one unit is `px`, so the warning names it and the fix recases it, and `2PX` behind the hack stays under both options, where each used to change a half of its own. See #526
+			// The other option over the word the `lower` block accepts: the one unit is `px`, so the warning names it and the fix recases it, and `2PX` behind the hack stays under both options, where each used to change a half of its own.
 			description: `a lower-case unit whose hack unit's escape swallows the whitespace in front of a second run of digits and letters, which stands behind the unit and stays as it is`,
 			code: `a { width: 10px\\9 2PX; }`,
 			fixed: `a { width: 10PX\\9 2PX; }`,
@@ -1783,7 +1717,6 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			// See #526
 			description: `two lower-case units in one word, a percent sign between them`,
 			code: `a { width: 10px%2rem; }`,
 			fixed: `a { width: 10PX%2REM; }`,
@@ -1805,7 +1738,6 @@ testRule({
 			],
 		},
 		{
-			// See #526
 			description: `two lower-case units in one word, a backslash and a line break between them`,
 			code: `a { width: 10px\\\n2rem; }`,
 			fixed: `a { width: 10PX\\\n2REM; }`,
@@ -1827,7 +1759,7 @@ testRule({
 			],
 		},
 		{
-			// The ASCII letter is the only one with an upper case of the same unit, so it alone is asked for and written; `lightningcss` prints both spellings as they stand, and Less reads a dimension in neither. See #653
+			// The ASCII letter is the only one with an upper case of the same unit, so it alone is asked for and written; `lightningcss` prints both spellings as they stand, and Less reads a dimension in neither.
 			description: `a lower-case letter in front of a sharp s`,
 			code: `a { width: 10p\u00DF; }`,
 			fixed: `a { width: 10P\u00DF; }`,

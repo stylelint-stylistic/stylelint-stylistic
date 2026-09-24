@@ -540,7 +540,6 @@ testRule({
 			],
 		},
 		{
-			// See #67
 			description: `every line of a comment containing an apostrophe`,
 			code: `/* This \n * fix \n * isn't \n * working. \n */`,
 			fixed: `/* This\n * fix\n * isn't\n * working.\n */`,
@@ -641,7 +640,6 @@ testRule({
 			],
 		},
 		{
-			// See #739
 			description: `trailing whitespace behind a bare address holding a quotation mark, which is a character of the address and opens no string`,
 			code: `a { b: url(x'y) }\nc {}  \nd {}`,
 			fixed: `a { b: url(x'y) }\nc {}\nd {}`,
@@ -650,7 +648,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #739
 			description: `trailing whitespace behind a string ending in an escaped backslash, whose closing quotation mark no escape holds`,
 			code: `a { b: "a\\\\" }\nc {}  \nd {}`,
 			fixed: `a { b: "a\\\\" }\nc {}\nd {}`,

@@ -2,7 +2,7 @@ import { LEADING_CSS_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
 import type { RunWrites } from "../closingBraceRunWrites/index.ts"
 
 /**
- * What `block-opening-brace-newline-after` and `block-opening-brace-space-after` each write over the run behind the opening brace: both spell the whitespace the run opens with and keep whatever stands behind it, since a stray semicolon the parser files in that run is no whitespace, and no write may drop it ([#655](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/655), 1789998855, 1790006582).
+ * What `block-opening-brace-newline-after` and `block-opening-brace-space-after` each write over the run behind the opening brace: both spell the whitespace the run opens with and keep whatever stands behind it, since a stray semicolon the parser files in that run is no whitespace, and no write may drop it.
  * @param lineBreak - Returns the break the file is written with, called only where a break is written.
  * @returns The two writes, by rule.
  */

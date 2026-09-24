@@ -92,7 +92,6 @@ testRule({
 			code: `.foo { font: calc(16px + .2vw)/1 }`,
 		},
 		{
-			// See #230
 			description: `a group inside a calculation, which plain CSS spells as readily as any other syntax, and whose closing parenthesis the operator behind it must be spaced from`,
 			code: `a { width: calc((100% - 20px) - 1rem); }`,
 		},
@@ -105,7 +104,6 @@ testRule({
 			code: `a { b: calc((1px)+(2px)); }`,
 		},
 		{
-			// See #252
 			description: `a percentage in front of a parenthesis, which the operator closing it names no call by`,
 			code: `a { b: 50%(1)red; }`,
 		},
@@ -178,7 +176,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #225
 			description: `a bare address inside a call the plugin knows nothing of: plain CSS spells no comment with a double slash, so the parenthesis closing that call is read`,
 			code: `a { b: myurl(//a)red; }`,
 			fixed: `a { b: myurl(//a) red; }`,
@@ -187,7 +184,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #225
 			description: `the parameters of an import are read the same way as a value`,
 			code: `@import myurl(//a)red;`,
 			fixed: `@import myurl(//a) red;`,
@@ -196,7 +192,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #225
 			description: `a bare address inside a url(), where plain CSS spells no comment with a double slash either`,
 			code: `a { b: url(http://x/y.png)red; }`,
 			fixed: `a { b: url(http://x/y.png) red; }`,
@@ -205,7 +200,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #230
 			description: `two calls abutting one another, each parenthesis closing a call of its own`,
 			code: `a { transform: translate(1px)rotate(2deg); }`,
 			fixed: `a { transform: translate(1px) rotate(2deg); }`,
@@ -214,7 +208,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #230
 			description: `a call standing in front of a group, whose own parenthesis is read while the group's is not`,
 			code: `a { b: f(1)(2); }`,
 			fixed: `a { b: f(1) (2); }`,
@@ -223,7 +216,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #230
 			description: `an address holding an escaped parenthesis, which closes the call no more than a parenthesis inside a string does`,
 			code: `a { b: url(a\\)b)red; }`,
 			fixed: `a { b: url(a\\)b) red; }`,
@@ -232,7 +224,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #230
 			description: `a call whose name closes on a digit, standing at the head of the value`,
 			code: `a { b: atan2(1,2)red; }`,
 			fixed: `a { b: atan2(1,2) red; }`,
@@ -257,7 +248,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #252
 			description: `a call whose name is written outside ASCII, which the grammar spells an identifier with wherever one stands`,
 			code: `a { b: 日本(1)red; }`,
 			fixed: `a { b: 日本(1) red; }`,
@@ -306,7 +296,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #739
 			description: `a call behind a bare address holding a quotation mark, which is a character of the address and opens no string`,
 			code: `a { b: url(x'y) c(d)e; }`,
 			fixed: `a { b: url(x'y) c(d) e; }`,
@@ -359,12 +348,10 @@ testRule({
 			code: `.foo { font: calc(16px + .2vw)/1 }`,
 		},
 		{
-			// See #257
 			description: `a sign opening a number rather than a sum, with nothing between it and the call`,
 			code: `a { b: url(x)-1px; }`,
 		},
 		{
-			// See #230
 			description: `a group inside a calculation, whose closing parenthesis the operator behind it must be spaced from however this option reads the whitespace of a call`,
 			code: `a { width: calc((100% - 20px) - 1rem); }`,
 		},
@@ -373,7 +360,6 @@ testRule({
 			code: `a { b: clamp(1px, (2px + 3px) - 1px, 4px); }`,
 		},
 		{
-			// See #257
 			description: `a call standing in front of the operator of a sum, whose whitespace belongs to the calculation rather than to the call`,
 			code: `a { b: calc(var(--x) + 1px); }`,
 		},
@@ -398,7 +384,6 @@ testRule({
 			code: `a { b: calc(min(1px, 2px) /**/+ 1px); }`,
 		},
 		{
-			// See #257
 			description: `a sum whose operator opens a group rather than a number, which the grammar asks a space behind and several browsers do not`,
 			code: `a { b: calc(min(1px, 2px) +(3px)); }`,
 		},
@@ -528,7 +513,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #225
 			description: `a bare address inside a call the plugin knows nothing of: plain CSS spells no comment with a double slash, so the parenthesis closing that call is read`,
 			code: `a { b: myurl(//a) red; }`,
 			fixed: `a { b: myurl(//a)red; }`,
@@ -537,7 +521,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #230
 			description: `an address holding an escaped parenthesis, which closes the call no more than a parenthesis inside a string does`,
 			code: `a { b: url(a\\)b) red; }`,
 			fixed: `a { b: url(a\\)b)red; }`,
@@ -546,7 +529,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #252
 			description: `a call whose name closes on a hyphen, which the grammar allows of every character but the first`,
 			code: `a { b: foo-(1) red; }`,
 			fixed: `a { b: foo-(1)red; }`,
@@ -563,7 +545,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #257
 			description: `a call standing in front of the operator of a product, which CSS reads whether whitespace stands beside it or not`,
 			code: `a { b: calc(var(--x) * 2); }`,
 			fixed: `a { b: calc(var(--x)* 2); }`,
@@ -588,7 +569,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #739
 			description: `whitespace behind a call and in front of a string, which is no run in front of the sum behind the string`,
 			code: `a { b: c(d) "x" - e; }`,
 			fixed: `a { b: c(d)"x" - e; }`,

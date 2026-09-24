@@ -3,7 +3,7 @@
 /**
  * Accounts for every line of `lib/` that spells a line break, and refuses one nobody has classified.
  *
- * [AGENTS.md](../AGENTS.md) wants every stylesheet-reading pattern under a name in [lib/regexps.ts](../lib/regexps.ts); a `===` against a break, an `includes`, a `style-search` target and a template-literal pattern slip past that ([#246](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/246)), and `oxlint` has no `no-restricted-syntax`. Matching the shapes of a reading cannot work (the first draft missed the line of [#247](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/247)), so every line spelling a break is a finding until a list classifies it.
+ * [AGENTS.md](../AGENTS.md) wants every stylesheet-reading pattern under a name in [lib/regexps.ts](../lib/regexps.ts); a `===` against a break, an `includes`, a `style-search` target and a template-literal pattern slip past that, and `oxlint` has no `no-restricted-syntax`. Matching the shapes of a reading cannot work (the first draft missed the line of [#247](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/247)), so every line spelling a break is a finding until a list classifies it.
  *
  * `ALLOWED` puts a break into a text or spells a stylesheet as data; it asks nothing and may stand for ever. `DEBT` reads one and is meant to shrink: a line leaves it through a name in `lib/regexps.ts`, or a name of its own where the narrow reading is right.
  *

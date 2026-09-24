@@ -39,7 +39,7 @@ const FIXTURES: [string, string][] = [
 	[`interpolation-with-space`, `a { --x: 10px#{$a != $b}; }\n`],
 ]
 
-/** The same shapes with a `//` comment. The last three stand where a fixer removes a break, carrying the code after it into the comment ([#248](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/248)), or writes one in, closing the comment and handing the second call back to the value ([#288](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/288)). */
+/** The same shapes with a `//` comment. The last three stand where a fixer removes a break, carrying the code after it into the comment, or writes one in, closing the comment and handing the second call back to the value. */
 const INLINE_FIXTURES: [string, string][] = [
 	[`inline-value`, `a { b: 1px // c\n\t2px; }\n`],
 	[`inline-trailing`, `a {\n\tcolor: pink // c\n}\n`],

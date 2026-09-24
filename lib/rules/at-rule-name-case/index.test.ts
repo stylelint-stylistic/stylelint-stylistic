@@ -172,7 +172,6 @@ testRule({
 			column: 1,
 			message: messages.expected(`-WEBKIT-KEYFRAMES`, `-webkit-keyframes`),
 		},
-		// See #357
 		{
 			description: `an at-rule spelled without a space in front of its options, which the parser gives the shape of a call to a Less detached ruleset`,
 			code: `span { @IMPORT(reference) "x"; }`,
@@ -181,7 +180,6 @@ testRule({
 			column: 8,
 			message: messages.expected(`IMPORT`, `import`),
 		},
-		// See #357
 		{
 			description: `the same at-rule written with the space`,
 			code: `span { @IMPORT (reference) "x"; }`,

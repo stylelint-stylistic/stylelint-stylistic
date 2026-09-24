@@ -12,7 +12,6 @@ testRule({
 
 	reject: [
 		{
-			// See 1789420319
 			description: `a wordless declaration in front of the brace, whose single space the neighbor asks to stand behind the colon, so the break is not written and the warning stands`,
 			code: `
 				a {
@@ -27,7 +26,7 @@ testRule({
 			message: messages.expectedBefore,
 		},
 		{
-			// The neighbor listed behind used to write over the break this rule accepts, and the fixing run came back clean (1789508665)
+			// The neighbor listed behind used to write over the break this rule accepts, and the fixing run came back clean
 			description: `the same declaration with the break this rule asks for in front of the brace, which the neighbor asks to be a single space: the space is not written, and the file rests with the neighbor's warning`,
 			code: `
 				a {

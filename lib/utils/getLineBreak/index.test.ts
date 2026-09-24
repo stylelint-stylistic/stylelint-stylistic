@@ -22,7 +22,6 @@ describe(`getLineBreak`, () => {
 		expect(askScss(`a {}\nb {}`, { "@stylistic/linebreaks": `windows` })).toBe(`\n`)
 	})
 
-	// See #716
 	it(`the rule under the namespace of another syntax, which reads a plain CSS file too`, () => {
 		expect(ask(`a {}\nb {}`, { "@stylistic/scss/linebreaks": `windows` })).toBe(`\r\n`)
 		expect(ask(`a {}\r\nb {}`, { "@stylistic/less/linebreaks": [`unix`] })).toBe(`\n`)

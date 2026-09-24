@@ -88,7 +88,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// The run the check reads opens behind that one semicolon, so the fix writes behind it too, leaving it and whatever stands in front of it in the block's `raws.ownSemicolon`
 			let { semicolon, holdsASemicolon } = runBehindBrace(nextNode)
-			// A write crossing a further semicolon is `no-extra-semicolons`'s question rather than this rule's, and what may be written there is unsettled (#584, #598, #687): the warning stands
+			// A write crossing a further semicolon is `no-extra-semicolons`'s question rather than this rule's, and what may be written there is unsettled: the warning stands
 			let isFixable = typeof nextNode.raws.before === `string`
 				&& !holdsASemicolon
 				&& writesRunBehindBrace(syntax, statement, result, ruleName)

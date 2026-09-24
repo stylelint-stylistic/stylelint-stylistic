@@ -43,7 +43,6 @@ describe(`isLessDetachedRulesetCall`, () => {
 		expect(isLessDetachedRulesetCall(lessAtRule(`@media() {}`))).toBe(false)
 	})
 
-	// See #724
 	it(`the shape of a call under a name holding a character Less does not call a ruleset by, which has the shape of a call but is no call`, () => {
 		for (let name of [`dr$`, `d!r`, `d*r`, `d·r`, `dÄ`]) {
 			let atRule = lessAtRule(`a { @${name}(); }`)
@@ -53,7 +52,6 @@ describe(`isLessDetachedRulesetCall`, () => {
 		}
 	})
 
-	// See #724
 	it(`a call under a name of word characters and hyphens`, () => {
 		for (let name of [`d-r`, `d_r`, `1dr`, `DR`, `-dr`]) expect(isLessDetachedRulesetCall(lessAtRule(`a { @${name}(); }`))).toBe(true)
 	})

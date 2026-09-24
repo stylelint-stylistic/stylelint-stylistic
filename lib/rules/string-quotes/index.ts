@@ -237,17 +237,17 @@ function checkDeclOrAtRule<T extends AtRule | Declaration> (scope: QuotesScope, 
 	// No erroneous quote, nothing to do
 	if (!value.includes(erroneousQuote)) return
 
-	// Blanked, since the value parser closes `/*/` on its own star and reads the rest as value nodes (#378)
+	// Blanked, since the value parser closes `/*/` on its own star and reads the rest as value nodes
 	let commentSpans = syntax.printedComments(node, value, result)
 
-	// The parentheses behind a `url` parted from its `(` are one token to the tokenizer, and the marks the value parser pairs across such a token's edge are masked, so that a fix rewrites the marks the tokenizer pairs (1789653630)
+	// The parentheses behind a `url` parted from its `(` are one token to the tokenizer, and the marks the value parser pairs across such a token's edge are masked, so that a fix rewrites the marks the tokenizer pairs
 	let addressTokens = syntax.addressTokenSpans(getPrefix(node), value, node, result)
 
 	// The value is passed over where the parser's own tokenizer is out of reach: which marks of it are an address's cannot be said, and a fix written blind leaves a text that parser refuses
 	if (!addressTokens) return
 
 	valueParser(maskMisreadMarks(hideParenthesesInUrlStrings(blankComments(value, commentSpans), commentSpans), addressTokens)).walk((valueNode, index, siblings) => {
-		// A bare address is passed over whole where the syntax reads a quotation mark inside one as a character of it, since the parser opens an address behind the name spelled `url` alone and hands the strings behind `URL(`, `u\rl(` and `\75 rl(` back as strings (1789604002). A quoted address is the string, and is walked.
+		// A bare address is passed over whole where the syntax reads a quotation mark inside one as a character of it, since the parser opens an address behind the name spelled `url` alone and hands the strings behind `URL(`, `u\rl(` and `\75 rl(` back as strings. A quoted address is the string, and is walked.
 		if (valueNode.type === `function` && !syntax.readsQuoteInsideAddressAsString() && opensAnAddress(valueNode, index, siblings) && valueNode.nodes[0]?.type !== `string`) return false
 
 		// A string the value never closes has no mark to replace, and a mark written where the parser read none leaves a text it refuses

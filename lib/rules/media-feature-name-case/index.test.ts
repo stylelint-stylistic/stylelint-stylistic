@@ -72,12 +72,10 @@ testRule({
 			code: `@media (--VIEWPORT-MEDIUM) { }`,
 		},
 		{
-			// See #399
 			description: `a set of parameters ending inside a call the block never closes, which PostCSS reads to the end of the file`,
 			code: `@media (a( {}`,
 		},
 		{
-			// See #399
 			description: `a set of parameters ending inside a block nested in the one the parameters open`,
 			code: `@media ((a {}`,
 		},
@@ -263,7 +261,6 @@ testRule({
 			message: messages.expected(`@MONOCHROME`, `@monochrome`),
 		},
 		{
-			// See #399
 			description: `an upper-case feature name in front of a call left open inside the block the parameters end in, which used to end the lint in a TypeError`,
 			code: `@media (A: 1px) and (b( {}`,
 			fixed: `@media (a: 1px) and (b( {}`,

@@ -13,7 +13,6 @@ testRule({
 
 	reject: [
 		{
-			// See #715
 			description: `a plain CSS value that is nothing but a space, with the neighbor that takes the semicolon away listed under the core's name, which reads the same file`,
 			code: `a { color: ; }`,
 			fixed: `a { color:}`,

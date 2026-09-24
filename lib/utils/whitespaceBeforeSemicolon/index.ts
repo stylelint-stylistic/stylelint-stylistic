@@ -34,7 +34,7 @@ const RULES_OF_WHITESPACE: Record<`decl` | `atrule`, Partial<Record<Whitespace, 
 /**
  * The whitespace the rules about it ask for in front of a semicolon a fix adds behind a declaration or bodiless at-rule.
  *
- * Stylelint runs each rule once, so a bare semicolon written behind `declaration-block-semicolon-newline-before` or `-space-before` waits for the next `--fix` ([#354](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/354)), as does one written behind `at-rule-semicolon-space-before` ([#477](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/477)). `whitespaceAsked` picks the rule, a break asked for winning over a `-single-line` twin's space (1790029462); lineness is asked of the block at the write ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)).
+ * Stylelint runs each rule once, so a bare semicolon written behind `declaration-block-semicolon-newline-before` or `-space-before` waits for the next `--fix`, as does one written behind `at-rule-semicolon-space-before`. `whitespaceAsked` picks the rule, a break asked for winning over a `-single-line` twin's space; lineness is asked of the block at the write.
  * @param syntax - The asking rule's syntax.
  * @param node - The declaration or bodiless at-rule.
  * @param result - The Stylelint result.
@@ -66,7 +66,7 @@ export function whitespaceBeforeSemicolon (syntax: Syntax, node: AtRule | Declar
 }
 
 /**
- * The raw a bodiless at-rule ends on: a Less mixin call's flag, where the `less` namespace hands the run behind it ([#374](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/374)), otherwise `raws.between`.
+ * The raw a bodiless at-rule ends on: a Less mixin call's flag, where the `less` namespace hands the run behind it, otherwise `raws.between`.
  * @param atRule - The at-rule.
  * @returns The raw.
  */
@@ -77,7 +77,7 @@ function atRuleTail (atRule: AtRule): string {
 }
 
 /**
- * Reads the whitespace a text ends on, as the tokenizer reads whitespace, since a no-break space or a vertical tab there is a word the value keeps. The run is measured over the copy with its escapes masked: an escaped space is a character of a word and no run, and the whitespace closing a hexadecimal escape stays a run, since the semicolon closes the escape as well (1789661964). The reading is the syntax's, as the rules' checks read: in a plain CSS value `//d\ ` is code ending in an escaped space, and a comment to the default reading.
+ * Reads the whitespace a text ends on, as the tokenizer reads whitespace, since a no-break space or a vertical tab there is a word the value keeps. The run is measured over the copy with its escapes masked: an escaped space is a character of a word and no run, and the whitespace closing a hexadecimal escape stays a run, since the semicolon closes the escape as well. The reading is the syntax's, as the rules' checks read: in a plain CSS value `//d\ ` is code ending in an escaped space, and a comment to the default reading.
  * @param text - The text.
  * @param reading - What the syntax makes of a `//` comment.
  * @returns The run, empty where the text ends in a word.
@@ -159,7 +159,7 @@ export function keepsEscapedCharacter (syntax: Syntax, node: AtRule | Declaratio
 }
 
 /**
- * Asks whether taking a node's semicolon away, with the run in front of it, keeps the character behind a backslash the node's code ends on: `c\⏎;` would come out as `c\`, and whatever the file holds behind it lands against the backslash, an escaped space where a space stood (1789664271).
+ * Asks whether taking a node's semicolon away, with the run in front of it, keeps the character behind a backslash the node's code ends on: `c\⏎;` would come out as `c\`, and whatever the file holds behind it lands against the backslash, an escaped space where a space stood.
  * @param syntax - The syntax reading the value.
  * @param node - The declaration or bodiless at-rule.
  * @param result - The Stylelint result.
@@ -173,7 +173,7 @@ export function takingTheSemicolonKeepsEscapedCharacter (syntax: Syntax, node: A
 /**
  * Writes the whitespace in front of a semicolon, over the whitespace the node ends with.
  *
- * With `!important` it goes into `raws.important`, kept by PostCSS only for a spelling other than ` !important` and edited so a comment in front of the flag survives; otherwise onto the end of the value, or into a bodiless at-rule's `raws.between` — a Less mixin call's `raws.important` where it has one, since the `less` namespace hands it the run behind the flag ([#374](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/374)). The two declaration rules, `at-rule-semicolon-space-before`, `declaration-block-trailing-semicolon` and `indentation` all write through here.
+ * With `!important` it goes into `raws.important`, kept by PostCSS only for a spelling other than ` !important` and edited so a comment in front of the flag survives; otherwise onto the end of the value, or into a bodiless at-rule's `raws.between` — a Less mixin call's `raws.important` where it has one, since the `less` namespace hands it the run behind the flag. The two declaration rules, `at-rule-semicolon-space-before`, `declaration-block-trailing-semicolon` and `indentation` all write through here.
  * @param syntax - The syntax reading and writing the value.
  * @param node - The declaration or bodiless at-rule.
  * @param result - The Stylelint result.

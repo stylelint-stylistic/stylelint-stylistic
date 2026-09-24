@@ -74,19 +74,19 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 			})
 		})
 
-		// The run in front of a comma opening the parameters lies in `raws.afterName`, comments and all (1789593917)
+		// The run in front of a comma opening the parameters lies in `raws.afterName`, comments and all
 		let textBefore = rawInFrontOfText(atRule)
 
 		for (let { comma, pastComments } of commas) checkComma(params, runString, opts.allowTrailingComments ? pastComments : comma, atRule, textBefore)
 	})
 
 	/**
-	 * Checks one comma. The whitespace is read over the copy with its escapes masked, since an escaped space or the space closing a hexadecimal escape is a character of a word and no run (1789657288).
+	 * Checks one comma. The whitespace is read over the copy with its escapes masked, since an escaped space or the space closing a hexadecimal escape is a character of a word and no run.
 	 * @param source - The at-rule's params the comma stands in.
 	 * @param runString - The copy of them the runs are read over.
 	 * @param index - The comma's index.
 	 * @param node - The at-rule.
-	 * @param textBefore - What the file holds in front of the parameters, where a comma opening them has its run (1789593917).
+	 * @param textBefore - What the file holds in front of the parameters, where a comma opening them has its run.
 	 */
 	function checkComma (source: string, runString: string, index: number, node: AtRule, textBefore: string): void {
 		opts.locationChecker({

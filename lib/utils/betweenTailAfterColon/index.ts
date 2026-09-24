@@ -7,7 +7,7 @@ import { colonIndexInBetween } from "../colonIndexInBetween/index.ts"
 /**
  * Returns what stands behind a declaration's colon in `raws.between`.
  *
- * The parser trims the whitespace behind the colon of a worded value into `raws.between` but leaves a whitespace-only value in the value; the colon rules write onto this tail either way, so a rule deferred to the run's end reads its run partly or wholly here ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)). The colon is the one `colonIndexInBetween` finds, since a comment in the raw may spell one; where it cannot answer, the tail is empty, since the callers ask whether a single space is all that stands there.
+ * The parser trims the whitespace behind the colon of a worded value into `raws.between` but leaves a whitespace-only value in the value; the colon rules write onto this tail either way, so a rule deferred to the run's end reads its run partly or wholly here. The colon is the one `colonIndexInBetween` finds, since a comment in the raw may spell one; where it cannot answer, the tail is empty, since the callers ask whether a single space is all that stands there.
  * @param syntax - The syntax the asking rule is built over.
  * @param decl - The declaration.
  * @param result - The Stylelint result.

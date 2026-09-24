@@ -16,7 +16,6 @@ testRule({
 
 	accept: [
 		{
-			// See #533
 			description: `a bare address holding a quotation mark, which a space behind the parenthesis would part from it and leave a file the parser refuses`,
 			code: `a { b: url(a"b); }`,
 		},
@@ -53,12 +52,11 @@ testRule({
 			code: `$list: (value, value2)`,
 		},
 		{
-			// See #655
 			description: `a vertical tab between single spaces inside a call, which the tokenizer reads as the call's argument, so each parenthesis already has its space`,
 			code: `a { b: f( \v ); }`,
 		},
 		{
-			// The sign ends the name to `@csstools/css-tokenizer`, so what the parentheses hold is the text of an address; the space used to be written into that text, in front of its first character (1789895915)
+			// The sign ends the name to `@csstools/css-tokenizer`, so what the parentheses hold is the text of an address; the space used to be written into that text, in front of its first character
 			description: `an address glued to a sign, holding what the parser reads as a block comment`,
 			code: `a { b: 1!url(a /* c */ ) 1px; }`,
 		},
@@ -84,7 +82,6 @@ testRule({
 			],
 		},
 		{
-			// See #588
 			description: `an address whose name a backslash and a break divide from what stands in front, standing beside a call`,
 			code: `a { b: \\\nurl(c.png) f(1px); }`,
 			fixed: `a { b: \\\nurl(c.png) f( 1px ); }`,
@@ -138,7 +135,6 @@ testRule({
 			],
 		},
 		{
-			// See #533
 			description: `a call standing beside an address written in capitals, whose parentheses are spaced out while the address is left as the file spells it`,
 			code: `a { b: URL(a) f(1); }`,
 			fixed: `a { b: URL(a) f( 1 ); }`,
@@ -156,7 +152,6 @@ testRule({
 			],
 		},
 		{
-			// See #344, #533 and #669
 			description: `a call whose name a hexadecimal escape welds to the word in front of it, which names no address and is spaced out like any other call, though the parser this plugin runs on reads the parentheses as an address's`,
 			code: `a { b: \\61 url(1px); }`,
 			fixed: `a { b: \\61 url( 1px ); }`,
@@ -174,7 +169,6 @@ testRule({
 			],
 		},
 		{
-			// See #669
 			description: `the same call holding a bare address with a quotation mark, where the space would hand the parentheses to code and leave a string nothing closes, so the opening warning stands unfixed`,
 			code: `a { b: \\61 url(a"b.png); }`,
 			fixed: `a { b: \\61 url(a"b.png ); }`,
@@ -192,7 +186,6 @@ testRule({
 			],
 		},
 		{
-			// See #669
 			description: `the same call holding a parenthesis nothing closes, which code reads as a group the parser finds open at the end of the declaration`,
 			code: `a { b: \\61 url(a(b.png); }`,
 			fixed: `a { b: \\61 url(a(b.png ); }`,
@@ -210,7 +203,6 @@ testRule({
 			],
 		},
 		{
-			// See #669
 			description: `the same call holding a square bracket, which leaves the parentheses one plain token closed where the address's token closed, so both spaces are written`,
 			code: `a { b: \\61 url(a[b]c.png); }`,
 			fixed: `a { b: \\61 url( a[b]c.png ); }`,
@@ -228,7 +220,6 @@ testRule({
 			],
 		},
 		{
-			// See #669
 			description: `the same call standing inside a call PostCSS read as code, which leaves every parenthesis to that call's first closing one code as well, so the square bracket opens a group nothing closes`,
 			code: `a { b: f( \\61 url(c[d.png) ); }`,
 			fixed: `a { b: f( \\61 url(c[d.png ) ); }`,
@@ -397,7 +388,6 @@ testRule({
 			],
 		},
 		{
-			// See #506 and #508
 			description: `a comment holding a parenthesis between two quotation marks it closes around them: the string those marks open reaches past nothing, so the mask leaves them where they stand and the parenthesis stays the comment's`,
 			code: `a { b: g(1 /*/ "(" */ 2); }`,
 			fixed: `a { b: g( 1 /*/ "(" */ 2 ); }`,
@@ -415,8 +405,6 @@ testRule({
 			],
 		},
 		{
-			// See #506 and #508
-			// See #508
 			description: `a call holding a comment with one quotation mark and a string behind it: the string the mark of the comment used to open took the parenthesis the file closes the call on, and the rule read nothing of a call the parser never closed`,
 			code: `a { b: g(1 /*/ " */ "1"); }`,
 			fixed: `a { b: g( 1 /*/ " */ "1" ); }`,
@@ -434,7 +422,6 @@ testRule({
 			],
 		},
 		{
-			// See #655
 			description: `vertical tabs abutting both parentheses, which the tokenizer reads as characters of the argument, so each space is written between a parenthesis and a tab`,
 			code: `a { b: f(\vc\v); }`,
 			fixed: `a { b: f( \vc\v ); }`,
@@ -460,7 +447,6 @@ testRule({
 
 	accept: [
 		{
-			// See #533
 			description: `a bare address, whose parentheses are the address's and no call's`,
 			code: `a { b: url(a); }`,
 		},
@@ -521,7 +507,6 @@ testRule({
 
 	reject: [
 		{
-			// See #669
 			description: `a call whose name a hexadecimal escape welds to the word in front of it, holding a bare address with a quotation mark, where the space would hand the parentheses to code and leave a string nothing closes`,
 			code: `a { b: \\61 url(a"b.png); }`,
 			fixed: `a { b: \\61 url(a"b.png ); }`,
@@ -539,7 +524,6 @@ testRule({
 			],
 		},
 		{
-			// See #244
 			description: `form feeds inside the parentheses, which are whitespace and no line break, so the function is single-line and the option asks for a space on the inside`,
 			code: `a { b: fn(\f1px\f); }`,
 			fixed: `a { b: fn( 1px ); }`,
@@ -677,12 +661,10 @@ testRule({
 
 	accept: [
 		{
-			// See #533
 			description: `the spaces inside a quoted address's own parentheses, where postcss-scss would read a token of a string holding a parenthesis`,
 			code: `a { b: url( "a", format("woff2") ); }`,
 		},
 		{
-			// See #378
 			description: `a call the value parser closed on a parenthesis standing inside a comment opening with a solidus, a star and a solidus, which is no parenthesis the file writes, so the call is left alone as one closed inside an end-of-line comment is`,
 			code: `a { b: f(1 /*/ ) */ ); }`,
 		},
@@ -718,7 +700,6 @@ testRule({
 
 	reject: [
 		{
-			// See #560
 			description: `a call among the arguments behind a quoted address, which are those of any call while the spaces of the address's own parentheses stay`,
 			code: `a { b: url( "a", format( "woff2" ) ); }`,
 			fixed: `a { b: url( "a", format("woff2") ); }`,
@@ -736,7 +717,6 @@ testRule({
 			],
 		},
 		{
-			// See #669
 			description: `a call whose name a hexadecimal escape welds to the word in front of it, holding a string with a closing parenthesis, where emptying the run would close the address's token inside that string and leave its quotation mark unpaired`,
 			code: `a { b: \\61 url( a ")" b ); }`,
 			fixed: `a { b: \\61 url( a ")" b); }`,
@@ -754,7 +734,6 @@ testRule({
 			],
 		},
 		{
-			// See #660 and #669
 			description: `the same call holding a block comment with a closing parenthesis, where emptying the run would open the address's token inside the comment and leave the comment unopened`,
 			code: `a { b: \\61 url( a /* ) */ ); }`,
 			fixed: `a { b: \\61 url( a /* ) */); }`,
@@ -790,7 +769,6 @@ testRule({
 			],
 		},
 		{
-			// See #533
 			description: `an address standing beside the call that names its format, which is spaced out while the address is left as the file spells it`,
 			code: `@font-face { src: url( "a.woff2" ) format( "woff2" ); }`,
 			fixed: `@font-face { src: url( "a.woff2" ) format("woff2"); }`,
@@ -808,7 +786,6 @@ testRule({
 			],
 		},
 		{
-			// See #533
 			description: `a call standing beside a bare address, whose parentheses are closed up while the address is left as the file spells it`,
 			code: `a { b: url( a ) f( 1 ); }`,
 			fixed: `a { b: url( a ) f(1); }`,
@@ -971,7 +948,6 @@ testRule({
 			],
 		},
 		{
-			// See #225
 			description: `a double slash of plain CSS opens no comment, so the parenthesis has a line to join and the fix is written`,
 			code: `
 				a {
@@ -989,7 +965,6 @@ testRule({
 			message: messages.rejectedClosing,
 		},
 		{
-			// See #280
 			description: `a line break in front of the first argument behind a double slash of plain CSS, which spells no comment there: the guard holds nothing back and the whitespace goes`,
 			code: `
 				a {
@@ -1007,7 +982,6 @@ testRule({
 			message: messages.rejectedOpening,
 		},
 		{
-			// See #272
 			description: `a call standing behind a comment the value parser does not give back as it read it`,
 			code: `a { b: x/*/*a*/f( 1 )c; }`,
 			fixed: `a { b: x/*/*a*/f(1)c; }`,
@@ -1025,7 +999,6 @@ testRule({
 			],
 		},
 		{
-			// See #378
 			description: `a call standing beside a comment opening with a solidus, a star and a solidus, whose text spells a call of its own that the value parser hands back as a call`,
 			code: `a { b: g( 1 ) /*/ f( 1 ) */ 3; }`,
 			fixed: `a { b: g(1) /*/ f( 1 ) */ 3; }`,
@@ -1043,7 +1016,6 @@ testRule({
 			],
 		},
 		{
-			// See #508
 			description: `a call in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no call`,
 			code: `a { b: f( 1 ) /*/ " */ "f( 1 )"; }`,
 			fixed: `a { b: f(1) /*/ " */ "f( 1 )"; }`,
@@ -1061,7 +1033,6 @@ testRule({
 			],
 		},
 		{
-			// See #506
 			description: `the whitespace in front of the closing parenthesis of a call holding a comment opening with a solidus, a star and a solidus, reported at the character in front of the parenthesis as it is for the twin holding a comment of that width the value parser gives back as it read it, rather than a column further on`,
 			code: `a { b: f(2 /*/ c */ ); }`,
 			fixed: `a { b: f(2 /*/ c */); }`,
@@ -1070,7 +1041,6 @@ testRule({
 			message: messages.rejectedClosing,
 		},
 		{
-			// See #655
 			description: `spaces around vertical tabs inside a call, which the tokenizer reads as characters of the argument, so the spaces go and the tabs stay`,
 			code: `a { b: f( \vc\v ); }`,
 			fixed: `a { b: f(\vc\v); }`,
@@ -1096,7 +1066,6 @@ testRule({
 
 	accept: [
 		{
-			// See #533
 			description: `a bare address, whose parentheses are the address's and no call's`,
 			code: `a { b: url( a ); }`,
 		},
@@ -1148,7 +1117,6 @@ testRule({
 
 	reject: [
 		{
-			// See #669
 			description: `the same call holding a string with a closing parenthesis, where emptying the run would close the address's token inside that string and leave its quotation mark unpaired`,
 			code: `a { b: \\61 url( a ")" b ); }`,
 			fixed: `a { b: \\61 url( a ")" b); }`,
@@ -1280,7 +1248,6 @@ testRule({
 	],
 })
 
-// See #669
 describe(`a call whose name the parser reads a url token by though no compiler does`, () => {
 	let ruleOfSyntax = { css: ruleName, less: `@stylistic/less/function-parentheses-space-inside`, scss: `@stylistic/scss/function-parentheses-space-inside` }
 

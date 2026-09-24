@@ -44,7 +44,7 @@ const FILLINGS: Record<string, (run: string) => string> = {
 	indented: (run) => run.replaceAll(`⏎`, `⏎\t`).replace(/\t$/u, ``),
 }
 
-/** The break spelling; a line feed is a break whatever stands in front of it, so the mixed one is one run as PostCSS counts it ([#586](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/586)). */
+/** The break spelling; a line feed is a break whatever stands in front of it, so the mixed one is one run as PostCSS counts it. */
 const BREAKS: Record<string, (text: string) => string> = {
 	lf: (text) => text.replaceAll(`⏎`, `\n`),
 	crlf: (text) => text.replaceAll(`⏎`, `\r\n`),

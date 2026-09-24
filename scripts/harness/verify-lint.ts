@@ -78,7 +78,7 @@ async function askRunner (code: string, config: Config, fix: boolean): Promise<A
 		return await lintDirect({ code, rules: settingsOf(config.rules), registry: REGISTRY, syntax: config.customSyntax, fix })
 	}
 	catch (error) {
-		// A rule stopping the run, as over contradicting settings (#743), is answered as Stylelint's own stop is above
+		// A rule stopping the run, as over contradicting settings, is answered as Stylelint's own stop is above
 		return { unparsable: true, detail: (error as { message: string }).message }
 	}
 }

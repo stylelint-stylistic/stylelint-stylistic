@@ -37,7 +37,6 @@ testRule({
 
 	accept: [
 		{
-			// See #694
 			description: `the line feeds PostCSS prints in front of declarations the file spells no run in front of, which are the breaks unix asks for`,
 			code: `
 				a {
@@ -52,7 +51,6 @@ testRule({
 })
 
 describe(`the run PostCSS prints in front of a declaration the file spells none in front of`, () => {
-	// See #694
 	// The line check reads the file, which still spells the breaks the syntax took off the tree, so the break between the second and the third line is reported twice here, by the line and by the node; a plugin filling an empty block leaves no such line in the file
 	it(`is a line feed windows refuses, reported on the declaration, and the fix respells it along with the file's own breaks`, async () => {
 		expect(await fixAndRead(`a {\ncolor: pink;\ntop: 0;\n}`, `windows`)).toEqual({

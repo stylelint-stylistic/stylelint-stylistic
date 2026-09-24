@@ -3,7 +3,7 @@ import { messages as colonSpaceAfterMessages } from "../declaration-colon-space-
 
 import { messages, ruleName } from "./index.ts"
 
-// Where a declaration's value is nothing but whitespace, the run this rule reads in front of the semicolon is the run the `declaration-colon-*-after` rules read behind the colon (#416). The library lists the rule a block names first and its extra rules behind it, so in every block below the neighbor runs last and has the last word.
+// Where a declaration's value is nothing but whitespace, the run this rule reads in front of the semicolon is the run the `declaration-colon-*-after` rules read behind the colon. The library lists the rule a block names first and its extra rules behind it, so in every block below the neighbor runs last and has the last word.
 let testRule = createTestRule({ ruleName })
 
 testRule({
@@ -13,7 +13,6 @@ testRule({
 
 	reject: [
 		{
-			// See #416
 			description: `a value that is nothing but a space, which the neighbor asks to stand behind the colon: the neighbor is listed last and has the last word, so the space is not taken away and the warning stands`,
 			code: `a { color: ; }`,
 			fixed: `a { color: ; }`,
@@ -83,7 +82,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a single-line option asked at the run's end, of the block the neighbor's break has finished (#355): the unfixed file draws both warnings, and under \`--fix\` the option is silenced by the break the neighbor wrote, so the run before the semicolon stays as it stands`,
+			description: `a single-line option asked at the run's end, of the block the neighbor's break has finished: the unfixed file draws both warnings, and under \`--fix\` the option is silenced by the break the neighbor wrote, so the run before the semicolon stays as it stands`,
 			code: `a { color: ; }`,
 			fixed: `
 				a { color:
@@ -115,7 +114,6 @@ testRule({
 
 	reject: [
 		{
-			// See #494
 			description: `a value ending in a vertical tab, which the tokenizer reads as a word: the space is written behind it, and the character stays where the fix used to carry it off`,
 			code: `a { color: red\v; }`,
 			fixed: `a { color: red\v ; }`,
@@ -134,7 +132,6 @@ testRule({
 
 	reject: [
 		{
-			// See #494
 			description: `a custom property's value ending in a vertical tab in front of the space, a word to the tokenizer: only the space goes, and the character stays`,
 			code: `a { --x:\v ; }`,
 			fixed: `a { --x:\v; }`,
@@ -154,7 +151,6 @@ testRule({
 
 	reject: [
 		{
-			// See #355
 			description: `an empty custom property the neighbor finishes as \`--x: ;\` in the same run: the space stands on the tail of the raw between until the file is read back, the exception of #50 reads it there, and the deferred check stays silent about the finished form`,
 			code: `a { --bar:; x: y; }`,
 			fixed: `a { --bar: ; x: y; }`,
@@ -174,7 +170,6 @@ testRule({
 
 	reject: [
 		{
-			// See #710
 			description: `a value that is nothing but a space, with the neighbor listed under the namespace of another syntax, which reads the same plain CSS file and so is listed last all the same`,
 			code: `a { color: ; }`,
 			fixed: `a { color: ; }`,

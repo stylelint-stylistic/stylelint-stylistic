@@ -8,7 +8,7 @@ it(`endsInAnOpenHexEscape`, () => {
 	expect(endsInAnOpenHexEscape(`\\75`)).toBe(true)
 	expect(endsInAnOpenHexEscape(`a\\\\\\9`)).toBe(true)
 
-	// An escaped backslash in front of the digits, which leaves them plain characters (#579)
+	// An escaped backslash in front of the digits, which leaves them plain characters
 	expect(endsInAnOpenHexEscape(`x\\\\9`)).toBe(false)
 	expect(endsInAnOpenHexEscape(`\\\\61`)).toBe(false)
 

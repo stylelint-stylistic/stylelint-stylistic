@@ -359,7 +359,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the write over the run the check read, where an escaped tab is a character of the name and no run (1789666655)
+			// Pins the write over the run the check read, where an escaped tab is a character of the name and no run
 			description: `an escaped tab behind the operator, which is a character of the value and no space`,
 			code: `[a=\\\tb] {}`,
 			fixed: `[a= \\\tb] {}`,
@@ -1348,7 +1348,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the write over the run the check read, where an escaped tab is a character of the name and no run (1789666655)
+			// Pins the write over the run the check read, where an escaped tab is a character of the name and no run
 			description: `a space behind the operator in front of an escaped tab, which is a character of the value`,
 			code: `[a= \\\tb] {}`,
 			fixed: `[a=\\\tb] {}`,

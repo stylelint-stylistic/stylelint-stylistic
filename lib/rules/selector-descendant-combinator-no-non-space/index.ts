@@ -63,7 +63,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Skipped where the tree does not print the source back, since message, index and fix are measured against it.
 			if (!standsForSource(fullSelector, selector)) return
 
-			// The parser reads a backslash in front of a tab as no escape, and hands the tab over as a descendant combinator although the grammar reads it as a character of the name: the run is read over the copy with the escapes masked (1789666655)
+			// The parser reads a backslash in front of a tab as no escape, and hands the tab over as a descendant combinator although the grammar reads it as a character of the name: the run is read over the copy with the escapes masked
 			let { runString, escapes } = selectorSearchCopy(selector)
 
 			fullSelector.walkCombinators((combinatorNode) => {
@@ -115,7 +115,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				}): void {
 					if (segment.isComment) return
 
-					// The whitespace closing a hexadecimal escape is a character of the escape and no whitespace of the file, and the copy leaves it standing (1789657288), so the run opens behind the span it falls in: `a\41⏎⏎b` is the name `aA` and one break standing for the combinator (1789874864)
+					// The whitespace closing a hexadecimal escape is a character of the escape and no whitespace of the file, and the copy leaves it standing, so the run opens behind the span it falls in: `a\41⏎⏎b` is the name `aA` and one break standing for the combinator
 					let runOpensAt = escapes.find(({ start, end }) => start < segment.index && end > segment.index)?.end ?? segment.index
 					// What the segment holds of whitespace, the characters an escape covers left out of it
 					let run = runInFront(runString.slice(runOpensAt, segment.index + segment.value.length), segment.index + segment.value.length - runOpensAt)
@@ -128,7 +128,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 					let start = segment.index + segment.value.length - run.length
 					let index = copies.toSourceIndex(start)
-					// A backslash in front of a line break is a delimiter, and the space written in its place is read as its escape: `a>\⏎b` would come out as `a>\ b`, a child combinator and the name ` b`, so the warning stands with no fix (1789857484)
+					// A backslash in front of a line break is a delimiter, and the space written in its place is read as its escape: `a>\⏎b` would come out as `a>\ b`, a child combinator and the name ` b`, so the warning stands with no fix
 					let keepsTheEscape = editKeepsEscapedCharacter(selector, { start, end: segment.index + segment.value.length, text: ` ` })
 
 					report({

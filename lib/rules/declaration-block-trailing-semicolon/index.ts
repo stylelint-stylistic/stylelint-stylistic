@@ -45,10 +45,10 @@ type HeldRaw = {
 /**
  * Returns a node's start and end offsets.
  *
- * Where a closing brace ends an at-rule, PostCSS ends it on the last of its parameter tokens that is not whitespace, and a bodiless at-rule with nothing but whitespace in front of that brace has no such token, so it is handed over with `source.end` unset ([#630](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/630)). The end is taken from the node's printed text there, since it holds that whitespace as its own trailing run wherever the `always` fix of a neighboring namespace has moved the run to.
+ * Where a closing brace ends an at-rule, PostCSS ends it on the last of its parameter tokens that is not whitespace, and a bodiless at-rule with nothing but whitespace in front of that brace has no such token, so it is handed over with `source.end` unset. The end is taken from the node's printed text there, since it holds that whitespace as its own trailing run wherever the `always` fix of a neighboring namespace has moved the run to.
  * @param node - The node whose source is read.
  * @param result - The Stylelint result, whose syntax prints a node the parser gave no end.
- * @returns The offsets, or nothing for a node another rule built without a source, which holds no place in the file (1790090148).
+ * @returns The offsets, or nothing for a node another rule built without a source, which holds no place in the file.
  */
 function offsetsOf (node: Node, result?: PostcssResult): {
 	start: number,
@@ -95,7 +95,7 @@ function placedAt (offset: number | undefined, by: number): number | undefined {
 /**
  * Returns the raws between the node closing the block and the block's end, in file order, with their start offsets.
  *
- * Only comments follow that node, so a `;` here is code, and so is one a `//` comment holds in its text past the break closing it, unless the flag's semicolon is the text of a `//` comment: that comment runs on to the first break closing it, which a comment it meets may hold ([#359](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/359)). A comment's `raws.before` is anchored to the comment's own start, since `postcss-less` ends an inline comment one character short. A missing raw is skipped, since an empty string would override the PostCSS default.
+ * Only comments follow that node, so a `;` here is code, and so is one a `//` comment holds in its text past the break closing it, unless the flag's semicolon is the text of a `//` comment: that comment runs on to the first break closing it, which a comment it meets may hold. A comment's `raws.before` is anchored to the comment's own start, since `postcss-less` ends an inline comment one character short. A missing raw is skipped, since an empty string would override the PostCSS default.
  * @param syntax - The syntax reading the comments.
  * @param node - The node closing the block.
  * @param result - The Stylelint result.
@@ -159,7 +159,7 @@ function spellsSemicolon (raw: HeldRaw): boolean {
 /**
  * Asks whether a semicolon closes the node ending the block.
  *
- * A flag set by a comment's text leaves the node closed only by a semicolon of code behind that comment ([#359](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/359)). A Sass nested property with a value closes on its own brace, and `postcss-scss` files the semicolon behind that brace in a raw behind it, the block's tail or a following comment's `raws.before`, rather than in the flag, so it too is closed by a semicolon of code behind it ([#336](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/336)).
+ * A flag set by a comment's text leaves the node closed only by a semicolon of code behind that comment. A Sass nested property with a value closes on its own brace, and `postcss-scss` files the semicolon behind that brace in a raw behind it, the block's tail or a following comment's `raws.before`, rather than in the flag, so it too is closed by a semicolon of code behind it.
  * @param node - The node closing the block.
  * @param raws - The raws behind the node.
  * @param flagIsCommentText - Whether the flag's semicolon is the text of a `//` comment.
@@ -174,7 +174,7 @@ function endsOnSemicolon (node: ChildNode, raws: HeldRaw[], flagIsCommentText: b
 /**
  * Returns the index of the last semicolon behind the node closing the block.
  *
- * `raws.semicolon` covers only the semicolon right behind the node; further ones sit in a following comment's `raws.before` or the block's `raws.after`. The index is counted in the file, as `report` reads it, so it may reach past the node's end; a raw another rule rewrote in the same `--fix` pass shifts it ([#356](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/356)).
+ * `raws.semicolon` covers only the semicolon right behind the node; further ones sit in a following comment's `raws.before` or the block's `raws.after`. The index is counted in the file, as `report` reads it, so it may reach past the node's end; a raw another rule rewrote in the same `--fix` pass shifts it.
  * @param node - The node closing the block.
  * @param result - The Stylelint result, which {@link offsetsOf} reads the syntax from.
  * @param raws - The raws behind the node.
@@ -207,7 +207,7 @@ function withoutTheSemicolonsOfCode (raw: HeldRaw): string {
 /**
  * Removes every semicolon behind the node, in the flag and in the raws, and the whitespace in front of the flag's own.
  *
- * Removing the flag's alone left one in a raw, which the next parse read as the flag's. The whitespace outlived the semicolon whenever a `declaration-block-semicolon-*-before` rule was listed first ([#479](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/479)); in front of a semicolon in a raw it is a comment's layout and stays. Behind an inline comment nothing is trimmed, and a semicolon in its text or in a comment the code holds stays.
+ * Removing the flag's alone left one in a raw, which the next parse read as the flag's. The whitespace outlived the semicolon whenever a `declaration-block-semicolon-*-before` rule was listed first; in front of a semicolon in a raw it is a comment's layout and stays. Behind an inline comment nothing is trimmed, and a semicolon in its text or in a comment the code holds stays.
  * @param syntax - The syntax the rule is built over.
  * @param node - The node closing the block.
  * @param result - The Stylelint result.
@@ -282,7 +282,7 @@ function runLeftInFront (syntax: Syntax, node: AtRule | Declaration, result: Pos
 }
 
 /**
- * The bodiless at-rule that swallowed what follows the node closing a block into `raws.between`, which leaves it no sibling; not behind a Less mixin call's flag, since the `less` namespace hands that run to the block wherever it finds the flag in the file ([#374](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/374)).
+ * The bodiless at-rule that swallowed what follows the node closing a block into `raws.between`, which leaves it no sibling; not behind a Less mixin call's flag, since the `less` namespace hands that run to the block wherever it finds the flag in the file.
  * @param node - The node closing the block.
  * @returns The at-rule, or undefined.
  */
@@ -293,7 +293,7 @@ function swallowingAtRule (node: ChildNode): AtRule | undefined {
 /**
  * Asks whether the warning over a node can carry a fix.
  *
- * Under `always`, no for a node with a block (`postcss-scss` drops a Sass nested property's semicolon), where the flag is the text of an inline comment ending the node, which a break written in front of the semicolon would take out of it, and where a backslash ending the node would read the written text as part of it. Where such a comment ends the node and the semicolon would land inside it, yes only where the run holding the comment can move behind the semicolon ({@link trailingCommentRun}), which the fix then writes in front of the comment ([#423](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/423)). Under `never`, no for the semicolon PostCSS writes regardless of the flag and the ones the syntax requires, which under Less are the semicolon behind a bodiless at-rule and the one behind a declaration it reads no value in, and none either where taking the run in front of the flag's semicolon away would leave a backslash ending the node reading what the file holds behind it (1789664271). The warning then stands over code the fix leaves alone.
+ * Under `always`, no for a node with a block (`postcss-scss` drops a Sass nested property's semicolon), where the flag is the text of an inline comment ending the node, which a break written in front of the semicolon would take out of it, and where a backslash ending the node would read the written text as part of it. Where such a comment ends the node and the semicolon would land inside it, yes only where the run holding the comment can move behind the semicolon ({@link trailingCommentRun}), which the fix then writes in front of the comment. Under `never`, no for the semicolon PostCSS writes regardless of the flag and the ones the syntax requires, which under Less are the semicolon behind a bodiless at-rule and the one behind a declaration it reads no value in, and none either where taking the run in front of the flag's semicolon away would leave a backslash ending the node reading what the file holds behind it. The warning then stands over code the fix leaves alone.
  * @param syntax - The syntax the rule is built over.
  * @param node - The node the semicolon stands behind.
  * @param primary - The primary option.
@@ -323,7 +323,7 @@ function isFixable (syntax: Syntax, node: AtRule | Declaration, primary: `always
 }
 
 /**
- * Returns the run an `always` write moves behind the semicolon: where the semicolon would land inside an inline comment ending the node, the run holding the comment, where it can move ([#423](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/423)).
+ * Returns the run an `always` write moves behind the semicolon: where the semicolon would land inside an inline comment ending the node, the run holding the comment, where it can move.
  * @param syntax - The rule's syntax.
  * @param node - The node the semicolon stands behind.
  * @param primary - The primary option.
@@ -427,7 +427,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// The whitespace before the closing brace is parsed into the at-rule, not the block
 				let between = typeof bodilessAtRule?.raws.between === `string` ? bodilessAtRule.raws.between : ``
 				let beforeWhitespace = between.replace(TRAILING_CSS_WHITESPACE, ``)
-				// The written semicolon carries the whitespace the `*-semicolon-space-before` rules ask for, since one listed earlier never sees it (#354, #477)
+				// The written semicolon carries the whitespace the `*-semicolon-space-before` rules ask for, since one listed earlier never sees it
 				let whitespace = message === messages.expected && (isDeclaration(node) || isAtRule(node)) ? whitespaceBeforeSemicolon(syntax, node, result) : ``
 				// Behind a bodiless at-rule the semicolon lands on the whitespace handed to the block, which the guard reads when told nothing; behind any other node only `whitespace` stands between, and a line break in it closes an inline comment
 				let spelledBetween = bodilessAtRule ? undefined : whitespace
@@ -444,19 +444,19 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 							if (primary === `always` && !hasSemicolon) {
 								parent.raws.semicolon = true
 
-								// The trailing whitespace goes to the block first, so the space lands in front of the semicolon; where a semicolon closed the at-rule at the parse, the at-rule holds none of that run and the block's raw holds it already ([#684](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/684)) — a shape one copy of the rule reaches no longer, since the semicolon it cleared in the same pass was a second copy's
+								// The trailing whitespace goes to the block first, so the space lands in front of the semicolon; where a semicolon closed the at-rule at the parse, the at-rule holds none of that run and the block's raw holds it already — a shape one copy of the rule reaches no longer, since the semicolon it cleared in the same pass was a second copy's
 								if (bodilessAtRule && atRuleHoldsTheBlockAfter) {
 									bodilessAtRule.raws.between = beforeWhitespace
 									parent.raws.after = between.slice(beforeWhitespace.length)
 								}
 
-								// An inline comment ending the node moves behind the semicolon with the run holding it, the run read before the block took its whitespace, since the move writes the whole of it behind the semicolon (#423)
+								// An inline comment ending the node moves behind the semicolon with the run holding it, the run read before the block took its whitespace, since the move writes the whole of it behind the semicolon
 								trailingRun?.move()
 
 								if (bodilessAtRule) {
 									if (whitespace) writeWhitespaceBeforeSemicolon(syntax, bodilessAtRule, result, whitespace)
 								}
-								// A whitespace-only value shares its run with the colon, and a colon rule listed earlier may have written onto the tail of `raws.between` (#50); that tail and the value are read as one run, as the semicolon rules do (#536)
+								// A whitespace-only value shares its run with the colon, and a colon rule listed earlier may have written onto the tail of `raws.between`; that tail and the value are read as one run, as the semicolon rules do
 								else if (isDeclaration(node) && whitespace && !(!node.important && WHITESPACE_OR_NOTHING.test(syntax.read(node)) && betweenTailAfterColon(syntax, node, result) + syntax.read(node) === whitespace)) writeWhitespaceBeforeSemicolon(syntax, node, result, whitespace)
 							}
 							else if (primary === `never`) takeTheTrailingSemicolonsAway(syntax, node, result, raws, flagIsCommentText)

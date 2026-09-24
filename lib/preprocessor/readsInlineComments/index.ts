@@ -18,7 +18,7 @@ let inlineCommentSyntaxes: WeakMap<object, InlineCommentReading> = new WeakMap()
 /** A stylesheet with an inline comment in both places the answers turn on. */
 const INLINE_COMMENT_PROBE = `a {}\n// comment\na { b: 'x', // comment\n  'y'; }\n`
 
-/** A stylesheet with a form feed in the middle of an inline comment and a rule of its own written behind it. A syntax closing a comment on the character has two rules here; one reading it as the comment's text has one, and the second is that comment's text ([#333](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/333)). */
+/** A stylesheet with a form feed in the middle of an inline comment and a rule of its own written behind it. A syntax closing a comment on the character has two rules here; one reading it as the comment's text has one, and the second is that comment's text. */
 const FORM_FEED_PROBE = `a {}\n// c\fb {}\n`
 
 /**

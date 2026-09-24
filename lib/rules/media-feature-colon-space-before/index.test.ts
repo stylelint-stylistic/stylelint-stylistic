@@ -32,12 +32,10 @@ testRule({
 			code: `@custom-selector:--enter :hover;`,
 		},
 		{
-			// See #213
 			description: `a colon inside the arguments of a function belongs to the address and to no media feature`,
 			code: `@media (min-width : url(a:b)) { a { b: c; } }`,
 		},
 		{
-			// See #215
 			description: `a media feature standing behind a bare address, whose double slash opens no comment`,
 			code: `@media (min-width : url(http://x)) and (max-width :1px) { a { b: c; } }`,
 		},
@@ -45,7 +43,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the feature's name in front of a line break and the colon, where the space would stand behind the backslash as its escaped character, so the warning stands`,
 			code: `@media (a\\\n:b) {}`,
 			fixed: `@media (a\\\n:b) {}`,
@@ -54,7 +52,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the colon, which is a character of the feature's name and no space`,
 			code: `@media (a\\ :b) {}`,
 			fixed: `@media (a\\  :b) {}`,
@@ -160,7 +158,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #215
 			description: `a media feature standing behind a bare address, whose double slash opens no comment`,
 			code: `@media (min-width : url(http://x)) and (max-width:1px) { a { b: c; } }`,
 			fixed: `@media (min-width : url(http://x)) and (max-width :1px) { a { b: c; } }`,
@@ -177,7 +174,7 @@ testRule({
 
 	accept: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the colon, which is a character of the feature's name and no whitespace`,
 			code: `@media (a\\ :b) {}`,
 		},
@@ -209,7 +206,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the feature's name in front of a line break and the colon, which the write would turn into an escaped colon, so the warning stands`,
 			code: `@media (a\\\n:b) {}`,
 			fixed: `@media (a\\\n:b) {}`,
@@ -317,14 +314,13 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer: the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab in front of the colon, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `@media (a\v: 10px) {}`,
 			fixed: `@media (a\v : 10px) {}`,
@@ -343,7 +339,6 @@ testRule({
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab at the run before the colon: only the tokenizer's run goes, and the character stays`,
 			code: `@media (a\v : 10px) {}`,
 			fixed: `@media (a\v: 10px) {}`,

@@ -44,7 +44,6 @@ testRule({
 
 	accept: [
 		{
-			// See #517
 			description: `a comma standing in the text of an inline comment a backslash stands against, which this parser reads as a comment all the same`,
 			code: `a { prop: 1px \\//c ,\n2px; }`,
 		},

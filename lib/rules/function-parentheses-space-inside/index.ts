@@ -42,7 +42,7 @@ export let meta = {
 /**
  * Asks whether the function the value parser returned is one the file writes.
  *
- * No for a preprocessor construct, an unclosed function, or one closed on a `)` inside a `//` comment, which the parser cannot see: a `/*` in one swallows every `)` behind it ([#131](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/131)), a `)` in one closes the call early ([#320](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/320)), and the fix guards see neither ([#132](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/132)). The whole node is refused: the closing `)` is one the parser never returns ([#285](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/285)).
+ * No for a preprocessor construct, an unclosed function, or one closed on a `)` inside a `//` comment, which the parser cannot see: a `/*` in one swallows every `)` behind it, a `)` in one closes the call early, and the fix guards see neither. The whole node is refused: the closing `)` is one the parser never returns.
  * @param syntax - The syntax the rule is built over.
  * @param valueNode - The function.
  * @param comments - The value's comment spans.
@@ -88,7 +88,7 @@ function openingEdit (valueNode: FunctionNode, text: string): Edit {
 }
 
 /**
- * The closing `)`'s index, from the node's end: a printed copy prints `/*\/` as `/**\/` and was a character off ([#506](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/506)).
+ * The closing `)`'s index, from the node's end: a printed copy prints `/*\/` as `/**\/` and was a character off.
  * @param valueNode - The function.
  * @returns The index.
  */
@@ -154,9 +154,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let declValue = syntax.read(decl)
 			// A `//` is a comment only where the syntax says: `myurl(//a)` is CSS
 			let reading = syntax.inlineComments(decl, result)
-			// Both kinds: a `//` comment's text comes back as words and calls, a `/*/` comment closes on its own star (#378)
+			// Both kinds: a `//` comment's text comes back as words and calls, a `/*/` comment closes on its own star
 			let comments = syntax.commentSpans(declValue, decl, result)
-			// Masks quotation marks a comment leaves open, so the parser pairs them right (#508)
+			// Masks quotation marks a comment leaves open, so the parser pairs them right
 			let parsedValue = valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(declValue, comments), comments))
 
 			// The value parser calls a control character such as a vertical tab whitespace where the tokenizer calls it a word, and both fixes rewrite a whole side
@@ -165,7 +165,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			parsedValue.walk((valueNode, at, siblings) => {
 				if (valueNode.type !== `function`) return
 
-				// The parentheses of a call opening an address are the address's: a space or a break written behind the `(` parts a bare address from the parenthesis, which is what a tokenizer reads one token by ([#533](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/533)), and `postcss-scss` reads a quoted one behind such a space as a token counting parentheses, which a string holding one leaves unclosed. Passed over, and the walk goes no further in where the address is bare, as it does in the four rules that ask this question of a node they would otherwise read inside; behind a quoted address stand arguments, whose calls are walked ([#560](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/560)). The name is the file's spelling rather than the parser's, which is wider than what a parser takes a url token by ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)).
+				// The parentheses of a call opening an address are the address's: a space or a break written behind the `(` parts a bare address from the parenthesis, which is what a tokenizer reads one token by, and `postcss-scss` reads a quoted one behind such a space as a token counting parentheses, which a string holding one leaves unclosed. Passed over, and the walk goes no further in where the address is bare, as it does in the four rules that ask this question of a node they would otherwise read inside; behind a quoted address stand arguments, whose calls are walked. The name is the file's spelling rather than the parser's, which is wider than what a parser takes a url token by.
 				if (opensAnAddress(valueNode, at, siblings)) return quotesItsAddress(valueNode) ? undefined : false
 
 				// A narrowing here is not carried into a nested function
@@ -188,7 +188,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let openingIndex = valueNode.sourceIndex + valueNode.value.length + 1
 
 				/**
-				 * Asks whether the fix may write the run behind the `(`. Under a parser whose tokenizer reads the parentheses behind `url(` as one token, a write opening a comment, as taking away the whitespace in front of a quotation mark there does, is refused; outside it the question is not asked, since a name glued to a sign, `1!url(`, is an address to the walk and a call to the parser, and a refusal there would take away a write the parser reads the same. A write switching how the tokenizer reads parentheses it takes for an address's is refused as well: this run holds the character that decides it, and the name the parser reads there is not the one the walk read ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)). Whether the break the run holds closes a `//` comment is not asked: the `(` would stand in that comment's text, and the walk turns such a call away before the question is put ([#393](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/393)).
+				 * Asks whether the fix may write the run behind the `(`. Under a parser whose tokenizer reads the parentheses behind `url(` as one token, a write opening a comment, as taking away the whitespace in front of a quotation mark there does, is refused; outside it the question is not asked, since a name glued to a sign, `1!url(`, is an address to the walk and a call to the parser, and a refusal there would take away a write the parser reads the same. A write switching how the tokenizer reads parentheses it takes for an address's is refused as well: this run holds the character that decides it, and the name the parser reads there is not the one the walk read. Whether the break the run holds closes a `//` comment is not asked: the `(` would stand in that comment's text, and the walk turns such a call away before the question is put.
 				 * @param write - The whitespace the fix writes.
 				 * @returns True if no comment opens where that question is asked and the parentheses keep their reading.
 				 */
@@ -206,7 +206,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let closingIndex = closingParenthesisIndex(valueNode) - 1
 
 				/**
-				 * Asks whether the line break in front of the `)` closes a `//` comment, which no option can satisfy without commenting it out; the warning then stands unfixed ([#114](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/114)).
+				 * Asks whether the line break in front of the `)` closes a `//` comment, which no option can satisfy without commenting it out; the warning then stands unfixed.
 				 * @returns True if the `)` stays outside a comment.
 				 */
 				function isClosingFixable (): boolean {

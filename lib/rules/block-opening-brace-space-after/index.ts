@@ -112,7 +112,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: Prim
 						endIndex: problemIndex,
 						result,
 						ruleName,
-						// The rule reads the characters right behind the brace, so the write spells the whitespace the run opens with and keeps what stands behind it: the parser files a stray semicolon standing in front of the first node in this run, and no option speaks of it (1790006582)
+						// The rule reads the characters right behind the brace, so the write spells the whitespace the run opens with and keeps what stands behind it: the parser files a stray semicolon standing in front of the first node in this run, and no option speaks of it
 						fix: (): void => {
 							statementFirst.raws.before = writes.space(primary, runInFrontOf(statementFirst))
 						},

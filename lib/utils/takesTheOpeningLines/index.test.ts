@@ -6,7 +6,6 @@ import { describe, expect, it } from "vitest"
 import { takesTheOpeningLines } from "./index.ts"
 
 describe(`takesTheOpeningLines`, () => {
-	// See #682
 	it(`a live copy of the rule over a file opening with an empty line`, () => {
 		expect(ask(`\n;\n`, { "@stylistic/no-empty-first-line": true })).toBe(true)
 		expect(ask(`\n\na {}\n`, { "@stylistic/no-empty-first-line": [true] })).toBe(true)

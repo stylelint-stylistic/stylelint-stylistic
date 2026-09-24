@@ -49,7 +49,6 @@ testRule({
 			code: `a { background: url(data:application/font-woff;...); }`,
 		},
 		{
-			// See #92
 			description: `comment with an URL, space after the declaration's own colon`,
 			code: `a { color/* https://foo.bar/ */: pink; }`,
 		},
@@ -78,7 +77,6 @@ testRule({
 			code: `a { --a\t: /*comment*/; }`,
 		},
 		{
-			// See #371
 			description: `an ordinary property whose value is nothing but a flag, with one space behind the colon`,
 			code: `a { color: !important; }`,
 		},
@@ -91,54 +89,44 @@ testRule({
 			code: `a { color: ; }`,
 		},
 		{
-			// See #421
 			description: `a property spelling a colon of its own, escaped, with the single space behind the declaration's colon`,
 			code: `a { b\\:c: pink; }`,
 		},
 		{
-			// See #387
 			description: `a declaration printing nothing behind its colon, whose single space the block's own raw holds`,
 			code: `a { color: }`,
 		},
 		{
-			// See #387
 			description: `the same declaration with a comment written behind it, whose single space that comment's raw holds`,
 			code: `a { color: /*comment*/ }`,
 		},
 		{
-			// See #537
 			description: `a declaration standing last at the top level of a stylesheet, whose run behind the colon is the tail of the file`,
 			code: `color:${S}`,
 		},
 		{
-			// See #537
 			description: `the same declaration whose tail is two spaces, a run this option collapses anywhere else`,
 			code: `color:${S}${S}`,
 		},
 		{
-			// See #537
 			autoStripIndent: false,
 			description: `the same declaration whose tail is the break the file ends on`,
 			code: `color:\n`,
 		},
 		{
-			// See #537
 			description: `the same declaration with no tail at all, the file ending at the colon`,
 			code: `color:`,
 		},
 		{
-			// See #546
 			description: `a custom property standing last at the top level of a stylesheet, whose two spaces are the tail of the file and the value's own text`,
 			code: `--a:${S}${S}`,
 		},
 		{
-			// See #546
 			autoStripIndent: false,
 			description: `the same custom property whose value is a space and the break the file ends on`,
 			code: `--a:${S}\n`,
 		},
 		{
-			// See #546
 			autoStripIndent: false,
 			description: `the same custom property whose value is that break alone`,
 			code: `--a:\n`,
@@ -147,7 +135,6 @@ testRule({
 
 	reject: [
 		{
-			// See #408
 			description: `a property ending in a run of two solidi, which the search that finds the colon reads to the end of the line as a comment though no syntax spells one there`,
 			code: `a { color//c:\nurl(data:x); }`,
 			fixed: `a { color//c: url(data:x); }`,
@@ -156,7 +143,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #421
 			description: `the same escaped colon in front of a value that holds no word of its own`,
 			code: `a { b\\:c:  !important; }`,
 			fixed: `a { b\\:c: !important; }`,
@@ -286,7 +272,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #92
 			description: `a comment holding an address, whose double slash opens none of its own`,
 			code: `a { color/* https://foo.bar/ */:pink; }`,
 			fixed: `a { color/* https://foo.bar/ */: pink; }`,
@@ -367,7 +352,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #371
 			description: `an ordinary property whose value is nothing but a flag, with two spaces behind the colon`,
 			code: `a { color:  !important; }`,
 			fixed: `a { color: !important; }`,
@@ -408,7 +392,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #387
 			description: `a declaration printing nothing behind its colon, whose two spaces the block's own raw holds`,
 			code: `a { color:  }`,
 			fixed: `a { color: }`,
@@ -417,7 +400,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #387
 			description: `the same declaration with a comment written behind it, whose two spaces that comment's raw holds`,
 			code: `a { color:  /*comment*/ }`,
 			fixed: `a { color: /*comment*/ }`,
@@ -426,7 +408,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #387
 			description: `the same declaration whose run is the break the closing brace stands behind, over which the single space is written`,
 			code: `
 				@media all {
@@ -446,7 +427,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #537
 			description: `a declaration standing at the top level of a stylesheet with a comment written behind it, whose two spaces that comment's raw holds`,
 			code: `color:${S}${S}/*comment*/`,
 			fixed: `color:${S}/*comment*/`,
@@ -455,7 +435,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #546
 			description: `a custom property whose break the closing brace of its block bounds rather than the end of the file`,
 			code: `a {--a:${S}\n}`,
 			fixed: `a {--a: }`,
@@ -464,7 +443,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #546
 			autoStripIndent: false,
 			description: `a custom property standing last at the top level of a stylesheet with a flag behind it, out of whose raw the file writes the break it ends on`,
 			code: `--a:${S}${S}!important\n`,
@@ -486,33 +464,27 @@ testRule({
 			code: `a { --a:; color:red; }`,
 		},
 		{
-			// See #387
 			description: `a declaration printing nothing behind its colon, which the closing brace abuts`,
 			code: `a { color:}`,
 		},
 		{
-			// See #387
 			description: `the same declaration which a comment abuts instead`,
 			code: `a { color:/*comment*/ }`,
 		},
 		{
-			// See #537
 			description: `a declaration standing last at the top level of a stylesheet, whose space is the tail of the file`,
 			code: `color:${S}`,
 		},
 		{
-			// See #537
 			autoStripIndent: false,
 			description: `the same declaration whose tail is the break the file ends on`,
 			code: `color:\n`,
 		},
 		{
-			// See #546
 			description: `a custom property standing last at the top level of a stylesheet, whose single space is the tail of the file and the value's own text`,
 			code: `--a:${S}`,
 		},
 		{
-			// See #546
 			autoStripIndent: false,
 			description: `the same custom property whose value is a space and the break the file ends on`,
 			code: `--a:${S}\n`,
@@ -538,7 +510,6 @@ testRule({
 			code: `$map: (key: value)`,
 		},
 		{
-			// See #92
 			description: `comment with an URL, no space after the declaration's own colon`,
 			code: `a { color/* https://foo.bar/ */:pink; }`,
 		},
@@ -563,7 +534,6 @@ testRule({
 			code: `a { --a :/*comment*/ !important; }`,
 		},
 		{
-			// See #371
 			description: `an ordinary property whose value is nothing but a flag, abutting the colon`,
 			code: `a { color:!important; }`,
 		},
@@ -627,7 +597,6 @@ testRule({
 			message: messages.rejectedAfter(),
 		},
 		{
-			// See #92
 			description: `a comment holding an address, with a space behind the colon`,
 			code: `a { color/* https://foo.bar/ */: pink; }`,
 			fixed: `a { color/* https://foo.bar/ */:pink; }`,
@@ -692,7 +661,6 @@ testRule({
 			message: messages.rejectedAfter(),
 		},
 		{
-			// See #371
 			description: `an ordinary property whose value is nothing but a flag, with one space behind the colon`,
 			code: `a { color: !important; }`,
 			fixed: `a { color:!important; }`,
@@ -717,7 +685,6 @@ testRule({
 			message: messages.rejectedAfter(),
 		},
 		{
-			// See #387
 			description: `a declaration printing nothing behind its colon, whose space the block's own raw holds`,
 			code: `a { color: }`,
 			fixed: `a { color:}`,
@@ -726,7 +693,6 @@ testRule({
 			message: messages.rejectedAfter(),
 		},
 		{
-			// See #387
 			description: `the same declaration with a comment written behind it, whose two spaces that comment's raw holds`,
 			code: `a { color:  /*comment*/ }`,
 			fixed: `a { color:/*comment*/ }`,
@@ -735,7 +701,6 @@ testRule({
 			message: messages.rejectedAfter(),
 		},
 		{
-			// See #537
 			description: `a declaration standing at the top level of a stylesheet with a comment written behind it, whose space that comment's raw holds`,
 			code: `color:${S}/*comment*/`,
 			fixed: `color:/*comment*/`,
@@ -744,7 +709,6 @@ testRule({
 			message: messages.rejectedAfter(),
 		},
 		{
-			// See #546
 			autoStripIndent: false,
 			description: `a custom property standing last at the top level of a stylesheet with a flag behind it, out of whose raw the file writes the break it ends on`,
 			code: `--a:${S}!important\n`,
@@ -766,12 +730,10 @@ testRule({
 			code: `a { --a: ; color: red; }`,
 		},
 		{
-			// See #387
 			description: `a declaration printing nothing behind its colon, whose single space the block's own raw holds`,
 			code: `a { color: }`,
 		},
 		{
-			// See #537
 			description: `a declaration standing last at the top level of a stylesheet, whose two spaces are the tail of the file`,
 			code: `color:${S}${S}`,
 		},
@@ -780,7 +742,6 @@ testRule({
 			code: `a { --a: ; }`,
 		},
 		{
-			// See #546
 			description: `a custom property standing last at the top level of a stylesheet, whose two spaces are the tail of the file and the value's own text`,
 			code: `--a:${S}${S}`,
 		},
@@ -825,12 +786,10 @@ testRule({
 			code: `a { --a\t: /*comment*/; }`,
 		},
 		{
-			// See #371
 			description: `an ordinary property whose value is nothing but a flag, with one space behind the colon`,
 			code: `a { color: !important; }`,
 		},
 		{
-			// See #389
 			description: `two spaces behind the colon of a value broken between the comment in front of its word and the word, which this option passes over`,
 			code: `a { color:  /*c*/\nx; }`,
 		},
@@ -866,7 +825,6 @@ testRule({
 			message: messages.expectedAfterSingleLine(),
 		},
 		{
-			// See #389
 			description: `a break behind the value, in front of the semicolon, which is no line of the declaration`,
 			code: `a { color:  x\n; }`,
 			fixed: `a { color: x\n; }`,
@@ -995,7 +953,6 @@ testRule({
 			message: messages.expectedAfterSingleLine(),
 		},
 		{
-			// See #371
 			description: `an ordinary property whose value is nothing but a flag, with two spaces behind the colon`,
 			code: `a { color:  !important; }`,
 			fixed: `a { color: !important; }`,
@@ -1012,7 +969,6 @@ testRule({
 			message: messages.expectedAfterSingleLine(),
 		},
 		{
-			// See #387
 			description: `a declaration printing nothing behind its colon, whose two spaces the block's own raw holds`,
 			code: `a { color:  }`,
 			fixed: `a { color: }`,
@@ -1021,7 +977,6 @@ testRule({
 			message: messages.expectedAfterSingleLine(),
 		},
 		{
-			// See #537
 			description: `a declaration standing at the top level of a stylesheet with a comment written behind it, whose two spaces that comment's raw holds`,
 			code: `color:${S}${S}/*comment*/`,
 			fixed: `color:${S}/*comment*/`,
@@ -1030,7 +985,6 @@ testRule({
 			message: messages.expectedAfterSingleLine(),
 		},
 		{
-			// See #689
 			description: `a value abutting the colon of a custom property closing its block with no semicolon, whose break in front of the brace the parser keeps in the value and which is the block's, no line of the declaration`,
 			code: `
 				a {
@@ -1058,7 +1012,7 @@ testRule({
 	],
 })
 
-// The two roots an HTML page holds are answered opposite ways: a `style` attribute's root closes on the attribute's quotation mark as a block closes on its brace, and the run behind a declaration printing nothing goes into its `raws.after` all the same (#387), where a `<style>` element's root is a stylesheet ending in that raw as a file does, and the run there is no rule's to write from the colon (#537).
+// The two roots an HTML page holds are answered opposite ways: a `style` attribute's root closes on the attribute's quotation mark as a block closes on its brace, and the run behind a declaration printing nothing goes into its `raws.after` all the same, where a `<style>` element's root is a stylesheet ending in that raw as a file does, and the run there is no rule's to write from the colon.
 testRule({
 	ruleName,
 	config: [`always`],
@@ -1066,27 +1020,22 @@ testRule({
 
 	accept: [
 		{
-			// See #387
 			description: `an attribute whose one declaration prints nothing behind its colon, the single space standing in the root's own raw`,
 			code: `<p style="color: "></p>`,
 		},
 		{
-			// See #537
 			description: `a style element whose one declaration prints nothing behind its colon, the two spaces standing where that element's own stylesheet ends`,
 			code: `<style>\ncolor:${S}${S}\n</style>`,
 		},
 		{
-			// See #537
 			description: `the same element written on one line, whose two spaces this syntax keeps outside the stylesheet altogether and gives back when the page is printed, so that the raw the run would be written into is empty`,
 			code: `<style>color:  </style>`,
 		},
 		{
-			// See #546
 			description: `a style element whose one declaration is a custom property, the break its stylesheet ends on standing in that declaration's own value`,
 			code: `<style>\n--a:${S}\n</style>`,
 		},
 		{
-			// See #546
 			description: `the same custom property in an element written on one line, whose two spaces this syntax keeps outside the stylesheet as it does a plain property's`,
 			code: `<style>--a:  </style>`,
 		},
@@ -1094,7 +1043,6 @@ testRule({
 
 	reject: [
 		{
-			// See #387
 			description: `the same attribute with two spaces there instead`,
 			code: `<p style="color:  "></p>`,
 			fixed: `<p style="color: "></p>`,
@@ -1103,7 +1051,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #387
 			description: `the same run held by the raw of a comment written behind that declaration`,
 			code: `<p style="color:  /*comment*/"></p>`,
 			fixed: `<p style="color: /*comment*/"></p>`,
@@ -1112,7 +1059,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #537
 			description: `a style element with a comment written behind its declaration, whose raw bounds the run where the element's own does not`,
 			code: `<style>color:  /*comment*/</style>`,
 			fixed: `<style>color: /*comment*/</style>`,
@@ -1130,7 +1076,6 @@ testRule({
 
 	reject: [
 		{
-			// See #387
 			description: `the same attribute, whose run this option takes away`,
 			code: `<p style="color: "></p>`,
 			fixed: `<p style="color:"></p>`,
@@ -1141,7 +1086,7 @@ testRule({
 	],
 })
 
-// A block comment behind a break is off the colon's line, and the write over the break puts it on that line (#590)
+// A block comment behind a break is off the colon's line, and the write over the break puts it on that line
 testRule({
 	ruleName,
 	config: [`always`],
@@ -1209,7 +1154,7 @@ testRule({
 	],
 })
 
-// The head run is the run in front of a comma opening the value too, which the `value-list-comma-*-before` rules write (#166): the rules asked settle who writes it, and a rule held by its neighbor reports and leaves the run (1789594574)
+// The head run is the run in front of a comma opening the value too, which the `value-list-comma-*-before` rules write: the rules asked settle who writes it, and a rule held by its neighbor reports and leaves the run
 testRule({
 	ruleName,
 	config: [`never`],

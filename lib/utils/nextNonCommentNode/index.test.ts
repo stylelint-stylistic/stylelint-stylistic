@@ -120,7 +120,6 @@ describe(`nextNonCommentNode`, () => {
 		expect(steps).toEqual([[`x`, undefined]])
 	})
 
-	// See #360
 	it(`next node is a declaration preceded by a run of comments longer than the stack is deep`, () => {
 		let root = parse(`a { ${`/* c */ `.repeat(COMMENT_RUN_LENGTH)}color: pink; }`)
 
@@ -134,7 +133,6 @@ describe(`nextNonCommentNode`, () => {
 		expect(nextNonCommentNode(aNode?.first)).toBe(colorNode)
 	})
 
-	// See #360
 	it(`next node is null preceded by a run of comments longer than the stack is deep`, () => {
 		let root = parse(`a { ${`/* c */ `.repeat(COMMENT_RUN_LENGTH)}}`)
 
@@ -145,7 +143,6 @@ describe(`nextNonCommentNode`, () => {
 		expect(nextNonCommentNode(aNode?.first)).toBe(null)
 	})
 
-	// See #409
 	it(`the callback is called once per comment of a run longer than the stack is deep`, () => {
 		let root = parse(`a { ${`/* c */ `.repeat(COMMENT_RUN_LENGTH)}color: pink; }`)
 		let steps = 0

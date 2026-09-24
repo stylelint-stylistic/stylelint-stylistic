@@ -24,7 +24,7 @@ export type GridTableLine = {
 /**
  * Asks whether a line break stands in a node that is no row.
  *
- * A `named-grid-areas-alignment` fix collapses a row's whitespace, so a break there is about to be written over ([#402](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/402)). Sliced from the value, since a blanked comment is spaces in the parse copy.
+ * A `named-grid-areas-alignment` fix collapses a row's whitespace, so a break there is about to be written over. Sliced from the value, since a blanked comment is spaces in the parse copy.
  * @param value - The grid shorthand's value text.
  * @param nodes - Its parse, comments blanked.
  * @returns True where a break stands outside every row.
@@ -34,7 +34,7 @@ export function spansLinesOutsideRows (value: string, nodes: ValueNode[]): boole
 }
 
 /**
- * Reads the row lines of a grid shorthand as table cells ([#45](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/45)).
+ * Reads the row lines of a grid shorthand as table cells.
  *
  * A line is the stretch between two break-holding whitespace nodes, and is a row where it holds exactly one top-level string with only code in front. Its tokens run to the first `/` or comment: line names before the string, the size behind it unless it opens on `[`, then the closing names.
  * @param value - The grid shorthand's value text.

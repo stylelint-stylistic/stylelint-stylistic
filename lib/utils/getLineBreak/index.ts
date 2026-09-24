@@ -36,7 +36,7 @@ function lineBreakOfFile (node: Node): string | undefined {
 /**
  * The line break a fix writes where none stood.
  *
- * In order: what `linebreaks` asks for where configured, or a break written the other way would never be respelled ([#352](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/352)); the file's; a line feed. Never the machine's, which `context.newline` falls back on. The rule is read under whichever namespace its copy reading the root is configured ([#716](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/716)), one whose fix is off included, as it still reports the other break ([#485](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/485)).
+ * In order: what `linebreaks` asks for where configured, or a break written the other way would never be respelled; the file's; a line feed. Never the machine's, which `context.newline` falls back on. The rule is read under whichever namespace its copy reading the root is configured, one whose fix is off included, as it still reports the other break.
  * @param node - A node of the file.
  * @param result - The result, with the configuration.
  * @returns The break to write.

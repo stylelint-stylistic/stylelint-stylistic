@@ -12,7 +12,6 @@ testRule({
 
 	reject: [
 		{
-			// See #88
 			description: `inline comment before the colon: the colon cannot leave its line, so the code is left alone and the warning stands`,
 			code: `
 				a {
@@ -55,7 +54,6 @@ testRule({
 
 	reject: [
 		{
-			// See #88
 			description: `inline comment before the colon: the colon cannot leave its line, so the code is left alone and the warning stands`,
 			code: `
 				a {

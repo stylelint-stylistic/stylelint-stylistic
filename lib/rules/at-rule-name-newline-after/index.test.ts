@@ -136,7 +136,6 @@ testRule({
 	],
 
 	reject: [
-		// See #357
 		{
 			description: `an at-rule spelled without a space in front of its options, which the parser gives the shape of a call to a Less detached ruleset`,
 			code: `@layer(l);`,
@@ -169,7 +168,6 @@ testRule({
 			column: 1,
 			message: `${CHARSET_RULE_MESSAGE} (${ruleName})`,
 		},
-		// See #696
 		{
 			description: `a block comment between the name and the params, in front of which the break goes`,
 			code: `@media /* c */ (a) { }`,
@@ -453,7 +451,6 @@ testRule({
 	],
 
 	reject: [
-		// See #696
 		{
 			description: `a block comment behind the name carrying the head's only break, the params themselves standing on one line`,
 			code: `@media /*\n*/ (a) and (b) { }`,

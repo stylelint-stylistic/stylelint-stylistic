@@ -14,7 +14,7 @@ const RANGE_OPERATORS = [`>=`, `<=`, `>`, `<`, `=`]
  * @param syntax - The syntax the at-rule's params are read under.
  * @param atRule - The at-rule.
  * @param result - The Stylelint result.
- * @param cb - Called with each match, the params, the at-rule and the copy of the params the whitespace beside the operator is read over, its escapes masked (1789657288).
+ * @param cb - Called with each match, the params, the at-rule and the copy of the params the whitespace beside the operator is read over, its escapes masked.
  */
 export function findMediaOperator<T extends AtRule> (syntax: Syntax, atRule: T, result: PostcssResult, cb: (match: StyleSearchMatch, params: string, atRule: T, runString: string) => void): void {
 	if (atRule.name.toLowerCase() !== `media`) return

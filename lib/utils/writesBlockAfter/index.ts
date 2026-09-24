@@ -68,16 +68,16 @@ function acceptedByEmptyLine (option: string, secondary: Record<string, unknown>
  * @returns The primary and the secondaries per writing copy, none where the neighbor gates nothing.
  */
 function writingCopies (node: Node, result: PostcssResult, rule: NeighborRuleSetting): { option: string, secondary: Record<string, unknown> }[] {
-	// A turned-off fix rewrites nothing, so it gates nothing (#485)
+	// A turned-off fix rewrites nothing, so it gates nothing
 	return neighborCopies(node, result, rule).flatMap(({ option, fixDisabled, secondary }) => !fixDisabled && typeof option === `string` ? [{ option, secondary }] : [])
 }
 
 /**
- * Asks whether `block-opening-brace-newline-after` is the one to write the run in front of the closing brace of a block holding nothing but comments, the run the three `block-closing-brace-*-before` rules write ([#676](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/676)).
+ * Asks whether `block-opening-brace-newline-after` is the one to write the run in front of the closing brace of a block holding nothing but comments, the run the three `block-closing-brace-*-before` rules write.
  *
- * It writes only where every one of the three that speaks of the block as the write leaves it accepts a spelling it accepts too; otherwise the run would be taken straight back out, and the two rules would take it in turns for as long as `--fix` ran. Sharing a spelling rather than accepting the written one is what lets `block-closing-brace-empty-line-before` double the break this rule writes ([#416](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/416)).
+ * It writes only where every one of the three that speaks of the block as the write leaves it accepts a spelling it accepts too; otherwise the run would be taken straight back out, and the two rules would take it in turns for as long as `--fix` ran. Sharing a spelling rather than accepting the written one is what lets `block-closing-brace-empty-line-before` double the break this rule writes.
  *
- * Run order is not asked: one rule asks and the three write whatever the configuration lists, so no order changes the answer. The copy of each of the three reading the root is asked ([#715](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/715)).
+ * Run order is not asked: one rule asks and the three write whatever the configuration lists, so no order changes the answer. The copy of each of the three reading the root is asked.
  * @param node - A node of the root the rules read.
  * @param result - The Stylelint result, which holds the configuration.
  * @param primary - The asking rule's primary option.

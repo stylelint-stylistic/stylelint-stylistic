@@ -105,7 +105,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			// Pins the run in front of the brace read over the copy with the escapes masked
 			description: `a space behind a backslash ending the selector, which spells a character of the selector, so the break goes behind it`,
 			code: `a\\ { b: c }`,
 			fixed: `a\\ \n{ b: c }`,
@@ -354,7 +354,7 @@ testRule({
 
 	accept: [
 		{
-			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			// Pins the run in front of the brace read over the copy with the escapes masked
 			description: `a backslash ending the selector in front of a space, which spells a character of the selector and no run`,
 			code: `a\\ { b: c }`,
 		},
@@ -414,7 +414,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the selector in front of a line break and the brace, which the write would turn into an escaped brace the file no longer parses, so the warning stands`,
 			code: `a\\\n{ b: c }`,
 			fixed: `a\\\n{ b: c }`,
@@ -423,7 +423,7 @@ testRule({
 			message: messages.rejectedBeforeSingleLine(),
 		},
 		{
-			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			// Pins the run in front of the brace read over the copy with the escapes masked
 			description: `a space behind such a backslash and a second one in front of the brace, where only the second is a run`,
 			code: `a\\  { b: c }`,
 			fixed: `a\\ { b: c }`,
@@ -796,7 +796,6 @@ testRule({
 			message: messages.rejectedBeforeMultiLine(),
 		},
 		{
-			// See #89
 			description: `comment between the selector and the opening brace`,
 			code: `
 				.some-class /* v3+ */
@@ -837,7 +836,7 @@ testRule({
 	],
 })
 
-// Two checks both deferred for their lineness options run in the plugin's own order rather than the configuration's (#502): this rule's subject is a line break, so it speaks first whichever the configuration lists first, and both orders rest on one file. The two cases are the other spelling of the pairs pinned in the neighbors' test files.
+// Two checks both deferred for their lineness options run in the plugin's own order rather than the configuration's: this rule's subject is a line break, so it speaks first whichever the configuration lists first, and both orders rest on one file. The two cases are the other spelling of the pairs pinned in the neighbors' test files.
 testRule({
 	ruleName,
 	config: [`always-single-line`],
@@ -845,7 +844,7 @@ testRule({
 
 	reject: [
 		{
-			// See #502. The outer block's closing brace is reported first, the walk of the closing-brace rule visiting the nodes in document order (#570)
+			// The outer block's closing brace is reported first, the walk of the closing-brace rule visiting the nodes in document order
 			description: `an outer block this rule's break puts over lines, the neighbor listed behind it: the file as it stands draws a warning from each rule about each brace, and under the fix the break goes in first, so no space stands in front of the outer closing brace`,
 			code: `@media(min-width:100px){a{b:c}}\n`,
 			fixed: `@media(min-width:100px){a\n{b:c }}\n`,
@@ -890,7 +889,6 @@ testRule({
 
 	reject: [
 		{
-			// See #502
 			description: `an outer block this rule's break puts over lines, the other neighbor listed behind it: the same again, and no space stands behind the outer opening brace`,
 			code: `@media(min-width:100px){a{b:c}}\n`,
 			fixed: `@media(min-width:100px){a\n{ b:c}}\n`,

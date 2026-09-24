@@ -12,7 +12,6 @@ testRule({
 
 	accept: [
 		{
-			// See #570
 			description: `a Sass nested property whose value spans lines while its block is one, the block alone deciding the block's lineness`,
 			code: `
 				a {
@@ -23,7 +22,6 @@ testRule({
 			`,
 		},
 		{
-			// See #139
 			description: `a single-line block behind a media feature holding an inline comment, which the option leaves alone because the block is on one line however wide the comment is printed`,
 			code: `
 				@media (min-width: 100px // c
@@ -34,7 +32,6 @@ testRule({
 
 	reject: [
 		{
-			// See #570
 			description: `a Sass nested property written with a value, which this syntax parses as a declaration with a block, whose multi-line block closes with no empty line in front of its brace`,
 			code: `
 				a {
@@ -58,7 +55,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #139
 			description: `no empty line in front of the closing brace of a block whose value carries on past an inline comment`,
 			code: `
 				a { b: 1px // c

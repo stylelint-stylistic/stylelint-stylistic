@@ -3,7 +3,7 @@
  *
  * Written for [#414](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/414), where `unit-case` split a word at every star, escaped or not, and named `PX\` the unit of `10PX\*2REM`. The star is spelled behind none to three backslashes, since the run's parity decides what it is; a backslash stands in front of each line break, where it opens no escape. Five characters (`%`, `$`, a no-break space, `.`, `+`) end a unit without parting the word `postcss-value-parser` returns, as every non-identifier code point does; `.` and `+` are the two the tokenizer puts no delimiter between. The escape is also written at the front of the word, inside the unit, at its end and in front of a hack's digit, and each thing a unit ends in front of stands behind the dimension, escaped and plain.
  *
- * The whitespace closing a hexadecimal escape belongs to it, but `postcss-value-parser` parts the word there, so nine separators spell an escape and its whitespace ([#526](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526)), and three insides carry one inside the word. The inline-comment environment puts a dimension on the line below, since an escape at the value's end would take the closing break.
+ * The whitespace closing a hexadecimal escape belongs to it, but `postcss-value-parser` parts the word there, so nine separators spell an escape and its whitespace, and three insides carry one inside the word. The inline-comment environment puts a dimension on the line below, since an escape at the value's end would take the closing break.
  *
  * `color-hex-case` is swept over the same corpus, being the other rule that recases what it reads.
  */

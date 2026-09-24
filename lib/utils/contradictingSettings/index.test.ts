@@ -202,7 +202,6 @@ describe(`contradictionsAmong`, () => {
 	})
 })
 
-// #743
 describe(`a configuration holding contradicting settings`, () => {
 	it.each([
 		[`in a run that only checks`, false],

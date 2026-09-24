@@ -281,13 +281,13 @@ function tokenSpans (before: string, text: string, holding: RegExp, syntax?: unk
 /**
  * Finds the parentheses the syntax's tokenizer takes as one token behind the word `url`, whose quotation marks are characters of an address and no strings.
  *
- * The tokenizer keeps a stack of the words it reads and pops one at each `(`; the parentheses open a token where the word popped there is `url` itself. Whitespace and a comment push no word, so `url (`, `url\t(`, `url\n(` and `url/*c*\/(` open one as `url(` does, and so does a property named `url` in front of a value opening on a `(`. `postcss-value-parser` opens its own address mode behind a lowercase `url` glued to the `(` alone, and reads a quotation mark in every other spelling as a string; closing such a string leaves a text the parser refuses (1789653630).
+ * The tokenizer keeps a stack of the words it reads and pops one at each `(`; the parentheses open a token where the word popped there is `url` itself. Whitespace and a comment push no word, so `url (`, `url\t(`, `url\n(` and `url/*c*\/(` open one as `url(` does, and so does a property named `url` in front of a value opening on a `(`. `postcss-value-parser` opens its own address mode behind a lowercase `url` glued to the `(` alone, and reads a quotation mark in every other spelling as a string; closing such a string leaves a text the parser refuses.
  *
  * Only a token holding a quotation mark is returned, which is the only one this answers for: both tokenizers give a plain pair of parentheses up as `brackets` the moment its content holds a mark, so a `brackets` token carrying one can only be an address's.
  *
  * The text in front is read for the tokenizer's state, which a word of its own carries into the text asked about, and no span is answered for it; a token opening there and reaching into the text is cut at the text's start. A text holding no parenthesis holds no such token and is answered without a tokenizer at all.
  *
- * That stack runs through the whole file, and an at-rule's name pushes no word, so a `(` of its params pops what a node in front left there. Where the text read pops a word it does not hold, the node's own root is read for as many words as it owes and they are put in front as a text of their own, so that the tokenizer opens the text with the stack the file leaves it (1789910265).
+ * That stack runs through the whole file, and an at-rule's name pushes no word, so a `(` of its params pops what a node in front left there. Where the text read pops a word it does not hold, the node's own root is read for as many words as it owes and they are put in front as a text of their own, so that the tokenizer opens the text with the stack the file leaves it.
  * @param before - Read but not answered for: the property and what stands between it and the value, or the at-rule's name and what stands behind it.
  * @param text - The value or params the spans are sought in, standing right behind `before`.
  * @param [syntax] - The syntax, as `nodeSyntax` gives it.
@@ -300,7 +300,7 @@ export function addressTokenSpans (before: string, text: string, syntax?: unknow
 }
 
 /**
- * Finds the parentheses the syntax's tokenizer takes as one token behind the word `url` where they hold a `(` past the opening one, which is a character of the address and opens no call: PostCSS's tokenizer closes the token on the first `)` no backslash escapes, `postcss-scss`'s at the count of parentheses (1789505502). Both tokenizers give a plain pair of parentheses up as `brackets` only where no `(` stands inside, so such a token can only be an address's. The rest reads as {@link addressTokenSpans} does.
+ * Finds the parentheses the syntax's tokenizer takes as one token behind the word `url` where they hold a `(` past the opening one, which is a character of the address and opens no call: PostCSS's tokenizer closes the token on the first `)` no backslash escapes, `postcss-scss`'s at the count of parentheses. Both tokenizers give a plain pair of parentheses up as `brackets` only where no `(` stands inside, so such a token can only be an address's. The rest reads as {@link addressTokenSpans} does.
  * @param before - Read but not answered for.
  * @param text - The text the spans are sought in, standing right behind `before`.
  * @param [syntax] - The syntax, as `nodeSyntax` gives it.

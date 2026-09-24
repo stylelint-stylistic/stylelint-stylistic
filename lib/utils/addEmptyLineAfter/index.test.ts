@@ -36,19 +36,17 @@ describe(`addEmptyLineAfter`, () => {
 		expect(run(`a {\f\t}`)).toBe(`a {\n\n\f\t}`)
 	})
 
-	// See #678
 	it(`adds two newlines in front of a run holding none, the run being the brace's own indentation`, () => {
 		expect(run(`a {  }`)).toBe(`a {\n\n  }`)
 	})
 
-	// See #678
 	it(`writes them where a stray semicolon stands in front of the run's first whitespace character, so a rule taking that semicolon out leaves one file in either order`, () => {
 		expect(run(`a {color: pink;; }`)).toBe(`a {color: pink;;\n\n }`)
 		expect(run(`a {color: pink; ; }`)).toBe(`a {color: pink;\n\n ; }`)
 		expect(run(`a {color: pink;;}`)).toBe(`a {color: pink;;\n\n}`)
 	})
 
-	it(`doubles the break in front of a stray semicolon glued to the brace, which stays glued (#690)`, () => {
+	it(`doubles the break in front of a stray semicolon glued to the brace, which stays glued`, () => {
 		expect(run(`a {\n;}`)).toBe(`a {\n\n;}`)
 	})
 
@@ -56,7 +54,7 @@ describe(`addEmptyLineAfter`, () => {
 		expect(run(`a {\r\n;}`)).toBe(`a {\r\n\r\n;}`)
 	})
 
-	it(`doubles the run's first break, leaving a stray semicolon on its own line behind it (#690)`, () => {
+	it(`doubles the run's first break, leaving a stray semicolon on its own line behind it`, () => {
 		expect(run(`a {color: pink;;\n;\n}`)).toBe(`a {color: pink;;\n\n;\n}`)
 	})
 
@@ -66,7 +64,6 @@ describe(`addEmptyLineAfter`, () => {
 		expect(run(`x {y: 1;}\r\na {b: pink;}`, 1)).toBe(`x {y: 1;}\r\na {b: pink;\r\n\r\n}`)
 	})
 
-	// See #267
 	it(`writes that break where it stands outside every raw the whitespace of the tree is kept in`, () => {
 		expect(run(`a {b,\r\nc {color: pink;}}`)).toBe(`a {b,\r\nc {color: pink;}\r\n\r\n}`)
 		expect(run(`a {color: pink !\r\nimportant;}`)).toBe(`a {color: pink !\r\nimportant;\r\n\r\n}`)
@@ -85,7 +82,6 @@ describe(`addEmptyLineAfter`, () => {
 		expect(run(`a {}\r\nb {}`, 0, { "@stylistic/linebreaks": `unix` })).toBe(`a {\n\n}\r\nb {}`)
 	})
 
-	// See #292
 	it(`writes the whitespace an at-rule with neither a block nor a semicolon swallowed`, () => {
 		expect(run(`a {\n\t@extend .b\n}`)).toBe(`a {\n\t@extend .b\n\n}`)
 		expect(run(`a {@extend .b}`)).toBe(`a {@extend .b\n\n}`)

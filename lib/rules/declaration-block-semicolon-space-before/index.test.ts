@@ -8,11 +8,10 @@ testRule({
 
 	accept: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `a space in front of the semicolon behind an escaped space, which is a character of the value`,
 			code: `a { color: red \\  ; }`,
 		},
-		// See #208
 		{
 			description: `a comment closing the block behind a declaration without a semicolon, which has no semicolon to space`,
 			code: `a { color: pink /* c */ }`,
@@ -59,7 +58,7 @@ testRule({
 
 	reject: [
 		{
-			// The writer reads `//` as the syntax does, code in plain CSS, so the escape behind it is one to it as to the check (1789661964)
+			// The writer reads `//` as the syntax does, code in plain CSS, so the escape behind it is one to it as to the check
 			description: `an escaped space in front of the semicolon behind a double solidus, which opens no comment in plain CSS`,
 			code: `a { b: c //d\\ ; e: f }`,
 			fixed: `a { b: c //d\\  ; e: f }`,
@@ -68,7 +67,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the semicolon, which is a character of the value and no space`,
 			code: `a { color: red \\ ; }`,
 			fixed: `a { color: red \\  ; }`,
@@ -77,7 +76,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #208
 			description: `a nested rule closing the block, whose declaration keeps its semicolon and is still measured`,
 			code: `a { color: pink; b {} }`,
 			fixed: `a { color: pink ; b {} }`,
@@ -207,7 +205,7 @@ testRule({
 
 	accept: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the semicolon, which is a character of the value and no whitespace`,
 			code: `a { color: red \\ ; top: 0 }`,
 		},
@@ -238,7 +236,6 @@ testRule({
 		},
 		{
 			// A custom property may hold nothing but whitespace, and that whitespace is its value rather than the space in front of the semicolon
-			// See #50
 			description: `a custom property whose value is nothing but whitespace`,
 			code: `a { --foo: ; }`,
 		},
@@ -246,7 +243,7 @@ testRule({
 
 	reject: [
 		{
-			// The writer reads `//` as the syntax does, code in plain CSS, so the escape behind it is one to it as to the check (1789661964)
+			// The writer reads `//` as the syntax does, code in plain CSS, so the escape behind it is one to it as to the check
 			description: `a space in front of the semicolon behind an escaped space, where a double solidus opens no comment in plain CSS`,
 			code: `a { b: c //d\\  ; e: f }`,
 			fixed: `a { b: c //d\\ ; e: f }`,
@@ -255,7 +252,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `a space in front of the semicolon behind an escaped space, which is a character of the value and stays`,
 			code: `a { color: red \\  ; top: 0 }`,
 			fixed: `a { color: red \\ ; top: 0 }`,
@@ -368,7 +365,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #225
 			description: `a double slash of plain CSS opens no comment, so the semicolon has a line to join and the fix is written`,
 			code: `
 				a {
@@ -573,7 +569,6 @@ testRule({
 		},
 		{
 			// A custom property may hold nothing but whitespace, and that whitespace is its value rather than the space in front of the semicolon
-			// See #50
 			description: `a custom property whose value is whitespace, in a single-line block`,
 			code: `a { --foo: ; }`,
 		},

@@ -37,7 +37,6 @@ testRule({
 
 	accept: [
 		{
-			// See #693
 			description: `the break PostCSS prints in front of a declaration the file spells no run in front of`,
 			code: `
 				a {
@@ -57,7 +56,6 @@ testRule({
 
 	accept: [
 		{
-			// See #693
 			description: `the break PostCSS prints in front of a declaration the file spells no run in front of`,
 			code: `
 				a {
@@ -71,7 +69,6 @@ testRule({
 })
 
 describe(`the run PostCSS prints in front of a declaration the file spells none in front of`, () => {
-	// See #693
 	it(`is the break never-multi-line refuses, and the fix takes it out`, async () => {
 		expect(await fixAndRead(`a {\ncolor: pink;\ntop: 0;\n}`, `never-multi-line`)).toEqual({
 			warnings: [`2:13 ${messages.rejectedAfterMultiLine()}`],
@@ -80,7 +77,6 @@ describe(`the run PostCSS prints in front of a declaration the file spells none 
 		})
 	})
 
-	// See #693
 	it(`is short of the break always asks for where the run PostCSS prints is the space its neighbor carries, and the fix writes it`, async () => {
 		expect(await fixAndRead(`b { color: red;\n top: 0 }\na {color: pink;top: 0 }`, `always`)).toEqual({
 			warnings: [`3:16 ${messages.expectedAfter()}`],
@@ -89,7 +85,6 @@ describe(`the run PostCSS prints in front of a declaration the file spells none 
 		})
 	})
 
-	// See #693
 	it(`is short of the break always-multi-line asks for in a multi-line block, and the fix writes it`, async () => {
 		expect(await fixAndRead(`b { color: red; top: 0 }\na {color: pink;top: 0\n}`, `always-multi-line`)).toEqual({
 			warnings: [`2:16 ${messages.expectedAfterMultiLine()}`],

@@ -5,7 +5,7 @@ import type { Edit } from "../applyEditsFromEnd/index.ts"
 /**
  * Measures the whitespace run on one side of a comma that the comma's div node does not hold.
  *
- * `postcss-value-parser` gives the run between two dividers to the `after` of the first, the run behind the opening parenthesis to the function's `before`, and the run in front of the closing one to the function's `after`; there the comma's own span is empty ([#349](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/349)).
+ * `postcss-value-parser` gives the run between two dividers to the `after` of the first, the run behind the opening parenthesis to the function's `before`, and the run in front of the closing one to the function's `after`; there the comma's own span is empty.
  * @param index - The comma's place among the arguments.
  * @param functionNode - The call holding the arguments.
  * @param position - The side of the comma.
@@ -64,7 +64,7 @@ export function functionCommaSpaceFix (params: {
 	if (expectation.startsWith(`never`)) {
 		let edits = [whitespaceEdit(div, index, functionNode, position, ``)]
 
-		// A `before` rule reads the run behind the comma with the comments taken out, so the whitespace standing past one is part of what it measured; a comment closes the div and that whitespace becomes nodes of its own, emptied one by one (1789508660)
+		// A `before` rule reads the run behind the comma with the comments taken out, so the whitespace standing past one is part of what it measured; a comment closes the div and that whitespace becomes nodes of its own, emptied one by one
 		if (position === `before`) {
 			for (let i = index + 1; i < nodes.length; i += 1) {
 				let node = nodes[i]

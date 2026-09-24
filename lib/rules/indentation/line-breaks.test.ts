@@ -3,7 +3,6 @@ import { messages, ruleName } from "./index.ts"
 let testRule = createTestRule({ ruleName })
 
 // Every fixture here is written on one line with escapes, since a carriage return is invisible in the source and no editor leaves it where it is put.
-// See #294
 
 testRule({
 	ruleName,
@@ -35,7 +34,6 @@ testRule({
 			message: messages.expected(`1 tab`),
 		},
 		{
-			// See #452
 			description: `a declaration whose indentation opens with a bare carriage return, which is whitespace to the parser and part of the run the fix writes over`,
 			code: `a {\n\r\t\tcolor: pink;\n}`,
 			fixed: `a {\n\tcolor: pink;\n}`,
@@ -68,7 +66,6 @@ testRule({
 			message: messages.expected(`1 tab`),
 		},
 		{
-			// See #513
 			description: `a value line whose indentation opens with a bare carriage return, measured by the whole run in front of its content`,
 			code: `a {\n\tmargin: 0\n\r\t1px;\n}`,
 			fixed: `a {\n\tmargin: 0\n\t\t1px;\n}`,
@@ -133,7 +130,7 @@ testRule({
 			message: messages.expected(`2 tabs`),
 		},
 		{
-			// The params were trimmed as JavaScript reads whitespace, which took the line of a lone vertical tab off before it was measured (1789421331)
+			// The params were trimmed as JavaScript reads whitespace, which took the line of a lone vertical tab off before it was measured
 			description: `a last params line holding a vertical tab alone, which is content to the tokenizer and no indentation`,
 			code: `a {\n\t@media print,\n\v {}\n}`,
 			fixed: `a {\n\t@media print,\n\t\t\v {}\n}`,
@@ -182,7 +179,6 @@ testRule({
 
 	reject: [
 		{
-			// See #452
 			autoStripIndent: false,
 			description: `a stylesheet whose first node stands behind a bare carriage return and a tab, whitespace to the parser and no line`,
 			code: `\r\ta{}`,

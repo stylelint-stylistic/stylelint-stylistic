@@ -55,7 +55,6 @@ testRule({
 			`,
 		},
 		{
-			// See #153
 			description: `a bare address inside each argument, whose double slash opens no comment`,
 			code: `
 				a { background: image-set(url(//cdn/a.png) 1x
@@ -63,7 +62,6 @@ testRule({
 			`,
 		},
 		{
-			// See #275
 			description: `a comma inside the text of a comment the value parser closes early, which is no comma of the value`,
 			code: `a { b: f(x/*/*q,w*/y); }`,
 		},
@@ -71,7 +69,6 @@ testRule({
 
 	reject: [
 		{
-			// See #560
 			description: `the comma behind a quoted address, which parts the arguments of a call as any comma does`,
 			code: `a { b: url("x", f(1)); }`,
 			fixed: `a { b: url("x"\n, f(1)); }`,
@@ -136,7 +133,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #153
 			description: `a comma between two bare addresses, whose double slashes open no comment`,
 			code: `a { background: image-set(url(//cdn/a.png) 1x,url(//cdn/b.png) 2x); }`,
 			fixed: `
@@ -148,7 +144,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #238
 			description: `a call standing behind a comment the value parser does not give back as it read it`,
 			code: `a { b: x/*/*a,b*/f(1,2)c; }`,
 			fixed: `
@@ -160,7 +155,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #275
 			description: `a comma of the value behind a comment the value parser closes early: the one inside the comment's text is passed over and this one is placed`,
 			code: `a { b: f(x/*/*q,w*/y,2); }`,
 			fixed: `
@@ -172,7 +166,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #275
 			description: `the comma of the value abutting that comment's closing delimiter, where the break this option writes lands`,
 			code: `a { b: f(x/*/*q,w*/,2); }`,
 			fixed: `
@@ -184,7 +177,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #349
 			description: `the whitespace between two commas of the arguments, which is what this option replaces and not a place to write beside`,
 			code: `a { b: f(a, ,c); }`,
 			fixed: `
@@ -206,7 +198,6 @@ testRule({
 			],
 		},
 		{
-			// See #349
 			description: `the whitespace between a divider that is no comma and the comma behind it, which is what this option replaces and not a place to write beside`,
 			code: `a { b: f(1 / ,2); }`,
 			fixed: `
@@ -218,7 +209,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #508
 			description: `a comma in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and the comma its text holds is no comma of the arguments`,
 			code: `a { b: f(1,2) /*/ " */ "f(1,2)"; }`,
 			fixed: `a { b: f(1\n,2) /*/ " */ "f(1,2)"; }`,
@@ -362,7 +352,6 @@ testRule({
 			message: messages.expectedBeforeMultiLine(),
 		},
 		{
-			// See #275
 			description: `a comma of the value inside a function the file breaks across lines, where a comment the value parser closes early stands as well: the comma inside that comment's text is passed over and this one is placed`,
 			code: `
 				a { b: f(x/*/*q,w*/y,2
@@ -410,7 +399,6 @@ testRule({
 			code: `a { transform: translate(1\t,1); }`,
 		},
 		{
-			// See #275
 			description: `a break in front of a comma inside the text of a comment the value parser closes early, neither of them the value's`,
 			code: `
 				a { b: f(x/*/*q
@@ -480,7 +468,6 @@ testRule({
 			message: messages.rejectedBeforeMultiLine(),
 		},
 		{
-			// See #349
 			description: `the break between two commas of the arguments, which the parser hands to the comma in front of it`,
 			code: `
 				a { b: f(a,
@@ -492,7 +479,6 @@ testRule({
 			message: messages.rejectedBeforeMultiLine(),
 		},
 		{
-			// See #349
 			description: `a break between a divider that is no comma and the comma behind it, which the parser hands to that divider just the same`,
 			code: `
 				a { b: f(1 /

@@ -11,7 +11,6 @@ testRule({
 	config: [`unix`],
 
 	reject: [
-		// See #269
 		{
 			description: `a carriage-return line break inside a selector that holds a block comment`,
 			code: `a /* c */,\r\nb { c: d; }`,
@@ -20,7 +19,6 @@ testRule({
 			column: 11,
 			message: messages.expected(`unix`),
 		},
-		// See #269
 		{
 			description: `a carriage-return line break closing an end-of-line comment the selector holds, which this syntax keeps in the selector itself rather than in a second copy beside it`,
 			code: `a // c\r\n, b { c: d; }`,
@@ -29,7 +27,6 @@ testRule({
 			column: 7,
 			message: messages.expected(`unix`),
 		},
-		// See #283
 		{
 			description: `a carriage-return line break between a Less at-variable and its value, which this syntax parts with a colon it files behind the name`,
 			code: `@variable:\r\n1px;`,
@@ -38,7 +35,6 @@ testRule({
 			column: 11,
 			message: messages.expected(`unix`),
 		},
-		// See #283
 		{
 			description: `a carriage-return line break closing an end-of-line comment that stands between a selector and its block`,
 			code: `a // c\r\n{ b: d; }`,
@@ -47,7 +43,6 @@ testRule({
 			column: 7,
 			message: messages.expected(`unix`),
 		},
-		// See #283
 		{
 			description: `a carriage-return line break closing an end-of-line comment that the bang of a declaration stands inside, which this syntax files in the raw of that bang`,
 			code: `a { b: c // x !important\r\n; }`,
@@ -57,7 +52,6 @@ testRule({
 			message: messages.expected(`unix`),
 		},
 		{
-			// See #374
 			description: `a carriage-return line break behind a mixin call's important flag, with a comment on the line below it`,
 			code: `a {\n\t.m() !important\r\n\t/* c */\n}`,
 			fixed: `a {\n\t.m() !important\n\t/* c */\n}`,
@@ -73,7 +67,6 @@ testRule({
 	config: [`windows`],
 
 	reject: [
-		// See #235
 		{
 			description: `a bare line feed inside a value that holds a block comment`,
 			code: `a { b: 1px /* c */\n\t2px; }`,
@@ -82,7 +75,6 @@ testRule({
 			column: 19,
 			message: messages.expected(`windows`),
 		},
-		// See #235
 		{
 			description: `a bare line feed inside the value of a Less at-variable that holds a block comment`,
 			code: `@variable: 1px /* c */\n\t2px;`,
@@ -91,7 +83,6 @@ testRule({
 			column: 23,
 			message: messages.expected(`windows`),
 		},
-		// See #270
 		{
 			description: `a bare line feed closing an end-of-line comment a set of at-rule parameters holds, which this syntax keeps in the parameters themselves rather than in a second copy beside them`,
 			code: `@media (min-width: 1px), // c\n(min-width: 2px) { a { b: c; } }`,
@@ -100,7 +91,6 @@ testRule({
 			column: 30,
 			message: messages.expected(`windows`),
 		},
-		// See #269
 		{
 			description: `a bare line feed closing an end-of-line comment the selector holds, which this syntax keeps in the selector itself rather than in a second copy beside it`,
 			code: `a // c\n, b { c: d; }`,
@@ -109,7 +99,6 @@ testRule({
 			column: 7,
 			message: messages.expected(`windows`),
 		},
-		// See #269
 		{
 			description: `a bare line feed inside a selector that holds a block comment, which this syntax keeps in a raw like any other`,
 			code: `a /* c */,\nb { c: d; }`,
@@ -118,7 +107,6 @@ testRule({
 			column: 11,
 			message: messages.expected(`windows`),
 		},
-		// See #283
 		{
 			description: `a bare line feed between a Less at-variable and its value, which this syntax parts with a colon it files behind the name`,
 			code: `@variable:\n1px;`,
@@ -127,7 +115,6 @@ testRule({
 			column: 11,
 			message: messages.expected(`windows`),
 		},
-		// See #283
 		{
 			description: `a bare line feed closing an end-of-line comment that stands between a selector and its block`,
 			code: `a // c\n{ b: d; }`,
@@ -136,7 +123,6 @@ testRule({
 			column: 7,
 			message: messages.expected(`windows`),
 		},
-		// See #283
 		{
 			description: `a bare line feed closing an end-of-line comment that the bang of a declaration stands inside, which this syntax files in the raw of that bang`,
 			code: `a { b: c // x !important\n; }`,
@@ -155,7 +141,6 @@ testRule({
 
 	reject: [
 		{
-			// See #650
 			description: `three lines, the first a Less variable whose value opens with a colon of its own and holds a block comment between its words, which every warning's fix writes over again`,
 			code: `@v: : 1PX /* c */ 2PX;\nb { c: @v; }\nc { d: e; }`,
 			fixed: `@v: : 1PX /* c */ 2PX;\r\nb { c: @v; }\r\nc { d: e; }`,

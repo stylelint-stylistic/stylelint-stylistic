@@ -63,10 +63,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let stringValue = syntax.read(decl)
 
-			// Both kinds: a `//` comment's text comes back as words and calls, a `/*/` comment closes on its own star (#378)
+			// Both kinds: a `//` comment's text comes back as words and calls, a `/*/` comment closes on its own star
 			let comments = syntax.commentSpans(stringValue, decl, result)
 
-			// Walked in a copy of the same length with every comment blanked, so a comment's empty lines are counted against no call and collapsed by no fix (#503), and the parser pairs only parentheses written as code
+			// Walked in a copy of the same length with every comment blanked, so a comment's empty lines are counted against no call and collapsed by no fix, and the parser pairs only parentheses written as code
 			let blankedValue = blankComments(stringValue, comments)
 
 			let splittedValue: Array<[string, string]> = []

@@ -81,7 +81,6 @@ testRule({
 			endColumn: 36,
 			message: messages.expected(1),
 		},
-		// #640
 		{
 			description: `a mixin inclusion's single-line content block holding two declarations`,
 			code: `@include m { color: pink; top: 0; }`,
@@ -127,7 +126,6 @@ testRule({
 			endColumn: 40,
 			message: messages.expected(1),
 		},
-		// #641
 		{
 			description: `a mixin inclusion closing the block, an at-rule without a block, which the fix puts on a line of its own too`,
 			code: `a { color: pink; top: 3px; @include m; }`,

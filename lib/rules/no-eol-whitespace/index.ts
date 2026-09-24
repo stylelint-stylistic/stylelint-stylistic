@@ -142,7 +142,7 @@ function eachEolWhitespace (scope: EolScope, string: string, callback: (index: n
 
 	styleSearch(
 		{
-			// The search reads a string by rules of its own, so it is handed none (#739)
+			// The search reads a string by rules of its own, so it is handed none
 			source: maskStrings(string, syntax.commentSpans(string, root, result)),
 			target: LINE_BREAK_CHARACTERS,
 			comments: `check`,
@@ -229,7 +229,7 @@ function fixRoot (scope: EolScope): void {
 			})
 		}
 
-		// The run behind a Less mixin call's flag, which the `less` namespace hands to the flag's raw (#374)
+		// The run behind a Less mixin call's flag, which the `less` namespace hands to the flag's raw
 		if (isAtRule(node) && typeof node.raws.important === `string`) {
 			fixText(scope, node.raws.important, (fixed) => {
 				node.raws.important = fixed

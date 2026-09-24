@@ -52,7 +52,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.before,
 			locationType: `before`,
 			checkedRuleName: ruleName,
-			// The run the check read, cut from the selector: the parser holds a tab behind a backslash in the combinator's spaces although the grammar reads it as a character of the name in front (1789666655)
+			// The run the check read, cut from the selector: the parser holds a tab behind a backslash in the combinator's spaces although the grammar reads it as a character of the name in front
 			fix: (index, runString) => [{ start: index - runInFront(runString, index).length, end: index, text: primary === `always` ? ` ` : `` }],
 		})
 	}

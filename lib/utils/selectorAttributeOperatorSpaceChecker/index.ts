@@ -50,10 +50,10 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 
 			let attributeNodeString = attributeNode.toString()
 
-			// The parser reads a backslash in front of a tab as no escape and files what follows into parts it prints back in another order, so `[a=\⇥\⇥b]` comes back as `[a=\⇥b⇥]`: an attribute whose parts do not spell the source is passed over, since every index here is measured in them (1789666655)
+			// The parser reads a backslash in front of a tab as no escape and files what follows into parts it prints back in another order, so `[a=\⇥\⇥b]` comes back as `[a=\⇥b⇥]`: an attribute whose parts do not spell the source is passed over, since every index here is measured in them
 			if (!selector.startsWith(attributeNodeString, attributeNode.sourceIndex)) return
 
-			// The parser reads an escaped space as a character of the attribute's name, and a tab behind a backslash as whitespace of its own; the run is read over the copy where the escapes are masked, and the fix cuts it out of the selector (1789661964, 1789666655)
+			// The parser reads an escaped space as a character of the attribute's name, and a tab behind a backslash as whitespace of its own; the run is read over the copy where the escapes are masked, and the fix cuts it out of the selector
 			let { runString } = selectorSearchCopy(attributeNodeString)
 
 			styleSearch({ source: attributeNodeString, target: operator }, (match) => {
@@ -82,7 +82,7 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 				index,
 				err: (msg) => {
 					let problemIndex = copies.toSourceIndex(attributeNode.sourceIndex + index)
-					// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `[a\⏎=b]` would come out as `[a\=b]`, one attribute name, or `[a\ =b]`, an escaped space (1789664271)
+					// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `[a\⏎=b]` would come out as `[a\=b]`, one attribute name, or `[a\ =b]`, an escaped space
 					let isFixable = fix && operatorEdits.every((edit) => editKeepsEscapedCharacter(selector, edit))
 
 					report({

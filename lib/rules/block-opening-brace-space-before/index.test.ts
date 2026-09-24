@@ -10,7 +10,7 @@ testRule({
 
 	accept: [
 		{
-			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			// Pins the run in front of the brace read over the copy with the escapes masked
 			description: `a backslash ending the selector in front of a space, and the run of one space behind it`,
 			code: `a\\  { b: c }`,
 		},
@@ -38,7 +38,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			// Pins the run in front of the brace read over the copy with the escapes masked
 			description: `a backslash ending the selector in front of a space, which spells a character of the selector, leaving no run for the option`,
 			code: `a\\ { b: c }`,
 			fixed: `a\\  { b: c }`,
@@ -47,7 +47,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the selector in front of a line break and the brace, where the space would stand behind the backslash as its escaped character, so the warning stands`,
 			code: `a\\\n{ b: c }`,
 			fixed: `a\\\n{ b: c }`,
@@ -112,7 +112,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #63
 			description: `comment between the selector and the opening brace`,
 			code: `
 				.some-class /* v3+ */
@@ -229,7 +228,7 @@ testRule({
 
 	accept: [
 		{
-			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			// Pins the run in front of the brace read over the copy with the escapes masked
 			description: `a backslash ending the selector in front of a space, which spells a character of the selector and no run`,
 			code: `a\\ { b: c }`,
 		},
@@ -245,7 +244,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the selector in front of a line break and the brace, which the write would turn into an escaped brace the file no longer parses, so the warning stands`,
 			code: `a\\\n{ b: c }`,
 			fixed: `a\\\n{ b: c }`,
@@ -254,7 +253,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			// Pins the run in front of the brace read over the copy with the escapes masked
 			description: `a space behind such a backslash and a second one in front of the brace, where only the second is a run`,
 			code: `a\\  { b: c }`,
 			fixed: `a\\ { b: c }`,
@@ -319,7 +318,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #63
 			description: `comment between the selector and the opening brace`,
 			code: `
 				.some-class /* v3+ */
@@ -785,7 +783,7 @@ testRule({
 	],
 })
 
-// A lineness-conditioned check waits for the run's writers (#355): whether the block is multi-line is asked of the text every writer has finished, so the configuration's order decides neither the file nor whether this rule speaks.
+// A lineness-conditioned check waits for the run's writers: whether the block is multi-line is asked of the text every writer has finished, so the configuration's order decides neither the file nor whether this rule speaks.
 testRule({
 	ruleName,
 	config: [`always-multi-line`],
@@ -793,7 +791,6 @@ testRule({
 
 	reject: [
 		{
-			// See #355
 			description: `a block the neighbor's break puts over lines within the same run: the option speaks of the finished block and writes its space, where it used to stay silent about a block that was about to stop being single-line`,
 			code: `@media screen{\na{b:c;d:e}\n}\n`,
 			fixed: `@media screen {\na {b:c;\nd:e}\n}\n`,
@@ -824,7 +821,6 @@ testRule({
 
 	reject: [
 		{
-			// See #355
 			description: `the same pair with this rule's fix turned off: the deferred check still reads the finished block, reports it, and writes nothing`,
 			code: `@media screen{\na{b:c;d:e}\n}\n`,
 			fixed: `@media screen{\na{b:c;\nd:e}\n}\n`,

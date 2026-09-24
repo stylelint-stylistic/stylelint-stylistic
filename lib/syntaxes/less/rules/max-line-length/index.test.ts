@@ -5,7 +5,7 @@ let { ruleName, messages } = createRule(less)
 
 let testRule = createTestRule({ ruleName })
 
-// The address of every `url()` comes off a line, and a `url(` inside a comment spells none. The file's syntax says which double slashes open a comment, so the same line is counted one way here and another under the core, where a double slash is code and the address behind it comes off. See #427
+// The address of every `url()` comes off a line, and a `url(` inside a comment spells none. The file's syntax says which double slashes open a comment, so the same line is counted one way here and another under the core, where a double slash is code and the address behind it comes off.
 testRule({
 	ruleName,
 	config: [22],
@@ -29,17 +29,14 @@ testRule({
 
 	accept: [
 		{
-			// See #656
 			description: `an import with an option in parentheses in front of its address, which Less reads between the name and the address: 48 - 27 = 21`,
 			code: `@import (reference) "aaaaaaaaaaaaaaaaaaaa.less";`,
 		},
 		{
-			// See #656
 			description: `a plugin with arguments in parentheses in front of its address, anything but a closing parenthesis or a semicolon to Less: 41 - 25 = 16`,
 			code: `@plugin (a: 1) "aaaaaaaaaaaaaaaaaaaa.js";`,
 		},
 		{
-			// See #656
 			description: `a plugin, whose address Less loads as an import's: 34 - 25 = 9`,
 			code: `@plugin "aaaaaaaaaaaaaaaaaaaa.js";`,
 		},
@@ -47,7 +44,6 @@ testRule({
 
 	reject: [
 		{
-			// See #656
 			description: `an import with its option group right behind the name, which Less reads as an at-rule of its own rather than an import`,
 			code: `@import(reference) "aaaaaaaaaaaaaaaaaaaa.less";`,
 			line: 1,
@@ -55,7 +51,6 @@ testRule({
 			message: messages.expected(21),
 		},
 		{
-			// See #656
 			description: `an import whose group holds a word Less has no option by`,
 			code: `@import (foo) "aaaaaaaaaaaaaaaaaaaa.less";`,
 			line: 1,
@@ -63,7 +58,6 @@ testRule({
 			message: messages.expected(21),
 		},
 		{
-			// See #656
 			description: `a plugin spelled in upper case, which Less refuses`,
 			code: `@PLUGIN "aaaaaaaaaaaaaaaaaaaa.js";`,
 			line: 1,
@@ -71,7 +65,6 @@ testRule({
 			message: messages.expected(21),
 		},
 		{
-			// See #656
 			description: `a use, which names no module under Less`,
 			code: `@use "aaaaaaaaaaaaaaaaaaaaaaaa.scss";`,
 			line: 1,
@@ -88,7 +81,6 @@ testRule({
 
 	accept: [
 		{
-			// See #656
 			description: `an import with comments in front of its option group and inside it, which Less steps over: 60 - 27 = 33`,
 			code: `@import /*c*/ (reference /*d*/) "aaaaaaaaaaaaaaaaaaaa.less";`,
 		},

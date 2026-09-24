@@ -72,7 +72,6 @@ testRule({
 			endColumn: 46,
 			message: messages.expected(1),
 		},
-		// #640
 		{
 			description: `a detached ruleset's single-line block holding two declarations, which the parser files as an at-rule`,
 			code: `@detached: { color: pink; top: 0; }`,
@@ -88,7 +87,6 @@ testRule({
 			endColumn: 36,
 			message: messages.expected(1),
 		},
-		// #641
 		{
 			description: `a mixin call written without a semicolon closing the block, which holds the run in front of the brace, so the fix writes the break there`,
 			code: `a { color: pink; top: 3px; .m() }`,

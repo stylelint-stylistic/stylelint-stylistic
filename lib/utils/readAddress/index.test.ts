@@ -39,21 +39,20 @@ describe(`readAddress`, () => {
 		expect(readAddress(`url(\n\t"a.png"\n)`, 4, `url`, LESS)).toEqual({ isQuoted: true, index: 6, comments: [], strings: [], escapes: [] })
 	})
 
-	// None of the three is whitespace to any of the tokenizers; Sass reads the comment behind the no-break space and behind the line separator, and refuses a file holding the vertical tab at all, so the wider reading is the declining one. See #557
+	// None of the three is whitespace to any of the tokenizers; Sass reads the comment behind the no-break space and behind the line separator, and refuses a file holding the vertical tab at all, so the wider reading is the declining one.
 	it(`whitespace no tokenizer reads as whitespace between the parenthesis and the mark, which parts them all the same`, () => {
 		expect(readAddress(`url(\u00A0"a" // c)`, 4, `url`, LESS)).toEqual({ isQuoted: true, index: 5, comments: [], strings: [], escapes: [] })
 		expect(readAddress(`url(\v"a" // c)`, 4, `url`, LESS)).toEqual({ isQuoted: true, index: 5, comments: [], strings: [], escapes: [] })
 		expect(readAddress(`url(\u2028"a" // c)`, 4, `url`, LESS)).toEqual({ isQuoted: true, index: 5, comments: [], strings: [], escapes: [] })
 	})
 
-	// The tokenizer takes one token of the parentheses wherever the `(` is met by anything but its own whitespace, so the delimiters are text of the address there and a comment behind whitespace is a comment. See #660
+	// The tokenizer takes one token of the parentheses wherever the `(` is met by anything but its own whitespace, so the delimiters are text of the address there and a comment behind whitespace is a comment.
 	it(`a block comment behind the whitespace of the tokenizer, which the parenthesis closing the parentheses then stands outside of`, () => {
 		expect(readAddress(`url( a /* c */ ) 1px`, 4, `url`, LESS)).toEqual({ isQuoted: false, index: 15, comments: [{ start: 7, end: 14, isInline: false }], strings: [], escapes: [] })
 		expect(readAddress(`url( a /* ) */ ) 1px`, 4, `url`, LESS)).toEqual({ isQuoted: false, index: 15, comments: [{ start: 7, end: 14, isInline: false }], strings: [], escapes: [] })
 		expect(readAddress(`url(\na /* ) */ ) 1px`, 4, `url`, LESS)).toEqual({ isQuoted: false, index: 15, comments: [{ start: 7, end: 14, isInline: false }], strings: [], escapes: [] })
 	})
 
-	// See #665
 	it(`such a comment whose opening solidus a backslash stands in front of, which the backslash covers for the grammar and for no parser`, () => {
 		expect(readAddress(`url( a\\/* ) */ ) 1px`, 4, `url`, LESS)).toEqual({ isQuoted: false, index: 15, comments: [{ start: 7, end: 14, isInline: false }], strings: [], escapes: [] })
 	})
@@ -71,7 +70,7 @@ describe(`readAddress`, () => {
 		expect(readAddress(`url(a/*b) 1px`, 4, `url`, LESS)).toEqual({ isQuoted: false, index: 8, comments: [], strings: [], escapes: [] })
 	})
 
-	// The tokenizers read an address behind the word `url` alone, and a solidus makes the parentheses of any other call code. See #664
+	// The tokenizers read an address behind the word `url` alone, and a solidus makes the parentheses of any other call code.
 	it(`the same block comment behind a name spelled other than the word itself, which is a comment to every parser`, () => {
 		expect(readAddress(`URL(a /* ) */ ) 1px`, 4, `URL`, LESS)).toEqual({ isQuoted: false, index: 14, comments: [{ start: 6, end: 13, isInline: false }], strings: [], escapes: [] })
 		expect(readAddress(`\\75 rl(a/*b*/) 1px`, 7, `\\75 rl`, LESS)).toEqual({ isQuoted: false, index: 13, comments: [{ start: 8, end: 13, isInline: false }], strings: [], escapes: [] })
@@ -84,12 +83,12 @@ describe(`readAddress`, () => {
 		expect(readAddress(`x /url(a/*b) // c */) 1px`, 7, `url`, SCSS)).toEqual({ isQuoted: false, index: 11, comments: [], strings: [], escapes: [] })
 	})
 
-	// Sass reads an address there and a double slash behind it, which the parser's comment would hide. See #664
+	// Sass reads an address there and a double slash behind it, which the parser's comment would hide.
 	it(`the same name under the parser Sass is read by, where Sass reads an address and the parser a comment`, () => {
 		expect(readAddress(`URL(a/*b) // c */) 1px`, 4, `URL`, SCSS)).toEqual({ isQuoted: false, index: 8, comments: [], strings: [], escapes: [] })
 	})
 
-	// Sass reads the parentheses as code wherever they hold no unquoted address, and a comment inside them is a comment to it. See #661
+	// Sass reads the parentheses as code wherever they hold no unquoted address, and a comment inside them is a comment to it.
 	it(`comments of both kinds inside parentheses Sass reads as code, under the parser whose tokenizer reads a double slash`, () => {
 		expect(readAddress(`url(a /* ) */ ) 1px`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 14, comments: [{ start: 6, end: 13, isInline: false }], strings: [], escapes: [] })
 		expect(readAddress(`url(a // ) c\n) 1px`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 13, comments: [{ start: 6, end: 12, isInline: true }], strings: [], escapes: [] })
@@ -120,7 +119,7 @@ describe(`readAddress`, () => {
 		expect(readAddress(`url($a #{c // )\n}) , 1px`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 17, comments: [{ start: 11, end: 15, isInline: true }], strings: [], escapes: [] })
 	})
 
-	// The expression is Sass code, so a backslash there covers what stands behind it: Sass reads `url(a#{b\\}c}d)` as the address `ab\\}cd` (1789883888)
+	// The expression is Sass code, so a backslash there covers what stands behind it: Sass reads `url(a#{b\\}c}d)` as the address `ab\\}cd`
 	it(`an escape standing in the code of an interpolation, which is recorded and whose brace closes the expression no more than its parenthesis closes the parentheses`, () => {
 		expect(readAddress(`url(a#{b\\\t  c}d)`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 15, comments: [], strings: [], escapes: [{ start: 8, end: 10 }] })
 		expect(readAddress(`url(a#{b\\}c}d)`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 13, comments: [], strings: [], escapes: [{ start: 8, end: 10 }] })
@@ -144,7 +143,7 @@ describe(`readAddress`, () => {
 		expect(readAddress(`url(a // c`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 10, comments: [{ start: 6, end: 10, isInline: true }], strings: [], escapes: [] })
 	})
 
-	// A no-break space is no whitespace to the tokenizer, so the parentheses are one token to it and the comment is text. See #660
+	// A no-break space is no whitespace to the tokenizer, so the parentheses are one token to it and the comment is text.
 	it(`a block comment behind whitespace the tokenizer reads as a character of the address`, () => {
 		expect(readAddress(`url(\u00A0a /* ) */ ) 1px`, 4, `url`, LESS)).toEqual({ isQuoted: false, index: 10, comments: [], strings: [], escapes: [] })
 	})
@@ -165,7 +164,7 @@ describe(`readAddress`, () => {
 		expect(readAddress(`url(a '//' // c\n) 1px`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 16, comments: [{ start: 11, end: 15, isInline: true }], strings: [{ start: 6, end: 10 }], escapes: [] })
 	})
 
-	// The string is handed back with the comments, so that the walk records it and a comma inside it is text to a scan over the copy (1789637913)
+	// The string is handed back with the comments, so that the walk records it and a comma inside it is text to a scan over the copy
 	it(`the same string handed back, quotation marks and all, under every reading of the parentheses as code`, () => {
 		expect(readAddress(`1px, 1/url(a "),b" ), 2px`, 11, `url`, LESS)).toEqual({ isQuoted: false, index: 19, comments: [], strings: [{ start: 13, end: 18 }], escapes: [] })
 		expect(readAddress(`1,url(a ') , b' ) 2px`, 6, `url`, LESS)).toEqual({ isQuoted: false, index: 16, comments: [], strings: [{ start: 8, end: 15 }], escapes: [] })

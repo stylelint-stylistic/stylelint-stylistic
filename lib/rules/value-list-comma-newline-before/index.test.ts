@@ -10,7 +10,7 @@ testRule({
 
 	accept: [
 		{
-			// The break the backslash stands in front of is a delimiter and the run the option asks for (1789661965)
+			// The break the backslash stands in front of is a delimiter and the run the option asks for
 			description: `a backslash ending the word in front of the line break and the comma`,
 			code: `a { b: 1\n,a\\\n,b; }`,
 		},
@@ -55,7 +55,6 @@ testRule({
 			code: `a { transform: translate(1,1); }`,
 		},
 		{
-			// See #153
 			description: `a bare address in front of the comma, whose double slash opens no comment`,
 			code: `
 				a { background: url(http://x/y.png)
@@ -98,7 +97,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #153
 			description: `a comma behind a bare address, whose double slash opens no comment`,
 			code: `a { background: url(http://x/y.png),url(http://x/z.png); }`,
 			fixed: `a { background: url(http://x/y.png)\n,url(http://x/z.png); }`,
@@ -249,7 +247,7 @@ testRule({
 
 	reject: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the comma of a multi-line list, which is a character of the word and no newline, so the break goes behind it`,
 			code: `a { b: 1\n,a\\ ,b; }`,
 			fixed: `a { b: 1\n,a\\ \n,b; }`,
@@ -307,7 +305,7 @@ testRule({
 
 	accept: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the comma of a multi-line list, which is a character of the word and no whitespace`,
 			code: `a { b: 1,a\\ ,b\n2px; }`,
 		},
@@ -331,7 +329,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the word in front of a line break and the comma, which the write would turn into an escaped comma, so the warning stands`,
 			code: `a { b: 1,\n a\\\n,b; }`,
 			fixed: `a { b: 1,\n a\\\n,b; }`,
@@ -382,7 +380,7 @@ testRule({
 	],
 })
 
-// The run in front of a comma opening the value is the head run behind the colon, which the colon rules read too: the rules asked settle who writes it, and a rule held by its neighbor reports and leaves the run (1789594574)
+// The run in front of a comma opening the value is the head run behind the colon, which the colon rules read too: the rules asked settle who writes it, and a rule held by its neighbor reports and leaves the run
 testRule({
 	ruleName,
 	config: [`always`],
@@ -407,7 +405,7 @@ testRule({
 
 	reject: [
 		{
-			// The breaks this rule writes in front of the list's other commas make the value multi-line, so the colon rule behind it says nothing once the pass is over, and nothing holds the head run (1789594574)
+			// The breaks this rule writes in front of the list's other commas make the value multi-line, so the colon rule behind it says nothing once the pass is over, and nothing holds the head run
 			description: `a list opened by a comma and holding another, where the colon rule behind this one speaks of a single-line declaration in the check and is silenced by the breaks the fixing run writes, so both commas get their break in one pass`,
 			code: `a { b:,c,d }`,
 			fixed: `a { b:\n,c\n,d }`,
@@ -432,7 +430,7 @@ testRule({
 	],
 })
 
-// Behind a block comment on the colon's line the run in front of a comma opening the value is the one `declaration-colon-newline-after` reads past the comment: the rules asked settle who writes it (1790072055)
+// Behind a block comment on the colon's line the run in front of a comma opening the value is the one `declaration-colon-newline-after` reads past the comment: the rules asked settle who writes it
 testRule({
 	ruleName,
 	config: [`never-multi-line`],

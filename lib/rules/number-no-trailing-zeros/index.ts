@@ -70,10 +70,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// No period, no fraction
 			if (!value.includes(`.`)) return
 
-			// The value parser knows nothing of `//` comments and closes `/*/` on its own star (#378)
+			// The value parser knows nothing of `//` comments and closes `/*/` on its own star
 			let comments = syntax.commentSpans(value, node, result)
 
-			// Quotation marks in comments are masked, so the parser pairs the rest as the file does (#508)
+			// Quotation marks in comments are masked, so the parser pairs the rest as the file does
 			valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(value, comments), comments)).walk((valueNode, at, siblings) => {
 				// A bare address, not arguments, while a quoted one has arguments behind its string; the name is read as CSS does, so `\75 rl(` counts
 				if (opensAnAddress(valueNode, at, siblings) && !quotesItsAddress(valueNode)) return false

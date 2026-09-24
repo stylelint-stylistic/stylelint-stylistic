@@ -67,7 +67,6 @@ testRule({
 
 	reject: [
 		{
-			// See #560
 			description: `a solidus among the arguments behind a quoted address, which are those of any call`,
 			code: `@media (c: url("x", 1/2)) {}`,
 			fixed: `@media (c: url("x", 1/ 2)) {}`,
@@ -173,7 +172,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #496
 			description: `a vertical tab behind the solidus, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `@media (aspect-ratio: 16 /\v9) {}`,
 			fixed: `@media (aspect-ratio: 16 / \v9) {}`,
@@ -330,7 +328,6 @@ testRule({
 			message: messages.rejectedAfter(),
 		},
 		{
-			// See #496
 			description: `a vertical tab at the run behind the solidus: only the tokenizer's run goes, and the character stays`,
 			code: `@media (aspect-ratio: 16/ \v9) {}`,
 			fixed: `@media (aspect-ratio: 16/\v9) {}`,

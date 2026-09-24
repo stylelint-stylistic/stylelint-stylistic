@@ -18,7 +18,7 @@ export type BraceRun = {
 /**
  * Parts the raw the two rules about the run behind a closing brace read.
  *
- * PostCSS keeps a stray semicolon and the whitespace in front of it in the block's own `raws.ownSemicolon`, so a semicolon reaching this raw is a second one; both rules skip one of them and judge what stands behind it ([#698](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/698)).
+ * PostCSS keeps a stray semicolon and the whitespace in front of it in the block's own `raws.ownSemicolon`, so a semicolon reaching this raw is a second one; both rules skip one of them and judge what stands behind it.
  * @param node - The node the run stands in front of.
  * @returns The parts; an empty run where the raw is no string, as a node another plugin inserted carries none.
  */

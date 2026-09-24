@@ -118,7 +118,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let between = statement.raws.between ?? ``
 			let escapes = findEscapeSpans(source, syntax.inlineComments(statement, result))
-			// An escaped space is a character of the head and no run at all, so the run is read over the copy with the escapes masked (1789661964); PostCSS ends the head at the backslash and files the whitespace an escape covering one spells in `raws.between`, which the write keeps in front of the run it rewrites
+			// An escaped space is a character of the head and no run at all, so the run is read over the copy with the escapes masked; PostCSS ends the head at the backslash and files the whitespace an escape covering one spells in `raws.between`, which the write keeps in front of the run it rewrites
 			let escapedHead = between.slice(0, escapeHeadLength(source, escapes, source.length - between.length))
 			let run = between.slice(escapedHead.length)
 			let maskedSource = maskEscapes(source, escapes, true)
@@ -133,7 +133,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let written = primary.startsWith(`always`) ? `${beforeWhitespace} ` : beforeWhitespace
 					// Behind an inline comment the brace cannot join its line, so neither option is satisfiable; the warning stands unfixed. The parser may keep the comment in the selector or params, so they are asked too
 					let isFixable = !syntax.endsWithInlineComment(`${syntax.read(statement)}${between}`, syntax.inlineComments(statement, result))
-						// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎{` would come out as `a\{`, which the parser no longer reads as a block, or `a\ {`, an escaped space (1789664271)
+						// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎{` would come out as `a\{`, which the parser no longer reads as a block, or `a\ {`, an escaped space
 						&& editKeepsEscapedCharacter(`${source}{`, { start: source.length - run.length, end: source.length, text: written })
 
 					report({

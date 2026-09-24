@@ -12,7 +12,6 @@ testRule({
 
 	accept: [
 		{
-			// See #137
 			description: `an inline comment in front of the comma, closed by the break the rule asks for`,
 			code: `
 				@media (min-width: 1px) // c
@@ -23,7 +22,6 @@ testRule({
 
 	reject: [
 		{
-			// See #137
 			description: `a comma inside the text of an inline comment is no comma of the query, and the comma in front of the comment gets its break`,
 			code: `
 				@media (min-width: 1px), // a , b
@@ -56,7 +54,6 @@ testRule({
 
 	reject: [
 		{
-			// See #137
 			description: `a comma whose whitespace holds the break that closes an inline comment, which the fixer has to leave standing`,
 			code: `
 				@media (min-width: 1px) // c

@@ -50,7 +50,6 @@ testRule({
 			code: `@import\nurl('landscape.css')\nprojection ;`,
 		},
 		{
-			// See #395
 			description: `a bodiless at-rule closing its block, which the file spells no semicolon behind`,
 			code: `
 				a {
@@ -83,7 +82,7 @@ testRule({
 
 	reject: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the semicolon, which is a character of the params and no space`,
 			code: `@import a \\ ;`,
 			fixed: `@import a \\  ;`,
@@ -100,7 +99,6 @@ testRule({
 			message: `${CHARSET_RULE_MESSAGE} (${ruleName})`,
 		},
 		{
-			// See #357
 			description: `an at-rule spelled without a space in front of its options, which the parser gives the shape of a call to a Less detached ruleset`,
 			code: `@layer(l);`,
 			fixed: `@layer(l) ;`,
@@ -109,7 +107,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #697
 			description: `a block comment in front of the semicolon, behind which the space goes`,
 			code: `@import "x" /* c */;`,
 			fixed: `@import "x" /* c */ ;`,
@@ -174,7 +171,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #545
 			description: `a semicolon abutting the params of an at-rule indented inside a block, which the block does spell`,
 			code: `
 				a {
@@ -252,7 +248,7 @@ testRule({
 
 	accept: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the semicolon, which is a character of the params and no whitespace`,
 			code: `@import a \\ ;`,
 		},
@@ -297,7 +293,6 @@ testRule({
 			code: `@import\nurl('landscape.css')\nprojection;`,
 		},
 		{
-			// See #395
 			description: `a bodiless at-rule closing its block on the block's own line, which the file spells no semicolon behind`,
 			code: `a { @import "styles/mystyle" }`,
 		},
@@ -330,7 +325,7 @@ testRule({
 
 	reject: [
 		{
-			// The run is read over the copy with its escapes masked and cut out of `raws.between`, where PostCSS puts the whitespace the escape covers (1789661964)
+			// The run is read over the copy with its escapes masked and cut out of `raws.between`, where PostCSS puts the whitespace the escape covers
 			description: `a space in front of the semicolon behind an escaped space, which is a character of the params and stays`,
 			code: `@import a \\  ;`,
 			fixed: `@import a \\ ;`,
@@ -395,7 +390,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #545
 			description: `a space in front of the semicolon of an at-rule indented inside a block, which the block does spell`,
 			code: `
 				a {
@@ -439,7 +433,6 @@ testRule({
 
 	accept: [
 		{
-			// See #395
 			description: `a style attribute holding an at-rule the file spells no semicolon behind`,
 			code: `<div style="@import 'x'">x</div>`,
 		},
@@ -463,7 +456,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #545
 			description: `a style block whose at-rule abuts the semicolon the declaration block does spell`,
 			code: `<style>\n\ta {\n\t\t@import "x";\n\t}\n</style>`,
 			fixed: `<style>\n\ta {\n\t\t@import "x" ;\n\t}\n</style>`,
@@ -481,7 +473,6 @@ testRule({
 
 	accept: [
 		{
-			// See #395
 			description: `a style block whose at-rule closes a declaration block, the closing brace standing on a line of its own`,
 			code: `<style>\n\ta {\n\t\t@import "x"\n\t}\n</style>`,
 		},
@@ -501,7 +492,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #545
 			description: `a style block with a space in front of the semicolon the declaration block does spell`,
 			code: `<style>\n\ta {\n\t\t@import "x" ;\n\t}\n</style>`,
 			fixed: `<style>\n\ta {\n\t\t@import "x";\n\t}\n</style>`,

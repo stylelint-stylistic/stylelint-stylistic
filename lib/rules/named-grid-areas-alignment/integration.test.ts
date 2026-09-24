@@ -4,7 +4,7 @@ import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
 
-// Under `alignColumns` the runs between the tokens of a line of the table are this rule's, and `no-multiple-whitespaces` leaves them alone (#45); the run in front of the solidus is no run of the table, and that rule collapses it as before. The library lists the rule a block names first, so here the neighbor runs last; its own integration test has it run first.
+// Under `alignColumns` the runs between the tokens of a line of the table are this rule's, and `no-multiple-whitespaces` leaves them alone; the run in front of the solidus is no run of the table, and that rule collapses it as before. The library lists the rule a block names first, so here the neighbor runs last; its own integration test has it run first.
 testRule({
 	ruleName,
 	config: [true, { alignColumns: true }],

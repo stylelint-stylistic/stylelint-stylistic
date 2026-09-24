@@ -45,7 +45,7 @@ export function mediaFeatureColonSpaceChecker (opts: {
 	})
 
 	/**
-	 * Checks one colon. The whitespace is read over the copy with its escapes masked, since an escaped space or the space closing a hexadecimal escape is a character of a word and no run (1789657288).
+	 * Checks one colon. The whitespace is read over the copy with its escapes masked, since an escaped space or the space closing a hexadecimal escape is a character of a word and no run.
 	 * @param source - The at-rule's params the colon stands in.
 	 * @param runString - The copy of them the runs are read over.
 	 * @param index - The colon's index.

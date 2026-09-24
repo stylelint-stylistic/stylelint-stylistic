@@ -38,7 +38,6 @@ testRule({
 
 	reject: [
 		{
-			// See #178
 			description: `an inline comment standing in the selector, which the fix leaves spelled as the file spells it, the warning at the quote it is about`,
 			code: `.a // c\n[title='y'] {}`,
 			fixed: `.a // c\n[title="y"] {}`,
@@ -79,7 +78,6 @@ testRule({
 			message: messages.expected(`double`),
 		},
 		{
-			// See #33
 			description: `accurate position after a comment inside at-rule params`,
 			code: `
 				@mixin foo(
@@ -98,7 +96,6 @@ testRule({
 			message: messages.expected(`double`),
 		},
 		{
-			// See #61
 			description: `comments within a map literal are kept`,
 			code: `
 				$somevar: ( /* This is a comment */
@@ -257,7 +254,7 @@ testRule({
 			message: messages.expected(`double`),
 		},
 		{
-			// Sass compiles it to `url(a ")" b)`, the string double-quoted, where the core passes such an address over whole (1789604002)
+			// Sass compiles it to `url(a ")" b)`, the string double-quoted, where the core passes such an address over whole
 			description: `a string holding a closing parenthesis inside the parentheses of an address whose name opens with a hexadecimal escape, which Sass reads as code`,
 			code: `a { b: \\75 rl( a ')' b ) 1px; }`,
 			fixed: `a { b: \\75 rl( a ")" b ) 1px; }`,
@@ -299,7 +296,6 @@ testRule({
 			message: messages.expected(`double`),
 		},
 		{
-			// See #378
 			description: `a string standing beside a comment opening with a solidus, a star and a solidus, in a value that also carries an end-of-line comment, so that the syntax keeps a pair of copies and the block comment is found beside the pair's reading`,
 			code: `
 				a {

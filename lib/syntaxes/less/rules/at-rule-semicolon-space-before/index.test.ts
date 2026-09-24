@@ -29,7 +29,6 @@ testRule({
 
 	reject: [
 		{
-			// See #697
 			description: `an at-rule ending in an inline comment, whose closing break the fix would write over, putting the semicolon inside the comment`,
 			code: `@import "x" // c\n;`,
 			fixed: `@import "x" // c\n;`,
@@ -55,7 +54,6 @@ testRule({
 
 	reject: [
 		{
-			// See #697
 			description: `an at-rule ending in an inline comment, whose closing break the fix would write over, putting the semicolon inside the comment`,
 			code: `@import "x" // c\n;`,
 			fixed: `@import "x" // c\n;`,

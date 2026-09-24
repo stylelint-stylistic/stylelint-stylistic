@@ -37,10 +37,10 @@ export const EVERY_ASCII_UPPER_CASE_RUN = /[A-Z]+/gu
 /** Every block comment delimiter. */
 export const EVERY_COMMENT_DELIMITER = /(\*\/|\/\*)/gu
 
-/** The properties spelling grid rows as strings, any case ([#614](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/614)). */
+/** The properties spelling grid rows as strings, any case. */
 export const GRID_AREAS_PROPERTY = /^(?:grid-template-areas|grid-template|grid)$/iu
 
-/** Every run of tokenizer whitespace; a no-break space and a vertical tab are words ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494), [#401](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/401)). The narrowing of `\s+`. */
+/** Every run of tokenizer whitespace; a no-break space and a vertical tab are words. The narrowing of `\s+`. */
 export const EVERY_CSS_WHITESPACE_RUN = /[ \t\n\r\f]+/gu
 
 /** Every run of breaks leaving an empty line, the first break captured; a stray semicolon may stand between two breaks, since the readers measure whitespace with semicolons out. */
@@ -67,7 +67,7 @@ export const EVERY_PARENTHESIS = /[()]/gu
 /** Every character but a line feed and a carriage return. */
 export const EVERY_CHARACTER_BUT_A_BREAK = /[^\n\r]/gu
 
-/** Every run of breaks as PostCSS reads them, a Windows pair and a line feed alike, nothing between them: what `max-empty-lines` collapses, whichever way each break is spelled ([#586](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/586)). {@link EVERY_LINE_BREAK_RUN} reads a bare carriage return into a run too. */
+/** Every run of breaks as PostCSS reads them, a Windows pair and a line feed alike, nothing between them: what `max-empty-lines` collapses, whichever way each break is spelled. {@link EVERY_LINE_BREAK_RUN} reads a bare carriage return into a run too. */
 export const EVERY_RUN_OF_LINE_BREAKS = /(?:\r?\n)+/gu
 
 /** Every line ending in a break, break included. */
@@ -76,7 +76,7 @@ export const EVERY_LINE_WITH_BREAK = /[^\n]*\n/gu
 /** Every break, a pair's carriage return included; a split keeps neither. */
 export const EVERY_LINE_BREAK = /\r?\n/gu
 
-/** Every break and the indentation behind it, where content or the end follows, the break captured; the indentation is tokenizer whitespace short of a break, form feed and bare carriage return among it, which a fix stopping at spaces and tabs wrote nothing over ([#452](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/452)). */
+/** Every break and the indentation behind it, where content or the end follows, the break captured; the indentation is tokenizer whitespace short of a break, form feed and bare carriage return among it, which a fix stopping at spaces and tabs wrote nothing over. */
 export const EVERY_LINE_BREAK_AND_INDENT = /(\r?\n)(?:[ \t\f]|\r(?!\n))*(?=\S|$)/gu
 
 /** Every run of line feeds and carriage returns, a Windows pair counting as two, and the empty run everywhere else. */
@@ -145,13 +145,13 @@ export const LEADING_CLOSING_BRACE = /^[ \t\r\f]*\}/u
 /** A leading `)`, whitespace short of a break aside, as {@link LEADING_INDENT_AND_CONTENT} reads a line's indentation. */
 export const LEADING_CLOSING_PARENTHESIS = /^[ \t\r\f]*\)/u
 
-/** A leading colon and the tokenizer whitespace behind it ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). */
+/** A leading colon and the tokenizer whitespace behind it. */
 export const LEADING_COLON_AND_WHITESPACE = /^:[ \t\n\r\f]*/u
 
-/** The leading tokenizer whitespace; a vertical tab and a no-break space are words ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). The narrowing of {@link LEADING_WHITESPACE}. */
+/** The leading tokenizer whitespace; a vertical tab and a no-break space are words. The narrowing of {@link LEADING_WHITESPACE}. */
 export const LEADING_CSS_WHITESPACE = /^[ \t\n\r\f]*/u
 
-/** The leading word, up to the first tokenizer whitespace, the complement of {@link LEADING_CSS_WHITESPACE}, for cutting a run `postcss-value-parser` read too wide ([#496](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496)). */
+/** The leading word, up to the first tokenizer whitespace, the complement of {@link LEADING_CSS_WHITESPACE}, for cutting a run `postcss-value-parser` read too wide. */
 export const LEADING_CSS_WORD = /^[^ \t\n\r\f]*/u
 
 /** The name of a `@charset`, in any case: the encoding declaration where css-syntax-3's fallback-encoding step reads one out of the byte stream, dead text everywhere else, and no at-rule to a reader of an at-rule's own text either way. */
@@ -163,7 +163,7 @@ export const LEADING_HEX_ESCAPE = /^\\[\da-f]{1,6}(?:\r\n|[ \t\n\r\f])?/iu
 /** A Less mixin call's important flag opening its raw, spelled as `postcss-less` reads one (a bang, whitespace, the keyword in any case), with the rest of its line. */
 export const LEADING_IMPORTANT_FLAG_LINE = /^![ \t\n\r\f]*important[^\n]*/iu
 
-/** The leading indentation, captured, and the first content character. Both are read as the tokenizer reads them: a form feed or bare carriage return is indentation, and a line whose run held one went unmeasured ([#513](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/513)); a vertical tab, a no-break space or any other character `\s` spells beyond those five is content. */
+/** The leading indentation, captured, and the first content character. Both are read as the tokenizer reads them: a form feed or bare carriage return is indentation, and a line whose run held one went unmeasured; a vertical tab, a no-break space or any other character `\s` spells beyond those five is content. */
 export const LEADING_INDENT_AND_CONTENT = /^([ \t\r\f]*)[^ \t\n\r\f]/u
 
 /** A leading break with nothing in front, where {@link OPENS_WITH_LINE_BREAK} says yes too often. */
@@ -172,13 +172,13 @@ export const LEADING_LINE_BREAK = /^\r?\n/u
 /** A break closing a run, indentation allowed behind it, as `declaration-block-semicolon-newline-before` reads the run in front of a semicolon. */
 export const TRAILING_LINE_BREAK_AND_INDENTATION = /\r?\n[ \t]*$/u
 
-/** The leading breaks, nothing between them: what `max-empty-lines` counts from the start of a file and writes where it has no node ([#404](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/404)). */
+/** The leading breaks, nothing between them: what `max-empty-lines` counts from the start of a file and writes where it has no node. */
 export const LEADING_LINE_BREAK_RUN = /^(?:\r?\n)+/u
 
 /** A text opening on non-whitespace. */
 export const LEADING_NON_WHITESPACE = /^\S/u
 
-/** The leading number Less reads: a sign, digits and at most one period, no exponent ([#646](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/646)). */
+/** The leading number Less reads: a sign, digits and at most one period, no exponent. */
 export const LEADING_NUMBER_WITHOUT_EXPONENT = /^[+-]?\d*\.?\d+/u
 
 /** A leading arithmetic operator, as in `-$variable`. */
@@ -205,7 +205,7 @@ export const LEADING_WHITESPACE_OR_BLOCK_COMMENT = /^(?:\s+|\/\*.*?\*\/)/su
 /** The leading whitespace, where there is any. */
 export const LEADING_WHITESPACE_RUN = /^\s+/u
 
-/** The leading whitespace up to the first break, a Windows pair left whole; a vertical tab and a no-break space are words ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). */
+/** The leading whitespace up to the first break, a Windows pair left whole; a vertical tab and a no-break space are words. */
 export const LEADING_WHITESPACE_WITHOUT_BREAK = /^(?:[ \t\f]|\r(?!\n))*/u
 
 /** A leading token PostCSS's tokenizer and `postcss-scss`'s read without pushing a word, a string and a comment aside: a run of whitespace, an at-word, one of the characters read as a token of their own, which are a colon, a semicolon, a square bracket and a brace, a closing parenthesis left out since it may close a token holding the name, or an escape, a word token pushed nowhere: a run of backslashes and, behind an odd run, one more character, unless that is a solidus or whitespace, with the hexadecimal digits behind it and the one space closing them; the tokenizer takes one code unit there, so a code point past the basic plane is left to be read as the word its second unit is. */
@@ -220,7 +220,7 @@ export const LINE_BREAK = /\r?\n/u
 /** `media`, any case. */
 export const MEDIA_AT_RULE = /^media$/iu
 
-/** A character a call's name goes on through inside a word `postcss-value-parser` hands back whole while being no {@link IDENTIFIER_CODE_POINT} code point: a `#` and an `@`, behind which the tokenizer reads the letters as a hash or an at-word and the `(` behind them opens no address. A sign ends the name, and the `url(` behind it opens an address to `@csstools/css-tokenizer` and `lightningcss` alike (1789895915). A closing brace ends it as well, unless it closes an interpolation the same word opens ({@link INTERPOLATION_MARK}). */
+/** A character a call's name goes on through inside a word `postcss-value-parser` hands back whole while being no {@link IDENTIFIER_CODE_POINT} code point: a `#` and an `@`, behind which the tokenizer reads the letters as a hash or an at-word and the `(` behind them opens no address. A sign ends the name, and the `url(` behind it opens an address to `@csstools/css-tokenizer` and `lightningcss` alike. A closing brace ends it as well, unless it closes an interpolation the same word opens ({@link INTERPOLATION_MARK}). */
 export const NAME_CHARACTER_BESIDE_IDENTIFIER = /[#@]/u
 
 /** Anything but a space. */
@@ -238,16 +238,16 @@ export const OPENING_PARENTHESIS_AT_END = /\([ \t]*(?:\/\*(?:[^*]|\*(?!\/))*\*\/
 /** The head of an identifier-character run that is no identifier: a digit, a hyphen and a digit, or a lone hyphen; `--` opens one whatever follows. */
 export const OPENS_NO_IDENTIFIER = /^-?\d|^-$/u
 
-/** A leading block comment, breaks aside; a vertical tab or no-break space in front is a word ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). */
+/** A leading block comment, breaks aside; a vertical tab or no-break space in front is a word. */
 export const OPENS_WITH_BLOCK_COMMENT = /^(?:[ \t\f]|\r(?!\n))*\/\*/u
 
 /** A leading `//` comment, breaks aside. */
 export const OPENS_WITH_INLINE_COMMENT = /^[^\S\n]*\/\//u
 
-/** The leading run of tokenizer whitespace down to its last break: every empty line a file opens with. Tokenizer whitespace, since a vertical tab, a no-break space or any other character `\s` spells beyond the five opens the first node's own text instead of the raw a fix writes, and the warning stood where nothing could be taken off ([#683](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/683)). {@link OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE} reads the same whitespace down to its first break. */
+/** The leading run of tokenizer whitespace down to its last break: every empty line a file opens with. Tokenizer whitespace, since a vertical tab, a no-break space or any other character `\s` spells beyond the five opens the first node's own text instead of the raw a fix writes, and the warning stood where nothing could be taken off. {@link OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE} reads the same whitespace down to its first break. */
 export const OPENS_WITH_LINE_BREAK = /^[ \t\n\r\f]*\n/u
 
-/** A break behind the leading tokenizer non-break whitespace; a vertical tab and a no-break space stop the run ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). It is {@link OPENS_WITH_LINE_BREAK}'s match cut at its first break, that one reading the same whitespace on to its last ([#683](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/683)). */
+/** A break behind the leading tokenizer non-break whitespace; a vertical tab and a no-break space stop the run. It is {@link OPENS_WITH_LINE_BREAK}'s match cut at its first break, that one reading the same whitespace on to its last. */
 export const OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE = /^(?:[ \t\f]|\r(?!\n))*\r?\n/u
 
 /** A leading quote, whitespace aside. */
@@ -316,7 +316,7 @@ export const TPL_INTERPOLATION = /\{.+?\}/su
 /** The run of backslashes a text ends on. */
 export const TRAILING_BACKSLASHES = /\\*$/u
 
-/** The trailing whitespace as the tokenizer reads it ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)); the narrowing of {@link TRAILING_WHITESPACE}. */
+/** The trailing whitespace as the tokenizer reads it; the narrowing of {@link TRAILING_WHITESPACE}. */
 export const TRAILING_CSS_WHITESPACE = /[ \t\n\r\f]*$/u
 
 /** A trailing hexadecimal escape, its closing whitespace aside, which `postcss-value-parser` returns as a divider. */
@@ -337,7 +337,7 @@ export const TRAILING_WHITESPACE = /\s*$/u
 /** The trailing whitespace, where there is any; a search answers -1 otherwise. */
 export const TRAILING_WHITESPACE_RUN = /\s+$/u
 
-/** The trailing whitespace down to the last break, a Windows pair left whole; a bare carriage return and a form feed go with it, a vertical tab and a no-break space are words ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). The twin of {@link LEADING_WHITESPACE_WITHOUT_BREAK}. */
+/** The trailing whitespace down to the last break, a Windows pair left whole; a bare carriage return and a form feed go with it, a vertical tab and a no-break space are words. The twin of {@link LEADING_WHITESPACE_WITHOUT_BREAK}. */
 export const TRAILING_WHITESPACE_WITHOUT_BREAK = /(?:[ \t\f]|\r(?!\n))+$/u
 
 /** A character `postcss-value-parser` ends a word on outside `calc()`: a code point up to the space, a quotation mark, a parenthesis, a comma, a solidus, a colon. Spelled as what it is not, since a control character in a class is refused. */
@@ -349,10 +349,10 @@ export const VENDOR_PREFIX = /^-[a-z]+-/iu
 /** One whitespace character. */
 export const WHITESPACE = /\s/u
 
-/** Tokenizer whitespace only, at least one character ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). */
+/** Tokenizer whitespace only, at least one character. */
 export const WHITESPACE_ONLY = /^[ \t\n\r\f]+$/u
 
-/** Tokenizer whitespace or nothing; a vertical tab or no-break space is a word ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). */
+/** Tokenizer whitespace or nothing; a vertical tab or no-break space is a word. */
 export const WHITESPACE_OR_NOTHING = /^[ \t\n\r\f]*$/u
 
 /** A block comment behind some leading whitespace. */

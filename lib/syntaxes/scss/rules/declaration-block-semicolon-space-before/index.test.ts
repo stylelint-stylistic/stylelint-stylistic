@@ -12,7 +12,6 @@ testRule({
 
 	accept: [
 		{
-			// See #437
 			description: `a Sass nested property standing in front of another declaration, which its own block closes and no semicolon of its own, so the run between its value and its block is the block's and not the rule's`,
 			code: `
 				a {
@@ -23,7 +22,6 @@ testRule({
 			`,
 		},
 		{
-			// See #437
 			description: `the same nested property with a stray semicolon behind its block, which is the next declaration's raw and no semicolon of the property's`,
 			code: `a { font: 12px { family: serif; }; top: 0 ; }`,
 		},
@@ -31,7 +29,6 @@ testRule({
 
 	reject: [
 		{
-			// See #117
 			description: `inline comment before the semicolon: the semicolon cannot join the comment's line, so the code is left alone and the warning stands`,
 			code: `
 				a {
@@ -50,7 +47,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #117
 			description: `inline comment behind the flag: the semicolon cannot join its line either`,
 			code: `
 				a {
@@ -69,7 +65,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #117
 			description: `inline comment in front of the flag: the space goes behind the flag, and the comment stays where it is`,
 			code: `
 				a {
@@ -105,7 +100,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #211
 			description: `a flag standing in the text of the comment, which this syntax reads as comment text and no flag of its own — the twin of the Less case below, where the guard used to let the fix through`,
 			code: `
 				a {
@@ -132,7 +126,6 @@ testRule({
 
 	reject: [
 		{
-			// See #664
 			description: `a comment behind an address whose name is written in upper case and which holds the opening delimiter of a block comment, where Sass reads an address and the double slash behind it`,
 			code: `
 				a {
@@ -151,7 +144,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #117
 			description: `inline comment before the semicolon: the semicolon cannot join the comment's line, so the code is left alone and the warning stands`,
 			code: `
 				a {
@@ -170,7 +162,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #517
 			description: `the same comment with a backslash standing against its double slash, which this parser reads as a comment all the same`,
 			code: `
 				a {
@@ -189,7 +180,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #117
 			description: `inline comment behind the flag: the semicolon cannot join its line either`,
 			code: `
 				a {
@@ -227,7 +217,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #211
 			description: `a flag standing in the text of the comment, which this syntax reads as comment text and no flag of its own — the twin of the Less case below, where the guard used to let the fix through`,
 			code: `
 				a {
@@ -254,7 +243,6 @@ testRule({
 
 	accept: [
 		{
-			// See #437
 			description: `a Sass nested property standing in front of another declaration, which its own block closes and no semicolon of its own, so the run between its value and its block is the block's and not the rule's`,
 			code: `
 				a {
@@ -265,7 +253,6 @@ testRule({
 			`,
 		},
 		{
-			// See #437
 			description: `the same nested property with a stray semicolon behind its block, which is the next declaration's raw and no semicolon of the property's`,
 			code: `a { font: 12px { family: serif; }; top: 0; }`,
 		},
@@ -282,7 +269,6 @@ testRule({
 
 	accept: [
 		{
-			// See #139
 			description: `a Sass nested property with a declaration behind it, whose own text ends where its value does rather than where its block does`,
 			code: `a { font: 12px { family: serif; } ; top: 0 ; }`,
 		},

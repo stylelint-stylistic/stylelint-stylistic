@@ -6,7 +6,7 @@ export type RunWrites = Record<`newline` | `space`, (option: string, run: string
 /**
  * Spells the run in front of the closing brace as the `always` options of the break rule ask: whatever stands in front of the run's first break with the whitespace taken out of it, then the run from that break; where the run holds no break, one in front of its first whitespace, or behind a run holding no whitespace either.
  *
- * A stray semicolon standing in front of the break is no whitespace and stays, since no option of the rule speaks of it ([#687](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/687)), and the check cuts it out of the run it measures, so the break behind it opens that run (1789520440).
+ * A stray semicolon standing in front of the break is no whitespace and stays, since no option of the rule speaks of it, and the check cuts it out of the run it measures, so the break behind it opens that run.
  * @param raw - The run as it stands.
  * @param lineBreak - The break the file is written with.
  * @returns The run to write.

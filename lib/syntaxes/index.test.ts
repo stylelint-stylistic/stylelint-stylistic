@@ -51,7 +51,7 @@ describe(`the core`, () => {
 		expect(offending).toEqual([])
 	})
 
-	it(`reports through lib/utils/report alone, which places a problem on a node another rule built with no source (1790090148)`, async () => {
+	it(`reports through lib/utils/report alone, which places a problem on a node another rule built with no source`, async () => {
 		let offending: string[] = []
 
 		for (let [file, text] of await modulesOf(`.`)) {

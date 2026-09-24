@@ -12,12 +12,10 @@ testRule({
 
 	accept: [
 		{
-			// See #216
 			description: `a double slash of a syntax that spells a comment with one still opens a comment: the comma in its text is no comma of the value, and the one behind it stands on its own line`,
 			code: `a { b: 1px // a , b\n,2px; }`,
 		},
 		{
-			// See #153
 			description: `an inline comment standing behind a bare address is a comment all the same, and the comma behind it stands on its own line`,
 			code: `
 				a {
@@ -30,7 +28,6 @@ testRule({
 
 	reject: [
 		{
-			// See #181
 			description: `a value spelling an extend, which the syntax marks the declaration as one for`,
 			code: `a { b: "extend(x)",0; }`,
 			fixed: `a { b: "extend(x)"\n,0; }`,
@@ -39,7 +36,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #136
 			description: `a comma inside the text of an inline comment is no comma of the value, and the comma in front of the comment gets its break`,
 			code: `
 				a {
@@ -67,7 +63,6 @@ testRule({
 
 	reject: [
 		{
-			// See #136
 			description: `inline comment before the comma: the comma cannot join the comment's line, so the value is left alone and the warning stands`,
 			code: `
 				a {

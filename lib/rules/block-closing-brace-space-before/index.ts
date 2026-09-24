@@ -44,7 +44,7 @@ export let meta = {
 }
 
 /**
- * Asks whether this rule is the one to write the run in front of the closing brace, which the colon rules read as the run behind the colon of a wordless declaration ([#416](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/416)).
+ * Asks whether this rule is the one to write the run in front of the closing brace, which the colon rules read as the run behind the colon of a wordless declaration.
  * @param syntax - The syntax the rule is built over.
  * @param result - The Stylelint result, which holds the configuration.
  * @param ruleName - This rule's configured name.
@@ -87,7 +87,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		let writes = closingBraceRunWrites(() => getLineBreak(root, result))
 
-		// Every node carrying a block, a Sass nested property written with a value among them (#570)
+		// Every node carrying a block, a Sass nested property written with a value among them
 		root.walk((node) => {
 			if (carriesABlock(node)) check(node)
 		})
@@ -109,8 +109,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (text[index - 1] === `\r`) index -= 1
 
 			let escapes = findEscapeSpans(source, syntax.inlineComments(statement, result))
-			// An escaped space is the last character of the block's final node and no run at all, so the run is read over the copy with the escapes masked (1789661964); PostCSS ends the node at the backslash and files the whitespace an escape covering one spells in the raw behind it, which the write keeps in front of the run it rewrites
-			// Under `postcss-less` the raw may open with more of a `//` comment a semicolon of its text closed the last node in, and the run opens at the break closing it, which the write has to keep (#720)
+			// An escaped space is the last character of the block's final node and no run at all, so the run is read over the copy with the escapes masked; PostCSS ends the node at the backslash and files the whitespace an escape covering one spells in the raw behind it, which the write keeps in front of the run it rewrites
+			// Under `postcss-less` the raw may open with more of a `//` comment a semicolon of its text closed the last node in, and the run opens at the break closing it, which the write has to keep
 			let commentHead = syntax.commentTextHead(statement, `after`, result)
 			let escapedHead = commentHead ?? blockAfter.slice(0, escapeHeadLength(source, escapes, source.length - 1 - blockAfter.length))
 			let run = blockAfter.slice(escapedHead.length)
@@ -129,7 +129,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (isFixable && commentHead !== null) isFixable = INLINE_COMMENT_BREAK.test(written)
 
-			// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `c \⏎}` would come out as `c \}`, which the parser reads no block's end in, or `c \ }`, an escaped space (1789664271)
+			// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `c \⏎}` would come out as `c \}`, which the parser reads no block's end in, or `c \ }`, an escaped space
 			if (isFixable) isFixable = editKeepsEscapedCharacter(source, { start: source.length - 1 - run.length, end: source.length - 1, text: written })
 
 			checker.before({

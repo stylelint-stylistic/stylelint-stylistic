@@ -29,7 +29,7 @@ function mask (text: string, spans: InlineCommentSpan[]): string {
 }
 
 /**
- * Masks every string of a text, quotation marks and all, and every quotation mark inside an address, so `style-search` opens no string by its own reading: it opens one at a mark inside a bare address, where the tokenizer reads a character of the address, and closes none at a mark with a backslash in front, escaped or not (#739).
+ * Masks every string of a text, quotation marks and all, and every quotation mark inside an address, so `style-search` opens no string by its own reading: it opens one at a mark inside a bare address, where the tokenizer reads a character of the address, and closes none at a mark with a backslash in front, escaped or not.
  *
  * A `?` stands in, not a space, since callers match patterns against the copy, and whitespace there reads as a run in front of an operator or behind a `(` ending its line. The strings and addresses are found over the text with its comments blanked, so a mark inside a comment opens nothing; the comments stay in the copy, which is as long as the text.
  * @param text - The text the search runs over.

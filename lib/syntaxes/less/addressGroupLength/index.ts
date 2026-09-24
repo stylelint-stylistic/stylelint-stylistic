@@ -44,7 +44,7 @@ function importOptionsEnd (text: string, index: number, comments: Map<number, nu
 }
 
 /**
- * Measures the group Less reads between the name of an `@import` or a `@plugin` and its address: `(reference, optional)`, `(args)` ([#656](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/656)).
+ * Measures the group Less reads between the name of an `@import` or a `@plugin` and its address: `(reference, optional)`, `(args)`.
  *
  * Less takes the at-rule for an import or a plugin only with whitespace right behind the name, and steps over whitespace and comments between the tokens behind it; an import's group holds the options its `importOption` names, a plugin's anything up to the closing parenthesis but a semicolon.
  * @param text - The text behind the name.

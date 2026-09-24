@@ -127,7 +127,7 @@ async function refusalsOf (registry: Registry): Promise<string[]> {
 	return refusals
 }
 
-// A refused configuration keeps rows the plugin never produces, which `measureOne` files as unusable, so such a sweep used to count them in silence (#543). The working tree's rules are asked for either side, since a tree that moved no rule reads both back from the store
+// A refused configuration keeps rows the plugin never produces, which `measureOne` files as unusable, so such a sweep used to count them in silence. The working tree's rules are asked for either side, since a tree that moved no rule reads both back from the store
 let refusals = await refusalsOf(await loadRules(libAt(`worktree`)))
 
 if (refusals.length > 0) {

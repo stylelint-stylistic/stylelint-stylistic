@@ -28,9 +28,9 @@ function primaryOf (setting: unknown): string | true | undefined {
 type Listed<Key extends string, Option extends string | true> = { key: Key, option: Option, setting: unknown, name: string, syntax: Syntax }
 
 /**
- * Lists the copies of some neighbors the configuration holds, in run order: configuration order, then the lineness-conditioned rules, which wait for the run's writers ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)) in the plugin's order ([#502](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/502)).
+ * Lists the copies of some neighbors the configuration holds, in run order: configuration order, then the lineness-conditioned rules, which wait for the run's writers in the plugin's order.
  *
- * Stylelint runs rules in configuration order, so the key order of `result.stylelint.config` is the run's. A neighbor is listed under the one name whose copy reads the node's root (`copyReadingTheRoot`), whichever namespace that is, since every namespace reads plain CSS and a copy under another one writes the same file ([#710](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/710)). A copy refusing its option is passed over.
+ * Stylelint runs rules in configuration order, so the key order of `result.stylelint.config` is the run's. A neighbor is listed under the one name whose copy reads the node's root (`copyReadingTheRoot`), whichever namespace that is, since every namespace reads plain CSS and a copy under another one writes the same file. A copy refusing its option is passed over.
  * @param node - A node of the root the rules read.
  * @param result - The PostCSS result carrying the configuration.
  * @param rules - The neighbors by the caller's keys; a key may stand empty.
@@ -65,7 +65,7 @@ function listedInRunOrder<Key extends string, Option extends string | true> (nod
 		return linenessRank((rules[copy.key] as { name: string }).name, copy.syntax.namespace, copy.option as string)
 	}
 
-	// The deferred go behind every other (#355), in the plugin's order (#502)
+	// The deferred go behind every other, in the plugin's order
 	let undeferred = found.filter(({ option }) => !defersToRunEnd(option))
 	let deferred = found.filter(({ option }) => defersToRunEnd(option)).toSorted((one, other) => compareRanks(rankOf(one), rankOf(other)))
 
@@ -73,7 +73,7 @@ function listedInRunOrder<Key extends string, Option extends string | true> (nod
 }
 
 /**
- * Reads some neighbors' settings in run order, as {@link listedInRunOrder} lists them; whether a copy's fix is off travels with its option ([#485](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/485)).
+ * Reads some neighbors' settings in run order, as {@link listedInRunOrder} lists them; whether a copy's fix is off travels with its option.
  * @param node - A node of the root the rules read.
  * @param result - The PostCSS result carrying the configuration.
  * @param rules - The neighbors by the caller's keys; a key may stand empty.
@@ -156,7 +156,7 @@ export type NeighborCopy = {
 let tablesByRule: WeakMap<NeighborRuleSetting, { copy: NeighborRuleSetting }> = new WeakMap()
 
 /**
- * Reads the copy of one neighbor that reads the root whole, secondaries included, under whichever namespace it is configured, as {@link neighborSettings} finds it ([#715](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/715)).
+ * Reads the copy of one neighbor that reads the root whole, secondaries included, under whichever namespace it is configured, as {@link neighborSettings} finds it.
  * @param node - A node of the root the rules read.
  * @param result - The PostCSS result carrying the configuration.
  * @param rule - The neighbor and the primaries it accepts.

@@ -82,7 +82,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (pseudoNode.length === 0) return
 
 				let paramString = pseudoNode.map((node) => node.toString()).join(`,`)
-				// The run beside the parenthesis is read over the copy with the escapes masked, where an escaped space is a character of the argument and no run at all (1789661964), and written into the selector at the index it was read at: the parser files an escaped tab in the spaces of the node beside it and prints it back as the source spells it (1789666655)
+				// The run beside the parenthesis is read over the copy with the escapes masked, where an escaped space is a character of the argument and no run at all, and written into the selector at the index it was read at: the parser files an escaped tab in the spaces of the node beside it and prints it back as the source spells it
 				let { runString } = selectorSearchCopy(paramString)
 				// Multi-line by line feed only, as PostCSS counts lines
 				let isParamStringMultiline = LINE_BREAK.test(paramString)
@@ -111,7 +111,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let closeIndex = openIndex + paramString.length - 1
 					let run = runInFront(runString, paramString.length)
 					let edit = { start: closeIndex + 1 - run.length, end: closeIndex + 1, text: written }
-					// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a:not(b\⏎)` would come out as `a:not(b\ )`, an escaped space, so the warning stands with no fix (1789664271)
+					// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a:not(b\⏎)` would come out as `a:not(b\ )`, an escaped space, so the warning stands with no fix
 					let keepsTheEscape = editKeepsEscapedCharacter(selector, edit)
 
 					if (prevCharIsSpace && primary === `never` && !isParamStringMultiline) complain(messages.rejectedClosing, closeIndex, keepsTheEscape ? edit : undefined)

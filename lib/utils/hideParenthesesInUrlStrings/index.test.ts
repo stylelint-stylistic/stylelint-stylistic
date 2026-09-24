@@ -68,7 +68,6 @@ describe(`hideParenthesesInUrlStrings`, () => {
 		expect(hideParenthesesInUrlStrings(text, findCommentSpans(text))).toBe(text)
 	})
 
-	// See #588
 	it(`a backslash in front of a break, which spells nothing and leaves the name behind the break its own`, () => {
 		expect(hideParenthesesInUrlStrings(`\\\nurl(a)`)).toBe(`?\nurl(a)`)
 		expect(hideParenthesesInUrlStrings(`\\\rurl(a)`)).toBe(`?\rurl(a)`)

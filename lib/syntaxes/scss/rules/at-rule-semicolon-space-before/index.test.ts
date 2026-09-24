@@ -12,7 +12,6 @@ testRule({
 
 	reject: [
 		{
-			// See #139
 			description: `a space in front of the semicolon of an at-rule whose parameters carry on past an inline comment, which this syntax keeps a second copy of`,
 			code: `
 				@import "a" // c
@@ -27,7 +26,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #545
 			description: `the same at-rule indented inside a declaration block, whose leading raw carries a break`,
 			code: `
 				a {
@@ -46,7 +44,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #697
 			description: `an at-rule ending in an inline comment, whose closing break the fix would write over, putting the semicolon inside the comment`,
 			code: `@import "x" // c\n;`,
 			fixed: `@import "x" // c\n;`,
@@ -64,7 +61,6 @@ testRule({
 
 	reject: [
 		{
-			// See #697
 			description: `an at-rule ending in an inline comment, whose closing break the fix would write over, putting the semicolon inside the comment`,
 			code: `@import "x" // c\n;`,
 			fixed: `@import "x" // c\n;`,

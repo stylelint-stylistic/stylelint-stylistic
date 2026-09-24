@@ -40,7 +40,6 @@ a {
 			code: `<a style="display:block; color:red;"></a>`,
 		},
 		{
-			// See #594
 			description: `a style attribute closing on an at-rule whose parameters span lines, the continuation line indented one level`,
 			code: `<a style="@import url(
 	'x')"></a>`,
@@ -63,7 +62,6 @@ a {
 			message: messages.expected(`1 tab`),
 		},
 		{
-			// See #635
 			description: `a style attribute whose value opens on the line behind its colon, not indented`,
 			code: `<a style="color:\npink"></a>`,
 			fixed: `<a style="color:\n\tpink"></a>`,
@@ -72,7 +70,6 @@ a {
 			message: messages.expected(`1 tab`),
 		},
 		{
-			// See #594
 			description: `a style attribute closing on an at-rule whose parameters span lines, the continuation line not indented`,
 			code: `<a style="@import url(
 'x')"></a>`,
@@ -83,7 +80,6 @@ a {
 			message: messages.expected(`1 tab`),
 		},
 		{
-			// See #594
 			description: `a stylesheet opening on the line of the style tag, whose one declaration is indented two levels and whose block closes on that declaration's line`,
 			code: `<style>a {
 		b: c; }</style>`,
@@ -94,7 +90,6 @@ a {
 			message: messages.expected(`1 tab`),
 		},
 		{
-			// See #594
 			description: `the same stylesheet on the line of an indented style tag, the declaration indented one level`,
 			code: `	<style>a {
 	b: c; }
@@ -107,7 +102,6 @@ a {
 			message: messages.expected(`2 tabs`),
 		},
 		{
-			// See #510
 			description: `a comment an at-rule with neither a block nor a semicolon swallowed inside the style element, indented a level past the block it is a line of`,
 			code: `
 <style>
@@ -291,7 +285,6 @@ testRule({
 
 	accept: [
 		{
-			// See #634
 			description: `the file one run of the fix leaves over a tab-indented stylesheet opening on the line of the style tag, whose own line is two levels of the option deep, which the next run used to read a level lower`,
 			code: `<style>a {
       b: c;
@@ -331,7 +324,6 @@ a {
 	],
 	reject: [
 		{
-			// See #634
 			description: `a stylesheet opening on its own line four spaces deep with its declaration eight, whose own lines are two levels of the option deep, so the declaration is asked for three rather than the whole sheet being moved to a width voted off the page`,
 			code: `<style>
     a {
@@ -751,7 +743,6 @@ testRule({
 
 	accept: [
 		{
-			// See #594
 			description: `a stylesheet opening on the line of the style tag, its declaration and its closing brace both indented one level`,
 			code: `<style>a {
 	b: c;
@@ -761,7 +752,6 @@ testRule({
 
 	reject: [
 		{
-			// See #594
 			description: `a stylesheet opening on the line of the style tag, its declaration and its closing brace both at the left margin`,
 			code: `<style>a {
 b: c;
@@ -793,7 +783,6 @@ testRule({
 
 	reject: [
 		{
-			// See #569
 			description: `a semicolon alone on its line inside a style element, asked for the declaration's level`,
 			code: `<style>\n\ta {\n\t\tcolor: pink\n\t\t\t\t;\n\t}\n</style>`,
 			fixed: `<style>\n\ta {\n\t\tcolor: pink\n\t\t;\n\t}\n</style>`,
@@ -810,7 +799,6 @@ testRule({
 			message: messages.expected(`0 tabs`),
 		},
 		{
-			// See #592
 			description: `a comment behind the last at-rule of a style element, which has neither a block nor a semicolon, indented a level past the at-rule`,
 			code: `<style>\n\t@import 'x'\n\t\t/* c */\n</style>`,
 			fixed: `<style>\n\t@import 'x'\n\t/* c */\n</style>`,
@@ -827,7 +815,7 @@ testRule({
 			message: messages.expected(`0 tabs`),
 		},
 		{
-			// The braces carry the break into the property, so the core rule meets one outside Sass too (1789503578)
+			// The braces carry the break into the property, so the core rule meets one outside Sass too
 			description: `a property broken inside a pair of interpolation braces, standing in a style attribute`,
 			code: `<a style="font-#{\n$s}: 1px\n2px"></a>`,
 			fixed: `<a style="font-#{\n\t$s}: 1px\n\t2px"></a>`,
@@ -837,7 +825,7 @@ testRule({
 			],
 		},
 		{
-			// The break stands in the property alone, where the guard used to ask only the value and the run in front of it (1789926320)
+			// The break stands in the property alone, where the guard used to ask only the value and the run in front of it
 			description: `the same property over a value written on one line`,
 			code: `<a style="font-#{\n$s}: 1px"></a>`,
 			fixed: `<a style="font-#{\n\t$s}: 1px"></a>`,
@@ -848,7 +836,6 @@ testRule({
 	],
 })
 
-// See #634
 testRule({
 	ruleName,
 	config: [4],

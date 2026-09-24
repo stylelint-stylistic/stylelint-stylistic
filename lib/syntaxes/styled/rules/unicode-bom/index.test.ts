@@ -5,7 +5,6 @@ let { ruleName } = createRule(styled)
 
 let testRule = createTestRule({ ruleName })
 
-// See #728
 testRule({
 	customSyntax: `postcss-styled-syntax`,
 	ruleName,
@@ -24,7 +23,6 @@ testRule({
 	],
 })
 
-// See #728
 testRule({
 	customSyntax: `postcss-styled-syntax`,
 	ruleName,

@@ -86,7 +86,7 @@ function spanAt (text: string, checkIndex: number, position: `before` | `after`,
  *
  * A write behind the solidus is refused too where it parts the name of a bare address from the solidus or joins it to it and the two readings of the parentheses part: PostCSS's tokenizer reads `1/url` as one word, so the parentheses behind it are code, while behind `1/ url` they are one token closed at the first `)`.
  *
- * And a write is refused where the character behind a backslash the text in front of it ends on would change, since one of the two readings of that backslash takes what is written: `1\⏎/2` is a word, a delimiter and a ratio's solidus, and emptying the run would leave `1\/2`, one word (1789664271).
+ * And a write is refused where the character behind a backslash the text in front of it ends on would change, since one of the two readings of that backslash takes what is written: `1\⏎/2` is a word, a delimiter and a ratio's solidus, and emptying the run would leave `1\/2`, one word.
  * @param syntax - The syntax the rule is built over.
  * @param reading - What the syntax makes of a `//` comment.
  * @param text - The text the solidus stands in.
@@ -108,9 +108,9 @@ function writesTheSpan (syntax: Syntax, reading: InlineCommentReading, text: str
 /**
  * Builds the check of one text's separator solidi.
  *
- * A run ends at a vertical tab or a no-break space ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)). The text is edited from the back, not printed, since `postcss-value-parser` may not return what it was given.
+ * A run ends at a vertical tab or a no-break space. The text is edited from the back, not printed, since `postcss-value-parser` may not return what it was given.
  *
- * A newline rule behind the solidus reads as its comma twin does ([#622](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/622)): a `//` comment behind it already ends in a break, so the solidus is skipped; a block comment is read through, the break asked for behind its `*\/`. The break goes in front of the run, which becomes the next line's indentation.
+ * A newline rule behind the solidus reads as its comma twin does: a `//` comment behind it already ends in a break, so the solidus is skipped; a block comment is read through, the break asked for behind its `*\/`. The break goes in front of the run, which becomes the next line's indentation.
  * @param opts - The options.
  * @returns The check.
  */
@@ -120,9 +120,9 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 
 	return (node, text, textIndex, lineCheckStr, readsGroups) => {
 		let reading = syntax.inlineComments(node, result)
-		// A solidus opening the text has its run in the raw in front of it, `raws.between` of a declaration or `raws.afterName` of an at-rule (1789593917)
+		// A solidus opening the text has its run in the raw in front of it, `raws.between` of a declaration or `raws.afterName` of an at-rule
 		let textBefore = rawInFrontOfText(node)
-		// The run beside the solidus is read over the copy with its escapes masked, where an escaped space is a character of a word and no run (1789661964); the guards read the text the write lands in
+		// The run beside the solidus is read over the copy with its escapes masked, where an escaped space is a character of a word and no run; the guards read the text the write lands in
 		let runText = maskEscapes(text, findEscapeSpans(text, reading), true)
 		let written = writes ? (whitespace === `newline` ? getLineBreak(node, result) : ` `) : ``
 		let edits: Edit[] = []

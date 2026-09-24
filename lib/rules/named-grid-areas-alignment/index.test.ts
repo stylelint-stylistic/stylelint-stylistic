@@ -109,7 +109,6 @@ testRule({
 						'c cc ccc c' }
 			`,
 		},
-		// See #367
 		{
 			description: `a call standing between two rows that are aligned to each other`,
 			code: `
@@ -118,12 +117,10 @@ testRule({
 				}
 			`,
 		},
-		// See #401
 		{
 			description: `a row ending on a cell named with a no-break space alone, which is a cell of the row and no trailing whitespace`,
 			code: `a { grid-template-areas: "a ${N}" "bb b"; }`,
 		},
-		// See #520
 		{
 			description: `a cell named with a character outside the Basic Multilingual Plane, in a grid whose columns line up as the file is read`,
 			code: `
@@ -284,7 +281,6 @@ testRule({
 			endColumn: 13,
 			message: messages.expected(`grid-template-areas`),
 		},
-		// See #322
 		{
 			description: `a row spelled behind a double slash, which plain CSS spells no comment with, so it is a row like any other`,
 			code: `
@@ -323,7 +319,6 @@ testRule({
 			endColumn: 49,
 			message: messages.expected(`grid-template-areas`),
 		},
-		// See #367
 		{
 			description: `a call opening the value, whose rows behind it are not aligned`,
 			code: `
@@ -486,7 +481,6 @@ testRule({
 			endColumn: 37,
 			message: messages.expected(`grid-template-areas`),
 		},
-		// See #368
 		{
 			description: `a row holding no cell in front of two rows whose cells do not line up`,
 			code: `
@@ -596,7 +590,6 @@ testRule({
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
-			// See #378
 			description: `a row standing inside a comment opening with a solidus, a star and a solidus, which the value parser hands back as a string and which is no row of the grid`,
 			code: `a { grid-template-areas: "c   c" /*/ "a  a" */ "b b"; }`,
 			fixed: `a { grid-template-areas: "c c" /*/ "a  a" */ "b b"; }`,
@@ -606,7 +599,6 @@ testRule({
 			endColumn: 53,
 			message: messages.expected(`grid-template-areas`),
 		},
-		// See #504
 		{
 			description: `a quotation mark standing inside such a comment, which the value parser pairs with the opening mark of the row behind it, so that the rows behind the comment are cut at the wrong places`,
 			code: `a { grid-template-areas: "c   c" /*/ " */ "a  a" "b b"; }`,
@@ -637,7 +629,6 @@ testRule({
 			endColumn: 46,
 			message: messages.expected(`grid-template-areas`),
 		},
-		// See #401
 		{
 			description: `a row whose cells are named with a no-break space, which is a word to the tokenizer and whitespace to JavaScript, over a row whose cells do not line up`,
 			code: `a { grid-template-areas: "${N} ${N}" "b  b"; }`,
@@ -678,7 +669,6 @@ testRule({
 			endColumn: 41,
 			message: messages.expected(`grid-template-areas`),
 		},
-		// See #402
 		{
 			description: `a line break between the cells of a row over a wider row, which is a break the fix writes over, so the cells are not padded to the width of the row below`,
 			code: `a { grid-template-areas: "a\n\t\ta" "bb bb"; }`,
@@ -769,7 +759,6 @@ testRule({
 			endColumn: 40,
 			message: messages.expected(`grid-template-areas`),
 		},
-		// See #520
 		{
 			description: `a cell named with a character outside the Basic Multilingual Plane, whose column is padded out by the characters the row is written with rather than by the code units it is stored in`,
 			code: `
@@ -833,7 +822,6 @@ testRule({
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
-			// See #614
 			description: `the same rows under the property name written in upper case, which names the same property and is read like it`,
 			code: `a { GRID-TEMPLATE-AREAS: 'a  a  a' }`,
 			fixed: `a { GRID-TEMPLATE-AREAS: 'a a a' }`,
@@ -844,7 +832,6 @@ testRule({
 			message: messages.expected(`GRID-TEMPLATE-AREAS`),
 		},
 		{
-			// See #614
 			description: `the same rows under the property name written in mixed case`,
 			code: `a { GrId-TeMpLaTe-ArEaS: 'a  a  a' }`,
 			fixed: `a { GrId-TeMpLaTe-ArEaS: 'a a a' }`,
@@ -1114,7 +1101,6 @@ testRule({
 			endColumn: 11,
 			message: messages.expected(`grid-template-areas`),
 		},
-		// See #368
 		{
 			description: `a row holding no cell between two rows, which widens neither the columns nor the gap between them`,
 			code: `
@@ -1176,7 +1162,6 @@ testRule({
 				a { grid-template-areas: 'a a a' 'bb bb bb' }
 			`,
 		},
-		// See #368
 		{
 			description: `a row holding no cell, already as wide as the rows whose quotes it lines up with`,
 			code: `
@@ -1188,7 +1173,6 @@ testRule({
 				}
 			`,
 		},
-		// See #520
 		{
 			description: `the widest row of a grid holding a cell named with two characters outside the Basic Multilingual Plane, so that the width every other row is padded out to is measured in those characters`,
 			code: `
@@ -1302,7 +1286,6 @@ testRule({
 			endColumn: 44,
 			message: messages.expected(`grid-template-areas`),
 		},
-		// See #368
 		{
 			description: `a row holding no cell between two rows, its closing quote lined up with theirs by the option`,
 			code: `
@@ -1351,7 +1334,6 @@ testRule({
 			endColumn: 10,
 			message: messages.expected(`grid-template-areas`),
 		},
-		// See #401
 		{
 			description: `a row ending on a cell named with a no-break space alone, padded out to the width of the row below rather than emptied`,
 			code: `
@@ -1374,7 +1356,6 @@ testRule({
 			endColumn: 10,
 			message: messages.expected(`grid-template-areas`),
 		},
-		// See #402
 		{
 			description: `a line break between the cells of a row over a wider row, whose closing quotes are therefore not lined up`,
 			code: `a { grid-template-areas: "a\n\t\ta" "bb bb"; }`,
@@ -1395,7 +1376,6 @@ testRule({
 			endColumn: 10,
 			message: messages.expected(`grid-template-areas`),
 		},
-		// See #520
 		{
 			description: `a row holding a cell named with a character outside the Basic Multilingual Plane, padded out to the width of the row below counted in the characters it is written with`,
 			code: `
@@ -1570,7 +1550,7 @@ testRule({
 	],
 })
 
-// The rows of the `grid-template` and `grid` shorthands are read as the longhand's (#45): every top-level string of the value is a row, and a row's size, its line names, the solidus and the columns behind it go back as the file spells them.
+// The rows of the `grid-template` and `grid` shorthands are read as the longhand's: every top-level string of the value is a row, and a row's size, its line names, the solidus and the columns behind it go back as the file spells them.
 testRule({
 	ruleName,
 	config: [true],
@@ -1647,7 +1627,6 @@ testRule({
 			message: messages.expected(`grid-template`),
 		},
 		{
-			// See #614
 			description: `the same shorthand under the property name written in upper case`,
 			code: `a { GRID-TEMPLATE: "a  a" 1fr "b b" auto / 1fr 1fr; }`,
 			fixed: `a { GRID-TEMPLATE: "a a" 1fr "b b" auto / 1fr 1fr; }`,
@@ -1658,7 +1637,6 @@ testRule({
 			message: messages.expected(`GRID-TEMPLATE`),
 		},
 		{
-			// See #614
 			description: `the \`grid\` shorthand under its name written in upper case`,
 			code: `a { GRID: "a  a" 1fr / 1fr; }`,
 			fixed: `a { GRID: "a a" 1fr / 1fr; }`,
@@ -1824,7 +1802,7 @@ testRule({
 	],
 })
 
-// Under `alignColumns` a shorthand's row lines are laid out as a table, the line names in front, the row, its size and the names behind each in a column, the padding written between a line's tokens and never in front of its first (#45).
+// Under `alignColumns` a shorthand's row lines are laid out as a table, the line names in front, the row, its size and the names behind each in a column, the padding written between a line's tokens and never in front of its first.
 testRule({
 	ruleName,
 	config: [true, { alignColumns: true }],

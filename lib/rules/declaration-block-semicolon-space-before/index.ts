@@ -74,17 +74,17 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// Stored for future safe replacement
 				isCustomPropertyWithOnlySpaces = WHITESPACE_ONLY.test(value)
 
-				// The space may stand at the tail of `raws.between` until the next parse: `declaration-colon-space-after` writes it there, and a check deferred to the run's end (#355) runs before that (#50)
+				// The space may stand at the tail of `raws.between` until the next parse: `declaration-colon-space-after` writes it there, and a check deferred to the run's end runs before that
 				if (primary.startsWith(`never`) && betweenTailAfterColon(syntax, decl, result) + value === ` `) return
 			}
 
 			let declString = declarationString(syntax, decl)
 			let problemIndex = declString.length - 1
-			// The semicolon goes at the end of the run the fix cuts into; a `//` comment there is closed by that run's break, so either option would take the semicolon into it: the warning stands. A value of nothing but that run is the run behind the colon too, whose writer the rules asked about it settle (#416). A backslash ending the value would read what the fix puts behind it
+			// The semicolon goes at the end of the run the fix cuts into; a `//` comment there is closed by that run's break, so either option would take the semicolon into it: the warning stands. A value of nothing but that run is the run behind the colon too, whose writer the rules asked about it settle. A backslash ending the value would read what the fix puts behind it
 			let isFixable = !syntax.writesIntoInlineComment(decl, result) && writesSharedRun(syntax, decl, result, ruleName) && keepsEscapedCharacter(syntax, decl, result, primary.startsWith(`always`) ? ` ` : ``)
 
 			checker.before({
-				// The run is read over the copy with its escapes masked, where an escaped space is a character of the value and no run (1789661964)
+				// The run is read over the copy with its escapes masked, where an escaped space is a character of the value and no run
 				source: maskEscapes(declString, findEscapeSpans(declString, syntax.inlineComments(decl, result)), true),
 				index: declString.length,
 				lineCheckStr: blockString(parentRule, result),

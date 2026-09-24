@@ -60,7 +60,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #292
 			description: `a block a mixin call with no semicolon of its own closes, the break in front of the brace parsed into that call`,
 			code: `
 				a {
@@ -94,7 +93,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #374
 			description: `a closing brace right behind a mixin call's important flag, where the space this option writes stays behind the flag rather than moving in front of it on the next parse`,
 			code: `
 				a {
@@ -117,7 +115,6 @@ testRule({
 
 	reject: [
 		{
-			// See #720
 			description: `a block whose last declaration a semicolon of the text of its inline comment closed, and a block comment carved out of that text standing last, so the brace still has nowhere to go`,
 			code: `
 				a {
@@ -202,7 +199,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #292
 			description: `a block a mixin call with no semicolon of its own closes, the break in front of the brace parsed into that call`,
 			code: `
 				a {
@@ -236,7 +232,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #398
 			description: `a call named with an ASCII word in front of the three letters of an address, whose double slashes open a comment the brace has nowhere to go past`,
 			code: `a { b: aurl(http://a/b.png) 1px; }`,
 			fixed: `a { b: aurl(http://a/b.png) 1px; }`,
@@ -277,7 +272,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #566
 			description: `an address behind a backslash and a form feed, which the grammar reads a newline in, so that the backslash spells nothing and names nothing, and the address takes the brace`,
 			code: `a { b: \\\furl(http://a/b.png) 1px; }`,
 			fixed: `a { b: \\\furl(http://a/b.png) 1px;}`,
@@ -294,7 +288,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #333
 			description: `a form feed inside an inline comment, which is whitespace and no line break, so the brace stands in the comment's text and the block is left alone`,
 			code: `a { b: 1px // c\f\t2px; }`,
 			fixed: `a { b: 1px // c\f\t2px; }`,
@@ -303,7 +296,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #374
 			description: `a line break between a mixin call's important flag and the closing brace, which the parser collects into the call's raw along with the space in front of the flag`,
 			code: `
 				a {
@@ -444,7 +436,6 @@ testRule({
 
 	reject: [
 		{
-			// See #723
 			description: `a mixin call standing in the rest of the text of an inline comment a semicolon of that text closed the last declaration in, so the brace has nowhere to go`,
 			code: `
 				a {

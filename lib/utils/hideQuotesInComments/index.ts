@@ -29,9 +29,9 @@ function findLeakingMarks (text: string, spans: (CommentSpan | InlineCommentSpan
 /**
  * Masks the quotation marks a comment opens a string with that runs past it, so that `postcss-value-parser` pairs a value's marks as the file does.
  *
- * The parser reads a `//` or `/*\/` comment's text as code, so a mark in it re-pairs every mark behind it; {@link findCommentSpanHolding} answers only for nodes opening inside the comment, so eleven rules wrote into the string behind it, and a call whose `)` the phantom string covers never closes ([#508](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/508)).
+ * The parser reads a `//` or `/*\/` comment's text as code, so a mark in it re-pairs every mark behind it; {@link findCommentSpanHolding} answers only for nodes opening inside the comment, so eleven rules wrote into the string behind it, and a call whose `)` the phantom string covers never closes.
  *
- * Only such a mark is masked, since a string closed inside the comment hides a `)` from the parser ([#320](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/320), [#329](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/329)); masking both made `media-feature-parentheses-space-inside` grow a query every run. The price is un-hiding what the phantom string covered: the `function-parentheses-*-inside` rules turn such a call away, `media-feature-parentheses-space-inside` writes at it ([#347](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/347)).
+ * Only such a mark is masked, since a string closed inside the comment hides a `)` from the parser; masking both made `media-feature-parentheses-space-inside` grow a query every run. The price is un-hiding what the phantom string covered: the `function-parentheses-*-inside` rules turn such a call away, `media-feature-parentheses-space-inside` writes at it.
  *
  * The parse is remade after each pass, since a removed mark re-pairs those behind it, at most once per mark. Unlike {@link blankComments}, the mask keeps a comment's width, so parse indexes count in the file's text.
  * @param text - The value or params to mask.

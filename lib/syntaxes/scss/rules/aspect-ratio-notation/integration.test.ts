@@ -5,7 +5,7 @@ let { ruleName, messages } = createRule(scss)
 
 let testRule = createTestRule({ ruleName })
 
-// The neighbors are read under the namespace's own names (#550), so an SCSS file configured with the namespace's slash rules gets its solidus spelled as they ask.
+// The neighbors are read under the namespace's own names, so an SCSS file configured with the namespace's slash rules gets its solidus spelled as they ask.
 testRule({
 	ruleName,
 	config: [`ratio`],

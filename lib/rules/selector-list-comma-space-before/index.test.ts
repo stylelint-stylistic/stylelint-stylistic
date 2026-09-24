@@ -68,7 +68,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the selector in front of a line break and the comma, where the space would stand behind the backslash as its escaped character, so the warning stands`,
 			code: `a ,b\\\n,c {}`,
 			fixed: `a ,b\\\n,c {}`,
@@ -77,7 +77,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the comma, which is a character of the name and no space`,
 			code: `a ,b\\ ,c {}`,
 			fixed: `a ,b\\  ,c {}`,
@@ -229,7 +229,7 @@ testRule({
 
 	accept: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the comma, which is a character of the name and no whitespace`,
 			code: `a,b\\ ,c {}`,
 		},
@@ -273,7 +273,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the selector in front of a line break and the comma, which the write would turn into an escaped comma, so the warning stands`,
 			code: `a,b\\\n,c {}`,
 			fixed: `a,b\\\n,c {}`,
@@ -458,14 +458,13 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer: the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab in front of the comma, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `a\v, b {}`,
 			fixed: `a\v , b {}`,
@@ -484,7 +483,6 @@ testRule({
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab at the run before the comma: only the tokenizer's run goes, and the character stays`,
 			code: `a\v , b {}`,
 			fixed: `a\v, b {}`,

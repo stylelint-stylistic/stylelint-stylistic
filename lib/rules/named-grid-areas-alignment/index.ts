@@ -29,7 +29,7 @@ export let meta = {
 /**
  * Asks whether a node of the parsed value is a grid row: a string.
  *
- * Comments are blanked first: the value parser has no `//` comment node and closes `/*\/` on its own star ([#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378)), and a quotation mark inside one would open a string ([#504](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504)).
+ * Comments are blanked first: the value parser has no `//` comment node and closes `/*\/` on its own star, and a quotation mark inside one would open a string.
  * @param node - A node of the parsed value.
  * @returns True where the node is a row.
  */
@@ -38,7 +38,7 @@ function isGridRow (node: Node): node is StringNode {
 }
 
 /**
- * Counts code points; `padEnd` counts UTF-16 units and misaligned a cell holding a non-BMP one ([#520](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/520)). Grapheme clusters and double-width characters are not handled.
+ * Counts code points; `padEnd` counts UTF-16 units and misaligned a cell holding a non-BMP one. Grapheme clusters and double-width characters are not handled.
  * @param text - The text to measure.
  * @returns The number of code points.
  */
@@ -60,7 +60,7 @@ function padToWidth (text: string, width: number): string {
 const COLUMNS: GridColumn[] = [`names`, `row`, `size`, `trailing`]
 
 /**
- * Lays the lines of a grid shorthand out as a table and returns the padding for every run between two tokens ([#45](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/45)).
+ * Lays the lines of a grid shorthand out as a table and returns the padding for every run between two tokens.
  *
  * A column is as wide as its widest text, tokens of one column on a line are one space apart, and each column stands `gap` behind the one before it where any line has it. Nothing is written in front of the first token, the indent's side.
  * @param lines - The shorthand's lines, each with its tokens by column.
@@ -126,7 +126,7 @@ export type SecondaryOptions = {
 /**
  * Aligns the cells of the rows of `grid-template-areas`, `grid-template` and `grid`.
  *
- * Every top-level string is a row; everything else is kept as spelled ([#45](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/45)).
+ * Every top-level string is a row; everything else is kept as spelled.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
@@ -165,14 +165,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let comments = syntax.commentSpans(declarationValue, declaration, result)
 			// Blanked, not stripped, so every parse index is an index of the value.
 			let parsedValue = valueParser(hideParenthesesInUrlStrings(blankComments(declarationValue, comments), comments))
-			// A break inside a row is written over, so it is not counted (#402).
+			// A break inside a row is written over, so it is not counted.
 			let isMultilineDeclaration = spansLinesOutsideRows(declarationValue, parsedValue.nodes)
 
 			let gridRows = parsedValue.nodes.filter(isGridRow)
 
 			// A cell-less row keeps an empty entry, since `formatted` is indexed by row.
 
-			// `trim` and `\s` would take a no-break space out of a cell name (#401).
+			// `trim` and `\s` would take a no-break space out of a cell name.
 			let rows = gridRows.map(({ value }) => value.replace(LEADING_CSS_WHITESPACE, ``).replace(TRAILING_CSS_WHITESPACE, ``).replaceAll(EVERY_CSS_WHITESPACE_RUN, ` `))
 
 			let maxCellsCount = 0

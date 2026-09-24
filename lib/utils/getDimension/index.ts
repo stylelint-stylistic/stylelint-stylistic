@@ -84,7 +84,7 @@ export function getDimension (syntax: Syntax, node?: Partial<Node>): {
 	// Less ends a unit at the first escape whatever it spells (`10P\9X` is `10P` and the keyword `\9X`, #527), at the first hyphen (`10PX-A` is `10PX` and the keyword `A`, #633) and at the first digit (`10PX9` is `10PX` and the number `9`, #646), so no hack comes out and the cut below falls on whichever of the three stands first
 	let readsIdentifier = syntax.readsUnitAsIdentifier()
 
-	// The hacks come off wherever they stand, only where the file spells an escape (`10PX\\0` ends in an escaped backslash, #414); the escape's closing whitespace stays, so the unit of `10px\9 2PX` ends at the space (#526)
+	// The hacks come off wherever they stand, only where the file spells an escape (`10PX\\0` ends in an escaped backslash, #414); the escape's closing whitespace stays, so the unit of `10px\9 2PX` ends at the space
 	let hackRuns = readsIdentifier ? spelledRuns(value).filter((run) => run.escape && HACK_UNITS.some((hack) => run.text === hack || (run.text.startsWith(hack) && HEX_ESCAPE_TERMINATOR.test(run.text.slice(hack.length))))) : []
 
 	// From the end, so each run's index still counts in the copy
@@ -100,11 +100,11 @@ export function getDimension (syntax: Syntax, node?: Partial<Node>): {
 		}
 	}
 
-	// Less reads a number as digits and at most one period, so the number of `1E5PX` ends at the `1` and the identifier behind it opens at the `E` (#646)
+	// Less reads a number as digits and at most one period, so the number of `1E5PX` ends at the `1` and the identifier behind it opens at the `E`
 	let number = numberOf(syntax, value, parsedUnit.number)
 	let identifier = value.slice(number.length)
 
-	// `valueParser.unit` calls everything behind the number a unit; an identifier ends at the first character that is no code point of one, an escape aside (`10px#fff` is `10px` and `#fff`, #426; `10px\#fff` has the unit `px\#fff`, #414), and a syntax reading a shorter unit ends it at the first escape (#527), hyphen (#633) or digit (#646) as well — an escaped hyphen ending it as the escape it is, which is the same place; the rest stays in the copy
+	// `valueParser.unit` calls everything behind the number a unit; an identifier ends at the first character that is no code point of one, an escape aside (`10px#fff` is `10px` and `#fff`, #426; `10px\#fff` has the unit `px\#fff`, #414), and a syntax reading a shorter unit ends it at the first escape, hyphen or digit as well — an escaped hyphen ending it as the escape it is, which is the same place; the rest stays in the copy
 	let unitEnd = spelledRuns(identifier).find((run) => (run.escape ? !readsIdentifier : !IDENTIFIER_CODE_POINT.test(run.text) || (!readsIdentifier && (run.text === `-` || DIGIT.test(run.text)))))?.index
 	let unit = unitEnd === undefined ? identifier : identifier.slice(0, unitEnd)
 	// A closing hexadecimal escape may have taken the whitespace behind it, which is the escape's: the unit of `10PX\61 $VAR` is `PX\61`. Between letters it stays, `P\61 X` being one identifier, as does an escaped space, `10PX\ `

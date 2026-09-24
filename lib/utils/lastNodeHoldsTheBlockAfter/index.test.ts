@@ -31,7 +31,6 @@ describe(`lastNodeHoldsTheBlockAfter`, () => {
 		expect(run(`a {\n\t@dr: { b: c; }\n}`, less)).toBe(false)
 	})
 
-	// See #538
 	it(`answers for a custom property with no semicolon, whose value keeps the run`, () => {
 		expect(run(`a {\n\t--b: red\n}`)).toBe(true)
 		expect(run(`a { --b: red }`)).toBe(true)
@@ -68,7 +67,6 @@ describe(`lastNodeHoldsTheBlockAfter`, () => {
 		expect(run(`a {\n}`)).toBe(false)
 	})
 
-	// See #374
 	it(`turns away a Less mixin call carrying an important flag, whose between raw holds the run in front of the flag as well`, () => {
 		expect(run(`a {\n\t.m() !important\n}`, less)).toBe(false)
 		expect(run(`a {\n\t.m() !important}`, less)).toBe(false)

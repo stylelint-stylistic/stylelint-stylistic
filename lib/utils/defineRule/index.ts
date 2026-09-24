@@ -19,7 +19,7 @@ export type RuleScope<M extends RuleMessages> = {
 	syntax: Syntax,
 }
 
-/** What a rule module defines once, whichever namespaces it is registered under. `defersToRunEnd` marks a rule that reads what a run's writers leave, so it checks last, behind the lineness-deferred rules: `indentation`, which reads every line ([#353](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/353)), and `declaration-block-single-line-max-declarations`, which reads a block's lineness and breaks the block behind them ([#641](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/641)). `checksAheadOfLineness` has such a rule check at the head of the lineness tier as well, so the tier reads the breaks it writes ([#713](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/713)). */
+/** What a rule module defines once, whichever namespaces it is registered under. `defersToRunEnd` marks a rule that reads what a run's writers leave, so it checks last, behind the lineness-deferred rules: `indentation`, which reads every line, and `declaration-block-single-line-max-declarations`, which reads a block's lineness and breaks the block behind them. `checksAheadOfLineness` has such a rule check at the head of the lineness tier as well, so the tier reads the breaks it writes. */
 export type RuleDefinition<P, S, M extends RuleMessages> = {
 	shortName: string,
 	meta: RuleMeta,
@@ -38,7 +38,7 @@ export function defineMessages<M extends RuleMessages> (messages: M): M {
 	return messages
 }
 
-/** What `defineRule` returns: the rule under a syntax's namespace, with the options its function is written for in the type arguments, where `defineStylistic` reads them ([#624](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/624)). */
+/** What `defineRule` returns: the rule under a syntax's namespace, with the options its function is written for in the type arguments, where `defineStylistic` reads them. */
 export type RuleFactory<P, S, M extends RuleMessages> = (syntax: Syntax) => Rule<P, S, M>
 
 /** The roots refused already: one warning per stylesheet, not one per rule. */
@@ -113,7 +113,7 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 
 				let last = lastConfiguredPluginRule(result)
 
-				// Deferred (#355 lineness, #353 every line) only where a flush is sure to come: under a configuration the plugin cannot read the check runs where it stands. Its place is the plugin's to decide, not the configuration's (#502)
+				// Deferred (#355 lineness, #353 every line) only where a flush is sure to come: under a configuration the plugin cannot read the check runs where it stands. Its place is the plugin's to decide, not the configuration's
 				if (readsEveryLine && last !== undefined) {
 					if (checksAheadOfLineness) deferHeadCheck(root, rank, () => guarded(root, result))
 

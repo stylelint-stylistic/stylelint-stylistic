@@ -8,7 +8,7 @@ testRule({
 
 	accept: [
 		{
-			// A parenthesis inside a bare address opened a call to the scan, which held the lines behind the address inside it (1789505502)
+			// A parenthesis inside a bare address opened a call to the scan, which held the lines behind the address inside it
 			description: `a value broken behind a bare address holding an opening parenthesis, its line a level deeper`,
 			code: `a {\n  b: url(x(y),c,\n    d;\n}`,
 		},

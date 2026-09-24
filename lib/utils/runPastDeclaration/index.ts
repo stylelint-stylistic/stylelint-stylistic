@@ -11,7 +11,7 @@ import { declarationEndsTheStylesheet } from "../declarationEndsTheStylesheet/in
 /**
  * Finds the whitespace run behind a declaration's colon that lies outside the declaration's text, and whether its raw ends the stylesheet.
  *
- * A declaration printing nothing behind its colon (`raws.between` ends there, empty value, no `!important`) and closed by no semicolon leaves the run to the next node's `raws.before` or the container's `raws.after` ([#387](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387)). The semicolon and the value are read as `declaration-block-trailing-semicolon` will leave them ([#536](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/536)). A missing raw is refused, since a write would replace PostCSS's computed default; so is one not all whitespace. A root's `raws.after` is what the stylesheet ends on ([#537](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537)).
+ * A declaration printing nothing behind its colon (`raws.between` ends there, empty value, no `!important`) and closed by no semicolon leaves the run to the next node's `raws.before` or the container's `raws.after`. The semicolon and the value are read as `declaration-block-trailing-semicolon` will leave them. A missing raw is refused, since a write would replace PostCSS's computed default; so is one not all whitespace. A root's `raws.after` is what the stylesheet ends on.
  * @param syntax - The rule's syntax.
  * @param decl - The declaration.
  * @param result - The Stylelint result.
@@ -55,7 +55,7 @@ export function runPastDeclaration (syntax: Syntax, decl: Declaration, result: P
 /**
  * Asks whether the run past a declaration is the raw the stylesheet ends on.
  *
- * The raw is `no-missing-end-of-source-newline`'s; an inline `style` attribute's root is passed over as there, and a one-line `<style>` element keeps the run outside the stylesheet. `declaration-colon-space-after` has no spelling keeping the closing break, so it passes the declaration over; its newline neighbor writes its break in front of the run, leaving the last line whitespace ([#537](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/537)).
+ * The raw is `no-missing-end-of-source-newline`'s; an inline `style` attribute's root is passed over as there, and a one-line `<style>` element keeps the run outside the stylesheet. `declaration-colon-space-after` has no spelling keeping the closing break, so it passes the declaration over; its newline neighbor writes its break in front of the run, leaving the last line whitespace.
  * @param syntax - The rule's syntax.
  * @param decl - The declaration.
  * @param result - The Stylelint result.
@@ -68,7 +68,7 @@ export function runPastDeclarationEndsTheStylesheet (syntax: Syntax, decl: Decla
 /**
  * Writes over the run {@link runPastDeclaration} reads, in the raw that holds it.
  *
- * Not `raws.between`, which would leave the run standing and grow the file every `--fix` ([#387](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387)); not `setBlockAfter`, whose childless-at-rule question does not arise behind a declaration.
+ * Not `raws.between`, which would leave the run standing and grow the file every `--fix`; not `setBlockAfter`, whose childless-at-rule question does not arise behind a declaration.
  * @param decl - The declaration {@link runPastDeclaration} answered for.
  * @param run - The run to write.
  */

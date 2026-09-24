@@ -45,7 +45,7 @@ export let meta = {
 /**
  * Asks whether the function the value parser returned is one the file writes.
  *
- * No for a preprocessor construct, for an unclosed function, and for one closed on a `)` inside a `//` comment. The parser knows nothing of `//` comments: a `/*` inside one swallows every `)` behind it, and the fix grows the value by a character a run ([#131](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/131)); a `)` inside one closes the call early, and the fix writes into the comment ([#320](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/320)). The guards in front of the fixes miss this, since the parenthesis is inside a comment on both sides of the fix ([#132](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/132)). The whole node is turned away, since the closing `)` is one the parser never returns ([#285](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/285)). PostCSS throws on a bracket the file leaves open, so only a comment unclosed a function here.
+ * No for a preprocessor construct, for an unclosed function, and for one closed on a `)` inside a `//` comment. The parser knows nothing of `//` comments: a `/*` inside one swallows every `)` behind it, and the fix grows the value by a character a run; a `)` inside one closes the call early, and the fix writes into the comment. The guards in front of the fixes miss this, since the parenthesis is inside a comment on both sides of the fix. The whole node is turned away, since the closing `)` is one the parser never returns. PostCSS throws on a bracket the file leaves open, so only a comment unclosed a function here.
  * @param syntax - The syntax the rule is built over.
  * @param valueNode - The function the walk has reached.
  * @param comments - The comment spans of the value, both kinds.
@@ -133,7 +133,7 @@ function findFirstCharacterIndex (declValue: string, firstIndex: number): number
 /**
  * Says which of the two `never` fixes of one function may be written.
  *
- * A fix is refused where it carries a character of the function into an inline comment: the opening one asks about the first significant thing, the closing one about the `)`. Under a parser whose tokenizer reads the parentheses behind `url(` as one token, the opening one is refused too where it opens a comment, as taking away the whitespace in front of a quotation mark there does, and under either tokenizer where emptying the run switches how it reads parentheses it takes for an address's ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)). The two are not weighed together: two writes safe apart destroyed the value together only where a call was opened inside a `//` comment ([#312](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/312)), and the walk turns such a call away before either is asked ([#393](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/393)).
+ * A fix is refused where it carries a character of the function into an inline comment: the opening one asks about the first significant thing, the closing one about the `)`. Under a parser whose tokenizer reads the parentheses behind `url(` as one token, the opening one is refused too where it opens a comment, as taking away the whitespace in front of a quotation mark there does, and under either tokenizer where emptying the run switches how it reads parentheses it takes for an address's. The two are not weighed together: two writes safe apart destroyed the value together only where a call was opened inside a `//` comment, and the walk turns such a call away before either is asked.
  * @param syntax - The syntax the rule is built over.
  * @param read - What the walk read of the function, and the value.
  * @returns Whether each fix may be written.
@@ -156,7 +156,7 @@ function getNeverFixability (syntax: Syntax, read: {
 
 	let firstCharacterIndex = findFirstCharacterIndex(declValue, firstIndex)
 	let { end: closingParenthesisIndex } = getAfterSpan(valueNode)
-	// Each `never` fix empties the stretches its walk measured, minus one opening on the break closing an inline comment; a fix not reaching every stretch is refused, since Stylelint would call the problem solved while the option stayed violated (#285, #378).
+	// Each `never` fix empties the stretches its walk measured, minus one opening on the break closing an inline comment; a fix not reaching every stretch is refused, since Stylelint would call the problem solved while the option stayed violated.
 	let emptiedBefore = checkBefore === `` ? [] : measuredBefore.filter((stretch) => !closesAnInlineComment(stretch, comments))
 	let emptiedAfter = checkAfter === `` ? [] : measuredAfter.filter((stretch) => !closesAnInlineComment(stretch, comments))
 	let isOpeningFixable = checkBefore !== `` && reachesEveryStretch(measuredBefore, emptiedBefore) && !movesIntoComment(syntax, declValue, firstCharacterIndex, emptiedBefore, reading) && (!reading.tokenizes || editsOpenNoComment(declValue, fixBeforeForNever(emptiedBefore), reading)) && !editsRereadAnAddress(declValue, valueNode.sourceIndex + valueNode.value.length, fixBeforeForNever(emptiedBefore), reading)
@@ -195,9 +195,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let declValue = syntax.read(decl)
 			// A `//` is a comment only where the syntax says so: in plain CSS `myurl(//a)` is code
 			let reading = syntax.inlineComments(decl, result)
-			// Both kinds: the value parser reads a `//` comment as nodes, and closes `/*/` on its own star (#378)
+			// Both kinds: the value parser reads a `//` comment as nodes, and closes `/*/` on its own star
 			let comments = syntax.commentSpans(declValue, decl, result)
-			// Quotation marks a comment leaves open are masked so the parser pairs them as the file does (#508)
+			// Quotation marks a comment leaves open are masked so the parser pairs them as the file does
 			let parsedValue = valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(declValue, comments), comments))
 
 			// The value parser calls a vertical tab whitespace where the tokenizer calls it a word
@@ -209,7 +209,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A narrowing here is not carried into a nested function
 				let functionNode = valueNode
 
-				// The parentheses of a call opening an address are the address's: a space or a break written behind the `(` parts a bare address from the parenthesis, which is what a tokenizer reads one token by ([#533](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/533)), and `postcss-scss` reads a quoted one behind such a space as a token counting parentheses, which a string holding one leaves unclosed. Passed over, and the walk goes no further in where the address is bare, as it does in the four rules that ask this question of a node they would otherwise read inside; behind a quoted address stand arguments, whose calls are walked ([#560](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/560)). The name is the file's spelling rather than the parser's, which is wider than what a parser takes a url token by ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)).
+				// The parentheses of a call opening an address are the address's: a space or a break written behind the `(` parts a bare address from the parenthesis, which is what a tokenizer reads one token by, and `postcss-scss` reads a quoted one behind such a space as a token counting parentheses, which a string holding one leaves unclosed. Passed over, and the walk goes no further in where the address is bare, as it does in the four rules that ask this question of a node they would otherwise read inside; behind a quoted address stand arguments, whose calls are walked. The name is the file's spelling rather than the parser's, which is wider than what a parser takes a url token by.
 				if (opensAnAddress(valueNode, at, siblings)) return quotesItsAddress(valueNode) ? undefined : false
 
 				// A call in a comment's text is skipped, but its nested calls are walked: a call opened inside a comment reaches past its close
@@ -223,7 +223,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// Both sides are read first: under `never-multi-line` the two fixes are weighed against one another
 				let openingIndex = valueNode.sourceIndex + valueNode.value.length + 1
 				let { before: checkBefore, firstIndex, measured: measuredBefore } = readOpeningRuns(valueNode, openingIndex, declValue, comments)
-				// From the node's end, not a printed copy, which the stringifier widens at `/*/` (#506)
+				// From the node's end, not a printed copy, which the stringifier widens at `/*/`
 				let closingIndex = getAfterSpan(valueNode).end - 1
 				let { after: checkAfter, measured: measuredAfter } = readClosingRuns(valueNode, declValue, comments)
 				let { isOpeningFixable, isClosingFixable } = isMultiLine && primary === `never-multi-line`
@@ -231,14 +231,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					: { isOpeningFixable: false, isClosingFixable: false }
 				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` inside, or a `{` in a custom property's value, is then a group nothing closes: the file stops parsing, so the `always` fixes are refused there and the warnings stand; a multi-line call holds a break inside its parentheses already, so `always-multi-line` never meets the token
 				let breaksAToken = breakRereadsParentheses(declValue, openingIndex - 1, isCustomProperty(decl.prop))
-				// The break the `always` options write behind the `(` stands where the tokenizer decides whether parentheses it takes for an address's are one token, and the name it reads there is not the one the walk read ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)); the break in front of the `)` moves no such character, so only this one is asked about. Read under those two options alone: `fixBeforeForAlways` takes the last stretch the walk measured, and `never-multi-line` is the option that can meet a call with none.
+				// The break the `always` options write behind the `(` stands where the tokenizer decides whether parentheses it takes for an address's are one token, and the name it reads there is not the one the walk read; the break in front of the `)` moves no such character, so only this one is asked about. Read under those two options alone: `fixBeforeForAlways` takes the last stretch the walk measured, and `never-multi-line` is the option that can meet a call with none.
 				let writesABreakBehind = primary === `always` || primary === `always-multi-line`
 				let openingWrite = writesABreakBehind ? fixBeforeForAlways(measuredBefore, declValue, getLineBreak(root, result)) : []
 				let alwaysRereadsAnAddress = writesABreakBehind && editsRereadAnAddress(declValue, openingIndex - 1, openingWrite, reading)
 
 				checkOpening()
 
-				// A pair holding no node encloses one run of whitespace, which the parser hands back whole as `before` and never as `after`, so the closing question is the opening one, already asked: asking it again reported a half the opening fix had settled and wrote another break every run ([#329](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/329)). `splitSpaceNodesAtWords` has run, so a node here means the tokenizer's whitespace; under `never-multi-line` the closing check was dead on such a pair already, `checkAfter` being empty.
+				// A pair holding no node encloses one run of whitespace, which the parser hands back whole as `before` and never as `after`, so the closing question is the opening one, already asked: asking it again reported a half the opening fix had settled and wrote another break every run. `splitSpaceNodesAtWords` has run, so a node here means the tokenizer's whitespace; under `never-multi-line` the closing check was dead on such a pair already, `checkAfter` being empty.
 				if (valueNode.nodes.length === 0) return
 
 				checkClosing()
@@ -320,7 +320,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 /**
  * Names the span the `always` fix writes the break into: the last stretch the walk measured, so a comment in between keeps its line.
  *
- * That stretch may be whitespace a node held by a comment reaches past the comment with; a walk by whitespace nodes wrote the break at the `(` ([#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378)). The stretch behind an inline comment opens on the break closing it, so it is never the last.
+ * That stretch may be whitespace a node held by a comment reaches past the comment with; a walk by whitespace nodes wrote the break at the `(`. The stretch behind an inline comment opens on the break closing it, so it is never the last.
  * @param measured - The stretches the walk measured behind the `(`, in order.
  * @param declValue - The value the stretches count in.
  * @param newline - The newline to write.

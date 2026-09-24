@@ -1,7 +1,7 @@
 import type { Document, Root } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-/** The lineness-conditioned primaries ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)). */
+/** The lineness-conditioned primaries. */
 const LINENESS_PRIMARY = /-(?:single|multi)-line$/u
 
 /** The single-line primaries. */
@@ -105,7 +105,7 @@ function queuesOf (root: Document | Root): { head: DeferredCheck[], lineness: De
 }
 
 /**
- * Ranks a deferred check, so that the plugin rather than the configuration decides the order ([#502](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/502)).
+ * Ranks a deferred check, so that the plugin rather than the configuration decides the order.
  *
  * String order is run order:
  *
@@ -130,7 +130,7 @@ export function linenessRank (shortName: string, namespace: string | undefined, 
 let registered: Set<string> = new Set()
 
 /**
- * Asks whether a primary defers its check to the run's end: `-single-line` and `-multi-line` read a lineness another rule may still change ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)).
+ * Asks whether a primary defers its check to the run's end: `-single-line` and `-multi-line` read a lineness another rule may still change.
  * @param primary - The rule's configured primary, of any type.
  * @returns True where the check waits.
  */
@@ -194,7 +194,7 @@ export function runsAtTheHead (root: Document | Root): boolean {
 }
 
 /**
- * Defers a check ahead of the lineness tier, so that the tier reads the breaks it writes ([#713](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/713)).
+ * Defers a check ahead of the lineness tier, so that the tier reads the breaks it writes.
  * @param root - The root whose flush runs the check.
  * @param rank - From `linenessRank`.
  * @param run - The check.
@@ -204,7 +204,7 @@ export function deferHeadCheck (root: Document | Root, rank: string, run: () => 
 }
 
 /**
- * Defers a check behind the lineness tier, which writes breaks too ([#353](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/353)).
+ * Defers a check behind the lineness tier, which writes breaks too.
  * @param root - The root whose flush runs the check.
  * @param rank - From `linenessRank`.
  * @param run - The check.
@@ -214,7 +214,7 @@ export function deferFinalCheck (root: Document | Root, rank: string, run: () =>
 }
 
 /**
- * Runs this root's deferred checks, the head first, then the lineness tier, then the reading one, each in rank order ([#502](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/502)); every queue sorts, since a rule under two namespaces reads a plain CSS root twice.
+ * Runs this root's deferred checks, the head first, then the lineness tier, then the reading one, each in rank order; every queue sorts, since a rule under two namespaces reads a plain CSS root twice.
  * @param root - The root whose queued checks run.
  */
 export function flushDeferredChecks (root: Document | Root): void {

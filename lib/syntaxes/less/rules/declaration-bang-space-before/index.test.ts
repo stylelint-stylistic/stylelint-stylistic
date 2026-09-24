@@ -12,7 +12,6 @@ testRule({
 
 	reject: [
 		{
-			// See #116
 			description: `inline comment before the bang: the bang cannot join the comment's line, so the code is left alone and the warning stands`,
 			code: `
 				a {
@@ -75,7 +74,6 @@ testRule({
 
 	reject: [
 		{
-			// See #116
 			description: `inline comment before the bang: the bang cannot join the comment's line, so the code is left alone and the warning stands`,
 			code: `
 				a {

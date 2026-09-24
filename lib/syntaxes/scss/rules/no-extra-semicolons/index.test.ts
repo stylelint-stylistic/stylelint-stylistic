@@ -12,7 +12,6 @@ testRule({
 
 	reject: [
 		{
-			// See #139
 			autoStripIndent: true,
 			description: `a second semicolon behind a value carrying an inline comment, which this syntax keeps a second copy of`,
 			code: `
@@ -32,7 +31,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #139
 			autoStripIndent: true,
 			description: `a semicolon of the block's own behind a closing brace, with an inline comment standing in front of it`,
 			code: `

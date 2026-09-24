@@ -152,7 +152,6 @@ testRule({
 			code: `namespace|type#id > .foo {}, space|customtype#id_withunder > a {}`,
 		},
 		{
-			// See #66
 			description: `selector list whose second selector begins with a comment and a combinator`,
 			code: `
 				.a,
@@ -164,7 +163,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the name in front of a line break and the combinator, where the space would stand behind the backslash as its escaped character, so the warning stands`,
 			code: `a,b\\\n>c { d: e }`,
 			fixed: `a,b\\\n>c { d: e }`,
@@ -173,7 +172,7 @@ testRule({
 			message: messages.expectedBefore(`>`),
 		},
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the combinator, which is a character of the name and no space`,
 			code: `a\\ >b {}`,
 			fixed: `a\\  >b {}`,
@@ -182,7 +181,7 @@ testRule({
 			message: messages.expectedBefore(`>`),
 		},
 		{
-			// The selector parser reads a backslash in front of a tab as no escape, and the fix wrote over the tab (1789666655)
+			// The selector parser reads a backslash in front of a tab as no escape, and the fix wrote over the tab
 			description: `an escaped tab in front of the combinator, which is a character of the name and no space`,
 			code: `a\\\t>b {}`,
 			fixed: `a\\\t >b {}`,
@@ -279,7 +278,7 @@ testRule({
 
 	accept: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the combinator, which is a character of the name and no whitespace`,
 			code: `a\\ >b {}`,
 		},
@@ -380,7 +379,6 @@ testRule({
 			code: `namespace|type#id> .foo {}`,
 		},
 		{
-			// See #66
 			description: `selector list whose second selector begins with a comment and a combinator`,
 			code: `
 				.a,
@@ -392,7 +390,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the name in front of a line break and the combinator, which the write would turn into an escaped combinator, so the warning stands`,
 			code: `a,b\\\n>c { d: e }`,
 			fixed: `a,b\\\n>c { d: e }`,
@@ -401,7 +399,7 @@ testRule({
 			message: messages.rejectedBefore(`>`),
 		},
 		{
-			// The selector parser reads a backslash in front of a tab as no escape, and the fix wrote over the tab (1789666655)
+			// The selector parser reads a backslash in front of a tab as no escape, and the fix wrote over the tab
 			description: `a space in front of the combinator behind an escaped tab, which is a character of the name`,
 			code: `a\\\t >b {}`,
 			fixed: `a\\\t>b {}`,

@@ -76,7 +76,6 @@ testRule({
 			code: `a { background: URL(data:image/svg+xml;...0.5); }`,
 		},
 		{
-			// See #579
 			description: `an address behind a word ending in an escaped backslash and a digit, which open no escape to take the space between the word and the name`,
 			code: `a { b: x\\\\9 url(.5); }`,
 		},
@@ -108,7 +107,6 @@ testRule({
 
 	reject: [
 		{
-			// See #560
 			description: `a fraction among the arguments behind a quoted address, which are those of any call`,
 			code: `a { b: url("x", f(.5)); }`,
 			fixed: `a { b: url("x", f(0.5)); }`,
@@ -198,7 +196,6 @@ testRule({
 			column: 20,
 			message: messages.expected,
 		},
-		// See #268
 		{
 			description: `a fraction with no leading zero standing behind a block comment the value holds`,
 			code: `a { b: 1px /* c */ .50em; }`,
@@ -207,7 +204,6 @@ testRule({
 			column: 20,
 			message: messages.expected,
 		},
-		// See #268
 		{
 			description: `three fractions with no leading zero and a block comment standing among them`,
 			code: `a { b: .50px /* c */ .50em .5rem; }`,
@@ -231,7 +227,6 @@ testRule({
 			],
 		},
 		{
-			// See #378
 			description: `a fraction standing beside a comment opening with a solidus, a star and a solidus, whose text spells a fraction of its own that the value parser hands back as a word`,
 			code: `a { b: .5 /*/ .5 */ 3; }`,
 			fixed: `a { b: 0.5 /*/ .5 */ 3; }`,
@@ -240,7 +235,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #508
 			description: `a fraction in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no number`,
 			code: `a { b: .5 /*/ " */ ".5"; }`,
 			fixed: `a { b: 0.5 /*/ " */ ".5"; }`,
@@ -416,7 +410,6 @@ testRule({
 			column: 20,
 			message: messages.rejected,
 		},
-		// See #268
 		{
 			description: `a leading zero standing behind a block comment the value holds`,
 			code: `a { b: 1px /* c */ 0.50em; }`,
@@ -425,7 +418,6 @@ testRule({
 			column: 20,
 			message: messages.rejected,
 		},
-		// See #268
 		{
 			description: `a leading zero in front of a block comment the parameters of a media query hold`,
 			code: `@media (min-width: 0.5px /* c */) { a { b: c; } }`,
@@ -435,7 +427,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #378
 			description: `a fraction standing beside a comment opening with a solidus, a star and a solidus, whose text spells a fraction of its own that the value parser hands back as a word`,
 			code: `a { b: 0.5 /*/ 0.5 */ 3; }`,
 			fixed: `a { b: .5 /*/ 0.5 */ 3; }`,

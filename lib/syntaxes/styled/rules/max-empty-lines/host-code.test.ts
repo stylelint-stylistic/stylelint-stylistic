@@ -8,7 +8,7 @@ import plugins from "../../../../index.ts"
 const CODE = `const A = styled.div\`\n\tb: \${\`p\n\n\nq\`} d;\n\n\n\ttop: 0;\n\`\n`
 
 describe(`@stylistic/styled/max-empty-lines`, () => {
-	// See #582. The breaks of an interpolation end lines of the host file, so a run written there rewrites a string of the JavaScript; the check counting them is 1789957014
+	// The breaks of an interpolation end lines of the host file, so a run written there rewrites a string of the JavaScript; the check counting them is 1789957014
 	it(`a run inside an interpolation, which stays as the file spells it while the run of the stylesheet beside it is written`, async () => {
 		let options = { config: { plugins, rules: { "@stylistic/styled/max-empty-lines": 1 } }, customSyntax: `postcss-styled-syntax` }
 		let checked = await stylelint.lint({ code: CODE, ...options })

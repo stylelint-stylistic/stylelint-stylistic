@@ -56,13 +56,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
-			// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎:b` would come out as `a\:b`, one identifier, or `a\ :b`, an escaped space, so the warning stands (1789661965)
+			// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎:b` would come out as `a\:b`, one identifier, or `a\ :b`, an escaped space, so the warning stands
 			isFixable: (params, index, atRule, runString) => {
 				let run = runInFront(runString, index)
 
 				return editKeepsEscapedCharacter(params, { start: index - run.length, end: index, text: primary === `always` ? ` ` : `` })
 			},
-			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ :b` is not cut (1789657288)
+			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ :b` is not cut
 			fix: (atRule, index, runString) => {
 				let paramColonIndex = index - atRuleParamIndex(atRule)
 

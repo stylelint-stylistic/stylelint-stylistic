@@ -1,5 +1,5 @@
 /**
- * A quotation mark inside a comment, in front of a string holding the same text the code beside the comment spells ([#504](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504)).
+ * A quotation mark inside a comment, in front of a string holding the same text the code beside the comment spells.
  *
  * The value parser has no `//` comment node and closes `/*\/` on its own star, so a mark in either opens a string to it and every mark behind changes sides. A row says whether the code beside the comment is still read and whether the string's text is left alone. The controls are a block comment the parser closes where CSS does, and no comment; a branch moving either has done something else. Unlike `slash-star-slash`, the comment holds one mark.
  */

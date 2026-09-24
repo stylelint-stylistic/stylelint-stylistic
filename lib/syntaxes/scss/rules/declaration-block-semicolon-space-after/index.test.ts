@@ -12,7 +12,6 @@ testRule({
 
 	accept: [
 		{
-			// See #437
 			description: `a Sass nested property standing in front of another declaration, which its own block closes and no semicolon of its own, so the run between its value and its block is the block's and not the rule's`,
 			code: `
 				a {
@@ -23,7 +22,6 @@ testRule({
 			`,
 		},
 		{
-			// See #437
 			description: `the same nested property with a stray semicolon behind its block, which is the next declaration's raw and no semicolon of the property's`,
 			code: `a { font: 12px { family: serif; }; top: 0; }`,
 		},
@@ -40,7 +38,6 @@ testRule({
 
 	reject: [
 		{
-			// See #139
 			description: `no space behind a semicolon standing on the line the value's inline comment ends, which this syntax keeps a second copy of`,
 			code: `
 				a { color: red // c

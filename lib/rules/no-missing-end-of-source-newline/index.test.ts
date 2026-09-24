@@ -58,7 +58,6 @@ testRule({
 			column: 19,
 			message: messages.rejected,
 		},
-		// See #369
 		{
 			description: `two free semicolons standing behind the block that ends the stylesheet`,
 			code: `a { color: pink; };;`,
@@ -162,7 +161,6 @@ a {
 			column: 1,
 			message: messages.rejected,
 		},
-		// See #369
 		{
 			description: `an embedded stylesheet whose last block two free semicolons stand behind`,
 			code: `<div>

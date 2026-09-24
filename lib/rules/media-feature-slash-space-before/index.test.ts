@@ -74,7 +74,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the number in front of a line break and the solidus, where the space would stand behind the backslash as its escaped character, so the warning stands`,
 			code: `@media (a: 1\\\n/2) {}`,
 			fixed: `@media (a: 1\\\n/2) {}`,
@@ -83,7 +83,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the solidus, which is a character of the word and no space`,
 			code: `@media (a: 1\\ /2) {}`,
 			fixed: `@media (a: 1\\  /2) {}`,
@@ -92,7 +92,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #560
 			description: `a solidus among the arguments behind a quoted address, which are those of any call`,
 			code: `@media (c: url("x", 1/2)) {}`,
 			fixed: `@media (c: url("x", 1 /2)) {}`,
@@ -198,7 +197,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #496
 			description: `a vertical tab in front of the solidus, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `@media (aspect-ratio: 16\v/9) {}`,
 			fixed: `@media (aspect-ratio: 16\v /9) {}`,
@@ -217,7 +215,7 @@ testRule({
 
 	accept: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the solidus, which is a character of the word and no whitespace`,
 			code: `@media (a: 1\\ /2) {}`,
 		},
@@ -261,7 +259,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the number in front of a line break and the solidus, which the write would turn into an escaped solidus, so the warning stands`,
 			code: `@media (a: 1\\\n/2) {}`,
 			fixed: `@media (a: 1\\\n/2) {}`,
@@ -351,7 +349,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #496
 			description: `a vertical tab at the run in front of the solidus: only the tokenizer's run goes, and the character stays`,
 			code: `@media (aspect-ratio: 16\v /9) {}`,
 			fixed: `@media (aspect-ratio: 16\v/9) {}`,

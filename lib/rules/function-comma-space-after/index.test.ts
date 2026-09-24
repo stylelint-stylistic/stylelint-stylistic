@@ -40,17 +40,14 @@ testRule({
 			code: `a { transform: translate(1, /* comment */1); }`,
 		},
 		{
-			// See #153
 			description: `a bare address inside each argument, whose double slash opens no comment`,
 			code: `a { background: image-set(url(//cdn/a.png) 1x, url(//cdn/b.png) 2x); }`,
 		},
 		{
-			// See #214
 			description: `two comments, the first of which code follows straight away: the second is no continuation of it`,
 			code: `a { b: translate(1px/*k*/, /*c*/ 2px); }`,
 		},
 		{
-			// See #275
 			description: `a comma inside the text of a comment the value parser closes early, which is no comma of the value`,
 			code: `a { b: f(x/*/*q,w*/y); }`,
 		},
@@ -63,7 +60,6 @@ testRule({
 
 	reject: [
 		{
-			// See #560
 			description: `the comma behind a quoted address, which parts the arguments of a call as any comma does`,
 			code: `a { b: url("x",f(1,2)); }`,
 			fixed: `a { b: url("x", f(1, 2)); }`,
@@ -81,7 +77,6 @@ testRule({
 			],
 		},
 		{
-			// See #560
 			description: `the same comma behind a comment standing behind the address`,
 			code: `a { b: url("x" /* c */,f(1)); }`,
 			fixed: `a { b: url("x" /* c */, f(1)); }`,
@@ -215,7 +210,6 @@ testRule({
 			],
 		},
 		{
-			// See #153
 			description: `a comma between two bare addresses, whose double slashes open no comment`,
 			code: `a { background: image-set(url(//cdn/a.png) 1x,url(//cdn/b.png) 2x); }`,
 			fixed: `a { background: image-set(url(//cdn/a.png) 1x, url(//cdn/b.png) 2x); }`,
@@ -224,7 +218,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #214
 			description: `a run inside a string that spells the delimiters of a comment lures the reading across no comma: the comma at 24 has its space and only the one at 33 has none`,
 			code: `a { b: translate("a/*b", "c*/ d",1px); }`,
 			fixed: `a { b: translate("a/*b", "c*/ d", 1px); }`,
@@ -233,7 +226,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #238
 			description: `a call standing behind a comment the value parser does not give back as it read it`,
 			code: `a { b: x/*/*a,b*/f(1,2)c; }`,
 			fixed: `a { b: x/*/*a,b*/f(1, 2)c; }`,
@@ -242,7 +234,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #275
 			description: `a comma of the value behind a comment the value parser closes early: the one inside the comment's text is passed over and this one is placed`,
 			code: `a { b: f(x/*/*q,w*/y,2); }`,
 			fixed: `a { b: f(x/*/*q,w*/y, 2); }`,
@@ -251,7 +242,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #508
 			description: `a comma in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and the comma its text holds is no comma of the arguments`,
 			code: `a { b: f(1,2) /*/ " */ "f(1,2)"; }`,
 			fixed: `a { b: f(1, 2) /*/ " */ "f(1,2)"; }`,
@@ -305,7 +295,6 @@ testRule({
 			code: `a { transform: translate(1,/* comment */1); }`,
 		},
 		{
-			// See #275
 			description: `a space behind a comma inside the text of a comment the value parser closes early, neither of them the value's`,
 			code: `a { b: f(x/*/*q, w*/y,2); }`,
 		},
@@ -313,7 +302,6 @@ testRule({
 
 	reject: [
 		{
-			// See #588
 			description: `an address whose name a backslash and a break divide from what stands in front, standing beside a call`,
 			code: `a { b: \\\nurl(c, d) f(1px, 2px); }`,
 			fixed: `a { b: \\\nurl(c, d) f(1px,2px); }`,
@@ -437,7 +425,6 @@ testRule({
 			],
 		},
 		{
-			// See #214
 			description: `a run inside a string that spells the delimiters of a comment lures the reading across no comma`,
 			code: `a { b: translate("a/*b", "c*/ d",1px); }`,
 			fixed: `a { b: translate("a/*b","c*/ d",1px); }`,
@@ -446,7 +433,6 @@ testRule({
 			message: messages.rejectedAfter(),
 		},
 		{
-			// See #275
 			description: `a comma of the value carrying the whitespace this option takes away, behind a comment the value parser closes early whose text carries whitespace of its own: only the value's is taken`,
 			code: `a { b: f(x/*/*q, w*/y, 2); }`,
 			fixed: `a { b: f(x/*/*q, w*/y,2); }`,
@@ -520,7 +506,6 @@ testRule({
 			code: `a { background: linear-gradient(45deg\n,rgba(0, 0, 0, 1)\n,red); }`,
 		},
 		{
-			// See #275
 			description: `a comma inside the text of a comment the value parser closes early, which is no comma of the value`,
 			code: `a { b: f(x/*/*q,w*/y); }`,
 		},
@@ -604,7 +589,6 @@ testRule({
 			code: `a { color: rgba(0\n, 0, 0); }`,
 		},
 		{
-			// See #275
 			description: `a space behind a comma inside the text of a comment the value parser closes early, neither of them the value's`,
 			code: `a { b: f(x/*/*q, w*/y,2); }`,
 		},

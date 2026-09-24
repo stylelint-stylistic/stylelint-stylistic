@@ -8,7 +8,7 @@ import { isDeclaration } from "../typeGuards/index.ts"
 /**
  * Returns the run between a block's last node and its closing brace, wherever the parser filed it.
  *
- * Where {@link lastNodeHoldsTheBlockAfter} says the last node swallowed the run, it is the trailing whitespace of that node's `raws.between`, or of a custom property's printed value or `raws.important`; otherwise `raws.after` as it stands, since PostCSS computes a default for a missing one. A value's run is read as the tokenizer reads whitespace, since a no-break space or a vertical tab there is a word the value keeps ([#538](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/538)).
+ * Where {@link lastNodeHoldsTheBlockAfter} says the last node swallowed the run, it is the trailing whitespace of that node's `raws.between`, or of a custom property's printed value or `raws.important`; otherwise `raws.after` as it stands, since PostCSS computes a default for a missing one. A value's run is read as the tokenizer reads whitespace, since a no-break space or a vertical tab there is a word the value keeps.
  * @param syntax - The syntax the rule is built over, which reads the value.
  * @param statement - The block's statement.
  * @returns The run, or undefined without a raw.

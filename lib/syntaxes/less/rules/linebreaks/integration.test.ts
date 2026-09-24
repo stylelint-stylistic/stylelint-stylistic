@@ -5,7 +5,7 @@ import { less } from "../../index.ts"
 let { ruleName, messages } = createRule(less)
 let { ruleName: writerRuleName, messages: writerMessages } = createWriter(less)
 
-// A break another rule writes is the one `linebreaks` asks for, and that setting is read under the namespace's own name: listed ahead of the writer, as the library lists the rule a block names ahead of its extra rules, `linebreaks` used to be looked up under the core's name alone and the writer fell back on the break the file spells (#478).
+// A break another rule writes is the one `linebreaks` asks for, and that setting is read under the namespace's own name: listed ahead of the writer, as the library lists the rule a block names ahead of its extra rules, `linebreaks` used to be looked up under the core's name alone and the writer fell back on the break the file spells.
 let testRule = createTestRule({ ruleName, autoStripIndent: false, customSyntax: `postcss-less`, extraRules: { [writerRuleName]: `always` } })
 
 testRule({
@@ -14,7 +14,6 @@ testRule({
 
 	reject: [
 		{
-			// See #478
 			description: `a file of line feeds asked for Windows pairs, whose written break in front of the semicolon is a pair like the respelled ones`,
 			code: `a {\n\tb: c;\n}`,
 			fixed: `a {\r\n\tb: c\r\n;\r\n}`,

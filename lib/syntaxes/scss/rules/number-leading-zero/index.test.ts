@@ -12,7 +12,6 @@ testRule({
 
 	accept: [
 		{
-			// See #271
 			description: `a fraction with no leading zero standing in the text of an inline comment the value holds`,
 			code: `
 				a { b: 0.5px // .5px
@@ -20,7 +19,6 @@ testRule({
 			`,
 		},
 		{
-			// See #271
 			description: `a fraction with no leading zero standing in the text of an inline comment a set of media parameters holds`,
 			code: `
 				@media (min-width: 1px // .5px
@@ -30,7 +28,6 @@ testRule({
 	],
 
 	reject: [
-		// See #268
 		{
 			description: `a fraction with no leading zero on either side of an end-of-line comment the value holds`,
 			code: `
@@ -63,7 +60,6 @@ testRule({
 
 	accept: [
 		{
-			// See #271
 			description: `a leading zero standing in the text of an inline comment the value holds`,
 			code: `
 				a { b: .5px // 0.5px
@@ -71,7 +67,6 @@ testRule({
 			`,
 		},
 		{
-			// See #271
 			description: `a leading zero standing in the text of an inline comment a set of media parameters holds`,
 			code: `
 				@media (min-width: 1px // 0.5px
@@ -81,7 +76,6 @@ testRule({
 	],
 
 	reject: [
-		// See #268
 		{
 			description: `a leading zero standing behind an end-of-line comment the value holds`,
 			code: `

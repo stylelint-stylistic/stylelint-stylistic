@@ -115,7 +115,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the run in front of the parenthesis read over the copy with the escapes masked (1789845987)
+			// Pins the run in front of the parenthesis read over the copy with the escapes masked
 			description: `a backslash ending the argument in front of a space, which spells a character of the argument, leaving no run for the option`,
 			code: `a:not( b\\ ) {}`,
 			fixed: `a:not( b\\  ) {}`,
@@ -124,7 +124,7 @@ testRule({
 			message: messages.expectedClosing,
 		},
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the argument in front of a line break and the parenthesis, where the space would stand behind the backslash as its escaped character, so the warning stands`,
 			code: `a:not( b\\\n) {}`,
 			fixed: `a:not( b\\\n) {}`,
@@ -133,7 +133,7 @@ testRule({
 			message: messages.expectedClosing,
 		},
 		{
-			// Pins the space written in front of the parenthesis: the run the parser files opens on the tab behind the backslash, so the write over it was refused and the warning stood (1789855319)
+			// Pins the space written in front of the parenthesis: the run the parser files opens on the tab behind the backslash, so the write over it was refused and the warning stood
 			description: `a backslash ending the argument in front of a tab, which the parser reads as whitespace of its own and the grammar as a character of the argument`,
 			code: `a:not(b\\\t) {}`,
 			fixed: `a:not( b\\\t ) {}`,
@@ -467,7 +467,7 @@ testRule({
 
 	accept: [
 		{
-			// Pins the run in front of the parenthesis read over the copy with the escapes masked (1789845987)
+			// Pins the run in front of the parenthesis read over the copy with the escapes masked
 			description: `a backslash ending the argument in front of a space, which spells a character of the argument and no run`,
 			code: `a:not(b\\ ) {}`,
 		},
@@ -573,7 +573,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the write the guard lets through: the space it takes stands behind the escaped character, not behind the backslash (1789664271)
+			// Pins the write the guard lets through: the space it takes stands behind the escaped character, not behind the backslash
 			description: `a space behind an escaped vertical tab in front of the parenthesis, which the fix takes without touching the escape`,
 			code: `a:not(b\\\v ) {}`,
 			fixed: `a:not(b\\\v) {}`,
@@ -582,7 +582,7 @@ testRule({
 			message: messages.rejectedClosing,
 		},
 		{
-			// Pins the space taken and the tab left: the run the parser files opens on that tab, so the write over it was refused and the warning stood (1789855319)
+			// Pins the space taken and the tab left: the run the parser files opens on that tab, so the write over it was refused and the warning stood
 			description: `the same space standing behind an escaped tab, which the parser reads as whitespace of its own`,
 			code: `a:not(b\\\t ) {}`,
 			fixed: `a:not(b\\\t) {}`,
@@ -591,7 +591,6 @@ testRule({
 			message: messages.rejectedClosing,
 		},
 		{
-			// See #173
 			description: `a form feed inside the arguments, which is whitespace and no line break, so the list is single-line and the space in front of the closing parenthesis goes`,
 			code: `a:not(b\f, c ) {}`,
 			fixed: `a:not(b\f, c) {}`,

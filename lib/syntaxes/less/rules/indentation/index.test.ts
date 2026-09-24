@@ -63,7 +63,6 @@ testRule({
 
 	reject: [
 		{
-			// See #237
 			description: `the same query read as Less`,
 			code: `
 				@media (min-width: 100px
@@ -78,7 +77,6 @@ testRule({
 			message: messages.expected(`0 tabs`),
 		},
 		{
-			// See #375 and #510
 			description: `a comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace rather than into a node of its own, indented a level past the block it is a line of`,
 			code: `
 				a {
@@ -97,7 +95,6 @@ testRule({
 			message: messages.expected(`1 tab`),
 		},
 		{
-			// See #452
 			autoStripIndent: false,
 			description: `a stylesheet whose first node stands behind a bare carriage return and a tab, whitespace to the parser and no line`,
 			code: `\r\ta{}`,
@@ -147,7 +144,6 @@ testRule({
 
 	accept: [
 		{
-			// See #236
 			description: `a value whose closing line carries the inline comment`,
 			code: `
 				a {
@@ -162,7 +158,6 @@ testRule({
 
 	reject: [
 		{
-			// See #236
 			description: `a value continued on the line behind an inline comment`,
 			code: `
 				a {
@@ -181,7 +176,6 @@ testRule({
 			message: messages.expected(`4 spaces`),
 		},
 		{
-			// See #236
 			description: `the closing parenthesis of a function on the line behind an inline comment`,
 			code: `
 				a {
@@ -200,7 +194,6 @@ testRule({
 			message: messages.expected(`2 spaces`),
 		},
 		{
-			// See #236
 			description: `a function's arguments opening on the line behind an inline comment, whose parenthesis the comment must not hide`,
 			code: `
 				a {
@@ -219,7 +212,6 @@ testRule({
 			message: messages.expected(`4 spaces`),
 		},
 		{
-			// See #236
 			description: `a value carrying two inline comments, every line behind one of them measured`,
 			code: `
 				a {
@@ -241,7 +233,6 @@ testRule({
 			],
 		},
 		{
-			// See #236
 			description: `a selector line holding nothing but an inline comment`,
 			code: `
 				x {
@@ -262,7 +253,6 @@ testRule({
 			message: messages.expected(`2 spaces`),
 		},
 		{
-			// See #236
 			description: `an at-rule's parameters continued on the line behind an inline comment`,
 			code: `
 				@media screen // c
@@ -285,7 +275,6 @@ testRule({
 			message: messages.expected(`2 spaces`),
 		},
 		{
-			// See #236
 			description: `a line holding nothing but an inline comment inside a set of parameters`,
 			code: `
 				@media screen,
@@ -315,7 +304,6 @@ testRule({
 
 	reject: [
 		{
-			// See #236
 			description: `a value continued on the line behind an inline comment, measured in tabs`,
 			code: `
 				a {
@@ -652,7 +640,6 @@ testRule({
 
 	accept: [
 		{
-			// See #509
 			description: `the closing brace of a block whose last statement is a mixin call carrying no semicolon, standing at the level the block does`,
 			code: `
 				a {
@@ -661,7 +648,6 @@ testRule({
 			`,
 		},
 		{
-			// See #510
 			description: `a comment such a call swallowed, standing at the level of the block it is a line of`,
 			code: `
 				a {
@@ -671,7 +657,6 @@ testRule({
 			`,
 		},
 		{
-			// See #374
 			description: `an important flag such a call spells on a line of its own, which is measured no more than with a semicolon behind the call`,
 			code: `
 				a {
@@ -693,7 +678,6 @@ testRule({
 
 	reject: [
 		{
-			// See #510
 			description: `a comment such a call swallowed, indented a level past the block it is a line of`,
 			code: `
 				a {
@@ -712,7 +696,6 @@ testRule({
 			message: messages.expected(`1 tab`),
 		},
 		{
-			// See #509
 			description: `that closing brace indented a level in, the run in front of it standing in the mixin call's whitespace rather than in the block's own`,
 			code: `
 				a {
@@ -729,7 +712,6 @@ testRule({
 			message: messages.expected(`0 tabs`),
 		},
 		{
-			// See #374
 			description: `the same brace behind a call carrying a bang flag, whose whitespace the parser collects from both sides of that flag`,
 			code: `
 				a {
@@ -746,7 +728,6 @@ testRule({
 			message: messages.expected(`0 tabs`),
 		},
 		{
-			// See #374
 			description: `a comment such a call swallowed behind a bang flag, indented a level past the block it is a line of`,
 			code: `
 				a {
@@ -774,7 +755,6 @@ testRule({
 
 	accept: [
 		{
-			// See #569
 			description: `a semicolon alone on its line behind a mixin call, at the call's level`,
 			code: `a {\n\t.m()\n\t;\n}\n`,
 		},
@@ -791,7 +771,6 @@ testRule({
 
 	reject: [
 		{
-			// See #569
 			description: `a semicolon alone on its line, indented two levels past the mixin call it closes`,
 			code: `a {\n\t.m()\n\t\t\t;\n}\n`,
 			fixed: `a {\n\t.m()\n\t;\n}\n`,
@@ -816,7 +795,6 @@ testRule({
 			message: messages.expected(`1 tab`),
 		},
 		{
-			// See #374
 			description: `the same line behind a mixin call carrying an important flag, whose run the parser gathers in front of the flag`,
 			code: `a {\n\t.m() !important\n\t\t\t;\n}\n`,
 			fixed: `a {\n\t.m() !important\n\t;\n}\n`,
@@ -825,7 +803,6 @@ testRule({
 			message: messages.expected(`1 tab`),
 		},
 		{
-			// See #592
 			description: `a comment behind the stylesheet's last mixin call, which has neither a block nor a semicolon, indented a level past the call`,
 			code: `
 				a {}
@@ -868,7 +845,6 @@ testRule({
 
 	reject: [
 		{
-			// See #635
 			description: `a value opening on the line behind its colon, read as Less`,
 			code: `a {\n\tb:\n1px;\n}\n`,
 			fixed: `a {\n\tb:\n\t\t1px;\n}\n`,
@@ -886,7 +862,6 @@ testRule({
 
 	accept: [
 		{
-			// See #593
 			description: `an inline comment on its own line behind a mixin call carrying no semicolon, which the parser keeps in the call's params and Less reads to the end of its line, standing at the level of the block it is a line of`,
 			code: `
 				a {
@@ -947,7 +922,6 @@ testRule({
 
 	reject: [
 		{
-			// See #593
 			description: `an inline comment on its own line behind a mixin call carrying no semicolon, indented a level past the block it is a line of`,
 			code: `
 				a {
@@ -1106,7 +1080,6 @@ testRule({
 
 	accept: [
 		{
-			// See #651
 			description: `a mixin definition whose guard stands on a line of its own, a level deeper, as a line continuing an at-rule's parameters does`,
 			code: `
 				.m(@a; @b)
@@ -1114,7 +1087,6 @@ testRule({
 			`,
 		},
 		{
-			// See #651
 			description: `a mixin definition whose parameter list, opened in the middle of the first line, goes on at the rule's own level, as a mixin call's arguments do`,
 			code: `
 				.m(@a: 1px;
@@ -1125,7 +1097,6 @@ testRule({
 
 	reject: [
 		{
-			// See #651
 			description: `a mixin definition whose guard stands on a line of its own at the rule's level`,
 			code: `
 				.m(@a; @b)
@@ -1140,7 +1111,6 @@ testRule({
 			message: messages.expected(`1 tab`),
 		},
 		{
-			// See #651
 			description: `the parameter list of the issue, a line inside it indented a level deeper than the parentheses opened in the middle of the first line ask`,
 			code: `
 				.m(@a: 1px;
@@ -1164,7 +1134,6 @@ testRule({
 
 	accept: [
 		{
-			// See #651
 			description: `a mixin definition whose guard stands on a line of its own at the rule's level, as an at-rule's parameters do under this option`,
 			code: `
 				.m(@a; @b)
@@ -1181,7 +1150,6 @@ testRule({
 
 	accept: [
 		{
-			// See #651
 			description: `a mixin definition whose head goes on over lines at any level, as an at-rule's parameters do under this option`,
 			code: `
 				.m(@a;

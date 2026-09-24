@@ -12,7 +12,6 @@ testRule({
 
 	accept: [
 		{
-			// See #437
 			description: `a Sass nested property standing in front of another declaration, which its own block closes and no semicolon of its own, so the run between its value and its block is the block's and not the rule's`,
 			code: `
 				a {
@@ -24,7 +23,6 @@ testRule({
 			`,
 		},
 		{
-			// See #437
 			description: `the same nested property with a stray semicolon behind its block, which is the next declaration's raw and no semicolon of the property's`,
 			code: `a { font: 12px { family: serif; }; top: 0
 ; }`,
@@ -42,7 +40,6 @@ testRule({
 
 	accept: [
 		{
-			// See #437
 			description: `a Sass nested property standing in front of another declaration, which its own block closes and no semicolon of its own, so the run between its value and its block is the block's and not the rule's`,
 			code: `
 				a {
@@ -56,7 +53,6 @@ testRule({
 
 	reject: [
 		{
-			// See #207
 			description: `inline comment before the semicolon: the semicolon cannot join the comment's line, so the code is left alone and the warning stands`,
 			code: `
 				a {
@@ -75,7 +71,6 @@ testRule({
 			message: messages.rejectedBeforeMultiLine(),
 		},
 		{
-			// See #517
 			description: `the same comment with a backslash standing against its double slash, which this parser reads as a comment all the same`,
 			code: `
 				a {
@@ -94,7 +89,6 @@ testRule({
 			message: messages.rejectedBeforeMultiLine(),
 		},
 		{
-			// See #207
 			description: `inline comment behind the flag: the semicolon cannot join its line either`,
 			code: `
 				a {
@@ -113,7 +107,6 @@ testRule({
 			message: messages.rejectedBeforeMultiLine(),
 		},
 		{
-			// See #207
 			description: `inline comment in front of the flag: the whitespace behind the flag goes, and the comment stays where it is`,
 			code: `
 				a {
@@ -192,7 +185,6 @@ testRule({
 
 	accept: [
 		{
-			// See #139
 			description: `a Sass nested property with a declaration behind it, whose own text ends where its value does rather than where its block does`,
 			code: `
 				a {

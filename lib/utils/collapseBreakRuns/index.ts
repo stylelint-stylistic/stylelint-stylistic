@@ -10,7 +10,7 @@ function countBreaks (run: string): number {
 }
 
 /**
- * Asks whether a text holds a run of more breaks than allowed, read as PostCSS counts lines: a Windows pair and a line feed are one break each, in whatever order a run spells them ([#732](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/732)).
+ * Asks whether a text holds a run of more breaks than allowed, read as PostCSS counts lines: a Windows pair and a line feed are one break each, in whatever order a run spells them.
  * @param blanked - The text with every comment blanked, so a run inside one is read by nobody.
  * @param maxBreaks - The most breaks a run may hold.
  * @returns True where a run holds more.

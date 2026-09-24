@@ -48,7 +48,7 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 
 		let textBefore = rawInFrontOfText(rule)
 		let commaIndices: number[] = []
-		// The search reads a string and an escape by rules of its own, so the commas are found and checked over the copies and reported at the selector's index; the whitespace is read over the second copy, where an escaped space is a character of a name and no run (1789657288)
+		// The search reads a string and an escape by rules of its own, so the commas are found and checked over the copies and reported at the selector's index; the whitespace is read over the second copy, where an escaped space is a character of a name and no run
 		let { searchString, runString } = selectorSearchCopy(selector)
 
 		styleSearch(
@@ -72,7 +72,7 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 	 * @param index - The delimiter's index.
 	 * @param node - The rule the warning is reported on.
 	 * @param copies - The selector, opened by the syntax.
-	 * @param textBefore - What the file holds in front of the selector, where a comma opening it has its run (1789593917).
+	 * @param textBefore - What the file holds in front of the selector, where a comma opening it has its run.
 	 */
 	function checkDelimiter (source: string, runString: string, index: number, node: Rule, copies: SelectorCopies, textBefore: string): void {
 		opts.locationChecker({

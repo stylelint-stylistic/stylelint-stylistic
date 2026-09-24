@@ -15,7 +15,6 @@ testRule({
 
 	reject: [
 		{
-			// See #371
 			description: `a value that is nothing but an inline comment and a flag, whose run behind the colon this syntax keeps in the value's raw`,
 			code: `a { color:  // c\n!important; }`,
 			fixed: `a { color:\n  // c\n!important; }`,
@@ -24,7 +23,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #388
 			description: `an inline comment holding a colon of its own on the colon's line, whose text a break written at that colon would close early`,
 			code: `a { color: //x:y\n red; }`,
 			fixed: `a { color:\n //x:y\n red; }`,
@@ -49,7 +47,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #537
 			description: `a declaration standing at the top level of a stylesheet with an inline comment written behind it, a node of this syntax alone, whose space that comment's raw holds`,
 			code: `color:${S}// c`,
 			fixed: `color:\n${S}// c`,
@@ -67,7 +64,6 @@ testRule({
 
 	accept: [
 		{
-			// See #689
 			description: `a custom property closing its block with no semicolon, ending on an inline comment, whose closing break the parser keeps in the value and which is the block's, no line of the declaration`,
 			code: `
 				a {
@@ -79,7 +75,6 @@ testRule({
 
 	reject: [
 		{
-			// See #389
 			description: `a value broken by the inline comment in front of its word, whose break is the comment's own end, with two spaces behind the colon`,
 			code: `a { color:  // c\n x; }`,
 			fixed: `a { color:\n  // c\n x; }`,

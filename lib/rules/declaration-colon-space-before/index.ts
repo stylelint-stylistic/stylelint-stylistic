@@ -70,9 +70,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
-			// An inline comment ending this part would swallow the colon; a backslash in front of a slash is blanked first, since `\//` opens a comment to the parser but not to the guard. A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `b\⏎:c` would come out as `b\:c`, one word the file no longer parses, or `b\ :c`, an escaped space, so the warning stands (1789664271)
+			// An inline comment ending this part would swallow the colon; a backslash in front of a slash is blanked first, since `\//` opens a comment to the parser but not to the guard. A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `b\⏎:c` would come out as `b\:c`, one word the file no longer parses, or `b\ :c`, an escaped space, so the warning stands
 			isFixable: (decl, index, source, runString) => !syntax.endsWithInlineComment(beforeColonString(decl, index).replace(EVERY_BACKSLASH_IN_FRONT_OF_A_SLASH, ` `), syntax.inlineComments(decl, result)) && editKeepsEscapedCharacter(source, { start: index - runInFront(runString, index).length, end: index, text: primary === `always` ? ` ` : `` }),
-			// The run is the check's, read over the copy with its escapes masked, so the space of `b\ :c` is not cut (1789661964)
+			// The run is the check's, read over the copy with its escapes masked, so the space of `b\ :c` is not cut
 			fix: (decl, index, run) => {
 				let beforeColon = beforeColonString(decl, index)
 

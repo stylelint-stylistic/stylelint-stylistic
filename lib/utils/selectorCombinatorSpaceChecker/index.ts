@@ -56,7 +56,7 @@ export function selectorCombinatorSpaceChecker (opts: {
 
 		if (!selectorTree) return
 
-		// The parser reads an escaped space as a character of its name, and a backslash in front of a tab as no escape at all, so its spaces hold whitespace the grammar covers with the escape either way; the run is read over the copy where the escapes are masked, and the fix cuts that run out of the selector rather than writing the spaces (1789661964, 1789666655)
+		// The parser reads an escaped space as a character of its name, and a backslash in front of a tab as no escape at all, so its spaces hold whitespace the grammar covers with the escape either way; the run is read over the copy where the escapes are masked, and the fix cuts that run out of the selector rather than writing the spaces
 		let { runString } = selectorSearchCopy(selector)
 		let edits: Edit[] = []
 
@@ -71,7 +71,7 @@ export function selectorCombinatorSpaceChecker (opts: {
 		 */
 		function check (selectorText: string, source: string, combinator: Combinator, index: number, node: Node, reportIndex: number): void {
 			let combinatorEdits = fix ? fix(index, source) : []
-			// A comment beside a combinator folds into that side's raws, and whether the fix may write the run the check read between it and the combinator is unsettled, so the warning stands there (1789857483). A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `b\⏎>c` would come out as `b\>c`, one word, or `b\ >c`, an escaped space, so the warning stands for that too (1789664271)
+			// A comment beside a combinator folds into that side's raws, and whether the fix may write the run the check read between it and the combinator is unsettled, so the warning stands there. A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `b\⏎>c` would come out as `b\>c`, one word, or `b\ >c`, an escaped space, so the warning stands for that too
 			let isFixable = fix && combinator.raws?.spaces?.[opts.locationType] === undefined && combinatorEdits.every((edit) => editKeepsEscapedCharacter(selectorText, edit))
 
 			opts.locationChecker({

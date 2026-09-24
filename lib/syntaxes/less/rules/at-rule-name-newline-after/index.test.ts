@@ -46,7 +46,6 @@ testRule({
 	],
 
 	reject: [
-		// See #696
 		{
 			description: `a space where the break belongs, in a stylesheet whose variable the fixing run leaves alone`,
 			code: `@nice-blue: #5B83AD;\n@media (min-width: 1px) { a { color: @nice-blue } }`,
@@ -55,7 +54,6 @@ testRule({
 			column: 6,
 			message: messages.expectedAfter(`@media`),
 		},
-		// See #396
 		{
 			description: `an import with its options against the name, which Less prints through as text and a written break would load`,
 			code: `@import(reference) "x.less";`,

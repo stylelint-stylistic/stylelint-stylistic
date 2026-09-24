@@ -81,7 +81,7 @@ describe(`trailingSemicolonAsked`, () => {
 		expect(asked(`a { b: ; c: red }`, { [TRAILING]: `never` }, 0)).toBeUndefined()
 	})
 
-	it(`a declaration behind which a Less inline comment holds a declaration past a bare carriage return, which the rule passes over, and one holding a semicolon there, which the value's own semicolon now keeps the rule from touching (#688)`, () => {
+	it(`a declaration behind which a Less inline comment holds a declaration past a bare carriage return, which the rule passes over, and one holding a semicolon there, which the value's own semicolon now keeps the rule from touching`, () => {
 		expect(askedUnderLess(`a {\n\tcolor: pink; // c\r top: 0;\n}`)).toBeUndefined()
 		expect(askedUnderLess(`a {\n\tcolor: pink; // c\r;\n}`)).toBeUndefined()
 	})
@@ -95,7 +95,6 @@ describe(`trailingSemicolonAsked`, () => {
 		expect(asked(`a { --b: ; }`, { [TRAILING]: `never` })).toBe(false)
 	})
 
-	// See #715
 	it(`the rule listed under the namespace of another syntax, which reads the same plain CSS file`, () => {
 		expect(asked(`a { b: }`, { [SCSS_TRAILING]: `always` })).toBe(true)
 		expect(asked(`a { b: ; }`, { [SCSS_TRAILING]: `never` })).toBe(false)
@@ -122,7 +121,6 @@ describe(`closedBySemicolon`, () => {
 		expect(closed(`a { b: /*c*/ }`, {})).toBe(false)
 	})
 
-	// See #536
 	it(`the file as the rule will leave it, whichever way it stands`, () => {
 		expect(closed(`a { b: }`, { [TRAILING]: `always` })).toBe(true)
 		expect(closed(`a { b: ; }`, { [TRAILING]: `never` })).toBe(false)
@@ -137,7 +135,6 @@ describe(`valueAsClosed`, () => {
 		expect(value(`a { b: }`, { [TRAILING]: `never` })).toBe(``)
 	})
 
-	// See #536
 	it(`the value less the run a live never takes away with the semicolon`, () => {
 		expect(value(`a { b: ; }`, { [TRAILING]: `never` })).toBe(``)
 		expect(value(`a { b:  ; }`, { [TRAILING]: `never` })).toBe(``)

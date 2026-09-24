@@ -53,12 +53,10 @@ testRule({
 			code: `@media-non screen and (color), projection and (color) {}`,
 		},
 		{
-			// See #153
 			description: `a bare address in front of the comma, whose double slash opens no comment`,
 			code: `@media (min-width: url(http://x/y.png)) ,print { a { b: c; } }`,
 		},
 		{
-			// See #213
 			description: `a comma inside the arguments of a function is a comma of the address and of no query list`,
 			code: `@media (min-width: url(x/a,b.png)) { a { b: c; } }`,
 		},
@@ -66,7 +64,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the query in front of a line break and the comma, where the space would stand behind the backslash as its escaped character, so the warning stands`,
 			code: `@media a ,b\\\n,c {}`,
 			fixed: `@media a ,b\\\n,c {}`,
@@ -75,7 +73,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the comma, which is a character of the word and no space`,
 			code: `@media a ,b\\ ,c {}`,
 			fixed: `@media a ,b\\  ,c {}`,
@@ -178,7 +176,6 @@ testRule({
 			],
 		},
 		{
-			// See #153
 			description: `a comma behind a bare address, whose double slash opens no comment`,
 			code: `@media (min-width: url(http://x/y.png)),print { a { b: c; } }`,
 			fixed: `@media (min-width: url(http://x/y.png)) ,print { a { b: c; } }`,
@@ -187,7 +184,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #216
 			description: `a double slash standing in the code of a plain CSS text, which spells no comment`,
 			code: `@media (a//b),(c) { d { e: f; } }`,
 			fixed: `@media (a//b) ,(c) { d { e: f; } }`,
@@ -204,7 +200,7 @@ testRule({
 
 	accept: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the comma, which is a character of the word and no whitespace`,
 			code: `@media a,b\\ ,c {}`,
 		},
@@ -252,7 +248,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the query in front of a line break and the comma, which the write would turn into an escaped comma, so the warning stands`,
 			code: `@media a,b\\\n,c {}`,
 			fixed: `@media a,b\\\n,c {}`,
@@ -523,14 +519,13 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer: the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab in front of the comma, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `@media a\v, b {}`,
 			fixed: `@media a\v , b {}`,
@@ -549,7 +544,6 @@ testRule({
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab at the run before the comma: only the tokenizer's run goes, and the character stays`,
 			code: `@media a\v , b {}`,
 			fixed: `@media a\v, b {}`,

@@ -11,7 +11,7 @@ import { readEscapedCharacter } from "../readEscapedCharacter/index.ts"
 import { readIdentifierCharacter } from "../readIdentifierCharacter/index.ts"
 import { skipString } from "../skipString/index.ts"
 
-/** The last character of code in front of an `@` that opens a statement, whitespace and comments aside: a brace either way, a semicolon, or nothing at the start of the text; behind anything else the name of an at-rule naming an address is a word of a value, a selector or another at-rule's params ([#657](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/657)). The closing brace of an interpolation counts as one too, which the walk cannot tell from a block's. */
+/** The last character of code in front of an `@` that opens a statement, whitespace and comments aside: a brace either way, a semicolon, or nothing at the start of the text; behind anything else the name of an at-rule naming an address is a word of a value, a selector or another at-rule's params. The closing brace of an interpolation counts as one too, which the walk cannot tell from a block's. */
 const OPENS_A_STATEMENT = new Set([``, `{`, `}`, `;`])
 
 /** A name an at-rule is read to name an address by, and whether any case spells it: CSS reads `@import` ASCII case-insensitively, where Sass and Less read the at-rules of their own in lower case alone. */
@@ -55,7 +55,7 @@ function skipName (text: string, openIndex: number, spelling: AddressAtRuleName)
 }
 
 /**
- * Skips the name of an at-rule that names an address, and the group behind it the syntax's reader finds there, Less's `(reference)` ([#656](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/656)). The name is read where a statement can open, {@link OPENS_A_STATEMENT}, and is a word of the value, the selector or the params anywhere else ([#657](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/657)).
+ * Skips the name of an at-rule that names an address, and the group behind it the syntax's reader finds there, Less's `(reference)`. The name is read where a statement can open, {@link OPENS_A_STATEMENT}, and is a word of the value, the selector or the params anywhere else.
  * @param text - The text the name is read out of.
  * @param openIndex - The `@`.
  * @param lastCode - The last character of code in front of it that was no whitespace, or nothing.
@@ -93,7 +93,7 @@ function skipUrlName (text: string, openIndex: number): number {
 /**
  * Skips a `url()` token, whose bare address carries `//` and `/*` as ordinary characters.
  *
- * The name must stand alone, since `image-url(` is a call, and so is `$url(` ({@link lengthensTheName}). What the parentheses hold is {@link readAddress}'s reading: a quoted address leaves the rest of them code, so the walk reads on from behind the string and finds every comment written there ([#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378), [#557](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/557)); a bare one runs to the first `)` no escape holds and no comment, string or Sass interpolation covers, a quotation mark inside it a character of it wherever no comment is read there ([#504](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504)) and the opening of a string wherever one is, which is recorded as a string so that a scan over the copy reads a comma inside it as text (1789637913). A comment inside such an address ends the room the address had, an address being one span ([#660](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/660)). `\61 \75 rl(` is a call.
+ * The name must stand alone, since `image-url(` is a call, and so is `$url(` ({@link lengthensTheName}). What the parentheses hold is {@link readAddress}'s reading: a quoted address leaves the rest of them code, so the walk reads on from behind the string and finds every comment written there; a bare one runs to the first `)` no escape holds and no comment, string or Sass interpolation covers, a quotation mark inside it a character of it wherever no comment is read there and the opening of a string wherever one is, which is recorded as a string so that a scan over the copy reads a comma inside it as text. A comment inside such an address ends the room the address had, an address being one span. `\61 \75 rl(` is a call.
  * @param text - The text walked for comments and addresses.
  * @param openIndex - Where it would start.
  * @param behindIdentifier - True behind a name: a {@link IDENTIFIER_CODE_POINT} code point, a `}` or an escape.
@@ -133,7 +133,7 @@ function skipUrl (text: string, openIndex: number, behindIdentifier: boolean, re
 }
 
 /**
- * Finds the room a bare address stands in: the first run of code the parentheses hold that is not whitespace alone, since an address is one span and a comment inside them parts what they hold ([#660](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/660)). A string inside them parts what they hold to the tokenizer too, and is left in the room all the same: every reader of the span declines by it, and the string is masked whole where a scan reads the text (1789637913).
+ * Finds the room a bare address stands in: the first run of code the parentheses hold that is not whitespace alone, since an address is one span and a comment inside them parts what they hold. A string inside them parts what they hold to the tokenizer too, and is left in the room all the same: every reader of the span declines by it, and the string is masked whole where a scan reads the text.
  * @param text - The text holding the `url()` token.
  * @param openIndex - Behind the `(`.
  * @param address - What {@link readAddress} read of the parentheses.
@@ -178,7 +178,7 @@ function trailingWhitespaceLength (text: string): number {
 }
 
 /**
- * Records the bare address a `url()` holds: the code its parentheses open on, whitespace off. A no-break space is part of it ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)); a run reaching past a line, whose `)` may be lines below, is none; empty parentheses hold none.
+ * Records the bare address a `url()` holds: the code its parentheses open on, whitespace off. A no-break space is part of it; a run reaching past a line, whose `)` may be lines below, is none; empty parentheses hold none.
  * @param text - The text holding the `url()` token.
  * @param openIndex - Behind the `(`.
  * @param closeIndex - The `)`, or where the comment ending the address's room opens.
@@ -249,9 +249,9 @@ export type EscapeSpan = {
 }
 
 /**
- * Walks a text once for its comments and addresses, each the other's exception: a protocol's `//` opens no comment, a `url(` inside a comment no address ([#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427)). A block comment's span holds its delimiters, a `//` comment's stops at the break.
+ * Walks a text once for its comments and addresses, each the other's exception: a protocol's `//` opens no comment, a `url(` inside a comment no address. A block comment's span holds its delimiters, a `//` comment's stops at the break.
  *
- * The address of an `@import`, and of the other at-rules the syntax names ({@link AddressAtRules}), is the string standing behind the name, which only the walk can find: a pattern over the text cannot say where that string closes, nor whether the name it matched is code rather than the text of a comment or of another string ([#552](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/552)). The name is read where a statement can open, {@link OPENS_A_STATEMENT}, and is a word of the value, the selector or the params anywhere else ([#657](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/657)). Whitespace, comments and the group the syntax reads there stand between the name and the string; anything else ends the wait.
+ * The address of an `@import`, and of the other at-rules the syntax names ({@link AddressAtRules}), is the string standing behind the name, which only the walk can find: a pattern over the text cannot say where that string closes, nor whether the name it matched is code rather than the text of a comment or of another string. The name is read where a statement can open, {@link OPENS_A_STATEMENT}, and is a word of the value, the selector or the params anywhere else. Whitespace, comments and the group the syntax reads there stand between the name and the string; anything else ends the wait.
  * @param text - The value, selector or params walked.
  * @param reading - What the syntax makes of a `//` comment ({@link inlineCommentReading}).
  * @param addressing - The at-rules the syntax reads an address behind.
@@ -350,7 +350,7 @@ function scan (text: string, reading: CommentReading, addressing: AddressAtRules
 			behindIdentifier = false
 		}
 		else if (character === `/` && next === `/` && reading.spells) {
-			// The comment runs to the break its own language closes one on; a bare `\r` is one everywhere, a form feed only under Sass (#566).
+			// The comment runs to the break its own language closes one on; a bare `\r` is one everywhere, a form feed only under Sass.
 			let end = findInlineCommentEnd(text, index, reading)
 
 			spans.push({ start: index, end, isInline: true })
@@ -385,7 +385,7 @@ export function findCommentSpans (text: string, reading: CommentReading = SPELLS
 }
 
 /**
- * Finds the spans of a text's addresses — a `url()`'s as {@link pushBareAddress} and {@link pushQuotedAddress} measure it, the string an at-rule naming an address holds as {@link pushQuotedAddress} does. The comment walk finds them, since one inside a comment is no address and each letter of a name may be an escape ([#344](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/344), [#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427), [#552](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/552)).
+ * Finds the spans of a text's addresses — a `url()`'s as {@link pushBareAddress} and {@link pushQuotedAddress} measure it, the string an at-rule naming an address holds as {@link pushQuotedAddress} does. The comment walk finds them, since one inside a comment is no address and each letter of a name may be an escape.
  * @param text - The raw walked for addresses.
  * @param reading - What the syntax makes of a `//` comment ({@link inlineCommentReading}).
  * @param addressing - The at-rules the syntax reads an address behind, the core's `@import` alone unless told.
@@ -406,7 +406,7 @@ export function findStringSpans (text: string, reading: CommentReading = SPELLS_
 }
 
 /**
- * Finds the spans of a text's escapes, as {@link readEscapedCharacter} reads one: a backslash spelling a character, so one in front of a line break or at the end is none, and neither is one in front of a comment's delimiter, which the tokenizer opens the comment on. An escape inside a string or a comment is that span's, and the letters of a `url(` are an address's; one standing in the code of a bare address is its own, {@link readAddress} reading the parentheses the walk steps over in one (1789879423).
+ * Finds the spans of a text's escapes, as {@link readEscapedCharacter} reads one: a backslash spelling a character, so one in front of a line break or at the end is none, and neither is one in front of a comment's delimiter, which the tokenizer opens the comment on. An escape inside a string or a comment is that span's, and the letters of a `url(` are an address's; one standing in the code of a bare address is its own, {@link readAddress} reading the parentheses the walk steps over in one.
  * @param text - The raw walked for escapes.
  * @param reading - What the syntax makes of a `//` comment ({@link inlineCommentReading}).
  * @returns The spans, in source order.
@@ -426,7 +426,7 @@ export function findCommentSpanAt<Span extends Pick<CommentSpan, `start` | `end`
 }
 
 /**
- * Finds the comment span holding a node of a value parse. `postcss-value-parser` has no node for a `//` comment ([#271](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/271)) and closes a block comment on the first `*\/` ([#275](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/275), [#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378)). Only the opening is read: a node opening inside a comment is text of it; a call closed on a `)` inside one is {@link findCommentSpanAt}'s question ([#320](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/320)).
+ * Finds the comment span holding a node of a value parse. `postcss-value-parser` has no node for a `//` comment and closes a block comment on the first `*\/`. Only the opening is read: a node opening inside a comment is text of it; a call closed on a `)` inside one is {@link findCommentSpanAt}'s question.
  * @param valueNode - The node of the parse whose opening is asked about.
  * @param spans - The spans {@link findCommentSpans} found.
  * @returns The span, or nothing.

@@ -79,13 +79,13 @@ function writtenNodeOf (participant: Participant, configuredName: string, result
 }
 
 /**
- * Asks whether the asking rule is the one to write the run behind a closing brace, which both `block-closing-brace-*-after` rules write into a node's `raws.before` ([#698](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/698)).
+ * Asks whether the asking rule is the one to write the run behind a closing brace, which both `block-closing-brace-*-after` rules write into a node's `raws.before`.
  *
- * A rule writes only where every rule behind it in run order that would write the very same raw accepts a spelling it accepts too; otherwise that rule's write would be the file's last and this one's warning would be dropped as fixed over a run it does not accept ([#704](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/704)). Where the two accept a spelling in common both may write, since what either leaves the other accepts.
+ * A rule writes only where every rule behind it in run order that would write the very same raw accepts a spelling it accepts too; otherwise that rule's write would be the file's last and this one's warning would be dropped as fixed over a run it does not accept. Where the two accept a spelling in common both may write, since what either leaves the other accepts.
  *
- * A neighbor that would write nothing gates nothing, so its `disableFix`, its disable ranges and its own guards — the at-rules it passes over, the raw it writes, the semicolon the space rule refuses to write over — are asked before it is counted in ([#536](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/536)).
+ * A neighbor that would write nothing gates nothing, so its `disableFix`, its disable ranges and its own guards — the at-rules it passes over, the raw it writes, the semicolon the space rule refuses to write over — are asked before it is counted in.
  *
- * A rule ahead ran before the write and judged the run as it stood, so where it was content with that and refuses what the write leaves, the write would put the file in breach of a rule that reported nothing ([#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355)). Both judge the lineness of the block whose brace it is, and a write behind a brace nested inside that block does move it, so the two answer about the block as each of them finds it.
+ * A rule ahead ran before the write and judged the run as it stood, so where it was content with that and refuses what the write leaves, the write would put the file in breach of a rule that reported nothing. Both judge the lineness of the block whose brace it is, and a write behind a brace nested inside that block does move it, so the two answer about the block as each of them finds it.
  * @param syntax - The asking rule's syntax, whose namespace names the neighbor.
  * @param statement - The rule or at-rule whose closing brace the run stands behind.
  * @param result - The Stylelint result, which holds the configuration.
@@ -140,7 +140,7 @@ export function writesRunBehindBrace (syntax: Syntax, statement: AtRule | Rule, 
 	}
 
 	let restsBehind = settings.slice(position + 1).every(([behind, behindOption, behindFixTurnedOff, behindName]) => {
-		// A turned-off fix rewrites nothing, so it gates nothing (#485)
+		// A turned-off fix rewrites nothing, so it gates nothing
 		if (behindFixTurnedOff || !contends(behind, behindOption, behindName)) return true
 
 		return accepts(behind, behindOption).some((run) => accepted.includes(run))
@@ -148,7 +148,7 @@ export function writesRunBehindBrace (syntax: Syntax, statement: AtRule | Rule, 
 
 	let standing = spellingOf(parted.run)
 
-	// A rule ahead judged the run before the write, so where it was content with what stands and refuses what the write leaves, the write would put the file in breach of a rule that reported nothing (#355). A turned-off fix exempts nothing here: such a rule still reports, or still stays silent
+	// A rule ahead judged the run before the write, so where it was content with what stands and refuses what the write leaves, the write would put the file in breach of a rule that reported nothing. A turned-off fix exempts nothing here: such a rule still reports, or still stays silent
 	let restsAhead = settings.slice(0, position).every(([ahead, aheadOption, , aheadName]) => {
 		if (!contends(ahead, aheadOption, aheadName)) return true
 

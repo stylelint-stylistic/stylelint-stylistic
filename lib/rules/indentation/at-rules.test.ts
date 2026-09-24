@@ -195,7 +195,6 @@ testRule({
 			message: messages.expected(`2 spaces`),
 		},
 		{
-			// See #375 and #510
 			description: `a comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace, both lines written with tabs — the comment a line of the block, asked for the level the at-rule stands at`,
 			code: `a {\n\t@extend .b\n\t/* c */\n}`,
 			fixed: `a {\n  @extend .b\n  /* c */\n}`,
@@ -236,7 +235,6 @@ testRule({
 
 	reject: [
 		{
-			// See #510
 			description: `a comment an at-rule with neither a block nor a semicolon swallowed, indented a level past the block it is a line of — the at-rule's own level, which this option leaves where a block's contents stand`,
 			code: `
 				a {
@@ -346,7 +344,6 @@ testRule({
 
 	reject: [
 		{
-			// See #510
 			description: `a comment an at-rule with neither a block nor a semicolon swallowed, indented a level past the block it is a line of — which the option, being about params, has no say over`,
 			code: `
 				a {
@@ -389,7 +386,6 @@ testRule({
 			message: messages.expected(`0 spaces`),
 		},
 		{
-			// See #237
 			description: `a closing parenthesis indented under an option that gives the params no level of their own, which leaves the outermost level at the first column`,
 			code: `
 				@media (min-width: 100px
@@ -404,7 +400,6 @@ testRule({
 			message: messages.expected(`0 spaces`),
 		},
 		{
-			// See #237
 			description: `the lines inside a parenthesis the params open at the end of a line, which that parenthesis indents whatever the option says about the params themselves`,
 			code: `
 				@media (
@@ -459,7 +454,6 @@ testRule({
 
 	reject: [
 		{
-			// See #510
 			description: `a comment an at-rule with neither a block nor a semicolon swallowed, indented a level past the block it is a line of — no param, so measured whatever the option leaves alone`,
 			code: `
 				a {
@@ -523,7 +517,6 @@ testRule({
 			`,
 		},
 		{
-			// See #509
 			description: `the closing brace of a block whose last at-rule carries neither a block nor a semicolon, indented with the block it closes`,
 			code: `
 				a {
@@ -575,7 +568,6 @@ testRule({
 			message: messages.expected(`4 spaces`),
 		},
 		{
-			// See #509
 			description: `the closing brace of a block whose last at-rule carries neither a block nor a semicolon, standing at the block's own level where the option asks for one more`,
 			code: `
 				a {
@@ -690,7 +682,6 @@ testRule({
 
 	accept: [
 		{
-			// See #237
 			description: `a closing parenthesis standing alone in the first column, the parenthesis it closes having been opened in the middle of the line above`,
 			code: `
 				@media (min-width: 100px
@@ -715,7 +706,6 @@ testRule({
 			`,
 		},
 		{
-			// See #509
 			description: `the closing brace of a block whose last at-rule carries neither a block nor a semicolon, standing at the level the block does`,
 			code: `
 				a {
@@ -724,7 +714,6 @@ testRule({
 			`,
 		},
 		{
-			// See #375 and #510
 			description: `a comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace rather than into a node of its own, standing at the level of the block it is a line of`,
 			code: `
 				a {
@@ -761,7 +750,6 @@ testRule({
 
 	reject: [
 		{
-			// See #237
 			description: `that closing parenthesis indented by a tab, which asks for the outermost level of the params and not for one below it`,
 			code: `
 				@media (min-width: 100px
@@ -812,7 +800,6 @@ testRule({
 			message: messages.expected(`1 tab`),
 		},
 		{
-			// See #237
 			description: `the closing parenthesis of a nested at-rule whose params stand at the at-rule's own level rather than one above it`,
 			code: `
 				a {
@@ -858,7 +845,6 @@ testRule({
 			],
 		},
 		{
-			// See #375 and #510
 			description: `a comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace rather than into a node of its own, indented a level past the block it is a line of`,
 			code: `
 				a {
@@ -1063,7 +1049,6 @@ testRule({
 			message: messages.expected(`2 tabs`),
 		},
 		{
-			// See #509
 			description: `the closing brace of such a block indented a level in, the run in front of it standing in the at-rule's whitespace rather than in the block's own`,
 			code: `
 				a {
@@ -1152,7 +1137,6 @@ testRule({
 
 	accept: [
 		{
-			// See #569
 			description: `a semicolon standing alone on the line behind a bodiless at-rule, at the at-rule's level`,
 			code: `a {\n\t@extend .b\n\t;\n}\n`,
 		},
@@ -1161,7 +1145,6 @@ testRule({
 			code: `@import 'x'\n;\na {}\n`,
 		},
 		{
-			// See #592
 			description: `a comment behind the stylesheet's last at-rule, which has neither a block nor a semicolon, in the first column`,
 			code: `
 				a {}
@@ -1173,7 +1156,6 @@ testRule({
 
 	reject: [
 		{
-			// See #569
 			description: `a semicolon alone on its line, indented two levels past the bodiless at-rule it closes, whose whitespace raw keeps the run`,
 			code: `a {\n\t@extend .b\n\t\t\t;\n}\n`,
 			fixed: `a {\n\t@extend .b\n\t;\n}\n`,
@@ -1198,7 +1180,6 @@ testRule({
 			message: messages.expected(`0 tabs`),
 		},
 		{
-			// See #592
 			description: `a comment indented two levels behind the stylesheet's last at-rule, which has neither a block nor a semicolon, so the parser files the comment into the root's trailing whitespace`,
 			code: `
 				a {}
@@ -1248,7 +1229,6 @@ testRule({
 
 	reject: [
 		{
-			// See #569
 			description: `a semicolon alone on its line behind parameters the option does not measure: the semicolon's line is no line of the parameters, and is measured`,
 			code: `@import\n'x'\n  ;\na {}\n`,
 			fixed: `@import\n'x'\n;\na {}\n`,
@@ -1257,7 +1237,6 @@ testRule({
 			message: messages.expected(`0 spaces`),
 		},
 		{
-			// See #592
 			description: `a comment behind the stylesheet's last at-rule, which has neither a block nor a semicolon, indented a level past parameters the option does not measure: the comment's line is no line of the parameters, and is measured`,
 			code: `
 				@import

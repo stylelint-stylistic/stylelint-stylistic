@@ -135,7 +135,6 @@ describe(`findFunctionArgumentSpans`, () => {
 		expect(findFunctionArgumentSpans(`\\\n(1)`)).toEqual([])
 	})
 
-	// See #566
 	it(`the same backslash with a bare carriage return or a form feed behind it, which the grammar reads a newline in as well`, () => {
 		expect(findFunctionArgumentSpans(`\\\r(1)`)).toEqual([])
 		expect(findFunctionArgumentSpans(`\\\f(1)`)).toEqual([])

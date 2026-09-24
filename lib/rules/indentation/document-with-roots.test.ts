@@ -47,7 +47,6 @@ testRule({
 			`,
 		},
 		{
-			// See #594
 			description: `the same rule closing its block on the declaration's line, which leaves the rule's own line the one standing at the root's level`,
 			code: `
 				.foo {

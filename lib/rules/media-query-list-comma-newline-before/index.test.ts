@@ -64,7 +64,6 @@ testRule({
 			code: `@media-non screen and (color), projection and (color) {}`,
 		},
 		{
-			// See #153
 			description: `a bare address in front of the comma, whose double slash opens no comment`,
 			code: `
 				@media (min-width: url(http://x/y.png))
@@ -72,12 +71,11 @@ testRule({
 			`,
 		},
 		{
-			// See #213
 			description: `a comma inside the arguments of a function is a comma of the address and of no query list`,
 			code: `@media (min-width: url(x/a,b.png)) { a { b: c; } }`,
 		},
 		{
-			// The break the option asks for stands in `raws.afterName`, where the parser files the run in front of the parameters, comments and all (1789593917)
+			// The break the option asks for stands in `raws.afterName`, where the parser files the run in front of the parameters, comments and all
 			description: `a comma opening the parameters, whose run lies in the raw behind the at-rule name`,
 			code: `@media\n,a { b { c: d } }`,
 		},
@@ -133,7 +131,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #153
 			description: `a comma behind a bare address, whose double slash opens no comment`,
 			code: `@media (min-width: url(http://x/y.png)),print { a { b: c; } }`,
 			fixed: `@media (min-width: url(http://x/y.png))\n,print { a { b: c; } }`,
@@ -276,7 +273,7 @@ testRule({
 
 	reject: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the comma of a multi-line list, which is a character of the word and no newline, so the break goes behind it`,
 			code: `@media a\n,b\\ ,c {}`,
 			fixed: `@media a\n,b\\ \n,c {}`,
@@ -342,7 +339,7 @@ testRule({
 
 	accept: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the comma of a multi-line list, which is a character of the word and no whitespace`,
 			code: `@media a,b\\ ,(c\n) {}`,
 		},
@@ -390,7 +387,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the query in front of a line break and the comma, which the write would turn into an escaped comma, so the warning stands`,
 			code: `@media a,\nb\\\n,c {}`,
 			fixed: `@media a,\nb\\\n,c {}`,

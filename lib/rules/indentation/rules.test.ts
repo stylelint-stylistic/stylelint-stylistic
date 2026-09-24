@@ -113,7 +113,6 @@ testRule({
 			`,
 		},
 		{
-			// See #516
 			description: `a stray semicolon in front of a declaration on its line, which stands on the line and is no indentation`,
 			code: `a {\n  color: pink;\n  ; top: 1px;\n}`,
 		},
@@ -246,7 +245,6 @@ testRule({
 			message: messages.expected(`0 spaces`),
 		},
 		{
-			// See #516
 			description: `a stray semicolon in front of a declaration on a line indented a level too deep, whose run in front of the semicolon the fix writes`,
 			code: `a {\n  color: pink;\n    ; top: 1px;\n}`,
 			fixed: `a {\n  color: pink;\n  ; top: 1px;\n}`,
@@ -255,7 +253,7 @@ testRule({
 			message: messages.expected(`2 spaces`),
 		},
 		{
-			// Behind a rule's brace the semicolon and the run in front of it are the rule's own raw, and the next node's raw holds no break, so the line went unmeasured (1789424028)
+			// Behind a rule's brace the semicolon and the run in front of it are the rule's own raw, and the next node's raw holds no break, so the line went unmeasured
 			description: `a rule behind a free semicolon on a line indented a level too deep, the semicolon standing behind the closing brace of the rule in front`,
 			code: `a {\n  b {}\n    ; c {}\n}`,
 			fixed: `a {\n  b {}\n  ; c {}\n}`,
@@ -264,7 +262,7 @@ testRule({
 			message: messages.expected(`2 spaces`),
 		},
 		{
-			// A free semicolon alone on its line was measured by nobody, wherever the parser filed it (1790234713)
+			// A free semicolon alone on its line was measured by nobody, wherever the parser filed it
 			description: `a free semicolon alone on a line indented a level too deep, in the run in front of a closing brace`,
 			code: `a {\n  color: pink;\n    ;\n}`,
 			fixed: `a {\n  color: pink;\n  ;\n}`,
@@ -665,7 +663,6 @@ testRule({
 
 	reject: [
 		{
-			// See #568
 			description: `a closing brace indented a level too deep with a stray semicolon behind it, marked on the brace rather than on the semicolon PostCSS prints behind it`,
 			code: `a {\n\tcolor: pink;\n\t\t};`,
 			fixed: `a {\n\tcolor: pink;\n};`,
@@ -674,7 +671,6 @@ testRule({
 			message: messages.expected(`0 tabs`),
 		},
 		{
-			// See #568
 			description: `the same brace closing a block whose last node is an at-rule with neither block nor semicolon of its own, which reaches the brace since #509`,
 			code: `a {\n\t@include m\n\t\t};`,
 			fixed: `a {\n\t@include m\n};`,
@@ -683,7 +679,7 @@ testRule({
 			message: messages.expected(`0 tabs`),
 		},
 		{
-			// The escape is masked in the copy the breaks are found over, its closing break left standing (1789649818)
+			// The escape is masked in the copy the breaks are found over, its closing break left standing
 			description: `a value continued on the line behind the line break closing a hexadecimal escape, which is a line of the file`,
 			code: `
 				a {
@@ -836,7 +832,6 @@ testRule({
 			message: messages.expected(`1 tab`),
 		},
 		{
-			// See #538
 			description: `a closing brace indented by spaces, standing behind a custom property with no semicolon, whose value the parser keeps that indentation in rather than the block`,
 			code: `
 				a {
@@ -853,7 +848,7 @@ testRule({
 			message: messages.expected(`0 tabs`),
 		},
 		{
-			// The flag's line is in `raws.important`, which the writer wrote nothing to: its indentation landed at the end of the value and the value grew every run (1789503160)
+			// The flag's line is in `raws.important`, which the writer wrote nothing to: its indentation landed at the end of the value and the value grew every run
 			description: `an important flag standing on a line of its own behind a value broken over lines`,
 			code: `a {\n\tbackground-position: top left,\n\t\ttop right\n!important;\n}\n`,
 			fixed: `a {\n\tbackground-position: top left,\n\t\ttop right\n\t\t!important;\n}\n`,
@@ -870,7 +865,7 @@ testRule({
 			message: messages.expected(`2 tabs`),
 		},
 		{
-			// The break stands in the flag's raw alone, where the guard used to ask only the value and the run in front of it (1789926320)
+			// The break stands in the flag's raw alone, where the guard used to ask only the value and the run in front of it
 			description: `the same flag behind a value written on one line, whose break is the declaration's only one`,
 			code: `a {\n\tcolor: pink\n!important;\n}\n`,
 			fixed: `a {\n\tcolor: pink\n\t\t!important;\n}\n`,
@@ -962,7 +957,6 @@ testRule({
 			message: messages.expected(`2 spaces`),
 		},
 		{
-			// See #237
 			description: `the lines inside a parenthesis the value opens at the end of a line, which that parenthesis indents whatever the option says about the value itself`,
 			code: `
 				a {
@@ -1125,7 +1119,6 @@ testRule({
 
 	accept: [
 		{
-			// See #569
 			description: `a semicolon standing alone on the line behind the value, at the declaration's level`,
 			code: `a {\n\tcolor: pink\n\t;\n}\n`,
 		},
@@ -1141,7 +1134,6 @@ testRule({
 
 	reject: [
 		{
-			// See #569
 			description: `a semicolon alone on its line, indented two levels past the declaration it closes: the line is the declaration's, asked for the declaration's level`,
 			code: `a {\n\tcolor: pink\n\t\t\t;\n}\n`,
 			fixed: `a {\n\tcolor: pink\n\t;\n}\n`,
@@ -1238,7 +1230,6 @@ testRule({
 
 	reject: [
 		{
-			// See #569
 			description: `a semicolon alone on its line, indented by a tab where the declaration stands at two spaces`,
 			code: `a {\n  color: pink\n\t;\n}\n`,
 			fixed: `a {\n  color: pink\n  ;\n}\n`,
@@ -1255,7 +1246,6 @@ testRule({
 
 	reject: [
 		{
-			// See #569
 			description: `a semicolon alone on its line behind a value the option leaves at the declaration's level: the semicolon's line is asked for that level too`,
 			code: `a {\n  color:\n  pink\n    ;\n}\n`,
 			fixed: `a {\n  color:\n  pink\n  ;\n}\n`,
@@ -1272,7 +1262,6 @@ testRule({
 
 	reject: [
 		{
-			// See #569
 			description: `a semicolon alone on its line behind a value the option does not measure: the semicolon's line is no line of the value, and is measured`,
 			code: `a {\n  color:\n      pink\n    ;\n}\n`,
 			fixed: `a {\n  color:\n      pink\n  ;\n}\n`,
@@ -1289,7 +1278,6 @@ testRule({
 
 	accept: [
 		{
-			// See #635
 			description: `a value opening on the line behind its colon, a level deeper than the declaration`,
 			code: `a {\n\tcolor:\n\t\tpink;\n}\n`,
 		},
@@ -1297,7 +1285,6 @@ testRule({
 
 	reject: [
 		{
-			// See #635
 			description: `a value opening on the line behind its colon with no indentation, the break standing in the declaration's \`raws.between\``,
 			code: `a {\n\tcolor:\n pink;\n}\n`,
 			fixed: `a {\n\tcolor:\n\t\tpink;\n}\n`,
@@ -1363,7 +1350,6 @@ testRule({
 
 	reject: [
 		{
-			// See #635
 			description: `a value opening on the line behind its colon under the option, asked for the declaration's level`,
 			code: `a {\n\tcolor:\n\t\tpink;\n}\n`,
 			fixed: `a {\n\tcolor:\n\tpink;\n}\n`,
@@ -1380,7 +1366,6 @@ testRule({
 
 	accept: [
 		{
-			// See #635
 			description: `a value opening on the line behind its colon under the option, which does not measure it`,
 			code: `a {\n\tcolor:\npink;\n}\n`,
 		},

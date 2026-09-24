@@ -12,17 +12,15 @@ testRule({
 
 	accept: [
 		{
-			// Sass and `lightningcss` both read the escaped name as `url`, so what stands inside the parentheses is an address no rule may write to. See #344
+			// Sass and `lightningcss` both read the escaped name as `url`, so what stands inside the parentheses is an address no rule may write to.
 			description: `a trailing zero inside an address whose name an escape spells`,
 			code: `a { b: u\\rl(1.50px); }`,
 		},
 		{
-			// See #344
 			description: `the same zero inside an address whose name a hexadecimal escape spells, which the value parser hands the rule as a word and a call of two letters`,
 			code: `a { b: \\75 rl(1.50px); }`,
 		},
 		{
-			// See #271
 			description: `a trailing zero standing in the text of an inline comment the value holds`,
 			code: `
 				a { b: 1.5px // 1.50px
@@ -30,7 +28,6 @@ testRule({
 			`,
 		},
 		{
-			// See #271
 			description: `an address opened in the text of an inline comment and reaching past the break that closes it, which the rule passes over as it passes over every address`,
 			code: `
 				a { b: 1px // url(
@@ -38,7 +35,6 @@ testRule({
 			`,
 		},
 		{
-			// See #271
 			description: `a trailing zero standing in the text of an inline comment a set of media parameters holds`,
 			code: `
 				@media (min-width: 100px // 1.50px
@@ -49,7 +45,6 @@ testRule({
 
 	reject: [
 		{
-			// See #271
 			description: `a trailing zero a line below an inline comment, gathered by a call the parser opened inside that comment's text: the call is left alone and what it gathered is read where it stands`,
 			code: `
 				a { b: f(1.50px // c) calc(
@@ -73,7 +68,6 @@ testRule({
 			],
 		},
 		{
-			// See #271
 			description: `a trailing zero on either side of an inline comment whose text holds one as well`,
 			code: `
 				a { b: 1.50px // 1.50px
@@ -104,7 +98,6 @@ testRule({
 			column: 10,
 			message: messages.rejected,
 		},
-		// See #268
 		{
 			description: `a trailing zero in a value the raw of which ends in an end-of-line comment and a line break`,
 			code: `
@@ -146,7 +139,7 @@ testRule({
 
 	reject: [
 		{
-			// See #650; the column stands two too far right
+			// The column stands two too far right
 			description: `a Less variable whose value opens with a colon of its own, which the parser keeps in front of the value and out of the copy it prints`,
 			code: `@v: : 10.50px;`,
 			fixed: `@v: : 10.5px;`,

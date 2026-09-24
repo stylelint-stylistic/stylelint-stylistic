@@ -49,7 +49,7 @@ function topLevelTokenNodes (node: GeneralEnclosed): Array<CSSToken> {
 }
 
 /**
- * Closes what a block left open: a nested node holding the parameters' end takes the end-of-file token, and the outer block's `tokens()` holds a nothing the media parser throws on ([#399](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/399)).
+ * Closes what a block left open: a nested node holding the parameters' end takes the end-of-file token, and the outer block's `tokens()` holds a nothing the media parser throws on.
  * @param block - The parenthesised block whose tokens are closed.
  * @returns Its tokens, with a closer for every open node.
  */

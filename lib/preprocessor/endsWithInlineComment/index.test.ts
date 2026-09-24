@@ -121,7 +121,7 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`myurl(//a)`, PLAIN_CSS)).toBe(false)
 	})
 
-	// The name in front of the address is read as the comment walk reads it: an identifier code point, a closing brace or an escape. A pattern of the guard's own read ASCII word characters and the hyphen alone, so each call below was "no name" and taken for an address whose double slashes opened nothing. See #398
+	// The name in front of the address is read as the comment walk reads it: an identifier code point, a closing brace or an escape. A pattern of the guard's own read ASCII word characters and the hyphen alone, so each call below was "no name" and taken for an address whose double slashes opened nothing.
 	it(`a call whose name ends in a character no ASCII word holds, whose arguments hold a comment`, () => {
 		expect(endsWithInlineComment(`b: aurl(http://a/b.png) 1px; `, LESS)).toBe(true)
 		expect(endsWithInlineComment(`b: éurl(http://a/b.png) 1px; `, LESS)).toBe(true)
@@ -129,12 +129,12 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`b: \\75 url(http://a/b.png) 1px; `, LESS)).toBe(true)
 	})
 
-	// The address closes on the first parenthesis behind it, which is the reading the comment walk was brought onto: neither reading has a compiler behind it, since Less and Sass both refuse the text, and this one is the safe half, a fix held back where the other would write. See #557
+	// The address closes on the first parenthesis behind it, which is the reading the comment walk was brought onto: neither reading has a compiler behind it, since Less and Sass both refuse the text, and this one is the safe half, a fix held back where the other would write.
 	it(`a parenthesis inside a bare address, which closes the address for this reading`, () => {
 		expect(endsWithInlineComment(`b: url(a(b)c//d) 1px; `, LESS)).toBe(true)
 	})
 
-	// A quoted argument of `url` leaves a double slash behind it opening the comment Sass reads there: the first of these compiles to `a { b: url("a") 1px; }`. The comment walk read those slashes as code until the two readings were made one. See #557
+	// A quoted argument of `url` leaves a double slash behind it opening the comment Sass reads there: the first of these compiles to `a { b: url("a") 1px; }`. The comment walk read those slashes as code until the two readings were made one.
 	it(`a double slash beside a quoted address, which opens the comment Sass reads there`, () => {
 		expect(endsWithInlineComment(`b: url("a" // c\n) 1px; `, LESS)).toBe(false)
 		expect(endsWithInlineComment(`b: url("a" // c`, LESS)).toBe(true)
@@ -142,26 +142,25 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`b: url( "a" // c`, LESS)).toBe(true)
 	})
 
-	// All three parsers cut such a comment out of the declaration's value, so the double slashes inside it are its text. See #665
+	// All three parsers cut such a comment out of the declaration's value, so the double slashes inside it are its text.
 	it(`a double slash inside a block comment whose opening solidus a backslash stands in front of`, () => {
 		expect(endsWithInlineComment(`b: red \\/*x // c*/ `, LESS)).toBe(false)
 		expect(endsWithInlineComment(`b: red \\/*x // c`, LESS)).toBe(false)
 		expect(endsWithInlineComment(`b: url( a\\/* ) // c */ ) `, LESS)).toBe(false)
 	})
 
-	// `postcss-scss` reads the comment and cuts it out of the value, and the file a fix leaves is read by it again. See #517
+	// `postcss-scss` reads the comment and cuts it out of the value, and the file a fix leaves is read by it again.
 	it(`a double slash a backslash stands in front of, under a syntax whose tokenizer reads such a comment`, () => {
 		expect(endsWithInlineComment(`b: red \\//x`, SCSS)).toBe(true)
 		expect(endsWithInlineComment(`b: red\\//x`, SCSS)).toBe(true)
 	})
 
-	// Less reads the escape, and `postcss-less` keeps the slashes in the value. See #517
+	// Less reads the escape, and `postcss-less` keeps the slashes in the value.
 	it(`the same double slash under a syntax whose tokenizer reads no such comment, and under the default reading`, () => {
 		expect(endsWithInlineComment(`b: red \\//x`, LESS)).toBe(false)
 		expect(endsWithInlineComment(`b: red \\//x`)).toBe(false)
 	})
 
-	// See #517
 	it(`the same double slash inside a bare address, which the tokenizer reads whole`, () => {
 		expect(endsWithInlineComment(`b: url(a\\//x) `, SCSS)).toBe(false)
 	})
@@ -201,34 +200,29 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`b: // c\nurl(a(b)\\//c) 1px`, SCSS)).toBe(false)
 	})
 
-	// See #665
 	it(`a double slash standing behind such a comment, which the comment's own delimiter closed`, () => {
 		expect(endsWithInlineComment(`b: red \\/*x*/ // c`, LESS)).toBe(true)
 	})
 
-	// The double slashes stand in the text of a block comment PostCSS reads there, so the parenthesis closing the address stands behind that comment rather than inside it. See #660
+	// The double slashes stand in the text of a block comment PostCSS reads there, so the parenthesis closing the address stands behind that comment rather than inside it.
 	it(`a double slash inside a block comment the tokenizer's whitespace parts from the parenthesis of an address`, () => {
 		expect(endsWithInlineComment(`b: url( a /* ) // c */ ) 1px; `, LESS)).toBe(false)
 		expect(endsWithInlineComment(`b: url( a /* ) // c */ `, LESS)).toBe(false)
 		expect(endsWithInlineComment(`b: url( a /* ) // c `, LESS)).toBe(false)
 	})
 
-	// See #660
 	it(`the same text with the parenthesis standing against the address, which leaves the comment's delimiters characters of it`, () => {
 		expect(endsWithInlineComment(`b: url(a /* ) // c */ ) 1px; `, LESS)).toBe(true)
 	})
 
-	// See #661
 	it(`the same text under the parser Sass is read by, which reads the parentheses as code and the double slash as text of the block comment`, () => {
 		expect(endsWithInlineComment(`b: url(a /* ) // c */ ) 1px; `, SCSS)).toBe(false)
 	})
 
-	// See #664
 	it(`the same text behind a name spelled other than the word itself, whose parentheses every parser reads as code`, () => {
 		expect(endsWithInlineComment(`b: URL(a /* ) // c */ ) 1px; `, LESS)).toBe(false)
 	})
 
-	// See #664
 	it(`a double slash behind such a name under the parser Sass is read by, where Sass reads an address in front of it`, () => {
 		expect(endsWithInlineComment(`b: URL(a/*b) // c */)`, SCSS)).toBe(true)
 	})
@@ -277,13 +271,12 @@ describe(`endsWithInlineComment`, () => {
 		expect(endsWithInlineComment(`b: url(x)url(http://a/b.png) 1px; `, LESS)).toBe(false)
 	})
 
-	// See #344
 	it(`an address whose name is spelled with an escape, whose double slashes open nothing`, () => {
 		expect(endsWithInlineComment(`b: u\\rl(http://a/b.png) 1px; `, LESS)).toBe(false)
 		expect(endsWithInlineComment(`b: \\75 rl(http://a/b.png) 1px; `, LESS)).toBe(false)
 	})
 
-	// A backslash in front of any of the four newlines spells nothing and delimits, so the name behind it stands on its own. The form feed and the bare carriage return used to be read as escaped characters, which made an ordinary call of each and a comment of its protocol's double slashes. See #566
+	// A backslash in front of any of the four newlines spells nothing and delimits, so the name behind it stands on its own. The form feed and the bare carriage return used to be read as escaped characters, which made an ordinary call of each and a comment of its protocol's double slashes.
 	it(`an address behind a backslash and a newline of any of the four spellings, which the backslash names nothing in front of`, () => {
 		expect(endsWithInlineComment(`b: \\\nurl(http://a/b.png) 1px; `, LESS)).toBe(false)
 		expect(endsWithInlineComment(`b: \\\r\nurl(http://a/b.png) 1px; `, LESS)).toBe(false)

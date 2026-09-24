@@ -27,7 +27,7 @@ export function getRootBaseIndentLevel (syntax: Syntax, root: Root, baseIndentLe
 
 	if (isNumber(indentLevel) && Number.isSafeInteger(indentLevel)) return indentLevel
 
-	// A spaces option names the width of a level, so a root's own lines are measured in it; a width voted off the page's lines mixed two units, and after a fix the lines the rule had just written outvoted the page and read a level lower on the next run (#634). Under `tab` the width of a space-indented line has to be guessed, and the page is what it is guessed off
+	// A spaces option names the width of a level, so a root's own lines are measured in it; a width voted off the page's lines mixed two units, and after a fix the lines the rule had just written outvoted the page and read a level lower on the next run. Under `tab` the width of a space-indented line has to be guessed, and the page is what it is guessed off
 	let newIndentLevel = inferRootIndentLevel(syntax, root, baseIndentLevel, () => (isNumber(space) ? space : inferDocIndentSize(document, space)), indentClosingBrace)
 
 	source.baseIndentLevel = newIndentLevel
@@ -142,7 +142,7 @@ function inferRootIndentLevel (syntax: Syntax, root: Root, baseIndentLevel: numb
 	if (!isNumber(baseIndentLevel) || !Number.isSafeInteger(baseIndentLevel)) {
 		let { own, tagLine } = rootLevelIndents(syntax, root, indentClosingBrace ?? false)
 
-		// Read off the root's own lines, the ones statements open and blocks close on; a line inside a statement or nested block is measured against this level and rose a level every `--fix` (#594). A brace under `indentClosingBrace` is left out too; the tag's line stands in only where the sheet has no line of its own
+		// Read off the root's own lines, the ones statements open and blocks close on; a line inside a statement or nested block is measured against this level and rose a level every `--fix`. A brace under `indentClosingBrace` is left out too; the tag's line stands in only where the sheet has no line of its own
 		let indents = own.length > 0 ? own : tagLine
 
 		if (indents.length > 0) return Math.min(...indents.map((indent) => getIndentLevel(indent)))

@@ -82,7 +82,7 @@ function commasOf (functionNode: ValueParserFunctionNode, reading: CommentReadin
 	// A comment followed by whitespace alone takes the whitespace in front of it out too
 	let functionArguments = withoutComments(hiddenArguments, commentSpans)
 
-	// The value parser reads an escaped space as a character of its word, so the fix cuts none, and the check reads the run over a copy where it is none either (1789661964)
+	// The value parser reads an escaped space as a character of its word, so the fix cuts none, and the check reads the run over a copy where it is none either
 	return {
 		runArguments: maskEscapes(functionArguments, findEscapeSpans(functionArguments, reading), true),
 		commentedArguments: maskEscapes(hiddenArguments, findEscapeSpans(hiddenArguments, reading), true),
@@ -105,19 +105,19 @@ export function functionCommaSpaceChecker (opts: {
 	ignoreFunctions?: string | RegExp | Array<string | RegExp> | undefined,
 }): void {
 	let { fix } = opts
-	// A `before` rule reads the run in front of the comma, which a comment there leaves where it stands until the fix writes there (1789971383); only the run behind one is read past a comment by the copy with the comments taken out
+	// A `before` rule reads the run in front of the comma, which a comment there leaves where it stands until the fix writes there; only the run behind one is read past a comment by the copy with the comments taken out
 	let readsBehind = opts.fixPosition !== `before`
 
 	opts.root.walkDecls((decl) => {
 		let declValue = opts.syntax.read(decl)
 		// The value parser reads commas inside a `//` comment; whether `//` opens one the syntax says (in plain CSS `myurl(//a)` is code)
 		let reading = opts.syntax.inlineComments(decl, opts.result)
-		// Block comments too: the value parser closes `/*/` on its own star and returns the rest as nodes, commas among them (#275)
+		// Block comments too: the value parser closes `/*/` on its own star and returns the rest as nodes, commas among them
 		let valueCommentSpans = findCommentSpans(declValue, reading)
 
 		// Edited by position rather than printed from the tree, which gives `/*/` back as `/**/`
 		let edits: Edit[] = []
-		// Masked so the parser pairs quotation marks as the file does (#508)
+		// Masked so the parser pairs quotation marks as the file does
 		let parsedValue = valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(declValue, valueCommentSpans), valueCommentSpans))
 
 		parsedValue.walk((valueNode, at, siblings) => {
@@ -135,7 +135,7 @@ export function functionCommaSpaceChecker (opts: {
 			if (optionsMatches(opts, `ignoreFunctions`, valueNode.value)) return false
 
 			let { runArguments, commentedArguments, commaDataList } = commasOf(valueNode, reading, valueCommentSpans)
-			// A comment behind a comma takes the whitespace in front of itself out of the copy with the comments removed, so the run read there is the one past the comment while the fix writes the one in front of it (1789508660); the list families read this side with the comments standing
+			// A comment behind a comma takes the whitespace in front of itself out of the copy with the comments removed, so the run read there is the one past the comment while the fix writes the one in front of it; the list families read this side with the comments standing
 			let readText = readsBehind ? commentedArguments : runArguments
 
 			/**
@@ -191,7 +191,7 @@ export function functionCommaSpaceChecker (opts: {
 			}
 
 			for (let comma of commaDataList) {
-				// The run between the opening parenthesis and a comma opening the arguments, and the one between a comma closing them and the closing parenthesis, is the parentheses rules' to judge and to write, as the run in front of a closing brace is the brace rules' and not the semicolon rules' (1790021150)
+				// The run between the opening parenthesis and a comma opening the arguments, and the one between a comma closing them and the closing parenthesis, is the parentheses rules' to judge and to write, as the run in front of a closing brace is the brace rules' and not the semicolon rules'
 				if (readsBehind ? comma.nodeIndex === functionNode.nodes.length - 1 : comma.nodeIndex === 0) continue
 
 				let readIndex = readIndexOf(comma)

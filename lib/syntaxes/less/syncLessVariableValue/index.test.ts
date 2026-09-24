@@ -24,7 +24,6 @@ describe(`syncLessVariableValue`, () => {
 		expect(less(node)).toBe(`@foo: (\n\t/* c */\n\t'a'\n);`)
 	})
 
-	// See #650
 	it(`leaves out of the mirror the head the params hold in front of a value opening with a colon of its own, asked before the params are written`, () => {
 		for (let [code, written, printed] of [[`@v: : 10PX;`, `: 10px`, `@v: : 10px;`], [`@v: :10PX;`, `:10px`, `@v: :10px;`], [`@v:\n\t: 10PX;`, `: 10px`, `@v:\n\t: 10px;`], [`@v: 10PX;`, `10px`, `@v: 10px;`]] as const) {
 			let node = lessAtRule(code)

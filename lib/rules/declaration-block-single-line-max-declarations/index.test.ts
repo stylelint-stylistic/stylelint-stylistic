@@ -240,7 +240,6 @@ testRule({
 			endColumn: 42,
 			message: messages.expected(1),
 		},
-		// #640
 		{
 			description: `a single-line block of an at-rule holding two declarations`,
 			code: `@font-face { font-family: x; src: y; }`,
@@ -396,7 +395,6 @@ testRule({
 			endColumn: 39,
 			message: messages.expected(1),
 		},
-		// #641
 		{
 			description: `a comment at the head of the block, which stays on the brace's line as every rule about that run allows`,
 			code: `a { /* c */ color: pink; top: 3px; }`,
@@ -545,7 +543,6 @@ testRule({
 			message: messages.expected(1),
 		},
 		{
-			// See #538
 			description: `a single-line block holding two custom properties, the last with no semicolon, whose value the parser keeps the run in front of the brace in rather than the block`,
 			code: `a { --b: red; --c: blue }`,
 			fixed: `

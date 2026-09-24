@@ -51,7 +51,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Both kinds, since a `/*` written inside a `//` comment opens no comment under a syntax that spells one
 			let comments = syntax.commentSpans(value, decl, result)
 
-			// Read in a copy of the same length with every comment blanked, so a run inside a comment is reported by no warning and collapsed by no fix (#503)
+			// Read in a copy of the same length with every comment blanked, so a run inside a comment is reported by no warning and collapsed by no fix
 			let blankedValue = blankComments(value, comments)
 
 			if (holdsLongerBreakRun(blankedValue, maxAdjacentNewlines)) {

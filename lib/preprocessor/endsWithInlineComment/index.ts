@@ -69,7 +69,7 @@ function readInsideString (text: string, scan: Scan): void {
 /**
  * Reads one character of the code, where every other state opens.
  *
- * A `(` opens an address where {@link namesAnAddress} says so of the name just read and no sign in front lengthens it ({@link lengthensTheName}): {@link IDENTIFIER_CODE_POINT} code points, an interpolation's closing brace and escapes, since an ASCII pattern took `éurl(` for `url(` ([#398](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/398)). Read forward, since an escape spells one character with several.
+ * A `(` opens an address where {@link namesAnAddress} says so of the name just read and no sign in front lengthens it ({@link lengthensTheName}): {@link IDENTIFIER_CODE_POINT} code points, an interpolation's closing brace and escapes, since an ASCII pattern took `éurl(` for `url(`. Read forward, since an escape spells one character with several.
  * @param text - The raw scanned, standing in code.
  * @param scan - The scan, moved on.
  * @param reading - The syntax's reading, which says what the parentheses of an address hold.
@@ -151,7 +151,7 @@ function scanEndsInsideInlineComment (text: string, reading: InlineCommentReadin
 /**
  * Asks whether a raw ends inside a `//` comment, where a fixer writing behind it would write.
  *
- * Scanned rather than matched: the `//` in `url(http://example.com)` or `"//"` opens nothing, and `url` is {@link namesAnAddress}'s reading ([#427](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/427)). A syntax spelling no such comment ends `1px//c` in code; the caller says which. {@link INLINE_COMMENT_BREAK} closes the comment, a bare carriage return included, and {@link INLINE_COMMENT_BREAK_OR_FORM_FEED} where the reading says a form feed closes one too.
+ * Scanned rather than matched: the `//` in `url(http://example.com)` or `"//"` opens nothing, and `url` is {@link namesAnAddress}'s reading. A syntax spelling no such comment ends `1px//c` in code; the caller says which. {@link INLINE_COMMENT_BREAK} closes the comment, a bare carriage return included, and {@link INLINE_COMMENT_BREAK_OR_FORM_FEED} where the reading says a form feed closes one too.
  * @param source - A raw or a part of one.
  * @param reading - The syntax's reading of such a comment; defaults to spelling it.
  * @returns True if it ends inside a `//` comment.

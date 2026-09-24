@@ -61,24 +61,24 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// A declaration another plugin's fix built has no `raws.between`; PostCSS prints `: ` for it while `declarationValueIndex` counts `:`
 			if (!decl.raws.between) return
 
-			// A break behind the last top-level declaration's colon would end the stylesheet on a whitespace line (#537)
+			// A break behind the last top-level declaration's colon would end the stylesheet on a whitespace line
 			if (runPastDeclarationEndsTheStylesheet(syntax, decl, result)) return
 
 			// The declaration through its value, with the run past it
 			let source = declarationColonSource(syntax, decl, result)
 
-			// The colon is the first the parser read as one in `raws.between`: not one in the value, an escaped `\:` in the property, or one in a comment, where a break under `postcss-scss` closes an inline comment early (#388, #408, #421, #499)
+			// The colon is the first the parser read as one in `raws.between`: not one in the value, an escaped `\:` in the property, or one in a comment, where a break under `postcss-scss` closes an inline comment early
 			let indexInBetween = colonIndexInBetween(syntax, decl, result)
 
 			if (indexInBetween === -1) return
 
 			let colonIndex = declarationValueIndex(decl) - decl.raws.between.length + indexInBetween
-			// A whitespace-only run behind the colon is the run in front of the semicolon too, and the semicolon rules settle who writes it (#416)
+			// A whitespace-only run behind the colon is the run in front of the semicolon too, and the semicolon rules settle who writes it
 			let isFixable = writesSharedRun(syntax, decl, result, ruleName)
-			// Where `declaration-block-semicolon-newline-before` asks the shared run for a break, the fix writes the bare break the neighbor would, so either order ends on one file (#417)
+			// Where `declaration-block-semicolon-newline-before` asks the shared run for a break, the fix writes the bare break the neighbor would, so either order ends on one file
 			let finishesTheRun = isFixable && sharesRunWithSemicolon(syntax, decl, result, ruleName) && LINE_BREAK.test(whitespaceBeforeSemicolon(syntax, decl, result))
 
-			/** Trims the shared run to the bare break the neighbor asks for; a bare carriage return and a form feed go too, since the neighbor replaces the whole run ([#488](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/488)). */
+			/** Trims the shared run to the bare break the neighbor asks for; a bare carriage return and a form feed go too, since the neighbor replaces the whole run. */
 			function finishTheRun (): void {
 				if (!finishesTheRun) return
 
@@ -87,14 +87,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (syntax.read(decl) === `` && decl.raws.between) decl.raws.between = decl.raws.between.replace(TRAILING_WHITESPACE_WITHOUT_BREAK, ``)
 			}
 
-			// The search for the comment's end starts behind its opening, since `/*/` would otherwise close on its own star; an unclosed comment, which every syntax refuses, falls back to the colon (#400)
+			// The search for the comment's end starts behind its opening, since `/*/` would otherwise close on its own star; an unclosed comment, which every syntax refuses, falls back to the colon
 			let commentEnd = source.indexOf(`*/`, source.indexOf(`/*`, colonIndex) + 2)
 			let indexToCheck = OPENS_WITH_BLOCK_COMMENT.test(source.slice(colonIndex + 1)) && commentEnd !== -1 ? commentEnd + 1 : colonIndex
 
 			checker.afterOneOnly({
 				source,
 				index: indexToCheck,
-				// Lineness is read from the value as spelled, since `decl.value` drops comments and the breaks in them (#389)
+				// Lineness is read from the value as spelled, since `decl.value` drops comments and the breaks in them
 				lineCheckStr: declarationValueAsSpelled(syntax, decl, result),
 				err: (m) => {
 					report({
@@ -106,7 +106,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						ruleName,
 						...(isFixable && {
 							fix (): void {
-								// Behind an empty value the run is in the next node's raw; a break written into `between` instead would be added every run (#387)
+								// Behind an empty value the run is in the next node's raw; a break written into `between` instead would be added every run
 								let runPast = runPastDeclaration(syntax, decl, result)
 
 								if (runPast !== undefined) {

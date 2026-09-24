@@ -13,7 +13,7 @@ let { ruleName: newlineBeforeRuleName } = createNewlineBefore(less)
 let { ruleName: spaceBeforeRuleName } = createSpaceBefore(less)
 let { ruleName: atRuleSpaceBeforeRuleName } = createAtRuleSpaceBefore(less)
 
-// The neighbor is named and this rule listed behind it, as in the core's integration test (#354); these blocks add that the settings read are the namespace's own, and that a `//` comment ending the value parts the two whitespaces: a break closes the comment ahead of the semicolon, and a space would take the semicolon into it.
+// The neighbor is named and this rule listed behind it, as in the core's integration test; these blocks add that the settings read are the namespace's own, and that a `//` comment ending the value parts the two whitespaces: a break closes the comment ahead of the semicolon, and a space would take the semicolon into it.
 let testRule = createTestRule({ ruleName, extraRules: { [ruleName]: `always` }, customSyntax: `postcss-less` })
 
 testRule({
@@ -52,7 +52,7 @@ testRule({
 	],
 })
 
-// The neighbor's fix is off, so the break it asks for could only be this rule's write, and the file and this rule's warning are asserted directly: the neighbor reads the comment's semicolon as well. See #359
+// The neighbor's fix is off, so the break it asks for could only be this rule's write, and the file and this rule's warning are asserted directly: the neighbor reads the comment's semicolon as well.
 describe(`a semicolon in the text of an inline comment ending the value`, () => {
 	it(`is left in the comment where the namespace's rule asks for a break in front of the semicolon, which would take it out`, async () => {
 		let code = `a {\n\tb: c // ;\n}\n`
@@ -102,7 +102,6 @@ testRule({
 
 	reject: [
 		{
-			// See #477
 			description: `a bodiless at-rule closing the block, whose written semicolon gets the space the namespace's rule asks for`,
 			code: `a { @foo bar }`,
 			fixed: `a { @foo bar ; }`,

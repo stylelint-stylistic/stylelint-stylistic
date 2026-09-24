@@ -67,23 +67,22 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (isLastNodeWithoutSemicolon(decl)) return
 
-			// Under `postcss-less` a semicolon of a `//` comment's text closed the declaration; the one Less closes it on, if any, stands past the comment's break, where the rule does not look (#720)
+			// Under `postcss-less` a semicolon of a `//` comment's text closed the declaration; the one Less closes it on, if any, stands past the comment's break, where the rule does not look
 			if (syntax.closingSemicolonIsCommentText(decl, result)) return
 
 			let value = syntax.read(decl)
 			let isCustomPropertyWithOnlyHorizontalSpaces = isCustomProperty(decl.prop) && SPACES_AND_TABS_ONLY.test(value)
 
-			// See #50
-			// The single space may still be in `raws.between`, where `declaration-colon-space-after` wrote it before a deferred check (#355)
+			// The single space may still be in `raws.between`, where `declaration-colon-space-after` wrote it before a deferred check
 			if (primary.startsWith(`never`) && betweenTailAfterColon(syntax, decl, result) + value === ` `) return
 
 			let declString = declarationString(syntax, decl)
 			let problemIndex = declString.length - 1
-			// A `never-multi-line` fix taking the break that closes an inline comment would put the semicolon into it: unfixed. A whitespace-only value is the run behind the colon too, and the rules asked settle who writes it (#416). A backslash ending the value would read what the fix puts behind it
+			// A `never-multi-line` fix taking the break that closes an inline comment would put the semicolon into it: unfixed. A whitespace-only value is the run behind the colon too, and the rules asked settle who writes it. A backslash ending the value would read what the fix puts behind it
 			let isFixable = (primary.startsWith(`always`) || !syntax.writesIntoInlineComment(decl, result)) && writesSharedRun(syntax, decl, result, ruleName) && keepsEscapedCharacter(syntax, decl, result, primary.startsWith(`always`) ? getLineBreak(root, result) : ``)
 
 			checker.beforeAllowingIndentation({
-				// The run is read over the copy with its escapes masked, where an escaped space is a character of the value and no run (1789661964)
+				// The run is read over the copy with its escapes masked, where an escaped space is a character of the value and no run
 				source: maskEscapes(declString, findEscapeSpans(declString, syntax.inlineComments(decl, result)), true),
 				index: declString.length,
 				lineCheckStr: blockString(parentRule, result),

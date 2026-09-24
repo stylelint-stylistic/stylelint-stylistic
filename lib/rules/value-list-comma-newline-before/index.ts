@@ -79,7 +79,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			isFixable: (declNode, index, declString, runString) => {
 				if (index < declarationValueIndex(declNode)) return false
 
-				// The run in front of a comma opening the value is the head run behind the colon, which the colon rules read too, and the rules asked settle who writes it (1789594574)
+				// The run in front of a comma opening the value is the head run behind the colon, which the colon rules read too, and the rules asked settle who writes it
 				if (index === declarationValueIndex(declNode) && !writesSharedRun(syntax, declNode, result, ruleName)) return false
 
 				let closesInlineComment = syntax.endsWithInlineComment(declString.slice(0, index), syntax.inlineComments(declNode, result))
@@ -91,12 +91,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				let run = runInFront(runString, index)
 
-				// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎,b` would come out as `a\,b`, one identifier, so the warning stands; `always` leaves the break the backslash stands in front of (1789661965)
+				// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎,b` would come out as `a\,b`, one identifier, so the warning stands; `always` leaves the break the backslash stands in front of
 				if (primary === `never-multi-line` && !editKeepsEscapedCharacter(declString, { start: index - run.length, end: index, text: `` })) return false
 
 				return true
 			},
-			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ ,b` is not cut and no break parts it from its backslash (1789657288)
+			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ ,b` is not cut and no break parts it from its backslash
 			fix: (declNode, index, runString) => {
 				fixData = fixData || (new Map())
 

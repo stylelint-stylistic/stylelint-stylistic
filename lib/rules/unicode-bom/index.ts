@@ -27,7 +27,7 @@ export let meta = {
 export type PrimaryOption = `always` | `never`
 
 /**
- * Requires or disallows Unicode BOM. The mark is in none of the text the rules read: PostCSS takes it off while building the `Input` and keeps it as the `hasBOM` flag, which the stringifier reads back when it prints a root, so the fix is the flag ([#700](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/700)).
+ * Requires or disallows Unicode BOM. The mark is in none of the text the rules read: PostCSS takes it off while building the `Input` and keeps it as the `hasBOM` flag, which the stringifier reads back when it prints a root, so the fix is the flag.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
@@ -42,7 +42,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			possible: [`always`, `never`],
 		})
 
-		// A byte order mark stands at the head of the file, which only the result's root stands for; a block of `postcss-html` and a styled template are roots inside a document (#728)
+		// A byte order mark stands at the head of the file, which only the result's root stands for; a block of `postcss-html` and a styled template are roots inside a document
 		let source: EmbeddedSource | undefined = root.source
 
 		if (!validOptions || !source || source.inline || source.lang === `object-literal` || result.root !== root) return

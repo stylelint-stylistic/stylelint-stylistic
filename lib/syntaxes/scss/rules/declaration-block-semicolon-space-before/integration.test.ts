@@ -13,7 +13,6 @@ testRule({
 
 	reject: [
 		{
-			// See #710
 			description: `a plain CSS declaration closing its block without a semicolon, with the neighbor that adds one listed under the core's name, which reads the same file`,
 			code: `a { color: red }`,
 			fixed: `a { color: red ; }`,

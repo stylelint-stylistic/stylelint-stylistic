@@ -105,14 +105,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let ignoreComments = optionsMatches(secondaryOptions, `ignore`, `comments`)
 		let tabSize = secondaryOptions?.tabSize ?? 1
 		let rootString = root.source.input.css
-		// The spans left out of the count, in the source order the line queue reads them in; the comment-finding walk alone can say where an address closes and whether the text around it is code (#427, #552)
+		// The spans left out of the count, in the source order the line queue reads them in; the comment-finding walk alone can say where an address closes and whether the text around it is code
 		let skippedSubStrings: Array<[number, number]> = findAddressSpans(rootString, syntax.inlineComments(root, result), syntax.addressAtRules()).map(({ start, end }) => [start, end])
 		let skippedSubStringsIndex = 0
 
 		// Check first line
 		checkNewline({ endIndex: 0 })
 		// Check subsequent lines
-		// The search reads a string by rules of its own, so it is handed none (#739)
+		// The search reads a string by rules of its own, so it is handed none
 		styleSearch({ source: maskStrings(rootString, syntax.commentSpans(rootString, root, result)), target: [`\n`], comments: `check` }, (match) => checkNewline(match))
 
 		/**

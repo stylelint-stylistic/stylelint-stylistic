@@ -60,7 +60,7 @@ function fixWouldCommentOutTheBlock (syntax: Syntax, statement: Rule | AtRule, n
 /**
  * The run the closing brace of a block holding nothing but comments stands behind.
  *
- * Such a block has that brace where the checked node would stand, so the carry chains onto it: the block's own trailing raw takes the break in front of it exactly as a node's `raws.before` would ([#672](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/672)). The last comment's run is read the way every other is, so a comment carrying no raw is the run PostCSS prints in front of it ([#680](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/680)).
+ * Such a block has that brace where the checked node would stand, so the carry chains onto it: the block's own trailing raw takes the break in front of it exactly as a node's `raws.before` would. The last comment's run is read the way every other is, so a comment carrying no raw is the run PostCSS prints in front of it.
  * @param syntax - The syntax the rule is built over, which the raw is read through.
  * @param statement - The rule or at-rule whose block holds nothing but comments.
  * @returns The trailing raw, or the run carried past the last comment.
@@ -75,7 +75,7 @@ function runInFrontOfTheClosingBrace (syntax: Syntax, statement: Rule | AtRule):
 /**
  * Takes the line breaks out of the run in front of a node.
  *
- * A node carrying no raw is written the empty run rather than left alone, since PostCSS prints a run of its own in front of one and `never-multi-line`, the only option that asks for this, wants no whitespace there at all ([#411](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/411)).
+ * A node carrying no raw is written the empty run rather than left alone, since PostCSS prints a run of its own in front of one and `never-multi-line`, the only option that asks for this, wants no whitespace there at all.
  * @param node - The node whose leading run loses its breaks.
  */
 function unbreakTheRunInFrontOf (node: Node): void {
@@ -88,7 +88,7 @@ function unbreakTheRunInFrontOf (node: Node): void {
 /**
  * Spells the run in front of a node a comment's break was carried onto, which the `always` options read in that comment's run and write in front of the node.
  *
- * The break and the whitespace behind it are the comment's run's, and what the node's own run holds behind its whitespace is kept: a stray semicolon standing in either run is no whitespace, so the write neither drops the node's nor copies the comment's (1789998855).
+ * The break and the whitespace behind it are the comment's run's, and what the node's own run holds behind its whitespace is kept: a stray semicolon standing in either run is no whitespace, so the write neither drops the node's nor copies the comment's.
  * @param carried - The comment's run, which holds a break.
  * @param own - The node's own run, or nothing where it carries no raw.
  * @returns The run to write.
@@ -176,7 +176,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			/**
 			 * Carries the line break in front of a comment onto the node behind it.
 			 *
-			 * A comment at the head of the block may hold the break the option asks for, so its break is moved onto the next node, and the whitespace it replaces is filed in a map the fix reads back and the check restores from before it returns ([#410](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/410)). Over a run of comments the move chains.
+			 * A comment at the head of the block may hold the break the option asks for, so its break is moved onto the next node, and the whitespace it replaces is filed in a map the fix reads back and the check restores from before it returns. Over a run of comments the move chains.
 			 * @param comment - The comment stepped over.
 			 * @param nextNode - The node behind it.
 			 */
@@ -255,7 +255,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			/**
 			 * Builds the fix that spells the run in front of the checked node.
 			 *
-			 * The run the fix reads is the one the check read, so a node carrying no raw is written the run PostCSS would have printed in front of it, trimmed or opened as the option asks ([#680](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/680)).
+			 * The run the fix reads is the one the check read, so a node carrying no raw is written the run PostCSS would have printed in front of it, trimmed or opened as the option asks.
 			 * @param nodeToFix - The first non-comment node of the block.
 			 * @returns The fix.
 			 */
@@ -278,7 +278,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					if (primary === `never-multi-line`) {
 						restoreCarriedBreaks()
 
-						// The comments in front lose their breaks; the checked node's run loses the whitespace it opens with, and a stray semicolon behind it stays with whatever follows it (1789998855)
+						// The comments in front lose their breaks; the checked node's run loses the whitespace it opens with, and a stray semicolon behind it stays with whatever follows it
 						for (let comment = statement.first; comment && comment !== nodeToFix; comment = comment.next()) unbreakTheRunInFrontOf(comment)
 
 						nodeToFixRaws.before = writes.newline(primary, nodeToFixRaws.before ?? ``)

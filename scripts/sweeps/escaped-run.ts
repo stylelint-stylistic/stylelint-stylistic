@@ -17,7 +17,7 @@
  *
  * The three interpolation shapes were added for 1789883888, where the escapes standing in the code of an interpolation's expression came to be recorded: only a parser whose own tokenizer reads a `//` comment reads an interpolation there at all, so the call shape, whose escape the walk meets itself, is the control that parts the two readings. The open shape leaves the expression unclosed, where its reader and the walk behind it both go over the same characters, so a span recorded twice shows up as a mask longer than the text.
  *
- * The controls: `value-list-comma-space-before`, which reads its run over the search copy already (1789657288), and `declaration-bang-space-before`.
+ * The controls: `value-list-comma-space-before`, which reads its run over the search copy already, and `declaration-bang-space-before`.
  */
 
 import { multiply, place } from "../harness/matrix.ts"

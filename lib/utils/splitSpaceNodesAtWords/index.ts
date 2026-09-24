@@ -35,7 +35,7 @@ function splitSpaceValue (text: string, sourceIndex: number): ValueNode[] {
 /**
  * Splits a function's whitespace nodes at the characters the tokenizer reads as words.
  *
- * `postcss-value-parser` counts a vertical tab as whitespace and the tokenizer does not, so the `never-multi-line` fixes emptied a stretch holding one ([#496](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496)). Such a node is cut into the tokenizer's runs and words; `before` and `after` keep only the run touching the parenthesis.
+ * `postcss-value-parser` counts a vertical tab as whitespace and the tokenizer does not, so the `never-multi-line` fixes emptied a stretch holding one. Such a node is cut into the tokenizer's runs and words; `before` and `after` keep only the run touching the parenthesis.
  * @param nodes - A parsed value; every function is rewritten in place.
  */
 export function splitSpaceNodesAtWords (nodes: ValueNode[]): void {

@@ -93,7 +93,7 @@ function readPoppedParentheses (text: string, openIndex: number, popped: string 
 /**
  * Walks a text as the tokenizer does, up to the `(` the caller asks about.
  *
- * The tokenizer pushes every word it reads and pops one word at each `(`, and the word popped there is the one deciding whether the parentheses open a token: a word popped by one `(` is gone from the next, so `url x(y)(a` opens a token at the second `(` (1789646980). The tokens pushing no word are {@link wordlessTokenEnd}'s, while any other is a word.
+ * The tokenizer pushes every word it reads and pops one word at each `(`, and the word popped there is the one deciding whether the parentheses open a token: a word popped by one `(` is gone from the next, so `url x(y)(a` opens a token at the second `(`. The tokens pushing no word are {@link wordlessTokenEnd}'s, while any other is a word.
  *
  * The whole text is read, from its opening rather than from the parenthesis, since both the stack and the reading of parentheses carry state ({@link readPoppedParentheses}). The text is read as it is spelled, so that a break written into a token is asked about too. A `(` the walk passes over inside a token is never asked about: the parser reads no parentheses there.
  * @param text - The text read.
@@ -347,7 +347,7 @@ function scssCodeClosingIndex (text: string, openIndex: number): number {
 }
 
 /**
- * Asks whether the parentheses of a `url(` come apart under `postcss-scss`'s tokenizer, whose token closes where the count of parentheses returns to zero, through strings, comments and interpolations alike: the readings part where the `)` code closes the parentheses at, a square-bracket group and the parser's reading of a `;` behind the token counted in, is not that one, or where the count never returns to zero (1789574294).
+ * Asks whether the parentheses of a `url(` come apart under `postcss-scss`'s tokenizer, whose token closes where the count of parentheses returns to zero, through strings, comments and interpolations alike: the readings part where the `)` code closes the parentheses at, a square-bracket group and the parser's reading of a `;` behind the token counted in, is not that one, or where the count never returns to zero.
  * @param text - The text holding the address.
  * @param contentIndex - Behind the `(`.
  * @returns True where the two readings part.
@@ -449,7 +449,7 @@ function leavesTheTextOpen (text: string, reading: Pick<CommentReading, `tokeniz
 /**
  * Asks whether a string or a comment code reads inside a call's parentheses holds the `)` its token closes at, or runs past it.
  *
- * The parentheses close under both readings there, so the parser reads the text back; what the write loses is the string or the comment, whose opening the token swallows and whose closing is then an unpaired quotation mark or an unopened comment ([#660](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/660)).
+ * The parentheses close under both readings there, so the parser reads the text back; what the write loses is the string or the comment, whose opening the token swallows and whose closing is then an unpaired quotation mark or an unopened comment.
  * @param text - The text holding the address.
  * @param contentIndex - Behind the `(`.
  * @param tokenCloseIndex - The `)` the parentheses read as one token close at.
@@ -533,7 +533,7 @@ export function rereadsAnAddress (text: string, { start, end, text: written }: E
 /**
  * Asks whether the edits of a fix make the tokenizer read the parentheses of a call the other way, where the two readings part.
  *
- * The parentheses a `(` pops `url` at are one token, and what stands right behind that `(` is what keeps them code instead ({@link keepsParenthesesCode}), so the run written there is the one that can switch the reading and the run in front of the `)` is not. The call is the parser's rather than the compilers': `\61 url(` and `x\9 url(` name one call, `aurl` and `xurl`, to Sass and to `lightningcss`, and the value-parser rules read them as one ({@link opensAnAddress}), while the tokenizer sees the three characters `url` right against the `(` and takes the parentheses for an address's ([#669](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/669)).
+ * The parentheses a `(` pops `url` at are one token, and what stands right behind that `(` is what keeps them code instead ({@link keepsParenthesesCode}), so the run written there is the one that can switch the reading and the run in front of the `)` is not. The call is the parser's rather than the compilers': `\61 url(` and `x\9 url(` name one call, `aurl` and `xurl`, to Sass and to `lightningcss`, and the value-parser rules read them as one ({@link opensAnAddress}), while the tokenizer sees the three characters `url` right against the `(` and takes the parentheses for an address's.
  *
  * The refusal is scoped by what the write loses. Both texts are walked whole ({@link leavesTheTextOpen}), since whether the tokenizer reads a pair as code carries from one `(` to the next, and a refusal is read off what the write leaves the parser holding that the standing text did not; where it leaves nothing, the write is kept unless it swallows the opening of a string or a comment ({@link codeCoversTheTokenClose}). Otherwise the two readings part only in how far the call reaches, which changes no text the parser reads back.
  * @param text - The text the edits apply to.
@@ -550,7 +550,7 @@ export function editsRereadAnAddress (text: string, openIndex: number, edits: Ed
 
 	if (standingKeepsCode === keepsParenthesesCode(edited, openIndex, reading)) return false
 
-	// The standing text is asked too: an at-rule's params run past every brace while a `(` is open, so the text a media feature hands the rule leaves a group open whatever the write does ([#575](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/575))
+	// The standing text is asked too: an at-rule's params run past every brace while a `(` is open, so the text a media feature hands the rule leaves a group open whatever the write does
 	if (leavesTheTextOpen(edited, reading) && !leavesTheTextOpen(text, reading)) return true
 
 	// The reading that is not the address's is asked about over the text it stands in, where the parentheses hold what they hold under it; the `(` stands at one index in both, the edits standing behind it

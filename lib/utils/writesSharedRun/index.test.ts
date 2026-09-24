@@ -88,7 +88,6 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { --b: }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `never` }, COLON_NEWLINE)).toBe(false)
 	})
 
-	// See #590
 	it(`a block comment behind a head run holding a break, which a space or nothing written over the run puts on the colon's line, where the newline rule reads the run behind the comment instead`, () => {
 		expect(ask(`a { b:\n/*c*/\nx; }`, { [COLON_SPACE]: `always`, [COLON_NEWLINE]: `always-multi-line` }, COLON_SPACE)).toBe(true)
 		expect(ask(`a { b:\n/*c*/\nx; }`, { [COLON_SPACE]: `never`, [COLON_NEWLINE]: `always-multi-line` }, COLON_SPACE)).toBe(true)
@@ -96,7 +95,6 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { --b:\n/*c\n*/ ; }`, { [COLON_SPACE]: `always`, [COLON_NEWLINE]: `always-multi-line` }, COLON_SPACE)).toBe(true)
 	})
 
-	// See #590
 	it(`the same comment where the asking rule's check waits for the run's end and the newline rule ahead was content with the break, which the write takes off the head run — the break the newline rule then writes behind the comment is its own, on the run after`, () => {
 		expect(ask(`a { b:\n/*c*/ x; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `always-single-line` }, COLON_SPACE)).toBe(true)
 	})
@@ -133,20 +131,17 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { --b:  ; }`, { [SEMICOLON_SPACE]: `never`, [COLON_SPACE]: `always` }, SEMICOLON_SPACE)).toBe(true)
 	})
 
-	// See #627
 	it(`the tail behind a comment on the colon's line of a custom property, which the never option of the semicolon space rule reports like any other run, so that a newline rule deferred behind it — the colon's, or the semicolon's own — is freed by that warning`, () => {
 		expect(ask(`a { --b: /*c\n*/ ; }`, { [SEMICOLON_SPACE]: `never`, [COLON_NEWLINE]: `always-multi-line` }, COLON_NEWLINE)).toBe(true)
 		expect(ask(`a { --b: /*c\n*/ ; }`, { [COLON_NEWLINE]: `always-multi-line`, [SEMICOLON_SPACE]: `never` }, COLON_NEWLINE)).toBe(true)
 		expect(ask(`a { --b: /*c\n*/ ; }`, { [SEMICOLON_SPACE]: `never`, [SEMICOLON_NEWLINE]: `always-multi-line` }, SEMICOLON_NEWLINE)).toBe(true)
 	})
 
-	// See #627
 	it(`the same tail in a block over several lines, which the never option of the semicolon newline rule reports like any other run, so the space rule ahead of it does not write the space the newline rule would report`, () => {
 		expect(ask(`a {\n\tb: /*c*/\n;\n}`, { [SEMICOLON_SPACE]: `always`, [SEMICOLON_NEWLINE]: `never-multi-line` }, SEMICOLON_SPACE)).toBe(false)
 		expect(ask(`a {\n\tb:\n;\n}`, { [SEMICOLON_SPACE]: `always`, [SEMICOLON_NEWLINE]: `never-multi-line` }, SEMICOLON_SPACE)).toBe(true)
 	})
 
-	// See #627
 	it(`a run of two spaces or a tab, which no option accepts, so a rule ahead that speaks of it has reported it and frees the deferred rule behind`, () => {
 		expect(ask(`a {\n\tb: /*c*/  ;\n}`, { [SEMICOLON_SPACE]: `always`, [SEMICOLON_NEWLINE]: `never-multi-line` }, SEMICOLON_NEWLINE)).toBe(true)
 		expect(ask(`a {\n\t--b:\t;\n}`, { [SEMICOLON_SPACE]: `never`, [SEMICOLON_NEWLINE]: `always-multi-line` }, SEMICOLON_NEWLINE)).toBe(true)
@@ -175,12 +170,12 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { b: ; }`, { [SEMICOLON_SPACE]: `never`, [COLON_SPACE]: `always` }, SEMICOLON_SPACE, { ...css, isStandardDeclaration: () => false })).toBe(true)
 	})
 
-	it(`a block the asking rule's break puts over several lines, which wakes the neighbor's multi-line option — a neighbor behind the asker in either spelling, since a lineness-conditioned check waits for the run's writers (#355)`, () => {
+	it(`a block the asking rule's break puts over several lines, which wakes the neighbor's multi-line option — a neighbor behind the asker in either spelling, since a lineness-conditioned check waits for the run's writers`, () => {
 		expect(ask(`a { b:; }`, { [COLON_NEWLINE]: `always`, [SEMICOLON_NEWLINE]: `never-multi-line` }, COLON_NEWLINE)).toBe(false)
 		expect(ask(`a { b:; }`, { [SEMICOLON_NEWLINE]: `never-multi-line`, [COLON_NEWLINE]: `always` }, COLON_NEWLINE)).toBe(false)
 	})
 
-	it(`the rule taking the last turn, which still does not write over a rule ahead that was content with the run as it stood — that one has spoken by staying silent, and a write it would not accept leaves the file violating a rule that reported nothing (#355)`, () => {
+	it(`the rule taking the last turn, which still does not write over a rule ahead that was content with the run as it stood — that one has spoken by staying silent, and a write it would not accept leaves the file violating a rule that reported nothing`, () => {
 		expect(ask(`a { b:\n; }`, { [COLON_NEWLINE]: `always`, [SEMICOLON_NEWLINE]: `never-multi-line` }, SEMICOLON_NEWLINE)).toBe(false)
 		expect(ask(`a {\n\tb:\n;\n}`, { [COLON_NEWLINE]: `always`, [SEMICOLON_NEWLINE]: `never-multi-line` }, SEMICOLON_NEWLINE)).toBe(false)
 	})
@@ -193,7 +188,7 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a {\n\tb:;\n}`, { [COLON_SPACE]: `always`, [SEMICOLON_NEWLINE]: `never-multi-line`, [SEMICOLON_SPACE]: `never` }, COLON_SPACE)).toBe(false)
 	})
 
-	it(`four rules, where each is asked about every rule behind it — and a lineness-conditioned one about a rule ahead that was content with the run as it stood, whose silence a write must not turn into a violation (#355)`, () => {
+	it(`four rules, where each is asked about every rule behind it — and a lineness-conditioned one about a rule ahead that was content with the run as it stood, whose silence a write must not turn into a violation`, () => {
 		let rules = { [SEMICOLON_SPACE]: `never-single-line`, [COLON_NEWLINE]: `always`, [COLON_SPACE]: `always-single-line`, [SEMICOLON_NEWLINE]: `always-multi-line` }
 
 		expect(ask(`a { b: ; }`, rules, SEMICOLON_SPACE)).toBe(false)
@@ -218,7 +213,7 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { --b: ; }`, { [COLON_SPACE]: `always-single-line`, [COLON_NEWLINE]: `always` }, COLON_SPACE)).toBe(true)
 	})
 
-	it(`a value holding a word and a break, inside a comment or between two words, which is over several lines as the file spells it, so the single-line option behind is silent and the break is written — on a custom property as on an ordinary one (#389)`, () => {
+	it(`a value holding a word and a break, inside a comment or between two words, which is over several lines as the file spells it, so the single-line option behind is silent and the break is written — on a custom property as on an ordinary one`, () => {
 		expect(ask(`a { --b: x /*c\n*/; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `always-single-line` }, COLON_NEWLINE)).toBe(true)
 		expect(ask(`a { b: x /*c\n*/; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `always-single-line` }, COLON_NEWLINE)).toBe(true)
 		expect(ask(`a { --b: x\n b; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `always-single-line` }, COLON_NEWLINE)).toBe(true)
@@ -277,7 +272,6 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { b:; }`, { [COLON_SPACE]: `always`, [scssColonSpace]: `always` }, COLON_SPACE)).toBe(true)
 	})
 
-	// See 1789420319
 	it(`a wordless declaration the brace alone closes, whose run behind the colon is the run in front of the brace, which the earlier-listed rule of a contradicting pair never writes`, () => {
 		for (let code of [`a {\n\tx:\n}`, `a {\n\t--x:\n}`, `a { x: }`, `a { --x:}`]) {
 			expect(ask(code, { [COLON_SPACE]: `always`, [BRACE_NEWLINE]: `always` }, COLON_SPACE)).toBe(false)
@@ -337,7 +331,7 @@ describe(`writesSharedRun`, () => {
 })
 
 describe(`writesSharedRun over a comma opening the value`, () => {
-	// The head run is the comma's too (#166), so the colon rules and the comma rules settle it the way the colon and semicolon rules settle a wordless value (1789594574)
+	// The head run is the comma's too, so the colon rules and the comma rules settle it the way the colon and semicolon rules settle a wordless value
 	it(`a pair asking for different things of the head run: the earlier-listed one is held by the rule behind it, and the later-listed one by a rule ahead that stayed content`, () => {
 		expect(ask(`a { b: ,c }`, { [COLON_SPACE]: `never`, [COMMA_SPACE]: `always` }, COLON_SPACE)).toBe(false)
 		expect(ask(`a { b: ,c }`, { [COLON_SPACE]: `never`, [COMMA_SPACE]: `always` }, COMMA_SPACE)).toBe(true)
@@ -390,7 +384,7 @@ describe(`writesSharedRun over a comma opening the value`, () => {
 		expect(ask(`a { b: /*c*/ ,d }`, { [COLON_SPACE]: `never`, [COMMA_SPACE]: `always` }, COMMA_SPACE)).toBe(true)
 	})
 
-	// The run behind a block comment on the colon's line, which the newline rule of the colon reads past the comment and the comma rules read as the comma's (1790072055)
+	// The run behind a block comment on the colon's line, which the newline rule of the colon reads past the comment and the comma rules read as the comma's
 	it(`a comma opening the value behind a comment on the colon's line, whose run the colon newline rule shares with the comma rules: a pair asking for different things is held as over the head run, and a rule ahead that has warned frees the write`, () => {
 		expect(ask(`a { b: /*c*/ ,d }`, { [COLON_NEWLINE]: `always`, [COMMA_SPACE]: `always` }, COLON_NEWLINE)).toBe(false)
 		expect(ask(`a { b: /*c*/ ,d }`, { [COLON_NEWLINE]: `always`, [COMMA_SPACE]: `never` }, COLON_NEWLINE)).toBe(false)

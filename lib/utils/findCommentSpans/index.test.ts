@@ -54,14 +54,12 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`url(http://x) // c`)).toEqual([{ start: 14, end: 18, isInline: true }])
 	})
 
-	// See #378
 	it(`a slash and a star inside a bare address, which are two characters of the address to every tokenizer and open no comment`, () => {
 		expect(findCommentSpans(`url(a/* x) 1PX /* c */ 3PX`)).toEqual([{ start: 15, end: 22, isInline: false }])
 		expect(findCommentSpans(`url(a/* x) 1PX // c`)).toEqual([{ start: 15, end: 19, isInline: true }])
 		expect(findCommentSpans(`url(a/*)b*/) // c`)).toEqual([{ start: 13, end: 17, isInline: true }])
 	})
 
-	// See #504
 	it(`a quotation mark inside a bare address, which is a character of the address to every tokenizer and opens no string, so that the marks behind the address pair as the file pairs them`, () => {
 		expect(findCommentSpans(`url(a"b)c" /* " */ "d"`)).toEqual([])
 		expect(findCommentSpans(`url(a'b)c' // '\n'd'`)).toEqual([])
@@ -77,14 +75,13 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`url("a" /* c */ x) /* d */`)).toEqual([{ start: 8, end: 15, isInline: false }, { start: 19, end: 26, isInline: false }])
 	})
 
-	// The walk read those slashes as code and the guard over a fix as a comment, which is what Sass reads there. See #557
+	// The walk read those slashes as code and the guard over a fix as a comment, which is what Sass reads there.
 	it(`a double slash beside a quoted address, which opens a comment wherever the quotation mark stands`, () => {
 		expect(findCommentSpans(`url("a" // c)`)).toEqual([{ start: 8, end: 13, isInline: true }])
 		expect(findCommentSpans(`url("a" // c)`, PLAIN_CSS)).toEqual([])
 		expect(findCommentSpans(`url( "a" // c\n) 1px`)).toEqual([{ start: 9, end: 13, isInline: true }])
 	})
 
-	// See #557
 	it(`a block comment beside a quoted address whitespace parts from its parenthesis, which PostCSS reads as a comment and postcss-scss as one bracket token`, () => {
 		expect(findCommentSpans(`url( "a" /* c */ )`)).toEqual([{ start: 9, end: 16, isInline: false }])
 	})
@@ -93,25 +90,24 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`url("a" /* c */ x`)).toEqual([{ start: 8, end: 15, isInline: false }])
 	})
 
-	// The walk read the whole of an unclosed `url(` over again as code and found a comment inside it, where the guard over a fix read the address to the end of the text. See #557
+	// The walk read the whole of an unclosed `url(` over again as code and found a comment inside it, where the guard over a fix read the address to the end of the text.
 	it(`a bare address whose parentheses the text closes with none, which runs to that text's end`, () => {
 		expect(findCommentSpans(`url(a//b`)).toEqual([])
 		expect(findCommentSpans(`url(a/*b`)).toEqual([])
 	})
 
-	// Sass compiles the declaration to the address and the comment, where the tokenizers read the no-break space as the first character of a bare address. See #557
+	// Sass compiles the declaration to the address and the comment, where the tokenizers read the no-break space as the first character of a bare address.
 	it(`a comment beside a quoted address a no-break space parts from the parenthesis, which is whitespace to no tokenizer`, () => {
 		expect(findCommentSpans(`url(\u00A0"a" /* c */)`)).toEqual([{ start: 9, end: 16, isInline: false }])
 	})
 
-	// The tokenizer takes one token of the parentheses wherever the `(` is met by anything but its own whitespace, and where it does not, the comment written there is a comment to it. See #660
+	// The tokenizer takes one token of the parentheses wherever the `(` is met by anything but its own whitespace, and where it does not, the comment written there is a comment to it.
 	it(`a comment inside an address the tokenizer's whitespace parts from its parenthesis, which the parenthesis closing the address then stands outside of`, () => {
 		expect(findCommentSpans(`url( a /* c */ )`)).toEqual([{ start: 7, end: 14, isInline: false }])
 		expect(findCommentSpans(`url( a /* ) */ ) 1PX`)).toEqual([{ start: 7, end: 14, isInline: false }])
 		expect(findCommentSpans(`url(\na /* c */ )`)).toEqual([{ start: 7, end: 14, isInline: false }])
 	})
 
-	// See #660
 	it(`the same comment behind a no-break space, which is no whitespace to the tokenizer and leaves the parentheses one token of it`, () => {
 		expect(findCommentSpans(`url(\u00A0a /* ) */ ) 1PX`)).toEqual([])
 	})
@@ -122,7 +118,6 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`url(a "/*" b/c) // d`, SCSS)).toEqual([{ start: 16, end: 20, isInline: true }])
 	})
 
-	// See #661
 	it(`a comment holding a parenthesis inside an address Sass reads as code, which the parser Sass is read by reads as one`, () => {
 		expect(findCommentSpans(`url(a /* ) / b */ ) 1PX`, SCSS)).toEqual([{ start: 6, end: 17, isInline: false }])
 		expect(findCommentSpans(`url(a /* ) / b */ ) 1PX`)).toEqual([])
@@ -134,7 +129,6 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`url( a/* x) 1PX // c`)).toEqual([{ start: 6, end: 20, isInline: false }])
 	})
 
-	// See #664
 	it(`a comment inside an address whose name is spelled other than the word itself, which every parser reads as one`, () => {
 		expect(findCommentSpans(`URL(a /* ) / b */ ) 1PX`)).toEqual([{ start: 6, end: 17, isInline: false }])
 		expect(findCommentSpans(`u\\rl(a/*c*/) 1PX`)).toEqual([{ start: 6, end: 11, isInline: false }])
@@ -152,12 +146,11 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`!url(a/* ) " */) "x" 1PX`, PLAIN_CSS)).toEqual([{ start: 6, end: 15, isInline: false }])
 	})
 
-	// Every case below stands on an escape, which the scan used to read as an ordinary character everywhere but inside an address or a quoted string. See #321
+	// Every case below stands on an escape, which the scan used to read as an ordinary character everywhere but inside an address or a quoted string.
 	it(`a double slash whose first character an escape spells`, () => {
 		expect(findCommentSpans(`a\\//b 1px`)).toEqual([])
 	})
 
-	// See #517
 	it(`the same double slash under a syntax whose own tokenizer reads such a comment, which lets no backslash cover its solidus`, () => {
 		expect(findCommentSpans(`a\\//b 1px`, SCSS)).toEqual([{ start: 2, end: 9, isInline: true }])
 	})
@@ -209,7 +202,7 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`url(\n'a' \\// c\n) 1px`, SCSS)).toEqual([])
 	})
 
-	// The grammar reads the escape and PostCSS's tokenizer lets none cover a solidus, so all three parsers hand back the declaration with the comment cut out of its value. See #665
+	// The grammar reads the escape and PostCSS's tokenizer lets none cover a solidus, so all three parsers hand back the declaration with the comment cut out of its value.
 	it(`a slash an escape spells in front of a star, which the parsers read as a comment all the same`, () => {
 		expect(findCommentSpans(`a\\/*c*/ 1px`)).toEqual([{ start: 2, end: 7, isInline: false }])
 	})
@@ -261,7 +254,7 @@ describe(`findCommentSpans`, () => {
 		expect(findCommentSpans(`\\0 rl(http://x)`)).toEqual([{ start: 11, end: 15, isInline: true }])
 	})
 
-	// The cases below stand on a name the scan used to read in ASCII word characters alone, so a call named otherwise came out an address. The last two, and the second half of the case putting one name in two spellings, pin what had to survive the widening: an escape opened a name whatever it spelled, so `\e9 url(` reached a call on either side of the branch where the name written as the character it spells did not. See #343
+	// The cases below stand on a name the scan used to read in ASCII word characters alone, so a call named otherwise came out an address. The last two, and the second half of the case putting one name in two spellings, pin what had to survive the widening: an escape opened a name whatever it spelled, so `\e9 url(` reached a call on either side of the branch where the name written as the character it spells did not.
 	it(`a double slash inside a call whose name opens on a code point outside ASCII`, () => {
 		expect(findCommentSpans(`\u00E9url(http://x)`)).toEqual([{ start: 10, end: 14, isInline: true }])
 	})
@@ -328,7 +321,7 @@ describe(`findCommentSpans`, () => {
 	})
 })
 
-// The other answer of the walk that finds the comments: the same reading of what a `url()` is, put to the addresses it steps over instead of the comments it steps around. See #427
+// The other answer of the walk that finds the comments: the same reading of what a `url()` is, put to the addresses it steps over instead of the comments it steps around.
 describe(`findAddressSpans`, () => {
 	it(`a text holding no call at all`, () => {
 		expect(findAddressSpans(`1px 2px`)).toEqual([])
@@ -397,7 +390,7 @@ describe(`findAddressSpans`, () => {
 		expect(findAddressSpans(`url(aa\\\\41 )`)).toEqual([{ start: 4, end: 10 }])
 	})
 
-	// Which whitespace a backslash spells is the grammar's reading, held once by the plugin and not by this module: a backslash in front of any of the four newlines spells nothing, the form feed and the bare carriage return of the last two lines among them, which used to be read as characters the escape spells (#566).
+	// Which whitespace a backslash spells is the grammar's reading, held once by the plugin and not by this module: a backslash in front of any of the four newlines spells nothing, the form feed and the bare carriage return of the last two lines among them, which used to be read as characters the escape spells.
 	it(`a line break behind an escape, which a hexadecimal one closes on and a backslash spells nothing in front of`, () => {
 		expect(findAddressSpans(`url(a\\\n)`)).toEqual([{ start: 4, end: 6 }])
 		expect(findAddressSpans(`url(a\\41\r\n)`)).toEqual([])
@@ -410,7 +403,7 @@ describe(`findAddressSpans`, () => {
 		expect(findAddressSpans(`url(a\fb)`)).toEqual([{ start: 4, end: 7 }])
 	})
 
-	// The walk counted parentheses and read the whole of `url(a(b)c)` as one address, where the guard over a fix closed it on the first. See #557
+	// The walk counted parentheses and read the whole of `url(a(b)c)` as one address, where the guard over a fix closed it on the first.
 	it(`a parenthesis inside a bare address, which closes it as the first parenthesis behind the address does`, () => {
 		expect(findAddressSpans(`url(a(b.png) c d)`)).toEqual([{ start: 4, end: 11 }])
 		expect(findAddressSpans(`url(a(b.png) c\nd)`)).toEqual([{ start: 4, end: 11 }])
@@ -420,14 +413,14 @@ describe(`findAddressSpans`, () => {
 		expect(findAddressSpans(`url(a"b c)`)).toEqual([{ start: 4, end: 9 }])
 	})
 
-	// An address is one span, and a comment inside the parentheses parts the code they hold, so the room is the first run of it. See #660
+	// An address is one span, and a comment inside the parentheses parts the code they hold, so the room is the first run of it.
 	it(`a comment inside an address the tokenizer's whitespace parts from its parenthesis, which parts the room the address stands in`, () => {
 		expect(findAddressSpans(`url( a /* c */ )`)).toEqual([{ start: 5, end: 6 }])
 		expect(findAddressSpans(`url( /* c */ a.png )`)).toEqual([{ start: 13, end: 18 }])
 		expect(findAddressSpans(`url( /* c */ a /* d */ b )`)).toEqual([{ start: 13, end: 14 }])
 	})
 
-	// The room ends where the comment opens, as it does for a comment no backslash stands in front of. See #665
+	// The room ends where the comment opens, as it does for a comment no backslash stands in front of.
 	it(`a comment inside an address whose opening solidus a backslash stands in front of, which parts that room as any other comment does`, () => {
 		expect(findAddressSpans(`url( a\\/*c*/ )`)).toEqual([{ start: 5, end: 7 }])
 	})
@@ -441,12 +434,10 @@ describe(`findAddressSpans`, () => {
 		expect(findAddressSpans(`url(a /* c */ )`)).toEqual([{ start: 4, end: 13 }])
 	})
 
-	// See #661
 	it(`the same comment with no whitespace in front of it under the parser Sass is read by, which parts the address as whitespace does`, () => {
 		expect(findAddressSpans(`url(a /* c */ )`, SCSS)).toEqual([{ start: 4, end: 5 }])
 	})
 
-	// See #664
 	it(`the same comment behind a name spelled other than the word itself, which parts the address under every parser`, () => {
 		expect(findAddressSpans(`URL(a /* c */ )`)).toEqual([{ start: 4, end: 5 }])
 	})
@@ -456,14 +447,12 @@ describe(`findAddressSpans`, () => {
 		expect(findAddressSpans(`$url(a) !url(b) /url(c)`)).toEqual([{ start: 21, end: 22 }])
 	})
 
-	// See #557
 	it(`an address whose parentheses the text closes with none, which runs to that text's end`, () => {
 		expect(findAddressSpans(`url(a.png`)).toEqual([{ start: 4, end: 9 }])
 		expect(findAddressSpans(`url("a" /* c */`)).toEqual([{ start: 4, end: 7 }])
 		expect(findAddressSpans(`url("a`)).toEqual([])
 	})
 
-	// See #552
 	it(`the address an import names, which is the string standing behind the name, quotation marks and all`, () => {
 		expect(findAddressSpans(`@import "a.css";`)).toEqual([{ start: 8, end: 15 }])
 		expect(findAddressSpans(`@import "a.css" screen, tv`)).toEqual([{ start: 8, end: 15 }])
@@ -507,14 +496,14 @@ describe(`findAddressSpans`, () => {
 		expect(findAddressSpans(`@import url("a.css")`)).toEqual([{ start: 12, end: 19 }])
 	})
 
-	it(`an import standing where a statement opens: at the start, behind a brace either way, behind a semicolon, and behind a comment or whitespace there (#657)`, () => {
+	it(`an import standing where a statement opens: at the start, behind a brace either way, behind a semicolon, and behind a comment or whitespace there`, () => {
 		expect(findAddressSpans(`@import "a.css"; @import "b.css"`)).toEqual([{ start: 8, end: 15 }, { start: 25, end: 32 }])
 		expect(findAddressSpans(`a{}@import "a.css"`)).toEqual([{ start: 11, end: 18 }])
 		expect(findAddressSpans(`@media x { @import "a.css" }`)).toEqual([{ start: 19, end: 26 }])
 		expect(findAddressSpans(`a { b: 1 } /* c */ @import "a.css"`)).toEqual([{ start: 27, end: 34 }])
 	})
 
-	it(`an import standing where no statement opens, in a value or a selector, which is a word there and names no address (#657)`, () => {
+	it(`an import standing where no statement opens, in a value or a selector, which is a word there and names no address`, () => {
 		expect(findAddressSpans(`a { b: @import "a.css"; }`)).toEqual([])
 		expect(findAddressSpans(`a { b: @import"a.css"; }`)).toEqual([])
 		expect(findAddressSpans(`a:not(@import"a.css") { b: 1px; }`)).toEqual([])
@@ -537,7 +526,7 @@ describe(`findAddressSpans`, () => {
 describe(`findCommentSpanAt`, () => {
 	// The comment of `1px // c\n2px`, which runs from the double slash to the break
 	let spans = [{ start: 4, end: 8, isInline: true }]
-	// The comment of `1px /*/ c */ 2px`, which CSS closes on the last of its slashes and `postcss-value-parser` on the first star, so the fourth to the twelfth character come back as nodes of the value (#378)
+	// The comment of `1px /*/ c */ 2px`, which CSS closes on the last of its slashes and `postcss-value-parser` on the first star, so the fourth to the twelfth character come back as nodes of the value
 	let slashStarSlash = [{ start: 4, end: 12, isInline: false }]
 
 	it(`a position in front of the comment`, () => {
@@ -650,7 +639,7 @@ describe(`findStringSpans`, () => {
 		expect(findStringSpans(`url( "x" )`)).toEqual([{ start: 5, end: 8 }])
 	})
 
-	// The tokenizer reads the parentheses as code behind a sign it glues to the name, behind its own whitespace and behind a name spelled other than the word, so a string inside them is a string, which the walk records so that a scan over the copy reads the comma inside it as text (1789637913)
+	// The tokenizer reads the parentheses as code behind a sign it glues to the name, behind its own whitespace and behind a name spelled other than the word, so a string inside them is a string, which the walk records so that a scan over the copy reads the comma inside it as text
 	it(`a string inside the parentheses of a bare address the tokenizer reads as code, which is a string, and the address it stands in, which stays one span`, () => {
 		expect(findStringSpans(`1px, 1/url(a "),b" ), 'z'`)).toEqual([{ start: 13, end: 18 }, { start: 22, end: 25 }])
 		expect(findStringSpans(`1,url(a ') , b' ) 2px`)).toEqual([{ start: 8, end: 15 }])
@@ -708,7 +697,7 @@ describe(`findEscapeSpans`, () => {
 		expect(findEscapeSpans(`/*a\\,b*/,c`)).toEqual([])
 	})
 
-	// The walk steps over the parentheses in one, so the address reader records what stands in their code (1789879423)
+	// The walk steps over the parentheses in one, so the address reader records what stands in their code
 	it(`an escape standing in the code of a bare address, which is its own`, () => {
 		expect(findEscapeSpans(`url(a\\,b),c`)).toEqual([{ start: 5, end: 7 }])
 		expect(findEscapeSpans(`url(a\\\t  b)`)).toEqual([{ start: 5, end: 7 }])
@@ -721,14 +710,14 @@ describe(`findEscapeSpans`, () => {
 		expect(findEscapeSpans(`url( a /*\\,*/ b),c`)).toEqual([])
 	})
 
-	// The walk steps over the parentheses in one, and the expression of an interpolation is Sass code, so the address reader records what stands in it (1789883888)
+	// The walk steps over the parentheses in one, and the expression of an interpolation is Sass code, so the address reader records what stands in it
 	it(`an escape standing in the code of an interpolation inside such an address, which is its own under the parser that reads an interpolation`, () => {
 		expect(findEscapeSpans(`url(a#{b\\,c}d)`, SCSS)).toEqual([{ start: 8, end: 10 }])
 		expect(findEscapeSpans(`url(a#{b\\\t  c}d)`, SCSS)).toEqual([{ start: 8, end: 10 }])
 		expect(findEscapeSpans(`url(a#{"b\\,c"}d)`, SCSS)).toEqual([])
 	})
 
-	// The expression is walked twice where the text never closes it, once by its own reader and once by the walk behind it, and a span recorded on both would leave the mask longer than the text (1789883888)
+	// The expression is walked twice where the text never closes it, once by its own reader and once by the walk behind it, and a span recorded on both would leave the mask longer than the text
 	it(`the same escape where the text closes no such expression, which is recorded once`, () => {
 		expect(findEscapeSpans(`url(a#{b\\}c)`, SCSS)).toEqual([{ start: 8, end: 10 }])
 		expect(findEscapeSpans(`url(a#{b\\)`, SCSS)).toEqual([{ start: 8, end: 10 }])

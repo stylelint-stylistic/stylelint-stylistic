@@ -44,7 +44,7 @@ testRule({
 			code: `a\n,b[data-foo="tr,tr"] {}`,
 		},
 		{
-			// The break the option asks for stands in `raws.before`, which is where the parser files the run in front of a selector (1789593917)
+			// The break the option asks for stands in `raws.before`, which is where the parser files the run in front of a selector
 			description: `a comma opening the selector of a rule standing behind another, whose run lies in the raw in front of the selector`,
 			code: `x {}\n,a {}`,
 		},
@@ -101,7 +101,6 @@ testRule({
 
 	reject: [
 		{
-			// See #196
 			description: `a form feed beside the comma, which is whitespace and no line break, so the break is written in front of it`,
 			code: `a\f,b {}`,
 			fixed: `a\f\n,b {}`,
@@ -249,7 +248,7 @@ testRule({
 			code: `\ta\n\t, b {\n}`,
 		},
 		{
-			// The break in front of the first comma stands in `raws.before` (1789593917)
+			// The break in front of the first comma stands in `raws.before`
 			description: `a comma opening the selector of a multi-line list, whose run lies in the raw in front of the selector`,
 			code: `x {}\n,a\n,b {}`,
 		},
@@ -257,7 +256,7 @@ testRule({
 
 	reject: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the comma of a multi-line list, which is a character of the name and no newline, so the break goes behind it`,
 			code: `a\n,b\\ ,c {}`,
 			fixed: `a\n,b\\ \n,c {}`,
@@ -298,7 +297,7 @@ testRule({
 
 	accept: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the comma of a multi-line list, which is a character of the name and no whitespace`,
 			code: `a,b\\ ,c\nd {}`,
 		},
@@ -334,7 +333,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the selector in front of a line break and the comma, which the write would turn into an escaped comma, so the warning stands`,
 			code: `a,\nb\\\n,c {}`,
 			fixed: `a,\nb\\\n,c {}`,
@@ -392,14 +391,13 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off with the run.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer: the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off with the run.
 testRule({
 	ruleName,
 	config: [`never-multi-line`],
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab in the run before a comma of a multi-line list: the run goes down to the character, which stays`,
 			code: `a\v\n, b,\nc {}`,
 			fixed: `a\v, b,\nc {}`,
@@ -412,7 +410,7 @@ testRule({
 	],
 })
 
-// `postcss-html` files the run in front of a `<style>` element's first rule in the root's `raws.codeBefore`, the opening tag and all (1789593917)
+// `postcss-html` files the run in front of a `<style>` element's first rule in the root's `raws.codeBefore`, the opening tag and all
 testRule({
 	ruleName,
 	config: [`always`],

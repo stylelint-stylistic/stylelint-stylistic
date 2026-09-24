@@ -40,12 +40,10 @@ testRule({
 			code: `@media (width >= /*>*/ 600px) {}`,
 		},
 		{
-			// See #213
 			description: `an operator inside the arguments of a function belongs to the address and to no media feature`,
 			code: `@media (width >= 1px) and (height >= url(a>=b)) { a { b: c; } }`,
 		},
 		{
-			// See #215
 			description: `a media feature standing behind a bare address, whose double slash opens no comment`,
 			code: `@media (url(http://x) >= 1px) { a { b: c; } }`,
 		},
@@ -53,7 +51,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the feature's name in front of a line break and the operator, where the space would stand behind the backslash as its escaped character, so the warning stands`,
 			code: `@media (a\\\n>b) {}`,
 			fixed: `@media (a\\\n>b) {}`,
@@ -62,7 +60,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the operator, which is a character of the feature's name and no space`,
 			code: `@media (a\\ >b) {}`,
 			fixed: `@media (a\\  >b) {}`,
@@ -168,7 +166,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #215
 			description: `a media feature standing behind a bare address, whose double slash opens no comment`,
 			code: `@media (url(http://x)>=1px) { a { b: c; } }`,
 			fixed: `@media (url(http://x) >=1px) { a { b: c; } }`,
@@ -177,7 +174,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #216
 			description: `a double slash standing in the code of a plain CSS text, which spells no comment`,
 			code: `@media (a//b>=1px) { c { d: e; } }`,
 			fixed: `@media (a//b >=1px) { c { d: e; } }`,
@@ -186,7 +182,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #240
 			description: `a two-character operator standing right behind another one, which the single run the fixture is put through has to space as well`,
 			code: `@media ,a<>=b screen<screen { a { b: c; } }`,
 			fixed: `@media ,a < >=b screen <screen { a { b: c; } }`,
@@ -209,7 +204,6 @@ testRule({
 			],
 		},
 		{
-			// See #240
 			description: `two one-character operators standing side by side, of which the second used to be read as the tail of the first`,
 			code: `@media (a<<b) { c { d: e; } }`,
 			fixed: `@media (a < <b) { c { d: e; } }`,
@@ -235,7 +229,7 @@ testRule({
 
 	accept: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the operator, which is a character of the feature's name and no whitespace`,
 			code: `@media (a\\ >b) {}`,
 		},
@@ -275,7 +269,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the feature's name in front of a line break and the operator, which the write would turn into an escaped operator, so the warning stands`,
 			code: `@media (a\\\n>b) {}`,
 			fixed: `@media (a\\\n>b) {}`,
@@ -383,14 +377,13 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer: the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab in front of the range operator, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `@media (a\v>= 10px) {}`,
 			fixed: `@media (a\v >= 10px) {}`,
@@ -409,7 +402,6 @@ testRule({
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab at the run before the range operator: only the tokenizer's run goes, and the character stays`,
 			code: `@media (a\v >= 10px) {}`,
 			fixed: `@media (a\v>= 10px) {}`,

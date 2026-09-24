@@ -65,7 +65,7 @@ function isBalancedCall (text: string): boolean {
 /**
  * Asks whether Less reads a `//` comment behind the node as a comment whatever the node spells.
  *
- * A declaration of an ordinary property and a call to a mixin or a detached ruleset are read with the reader that skips such a comment, the call's name spelled as Less reads one, so a semicolon in its text closes nothing or the file is refused. A custom property's permissive reader parts the same way behind {@link LESS_CUSTOM_PROPERTY_BARE_ENTITY} or {@link isBalancedCall}, one entity its comment-and-entity loop consumes whole before it would ever fall back to a reader that knows no `//`; behind anything else — `pink !important`, a bare `(a)`, `a=b`, `1 / 2`, `{a}`, `[[a]]` — that loop cannot finish, so the flag is believed as it was before ([#722](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/722)). A variable and any other at-rule fall back to the reader with no `//` outright, and which of the two Less takes turns on its expression grammar, so their flag is believed too.
+ * A declaration of an ordinary property and a call to a mixin or a detached ruleset are read with the reader that skips such a comment, the call's name spelled as Less reads one, so a semicolon in its text closes nothing or the file is refused. A custom property's permissive reader parts the same way behind {@link LESS_CUSTOM_PROPERTY_BARE_ENTITY} or {@link isBalancedCall}, one entity its comment-and-entity loop consumes whole before it would ever fall back to a reader that knows no `//`; behind anything else — `pink !important`, a bare `(a)`, `a=b`, `1 / 2`, `{a}`, `[[a]]` — that loop cannot finish, so the flag is believed as it was before. A variable and any other at-rule fall back to the reader with no `//` outright, and which of the two Less takes turns on its expression grammar, so their flag is believed too.
  * @param node - The node the semicolon closes.
  * @param result - The Stylelint result, whose syntax says what opens a comment.
  * @returns True where the comment is one.
@@ -85,7 +85,7 @@ function readsTheComment (node: Node, result: PostcssResult): boolean {
 /**
  * Asks whether the semicolon `postcss-less` closed a declaration or a bodiless at-rule on may be the text of a `//` comment behind it, whatever Less makes of the node.
  *
- * The parser closes a node at the first semicolon behind it, one inside such a comment included ([#359](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/359), [#720](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/720)). A semicolon closes every node a node of code follows, and the block's last one where `raws.semicolon` is set; the stringifier prints it right behind the node's text, which is where an empty spelled run puts the guard's written character. A parser keeping no such comment in that text cut it out itself, so its semicolon is code.
+ * The parser closes a node at the first semicolon behind it, one inside such a comment included. A semicolon closes every node a node of code follows, and the block's last one where `raws.semicolon` is set; the stringifier prints it right behind the node's text, which is where an empty spelled run puts the guard's written character. A parser keeping no such comment in that text cut it out itself, so its semicolon is code.
  * @param node - The node asked about.
  * @param result - The Stylelint result, whose syntax says what opens a comment.
  * @returns True where it may be.

@@ -15,7 +15,6 @@ function reads (code: string): boolean {
 	return readsWhitespaceBehindAtRuleName(atRule)
 }
 
-// See #396
 describe(`readsWhitespaceBehindAtRuleName`, () => {
 	it(`an import and a plugin with nothing but code or a comment behind the name, which Less prints through as text`, () => {
 		expect(reads(`@import(reference) "x.less";`)).toBe(true)

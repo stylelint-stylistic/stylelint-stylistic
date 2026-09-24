@@ -6,7 +6,7 @@ import { scss } from "../../index.ts"
 let { ruleName, messages } = createRule(scss)
 let { ruleName: writerRuleName, messages: writerMessages } = createWriter(scss)
 
-// The break another rule writes is the one `linebreaks` asks for, read under the namespace's own name: listed ahead of the writer, as the library lists a block's rule ahead of its extra rules, `linebreaks` used to be looked up under the core's name alone, never found, and the writer fell back on the break the file spells (#478).
+// The break another rule writes is the one `linebreaks` asks for, read under the namespace's own name: listed ahead of the writer, as the library lists a block's rule ahead of its extra rules, `linebreaks` used to be looked up under the core's name alone, never found, and the writer fell back on the break the file spells.
 let testRule = createTestRule({ ruleName, autoStripIndent: false, customSyntax: `postcss-scss`, extraRules: { [writerRuleName]: `always` } })
 
 testRule({
@@ -15,7 +15,6 @@ testRule({
 
 	reject: [
 		{
-			// See #478
 			description: `a file of line feeds asked for Windows pairs, whose written break in front of the semicolon is a pair like the respelled ones`,
 			code: `a {\n\tb: c;\n}`,
 			fixed: `a {\r\n\tb: c\r\n;\r\n}`,
@@ -46,7 +45,7 @@ testRule({
 	],
 })
 
-// A namespace reads plain CSS, so a writer listed under the core's name writes into the file this rule respells, and the writer used to look this rule up under its own name alone (#716).
+// A namespace reads plain CSS, so a writer listed under the core's name writes into the file this rule respells, and the writer used to look this rule up under its own name alone.
 let plainTestRule = createTestRule({ ruleName, autoStripIndent: false, extraRules: { "@stylistic/declaration-colon-newline-after": `always` } })
 
 plainTestRule({
@@ -55,7 +54,6 @@ plainTestRule({
 
 	reject: [
 		{
-			// See #716
 			description: `a plain CSS file on one line, with a writer of breaks listed under the core's name`,
 			code: `a { color: red; }`,
 			fixed: `a { color:\r\n red; }`,

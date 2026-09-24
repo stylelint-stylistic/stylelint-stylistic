@@ -6,7 +6,7 @@ import { messages, ruleName } from "./index.ts"
 
 let testRuleListedFirst = createTestRule({ ruleName })
 
-// A `declaration-block-semicolon-*-before` rule listed ahead of this one formats no semicolon this rule writes (#354), and the same holds of `at-rule-semicolon-space-before` and the one written behind an at-rule (#477). The library lists the block's rule first and its extra rules behind, so every block below names the neighbor and lists this rule as the extra: the order the fix has to answer for, since in the other the neighbor respells whatever this rule wrote; the at-rule blocks keep it for uniformity.
+// A `declaration-block-semicolon-*-before` rule listed ahead of this one formats no semicolon this rule writes, and the same holds of `at-rule-semicolon-space-before` and the one written behind an at-rule. The library lists the block's rule first and its extra rules behind, so every block below names the neighbor and lists this rule as the extra: the order the fix has to answer for, since in the other the neighbor respells whatever this rule wrote; the at-rule blocks keep it for uniformity.
 let testRule = createTestRule({ ruleName, extraRules: { [ruleName]: `always` } })
 
 testRule({
@@ -15,7 +15,6 @@ testRule({
 
 	reject: [
 		{
-			// See #354
 			description: `the block of the issue, whose last semicolon is written behind a line break like the one the neighbor puts in front of the other`,
 			code: `
 				@media screen{
@@ -151,7 +150,6 @@ testRule({
 
 	reject: [
 		{
-			// See #354
 			description: `the block of the issue, whose last semicolon is written behind a space like the one the neighbor puts in front of the other`,
 			code: `
 				@media screen{
@@ -268,7 +266,6 @@ testRule({
 
 	reject: [
 		{
-			// See #477
 			description: `a bodiless at-rule closing the block, whose written semicolon gets the space that rule asks for`,
 			code: `a { @foo bar }`,
 			fixed: `a { @foo bar ; }`,
@@ -311,7 +308,7 @@ testRule({
 	],
 })
 
-// The whitespace in front of the semicolon `never` takes away goes with it (#479). The two blocks below run the neighbor first, the order in which the run it wrote used to outlive the semicolon, and the third runs this rule first, pinning that both orders rest on one file.
+// The whitespace in front of the semicolon `never` takes away goes with it. The two blocks below run the neighbor first, the order in which the run it wrote used to outlive the semicolon, and the third runs this rule first, pinning that both orders rest on one file.
 testRule({
 	ruleName: spaceBeforeRuleName,
 	config: [`always`],
@@ -319,7 +316,6 @@ testRule({
 
 	reject: [
 		{
-			// See #479
 			description: `the space the neighbor writes in front of the semicolon, which the strip takes along instead of leaving it in front of the brace`,
 			code: `a { aspect-ratio: 2; }`,
 			fixed: `a { aspect-ratio: 2 }`,
@@ -373,7 +369,7 @@ testRule({
 	],
 })
 
-// The break rule's always and a single-line option of its space twin both speak of a block on a line, and the semicolon this rule writes goes behind the break, which makes the block multi-line and the space rule silent, rather than behind the space, which would leave the break rule asking on the next run (1790029462)
+// The break rule's always and a single-line option of its space twin both speak of a block on a line, and the semicolon this rule writes goes behind the break, which makes the block multi-line and the space rule silent, rather than behind the space, which would leave the break rule asking on the next run
 testRule({
 	ruleName: newlineBeforeRuleName,
 	config: [`always`],
@@ -449,7 +445,6 @@ testRuleListedFirst({
 
 	reject: [
 		{
-			// See #485
 			description: `a neighbor whose fix is turned off and no live one speaking, whose ask the written semicolon still honors: the write is this rule's own text, not the turned-off fix`,
 			code: `a { b: c }`,
 			fixed: `a { b: c ; }`,

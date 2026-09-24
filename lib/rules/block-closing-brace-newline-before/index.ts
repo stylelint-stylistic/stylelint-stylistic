@@ -41,7 +41,7 @@ export let meta = {
 }
 
 /**
- * Asks whether the write may go in: a backslash in front of a line break is a delimiter, and what is written behind it is read as its escape, so emptying the run of `c \⏎}` would leave `c \}`, which the parser reads no block's end in (1789664271).
+ * Asks whether the write may go in: a backslash in front of a line break is a delimiter, and what is written behind it is read as its escape, so emptying the run of `c \⏎}` would leave `c \}`, which the parser reads no block's end in.
  * @param text - The statement through its closing brace, which is its last character.
  * @param raw - The run in front of that brace as it stands.
  * @param written - The run the write leaves there.
@@ -52,7 +52,7 @@ function writesTheRun (text: string, raw: string, written: string): boolean {
 }
 
 /**
- * Asks whether this rule is the one to write the run in front of the closing brace, which the colon rules read as the run behind the colon of a wordless declaration ([#416](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/416)).
+ * Asks whether this rule is the one to write the run in front of the closing brace, which the colon rules read as the run behind the colon of a wordless declaration.
  * @param syntax - The syntax the rule is built over.
  * @param result - The Stylelint result, which holds the configuration.
  * @param ruleName - This rule's configured name.
@@ -87,7 +87,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let writes = closingBraceRunWrites(() => getLineBreak(root, result))
 
 		// Rules and at-rules alike
-		// Every node carrying a block, a Sass nested property written with a value among them (#570)
+		// Every node carrying a block, a Sass nested property written with a value among them
 		root.walk((node) => {
 			if (carriesABlock(node)) check(node)
 		})
@@ -101,10 +101,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 
 			let blockAfter = getBlockAfter(syntax, statement) || ``
-			// The text is read through the brace, since a free semicolon behind it is printed too (#562)
+			// The text is read through the brace, since a free semicolon behind it is printed too
 			let text = statementString(statement, result)
-			// An escaped space is the last character of the block's final node and no run at all: PostCSS ends the node at the backslash and files the whitespace an escape covering one spells in the raw behind it, and the run the options speak of opens behind that character, which the write keeps (1789661964)
-			// Under `postcss-less` the raw may open with more of a `//` comment a semicolon of its text closed the last node in, and the run opens at the break closing it, which the write has to keep (#720)
+			// An escaped space is the last character of the block's final node and no run at all: PostCSS ends the node at the backslash and files the whitespace an escape covering one spells in the raw behind it, and the run the options speak of opens behind that character, which the write keeps
+			// Under `postcss-less` the raw may open with more of a `//` comment a semicolon of its text closed the last node in, and the run opens at the break closing it, which the write has to keep
 			let commentHead = syntax.commentTextHead(statement, `after`, result)
 			let escapedHead = commentHead ?? blockAfter.slice(0, escapeHeadLength(text, findEscapeSpans(text, syntax.inlineComments(statement, result)), text.length - 1 - blockAfter.length))
 			let run = blockAfter.slice(escapedHead.length)
@@ -113,7 +113,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let after = run.replace(SEMICOLON_RUN, ``)
 
 			let blockIsMultiLine = !isSingleLineString(blockString(statement, result))
-			// The index too, since the printed copy ends on that raw (#735)
+			// The index too, since the printed copy ends on that raw
 			let index = text.length - 2
 
 			if (text[index - 1] === `\r`) index -= 1

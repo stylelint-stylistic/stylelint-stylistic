@@ -79,7 +79,6 @@ testRule({
 
 	reject: [
 		{
-			// See #560
 			description: `a solidus among the arguments behind a quoted address, which are those of any call`,
 			code: `a { b: url("x", 1/2); }`,
 			fixed: `a { b: url("x", 1/ 2); }`,
@@ -219,7 +218,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #496
 			description: `a vertical tab behind the solidus, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `a { grid-area: 1 /\v2; }`,
 			fixed: `a { grid-area: 1 / \v2; }`,
@@ -409,7 +407,6 @@ testRule({
 			],
 		},
 		{
-			// See #496
 			description: `a vertical tab at the run behind the solidus: only the tokenizer's run goes, and the character stays`,
 			code: `a { grid-area: 1/ \v2; }`,
 			fixed: `a { grid-area: 1/\v2; }`,
@@ -474,7 +471,7 @@ testRule({
 
 	reject: [
 		{
-			description: `the message spelled out, since asking the rule for its own text would miss one that says the opposite of what the option asks (see #175)`,
+			description: `the message spelled out, since asking the rule for its own text would miss one that says the opposite of what the option asks`,
 			code: `a { grid-area: 1/2; }`,
 			fixed: `a { grid-area: 1/ 2; }`,
 			line: 1,

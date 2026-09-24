@@ -12,7 +12,6 @@ testRule({
 
 	accept: [
 		{
-			// See #135
 			description: `a comma inside the text of an inline comment is no comma of the value`,
 			code: `a { t: translate(1px, // a , b\n  2px); }`,
 		},
@@ -20,7 +19,6 @@ testRule({
 
 	reject: [
 		{
-			// See #135
 			description: `inline comment before the comma: the comma cannot join the comment's line, so the value is left alone and the warning stands`,
 			code: `a { t: translate(1px // c\n  ,2px); }`,
 			fixed: `a { t: translate(1px // c\n  ,2px); }`,
@@ -37,7 +35,6 @@ testRule({
 
 	accept: [
 		{
-			// See #135
 			description: `a comma inside the text of an inline comment is asked for no line break of its own`,
 			code: `a { t: translate(1px\n, // a, b\n  2px); }`,
 		},

@@ -43,25 +43,25 @@ export let less: Syntax = {
 	closingSemicolonIsCommentText,
 	commentTextHead,
 	inlineCommentCode,
-	// `postcss-less` keeps a mixin definition's parameter list in the selector and gives the rule no `params` (#651)
+	// `postcss-less` keeps a mixin definition's parameter list in the selector and gives the rule no `params`
 	readsRuleParams: (rule: PostcssRule) => LESS_MIXIN_DEFINITION_HEAD.test(rule.selector),
 	atRuleVariableValue,
 	// Under its default `math` mode Less divides only inside parentheses (`@a/2` prints `4/2`), a nameless call the rules pass over, so a solidus outside is the separator it is to the core
 	readsSlashAsOperator: () => false,
-	// Less reads a number as digits and at most one period, so `1E5PX` is the dimension `1E` beside the dimension `5PX` (#646). Answered for the whole namespace: the letter of an exponent is the one character this reading adds to what the fix writes, and its case is nothing to CSS either
+	// Less reads a number as digits and at most one period, so `1E5PX` is the dimension `1E` beside the dimension `5PX`. Answered for the whole namespace: the letter of an exponent is the one character this reading adds to what the fix writes, and its case is nothing to CSS either
 	readsNumberWithExponent: () => false,
-	// Less reads a unit as `%` or a run of ASCII letters and underscores, so `10px\#fff` is a dimension and an escaped value (#527), `10PX-2REM` two dimensions it subtracts (#633) and `10PX9` a dimension and a number (#646). Answered for the whole namespace, since the units it reads are substrings of the one the core reads, on the same positions, so this half of the reading costs at most a warning
+	// Less reads a unit as `%` or a run of ASCII letters and underscores, so `10px\#fff` is a dimension and an escaped value, `10PX-2REM` two dimensions it subtracts and `10PX9` a dimension and a number. Answered for the whole namespace, since the units it reads are substrings of the one the core reads, on the same positions, so this half of the reading costs at most a warning
 	readsUnitAsIdentifier: () => false,
-	// Less reads an at-rule name with an upper-case letter as something else, and refuses `@PAGE` and `@Media` alike (#578)
+	// Less reads an at-rule name with an upper-case letter as something else, and refuses `@PAGE` and `@Media` alike
 	readsUpperCaseAtRuleName: () => false,
-	// Less refuses a file with a quotation mark inside a bare address under every spelling of the name, `Expected ')'`, so nothing is written into one (1789604002)
+	// Less refuses a file with a quotation mark inside a bare address under every spelling of the name, `Expected ')'`, so nothing is written into one
 	readsQuoteInsideAddressAsString: () => false,
-	// Less reads `(reference)` and its other import options between `@import` and the address, and the arguments of a `@plugin` in the same place (#656)
+	// Less reads `(reference)` and its other import options between `@import` and the address, and the arguments of a `@plugin` in the same place
 	addressAtRules: () => LESS_ADDRESS_AT_RULES,
 	readsWhitespaceBehindAtRuleName,
 	// A Less variable keeps one copy more than the core writes, the `value` its stringifier prints
 	write (node: AtRule | Declaration | PostcssRule, text: string): void {
-		// The mirror reads the head of the params as they stand, so it goes first (#650)
+		// The mirror reads the head of the params as they stand, so it goes first
 		if (isAtRule(node)) syncLessVariableValue(node, text)
 
 		css.write(node, text)

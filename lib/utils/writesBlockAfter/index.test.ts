@@ -70,7 +70,6 @@ describe(`writesBlockAfter`, () => {
 		expect(ask(`always`, { ...rules, [CLOSING_SPACE]: `never` })).toBe(false)
 	})
 
-	// See #715
 	it(`a neighbor listed under the namespace of another syntax, which reads the same plain CSS file`, () => {
 		expect(ask(`always`, { [`@stylistic/scss/block-closing-brace-newline-before`]: `never-multi-line` })).toBe(false)
 		expect(ask(`always`, { [`@stylistic/less/block-closing-brace-space-before`]: `always` })).toBe(false)

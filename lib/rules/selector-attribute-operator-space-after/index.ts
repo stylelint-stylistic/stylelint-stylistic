@@ -51,7 +51,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.after,
 			checkedRuleName: ruleName,
 			checkBeforeOperator: false,
-			// The run the check read, cut from the selector: the parser holds a tab behind a backslash in `spaces.value.after` although the grammar reads it as a character of the value behind the operator (1789666655)
+			// The run the check read, cut from the selector: the parser holds a tab behind a backslash in `spaces.value.after` although the grammar reads it as a character of the value behind the operator
 			fix: (index, runString) => [{ start: index + 1, end: index + 1 + runBehind(runString, index).length, text: primary === `always` ? ` ` : `` }],
 		})
 	}

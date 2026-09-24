@@ -7,7 +7,6 @@ testRule({
 	config: [`always`],
 
 	accept: [
-		// See #208
 		{
 			description: `a comment closing the block behind a declaration without a semicolon, which has no semicolon to break in front of — the fix used to write a break in front of the comment, and another one on every run`,
 			code: `a { color: pink /* c */ }`,
@@ -75,7 +74,6 @@ testRule({
 
 	reject: [
 		{
-			// See #208
 			description: `a nested rule closing the block, whose declaration keeps its semicolon and is still measured`,
 			code: `a { color: pink; b {} }`,
 			fixed: `
@@ -168,7 +166,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #203
 			description: `important flag, which the break used to be written in front of rather than behind`,
 			code: `a { color: pink !important; }`,
 			fixed: `a { color: pink !important\n; }`,
@@ -217,7 +214,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// The run is read over the copy with its escapes masked, so the break goes behind the escaped space, not in its place (1789661964)
+			// The run is read over the copy with its escapes masked, so the break goes behind the escaped space, not in its place
 			description: `an escaped space in front of the semicolon, which is a character of the value and no run, so the break goes behind it`,
 			code: `a { color: red \\ ; }`,
 			fixed: `a { color: red \\ \n; }`,
@@ -396,7 +393,6 @@ testRule({
 			message: messages.expectedBeforeMultiLine(),
 		},
 		{
-			// See #203
 			description: `important flag, which the break used to be written in front of rather than behind`,
 			code: `
 				a {
@@ -493,7 +489,7 @@ testRule({
 
 	reject: [
 		{
-			// The run taken away is read over the copy with its escapes masked, so the escaped space stays (1789661964)
+			// The run taken away is read over the copy with its escapes masked, so the escaped space stays
 			description: `a line break in front of the semicolon behind an escaped space, which is a character of the value and stays`,
 			code: `a {\n\tcolor: red \\ \n;\n\ttop: 0;\n}`,
 			fixed: `a {\n\tcolor: red \\ ;\n\ttop: 0;\n}`,
@@ -632,7 +628,6 @@ testRule({
 			message: messages.rejectedBeforeMultiLine(),
 		},
 		{
-			// See #225
 			description: `a double slash of plain CSS opens no comment, so the semicolon has a line to join and the fix is written`,
 			code: `
 				a {

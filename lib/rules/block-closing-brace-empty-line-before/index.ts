@@ -73,7 +73,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		// Every node carrying a block, a Sass nested property written with a value among them (#570)
+		// Every node carrying a block, a Sass nested property written with a value among them
 		root.walk((node) => {
 			if (carriesABlock(node)) check(node)
 		})
@@ -88,7 +88,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Minus a stray semicolon
 			let before = (getBlockAfter(syntax, statement) || ``).replace(SEMICOLON_RUN, ``)
 
-			// Counted from the text through the brace: the printed copy ends on a stray `raws.ownSemicolon`, and the index landed inside that raw (#735)
+			// Counted from the text through the brace: the printed copy ends on a stray `raws.ownSemicolon`, and the index landed inside that raw
 			let text = statementString(statement, result)
 			let index = text.length - 1
 

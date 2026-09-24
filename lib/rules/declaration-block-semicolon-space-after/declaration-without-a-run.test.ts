@@ -37,7 +37,6 @@ testRule({
 
 	accept: [
 		{
-			// See #694
 			description: `the space PostCSS prints in front of a declaration the file spells no run in front of, which is the one its neighbor carries`,
 			code: `
 				b { color: red; top: 0 }
@@ -50,7 +49,6 @@ testRule({
 })
 
 describe(`the run PostCSS prints in front of a declaration the file spells none in front of`, () => {
-	// See #694
 	it(`is the break never refuses, and the fix takes it out`, async () => {
 		expect(await fixAndRead(`a {\ncolor: pink;\ntop: 0;\n}`, `never`)).toEqual({
 			warnings: [`2:13 ${messages.rejectedAfter()}`],
@@ -59,7 +57,6 @@ describe(`the run PostCSS prints in front of a declaration the file spells none 
 		})
 	})
 
-	// See #694
 	it(`is the space the neighbor carries, which never refuses, and the fix takes it out`, async () => {
 		expect(await fixAndRead(`b { color: red }\na {color: pink;top: 0 }`, `never`)).toEqual({
 			warnings: [`2:16 ${messages.rejectedAfter()}`],

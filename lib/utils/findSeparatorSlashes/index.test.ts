@@ -57,7 +57,6 @@ describe(`findSeparatorSlashes`, () => {
 		expect(slashesOf(`url(a\\)/b) 3/4`)).toEqual([12])
 	})
 
-	// See #560
 	it(`reads the arguments behind a quoted address as those of any call, the string holding a parenthesis closing nothing`, () => {
 		expect(slashesOf(`url("a)b" /2) 3/4`)).toEqual([10, 15])
 	})

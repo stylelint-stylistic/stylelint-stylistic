@@ -10,7 +10,7 @@ import type { Sweep } from "./run.ts"
 
 const NO_BREAK_SPACE = String.fromCodePoint(0x00a0)
 
-/** Every spelling of a run the value parser calls whitespace, then the runs holding a node, which are the control. A vertical tab is in the first group and reaches the media rule alone: `splitSpaceNodesAtWords` carries it into a node before `function-parentheses-newline-inside` reads either side ([#496](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/496)). */
+/** Every spelling of a run the value parser calls whitespace, then the runs holding a node, which are the control. A vertical tab is in the first group and reaches the media rule alone: `splitSpaceNodesAtWords` carries it into a node before `function-parentheses-newline-inside` reads either side. */
 const RUNS: Record<string, string> = {
 	empty: ``,
 	space: ` `,

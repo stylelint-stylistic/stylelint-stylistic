@@ -31,7 +31,6 @@ async function lint (code: string, rules: Record<string, unknown>, fix: boolean)
 	return { warnings: (results[0]?.warnings ?? []).map(({ line, column, rule }) => ({ line, column, rule })), code: written }
 }
 
-// See 1790090148
 describe(`report`, () => {
 	it(`a problem on a node another rule built with no source, reported on its nearest ancestor holding a place in the file`, async () => {
 		expect((await lint(`a {\n}\n`, { "@stylistic/color-hex-case": `lower` }, false)).warnings).toEqual([{ line: 1, column: 1, rule: `@stylistic/color-hex-case` }])

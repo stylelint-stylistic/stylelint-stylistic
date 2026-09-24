@@ -226,7 +226,7 @@ function adviceFor (one: ConfiguredSetting, other: ConfiguredSetting): string | 
 }
 
 /**
- * Finds every pair of settings no spelling of an ordinary construct satisfies together ([#743](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/743)): a break rule and its space twin asking for different characters on the same lines, the empty line in front of a closing brace against the rules leaving no room for it, and whitespace forbidden behind a call against the rules asking for it there. Two copies of one rule under two namespaces never meet, since one copy reads a root (`copyReadingTheRoot`).
+ * Finds every pair of settings no spelling of an ordinary construct satisfies together: a break rule and its space twin asking for different characters on the same lines, the empty line in front of a closing brace against the rules leaving no room for it, and whitespace forbidden behind a call against the rules asking for it there. Two copies of one rule under two namespaces never meet, since one copy reads a root (`copyReadingTheRoot`).
  * @param settings - The settings that read one stylesheet, in configuration order.
  * @returns The pairs, in configuration order.
  */

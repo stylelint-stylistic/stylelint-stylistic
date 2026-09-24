@@ -58,14 +58,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.after,
 			checkedRuleName: ruleName,
-			// A run behind the colon that ends the stylesheet, in the trailing raw (#537) or in the declaration's text, a custom property's above all (#546), is left alone: no spelling of this rule keeps the closing break
+			// A run behind the colon that ends the stylesheet, in the trailing raw or in the declaration's text, a custom property's above all, is left alone: no spelling of this rule keeps the closing break
 			isChecked: (decl) => !runPastDeclarationEndsTheStylesheet(syntax, decl, result) && !runInDeclarationEndsTheStylesheet(syntax, decl, result),
-			// Where the value is only the run, the semicolon rules share it, and the rules asked settle who writes (#416)
+			// Where the value is only the run, the semicolon rules share it, and the rules asked settle who writes
 			isFixable: (decl) => writesSharedRun(syntax, decl, result, ruleName),
 			fix: (decl, index) => {
 				let space = primary === `never` ? `` : ` `
 
-				// Where nothing prints behind the colon the run is in the next raw; a space in `between` would grow the declaration every `--fix` (#387)
+				// Where nothing prints behind the colon the run is in the next raw; a space in `between` would grow the declaration every `--fix`
 				if (runPastDeclaration(syntax, decl, result) !== undefined) {
 					writeRunPastDeclaration(decl, space)
 
@@ -79,7 +79,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// Counted from the start of `between`; the move below writes onto its end
 				let colonIndex = between.length + index - declarationValueIndex(decl)
 
-				// Where `between` ends at the colon the run is the value's head, unwritable in place (#109, #371)
+				// Where `between` ends at the colon the run is the value's head, unwritable in place
 				if (colonIndex === between.length - 1) moveDeclarationValueHeadIntoBetween(syntax, decl, (syntax.read(decl).match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0].length)
 
 				let { raws } = decl

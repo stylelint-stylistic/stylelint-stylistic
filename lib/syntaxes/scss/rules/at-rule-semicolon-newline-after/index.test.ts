@@ -12,7 +12,6 @@ testRule({
 
 	reject: [
 		{
-			// See #139
 			description: `no newline behind the semicolon of an at-rule whose parameters carry on past an inline comment, which this syntax keeps a second copy of`,
 			code: `
 				@import "a" // c

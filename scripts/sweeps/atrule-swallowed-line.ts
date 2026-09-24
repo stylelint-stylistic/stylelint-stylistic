@@ -8,7 +8,7 @@ import { multiply } from "../harness/matrix.ts"
 
 import type { Sweep } from "./run.ts"
 
-/** The first five have neither block nor semicolon, the last two are controls; `postcss-less` prints a mixin call's `!important` behind `raws.between`, so no rule may write into that run ([#374](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/374)). */
+/** The first five have neither block nor semicolon, the last two are controls; `postcss-less` prints a mixin call's `!important` behind `raws.between`, so no rule may write into that run. */
 const STATEMENTS: Record<string, string> = {
 	extend: `@extend .b`,
 	includeCall: `@include m(1px)`,

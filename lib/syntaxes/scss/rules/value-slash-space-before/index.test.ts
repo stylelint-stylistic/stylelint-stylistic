@@ -39,7 +39,6 @@ testRule({
 
 	reject: [
 		{
-			// See #661
 			description: `a solidus of the value beside one inside a block comment holding a parenthesis, in an address Sass reads as code`,
 			code: `a { b: 1/2 url(a /* ) / b */ ) }`,
 			fixed: `a { b: 1 /2 url(a /* ) / b */ ) }`,

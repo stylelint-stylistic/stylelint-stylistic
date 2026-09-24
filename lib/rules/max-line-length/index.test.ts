@@ -38,7 +38,6 @@ testRule({
 			code: `a {\n background: url("${TEST_URL}");\n}`,
 		},
 		{
-			// See #566
 			description: `a long bare address behind a backslash and a form feed, which the grammar reads a newline in, so that the backslash names nothing and the address comes off the line`,
 			code: `a {\n b: \\\furl(somethingsomethingsomething/something.png);\n}`,
 		},
@@ -287,7 +286,6 @@ testRule({
 			],
 		},
 		{
-			// See #739
 			description: `a long line behind a bare address holding a quotation mark, which is a character of the address and opens no string`,
 			code: `a { b: url(x'y) }\nc { d: eeeeeeeeeeeeeeeeeeee; }`,
 			line: 2,
@@ -295,7 +293,6 @@ testRule({
 			message: messages.expected(20),
 		},
 		{
-			// See #739
 			description: `a long line behind a string ending in an escaped backslash, whose closing quotation mark no escape holds`,
 			code: `a { b: "a\\\\" }\nc { d: eeeeeeeeeeeeeeeeeeee; }`,
 			line: 2,
@@ -844,7 +841,7 @@ testRuleConfigs({
 	],
 })
 
-// Every excluded substring standing on a line comes off that line, and off no other (see #197).
+// Every excluded substring standing on a line comes off that line, and off no other.
 testRule({
 	ruleName,
 	config: [20],
@@ -885,7 +882,6 @@ testRule({
 	],
 })
 
-// See #427
 // The address of every `url()` comes off a line, found by the walk that finds the comments of a text; the pattern it replaced asked nothing about the name in front of the parenthesis, ran to the last parenthesis of the line, matched the three letters inside another name, and took no single-character address off at all.
 testRule({
 	ruleName,
@@ -923,7 +919,6 @@ testRule({
 	],
 })
 
-// See #552
 // The address of an `@import` comes off a line, found by the same walk; the pattern it replaced ran to the last quotation mark of the line, and read an `@import` written inside a comment or inside a string as an at-rule of the stylesheet.
 testRule({
 	ruleName,
@@ -967,7 +962,6 @@ testRule({
 			message: messages.expected(20),
 		},
 		{
-			// See #657
 			description: `the six letters of an import standing in the value of a declaration, where no at-rule opens, so the string behind them is the value's and counts: 28`,
 			code: `a { b: @import "aaaaaaaa"; }`,
 			line: 1,
@@ -975,7 +969,6 @@ testRule({
 			message: messages.expected(20),
 		},
 		{
-			// See #657
 			description: `the same six letters glued to the string, which the pattern of the old reading asked a space in front of and the walk does not: 27`,
 			code: `a { b: @import"aaaaaaaa"; }`,
 			line: 1,
@@ -985,7 +978,6 @@ testRule({
 	],
 })
 
-// See #657
 // The six letters of an import name an at-rule where a statement opens and nowhere else; the maximum stands between what the old reading measured of these lines and their length.
 testRule({
 	ruleName,
@@ -1030,7 +1022,6 @@ testRule({
 	config: [20],
 	accept: [
 		{
-			// See #660
 			description: `the same address with no comment beside it, which comes off the line whole`,
 			code: `a { b: url( aaaaaaaaaaaaaaaaaaaaaaaaaa.png ) }`,
 		},
@@ -1038,7 +1029,6 @@ testRule({
 
 	reject: [
 		{
-			// See #665
 			description: `the same comment with a backslash standing in front of its opening solidus, which escapes it for the grammar and for no parser`,
 			code: `a { b: url( aaaaaaaaaaaaaaaa\\/*c*/ ) }`,
 			line: 1,
@@ -1046,7 +1036,6 @@ testRule({
 			message: messages.expected(20),
 		},
 		{
-			// See #660
 			description: `a comment inside an address the tokenizer's whitespace parts from its parenthesis, which is no part of the address and comes off no line`,
 			code: `a { b: url( aaaaaaaaaaaaaaaaaaaaaaaaaa.png /* c */ ) }`,
 			line: 1,
@@ -1054,7 +1043,6 @@ testRule({
 			message: messages.expected(20),
 		},
 		{
-			// See #664
 			description: `a comment standing against an address whose name is spelled in upper case, which every parser reads as a comment and which comes off no line`,
 			code: `a { b: URL(aaaaaaaaaaaaaaaaaaaaaaaaaa.png/* cccc */) }`,
 			line: 1,
@@ -1081,7 +1069,6 @@ testRule({
 			code: `a { background: url(qqqqqqqqqqqq\fqqqqqqqqqqqq.png) qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq }`,
 		},
 		{
-			// See #557
 			description: `a stray parenthesis inside a bare address, which closes it, so that what stands in front of that parenthesis comes off the line`,
 			code: `a { background: url(a(b.png) qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq }\n.c { d: e) }`,
 		},
@@ -1089,7 +1076,6 @@ testRule({
 
 	reject: [
 		{
-			// See #557
 			description: `a parenthesis inside a bare address the file closes on its own line, which takes off it only what stands in front of that parenthesis`,
 			code: `a { b: url(a(b)c.png) qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq }`,
 			line: 1,

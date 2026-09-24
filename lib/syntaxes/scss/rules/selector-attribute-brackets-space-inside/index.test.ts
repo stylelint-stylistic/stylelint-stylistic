@@ -12,7 +12,6 @@ testRule({
 
 	reject: [
 		{
-			// See #190
 			description: `a selector carrying an inline comment, whose fix reaches the copy the file spells, reported in the file's own coordinates`,
 			code: `.a // c\n:not( [ t='y' ] ) {}`,
 			fixed: `.a // c\n:not( [t='y'] ) {}`,

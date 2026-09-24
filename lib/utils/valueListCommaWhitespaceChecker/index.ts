@@ -71,7 +71,7 @@ export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceC
 	})
 
 	/**
-	 * Checks one comma. The whitespace is read over the copy with its escapes masked, since an escaped space or the space closing a hexadecimal escape is a character of a word and no run (1789657288).
+	 * Checks one comma. The whitespace is read over the copy with its escapes masked, since an escaped space or the space closing a hexadecimal escape is a character of a word and no run.
 	 * @param source - The declaration text.
 	 * @param runString - The copy of it the runs are read over.
 	 * @param index - The comma's index.

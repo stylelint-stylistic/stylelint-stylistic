@@ -50,7 +50,6 @@ testRule({
 			column: 1,
 			message: messages.expected(2),
 		},
-		// See #481
 		{
 			description: `three blank lines in front of the closing brace behind an include written without a semicolon, which the parser files inside the include itself`,
 			code: `a {\n\t@include x\n\n\n\n}\n`,
@@ -67,7 +66,6 @@ testRule({
 			column: 1,
 			message: messages.expected(2),
 		},
-		// See #583
 		{
 			description: `three blank lines in front of the closing brace of a nested property written with a value, whose block the stringifier of PostCSS leaves out`,
 			code: `a {\n\tfont: 12px {\n\t\tfamily: x;\n\n\n\n\t}\n}\n`,
@@ -76,7 +74,6 @@ testRule({
 			column: 1,
 			message: messages.expected(2),
 		},
-		// See #583
 		{
 			description: `three blank lines behind a nested property written with a value`,
 			code: `a {\n\tfont: 12px {\n\t\tfamily: x;\n\t}\n}\n\n\n\nb {}\n`,
@@ -93,7 +90,6 @@ testRule({
 			column: 1,
 			message: messages.expected(2),
 		},
-		// See #581
 		{
 			description: `three blank lines between the colon of a nested property and its block`,
 			code: `a {\n\tb:\n\n\n\n{ c: d; }\n}\n`,
@@ -111,7 +107,6 @@ testRule({
 	customSyntax: `postcss-scss`,
 
 	reject: [
-		// See #583
 		{
 			description: `two blank lines between two end-of-line comments, whose closing break counts`,
 			code: `// one\n\n\n// two\n`,
@@ -120,7 +115,6 @@ testRule({
 			column: 1,
 			message: messages.expected(1),
 		},
-		// See #586
 		{
 			description: `three blank lines behind an end-of-line comment whose breaks take turns between a carriage-return pair and a bare newline`,
 			code: `a {} // c\r\n\n\r\n\nb {}`,
@@ -138,7 +132,6 @@ testRule({
 				},
 			],
 		},
-		// See #725
 		{
 			description: `two blank lines in front of the closing brace behind a protocol-relative address, whose double slash opens no comment`,
 			code: `a {\n\tb: url(//x.y/z);\n\n\n}\n`,

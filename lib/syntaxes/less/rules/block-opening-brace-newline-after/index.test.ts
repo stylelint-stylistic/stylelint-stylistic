@@ -12,7 +12,6 @@ testRule({
 
 	reject: [
 		{
-			// See #248
 			description: `an inline comment abutting the brace, whose line break is what closes it, so the declaration behind it cannot join its line`,
 			code: `
 				a {// c
@@ -29,7 +28,6 @@ testRule({
 			message: messages.rejectedAfterMultiLine(),
 		},
 		{
-			// See #248
 			description: `an inline comment on a line of its own behind the brace, where the fix would take away two breaks and the second of them closes the comment`,
 			code: `
 				a {
@@ -48,7 +46,6 @@ testRule({
 			message: messages.rejectedAfterMultiLine(),
 		},
 		{
-			// See #248
 			description: `a block comment standing between an inline one and the declaration, which the fix would carry into the inline comment along with everything behind it`,
 			code: `
 				a {
@@ -85,7 +82,6 @@ testRule({
 			message: messages.rejectedAfterMultiLine(),
 		},
 		{
-			// See #672
 			description: `an inline comment alone in a block, which the fix would have to reach inside to spell the head as the option asks`,
 			code: `a {// c
 			}`,
@@ -105,7 +101,6 @@ testRule({
 
 	accept: [
 		{
-			// See #723
 			description: `a rule standing in the rest of the text of an inline comment a semicolon of that text closed a declaration in, whose brace is no brace of code`,
 			code: `
 				a {

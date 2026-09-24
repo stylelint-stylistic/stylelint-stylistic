@@ -8,7 +8,7 @@ testRule({
 
 	accept: [
 		{
-			// The comma closes the escape as well as its space does, so the space is a run a rule may write or take away (1789657288)
+			// The comma closes the escape as well as its space does, so the space is a run a rule may write or take away
 			description: `a hexadecimal escape spelling a comma, whose closing space is the run in front of the comma of the list`,
 			code: `a { b: 1 ,a\\2c ,b; }`,
 		},
@@ -34,7 +34,6 @@ testRule({
 			code: `a { transform: translate(1,1); }`,
 		},
 		{
-			// See #153
 			description: `a bare address in front of the comma, whose double slash opens no comment`,
 			code: `a { background: url(http://x/y.png) ,url(http://x/z.png); }`,
 		},
@@ -42,7 +41,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the word in front of a line break and the comma, where the space would stand behind the backslash as its escaped character, so the warning stands`,
 			code: `a { b: 1 ,a\\\n,b; }`,
 			fixed: `a { b: 1 ,a\\\n,b; }`,
@@ -51,7 +50,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the comma, which is a character of the word and no space`,
 			code: `a { b: 1 ,a\\ ,b; }`,
 			fixed: `a { b: 1 ,a\\  ,b; }`,
@@ -216,7 +215,6 @@ testRule({
 			],
 		},
 		{
-			// See #153
 			description: `a comma behind a bare address, whose double slash opens no comment`,
 			code: `a { background: url(http://x/y.png),url(http://x/z.png); }`,
 			fixed: `a { background: url(http://x/y.png) ,url(http://x/z.png); }`,
@@ -225,7 +223,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #216
 			description: `two block comments standing side by side, whose delimiters spell a double slash between them and open no comment`,
 			code: `a { b: 1px/*x*//*y*/,2px; }`,
 			fixed: `a { b: 1px/*x*//*y*/ ,2px; }`,
@@ -234,7 +231,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #216
 			description: `a bare address inside a call the plugin knows nothing of: plain CSS spells no comment with a double slash`,
 			code: `a { b: myurl(//a),2px; }`,
 			fixed: `a { b: myurl(//a) ,2px; }`,
@@ -243,7 +239,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #216
 			description: `a double slash inside an address whose second slash opens no comment of its own`,
 			code: `a { b: url(a//*b*/),2px; }`,
 			fixed: `a { b: url(a//*b*/) ,2px; }`,
@@ -261,7 +256,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// Pins the reading of a string inside parentheses the tokenizer reads as code behind a solidus glued to the name, whose comma is no comma of the list (1789637913)
+			// Pins the reading of a string inside parentheses the tokenizer reads as code behind a solidus glued to the name, whose comma is no comma of the list
 			description: `no space in front of the comma behind a bare address whose name a solidus is glued to, holding a string with a closing parenthesis and a comma, which are text of the string`,
 			code: `a { b: 1px , 1/url(a "),b" ),2px; }`,
 			fixed: `a { b: 1px , 1/url(a "),b" ) ,2px; }`,
@@ -278,7 +273,7 @@ testRule({
 
 	accept: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the comma, which is a character of the word and no whitespace`,
 			code: `a { b: 1,a\\ ,b; }`,
 		},
@@ -302,7 +297,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash delimiter (1789661965)
+			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the word in front of a line break and the comma, which the write would turn into an escaped comma, so the warning stands`,
 			code: `a { b: 1,a\\\n,b; }`,
 			fixed: `a { b: 1,a\\\n,b; }`,
@@ -319,7 +314,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// The comma closes the escape as well as its space does, so the space is a run a rule may take away (1789657288)
+			// The comma closes the escape as well as its space does, so the space is a run a rule may take away
 			description: `a space closing a hexadecimal escape in front of the comma, which is a run since the comma closes the escape as well`,
 			code: `a { b: 1,a\\2c ,b; }`,
 			fixed: `a { b: 1,a\\2c,b; }`,
@@ -468,7 +463,7 @@ testRule({
 
 	reject: [
 		{
-			description: `the message spelled out, since asking the rule for its own text would miss one that says the opposite of what the option asks (see #175)`,
+			description: `the message spelled out, since asking the rule for its own text would miss one that says the opposite of what the option asks`,
 			code: `a { background-size: 0, 0; }`,
 			fixed: `a { background-size: 0 , 0; }`,
 			line: 1,
@@ -609,14 +604,13 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer: the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab in front of the comma, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `a { b: x\v, y; }`,
 			fixed: `a { b: x\v , y; }`,
@@ -635,7 +629,6 @@ testRule({
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab at the run before the comma: only the tokenizer's run goes, and the character stays`,
 			code: `a { b: x\v , y; }`,
 			fixed: `a { b: x\v, y; }`,
@@ -648,7 +641,7 @@ testRule({
 	],
 })
 
-// The run in front of a comma opening the value is the head run behind the colon, which the colon rules read too: the rules asked settle who writes it, and a rule held by its neighbor reports and leaves the run (1789594574)
+// The run in front of a comma opening the value is the head run behind the colon, which the colon rules read too: the rules asked settle who writes it, and a rule held by its neighbor reports and leaves the run
 testRule({
 	ruleName,
 	config: [`always`],
@@ -666,7 +659,7 @@ testRule({
 	],
 })
 
-// Behind a block comment on the colon's line the run in front of a comma opening the value is the one `declaration-colon-newline-after` reads past the comment: the rules asked settle who writes it (1790072055)
+// Behind a block comment on the colon's line the run in front of a comma opening the value is the one `declaration-colon-newline-after` reads past the comment: the rules asked settle who writes it
 testRule({
 	ruleName,
 	config: [`never`],

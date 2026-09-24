@@ -36,7 +36,6 @@ testRule({
 			code: `a { color: pink /* !important */;}`,
 		},
 		{
-			// See #215
 			description: `the flag standing behind a bare address, whose double slash opens no comment`,
 			code: `a { b: url(http://x) ! important; }`,
 		},
@@ -102,7 +101,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #215
 			description: `the flag standing behind a bare address, whose double slash opens no comment`,
 			code: `a { b: url(http://x) !important; }`,
 			fixed: `a { b: url(http://x) ! important; }`,
@@ -111,7 +109,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #216
 			description: `a bare address inside a call the plugin knows nothing of: plain CSS spells no comment with a double slash`,
 			code: `a { b: myurl(//a) !important; }`,
 			fixed: `a { b: myurl(//a) ! important; }`,
@@ -120,7 +117,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #289
 			description: `a value ending on a bang of its own: the run behind that bang is the head of the flag's raw, and the space asked for goes there`,
 			code: `a { b: x!  !important; }`,
 			fixed: `a { b: x! ! important; }`,
@@ -138,7 +134,6 @@ testRule({
 			],
 		},
 		{
-			// See #239
 			description: `two bangs, the second of them standing behind a comment: each is given its space behind its own bang, in one run`,
 			code: `a { b: 1px!important 2px /*c*/!important; }`,
 			fixed: `a { b: 1px! important 2px /*c*/! important; }`,
@@ -156,7 +151,6 @@ testRule({
 			],
 		},
 		{
-			// See #239
 			description: `two bangs parted by a double slash, which plain CSS spells no comment with: the pair is left standing`,
 			code: `a { b: 1px!important//!important; }`,
 			fixed: `a { b: 1px! important//! important; }`,
@@ -174,7 +168,6 @@ testRule({
 			],
 		},
 		{
-			// See #239
 			description: `two bangs with nothing between them but a value, which keeps its every character`,
 			code: `a { b: 1px!important 2px!important; }`,
 			fixed: `a { b: 1px! important 2px! important; }`,
@@ -300,7 +293,6 @@ testRule({
 			message: messages.rejectedAfter(),
 		},
 		{
-			// See #289
 			description: `a value ending on a bang of its own: the run behind that bang is the head of the flag's raw, and this option takes it away there`,
 			code: `a { b: x!  !important; }`,
 			fixed: `a { b: x!!important; }`,
@@ -309,7 +301,6 @@ testRule({
 			message: messages.rejectedAfter(),
 		},
 		{
-			// See #239
 			description: `two bangs, whose whitespace this option takes away rather than writes, which moves the second of them the other way`,
 			code: `a { b: 1px! important 2px! important; }`,
 			fixed: `a { b: 1px!important 2px!important; }`,
@@ -338,14 +329,13 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer: the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab behind the bang, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `a { b: c !\vimportant; }`,
 			fixed: `a { b: c ! \vimportant; }`,
@@ -364,7 +354,6 @@ testRule({
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab behind the run after the bang: only the tokenizer's run goes, and the character stays`,
 			code: `a { b: c ! \vimportant; }`,
 			fixed: `a { b: c !\vimportant; }`,

@@ -147,7 +147,7 @@ export type PrimaryOption = number
  * @returns The check.
  */
 function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
-	// The check runs ahead of the lineness tier and again behind it (#713), so the options are validated once per root
+	// The check runs ahead of the lineness tier and again behind it, so the options are validated once per root
 	let validated: WeakMap<Root, boolean> = new WeakMap()
 
 	return (root, result) => {
@@ -163,7 +163,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		// Ahead of the tier the check only fixes, since the tier may yet break a block left on one line, and the check behind it reports what stands
 		let fixesOnly = runsAtTheHead(root)
 
-		// A block of declarations is what is counted, whichever keyword opens it, so an at-rule's block is read as a rule's (#640); one walk in document order, since a nested block broken first would make the block around it multi-line before it is read (#641)
+		// A block of declarations is what is counted, whichever keyword opens it, so an at-rule's block is read as a rule's; one walk in document order, since a nested block broken first would make the block around it multi-line before it is read
 		root.walk((node) => {
 			if (isRule(node) || isAtRule(node)) check(node)
 		})
@@ -189,7 +189,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Counted from the statement's own start, as `report` reads an index
 			let index = beforeBlockString(statement, result, { noRawBefore: true }).length
 
-			// The fix breaks the block over lines: the run in front of every node and the one in front of the closing brace, each spelled as the rules about it ask (#641), a break where none speaks. A comment keeps its run unless a space rule reads it, so it stays on the line of what it follows, as every newline rule allows. Where no run gets a break the block would stay on one line, so the warning stands unfixed
+			// The fix breaks the block over lines: the run in front of every node and the one in front of the closing brace, each spelled as the rules about it ask, a break where none speaks. A comment keeps its run unless a space rule reads it, so it stays on the line of what it follows, as every newline rule allows. Where no run gets a break the block would stay on one line, so the warning stands unfixed
 			let lineBreak = getLineBreak(statement, result)
 			let runs = statement.nodes.map((node) => {
 				let { rules, isSingleLine } = runOf(node, result)
@@ -223,7 +223,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 	}
 }
 
-// Breaks a block ahead of the lineness tier, so the tier reads the broken block in the same run (#713), and reads again behind the tier, which may put a block on one line (#641); what it writes, `indentation` indents behind it in the same run
+// Breaks a block ahead of the lineness tier, so the tier reads the broken block in the same run, and reads again behind the tier, which may put a block on one line; what it writes, `indentation` indents behind it in the same run
 export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule, defersToRunEnd: true, checksAheadOfLineness: true })
 
 export let { ruleName, messages } = createRule(css)

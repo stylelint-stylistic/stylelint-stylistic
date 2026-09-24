@@ -28,7 +28,6 @@ testRule({
 			endColumn: 48,
 			message: messages.expected(1),
 		},
-		// #640
 		{
 			description: `a single-line block of an at-rule holding two declarations inside a template`,
 			code: `const A = styled.div\`@media (x) { color: pink; top: 0; }\``,
@@ -39,7 +38,6 @@ testRule({
 			endColumn: 57,
 			message: messages.expected(1),
 		},
-		// #641
 		{
 			description: `a single-line block holding an interpolated declaration beside another inside a template, whose runs the fix writes as in a stylesheet`,
 			code: `const A = styled.div\`a { color: \${c}; top: 0; }\``,

@@ -12,7 +12,6 @@ testRule({
 
 	accept: [
 		{
-			// See #720
 			description: `a declaration a semicolon of the text of its inline comment closed, the semicolon Less closes it on standing on a line of its own`,
 			code: `
 				a {

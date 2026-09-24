@@ -33,8 +33,8 @@ export let scss: Syntax = {
 	isStandardSelector: isStandardPreprocessorSelector,
 	isStandardComment: isStandardPreprocessorComment,
 	readsSlashAsOperator,
-	// Sass reads the parentheses of a `url()` holding a quotation mark as code: `URL(a"b"c)` compiles to `URL(a "b" c)`, the string printed double-quoted (1789604002)
+	// Sass reads the parentheses of a `url()` holding a quotation mark as code: `URL(a"b"c)` compiles to `URL(a "b" c)`, the string printed double-quoted
 	readsQuoteInsideAddressAsString: () => true,
-	// Sass loads a module by the string behind `@use` and `@forward` as it does behind `@import` (#656)
+	// Sass loads a module by the string behind `@use` and `@forward` as it does behind `@import`
 	addressAtRules: () => SCSS_ADDRESS_AT_RULES,
 }

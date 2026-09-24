@@ -62,7 +62,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (isLastNodeWithoutSemicolon(decl)) return
 
-			// Under `postcss-less` a semicolon of a `//` comment's text closed the declaration; the one Less closes it on, if any, stands past the comment's break, where the rule does not look (#720)
+			// Under `postcss-less` a semicolon of a `//` comment's text closed the declaration; the one Less closes it on, if any, stands past the comment's break, where the rule does not look
 			if (syntax.closingSemicolonIsCommentText(decl, result)) return
 
 			let nextDecl = decl.next()
@@ -71,7 +71,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let problemIndex = nodeString(decl, result).length + 1
 
-			// The run behind the semicolon is the next node's leading run: the raw where the parser filed one, and otherwise the run PostCSS prints in front of a node a rule of another plugin built without one ([#694](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/694))
+			// The run behind the semicolon is the next node's leading run: the raw where the parser filed one, and otherwise the run PostCSS prints in front of a node a rule of another plugin built without one
 			checker.after({
 				source: runInFrontOf(nextDecl) + nodeString(nextDecl, result),
 				index: -1,

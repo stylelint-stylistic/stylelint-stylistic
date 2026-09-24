@@ -12,12 +12,11 @@ testRule({
 
 	accept: [
 		{
-			// Sass and `lightningcss` read every one of these spellings as a plain address, so what stands inside the parentheses is a URL no rule may write to. See #344
+			// Sass and `lightningcss` read every one of these spellings as a plain address, so what stands inside the parentheses is a URL no rule may write to.
 			description: `an upper-case unit inside an address whose name an escape spells`,
 			code: `a { b: u\\rl(13PX); }`,
 		},
 		{
-			// See #344
 			description: `the same unit inside an address whose name a hexadecimal escape spells, which the value parser hands the rule as a word and a call of two letters`,
 			code: `a { b: \\75 rl(13PX); }`,
 		},
@@ -26,67 +25,62 @@ testRule({
 			code: `a { width: 1em; \n// width: 10PX\n }`,
 		},
 		{
-			// The reading is CSS's, not this syntax's: in Sass `aurl(a/b)` and `éurl(a/b)` both compile, while `aurl(a//b)` and `éurl(a//b)` both fail at the length of the file, the `//` comment having carried off the closing parenthesis; `lightningcss` leaves all four whole. `postcss-scss` refuses such a file with `Unclosed bracket`. See #343
+			// The reading is CSS's, not this syntax's: in Sass `aurl(a/b)` and `éurl(a/b)` both compile, while `aurl(a//b)` and `éurl(a//b)` both fail at the length of the file, the `//` comment having carried off the closing parenthesis; `lightningcss` leaves all four whole. `postcss-scss` refuses such a file with `Unclosed bracket`.
 			description: `an upper-case unit behind a call whose name opens on a code point outside ASCII, which leaves the unit inside the text of a comment`,
 			code: `a { b: \u00E9url(http://a/b.png) 1PX; }`,
 		},
 		{
-			// See #343
 			description: `the same call named in several such code points`,
 			code: `a { b: \u65E5\u672Curl(http://a/b.png) 1PX; }`,
 		},
 		{
-			// See #343
 			description: `the same call with such a code point in front of a name whose first letter an escape spells`,
 			code: `a { b: \u00E9\\75 rl(http://a/b.png) 1PX; }`,
 		},
 		{
-			// The whitespace closing a hexadecimal escape belongs to the escape, so this is one dimension token, and Less prints the line back as it stands; the value parser hands the word back parted at that space, and the rule used to read `2PX` as a dimension of its own. See #526
+			// The whitespace closing a hexadecimal escape belongs to the escape, so this is one dimension token, and Less prints the line back as it stands; the value parser hands the word back parted at that space, and the rule used to read `2PX` as a dimension of its own.
 			description: `a lower-case unit whose hack unit's escape swallows the whitespace in front of a second run of digits and letters`,
 			code: `a { b: 10px\\9 2PX; }`,
 		},
 		{
-			// See #577
 			description: `a lower-case unit in the value of a Less at-variable declared with a space in front of its colon`,
 			code: `@v : 10px;`,
 		},
 		{
-			// The params are walked, and the parser hands the escaped text over as one string node, which the rule passes over as it passes over every node that is no word: a unit standing beside such a string is named. See #577
+			// The params are walked, and the parser hands the escaped text over as one string node, which the rule passes over as it passes over every node that is no word: a unit standing beside such a string is named.
 			description: `an upper-case unit inside an escaped string in such a declaration`,
 			code: `@v : ~"10PX";`,
 		},
 		{
-			// See #577
 			description: `an upper-case unit inside an address in such a declaration`,
 			code: `@v : url(10PX);`,
 		},
 		{
-			// The answer is the shape of the node, and these parameters do not open on a colon, so they stay a set of parameters no rule of a value reads. See #577
+			// The answer is the shape of the node, and these parameters do not open on a colon, so they stay a set of parameters no rule of a value reads.
 			description: `an upper-case unit inside the parameters of a feature query`,
 			code: `@supports (width: 10PX) { a { b: c } }`,
 		},
 		{
-			// `postcss-less` hands a mixin call over as an at-rule whose parameters are the arguments and whose name is the class without its dot, which it keeps in `raws.identifier`; those parameters open on no colon. See #577
+			// `postcss-less` hands a mixin call over as an at-rule whose parameters are the arguments and whose name is the class without its dot, which it keeps in `raws.identifier`; those parameters open on no colon.
 			description: `an upper-case unit inside the arguments of a mixin call`,
 			code: `.m(10PX);`,
 		},
 		{
-			// The value is gathered from the name, the raw behind it and the params, so the address is one call again and is passed over as every address is; reading the params alone would have left the nameless group `(10PX)`, where nothing says an address opens, and recased the text of one. See #649
+			// The value is gathered from the name, the raw behind it and the params, so the address is one call again and is passed over as every address is; reading the params alone would have left the nameless group `(10PX)`, where nothing says an address opens, and recased the text of one.
 			description: `an upper-case unit inside an address in a declaration whose colon the parser welded into the name`,
 			code: `@v:url(10PX);`,
 		},
 		{
-			// Neither of the next two would have been written into by a reading of the params alone — a string holds no word and a nameless group holding one holds no dimension — but they are the shapes the address stands among. See #649
+			// Neither of the next two would have been written into by a reading of the params alone — a string holds no word and a nameless group holding one holds no dimension — but they are the shapes the address stands among.
 			description: `the same declaration with an escaped string in place of the address`,
 			code: `@v:~"10PX";`,
 		},
 		{
-			// A block shuts the reading of an unmarked node: this is an at-rule of CSS whatever its name spells, and Less compiles it to `@page :10PX { … }` rather than declaring anything. See #649
+			// A block shuts the reading of an unmarked node: this is an at-rule of CSS whatever its name spells, and Less compiles it to `@page :10PX { … }` rather than declaring anything.
 			description: `an upper-case unit in the name of a page at-rule carrying a block`,
 			code: `@page:10PX { margin: 0 }`,
 		},
 		{
-			// See #649
 			description: `the same declaration with a call whose argument is a string`,
 			code: `@v:e("10PX");`,
 		},
@@ -94,7 +88,7 @@ testRule({
 
 	reject: [
 		{
-			// The whitespace closing a hexadecimal escape belongs to the escape, so the name is `\61 url`, which spells `aurl` and opens an ordinary call: `lightningcss` compiles the line to `a { b: aurl(13px); }`, Sass to `a { b: aurl(13PX); }`. `postcss-value-parser` reads no escape and hands the call back named `url`, which the rule used to match against, passing the unit over as an address's. See #344
+			// The whitespace closing a hexadecimal escape belongs to the escape, so the name is `\61 url`, which spells `aurl` and opens an ordinary call: `lightningcss` compiles the line to `a { b: aurl(13px); }`, Sass to `a { b: aurl(13PX); }`. `postcss-value-parser` reads no escape and hands the call back named `url`, which the rule used to match against, passing the unit over as an address's.
 			description: `an upper-case unit inside a call whose name an escape welds to the word in front of it`,
 			code: `a { b: \\61 url(13PX); }`,
 			fixed: `a { b: \\61 url(13px); }`,
@@ -105,7 +99,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #344
 			description: `an upper-case unit inside a call whose name ends in those three letters while being a name of its own, which is no address`,
 			code: `a { b: image-url(13PX); }`,
 			fixed: `a { b: image-url(13px); }`,
@@ -116,7 +109,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #297
 			description: `two dimensions multiplied in one word, both units upper-case`,
 			code: `a { b: 10PX*2REM; }`,
 			fixed: `a { b: 10px*2rem; }`,
@@ -138,7 +130,6 @@ testRule({
 			],
 		},
 		{
-			// See #321
 			description: `an upper-case unit behind a double slash whose first character an escape spells, which opens no comment`,
 			code: `a { b: a\\//b 1PX; }`,
 			fixed: `a { b: a\\//b 1px; }`,
@@ -149,7 +140,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #321
 			description: `an upper-case unit on the line below an inline comment that stands behind an escaped quotation mark, whose text holds an upper-case unit too`,
 			code: `
 				a { b: a\\"b // 1PX
@@ -166,7 +156,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// Less refuses such a name (`less.render` answers `Unrecognized input`) while Sass and every browser read the address, so the reading is CSS's rather than this syntax's; it is pinned here because `postcss-less` is the only syntax reaching the scan with this shape: plain CSS spells no `//` comment, and `postcss-scss` reads the file the same way on either side of the branch. See #321
+			// Less refuses such a name (`less.render` answers `Unrecognized input`) while Sass and every browser read the address, so the reading is CSS's rather than this syntax's; it is pinned here because `postcss-less` is the only syntax reaching the scan with this shape: plain CSS spells no `//` comment, and `postcss-scss` reads the file the same way on either side of the branch.
 			description: `an upper-case unit behind an address whose name an escape spells in a letter that is not its first`,
 			code: `a { b: u\\rl(http://a/b.png) 1PX; }`,
 			fixed: `a { b: u\\rl(http://a/b.png) 1px; }`,
@@ -207,7 +197,7 @@ testRule({
 			message: messages.expected(`Px`, `px`),
 		},
 		{
-			// `postcss-less` marks a declaration `variable` only where the colon closed the name, and the rule read that mark; Less declares `@v` on every spelling of the whitespace around the colon and gives a use of it `10PX` in each. The params of an unmarked one open on the colon, which the value parser reads as a divider. See #577
+			// `postcss-less` marks a declaration `variable` only where the colon closed the name, and the rule read that mark; Less declares `@v` on every spelling of the whitespace around the colon and gives a use of it `10PX` in each. The params of an unmarked one open on the colon, which the value parser reads as a divider.
 			description: `an upper-case unit in the value of a Less at-variable declared with a space in front of its colon`,
 			code: `@v : 10PX;`,
 			fixed: `@v : 10px;`,
@@ -218,7 +208,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #577
 			description: `the same declaration with no space behind the colon`,
 			code: `@v :10PX;`,
 			fixed: `@v :10px;`,
@@ -229,7 +218,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #577
 			description: `the same declaration with two spaces on either side of the colon`,
 			code: `@v  :  10PX;`,
 			fixed: `@v  :  10px;`,
@@ -240,7 +228,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #577
 			description: `the same declaration with a tab in front of the colon`,
 			code: `@v\t: 10PX;`,
 			fixed: `@v\t: 10px;`,
@@ -251,7 +238,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #577
 			description: `the same declaration with a line break in front of the colon`,
 			code: `
 				@v
@@ -268,7 +254,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #577
 			description: `the same declaration standing inside a block`,
 			code: `a { @v : 10PX; c: @v }`,
 			fixed: `a { @v : 10px; c: @v }`,
@@ -279,7 +264,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #577
 			description: `the same declaration whose value holds a second dimension already in the case asked for`,
 			code: `@v : 10PX 1px;`,
 			fixed: `@v : 10px 1px;`,
@@ -290,7 +274,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #577
 			description: `the same declaration with a bang flag behind the value`,
 			code: `@v : 10PX !important;`,
 			fixed: `@v : 10px !important;`,
@@ -301,7 +284,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// The parser keeps the comment in the raw beside the params and the fix is written to that raw, so the comment survives. See #577
+			// The parser keeps the comment in the raw beside the params and the fix is written to that raw, so the comment survives.
 			description: `the same declaration with a comment between the colon and the value`,
 			code: `@v : /* c */ 10PX;`,
 			fixed: `@v : /* c */ 10px;`,
@@ -312,7 +295,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// The at-word runs on past the colon here, so the word behind it is welded into the name: this node comes back named `v:10PX` with `1px` for params, and the value is gathered from both. Less declares `@v` all the same and gives a use of it `10PX 1px`. See #649
+			// The at-word runs on past the colon here, so the word behind it is welded into the name: this node comes back named `v:10PX` with `1px` for params, and the value is gathered from both. Less declares `@v` all the same and gives a use of it `10PX 1px`.
 			description: `an upper-case unit the parser welded into the name of the at-rule`,
 			code: `@v:10PX 1px;`,
 			fixed: `@v:10px 1px;`,
@@ -323,7 +306,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// The whole value stands in the name, the params coming back empty. See #649
+			// The whole value stands in the name, the params coming back empty.
 			description: `the same declaration with nothing behind that unit`,
 			code: `@v:10PX;`,
 			fixed: `@v:10px;`,
@@ -334,7 +317,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// One unit in the name and one in the params. See #649
+			// One unit in the name and one in the params.
 			description: `the same declaration with a second upper-case unit behind the first`,
 			code: `@v:10PX 1px 2EM;`,
 			fixed: `@v:10px 1px 2em;`,
@@ -356,7 +339,7 @@ testRule({
 			],
 		},
 		{
-			// The comment stands in the raw between the name and the params, which the write leaves as the file spells it. See #649
+			// The comment stands in the raw between the name and the params, which the write leaves as the file spells it.
 			description: `the same declaration with a comment between the two`,
 			code: `@v:10PX /* c */ 1px;`,
 			fixed: `@v:10px /* c */ 1px;`,
@@ -367,7 +350,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// This comment stands inside the params, in the raw the parser keeps beside them, and the write goes to that raw. See #649
+			// This comment stands inside the params, in the raw the parser keeps beside them, and the write goes to that raw.
 			description: `the same declaration with a comment inside the params`,
 			code: `@v:10PX 1px /* c */ 2EM;`,
 			fixed: `@v:10px 1px /* c */ 2em;`,
@@ -389,7 +372,6 @@ testRule({
 			],
 		},
 		{
-			// See #649
 			description: `the same declaration whose params are an end-of-line comment`,
 			code: `
 				@v:10PX// c
@@ -406,7 +388,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// A bang does not end the at-word, so the flag is welded into the name with the unit; Less compiles a use of this to `10PX !important`. See #649
+			// A bang does not end the at-word, so the flag is welded into the name with the unit; Less compiles a use of this to `10PX !important`.
 			description: `the same declaration with a bang flag welded to the unit`,
 			code: `@v:10PX!important;`,
 			fixed: `@v:10px!important;`,
@@ -417,7 +399,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// The name holds `v::10PX`, and the value the reading gathers opens on the second colon, which the value parser reads as a divider. Less compiles a use of this to `:10PX`. See #649
+			// The name holds `v::10PX`, and the value the reading gathers opens on the second colon, which the value parser reads as a divider. Less compiles a use of this to `:10PX`.
 			description: `the same declaration with a second colon in front of the value`,
 			code: `@v::10PX;`,
 			fixed: `@v::10px;`,
@@ -428,7 +410,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// Less subtracts inside the name as readily as anywhere else, compiling a use of this to `8PX 1px`. See #633 and #649
+			// Less subtracts inside the name as readily as anywhere else, compiling a use of this to `8PX 1px`.
 			description: `two upper-case units a hyphen welds together inside the name`,
 			code: `@v:10PX-2REM 1px;`,
 			fixed: `@v:10px-2rem 1px;`,
@@ -450,7 +432,7 @@ testRule({
 			],
 		},
 		{
-			// Less reads no exponent inside the name either, compiling a use of this to `1E 5PX`. See #646 and #649
+			// Less reads no exponent inside the name either, compiling a use of this to `1E 5PX`.
 			description: `an exponent and the unit behind it inside the name`,
 			code: `@v:1E5PX;`,
 			fixed: `@v:1e5px;`,
@@ -472,7 +454,6 @@ testRule({
 			],
 		},
 		{
-			// See #649
 			description: `the same declaration standing inside a block`,
 			code: `a { @v:10PX 1px; c: @v }`,
 			fixed: `a { @v:10px 1px; c: @v }`,
@@ -483,7 +464,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// The name of the variable stands in front of the colon and the write never reaches it. See #649
+			// The name of the variable stands in front of the colon and the write never reaches it.
 			description: `an upper-case unit in such a declaration whose variable is named in capitals`,
 			code: `@V:10PX;`,
 			fixed: `@V:10px;`,
@@ -494,7 +475,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// Less reads `@page` as a variable here and compiles a use of it to `10PX`; the at-rule of CSS by that name carries a block, which the reading answers no for. See #649
+			// Less reads `@page` as a variable here and compiles a use of it to `10PX`; the at-rule of CSS by that name carries a block, which the reading answers no for.
 			description: `an upper-case unit in a bodiless at-rule named for one of CSS`,
 			code: `@page:10PX;`,
 			fixed: `@page:10px;`,
@@ -505,7 +486,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #649
 			description: `the same declaration with a tab between the name and the params`,
 			code: `@v:10PX\t1px;`,
 			fixed: `@v:10px\t1px;`,
@@ -516,7 +496,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #649
 			description: `the same declaration with a line break there`,
 			code: `
 				@v:10PX
@@ -533,7 +512,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// The reading gathers the value whole, so the reference is one word and the unit behind it another. See #649
+			// The reading gathers the value whole, so the reference is one word and the unit behind it another.
 			description: `an upper-case unit behind a variable reference in such a declaration`,
 			code: `@v:@a 10PX;`,
 			fixed: `@v:@a 10px;`,
@@ -544,7 +523,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// The at-rule of CSS carries a block, so its name is no value: only the declaration inside it is read. See #649
+			// The at-rule of CSS carries a block, so its name is no value: only the declaration inside it is read.
 			description: `an upper-case unit inside a page at-rule whose name spells a colon`,
 			code: `@page:first { a: 10PX }`,
 			fixed: `@page:first { a: 10px }`,
@@ -555,7 +534,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// The escaped text is one string node to the value parser and the unit beside it a word like any other, so the declaration is read and the string left alone. See #577
+			// The escaped text is one string node to the value parser and the unit beside it a word like any other, so the declaration is read and the string left alone.
 			description: `an upper-case unit standing beside an escaped string in such a declaration`,
 			code: `@v : ~"a" 10PX;`,
 			fixed: `@v : ~"a" 10px;`,
@@ -566,7 +545,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #577
 			description: `the same declaration whose value an end-of-line comment closes`,
 			code: `
 				@v : 10PX // c
@@ -583,7 +561,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// Where the text behind the colon parses as no expression Less falls back to a directive, and the guard answers those as variables too; the unit is a unit of CSS in either reading, and Less prints the line as it stands. See #577 and #394
+			// Where the text behind the colon parses as no expression Less falls back to a directive, and the guard answers those as variables too; the unit is a unit of CSS in either reading, and Less prints the line as it stands.
 			description: `an upper-case unit inside the parameters of a directive whose colon opens them`,
 			code: `@custom-media :x (min-width: 10PX);`,
 			fixed: `@custom-media :x (min-width: 10px);`,
@@ -594,7 +572,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #426
 			description: `an upper-case unit with a hash welded to it, which opens no interpolation and is no part of the unit`,
 			code: `a { b: 10PX#FFF; }`,
 			fixed: `a { b: 10px#FFF; }`,
@@ -605,7 +582,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #413
 			description: `a variable spelled in capitals multiplied by an upper-case unit, a word the whole of which is no dimension`,
 			code: `a { b: @VAR*10PX; }`,
 			fixed: `a { b: @VAR*10px; }`,
@@ -616,7 +592,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// Less multiplies the unescaped twin but parts this one into the dimension and an escaped value printed as it stands, `a { b: 10PX \\*2REM; }`. The unit is `PX` where the core reads the whole of `PX\\*2REM`, so the escaped value keeps its case. See #414 and #527
+			// Less multiplies the unescaped twin but parts this one into the dimension and an escaped value printed as it stands, `a { b: 10PX \\*2REM; }`. The unit is `PX` where the core reads the whole of `PX\\*2REM`, so the escaped value keeps its case.
 			description: `an upper-case unit welded by an escaped star to a second one, which Less does not multiply`,
 			code: `a { b: 10PX\\*2REM; }`,
 			fixed: `a { b: 10px\\*2REM; }`,
@@ -627,7 +603,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// Less parts the word at the escape and prints `a { b: 10PX \\@VAR; }`, so the unit ends in front of the backslash and the name keeps its case. See #527
+			// Less parts the word at the escape and prints `a { b: 10PX \\@VAR; }`, so the unit ends in front of the backslash and the name keeps its case.
 			description: `an upper-case unit with an escaped at-sign and a name in capitals welded to it, which Less reads as a value of its own`,
 			code: `a { b: 10PX\\@VAR; }`,
 			fixed: `a { b: 10px\\@VAR; }`,
@@ -638,7 +614,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// Less stores a declaration whose value spells no operator unread and prints it whole, `a { b: 10PX\\!important; }`; in a variable's value or a call's arguments it reads an expression and prints `10PX \\!important`. In neither reading is the flag part of the unit, which the core's fix, recasing the flag along with the unit, used to leave as `10px\\!important`. See #527
+			// Less stores a declaration whose value spells no operator unread and prints it whole, `a { b: 10PX\\!important; }`; in a variable's value or a call's arguments it reads an expression and prints `10PX \\!important`. In neither reading is the flag part of the unit, which the core's fix, recasing the flag along with the unit, used to leave as `10px\\!important`.
 			description: `an upper-case unit with an escaped bang flag welded to it, in a declaration Less prints as it stands`,
 			code: `a { b: 10PX\\!important; }`,
 			fixed: `a { b: 10px\\!important; }`,
@@ -649,7 +625,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// To the tokenizer the escape spells `a` and the unit is `PaX`. Less stores this declaration unread and prints it whole, and wherever it reads an expression (a variable's value, a call's arguments, the last declaration of a block written without a semicolon) it reads a unit as ASCII letters alone and prints `10P \\61 X`; in neither reading is the escape part of the unit, so it ends at `P` and the letter behind the escape keeps its case. See #527
+			// To the tokenizer the escape spells `a` and the unit is `PaX`. Less stores this declaration unread and prints it whole, and wherever it reads an expression (a variable's value, a call's arguments, the last declaration of a block written without a semicolon) it reads a unit as ASCII letters alone and prints `10P \\61 X`; in neither reading is the escape part of the unit, so it ends at `P` and the letter behind the escape keeps its case.
 			description: `a unit whose middle letter a hexadecimal escape spells, which Less parts at the escape`,
 			code: `a { b: 10P\\61 X; }`,
 			fixed: `a { b: 10p\\61 X; }`,
@@ -660,7 +636,7 @@ testRule({
 			message: messages.expected(`P`, `p`),
 		},
 		{
-			// The core takes the hack out of the copy it reads the unit in and names `PX`. Less stores this declaration unread and prints it whole, and wherever it reads an expression parts the word at the hack as at any escape, `10P \\9X` in a variable's value; in either reading the letter behind the hack is no letter of the unit. See #527
+			// The core takes the hack out of the copy it reads the unit in and names `PX`. Less stores this declaration unread and prints it whole, and wherever it reads an expression parts the word at the hack as at any escape, `10P \\9X` in a variable's value; in either reading the letter behind the hack is no letter of the unit.
 			description: `a unit with a hack unit between its letters, which Less parts at the hack`,
 			code: `a { b: 10P\\9X; }`,
 			fixed: `a { b: 10p\\9X; }`,
@@ -671,7 +647,6 @@ testRule({
 			message: messages.expected(`P`, `p`),
 		},
 		{
-			// See #527
 			// An escaped backslash and a digit, no hack: the core reads the unit `PX\\\\9` whole, as the tokenizer does, and Less reads `10PX \\\\9` in a variable's value, so the unit ends in front of the escape here. The write is the base's, since the escape spells no letter; the name is not.
 			description: `an upper-case unit closing on an escaped backslash and a digit, which is no hack unit`,
 			code: `a { b: 10PX\\\\9; }`,
@@ -683,7 +658,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// An escaped space is a code point of the unit to the tokenizer, which reads `PX\\ 2REM` as one identifier; Less reads `10PX \\ 2REM` in a variable's value, so the unit ends in front of the escape and the second run keeps its case. See #527
+			// An escaped space is a code point of the unit to the tokenizer, which reads `PX\\ 2REM` as one identifier; Less reads `10PX \\ 2REM` in a variable's value, so the unit ends in front of the escape and the second run keeps its case.
 			description: `an upper-case unit an escaped space welds to a second one`,
 			code: `a { b: 10PX\\ 2REM; }`,
 			fixed: `a { b: 10px\\ 2REM; }`,
@@ -694,7 +669,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// The hack's whitespace welds the second run onto the word, and the unit ends in front of the hack under this syntax as under the core: the same `PX`, the same write. See #527
+			// The hack's whitespace welds the second run onto the word, and the unit ends in front of the hack under this syntax as under the core: the same `PX`, the same write.
 			description: `an upper-case unit whose hack unit's escape swallows the whitespace in front of a second run of digits and letters, which is off the unit under either reading`,
 			code: `a { b: 10PX\\9 2PX; }`,
 			fixed: `a { b: 10px\\9 2PX; }`,
@@ -705,7 +680,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #527
 			// Less reads a variable's value as an expression whatever it spells, and prints `10PX \\#fff` for this one.
 			description: `an upper-case unit with an escaped hash welded to it, in the value of a Less at-variable`,
 			code: `@v: 10PX\\#fff;`,
@@ -717,7 +691,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #527
 			description: `the same word in a set of media parameters, which Less reads as an expression too`,
 			code: `@media (min-width: 10PX\\#fff) { a { b: c } }`,
 			fixed: `@media (min-width: 10px\\#fff) { a { b: c } }`,
@@ -728,7 +701,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// The line break ends the comment before it closes the escape the comment's text ends in, and the value parser hands that text back as words like any other: Less compiles this to `a { b: 1PX 2REM; }`. A word in the text of a comment is welded onto nothing, so the dimension on the line below is read. See #526
+			// The line break ends the comment before it closes the escape the comment's text ends in, and the value parser hands that text back as words like any other: Less compiles this to `a { b: 1PX 2REM; }`. A word in the text of a comment is welded onto nothing, so the dimension on the line below is read.
 			description: `an upper-case unit on the line below an inline comment whose text ends in a hack unit, whose escape would swallow the break that closes the comment`,
 			code: `a { b: 1PX // 10PX\\9\n2REM; }`,
 			fixed: `a { b: 1px // 10PX\\9\n2rem; }`,
@@ -750,7 +723,7 @@ testRule({
 			],
 		},
 		{
-			// The dimension token is `10PX\*ns`, and the guard turning a reading through a Sass module away is asked about that token rather than the whole word, so the unit is named where the rule used to say nothing; Less refuses the line, `lightningcss` prints it as it stands. The unit ends in front of the escape under this namespace, so `PX` is named where the core names `PX\*ns` (#527). See #526
+			// The dimension token is `10PX\*ns`, and the guard turning a reading through a Sass module away is asked about that token rather than the whole word, so the unit is named where the rule used to say nothing; Less refuses the line, `lightningcss` prints it as it stands. The unit ends in front of the escape under this namespace, so `PX` is named where the core names `PX\*ns`.
 			description: `an upper-case unit an escaped star welds to a reading through a Sass module`,
 			code: `a { b: 10PX\\*ns.$V; }`,
 			fixed: `a { b: 10px\\*ns.$V; }`,
@@ -761,7 +734,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #526
 			description: `two upper-case units in one word, a percent sign between them, which is plain CSS's reading and the one this namespace inherits`,
 			code: `a { b: 10PX%2REM; }`,
 			fixed: `a { b: 10px%2rem; }`,
@@ -783,7 +755,7 @@ testRule({
 			],
 		},
 		{
-			// Less reads a unit as ASCII letters and underscores, so the hyphen opens an operand of its own and it compiles the line to `a { b: 10PX A; }`, printing the keyword exactly as written; the core reads the hyphen as a code point of the identifier and names `PX-A`. See #633
+			// Less reads a unit as ASCII letters and underscores, so the hyphen opens an operand of its own and it compiles the line to `a { b: 10PX A; }`, printing the keyword exactly as written; the core reads the hyphen as a code point of the identifier and names `PX-A`.
 			description: `an upper-case unit a hyphen welds a word to, which Less reads as a keyword of its own`,
 			code: `a { b: 10PX-A; }`,
 			fixed: `a { b: 10px-A; }`,
@@ -794,7 +766,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// Less subtracts the two and compiles the line to `a { b: 8PX; }`, so both are units to name, as they are in the word `10PX*2REM` the core parts. See #633
+			// Less subtracts the two and compiles the line to `a { b: 8PX; }`, so both are units to name, as they are in the word `10PX*2REM` the core parts.
 			description: `two upper-case units in one word, a hyphen between them, which Less subtracts`,
 			code: `a { b: 10PX-2REM; }`,
 			fixed: `a { b: 10px-2rem; }`,
@@ -816,7 +788,6 @@ testRule({
 			],
 		},
 		{
-			// See #633
 			description: `three upper-case units in one word, a hyphen between each pair, which Less subtracts down to one dimension`,
 			code: `a { b: 10PX-2REM-3EM; }`,
 			fixed: `a { b: 10px-2rem-3em; }`,
@@ -845,7 +816,7 @@ testRule({
 			],
 		},
 		{
-			// A keyword of Less holds hyphens of its own, so it reads `A-2REM` whole and compiles the line to `a { b: 10PX A-2REM; }`: only the hyphen behind the unit parts the word, and the digits behind the second one are no dimension. See #633
+			// A keyword of Less holds hyphens of its own, so it reads `A-2REM` whole and compiles the line to `a { b: 10PX A-2REM; }`: only the hyphen behind the unit parts the word, and the digits behind the second one are no dimension.
 			description: `an upper-case unit a hyphen welds a keyword to, the keyword holding a hyphen and digits of its own`,
 			code: `a { b: 10PX-A-2REM; }`,
 			fixed: `a { b: 10px-A-2REM; }`,
@@ -856,7 +827,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #633
 			description: `the same word with a keyword of two letters behind the unit`,
 			code: `a { b: 10PX-A-B; }`,
 			fixed: `a { b: 10px-A-B; }`,
@@ -867,7 +837,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// The second hyphen is the sign of the keyword, which Less prints as `a { b: 10PX -A; }`. See #633
+			// The second hyphen is the sign of the keyword, which Less prints as `a { b: 10PX -A; }`.
 			description: `an upper-case unit two hyphens weld a word to`,
 			code: `a { b: 10PX--A; }`,
 			fixed: `a { b: 10px--A; }`,
@@ -878,7 +848,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// The first hyphen is Less's operator and the second the sign of the operand, so it subtracts the two and compiles the line to `a { b: 12PX; }`: `REM` is a unit here as it is behind one hyphen. See #633
+			// The first hyphen is Less's operator and the second the sign of the operand, so it subtracts the two and compiles the line to `a { b: 12PX; }`: `REM` is a unit here as it is behind one hyphen.
 			description: `two upper-case units two hyphens weld together, which Less subtracts`,
 			code: `a { b: 10PX--2REM; }`,
 			fixed: `a { b: 10px--2rem; }`,
@@ -900,7 +870,7 @@ testRule({
 			],
 		},
 		{
-			// A keyword of Less opens on hyphens of its own, so behind the operator stands `--2REM` whole and no dimension: it compiles the line to `a { b: 10PX --2REM; }`, and the second run of digits and letters keeps its case. See #633
+			// A keyword of Less opens on hyphens of its own, so behind the operator stands `--2REM` whole and no dimension: it compiles the line to `a { b: 10PX --2REM; }`, and the second run of digits and letters keeps its case.
 			description: `the same pair three hyphens weld together, which Less leaves a keyword`,
 			code: `a { b: 10PX---2REM; }`,
 			fixed: `a { b: 10px---2REM; }`,
@@ -911,7 +881,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// The hyphens stand right behind the number, so the unit is empty and only the operand carries one; Less subtracts and compiles the line to `a { b: 12REM; }`. See #633
+			// The hyphens stand right behind the number, so the unit is empty and only the operand carries one; Less subtracts and compiles the line to `a { b: 12REM; }`.
 			description: `a word whose two hyphens leave no unit in front of them and a dimension behind`,
 			code: `a { b: 10--2REM; }`,
 			fixed: `a { b: 10--2rem; }`,
@@ -922,7 +892,7 @@ testRule({
 			message: messages.expected(`REM`, `rem`),
 		},
 		{
-			// The star parts the word before the hyphen does, so the second unit is named after the third and the warnings are put back into the order the file spells them. Less compiles the line to `a { b: 4PX; }`. See #633
+			// The star parts the word before the hyphen does, so the second unit is named after the third and the warnings are put back into the order the file spells them. Less compiles the line to `a { b: 4PX; }`.
 			description: `three upper-case units in one word, a hyphen between the first pair and a star between the second`,
 			code: `a { b: 10PX-2REM*3EM; }`,
 			fixed: `a { b: 10px-2rem*3em; }`,
@@ -951,7 +921,7 @@ testRule({
 			],
 		},
 		{
-			// The unit in front already stands in the case asked for, and the word is read on past it. See #633
+			// The unit in front already stands in the case asked for, and the word is read on past it.
 			description: `a miscased unit behind a hyphen whose unit in front needs no change`,
 			code: `a { b: 10px-2REM; }`,
 			fixed: `a { b: 10px-2rem; }`,
@@ -962,7 +932,7 @@ testRule({
 			message: messages.expected(`REM`, `rem`),
 		},
 		{
-			// Less compiles the line to `a { b: 10PX; }`, the hyphen leaving no operand behind it. See #633
+			// Less compiles the line to `a { b: 10PX; }`, the hyphen leaving no operand behind it.
 			description: `an upper-case unit closing on a hyphen`,
 			code: `a { b: 10PX-; }`,
 			fixed: `a { b: 10px-; }`,
@@ -973,7 +943,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// The hyphen stands right behind the number, so the unit is empty and `PX` is a keyword Less prints as it stands, `a { b: 10 PX 2REM; }`; the second dimension holds the fixer, since an accept case never runs it. See #633
+			// The hyphen stands right behind the number, so the unit is empty and `PX` is a keyword Less prints as it stands, `a { b: 10 PX 2REM; }`; the second dimension holds the fixer, since an accept case never runs it.
 			description: `a word whose hyphen leaves no unit at all beside a dimension of its own`,
 			code: `a { b: 10-PX 2REM; }`,
 			fixed: `a { b: 10-PX 2rem; }`,
@@ -984,7 +954,7 @@ testRule({
 			message: messages.expected(`REM`, `rem`),
 		},
 		{
-			// Less reads a variable's value as an expression whatever it spells, and prints `10PX A` for this one. See #633
+			// Less reads a variable's value as an expression whatever it spells, and prints `10PX A` for this one.
 			description: `an upper-case unit a hyphen welds a word to, in the value of a Less at-variable`,
 			code: `@v: 10PX-A;`,
 			fixed: `@v: 10px-A;`,
@@ -995,7 +965,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #633
 			description: `the same word in a set of media parameters, which Less reads as an expression too`,
 			code: `@media (min-width: 10PX-A) { a { b: c } }`,
 			fixed: `@media (min-width: 10px-A) { a { b: c } }`,
@@ -1006,7 +975,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// Less prints `10PX -A` here, the sign kept and the keyword as it stands. See #633
+			// Less prints `10PX -A` here, the sign kept and the keyword as it stands.
 			description: `the same word in the value of a custom property`,
 			code: `a { --x: 10PX-A; }`,
 			fixed: `a { --x: 10px-A; }`,
@@ -1017,7 +986,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// Inside a calculation Less prints the subtraction back without spaces, `calc(10PX-2REM)`, and it is two dimensions there as everywhere else. See #633
+			// Inside a calculation Less prints the subtraction back without spaces, `calc(10PX-2REM)`, and it is two dimensions there as everywhere else.
 			description: `two upper-case units a hyphen welds together inside a calculation`,
 			code: `a { b: calc(10PX-2REM); }`,
 			fixed: `a { b: calc(10px-2rem); }`,
@@ -1039,7 +1008,7 @@ testRule({
 			],
 		},
 		{
-			// The escape ends the unit in front of the hyphen it covers, which is the same place, and Less prints `10PX \-A`. See #527 and #633
+			// The escape ends the unit in front of the hyphen it covers, which is the same place, and Less prints `10PX \-A`.
 			description: `an upper-case unit an escaped hyphen welds a word to`,
 			code: `a { b: 10PX\\-A; }`,
 			fixed: `a { b: 10px\\-A; }`,
@@ -1050,7 +1019,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// Less reads a number as digits and at most one period, so a use of this variable compiles to `a { width: 1E 5PX; }` — the dimension `1E`, whose unit is `E`, beside the dimension `5PX`. That the `E` is a unit is what the arithmetic says: `1E+5PX` compiles to `6E`. The core reads one dimension whose number is `1E5` and named `PX` alone. See #646
+			// Less reads a number as digits and at most one period, so a use of this variable compiles to `a { width: 1E 5PX; }` — the dimension `1E`, whose unit is `E`, beside the dimension `5PX`. That the `E` is a unit is what the arithmetic says: `1E+5PX` compiles to `6E`. The core reads one dimension whose number is `1E5` and named `PX` alone.
 			description: `an upper-case unit behind an exponent, in the value of a Less at-variable`,
 			code: `@v: 1E5PX;`,
 			fixed: `@v: 1e5px;`,
@@ -1072,7 +1041,6 @@ testRule({
 			],
 		},
 		{
-			// See #646
 			description: `the same word in a set of media parameters, which Less reads as an expression too`,
 			code: `@media (min-width: 1E5PX) { a { b: c } }`,
 			fixed: `@media (min-width: 1e5px) { a { b: c } }`,
@@ -1094,7 +1062,7 @@ testRule({
 			],
 		},
 		{
-			// Less prints `1E 5PX` here as well. See #646
+			// Less prints `1E 5PX` here as well.
 			description: `the same word in the value of a custom property`,
 			code: `a { --x: 1E5PX; }`,
 			fixed: `a { --x: 1e5px; }`,
@@ -1116,7 +1084,6 @@ testRule({
 			],
 		},
 		{
-			// See #646
 			description: `the same word inside a calculation`,
 			code: `a { b: calc(1E5PX); }`,
 			fixed: `a { b: calc(1e5px); }`,
@@ -1138,7 +1105,6 @@ testRule({
 			],
 		},
 		{
-			// See #646
 			description: `the same word inside a call of another name`,
 			code: `a { b: max(1E5PX, 1px); }`,
 			fixed: `a { b: max(1e5px, 1px); }`,
@@ -1160,7 +1126,6 @@ testRule({
 			],
 		},
 		{
-			// See #646
 			description: `the same word in the last declaration of a block, written without a semicolon`,
 			code: `a { width: 1E5PX }`,
 			fixed: `a { width: 1e5px }`,
@@ -1182,7 +1147,7 @@ testRule({
 			],
 		},
 		{
-			// The value spells none of the characters that make Less read a declaration's value, so it is stored unread and printed whole, and what reaches the browser is the CSS dimension `1E5PX` whose unit is `PX`. The write is right under that reading too: the case of an exponent is nothing to CSS, and `lightningcss` compiles both spellings to `width: 100000px`. See #646
+			// The value spells none of the characters that make Less read a declaration's value, so it is stored unread and printed whole, and what reaches the browser is the CSS dimension `1E5PX` whose unit is `PX`. The write is right under that reading too: the case of an exponent is nothing to CSS, and `lightningcss` compiles both spellings to `width: 100000px`.
 			description: `the same word in a declaration closing on a semicolon, whose value Less stores unread`,
 			code: `a { width: 1E5PX; }`,
 			fixed: `a { width: 1e5px; }`,
@@ -1204,7 +1169,7 @@ testRule({
 			],
 		},
 		{
-			// The tokenizer reads the whole word as a number and the core finds no unit in it at all; Less prints `1E 5`. See #646
+			// The tokenizer reads the whole word as a number and the core finds no unit in it at all; Less prints `1E 5`.
 			description: `an exponent in a word the tokenizer reads as a number`,
 			code: `@v: 1E5;`,
 			fixed: `@v: 1e5;`,
@@ -1215,7 +1180,7 @@ testRule({
 			message: messages.expected(`E`, `e`),
 		},
 		{
-			// Less prints `1E 5%`. See #646
+			// Less prints `1E 5%`.
 			description: `the same exponent in a word the tokenizer reads as a percentage`,
 			code: `@v: 1E5%;`,
 			fixed: `@v: 1e5%;`,
@@ -1226,7 +1191,7 @@ testRule({
 			message: messages.expected(`E`, `e`),
 		},
 		{
-			// Less prints `1E 5PX 9`, the digit ending the unit and opening a number of its own. See #646
+			// Less prints `1E 5PX 9`, the digit ending the unit and opening a number of its own.
 			description: `an exponent and an upper-case unit a digit closes`,
 			code: `@v: 1E5PX9;`,
 			fixed: `@v: 1e5px9;`,
@@ -1248,7 +1213,7 @@ testRule({
 			],
 		},
 		{
-			// Less prints `1E 5E 5PX`, so the word holds three dimensions; the core reads one whose unit is `E5PX`. See #646
+			// Less prints `1E 5E 5PX`, so the word holds three dimensions; the core reads one whose unit is `E5PX`.
 			description: `a word of two exponents and an upper-case unit`,
 			code: `@v: 1E5E5PX;`,
 			fixed: `@v: 1e5e5px;`,
@@ -1277,7 +1242,7 @@ testRule({
 			],
 		},
 		{
-			// The period belongs to the number, so Less prints `1.5E 3PX`. See #646
+			// The period belongs to the number, so Less prints `1.5E 3PX`.
 			description: `an exponent behind a number holding a period`,
 			code: `@v: 1.5E3PX;`,
 			fixed: `@v: 1.5e3px;`,
@@ -1299,7 +1264,6 @@ testRule({
 			],
 		},
 		{
-			// See #646
 			description: `the same number written without its leading zero`,
 			code: `@v: .5E3PX;`,
 			fixed: `@v: .5e3px;`,
@@ -1321,7 +1285,7 @@ testRule({
 			],
 		},
 		{
-			// The hyphen is the operator Less subtracts at, and it compiles the use of this variable to `a { width: -4E; }`, the unit of the left operand carried through. See #633 and #646
+			// The hyphen is the operator Less subtracts at, and it compiles the use of this variable to `a { width: -4E; }`, the unit of the left operand carried through.
 			description: `an exponent whose sign is a hyphen`,
 			code: `@v: 1E-5PX;`,
 			fixed: `@v: 1e-5px;`,
@@ -1343,7 +1307,7 @@ testRule({
 			],
 		},
 		{
-			// Less adds the two and prints `6E`. See #646
+			// Less adds the two and prints `6E`.
 			description: `the same exponent with a plus in place of the hyphen`,
 			code: `@v: 1E+5PX;`,
 			fixed: `@v: 1e+5px;`,
@@ -1365,7 +1329,7 @@ testRule({
 			],
 		},
 		{
-			// Less prints `10PX 9`, the digit opening a number of its own, and the rule named `PX9` for a unit Less calls `PX`. A digit has no case, so the fix writes the same bytes either way. See #646
+			// Less prints `10PX 9`, the digit opening a number of its own, and the rule named `PX9` for a unit Less calls `PX`. A digit has no case, so the fix writes the same bytes either way.
 			description: `an upper-case unit a digit closes`,
 			code: `@v: 10PX9;`,
 			fixed: `@v: 10px9;`,
@@ -1376,7 +1340,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// Less prints `10PX 9PX`, two dimensions where the core reads the unit `PX9PX`. See #646
+			// Less prints `10PX 9PX`, two dimensions where the core reads the unit `PX9PX`.
 			description: `two upper-case units a digit welds together`,
 			code: `@v: 10PX9PX;`,
 			fixed: `@v: 10px9px;`,
@@ -1398,7 +1362,7 @@ testRule({
 			],
 		},
 		{
-			// An underscore is a code point of the unit Less reads, so it prints `1_ 5PX`: the unit of the first dimension is the underscore alone, which has no case. See #646
+			// An underscore is a code point of the unit Less reads, so it prints `1_ 5PX`: the unit of the first dimension is the underscore alone, which has no case.
 			description: `an underscore unit a digit welds an upper-case one to`,
 			code: `@v: 1_5PX;`,
 			fixed: `@v: 1_5px;`,
@@ -1409,7 +1373,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// Less prints `1E 3PX`, the third dimension subtracted from the second. See #633 and #646
+			// Less prints `1E 3PX`, the third dimension subtracted from the second.
 			description: `an exponent in front of a subtraction`,
 			code: `@v: 1E5PX-2REM;`,
 			fixed: `@v: 1e5px-2rem;`,
@@ -1438,7 +1402,7 @@ testRule({
 			],
 		},
 		{
-			// Less can open no entity on a code point outside ASCII and compiles the use of this variable to the word unparted, so the unit is the whole identifier here as it is to the core. That code point stays as it stands, being part of the unit rather than a letter with a case of it (#653). See #646
+			// Less can open no entity on a code point outside ASCII and compiles the use of this variable to the word unparted, so the unit is the whole identifier here as it is to the core. That code point stays as it stands, being part of the unit rather than a letter with a case of it.
 			description: `an upper-case unit closing on a code point outside ASCII, which Less parts the word at nowhere`,
 			code: `@v: 10PX\u00C4;`,
 			fixed: `@v: 10px\u00C4;`,
@@ -1449,7 +1413,7 @@ testRule({
 			message: messages.expected(`PX\u00C4`, `px\u00C4`),
 		},
 		{
-			// No digit stands behind the letter, so the letters run to the end of the word and Less prints `1EPX`. See #646
+			// No digit stands behind the letter, so the letters run to the end of the word and Less prints `1EPX`.
 			description: `a letter of an exponent with no digit behind it`,
 			code: `@v: 1EPX;`,
 			fixed: `@v: 1epx;`,
@@ -1468,12 +1432,11 @@ testRule({
 
 	accept: [
 		{
-			// Less compiles this to `a { width: 10PX \\#fff; }`, the escaped value printed as written, so the unit is `PX` and nothing of the hash, where the core names `PX\\#fff` and asks for `PX\\#FFF`. See #527
+			// Less compiles this to `a { width: 10PX \\#fff; }`, the escaped value printed as written, so the unit is `PX` and nothing of the hash, where the core names `PX\\#fff` and asks for `PX\\#FFF`.
 			description: `an upper-case unit with an escaped hash in lower case welded to it, which Less reads as a value of its own`,
 			code: `a { width: 10PX\\#fff; }`,
 		},
 		{
-			// See #527
 			// A number and an escaped value to Less, `10 \\#fff`; the core reads a dimension whose whole unit is the escaped hash, and asked for `\\#FFF` here.
 			description: `a number with an escaped hash welded to it, which leaves no unit to read`,
 			code: `a { width: 10\\#fff; }`,
@@ -1483,22 +1446,18 @@ testRule({
 			code: `a { width: 1EM; \n// width: 10px\n }`,
 		},
 		{
-			// See #234
 			description: `a unit in front of an interpolation whose text holds a bang, in a word that is no standard value`,
 			code: `a { b: 10px@{aB!x}; }`,
 		},
 		{
-			// See #298
 			description: `a lower-case unit in front of an interpolation whose text holds whitespace, in a set of media parameters, which is a place the Less parser carries such a value`,
 			code: `@media (min-width: 10px@{aB b}) { a { b: c } }`,
 		},
 		{
-			// See #298
 			description: `the same interpolation written in a custom property`,
 			code: `a { --x: 10px@{aB b}; }`,
 		},
 		{
-			// See #271
 			description: `a word of a multiplication standing in the text of an inline comment the value holds, whose dimensions the rule would read one at a time`,
 			code: `
 				a { b: 1PX // 2px*3rem
@@ -1506,7 +1465,6 @@ testRule({
 			`,
 		},
 		{
-			// See #271
 			description: `a lower-case unit standing in the text of an inline comment a set of media parameters holds`,
 			code: `
 				@media (min-width: 100PX // 2px
@@ -1514,7 +1472,6 @@ testRule({
 			`,
 		},
 		{
-			// See #271
 			description: `an address opened in that text and reaching past the break that closes the comment, which the rule passes over as it passes over every address`,
 			code: `
 				a { b: 1PX // url(
@@ -1522,17 +1479,16 @@ testRule({
 			`,
 		},
 		{
-			// Less compiles this to `a { b: 10PX a; }`: the dimension, and beside it a keyword printed exactly as written. The unit is `PX` and nothing of the keyword, where the core names `PX-a` and asks for `PX-A`. See #633
+			// Less compiles this to `a { b: 10PX a; }`: the dimension, and beside it a keyword printed exactly as written. The unit is `PX` and nothing of the keyword, where the core names `PX-a` and asks for `PX-A`.
 			description: `an upper-case unit a hyphen welds a lower-case word to, which Less reads as a keyword of its own`,
 			code: `a { b: 10PX-a; }`,
 		},
 		{
-			// Both units of `1E 5PX` already stand in the case asked for. See #646
+			// Both units of `1E 5PX` already stand in the case asked for.
 			description: `an exponent and the unit behind it, both in upper case`,
 			code: `@v: 1E5PX;`,
 		},
 		{
-			// See #577
 			description: `an upper-case unit in the value of a Less at-variable declared with a space in front of its colon`,
 			code: `@v : 10PX;`,
 		},
@@ -1540,7 +1496,6 @@ testRule({
 
 	reject: [
 		{
-			// See #271
 			description: `a lower-case unit on either side of an inline comment whose text holds one as well`,
 			code: `
 				a { b: 1px // 2px
@@ -1568,7 +1523,6 @@ testRule({
 			],
 		},
 		{
-			// See #271
 			description: `a unit a line below an inline comment, gathered by a call the parser opened inside that comment's text: the call is left alone and what it gathered is read where it stands`,
 			code: `
 				a { b: f(1px // c) calc(
@@ -1625,7 +1579,6 @@ testRule({
 			endColumn: 16,
 			message: messages.expected(`Px`, `PX`),
 		},
-		// See #233
 		{
 			description: `a lower-case unit on either side of a block comment the value of a Less at-variable holds`,
 			code: `@variable: 10px /* c */ 20px`,
@@ -1648,7 +1601,6 @@ testRule({
 			],
 		},
 		{
-			// See #425
 			description: `a variable multiplied by a lower-case unit, which used to be reported and never written`,
 			code: `a { b: @var*2rem; }`,
 			fixed: `a { b: @var*2REM; }`,
@@ -1659,7 +1611,7 @@ testRule({
 			message: messages.expected(`rem`, `REM`),
 		},
 		{
-			// The hash opens no interpolation and is a code point of the unit to the tokenizer, to Sass and to `lightningcss`, so the core names `px\\#fff`; Less parts the word at the escape and compiles the line to `a { width: 10px \\#fff; }`, so the unit is `px` here and the fix leaves the hash's case alone where it used to write `10PX\\#FFF`. See #414 and #527
+			// The hash opens no interpolation and is a code point of the unit to the tokenizer, to Sass and to `lightningcss`, so the core names `px\\#fff`; Less parts the word at the escape and compiles the line to `a { width: 10px \\#fff; }`, so the unit is `px` here and the fix leaves the hash's case alone where it used to write `10PX\\#FFF`.
 			description: `a lower-case unit with an escaped hash welded to it, which Less reads as a value of its own`,
 			code: `a { b: 10px\\#fff; }`,
 			fixed: `a { b: 10PX\\#fff; }`,
@@ -1670,7 +1622,7 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			// Less prints `1e 5px`, two dimensions, and the core reads one whose number is `1e5` and named `px` alone. See #646
+			// Less prints `1e 5px`, two dimensions, and the core reads one whose number is `1e5` and named `px` alone.
 			description: `a lower-case unit behind an exponent, in the value of a Less at-variable`,
 			code: `@v: 1e5px;`,
 			fixed: `@v: 1E5PX;`,
@@ -1692,7 +1644,6 @@ testRule({
 			],
 		},
 		{
-			// See #577
 			description: `a lower-case unit in the value of a Less at-variable declared with a space in front of its colon`,
 			code: `@v : 10px;`,
 			fixed: `@v : 10PX;`,
@@ -1703,7 +1654,7 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			// Where the head ends in the fixed text is read off the edits rather than off the text it was read from, since a recase of the whole run did not always keep its length: `\u00DF` uppercases to `SS`. The rule recases ASCII letters alone now (#653), so no edit changes a length any more, and what this case pins is that the head stays as the file spells it while the tail is written. See #649
+			// Where the head ends in the fixed text is read off the edits rather than off the text it was read from, since a recase of the whole run did not always keep its length: `\u00DF` uppercases to `SS`. The rule recases ASCII letters alone now, so no edit changes a length any more, and what this case pins is that the head stays as the file spells it while the tail is written.
 			description: `a sharp s behind an upper-case letter in a declaration whose colon the parser welded into the name, in front of a lower-case unit in the params`,
 			code: `@v:10A\u00DF 1px;`,
 			fixed: `@v:10A\u00DF 1PX;`,
@@ -1714,7 +1665,7 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			// The head of the value is written back into the name and the tail into the params, the raw between them left as the file spells it. See #649
+			// The head of the value is written back into the name and the tail into the params, the raw between them left as the file spells it.
 			description: `a lower-case unit in a declaration whose colon the parser welded into the name`,
 			code: `@v:10PX 1px;`,
 			fixed: `@v:10PX 1PX;`,
@@ -1725,7 +1676,6 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			// See #649
 			description: `both units of such a declaration in lower case`,
 			code: `@v:10px 1px;`,
 			fixed: `@v:10PX 1PX;`,
@@ -1747,7 +1697,6 @@ testRule({
 			],
 		},
 		{
-			// See #649
 			description: `an address in such a declaration, whose text the fix leaves alone`,
 			code: `@v:url(10px) 1px;`,
 			fixed: `@v:url(10px) 1PX;`,
@@ -1758,7 +1707,7 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			// The tokenizer reads the whole word as a number and the core finds no unit in it at all; Less prints `1e 5`. See #646
+			// The tokenizer reads the whole word as a number and the core finds no unit in it at all; Less prints `1e 5`.
 			description: `an exponent in a word the tokenizer reads as a number`,
 			code: `@v: 1e5;`,
 			fixed: `@v: 1E5;`,
@@ -1769,7 +1718,7 @@ testRule({
 			message: messages.expected(`e`, `E`),
 		},
 		{
-			// The keyword the hyphen welds on keeps its case where the fix used to write `10PX-A`; the second dimension holds the fixer to that. See #633
+			// The keyword the hyphen welds on keeps its case where the fix used to write `10PX-A`; the second dimension holds the fixer to that.
 			description: `a lower-case unit a hyphen welds a word to, beside a dimension of its own`,
 			code: `a { b: 10px-a 2rem; }`,
 			fixed: `a { b: 10PX-a 2REM; }`,
@@ -1800,7 +1749,7 @@ testRule({
 
 	reject: [
 		{
-			// See #650; the column stands two too far right
+			// The column stands two too far right
 			description: `a Less variable whose value opens with a colon of its own, which the parser keeps in front of the value and out of the copy it prints`,
 			code: `@v: : 10PX;`,
 			fixed: `@v: : 10px;`,
@@ -1809,7 +1758,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #650; the column stands two too far right
+			// The column stands two too far right
 			description: `the same variable with a block comment between the words of its value, which only the printed copy holds`,
 			code: `@v: : 10PX /* c */ 2PX;`,
 			fixed: `@v: : 10px /* c */ 2px;`,

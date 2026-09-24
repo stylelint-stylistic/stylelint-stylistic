@@ -55,10 +55,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!syntax.isStandardAtRule(atRule)) return
 
-			// The check asks about the position one past the at-rule, as though a semicolon stood there; where the file spells none the at-rule runs to its container's `}` or the end of the file, and the position is somebody else's (#395)
+			// The check asks about the position one past the at-rule, as though a semicolon stood there; where the file spells none the at-rule runs to its container's `}` or the end of the file, and the position is somebody else's
 			if (isLastNodeWithoutSemicolon(atRule)) return
 
-			// `report` counts an index from the node's own start, so the raw whitespace in front of the at-rule stays out of the text the position is measured in (#545)
+			// `report` counts an index from the node's own start, so the raw whitespace in front of the at-rule stays out of the text the position is measured in
 			let atRuleString = nodeString(atRule, result)
 			let problemIndex = atRuleString.length - 1
 			// The fix writes over the run the at-rule ends with, and a `//` comment there is closed by that run's break, so either option would put the semicolon inside it: the warning stands
@@ -66,7 +66,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let isFixable = !syntax.writesIntoInlineComment(atRule, result) && keepsEscapedCharacter(syntax, atRule, result, primary === `always` ? ` ` : ``)
 
 			checker.before({
-				// The run is read over the copy with its escapes masked, where an escaped space is a character of the params and no run (1789661964)
+				// The run is read over the copy with its escapes masked, where an escaped space is a character of the params and no run
 				source: maskEscapes(atRuleString, findEscapeSpans(atRuleString, syntax.inlineComments(atRule, result)), true),
 				index: atRuleString.length,
 				err: (m) => {

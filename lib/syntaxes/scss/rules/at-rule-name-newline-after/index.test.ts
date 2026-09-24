@@ -22,7 +22,6 @@ testRule({
 	],
 
 	reject: [
-		// See #696
 		{
 			description: `the same pair written with a space where each break belongs`,
 			code: `@mixin mixin() { @content; }; .colors { @include mixin { color: $color; }}`,

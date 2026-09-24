@@ -28,7 +28,7 @@ let meta = {
  * @returns The raw with that many of its leading breaks, and the whitespace between them, gone.
  */
 function takeOpeningLines (raw: string, lines: number): string {
-	// The warning is about the run the file opens with, so that run is what comes off — never everything the raw opens with, which `no-extra-semicolons`, listed ahead, has already joined the break behind the semicolon to (#632). Where the raw opens with fewer breaks than the file, all of them come off, and where it opens with none nothing does: whatever whitespace stands there is the first line's indentation rather than an empty line.
+	// The warning is about the run the file opens with, so that run is what comes off — never everything the raw opens with, which `no-extra-semicolons`, listed ahead, has already joined the break behind the semicolon to. Where the raw opens with fewer breaks than the file, all of them come off, and where it opens with none nothing does: whatever whitespace stands there is the first line's indentation rather than an empty line.
 	let opening = OPENS_WITH_LINE_BREAK.exec(raw)?.[0] ?? ``
 	let breaks = [...opening.matchAll(EVERY_LINE_BREAK)]
 	let last = breaks[lines - 1]
@@ -72,7 +72,7 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: Prim
 				fix () {
 					let { first } = root
 
-					// A root with no node keeps the file in `raws.after`; asking the first node for the break ended the lint in an error (#602)
+					// A root with no node keeps the file in `raws.after`; asking the first node for the break ended the lint in an error
 					if (first === undefined) {
 						if (root.raws.after === undefined) throw new Error(`The root node must keep the file in its trailing raw.`)
 

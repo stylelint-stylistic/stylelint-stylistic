@@ -12,12 +12,10 @@ testRule({
 
 	accept: [
 		{
-			// See #336
 			description: `a Sass nested property with a value already carrying the semicolon the option asks for, which this syntax parses into the trailing raw of the block around it rather than into the flag, and which the rule reads there`,
 			code: `a { font: 12px { family: serif; }; }`,
 		},
 		{
-			// See #336
 			description: `the same nested property broken over lines, the semicolon closing its brace on the brace's line`,
 			code: `
 				a {
@@ -40,22 +38,18 @@ testRule({
 			code: `a { @includes foo /* keep me */; }`,
 		},
 		{
-			// See #217
 			description: `a comment closing the block behind the declaration's semicolon`,
 			code: `a { color: pink; /* keep me */ }`,
 		},
 		{
-			// See #217
 			description: `a nested rule standing between the declaration and the comment closing the block, whose semicolon the flag speaks of rather than the declaration's`,
 			code: `a { color: red; &:hover { color: pink; } /* keep me */ }`,
 		},
 		{
-			// See #326
 			description: `a Sass variable standing on the root of the file, which is a statement of the file rather than the last declaration of a block`,
 			code: `$var: pink`,
 		},
 		{
-			// See #326
 			description: `the same variable with a comment behind it, which the walk looks past and finds the root all the same`,
 			code: `$var: pink /* keep me */`,
 		},
@@ -79,7 +73,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #87
 			description: `a comment standing between the at-rule and the closing brace`,
 			code: `a { @includes foo /* keep me */ }`,
 			fixed: `a { @includes foo /* keep me */; }`,
@@ -88,7 +81,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #217
 			description: `a comment closing the block behind a declaration, which this syntax reads with the same parser plain CSS is read with`,
 			code: `a { color: pink /* keep me */ }`,
 			fixed: `a { color: pink; /* keep me */ }`,
@@ -105,7 +97,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #87
 			description: `a block broken across lines, whose closing brace keeps its line when the semicolon is written`,
 			code: `
 				a {
@@ -162,7 +153,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #423
 			description: `the same comment on its own line, swallowed into that raw with the break in front of it, so the semicolon closes the params on their line`,
 			code: `
 				a {
@@ -181,7 +171,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #217
 			description: `the twin of the Less case below: this syntax reads the inline comment as a node of its own, so the semicolon lands in front of the comment rather than inside it and the fix goes through`,
 			code: `
 				a {
@@ -198,7 +187,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #287
 			description: `a custom property, whose value this syntax reads to the end of the line and takes the line break into: the semicolon lands past the comment rather than inside it, so the fix goes through and the closing brace takes its line`,
 			code: `
 				a {
@@ -215,7 +203,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #287
 			description: `the same custom property carrying a flag, which this syntax files in a raw of its own, so the line break closing the comment stands there rather than in the value`,
 			code: `
 				a {
@@ -232,7 +219,7 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// Only this syntax reads a nested property as a declaration: `postcss-less` and plain CSS read the three lines as a rule whose selector is `font: 12px`, which gives this rule nothing to say. See #335
+			// Only this syntax reads a nested property as a declaration: `postcss-less` and plain CSS read the three lines as a rule whose selector is `font: 12px`, which gives this rule nothing to say.
 			description: `a Sass nested property, which carries a block of its own: the stringifier drops the semicolon it is handed for such a declaration, so there is nothing the fix could write and the warning stands`,
 			code: `
 				a {
@@ -251,7 +238,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #335
 			description: `the same nested property with a block comment behind its value, which reaches the rule the same way and is refused the same way`,
 			code: `
 				a {
@@ -270,7 +256,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #335
 			description: `the same nested property carrying an inline comment, which the value takes the line break of and which changes nothing about the block standing behind it`,
 			code: `
 				a {
@@ -319,7 +304,6 @@ testRule({
 			code: `a { @includes foo }`,
 		},
 		{
-			// See #630
 			description: `the same at-rule with no parameters, which the parser hands over with no source end`,
 			code: `a { @content }`,
 		},
@@ -328,27 +312,22 @@ testRule({
 			code: `a { @foo { color: pink } }`,
 		},
 		{
-			// See #217
 			description: `a comment closing the block behind a declaration that carries no semicolon`,
 			code: `a { color: pink /* keep me */ }`,
 		},
 		{
-			// See #217
 			description: `a nested rule standing between the declaration and the comment closing the block, whose semicolon the flag speaks of rather than the declaration's`,
 			code: `a { color: red; &:hover { color: pink } /* keep me */ }`,
 		},
 		{
-			// See #326
 			description: `a Sass variable standing on the root of the file, whose semicolon closes no block and is as optional there as a block's trailing one`,
 			code: `$var: pink;`,
 		},
 		{
-			// See #326
 			description: `the same variable with a comment behind it, which the walk looks past and finds the root all the same`,
 			code: `$var: pink; /* keep me */`,
 		},
 		{
-			// See #326
 			description: `a Sass map written on the root of the file, which this parser reads as one declaration rather than as a container of its own`,
 			code: `$m: (a: 1, b: 2);`,
 		},
@@ -389,7 +368,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #87
 			description: `a comment standing between the at-rule and the semicolon`,
 			code: `a { @includes foo /* keep me */; }`,
 			fixed: `a { @includes foo /* keep me */ }`,
@@ -398,7 +376,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #217
 			description: `a comment closing the block behind a declaration's semicolon, which this syntax reads with the same parser plain CSS is read with`,
 			code: `a { color: pink; /* keep me */ }`,
 			fixed: `a { color: pink /* keep me */ }`,
@@ -407,7 +384,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #217
 			description: `the same comment standing behind the semicolon instead, where it is a node of its own: PostCSS writes the semicolon behind a bodiless at-rule whatever the flag says, since without it the comment would be read as more of the parameters, so the warning stands over code the fix leaves alone`,
 			code: `
 				a {
@@ -426,7 +402,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #217
 			description: `an inline comment closing the block behind the declaration's semicolon, which this syntax reads as a node of its own`,
 			code: `
 				a {
@@ -443,7 +418,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #517
 			description: `a semicolon on the line behind an inline comment a backslash stands against, which this parser reads as a comment: the semicolon goes and the break closing the comment stays`,
 			code: `a { color: pink \\// keep me\n; }`,
 			fixed: `a { color: pink \\// keep me\n }`,
@@ -452,7 +426,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #326
 			description: `a block standing in front of a Sass variable on the root of the file, whose own trailing semicolon is reported while the variable's is left where it stands`,
 			code: `
 				a { color: pink; }
@@ -467,7 +440,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #325
 			description: `a second semicolon standing behind the one that closes the declaration, which this syntax keeps in the same raw plain CSS keeps it in`,
 			code: `a { color: pink;; }`,
 			fixed: `a { color: pink }`,
@@ -476,7 +448,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #325
 			description: `the same pair with an inline comment closing the block behind it`,
 			code: `
 				a {
@@ -493,7 +464,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #325
 			// The same semicolon under `always` is #336: the flag is unset there too, so a property already carrying one is asked for another
 			description: `a Sass nested property carrying a semicolon behind its closing brace, which the parser keeps in the block's own trailing raw rather than in the flag, and the semicolon closing the nested block along with it`,
 			code: `a { font: 12px { family: serif; }; }`,
@@ -512,7 +482,6 @@ testRule({
 			],
 		},
 		{
-			// See #309
 			description: `an extend at-rule closing the block, which Sass parts with the semicolon behind, so the fix goes through where the Less reading of the same file holds it back`,
 			code: `a { @extend .b; }`,
 			fixed: `a { @extend .b }`,
@@ -529,7 +498,6 @@ testRule({
 
 	accept: [
 		{
-			// See #327
 			description: `the one declaration with an inline comment standing in front of it`,
 			code: `
 				a {
@@ -542,7 +510,6 @@ testRule({
 
 	reject: [
 		{
-			// See #327
 			description: `a block of two declarations with an inline comment standing in front of them, which leaves the option two nodes to count`,
 			code: `
 				a {
@@ -571,7 +538,6 @@ testRule({
 
 	accept: [
 		{
-			// See #327
 			description: `the one declaration with its semicolon and an inline comment standing in front of it`,
 			code: `
 				a {
@@ -590,7 +556,6 @@ testRule({
 
 	accept: [
 		{
-			// See #326
 			description: `a Sass variable standing on the root of a style element, which is a stylesheet of its own and closes no block`,
 			code: `<style lang="scss">$var: pink</style>`,
 		},
@@ -604,7 +569,6 @@ testRule({
 
 	accept: [
 		{
-			// See #326
 			description: `a Sass variable standing on the root of a style element, which is a stylesheet of its own however the page carries it`,
 			code: `<style lang="scss">$var: pink;</style>`,
 		},
@@ -612,7 +576,7 @@ testRule({
 
 	reject: [
 		{
-			// A page holding both languages splits its rules between the namespaces: the Less half this case once carried is the less namespace's. See #309
+			// A page holding both languages splits its rules between the namespaces: the Less half this case once carried is the less namespace's.
 			description: `an at-rule closing a block of a Sass style element, whose semicolon that syntax parts with`,
 			code: `
 				<style lang="scss">a { @extend .c; }</style>
@@ -634,7 +598,6 @@ testRule({
 
 	reject: [
 		{
-			// See #479
 			description: `an inline comment ending the declaration, whose closing break the strip leaves where it stands, taking the semicolon alone`,
 			code: `a { b: c // x\n; }`,
 			fixed: `a { b: c // x\n }`,

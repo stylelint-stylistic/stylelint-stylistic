@@ -8,7 +8,7 @@ testRule({
 
 	accept: [
 		{
-			// The search took an escaped bracket in the value for the attribute's closing one (1789517120)
+			// The search took an escaped bracket in the value for the attribute's closing one
 			description: `an escaped closing bracket in the value, which is a character of the value and no bracket`,
 			code: `[ a=b\\] ] {}`,
 		},
@@ -144,7 +144,7 @@ testRule({
 
 	reject: [
 		{
-			// The search took an escaped opening bracket in the name for a bracket, and the fix wrote a space into the name (1789517120)
+			// The search took an escaped opening bracket in the name for a bracket, and the fix wrote a space into the name
 			description: `an escaped opening bracket in the name, which is a character of the name and no bracket`,
 			code: `[a\\[b=c] {}`,
 			fixed: `[ a\\[b=c ] {}`,
@@ -154,7 +154,7 @@ testRule({
 			],
 		},
 		{
-			// The search closed no string at the quotation mark behind an escaped backslash, and the closing bracket passed for the string's text (1789517120)
+			// The search closed no string at the quotation mark behind an escaped backslash, and the closing bracket passed for the string's text
 			description: `no space in front of the closing bracket behind a string ending in an escaped backslash`,
 			code: `[ a="b\\\\"] {}`,
 			fixed: `[ a="b\\\\" ] {}`,
@@ -163,7 +163,7 @@ testRule({
 			message: messages.expectedClosing,
 		},
 		{
-			// Pins the run in front of the bracket read over the copy with the escapes masked (1789845987)
+			// Pins the run in front of the bracket read over the copy with the escapes masked
 			description: `a backslash ending the value in front of a space, which spells a character of the value, leaving no run for the option`,
 			code: `[ a=b\\ ] {}`,
 			fixed: `[ a=b\\  ] {}`,
@@ -172,7 +172,7 @@ testRule({
 			message: messages.expectedClosing,
 		},
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the value in front of a line break and the bracket, where the space would stand behind the backslash as its escaped character, so the warning stands`,
 			code: `[ a=b\\\n] {}`,
 			fixed: `[ a=b\\\n] {}`,
@@ -181,7 +181,7 @@ testRule({
 			message: messages.expectedClosing,
 		},
 		{
-			// Pins the attribute passed over and the one beside it fixed all the same: the parser prints the first with a tab in another place and a backslash gone, and every index here is measured in that print (1789855319)
+			// Pins the attribute passed over and the one beside it fixed all the same: the parser prints the first with a tab in another place and a backslash gone, and every index here is measured in that print
 			description: `a backslash in front of a tab twice over inside the value of the first attribute of a list, the second standing with no whitespace inside its brackets`,
 			code: `[a=\\\t\\\tb], [c=d] {}`,
 			fixed: `[a=\\\t\\\tb], [ c=d ] {}`,
@@ -199,7 +199,7 @@ testRule({
 			],
 		},
 		{
-			// Pins the space written in front of the bracket: the run the parser files opens on the tab behind the backslash, so the write over it was refused and the warning stood (1789855319)
+			// Pins the space written in front of the bracket: the run the parser files opens on the tab behind the backslash, so the write over it was refused and the warning stood
 			description: `a backslash ending the value in front of a tab, which the parser reads as whitespace of its own and the grammar as a character of the value`,
 			code: `[a=b\\\t] {}`,
 			fixed: `[ a=b\\\t ] {}`,
@@ -217,7 +217,7 @@ testRule({
 			],
 		},
 		{
-			// Pins the tab left where it stands: the write took it for the run it was asked for (1789855319)
+			// Pins the tab left where it stands: the write took it for the run it was asked for
 			description: `a backslash opening the value in front of a tab, the bracket carrying no whitespace at either end`,
 			code: `[a=\\\tb] {}`,
 			fixed: `[ a=\\\tb ] {}`,
@@ -235,7 +235,7 @@ testRule({
 			],
 		},
 		{
-			// Pins the run read where it stands rather than at the part the parser picked by `insensitive`, which it sets for a literal `i` alone (1789864269)
+			// Pins the run read where it stands rather than at the part the parser picked by `insensitive`, which it sets for a literal `i` alone
 			description: `a case flag the parser reads as no insensitivity mark, whose value carries the run the parser files for the closing bracket`,
 			code: `[a=b s] {}`,
 			fixed: `[ a=b s ] {}`,
@@ -253,7 +253,7 @@ testRule({
 			],
 		},
 		{
-			// Pins the line break kept: the write went to the run in front of the flag, which is the break, and carried it off (1789864269)
+			// Pins the line break kept: the write went to the run in front of the flag, which is the break, and carried it off
 			description: `the same flag standing behind a line break, which is no run of the closing bracket`,
 			code: `[a=b\ns] {}`,
 			fixed: `[ a=b\ns ] {}`,
@@ -743,7 +743,7 @@ testRule({
 
 	accept: [
 		{
-			// Pins the run in front of the bracket read over the copy with the escapes masked (1789845987)
+			// Pins the run in front of the bracket read over the copy with the escapes masked
 			description: `a backslash ending the value in front of a space, which spells a character of the value and no run`,
 			code: `[a=b\\ ] {}`,
 		},
@@ -851,7 +851,7 @@ testRule({
 
 	reject: [
 		{
-			// The search took an escaped opening bracket in the value for a bracket, and the fix took the closing bracket away with the run in front of it (1789517120)
+			// The search took an escaped opening bracket in the value for a bracket, and the fix took the closing bracket away with the run in front of it
 			description: `an escaped opening bracket in the value, which is a character of the value and no bracket`,
 			code: `[ a=b\\[ ] {}`,
 			fixed: `[a=b\\[] {}`,
@@ -861,7 +861,7 @@ testRule({
 			],
 		},
 		{
-			// The search closed no string at the quotation mark behind an escaped backslash, and the closing bracket passed for the string's text (1789517120)
+			// The search closed no string at the quotation mark behind an escaped backslash, and the closing bracket passed for the string's text
 			description: `a space in front of the closing bracket behind a string ending in an escaped backslash`,
 			code: `[ a="b\\\\" ] {}`,
 			fixed: `[a="b\\\\"] {}`,
@@ -879,7 +879,7 @@ testRule({
 			message: messages.rejectedClosing,
 		},
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the value in front of a line break and the bracket, which the write would turn into an escaped bracket the file no longer parses, so the warning stands`,
 			code: `[a=b\\\n ] {}`,
 			fixed: `[a=b\\\n ] {}`,
@@ -888,7 +888,7 @@ testRule({
 			message: messages.rejectedClosing,
 		},
 		{
-			// Pins the space taken and the tab left: the run the parser files opens on that tab, so the write over it was refused and the warning stood (1789855319)
+			// Pins the space taken and the tab left: the run the parser files opens on that tab, so the write over it was refused and the warning stood
 			description: `a space behind an escaped tab in front of the bracket, which the fix takes without touching the escape`,
 			code: `[a=b\\\t ] {}`,
 			fixed: `[a=b\\\t] {}`,
@@ -897,7 +897,7 @@ testRule({
 			message: messages.rejectedClosing,
 		},
 		{
-			// Pins the run read where it stands rather than at the part the parser picked by `insensitive`, which it sets for a literal `i` alone (1789864269)
+			// Pins the run read where it stands rather than at the part the parser picked by `insensitive`, which it sets for a literal `i` alone
 			description: `a space in front of the bracket behind a case flag the parser reads as no insensitivity mark`,
 			code: `[a=b s ] {}`,
 			fixed: `[a=b s] {}`,

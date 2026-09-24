@@ -42,7 +42,7 @@ testRule({
 	],
 })
 
-// The fix spells each run as the rules about it ask (#641). The rule's write lands ahead of every lineness-conditioned neighbor and behind every `always` and `never` one, wherever the configuration lists them, so the order the library fixes is the only order there is; a probe over both confirmed it
+// The fix spells each run as the rules about it ask. The rule's write lands ahead of every lineness-conditioned neighbor and behind every `always` and `never` one, wherever the configuration lists them, so the order the library fixes is the only order there is; a probe over both confirmed it
 testRule({
 	ruleName,
 	config: [1],
@@ -431,7 +431,7 @@ testRule({
 	],
 })
 
-// `indentation` checks behind this rule in the same run, so the lines the fix writes get their indent at once (#353)
+// `indentation` checks behind this rule in the same run, so the lines the fix writes get their indent at once
 testRule({
 	ruleName,
 	config: [1],
@@ -547,7 +547,6 @@ describe(`the run in front of a comment`, () => {
 	})
 })
 
-// #713
 describe(`the check ahead of the lineness tier`, () => {
 	it(`breaks the block before the lineness-conditioned rules read it, so the first run writes the break its multi-line option asks for behind the brace`, async () => {
 		let { code, results } = await stylelint.lint({

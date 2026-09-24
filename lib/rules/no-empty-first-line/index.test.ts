@@ -40,7 +40,6 @@ testRule({
 			code: `/* comment */`,
 		},
 		{
-			// See #683
 			description: `a no-break space opening the first line, which the tokenizer reads as the head of the first selector`,
 			code: `\u00A0\n.class {}\n`,
 		},
@@ -115,7 +114,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #602
 			description: `an empty first line in front of a free semicolon, which leaves the root no node`,
 			code: `\n;`,
 			fixed: `;`,
@@ -148,7 +146,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #683
 			description: `an empty first line in front of a second one opening on a no-break space`,
 			code: `\n\u00A0\n.class {}\n`,
 			fixed: `\u00A0\n.class {}\n`,
@@ -172,7 +169,6 @@ testRule({
 	],
 	reject: [
 		{
-			// See #602
 			description: `a style element with an empty line in front of a free semicolon, which leaves the element's root no node`,
 			code: `<style>\n\n;</style>`,
 			fixed: `<style>\n;</style>`,

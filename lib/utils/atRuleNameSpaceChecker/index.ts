@@ -42,7 +42,7 @@ export function atRuleNameSpaceChecker (options: {
 			source,
 			index,
 			err: (m) => {
-				// Under Less the whitespace behind `@import` and `@plugin` makes them directives, so the warning stands over a file the fix would change the meaning of (#396)
+				// Under Less the whitespace behind `@import` and `@plugin` makes them directives, so the warning stands over a file the fix would change the meaning of
 				let fix = options.syntax.readsWhitespaceBehindAtRuleName(node) ? null : options.fix
 
 				report({

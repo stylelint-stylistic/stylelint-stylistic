@@ -40,7 +40,6 @@ testRule({
 			code: `a {color: pink;\r\n\r\n}`,
 		},
 		{
-			// See #245
 			description: `two form feeds in front of the brace, which are whitespace and no empty line, so the block stays single-line and is left alone`,
 			code: `a {color: pink;\f\f}`,
 		},
@@ -107,7 +106,6 @@ testRule({
 			`,
 		},
 		{
-			// See #292
 			description: `an empty line in front of the brace of a block an at-rule with neither a block nor a semicolon closes, which the parser files into that at-rule rather than into the block`,
 			code: `
 				a {
@@ -120,7 +118,6 @@ testRule({
 
 	reject: [
 		{
-			// See #735
 			description: `a nested block with a stray semicolon on the line behind its brace, marked on the brace rather than inside the raw the semicolon stands in`,
 			code: `a {\n\tb {\n\t\tc: d\n\t}\n\t;\n}`,
 			fixed: `a {\n\tb {\n\t\tc: d\n\n\t}\n\t;\n\n}`,
@@ -154,7 +151,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #690
 			description: `a stray semicolon behind the break, which stays on its own line while the run's first break is doubled`,
 			code: `a { color: pink;;\n;\n}`,
 			fixed: `a { color: pink;;\n\n;\n}`,
@@ -187,7 +183,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #690
 			description: `a stray semicolon glued to the brace behind the break, which stays glued while the break is doubled, so that a rule taking it out leaves the same file whichever side of this one it is listed`,
 			code: `a { color: pink;\n;}`,
 			fixed: `a { color: pink;\n\n;}`,
@@ -196,7 +191,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #678
 			description: `a space in front of the brace of a block broken open, the empty line belonging in front of that space rather than behind it`,
 			code: `a {\ncolor: pink; }`,
 			fixed: `a {\ncolor: pink;\n\n }`,
@@ -205,7 +199,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #678
 			description: `a stray semicolon and a space in front of that brace, the empty line belonging between the two`,
 			code: `a {\ncolor: pink;; }`,
 			fixed: `a {\ncolor: pink;;\n\n }`,
@@ -277,7 +270,7 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// The outer block's brace is reported first, the walk visiting the nodes in document order (#570)
+			// The outer block's brace is reported first, the walk visiting the nodes in document order
 			description: `a comment closing a nested block, whose own brace has no empty line`,
 			code: `
 				@media print {
@@ -311,7 +304,6 @@ testRule({
 			],
 		},
 		{
-			// See #292
 			description: `a single break in front of the brace of a block an at-rule with neither a block nor a semicolon closes, which the parser files into that at-rule rather than into the block`,
 			code: `
 				a {
@@ -348,7 +340,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #538
 			description: `a single break in front of the brace of a block a custom property with no semicolon closes, which the parser keeps in that property's value rather than in the block`,
 			code: `
 				a {
@@ -437,7 +428,6 @@ testRule({
 			`,
 		},
 		{
-			// See #292
 			description: `a single break in front of the brace of a block an at-rule with neither a block nor a semicolon closes, which the parser files into that at-rule rather than into the block`,
 			code: `
 				a {
@@ -569,7 +559,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// The outer block's brace is reported first, the walk visiting the nodes in document order (#570)
+			// The outer block's brace is reported first, the walk visiting the nodes in document order
 			description: `nested blocks, each closing behind an empty line`,
 			code: `
 				@media print {
@@ -624,7 +614,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #292
 			description: `an empty line in front of the brace of a block an at-rule with neither a block nor a semicolon closes`,
 			code: `
 				a {
@@ -661,7 +650,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #538
 			description: `an empty line in front of the brace of a block a custom property with no semicolon closes, which the parser keeps in that property's value rather than in the block`,
 			code: `
 				a {
@@ -764,7 +752,6 @@ testRule({
 			`,
 		},
 		{
-			// See #292
 			description: `an empty line in front of the brace of a block an at-rule with neither a block nor a semicolon closes, which the reversed option asks for`,
 			code: `
 				a {
@@ -794,7 +781,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #678
 			description: `a space in front of the brace of a block holding nothing but a comment, which the reversed option gives an empty line`,
 			code: `a {/*c*/ }`,
 			fixed: `a {/*c*/\n\n }`,
@@ -850,7 +836,7 @@ testRule({
 			],
 		},
 		{
-			// The outer block's brace is reported first, the walk visiting the nodes in document order (#570)
+			// The outer block's brace is reported first, the walk visiting the nodes in document order
 			description: `an empty line in front of the inner brace, and none in front of the outer one`,
 			code: `
 				@media print {
@@ -927,7 +913,6 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			// See #292
 			description: `a single break in front of that brace, where the reversed option asks for an empty line`,
 			code: `
 				a {
@@ -1012,7 +997,6 @@ testRule({
 			`,
 		},
 		{
-			// See #292
 			description: `a single break in front of the brace of a block an at-rule with neither a block nor a semicolon closes, which the reversed option asks for`,
 			code: `
 				a {
@@ -1139,7 +1123,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #292
 			description: `an empty line in front of that brace, which the reversed option asks to go`,
 			code: `
 				a {

@@ -8,7 +8,7 @@ testRule({
 
 	accept: [
 		{
-			// The parser hands the character closing a hexadecimal escape over inside the combinator wherever it is not a space, and wherever the escape carries six digits (1789874864)
+			// The parser hands the character closing a hexadecimal escape over inside the combinator wherever it is not a space, and wherever the escape carries six digits
 			description: `a hexadecimal escape closed by a line break, where the grammar reads no combinator at all`,
 			code: `a\\41\nb {}`,
 		},
@@ -21,7 +21,7 @@ testRule({
 			code: `a\\000041  b {}`,
 		},
 		{
-			// The selector parser reads a backslash in front of a tab as no escape, and the fix wrote over the tab (1789666655)
+			// The selector parser reads a backslash in front of a tab as no escape, and the fix wrote over the tab
 			description: `an escaped tab between two names, which is a character of one name and no combinator`,
 			code: `a\\\tb {}`,
 		},
@@ -146,7 +146,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the run read from behind the escape: writing over the character that closes it would close the escape with the written space and leave no combinator (1789874864)
+			// Pins the run read from behind the escape: writing over the character that closes it would close the escape with the written space and leave no combinator
 			description: `two line breaks behind a hexadecimal escape, the first of which closes it, so the second alone stands for the combinator`,
 			code: `a\\41\n\nb {}`,
 			fixed: `a\\41\n b {}`,
@@ -155,7 +155,7 @@ testRule({
 			message: messages.rejected(`\n`),
 		},
 		{
-			// Pins the same reading where the escape closes on a tab, which closes one as each of the five characters CSS reads as whitespace does (1789874864)
+			// Pins the same reading where the escape closes on a tab, which closes one as each of the five characters CSS reads as whitespace does
 			description: `two tabs behind a hexadecimal escape, the first of which closes it`,
 			code: `a\\41\t\tb {}`,
 			fixed: `a\\41\t b {}`,
@@ -164,7 +164,7 @@ testRule({
 			message: messages.rejected(`\t`),
 		},
 		{
-			// Pins the pair counted as the one character closing the escape, which a reading taking a single character off the run would miss (1789874864)
+			// Pins the pair counted as the one character closing the escape, which a reading taking a single character off the run would miss
 			description: `two carriage-return line breaks behind a hexadecimal escape, the first pair of which closes it`,
 			code: `a\\41\r\n\r\nb {}`,
 			fixed: `a\\41\r\n b {}`,
@@ -173,7 +173,7 @@ testRule({
 			message: messages.rejected(`\r\n`),
 		},
 		{
-			// Pins the space handed over behind a six-digit escape, where the run the rule may write opens one character further on than the digits end (1789874864)
+			// Pins the space handed over behind a six-digit escape, where the run the rule may write opens one character further on than the digits end
 			description: `a six-digit hexadecimal escape closed by a space with two spaces behind it`,
 			code: `a\\000041   b {}`,
 			fixed: `a\\000041  b {}`,
@@ -182,7 +182,7 @@ testRule({
 			message: messages.rejected(`  `),
 		},
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789857484)
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a line break behind a child combinator and a backslash, where the space would stand behind the backslash as its escaped character and leave the second selector a name opening with a space, so the warning stands`,
 			code: `a>\\\nb {}`,
 			fixed: `a>\\\nb {}`,
@@ -191,7 +191,7 @@ testRule({
 			message: messages.rejected(`\n`),
 		},
 		{
-			// Pins the same refusal where the backslash follows a name (1789857484)
+			// Pins the same refusal where the backslash follows a name
 			description: `a line break behind a name and a backslash, where the space would become a character of the name and join the two into one, so the warning stands`,
 			code: `a\\\nb {}`,
 			fixed: `a\\\nb {}`,
@@ -200,7 +200,7 @@ testRule({
 			message: messages.rejected(`\n`),
 		},
 		{
-			// Pins the write the refusal lets through: an even run of backslashes spells an escaped backslash, and the space behind it is no escape (1789857484)
+			// Pins the write the refusal lets through: an even run of backslashes spells an escaped backslash, and the space behind it is no escape
 			description: `a line break behind two backslashes, the second of which the first escapes, so the run is written`,
 			code: `a\\\\\nb {}`,
 			fixed: `a\\\\ b {}`,
@@ -209,7 +209,7 @@ testRule({
 			message: messages.rejected(`\n`),
 		},
 		{
-			// The selector parser reads a backslash in front of a tab as no escape, and the fix wrote over the tab (1789666655)
+			// The selector parser reads a backslash in front of a tab as no escape, and the fix wrote over the tab
 			description: `a tab behind an escaped tab, where the escaped one is a character of the name and the other stands for the combinator`,
 			code: `a\\\t\tb {}`,
 			fixed: `a\\\t b {}`,

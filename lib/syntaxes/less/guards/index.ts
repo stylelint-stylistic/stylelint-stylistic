@@ -21,7 +21,7 @@ export function isStandardLessAtRule (atRule: AtRule | LessAtRule): boolean {
 	// Ignore Less mixins
 	if (`mixin` in atRule && atRule.mixin) return false
 
-	// A variable declaration or a detached ruleset call, `@dr();`, and the same shape under a name Less reads shorter than the parser does, `@dr$()` being `@dr` in front of `$()`, whose name no rule can write beside (#724)
+	// A variable declaration or a detached ruleset call, `@dr();`, and the same shape under a name Less reads shorter than the parser does, `@dr$()` being `@dr` in front of `$()`, whose name no rule can write beside
 	if (isLessVariableDeclaration(atRule) || hasLessDetachedRulesetCallShape(atRule)) return false
 
 	return true

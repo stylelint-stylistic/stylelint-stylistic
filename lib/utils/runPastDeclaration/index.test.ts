@@ -72,7 +72,6 @@ describe(`runPastDeclaration`, () => {
 		expect(run(`a { b:  ; c: red }`)).toBeUndefined()
 	})
 
-	// See #536
 	it(`the boundary as the trailing-semicolon rule will leave it: a semicolon a live always is to write, which makes the run the block's, and one a live never is to take away with the run in front of it, which makes the run behind the block's raw the colon's`, () => {
 		expect(runPastDeclaration(css, declarationOf(`a { b:  }`), configured(`always`))).toBeUndefined()
 		expect(runPastDeclaration(css, declarationOf(`a { b: ; }`), configured(`never`))).toBe(` `)

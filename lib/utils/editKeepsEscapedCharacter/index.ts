@@ -4,7 +4,7 @@ import type { Edit } from "../applyEditsFromEnd/index.ts"
 /**
  * Asks whether an edit keeps the character behind a backslash the text in front of it ends on.
  *
- * PostCSS lets a backslash cover no whitespace, so `red \ !important` keeps the flag; the grammar reads a backslash in front of a line break as a delimiter and in front of anything else as an escape. A write changing that character is read with the backslash by one of the two: `red \!important` takes the flag into the value, and `a\,b` in place of `a\⏎,b` is one identifier where a list of two stood (1789661965).
+ * PostCSS lets a backslash cover no whitespace, so `red \ !important` keeps the flag; the grammar reads a backslash in front of a line break as a delimiter and in front of anything else as an escape. A write changing that character is read with the backslash by one of the two: `red \!important` takes the flag into the value, and `a\,b` in place of `a\⏎,b` is one identifier where a list of two stood.
  * @param text - The text the edit applies to.
  * @param edit - The edit, indexed in that text.
  * @param edit.start - Where the span it replaces opens.

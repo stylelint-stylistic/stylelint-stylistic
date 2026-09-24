@@ -42,7 +42,6 @@ testRule({
 
 	reject: [
 		{
-			// See #411
 			description: `a break in front of the declaration standing behind a head comment the file spells no run in front of`,
 			code: `
 				a {/*c*/
@@ -54,7 +53,6 @@ testRule({
 			message: messages.rejectedAfterMultiLine(),
 		},
 		{
-			// See #411
 			description: `a block of two comments, the head one of which the file spells no run in front of`,
 			code: `
 				a {/*1*/
@@ -82,7 +80,6 @@ testRule({
 			`,
 		},
 		{
-			// See #680
 			description: `the break PostCSS prints in front of a head declaration the file spells no run in front of`,
 			code: `
 				a {
@@ -90,12 +87,10 @@ testRule({
 			`,
 		},
 		{
-			// See #680
 			description: `the break PostCSS prints in front of the one comment a block holds, which stands where the checked node would`,
 			code: `a {/*c*/}`,
 		},
 		{
-			// See #680
 			description: `the break PostCSS prints in front of a head comment the file spells no run in front of, which the check carries onto the declaration behind it`,
 			code: `
 				b {
@@ -117,7 +112,6 @@ testRule({
 
 	accept: [
 		{
-			// See #680
 			description: `the break PostCSS prints in front of a head declaration the file spells no run in front of`,
 			code: `
 				a {
@@ -125,7 +119,6 @@ testRule({
 			`,
 		},
 		{
-			// See #680
 			description: `the break PostCSS prints in front of the one comment a block holds, which stands where the checked node would`,
 			code: `a {/*c*/}`,
 		},
@@ -135,7 +128,6 @@ testRule({
 })
 
 describe(`the run PostCSS prints in front of a head node the file spells none in front of`, () => {
-	// See #411
 	it(`is the whitespace never-multi-line refuses over a block holding one comment, and the fix takes it out`, async () => {
 		expect(await fixAndRead(`a {/*1*/\n}`, `never-multi-line`)).toEqual({
 			warnings: [`1:4 ${messages.rejectedAfterMultiLine()}`],
@@ -144,7 +136,6 @@ describe(`the run PostCSS prints in front of a head node the file spells none in
 		})
 	})
 
-	// See #680
 	it(`is the whitespace never-multi-line refuses over a block whose one comment the file spells no run in front of, and the fix takes it out`, async () => {
 		expect(await fixAndRead(`a {/*c*/}`, `never-multi-line`)).toEqual({
 			warnings: [`1:4 ${messages.rejectedAfterMultiLine()}`],
@@ -153,7 +144,6 @@ describe(`the run PostCSS prints in front of a head node the file spells none in
 		})
 	})
 
-	// See #680
 	it(`is the whitespace never-multi-line refuses in front of a head declaration, and the fix takes it out`, async () => {
 		expect(await fixAndRead(`a {\ncolor: pink; }`, `never-multi-line`)).toEqual({
 			warnings: [`1:4 ${messages.rejectedAfterMultiLine()}`],

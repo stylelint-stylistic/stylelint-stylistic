@@ -276,7 +276,7 @@ export type Syntax = {
 	/**
 	 * Asks whether the syntax reads an exponent as part of a number.
 	 *
-	 * To CSS `1E5PX` is one dimension whose number is `1E5`; Less reads a number as digits and at most one period, so the same word is the dimension `1E` beside the dimension `5PX` ([#646](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/646)). Where the answer is no, a number and a percentage hold a unit as well: `1E5` is `1E` and `5`.
+	 * To CSS `1E5PX` is one dimension whose number is `1E5`; Less reads a number as digits and at most one period, so the same word is the dimension `1E` beside the dimension `5PX`. Where the answer is no, a number and a percentage hold a unit as well: `1E5` is `1E` and `5`.
 	 * @returns True where an exponent belongs to the number, false where the number is a sign, digits and at most one period.
 	 */
 	readsNumberWithExponent (): boolean,
@@ -284,7 +284,7 @@ export type Syntax = {
 	/**
 	 * Asks whether the syntax reads a dimension's unit as the whole identifier behind the number.
 	 *
-	 * To CSS an escape and a hyphen are both code points of an identifier, so `10px\#fff` is one dimension with the unit `px#fff` and `10PX-2REM` one with the unit `PX-2REM`. Less takes a run of ASCII letters and underscores as the unit and opens an entity of its own behind it — a keyword at a backslash ([#527](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/527)), the signed operand of a subtraction at a hyphen ([#633](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/633)), a dimension at a digit ([#646](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/646)) — so recasing the whole identifier under Less would recase a value. A character it can open no entity with ends nothing: it compiles `10PXÄ` back unparted.
+	 * To CSS an escape and a hyphen are both code points of an identifier, so `10px\#fff` is one dimension with the unit `px#fff` and `10PX-2REM` one with the unit `PX-2REM`. Less takes a run of ASCII letters and underscores as the unit and opens an entity of its own behind it — a keyword at a backslash, the signed operand of a subtraction at a hyphen, a dimension at a digit — so recasing the whole identifier under Less would recase a value. A character it can open no entity with ends nothing: it compiles `10PXÄ` back unparted.
 	 * @returns True where the unit runs to the end of the identifier, false where it ends in front of the first escape, hyphen or digit.
 	 */
 	readsUnitAsIdentifier (): boolean,
@@ -292,7 +292,7 @@ export type Syntax = {
 	/**
 	 * Asks whether the syntax reads an at-rule name spelled with an upper-case letter as the at-rule it names.
 	 *
-	 * CSS reads an at-rule name ASCII case-insensitively; Less reads a name holding an upper-case letter as something else, a variable call it refuses (`@MEDIA`, `@Media`, `@PAGE`), a variable in front of a word (`@mEdia` prints as `@m Edia`) or a name torn off its `@` (`@-WEBKIT-KEYFRAMES` prints as `@- WEBKIT-KEYFRAMES`) ([#578](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/578)), so a rule asking for an upper-case name has no file to leave behind.
+	 * CSS reads an at-rule name ASCII case-insensitively; Less reads a name holding an upper-case letter as something else, a variable call it refuses (`@MEDIA`, `@Media`, `@PAGE`), a variable in front of a word (`@mEdia` prints as `@m Edia`) or a name torn off its `@` (`@-WEBKIT-KEYFRAMES` prints as `@- WEBKIT-KEYFRAMES`), so a rule asking for an upper-case name has no file to leave behind.
 	 * @returns True where such a name is read.
 	 */
 	readsUpperCaseAtRuleName (): boolean,
@@ -300,13 +300,13 @@ export type Syntax = {
 	/**
 	 * Asks whether the syntax reads a quotation mark inside the parentheses of a `url()` that open on no quotation mark as opening a string.
 	 *
-	 * To CSS such parentheses are a bad-url token to the first `)` under every spelling of the name, the mark a character of it, and Less refuses the file; Sass reads the parentheses as code and the string as a string, which it prints double-quoted (1789604002).
+	 * To CSS such parentheses are a bad-url token to the first `)` under every spelling of the name, the mark a character of it, and Less refuses the file; Sass reads the parentheses as code and the string as a string, which it prints double-quoted.
 	 * @returns True where a string opens there, false where the mark is a character of the address.
 	 */
 	readsQuoteInsideAddressAsString (): boolean,
 
 	/**
-	 * Names the at-rules the syntax reads an address behind, which `max-line-length` takes off a line: CSS an `@import`, Sass its `@use` and `@forward` as well, Less its `@plugin` as well, with the group of options or arguments it allows in front of the address ([#656](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/656)).
+	 * Names the at-rules the syntax reads an address behind, which `max-line-length` takes off a line: CSS an `@import`, Sass its `@use` and `@forward` as well, Less its `@plugin` as well, with the group of options or arguments it allows in front of the address.
 	 * @returns The names and whether a group may stand in front of the address.
 	 */
 	addressAtRules (): AddressAtRules,
@@ -314,7 +314,7 @@ export type Syntax = {
 	/**
 	 * Asks whether whitespace written behind an at-rule's name changes what the syntax reads the at-rule as.
 	 *
-	 * To CSS and Sass `@import"x"` and `@import "x"` are one rule. Less takes `@import` and `@plugin` as directives only with whitespace behind the name, so a space written into `@import(reference) "x"` loads a file the stylesheet only printed ([#396](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/396)).
+	 * To CSS and Sass `@import"x"` and `@import "x"` are one rule. Less takes `@import` and `@plugin` as directives only with whitespace behind the name, so a space written into `@import(reference) "x"` loads a file the stylesheet only printed.
 	 * @param atRule - The at-rule.
 	 * @returns True where a rule writing whitespace behind the name would change the stylesheet's meaning.
 	 */
@@ -339,7 +339,7 @@ export type Syntax = {
 	/**
 	 * Finds the value of an at-rule the syntax declares a variable with, `@foo: bar;` under Less, to be walked as a declaration's.
 	 *
-	 * Where the name ended in front of the colon the parser keeps the whole value in the params, opening them on that colon, which the value parser reads as a divider no rule of a value names ([#577](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/577)). Where the at-word ran on past it, the word behind the colon is welded into the name, so the text is gathered from both and written back to both ([#649](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/649)). Under Less the answer is a value for the directive Less falls back to where the text behind the colon parses as no expression as well.
+	 * Where the name ended in front of the colon the parser keeps the whole value in the params, opening them on that colon, which the value parser reads as a divider no rule of a value names. Where the at-word ran on past it, the word behind the colon is welded into the name, so the text is gathered from both and written back to both. Under Less the answer is a value for the directive Less falls back to where the text behind the colon parses as no expression as well.
 	 * @param atRule - The at-rule.
 	 * @returns The value, or `null` where the syntax declares no variable with this at-rule.
 	 */
@@ -358,7 +358,7 @@ export type AtRuleVariableValue = {
 	/**
 	 * Writes the text back into the copies the parser split it over.
 	 *
-	 * A value welded into the name is written to the name and the params both, and the raw standing between them is left as the file spells it: that run is whitespace and comments, which no rule of a value writes into, so no edit spans it. Where a copy ends is read off the edits rather than off the text, so the split assumes nothing about a fixed text keeping the length of the one read (#649).
+	 * A value welded into the name is written to the name and the params both, and the raw standing between them is left as the file spells it: that run is whitespace and comments, which no rule of a value writes into, so no edit spans it. Where a copy ends is read off the edits rather than off the text, so the split assumes nothing about a fixed text keeping the length of the one read.
 	 * @param fixed - The value as the fix leaves it.
 	 * @param edits - The edits that made it, indexed in the text as it was read.
 	 */

@@ -14,7 +14,6 @@ function masked (text: string): string {
 	return maskAddressTokens(text, text, parse(text))
 }
 
-// See 1789505502
 describe(`maskAddressTokens`, () => {
 	it(`the content of an address holding a parenthesis, its own parentheses kept`, () => {
 		expect(masked(`a { b: url(x(y),c }`)).toBe(`a { b: url(???),c }`)

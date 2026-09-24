@@ -30,7 +30,6 @@ testRule({
 				span { background-color: @myVariable; }
 			`,
 		},
-		// See #357
 		{
 			description: `a call to a Less detached ruleset, which takes no arguments and no space in front of its parentheses`,
 			code: `
@@ -38,7 +37,6 @@ testRule({
 				span { @detachedRuleset(); }
 			`,
 		},
-		// See #394
 		{
 			description: `a Less variable declared with a space in front of its colon, which the parser leaves unmarked`,
 			code: `
@@ -89,7 +87,6 @@ testRule({
 	],
 })
 
-// See #578
 describe(`the upper option`, () => {
 	it(`is refused, since Less reads no at-rule name holding an upper-case letter, and the file is left as it is`, async () => {
 		let { code, results } = await stylelint.lint({ code: `@page :first { margin: 0; }\n`, customSyntax: `postcss-less`, config: { plugins, rules: { [ruleName]: `upper` } }, fix: true })

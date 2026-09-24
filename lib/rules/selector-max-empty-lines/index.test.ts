@@ -695,7 +695,6 @@ testRule({
 	],
 
 	reject: [
-		// See #732
 		{
 			description: `an empty line whose two breaks are spelled a line feed and then a Windows pair, which is one empty line to PostCSS and none to a search for either spelling alone`,
 			code: `.foo\n\r\n.bar { }`,
@@ -704,7 +703,6 @@ testRule({
 			column: 1,
 			message: messages.expected(0),
 		},
-		// See #732
 		{
 			description: `three empty lines spelled a line feed and then Windows pairs, cut to the first break as it is spelled`,
 			code: `.foo\n\r\n\r\n\r\n.bar { }`,
@@ -1323,7 +1321,6 @@ testRule({
 	config: [1],
 
 	accept: [
-		// See #732
 		{
 			description: `one empty line spelled a line feed and then a Windows pair, which is the most the option allows`,
 			code: `.foo\n\r\n.bar { }`,
@@ -2143,7 +2140,6 @@ testRule({
 	],
 
 	reject: [
-		// See #732
 		{
 			description: `two empty lines spelled a line feed and then Windows pairs, cut to the first two breaks as they are spelled`,
 			code: `.foo\n\r\n\r\n.bar { }`,

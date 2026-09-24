@@ -43,7 +43,7 @@ testRule({
 			code: `@media (aspect-ratio: 16 / 9) {}`,
 		},
 		{
-			// The break the option asks for stands behind the colon in `raws.between`, where the parser files the run in front of a value (1789593917)
+			// The break the option asks for stands behind the colon in `raws.between`, where the parser files the run in front of a value
 			description: `a solidus opening the value, whose run lies in the raw behind the colon`,
 			code: `a { grid-area:\n/ 2; }`,
 		},
@@ -59,7 +59,7 @@ testRule({
 
 	reject: [
 		{
-			// The break is written into `raws.between`, which the check now reads, so the second run has nothing left to ask for (1789593917)
+			// The break is written into `raws.between`, which the check now reads, so the second run has nothing left to ask for
 			description: `a solidus opening the value, whose raw holds no break`,
 			code: `a { grid-area:/ 2; }`,
 			fixed: `a { grid-area:\n/ 2; }`,
@@ -68,7 +68,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// The run is read over the copy with its escapes masked, so the break goes behind the escaped space, not in its place (1789661964)
+			// The run is read over the copy with its escapes masked, so the break goes behind the escaped space, not in its place
 			description: `an escaped space in front of the solidus, which is a character of the word and no run, so the break goes behind it`,
 			code: `a { b: a\\ /b; }`,
 			fixed: `a { b: a\\ \n/b; }`,
@@ -77,7 +77,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #560
 			description: `a solidus among the arguments behind a quoted address, which are those of any call`,
 			code: `a { b: url("x", 1/2); }`,
 			fixed: `a { b: url("x", 1\n/2); }`,
@@ -158,7 +157,7 @@ testRule({
 
 	reject: [
 		{
-			description: `the message spelled out, since asking the rule for its own text would miss one that says the opposite of what the option asks (see #175)`,
+			description: `the message spelled out, since asking the rule for its own text would miss one that says the opposite of what the option asks`,
 			code: `a { grid-area:\n\t1 / 2; }`,
 			fixed: `a { grid-area:\n\t1\n/ 2; }`,
 			line: 2,
@@ -185,7 +184,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the number in front of a line break and the solidus, which the write would turn into an escaped solidus, so the warning stands`,
 			code: `a { b: 1\\\n/2 }`,
 			fixed: `a { b: 1\\\n/2 }`,

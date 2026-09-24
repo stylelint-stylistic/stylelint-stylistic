@@ -52,7 +52,7 @@ function printedHead (printed: string, clean: string, headLength: number): strin
 /**
  * Mirrors the text about to be written to an at-rule's params into `value`: a Less variable carries both, and the stringifier prints `raws.afterName` and `value` alone.
  *
- * Where the value opens with a colon of its own, `@v: : 10PX`, `postcss-less` keeps that colon in `raws.afterName` and at the head of the params but not in `value`, so the head the params hold in front of the value is left out of the mirror, or every fix prints it once more ([#650](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/650)). The head is read with the comments taken out of both copies, since the parser leaves them out of `value` and a write earlier in the pass puts them in, and is cut out of the printed params past the comments among its characters. Asked before the params are written, since the head is read off the copies as they stand.
+ * Where the value opens with a colon of its own, `@v: : 10PX`, `postcss-less` keeps that colon in `raws.afterName` and at the head of the params but not in `value`, so the head the params hold in front of the value is left out of the mirror, or every fix prints it once more. The head is read with the comments taken out of both copies, since the parser leaves them out of `value` and a write earlier in the pass puts them in, and is cut out of the printed params past the comments among its characters. Asked before the params are written, since the head is read off the copies as they stand.
  * @param atRule - The at-rule.
  * @param params - The text about to be written to its params.
  * @returns The at-rule.

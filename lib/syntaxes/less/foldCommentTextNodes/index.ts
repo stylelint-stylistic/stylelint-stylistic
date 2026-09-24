@@ -97,9 +97,9 @@ function fold (node: ChildNode, run: ChildNode[], container: Container, result: 
 }
 
 /**
- * Folds the nodes `postcss-less` reads out of the text of a `//` comment back into that text, so no rule reads them as code ([#723](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/723)).
+ * Folds the nodes `postcss-less` reads out of the text of a `//` comment back into that text, so no rule reads them as code.
  *
- * The parser closes a node at a semicolon inside such a comment and reads the rest of the line as nodes, which Less reads as the comment. Behind every node whose semicolon is comment text ({@link closingSemicolonIsCommentText}, the reading the semicolon rules ask too), the siblings up to the break are taken out and their print is written in front of the raw behind them, the next node's `raws.before` or the block's `raws.after`, which `commentTextHead` keeps the writers off; a run of comments alone is left, since no rule reads a comment as code. Behind a node whose semicolon only may be such text, a flagged custom property, a variable or `@extend`, Less may read the rest of the line as code, so nothing is folded there (1789263104). A block whose print would change is put back.
+ * The parser closes a node at a semicolon inside such a comment and reads the rest of the line as nodes, which Less reads as the comment. Behind every node whose semicolon is comment text ({@link closingSemicolonIsCommentText}, the reading the semicolon rules ask too), the siblings up to the break are taken out and their print is written in front of the raw behind them, the next node's `raws.before` or the block's `raws.after`, which `commentTextHead` keeps the writers off; a run of comments alone is left, since no rule reads a comment as code. Behind a node whose semicolon only may be such text, a flagged custom property, a variable or `@extend`, Less may read the rest of the line as code, so nothing is folded there. A block whose print would change is put back.
  * @param root - The stylesheet, folded once.
  * @param result - The Stylelint result, which holds the file's syntax.
  */

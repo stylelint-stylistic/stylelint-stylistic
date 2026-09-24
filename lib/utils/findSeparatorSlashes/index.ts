@@ -21,7 +21,7 @@ export type SlashOptions = {
 }
 
 /**
- * Where a bare address's token closes, by PostCSS's tokenizer: every `(` and `)` counts, quoted or not, an escaped one does not. `postcss-value-parser` closes it on the first `)` and returns a solidus behind that as a divider ([#548](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/548)).
+ * Where a bare address's token closes, by PostCSS's tokenizer: every `(` and `)` counts, quoted or not, an escaped one does not. `postcss-value-parser` closes it on the first `)` and returns a solidus behind that as a divider.
  * @param text - The text, comments blanked.
  * @param openIndex - The index behind the `(`.
  * @returns The index behind the closing `)`, or the end of the text.
@@ -53,7 +53,7 @@ export type SeparatorSlash = {
 /**
  * Finds every solidus separating two parts of a value: a ratio, a font shorthand, a grid area, an alpha.
  *
- * Comments are blanked first ([#378](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/378), [#504](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/504)). Skipped with their contents: a `url()` address, a math function, a call the syntax does not read as one, and a call the options name. A nameless group is read as `readsGroups` says, and the syntax is asked at each solidus whether it is its own operator. The index is the solidus's own, not the `div` node's, which opens at the whitespace in front ([#494](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/494)).
+ * Comments are blanked first. Skipped with their contents: a `url()` address, a math function, a call the syntax does not read as one, and a call the options name. A nameless group is read as `readsGroups` says, and the syntax is asked at each solidus whether it is its own operator. The index is the solidus's own, not the `div` node's, which opens at the whitespace in front.
  * @param text - The text, as `Syntax#read` returns it.
  * @param syntax - The syntax asked about groups and operators.
  * @param node - The declaration or at-rule.
@@ -80,7 +80,7 @@ export function findSeparatorSlashes (text: string, syntax: Syntax, node: AtRule
 			if (valueNode.type === `div`) {
 				let index = valueNode.sourceIndex + valueNode.before.length
 
-				// `//` separates nothing, but the parser returns two dividers for it (#548)
+				// `//` separates nothing, but the parser returns two dividers for it
 				let pairsWithANeighbor = blanked.charAt(index - 1) === `/` || blanked.charAt(index + 1) === `/`
 
 				if (valueNode.value === `/` && !pairsWithANeighbor && !syntax.readsSlashAsOperator(nodes[at - 1], nodes[at + 1])) slashes.push({ index })

@@ -19,7 +19,7 @@ export function hasLessDetachedRulesetCallShape (atRule: AtRule | LessAtRule): b
 }
 
 /**
- * Asks whether an at-rule is a call to a Less detached ruleset, `@dr()`: the shape of one ({@link hasLessDetachedRulesetCallShape}) under a name Less calls a ruleset by ({@link LESS_DETACHED_RULESET_NAME}). A name spelling any other character is an at-rule to Less, `@dr$()` the at-rule `@dr` in front of `$()`, which Less closes on its semicolon ([#724](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/724)).
+ * Asks whether an at-rule is a call to a Less detached ruleset, `@dr()`: the shape of one ({@link hasLessDetachedRulesetCallShape}) under a name Less calls a ruleset by ({@link LESS_DETACHED_RULESET_NAME}). A name spelling any other character is an at-rule to Less, `@dr$()` the at-rule `@dr` in front of `$()`, which Less closes on its semicolon.
  * @param atRule - The at-rule.
  * @returns True where the node is a call to a detached ruleset.
  */

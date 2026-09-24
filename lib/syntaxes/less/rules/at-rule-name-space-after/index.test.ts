@@ -23,7 +23,6 @@ testRule({
 			description: `a Less variable whose value stands on the next line`,
 			code: `@nice-blue:\n#5B83AD;`,
 		},
-		// See #394
 		{
 			description: `a Less variable declared with a tab in front of its colon, which the parser leaves unmarked`,
 			code: `@nice-blue\t: #5B83AD;`,
@@ -40,7 +39,6 @@ testRule({
 			description: `a detached ruleset passed to a mixin`,
 			code: `@detached-ruleset: { background: red; }; .top { @detached-ruleset(); }`,
 		},
-		// See #357
 		{
 			description: `the same call carrying a lookup, which Less inlines just as it inlines the bare one`,
 			code: `@detached-ruleset: { background: red; }; .top { @detached-ruleset()[background]; }`,
@@ -60,7 +58,6 @@ testRule({
 	],
 
 	reject: [
-		// See #396
 		{
 			description: `an import with its options against the name, which Less prints through as text and a written space would load`,
 			code: `@import(reference) "x.less";`,
@@ -143,7 +140,6 @@ testRule({
 
 	accept: [
 		{
-			// See #724
 			description: `the shape of a detached ruleset call under a name Less reads shorter than the parser, whose name no whitespace can be written behind without landing in the at-rule's options`,
 			code: `
 				a {

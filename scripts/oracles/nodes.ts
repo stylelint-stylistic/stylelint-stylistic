@@ -3,7 +3,7 @@
 /**
  * Asks of every rule under every primary option whether every declaration, rule and at-rule survives the fix.
  *
- * The mirror of `comments.ts`: code swallowed into a surviving comment moves no comment count ([#248](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/248)). Nodes, not characters: a fixer may remove a character, but no stylistic rule removes a node.
+ * The mirror of `comments.ts`: code swallowed into a surviving comment moves no comment count. Nodes, not characters: a fixer may remove a character, but no stylistic rule removes a node.
  */
 
 import { stdout } from "node:process"

@@ -66,7 +66,6 @@ describe(`opensAnAddress`, () => {
 		expect(addressesOf(`\\75\r\nrl(a)`)).toEqual([`rl`])
 	})
 
-	// See #579
 	it(`an escaped backslash in front of the digits, which opens no escape and leaves the space dividing the value`, () => {
 		expect(addressesOf(`x\\\\9 url(a)`)).toEqual([`url`])
 		expect(addressesOf(`\\\\61 \\75 rl(a)`)).toEqual([`rl`])
@@ -81,7 +80,7 @@ describe(`opensAnAddress`, () => {
 		expect(addressesOf(`\\0 rl(a)`)).toEqual([])
 	})
 
-	// Less and Sass compile `[c]url(http://a/b.png)` with the protocol's `//` whole, so the parentheses hold an address to both; `postcss-value-parser` hands the bracket back inside the word in front of the call (1789894076)
+	// Less and Sass compile `[c]url(http://a/b.png)` with the protocol's `//` whole, so the parentheses hold an address to both; `postcss-value-parser` hands the bracket back inside the word in front of the call
 	it(`a square-bracket group in front of the name, which ends it to every tokenizer`, () => {
 		expect(addressesOf(`[c]url(a)`)).toEqual([`[c]url`])
 		expect(addressesOf(`[url(a)`)).toEqual([`[url`])
@@ -102,7 +101,7 @@ describe(`opensAnAddress`, () => {
 		expect(addressesOf(`\\\\]url(a)`)).toEqual([`\\\\]url`])
 	})
 
-	// `@csstools/css-tokenizer` opens a url token behind every one of these signs, and lightningcss quotes the address behind `+`, `%`, `*` and `.`; Less compiles `1+url(a//b.png)` and `1%url(a//b.png)` with the `//` whole and Sass `1&url(a//b.png)` too, while both refuse the control `aurl(a//b.png)` at the `)` its `//` swallowed (1789895915)
+	// `@csstools/css-tokenizer` opens a url token behind every one of these signs, and lightningcss quotes the address behind `+`, `%`, `*` and `.`; Less compiles `1+url(a//b.png)` and `1%url(a//b.png)` with the `//` whole and Sass `1&url(a//b.png)` too, while both refuse the control `aurl(a//b.png)` at the `)` its `//` swallowed
 	it(`a sign in front of the name, which ends it`, () => {
 		expect(addressesOf(`1+url(a)`)).toEqual([`1+url`])
 		expect(addressesOf(`1%url(a)`)).toEqual([`1%url`])
@@ -131,7 +130,7 @@ describe(`opensAnAddress`, () => {
 		expect(addressesOf(`@{p}url(a)`)).toEqual([])
 	})
 
-	// `@csstools/css-tokenizer` reads a url token behind every closing brace, and dart-sass and Less refuse every one of these texts, so the tokenizer is the only reading there is; a `{` no mark stands in front of, or one an escape covers, opens no interpolation (1789899902)
+	// `@csstools/css-tokenizer` reads a url token behind every closing brace, and dart-sass and Less refuse every one of these texts, so the tokenizer is the only reading there is; a `{` no mark stands in front of, or one an escape covers, opens no interpolation
 	it(`a closing brace that closes no interpolation, which ends the name`, () => {
 		expect(addressesOf(`f(1}url(a))`)).toEqual([`1}url`])
 		expect(addressesOf(`f(c}url(a))`)).toEqual([`c}url`])

@@ -12,7 +12,6 @@ testRule({
 
 	reject: [
 		{
-			// See #216
 			description: `a double slash of a syntax that spells a comment with one still opens a comment: the comma in its text is no comma of the value, and the one behind it cannot join the comment's line. This is what the syntax must go on doing, and is a guard rather than a shape the issue names`,
 			code: `a { b: 1px // a , b\n,2px; }`,
 			fixed: `a { b: 1px // a , b\n,2px; }`,
@@ -21,7 +20,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #136
 			description: `inline comment before the comma: the comma cannot join the comment's line, so the value is left alone and the warning stands`,
 			code: `
 				a {
@@ -40,7 +38,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #153
 			description: `an inline comment standing behind a bare address is a comment all the same, and the comma cannot join its line`,
 			code: `
 				a {
@@ -83,7 +80,6 @@ testRule({
 
 	accept: [
 		{
-			// See #136
 			description: `a comma inside the text of an inline comment is no comma of the value`,
 			code: `
 				a {
@@ -93,7 +89,6 @@ testRule({
 			`,
 		},
 		{
-			// See #153
 			description: `a comma inside the text of an inline comment behind a bare address is no comma of the value`,
 			code: `
 				a {
@@ -106,7 +101,6 @@ testRule({
 
 	reject: [
 		{
-			// See #181
 			description: `a value spelling an extend, which the syntax marks the declaration as one for`,
 			code: `a { b: "extend(x)" ,0; }`,
 			fixed: `a { b: "extend(x)",0; }`,
@@ -115,7 +109,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #136
 			description: `inline comment before the comma: the comma cannot join the comment's line, so the value is left alone and the warning stands`,
 			code: `
 				a {

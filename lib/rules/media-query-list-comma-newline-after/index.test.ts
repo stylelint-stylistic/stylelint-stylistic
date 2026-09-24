@@ -88,7 +88,6 @@ testRule({
 			code: `@media screen and (color), /*comment1*/ /*com\r\nment2*/\r\nprojection and (color) {}`,
 		},
 		{
-			// See #153
 			description: `a bare address in front of the comma, whose double slash opens no comment`,
 			code: `
 				@media (min-width: url(http://x/y.png)),
@@ -96,7 +95,6 @@ testRule({
 			`,
 		},
 		{
-			// See #213
 			description: `a comma inside the arguments of a function is a comma of the address and of no query list`,
 			code: `@media (min-width: url(x/a,b.png)) { a { b: c; } }`,
 		},
@@ -104,7 +102,6 @@ testRule({
 
 	reject: [
 		{
-			// See #204
 			description: `spaces and a form feed behind the comma, which are whitespace and no line break, so a line feed goes in front of them`,
 			code: `@media screen and (color),  \fprojection and (color) {}`,
 			fixed: `@media screen and (color),\n  \fprojection and (color) {}`,
@@ -247,7 +244,6 @@ testRule({
 			],
 		},
 		{
-			// See #153
 			description: `a comma behind a bare address, whose double slash opens no comment`,
 			code: `@media (min-width: url(http://x/y.png)),print { a { b: c; } }`,
 			fixed: `
@@ -608,7 +604,6 @@ testRule({
 
 	reject: [
 		{
-			// See #494
 			description: `a vertical tab opening the run behind the comma, a word to the tokenizer: the break is written in front of it, instead of the fix taking the run for already broken and carrying the character off`,
 			code: `@media a,\v\nb {}`,
 			fixed: `@media a,\n\v\nb {}`,
@@ -621,14 +616,13 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer: the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
 testRule({
 	ruleName,
 	config: [`never-multi-line`],
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab behind a comma's run in a multi-line list: each run is trimmed to the tokenizer's, and the character stays`,
 			code: `@media a, \vb,\nc {}`,
 			fixed: `@media a,\vb,c {}`,

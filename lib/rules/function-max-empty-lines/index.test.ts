@@ -68,7 +68,6 @@ testRule({
 				value2)
 			`,
 		},
-		// See #503
 		{
 			description: `the empty lines a block comment holds inside a call, which are text of the comment and no lines of the call`,
 			code: `a { b: f(1,\n/* g(\n\n\n2) */ 3); }`,
@@ -88,7 +87,6 @@ testRule({
 	],
 
 	reject: [
-		// See #732
 		{
 			description: `an empty line whose two breaks are spelled a line feed and then a Windows pair, which is one empty line to PostCSS and none to a search for either spelling alone`,
 			code: `a { transform: translate(\n\r\n1, 1); }`,
@@ -97,7 +95,6 @@ testRule({
 			column: 15,
 			message: messages.expected(0),
 		},
-		// See #732
 		{
 			description: `three empty lines spelled a line feed and then Windows pairs, cut to the first break as it is spelled`,
 			code: `a { transform: translate(\n\r\n\r\n\r\n1, 1); }`,
@@ -210,7 +207,6 @@ testRule({
 			column: 15,
 			message: messages.expected(0),
 		},
-		// See #322
 		{
 			description: `a call whose name stands behind a double slash, which plain CSS spells no comment with`,
 			code: `a { b: f(1) // g(\n\n\n2)\n; }`,
@@ -219,7 +215,6 @@ testRule({
 			column: 15,
 			message: messages.expected(0),
 		},
-		// See #366
 		{
 			description: `a call nested in another, both of them holding empty lines`,
 			code: `a { b: f(\n\n\ng(\n\n\n1)); }`,
@@ -327,7 +322,6 @@ testRule({
 				},
 			],
 		},
-		// See #370
 		{
 			description: `a comment opening with a solidus, a star and a solidus, standing in front of the empty lines it shares a call with`,
 			code: `a { b: f(1 /*/x*/\n\n\n2); }`,
@@ -378,7 +372,6 @@ testRule({
 			],
 		},
 		{
-			// See #378
 			description: `such a comment holding the opening of a call, which is text of the comment CSS reads and no call of the value`,
 			code: `a { b: f(1 /*/g(*/\n\n\n2); }`,
 			fixed: `a { b: f(1 /*/g(*/\n2); }`,
@@ -395,7 +388,6 @@ testRule({
 			message: messages.expected(0),
 		},
 		{
-			// See #378
 			description: `a call standing beside a comment opening with a solidus, a star and a solidus, whose text spells a call of its own holding empty lines, none of them the call's the file writes`,
 			code: `a { b: f(1,\n\n\n2) /*/ g(\n\n\n2) */ 3; }`,
 			fixed: `a { b: f(1,\n2) /*/ g(\n\n\n2) */ 3; }`,
@@ -403,7 +395,6 @@ testRule({
 			column: 7,
 			message: messages.expected(0),
 		},
-		// See #503
 		{
 			description: `empty lines of the call standing beside a comment holding empty lines of its own, of which only the call's are collapsed`,
 			code: `a { b: f(1,\n\n\n/* \n\n\n */ 2); }`,
@@ -468,7 +459,6 @@ testRule({
 	config: [1],
 
 	accept: [
-		// See #732
 		{
 			description: `one empty line spelled a line feed and then a Windows pair, which is the most the option allows`,
 			code: `a { transform: translate(\n\r\n1, 1); }`,
@@ -513,7 +503,6 @@ testRule({
 			description: `the same call spelled with carriage returns`,
 			code: `a { transform: translate(\r\n1\r\n,\r\n1\r\n\r\n); }`,
 		},
-		// See #503
 		{
 			description: `two empty lines a comment holds inside a call, which is one more than the option allows anywhere else`,
 			code: `a { b: f(1,\n/* \n\n\n */ 2); }`,
@@ -521,7 +510,6 @@ testRule({
 	],
 
 	reject: [
-		// See #732
 		{
 			description: `two empty lines spelled a line feed and then Windows pairs, cut to the first two breaks as they are spelled`,
 			code: `a { transform: translate(\n\r\n\r\n1, 1); }`,
@@ -530,7 +518,6 @@ testRule({
 			column: 15,
 			message: messages.expected(1),
 		},
-		// See #503
 		{
 			description: `three empty lines of the call standing beside a comment holding three of its own, of which only the call's are collapsed`,
 			code: `a { b: f(1,\n\n\n\n/* \n\n\n\n */ 2); }`,
@@ -603,7 +590,6 @@ testRule({
 			column: 15,
 			message: messages.expected(1),
 		},
-		// See #366
 		{
 			description: `a call nested in another under a higher maximum, both of them holding two empty lines`,
 			code: `a { b: f(\n\n\n\ng(\n\n\n\n1)); }`,

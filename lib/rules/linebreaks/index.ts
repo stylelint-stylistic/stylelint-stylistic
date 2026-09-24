@@ -51,7 +51,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		 *
 		 * A selector, value or params is written through the syntax, not as a bare property, since writing the property throws away the comment copy in `raws.selector.raw` and `raws.value.raw` and the printed `postcss-scss` copy in `raws.selector.scss` and `raws.value.scss`. A comment's text is written too; a `//` comment under `postcss-scss` prints `raws.text` instead and holds no break.
 		 *
-		 * The raws are written where the node holds them: `raws.afterName`, `raws.important`, `raws.left`, `raws.right`, `raws.between` ([#283](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/283)) and `raws.ownSemicolon` ([#372](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/372)); the code in them beside the whitespace is left alone. `raws.ownSemicolon` is written for a rule alone since `freeSemicolon` hands it to a rule alone; elsewhere the semicolon lands in the parent's `raws.after`, which the walk reads already.
+		 * The raws are written where the node holds them: `raws.afterName`, `raws.important`, `raws.left`, `raws.right`, `raws.between` and `raws.ownSemicolon`; the code in them beside the whitespace is left alone. `raws.ownSemicolon` is written for a rule alone since `freeSemicolon` hands it to a rule alone; elsewhere the semicolon lands in the parent's `raws.after`, which the walk reads already.
 		 */
 		function fix (): void {
 			root.walk((node) => {
@@ -66,7 +66,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 					if (node.raws.afterName) node.raws.afterName = fixData(node.raws.afterName)
 
-					// A Less mixin call's flag holds the run behind it (#374)
+					// A Less mixin call's flag holds the run behind it
 					if (typeof node.raws.important === `string`) node.raws.important = fixData(node.raws.important)
 				}
 
@@ -87,7 +87,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (typeof node.raws.between === `string` && node.raws.between) node.raws.between = fixData(node.raws.between)
 
-				// The raw where the parser filed one, and otherwise the run PostCSS prints in front of a node a rule of another plugin built without one, written into the raw so that the file the fix leaves spells the option's break there too (#694)
+				// The raw where the parser filed one, and otherwise the run PostCSS prints in front of a node a rule of another plugin built without one, written into the raw so that the file the fix leaves spells the option's break there too
 				let before = runInFrontOf(node)
 
 				if (before) node.raws.before = fixData(before)
@@ -113,7 +113,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			}
 		}
 
-		// A node a rule of another plugin built without a `raws.before` gets a run PostCSS prints in front of it, what its neighbors carry or a break with the default indent where they carry none, which no line of the file holds yet and the file the fix leaves will; it is reported on the node, whose place is the one it was built with ([#694](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/694)). One built with no source is passed over, as it was before `report` could place a problem on one (1790090148)
+		// A node a rule of another plugin built without a `raws.before` gets a run PostCSS prints in front of it, what its neighbors carry or a break with the default indent where they carry none, which no line of the file holds yet and the file the fix leaves will; it is reported on the node, whose place is the one it was built with. One built with no source is passed over, as it was before `report` could place a problem on one
 		root.walk((node) => {
 			if (typeof node.raws.before === `string` || !node.source || !hasError(runInFrontOf(node))) return
 

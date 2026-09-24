@@ -36,7 +36,6 @@ testRule({
 			code: `a { background : url(data:application/font-woff;...); }`,
 		},
 		{
-			// See #92
 			description: `comment with an URL, space before the declaration's own colon`,
 			code: `a { color/* https://foo.bar/ */ :pink; }`,
 		},
@@ -48,7 +47,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the property in front of a line break and the colon, where the space would stand behind the backslash as its escaped character, so the warning stands`,
 			code: `a { b\\\n: c }`,
 			fixed: `a { b\\\n: c }`,
@@ -57,7 +56,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the colon, which is a character of the property and no space`,
 			code: `a { b\\ :c; }`,
 			fixed: `a { b\\  :c; }`,
@@ -66,7 +65,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #408
 			description: `a property ending in a run of two solidi, which the search that finds the colon reads to the end of the line as a comment though no syntax spells one there`,
 			code: `a { --b//c:\nx:y; }`,
 			fixed: `a { --b//c :\nx:y; }`,
@@ -75,7 +73,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #421
 			description: `a property spelling a colon of its own, escaped, which opens no declaration`,
 			code: `a { b\\:c: pink; }`,
 			fixed: `a { b\\:c : pink; }`,
@@ -140,7 +137,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #88
 			description: `a comment holding a double slash, which opens none of its own`,
 			code: `a { color/* keep // me */:/*comment*/pink; }`,
 			fixed: `a { color/* keep // me */ :/*comment*/pink; }`,
@@ -149,7 +145,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #92
 			description: `a comment holding an address, likewise`,
 			code: `a { color/* https://foo.bar/ */:pink; }`,
 			fixed: `a { color/* https://foo.bar/ */ :pink; }`,
@@ -182,7 +177,7 @@ testRule({
 
 	accept: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the colon, which is a character of the property and no whitespace`,
 			code: `a { b\\ :c; }`,
 		},
@@ -207,7 +202,6 @@ testRule({
 			code: `$map :(key :value)`,
 		},
 		{
-			// See #92
 			description: `comment with an URL, no space before the declaration's own colon`,
 			code: `a { color/* https://foo.bar/ */:pink; }`,
 		},
@@ -219,7 +213,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the property in front of a line break and the colon, which the write would turn into an escaped colon the file no longer parses, so the warning stands`,
 			code: `a { b\\\n: c }`,
 			fixed: `a { b\\\n: c }`,
@@ -228,7 +222,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `a space in front of the colon behind an escaped space, which is a character of the property and stays`,
 			code: `a { b\\  :c; }`,
 			fixed: `a { b\\ :c; }`,
@@ -293,7 +287,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #88
 			description: `the same comment holding a double slash`,
 			code: `a { color/* keep // me */ :/*comment*/pink; }`,
 			fixed: `a { color/* keep // me */:/*comment*/pink; }`,
@@ -302,7 +295,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #92
 			description: `the same comment holding an address`,
 			code: `a { color/* https://foo.bar/ */ :pink; }`,
 			fixed: `a { color/* https://foo.bar/ */:pink; }`,
@@ -321,14 +313,13 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer: the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab in front of the colon, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `a { b \v: c; }`,
 			fixed: `a { b \v : c; }`,
@@ -347,7 +338,6 @@ testRule({
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab at the run before the colon: only the tokenizer's run goes, and the character stays`,
 			code: `a { b \v : c; }`,
 			fixed: `a { b \v: c; }`,

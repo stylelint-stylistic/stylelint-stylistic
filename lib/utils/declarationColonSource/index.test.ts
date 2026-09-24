@@ -51,12 +51,10 @@ describe(`declarationColonSource`, () => {
 		expect(source(postcss, `a { color/*c*/:  pink; }`)).toBe(`color/*c*/:  pinkxxx`)
 	})
 
-	// See #387
 	it(`a declaration printing nothing behind its colon, whose run the block's own raw holds`, () => {
 		expect(source(postcss, `a { color:  }`)).toBe(`color:  xxx`)
 	})
 
-	// See #387
 	it(`the same declaration with a comment written behind it, whose run that comment's raw holds`, () => {
 		expect(source(postcss, `a { color:  /*c*/ }`)).toBe(`color:  xxx`)
 	})

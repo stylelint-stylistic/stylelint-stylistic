@@ -83,7 +83,6 @@ describe(`deferCheck and flushDeferredChecks`, () => {
 		expect(ran).toStrictEqual([`lineness`, `reads-everything`])
 	})
 
-	// #713
 	it(`the head runs ahead of the lineness tier, whatever order the checks were put off in`, () => {
 		let root = parse(`a {}`)
 		let ran: string[] = []

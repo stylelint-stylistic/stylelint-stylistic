@@ -124,7 +124,6 @@ testRule({
 	],
 
 	reject: [
-		// See #357
 		{
 			description: `an at-rule spelled without a space in front of its options, which the parser gives the shape of a call to a Less detached ruleset`,
 			code: `@layer(l);`,

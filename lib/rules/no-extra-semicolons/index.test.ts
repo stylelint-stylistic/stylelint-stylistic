@@ -336,7 +336,6 @@ testRule({
 				},
 			],
 		},
-		// See #357
 		{
 			description: `a second semicolon in front of an at-rule spelled without a space in front of its options`,
 			code: `@layer(a);; @layer(l);`,

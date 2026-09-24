@@ -16,27 +16,26 @@ testRule({
 
 	accept: [
 		{
-			// The run is read over the copy with the escapes masked, so the character a backslash covers is none of it (1789855320)
+			// The run is read over the copy with the escapes masked, so the character a backslash covers is none of it
 			description: `an escaped tab and a space behind it, where the tab is a character of the word and the space the only whitespace`,
 			code: `a { b: c\\\t ; d: e }`,
 		},
 		{
-			// The first whitespace character behind a hexadecimal escape closes it and is none of the run (1789855320)
+			// The first whitespace character behind a hexadecimal escape closes it and is none of the run
 			description: `a hexadecimal escape closed by the first of two spaces, the second of which parts the words`,
 			code: `a { b: c\\2c  d }`,
 		},
 		{
-			// An escape of four digits closes on the space just as one of two does, which a mask reading a fixed length would miss (1789855320)
+			// An escape of four digits closes on the space just as one of two does, which a mask reading a fixed length would miss
 			description: `a four-digit hexadecimal escape closed by the first of two spaces`,
 			code: `a { b: c\\1f60  d; e: f }`,
 		},
 		{
-			// The escapes of a bare address are masked as the rest of a value's are, so what a backslash covers there is no run either (1789879423)
+			// The escapes of a bare address are masked as the rest of a value's are, so what a backslash covers there is no run either
 			description: `an escaped space inside a bare address, and one space behind it`,
 			code: `a { b: url(c\\  d) }`,
 		},
 		{
-			// 1789879423
 			description: `a hexadecimal escape inside a bare address, closed by the first of two spaces`,
 			code: `a { b: url(c\\2c  d) }`,
 		},
@@ -45,17 +44,17 @@ testRule({
 			code: `/* This  is  comment */\na { gap: 0 /* And   another   comment */ }`,
 		},
 		{
-			// A comment standing between the words of a value reaches the rule, where a trailing one is kept out of the value, and the walk read its text as code (1789885007)
+			// A comment standing between the words of a value reaches the rule, where a trailing one is kept out of the value, and the walk read its text as code
 			description: `double spaces inside a comment standing between the words of a value`,
 			code: `a { b: c /* x  y */ d }`,
 		},
 		{
-			// No escape span covers a backslash inside a comment, so the write took the tab it covers along with the run (1789885007)
+			// No escape span covers a backslash inside a comment, so the write took the tab it covers along with the run
 			description: `an escaped tab in front of a run, both inside such a comment`,
 			code: `a { b: c /* x\\\t  y */ d }`,
 		},
 		{
-			// The mark used to open a string of the walk's own, which closed on the one opening the value's string and left the run inside it outside one (1789885007)
+			// The mark used to open a string of the walk's own, which closed on the one opening the value's string and left the run inside it outside one
 			description: `a run inside a string behind a comment holding one quotation mark`,
 			code: `a { b: c /* " */ "x  y" }`,
 		},
@@ -121,7 +120,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins both runs of the value collapsed while the run inside the comment between them stays where it was (1789885007)
+			// Pins both runs of the value collapsed while the run inside the comment between them stays where it was
 			description: `two spaces on either side of a comment holding two more`,
 			code: `a { b: c  /* x  y */  d }`,
 			fixed: `a { b: c /* x  y */ d }`,
@@ -140,7 +139,7 @@ testRule({
 			],
 		},
 		{
-			// The run used to stand inside the string the comment's mark opened, and was passed over with it (1789885007)
+			// The run used to stand inside the string the comment's mark opened, and was passed over with it
 			description: `two spaces behind a comment holding one quotation mark`,
 			code: `a { b: c /* " */ d  e }`,
 			fixed: `a { b: c /* " */ d e }`,
@@ -149,7 +148,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// Pins the escaped tab kept and the run behind it collapsed, where the write used to take the tab as well (1789855320)
+			// Pins the escaped tab kept and the run behind it collapsed, where the write used to take the tab as well
 			description: `two spaces behind an escaped tab`,
 			code: `a { b: c\\\t  d; e: f }`,
 			fixed: `a { b: c\\\t d; e: f }`,
@@ -158,7 +157,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// Pins the character closing a hexadecimal escape kept out of the run (1789855320)
+			// Pins the character closing a hexadecimal escape kept out of the run
 			description: `a hexadecimal escape closed by the first of three spaces`,
 			code: `a { b: c\\2c   d }`,
 			fixed: `a { b: c\\2c  d }`,
@@ -167,7 +166,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// An escaped apostrophe opens no string, and the rest of the value was passed over behind one (1789855320)
+			// An escaped apostrophe opens no string, and the rest of the value was passed over behind one
 			description: `two spaces further along a value holding an escaped apostrophe, which opens no string`,
 			code: `a { b: c\\'d  e; f: g }`,
 			fixed: `a { b: c\\'d e; f: g }`,
@@ -176,7 +175,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// Pins a four-digit escape read to its end, where a mask of a fixed length would take the closing space for a run (1789855320)
+			// Pins a four-digit escape read to its end, where a mask of a fixed length would take the closing space for a run
 			description: `three spaces behind a four-digit hexadecimal escape`,
 			code: `a { b: c\\1f60   d; e: f }`,
 			fixed: `a { b: c\\1f60  d; e: f }`,
@@ -185,7 +184,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// Pins a form feed closing a hexadecimal escape, which the write used to carry off with the run (1789855320)
+			// Pins a form feed closing a hexadecimal escape, which the write used to carry off with the run
 			description: `two spaces behind a hexadecimal escape closed by a form feed`,
 			code: `a { b: c\\2c\f  d; e: f }`,
 			fixed: `a { b: c\\2c\f d; e: f }`,
@@ -194,7 +193,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// Pins the write the mask lets through: an even run of backslashes spells an escaped backslash, and the whitespace behind it is a run of its own (1789855320)
+			// Pins the write the mask lets through: an even run of backslashes spells an escaped backslash, and the whitespace behind it is a run of its own
 			description: `two spaces behind an escaped backslash`,
 			code: `a { b: c\\\\  d; e: f }`,
 			fixed: `a { b: c\\\\ d; e: f }`,
@@ -203,7 +202,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// Pins the escaped tab kept where the run stands inside a bare address, whose escapes the walk used to hand over none of (1789879423)
+			// Pins the escaped tab kept where the run stands inside a bare address, whose escapes the walk used to hand over none of
 			description: `two spaces behind an escaped tab inside a bare address`,
 			code: `a { b: url(c\\\t  d) }`,
 			fixed: `a { b: url(c\\\t d) }`,
@@ -212,7 +211,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// The parentheses hold a line break, so they are no address span, and the escape is recorded all the same (1789879423)
+			// The parentheses hold a line break, so they are no address span, and the escape is recorded all the same
 			description: `the same run inside parentheses a line break keeps from being an address`,
 			code: `a { b: url(c\\\t  \n d) }`,
 			fixed: `a { b: url(c\\\t \n d) }`,
@@ -221,7 +220,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// Pins the write a bare address keeps: nothing covers this run, and the mask leaves it where it was (1789879423)
+			// Pins the write a bare address keeps: nothing covers this run, and the mask leaves it where it was
 			description: `two spaces between the words of a bare address`,
 			code: `a { b: url(c  d) }`,
 			fixed: `a { b: url(c d) }`,
@@ -230,7 +229,7 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// The carriage return closing the escape is a character of it rather than a break of the value, so the run behind it is one the rule used to read as indentation (1789879423)
+			// The carriage return closing the escape is a character of it rather than a break of the value, so the run behind it is one the rule used to read as indentation
 			description: `two spaces behind a hexadecimal escape a carriage return closes inside a bare address`,
 			code: `a { b: url(c\\2c\r  d) }`,
 			fixed: `a { b: url(c\\2c\r d) }`,
@@ -420,7 +419,7 @@ describe(`a run behind an escape inside an interpolation of a bare address`, () 
 	})
 })
 
-// A parser spelling a double slash leaves the comment in the value a rule reads, and the walk read the run inside it as code; plain CSS spells none there, so the same text is code to the core (1789885007)
+// A parser spelling a double slash leaves the comment in the value a rule reads, and the walk read the run inside it as code; plain CSS spells none there, so the same text is code to the core
 /**
  * Fixes a text under one namespace of this rule.
  * @param configured - The rule's name in that namespace.

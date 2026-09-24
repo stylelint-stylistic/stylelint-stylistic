@@ -100,7 +100,6 @@ testRule({
 	],
 
 	reject: [
-		// See #357
 		{
 			description: `an at-rule spelled without a space in front of its options, with a declaration standing behind its semicolon`,
 			code: `span { @layer(l); color: red; }`,

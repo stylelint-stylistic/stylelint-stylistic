@@ -3,7 +3,7 @@
  *
  * Written for [#585](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/585): `max-empty-lines` counted that run as a file's, where the first break closes an empty line, although here it closes the host's own line; the warning it added was one the fix then wrote away, joining the first node onto the host's line. The axes: the run's length, what splits it, what follows it inside the template, what closes the template, and the break's spelling. A template opening on its first node is the control, holding no such run.
  *
- * The rules are the three that write the head raw of a root ([#682](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/682)) and `indentation`, which reads the run in front of a node as its level.
+ * The rules are the three that write the head raw of a root and `indentation`, which reads the run in front of a node as its level.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"
@@ -19,7 +19,7 @@ const LENGTHS: Record<string, number> = {
 	four: 4,
 }
 
-/** What splits the run; a free semicolon lands in the same raw ([#598](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/598)). */
+/** What splits the run; a free semicolon lands in the same raw. */
 const SPLITS: Record<string, string> = {
 	nothing: ``,
 	spaces: `   `,

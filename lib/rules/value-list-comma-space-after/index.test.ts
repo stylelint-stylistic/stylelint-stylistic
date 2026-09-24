@@ -8,7 +8,7 @@ testRule({
 
 	accept: [
 		{
-			// PostCSS's tokenizer takes the parentheses behind the name and a space as one token, which CSS reads as a group; a mask of the token's parentheses alone read the comma among the arguments of the call inside as one of the list (1789505502)
+			// PostCSS's tokenizer takes the parentheses behind the name and a space as one token, which CSS reads as a group; a mask of the token's parentheses alone read the comma among the arguments of the call inside as one of the list
 			description: `a comma among the arguments of a call inside the parentheses standing apart from the name url`,
 			code: `a { b: url (a(b,c).png) 1px; }`,
 		},
@@ -38,7 +38,6 @@ testRule({
 			code: `a { transform: translate(1,1); }`,
 		},
 		{
-			// See #153
 			description: `a bare address in front of the comma, whose double slash opens no comment`,
 			code: `a { background: url(http://x/y.png), url(http://x/z.png); }`,
 		},
@@ -207,7 +206,6 @@ testRule({
 			],
 		},
 		{
-			// See #153
 			description: `a comma behind a bare address, whose double slash opens no comment`,
 			code: `a { background: url(http://x/y.png),url(http://x/z.png); }`,
 			fixed: `a { background: url(http://x/y.png), url(http://x/z.png); }`,
@@ -216,7 +214,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #216
 			description: `a double slash standing in the code of a plain CSS value, which spells no comment`,
 			code: `a { b: a//b,2px; }`,
 			fixed: `a { b: a//b, 2px; }`,
@@ -225,7 +222,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #739
 			description: `a comma behind a bare address holding a quotation mark, which is a character of the address and opens no string`,
 			code: `a { b: url(x'y),c; }`,
 			fixed: `a { b: url(x'y), c; }`,
@@ -234,7 +230,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// A parenthesis inside a bare address opened a call to the scan, which then held the list behind the address as its arguments (1789505502)
+			// A parenthesis inside a bare address opened a call to the scan, which then held the list behind the address as its arguments
 			description: `a comma behind a bare address holding an opening parenthesis, which is a character of the address and opens no call`,
 			code: `a { b: url(x(y),c; }`,
 			fixed: `a { b: url(x(y), c; }`,
@@ -251,7 +247,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #739
 			description: `a comma behind a string ending in an escaped backslash, whose closing quotation mark no escape holds`,
 			code: `a { b: "a\\\\",c; }`,
 			fixed: `a { b: "a\\\\", c; }`,
@@ -296,7 +291,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// Pins the reading of a string inside parentheses the tokenizer reads as code behind a solidus glued to the name, whose comma is no comma of the list (1789637913)
+			// Pins the reading of a string inside parentheses the tokenizer reads as code behind a solidus glued to the name, whose comma is no comma of the list
 			description: `no space after the comma behind a bare address whose name a solidus is glued to, holding a string with a closing parenthesis and a comma, which are text of the string`,
 			code: `a { b: 1px, 1/url(a "),b" ),2px; }`,
 			fixed: `a { b: 1px, 1/url(a "),b" ), 2px; }`,
@@ -646,14 +641,13 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, so such a character stays where it used to be carried off with the run.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer: the fix rewrites only the run the tokenizer reads beside its anchor, so such a character stays where it used to be carried off with the run.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab behind the comma, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `a { b: x,\vy; }`,
 			fixed: `a { b: x, \vy; }`,
@@ -672,7 +666,6 @@ testRule({
 
 	reject: [
 		{
-			// See #496
 			description: `a no-break space behind the run after the comma: only the tokenizer's run goes, and the character stays`,
 			code: `a { b: x, \u00A0y; }`,
 			fixed: `a { b: x,\u00A0y; }`,

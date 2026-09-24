@@ -19,7 +19,7 @@ describe(`holdsLongerBreakRun`, () => {
 		expect(holdsLongerBreakRun(`1px\r\n\r\n\r\n2px`, 2)).toBe(true)
 	})
 
-	it(`a run spelling a line feed and then a Windows pair, which is two breaks to PostCSS (#732)`, () => {
+	it(`a run spelling a line feed and then a Windows pair, which is two breaks to PostCSS`, () => {
 		expect(holdsLongerBreakRun(`1px\n\r\n2px`, 1)).toBe(true)
 	})
 
@@ -53,7 +53,7 @@ describe(`collapseBreakRuns`, () => {
 		expect(collapseBreakRuns(`a\r\n\r\n\r\nb`, `a\r\n\r\n\r\nb`, 2)).toBe(`a\r\n\r\nb`)
 	})
 
-	it(`a run spelling its breaks both ways, cut to its first breaks as they are spelled (#732)`, () => {
+	it(`a run spelling its breaks both ways, cut to its first breaks as they are spelled`, () => {
 		expect(collapseBreakRuns(`a\n\r\n\r\n\r\nb`, `a\n\r\n\r\n\r\nb`, 2)).toBe(`a\n\r\nb`)
 	})
 

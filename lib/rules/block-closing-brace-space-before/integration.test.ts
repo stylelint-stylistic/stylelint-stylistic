@@ -10,7 +10,6 @@ testRule({
 
 	reject: [
 		{
-			// See 1789420319
 			description: `a wordless custom property in front of the brace, whose break the neighbor asks to stand behind the colon, so the space is not written and the warning stands`,
 			code: `
 				a {

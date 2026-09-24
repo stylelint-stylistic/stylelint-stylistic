@@ -33,7 +33,6 @@ testRule({
 
 	reject: [
 		{
-			// See #254
 			description: `two spaces making up the whole of an end-of-line comment, which the syntax files where the trim of the comment's end reaches them`,
 			code: `//  \nb {}`,
 			fixed: `//\nb {}`,
@@ -115,7 +114,6 @@ testRule({
 
 	reject: [
 		{
-			// See #193
 			description: `trailing whitespace in the text of an inline comment, which the fix trims in the copy the file spells`,
 			code: `.a // c \n.b {}`,
 			fixed: `.a // c\n.b {}`,

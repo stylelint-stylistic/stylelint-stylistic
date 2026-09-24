@@ -57,7 +57,6 @@ testRule({
 			code: `a { background-size: 0, /**/\n0; }`,
 		},
 		{
-			// See #153
 			description: `a bare address in front of the comma, whose double slash opens no comment`,
 			code: `
 				a { background: url(http://x/y.png),
@@ -125,7 +124,6 @@ testRule({
 			],
 		},
 		{
-			// See #153
 			description: `a comma behind a bare address, whose double slash opens no comment`,
 			code: `a { background: url(http://x/y.png),url(http://x/z.png); }`,
 			fixed: `
@@ -146,7 +144,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// Pins the reading of a string inside parentheses the tokenizer reads as code behind a sign glued to the name, whose comma is no comma of the list (1789637913)
+			// Pins the reading of a string inside parentheses the tokenizer reads as code behind a sign glued to the name, whose comma is no comma of the list
 			description: `no newline after the comma behind a bare address whose name a solidus is glued to, holding a string with a closing parenthesis and a comma, which are text of the string`,
 			code: `a { b: 1px,\n1/url(a "),b" ),2px; }`,
 			fixed: `a { b: 1px,\n1/url(a "),b" ),\n2px; }`,
@@ -399,14 +397,13 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer: the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
 testRule({
 	ruleName,
 	config: [`never-multi-line`],
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab behind a comma's run in a multi-line list: each run is trimmed to the tokenizer's, and the character stays`,
 			code: `a { b: x, \vy,\nz; }`,
 			fixed: `a { b: x,\vy,z; }`,

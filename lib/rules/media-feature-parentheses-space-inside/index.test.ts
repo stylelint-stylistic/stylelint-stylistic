@@ -32,27 +32,22 @@ testRule({
 			code: `@media ( max-width: /*comment*/ ) {}`,
 		},
 		{
-			// See #329
 			description: `one space inside a feature holding nothing else, which is the whole run the parentheses enclose and answers for both halves of the option`,
 			code: `@media ( ) { a { b: c; } }`,
 		},
 		{
-			// See #347
 			description: `a parenthesis written in the text of a comment opened by a solidus, a star and a solidus, which closes the feature to the parser, so neither space this option asks for is written into that text`,
 			code: `@media (a: 1 /*/ ) */ ) { a { b: c; } }`,
 		},
 		{
-			// See #655
 			description: `a vertical tab between single spaces inside a feature, which the tokenizer reads as what the feature holds, so each parenthesis already has its space`,
 			code: `@media ( \v ) { a { b: c; } }`,
 		},
 		{
-			// See #575
 			description: `a feature the file never closes, which holds the rest of the file to the parser and ends on no parenthesis, so it is passed over whole and nothing is written at the end of the file`,
 			code: `@media (a: 1 { a { b: c; } }`,
 		},
 		{
-			// See #575
 			description: `an unclosed call inside such a feature, which is a second node ending on no parenthesis`,
 			code: `@media (min-width: calc(1px { a { b: c; } }`,
 		},
@@ -60,7 +55,6 @@ testRule({
 
 	reject: [
 		{
-			// See #669
 			description: `a call in a feature's value whose name a hexadecimal escape welds to the word in front of it, holding a bare address with a quotation mark, where the space behind its parenthesis would hand the parentheses to code and leave a string nothing closes`,
 			code: `@media ( a: \\61 url(b"c.png) ) { d { e: f } }`,
 			fixed: `@media ( a: \\61 url(b"c.png ) ) { d { e: f } }`,
@@ -78,7 +72,6 @@ testRule({
 			],
 		},
 		{
-			// See #669 and #575
 			description: `the same call holding a parenthesis nothing closes, where the space would open a group the params run past every brace with, and the at-rule would swallow its own block`,
 			code: `@media ( a: \\61 url(b(c.png) ) { d { e: f } }`,
 			fixed: `@media ( a: \\61 url(b(c.png ) ) { d { e: f } }`,
@@ -96,7 +89,6 @@ testRule({
 			],
 		},
 		{
-			// See #588
 			description: `an address inside a feature, whose name a backslash and a break divide from what stands in front`,
 			code: `@media (a: \\\nurl(b.png)) { e { f: 1px } }`,
 			fixed: `@media ( a: \\\nurl(b.png) ) { e { f: 1px } }`,
@@ -150,7 +142,6 @@ testRule({
 			],
 		},
 		{
-			// See #347
 			description: `such a feature standing beside one the file does spell, whose parentheses are spaced out while the text of the comment is left as it stands`,
 			code: `@media (a: 1) and (b: 2 /*/ ) */ ) { a { b: c; } }`,
 			fixed: `@media ( a: 1 ) and (b: 2 /*/ ) */ ) { a { b: c; } }`,
@@ -256,7 +247,6 @@ testRule({
 			message: messages.expectedOpening,
 		},
 		{
-			// See #508
 			description: `a comment holding a parenthesis between two quotation marks it closes around them: the string those marks open reaches past nothing, so the mask leaves them where they stand and the parenthesis stays the comment's`,
 			code: `@media ( b: 2 /*/ "(" */ ) and (c: d) { a { c: d; } }`,
 			fixed: `@media ( b: 2 /*/ "(" */ ) and ( c: d ) { a { c: d; } }`,
@@ -274,7 +264,6 @@ testRule({
 			],
 		},
 		{
-			// See #329
 			description: `a feature holding nothing at all, whose one run is what both halves of the option are about`,
 			code: `@media () { a { b: c; } }`,
 			fixed: `@media ( ) { a { b: c; } }`,
@@ -285,7 +274,6 @@ testRule({
 			message: messages.expectedOpening,
 		},
 		{
-			// See #329
 			description: `a call holding nothing at all standing as a feature's value, read the same way as the feature itself`,
 			code: `@media (min-width: calc()) { a { b: c; } }`,
 			fixed: `@media ( min-width: calc( ) ) { a { b: c; } }`,
@@ -308,7 +296,6 @@ testRule({
 			],
 		},
 		{
-			// See #655
 			description: `vertical tabs abutting both parentheses of a feature, which the tokenizer reads as characters of the feature, so each space is written between a parenthesis and a tab`,
 			code: `@media (\va\v) { a { b: c; } }`,
 			fixed: `@media ( \va\v ) { a { b: c; } }`,
@@ -344,7 +331,6 @@ testRule({
 			],
 		},
 		{
-			// See #575
 			description: `a feature the file does spell beside one it never closes, whose parentheses are spaced out while the unclosed one is left as it stands`,
 			code: `@media (a: 1) and (b: 2 { a { b: c; } }`,
 			fixed: `@media ( a: 1 ) and (b: 2 { a { b: c; } }`,
@@ -394,12 +380,10 @@ testRule({
 			code: `@media (grid) and (max-width: 15em) {}`,
 		},
 		{
-			// See #347, #506 and #508
 			description: `a comment leaving a quotation mark open in front of a parenthesis it also holds: taking the mark away hands the parser that parenthesis, and the feature it closes is one the file never spells, so the whole of it is passed over and the space in front of the parenthesis the file does spell goes unreported with it`,
 			code: `@media ( b: 2 /*/ " ) */ ) and (c: d) { a { b: c; } }`,
 		},
 		{
-			// See #347
 			description: `a parenthesis written in the text of a comment opened by a solidus, a star and a solidus, which closes the feature to the parser`,
 			code: `@media (a: 1 /*/ ) */ ) { a { b: c; } }`,
 		},
@@ -409,7 +393,6 @@ testRule({
 			code: `@media (c: \\75 rl( a b )) { a { b: 1px } }`,
 		},
 		{
-			// See #575
 			description: `a space behind the parenthesis of a feature the file never closes, which ends on no parenthesis and is passed over whole`,
 			code: `@media ( a: 1 { a { b: c; } }`,
 		},
@@ -417,7 +400,6 @@ testRule({
 
 	reject: [
 		{
-			// See #669
 			description: `the same call holding a string with a closing parenthesis, where emptying the run behind its parenthesis would close the address's token inside that string and leave its quotation mark unpaired`,
 			code: `@media (a: \\61 url( b ")" c )) { d { e: f } }`,
 			fixed: `@media (a: \\61 url( b ")" c)) { d { e: f } }`,
@@ -435,7 +417,6 @@ testRule({
 			],
 		},
 		{
-			// See #560
 			description: `a call among the arguments behind a quoted address, which are those of any call while the address's own parentheses stay as written`,
 			code: `@media (c: url( "x", f( 1 ) )) {}`,
 			fixed: `@media (c: url( "x", f(1) )) {}`,
@@ -453,7 +434,6 @@ testRule({
 			],
 		},
 		{
-			// See #347
 			description: `such a feature standing beside one the file does spell, whose whitespace is taken away while the text of the comment is left as it stands`,
 			code: `@media ( a: 1 ) and (b: 2 /*/ ) */ ) { a { b: c; } }`,
 			fixed: `@media (a: 1) and (b: 2 /*/ ) */ ) { a { b: c; } }`,
@@ -591,7 +571,6 @@ testRule({
 			message: messages.rejectedClosing,
 		},
 		{
-			// See #225
 			description: `a bare address inside a call the plugin knows nothing of: plain CSS spells no comment with a double slash, so the feature behind it is read`,
 			code: `@media (myurl(//a)) and ( min-width:1px ) { c {} }`,
 			fixed: `@media (myurl(//a)) and (min-width:1px) { c {} }`,
@@ -609,7 +588,6 @@ testRule({
 			],
 		},
 		{
-			// See #272
 			description: `a feature standing behind a comment the value parser does not give back as it read it`,
 			code: `@media (min-width:1px) and x/*/*a*/( max-width:2px ) { a { b: c; } }`,
 			fixed: `@media (min-width:1px) and x/*/*a*/(max-width:2px) { a { b: c; } }`,
@@ -627,7 +605,6 @@ testRule({
 			],
 		},
 		{
-			// See #378
 			description: `a feature standing beside a comment opening with a solidus, a star and a solidus, whose text spells a feature of its own that the value parser hands back as one`,
 			code: `@media ( a: 1 ) /*/ ( b: 2 ) */ and (c: 3) { a { b: c; } }`,
 			fixed: `@media (a: 1) /*/ ( b: 2 ) */ and (c: 3) { a { b: c; } }`,
@@ -645,7 +622,6 @@ testRule({
 			],
 		},
 		{
-			// See #508
 			description: `a feature in front of a comment holding one quotation mark, and a feature of the same spelling inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no feature`,
 			code: `@media ( b: 2 ) /*/ " */ and (c: "( b: 2 )") { a { c: d; } }`,
 			fixed: `@media (b: 2) /*/ " */ and (c: "( b: 2 )") { a { c: d; } }`,
@@ -663,7 +639,6 @@ testRule({
 			],
 		},
 		{
-			// See #506
 			description: `the whitespace in front of the closing parenthesis of a feature holding a comment opening with a solidus, a star and a solidus, reported at the character in front of the parenthesis as it is for the twin holding a comment of that width the value parser gives back as it read it, rather than a column further on`,
 			code: `@media (a: 1 /*/ c */ ) { a { b: c; } }`,
 			fixed: `@media (a: 1 /*/ c */) { a { b: c; } }`,
@@ -672,7 +647,6 @@ testRule({
 			message: messages.rejectedClosing,
 		},
 		{
-			// See #655
 			description: `spaces around vertical tabs inside a feature, which the tokenizer reads as characters of the feature, so the spaces go and the tabs stay`,
 			code: `@media ( \va\v ) { a { b: c; } }`,
 			fixed: `@media (\va\v) { a { b: c; } }`,
@@ -726,7 +700,6 @@ testRule({
 			],
 		},
 		{
-			// See #575
 			description: `a feature the file does spell beside one it never closes, whose whitespace goes while the unclosed one is left as it stands`,
 			code: `@media ( a: 1 ) and ( b: 2 { a { b: c; } }`,
 			fixed: `@media (a: 1) and ( b: 2 { a { b: c; } }`,

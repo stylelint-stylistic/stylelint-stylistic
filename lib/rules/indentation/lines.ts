@@ -66,7 +66,7 @@ function writeDeclarationIndentation (decl: Declaration, fixPositions: FixPositi
 /**
  * Writes an at-rule's indentation, each line into its raw.
  *
- * Positions are counted from the at-rule's start through `raws.afterName`, the params, `raws.between`, a Less mixin call's `raws.important` and, behind a stylesheet's last at-rule, the root's `raws.after`. A line in `raws.between` is one the at-rule swallowed ([#510](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/510)); written onto the end of the params, the file grew a level every run ([#375](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/375)).
+ * Positions are counted from the at-rule's start through `raws.afterName`, the params, `raws.between`, a Less mixin call's `raws.important` and, behind a stylesheet's last at-rule, the root's `raws.after`. A line in `raws.between` is one the at-rule swallowed; written onto the end of the params, the file grew a level every run.
  * @param atRule - The at-rule.
  * @param fixPositions - The positions, in reverse order.
  * @param syntax - The syntax that reads and writes the params.
@@ -102,7 +102,7 @@ function writeAtRuleIndentation (atRule: AtRule, fixPositions: FixPosition[], sy
 			let flag = typeof atRule.raws.important === `string` ? atRule.raws.important : ``
 			let flagIndex = betweenIndex - atRuleBetween.length
 
-			// A Less mixin call's flag and, in a block, the lines behind it are printed behind `raws.between` (#374); behind a stylesheet's last at-rule the lines are the root's `raws.after`, printed behind both (#592)
+			// A Less mixin call's flag and, in a block, the lines behind it are printed behind `raws.between`; behind a stylesheet's last at-rule the lines are the root's `raws.after`, printed behind both
 			if (flagIndex >= flag.length && atRule.parent && isRoot(atRule.parent)) atRule.parent.raws.after = replaceIndentation(atRule.parent.raws.after || ``, fixPosition.currentIndentation, fixPosition.expectedIndentation, flagIndex - flag.length)
 			else if (flagIndex >= 0 && flag) atRule.raws.important = replaceIndentation(flag, fixPosition.currentIndentation, fixPosition.expectedIndentation, flagIndex)
 			else atRule.raws.between = replaceIndentation(atRuleBetween, fixPosition.currentIndentation, fixPosition.expectedIndentation, betweenIndex)
@@ -195,17 +195,17 @@ function checkMultilineBit (scope: IndentationScope, source: string, newlineInde
 
 	let { syntax, result, ruleName, messages, secondaryOptions, indentChar, legibleExpectation } = scope
 
-	// The search runs over a copy with every comment blanked: `style-search` reads the break closing an inline comment as part of it (#236). The copy's positions are the file's. Below, only the one test whose pattern spells a block comment out reads the copy
+	// The search runs over a copy with every comment blanked: `style-search` reads the break closing an inline comment as part of it. The copy's positions are the file's. Below, only the one test whose pattern spells a block comment out reads the copy
 	let { searchString } = syntax.searchCopy(source, node, result)
 
 	let fixPositions: FixPosition[] = []
 
-	// Breaks inside parentheses are turned away below where the option asks, for a Sass map's sake. Only a bracket opened at a line's end raises the lines behind it, so a bracket opening a line unwinds one only while such a one is open. Counts, not a stack, so a mid-line closer can spend a line-end opener. Braces and parentheses apart: a brace lowers the line it closes on, a parenthesis the line after (#237). The first line's discount is off where the measuring level already pays for the first line's brackets
+	// Breaks inside parentheses are turned away below where the option asks, for a Sass map's sake. Only a bracket opened at a line's end raises the lines behind it, so a bracket opening a line unwinds one only while such a one is open. Counts, not a stack, so a mid-line closer can spend a line-end opener. Braces and parentheses apart: a brace lowers the line it closes on, a parenthesis the line after. The first line's discount is off where the measuring level already pays for the first line's brackets
 	let opened: OpenBrackets = { parentheses: 0, braces: 0, firstLineDiscount: 0 }
 
 	let ignoreInsideParens = optionsMatches(secondaryOptions, `ignore`, `inside-parens`)
 
-	// Where the text is measured a level above its node, its first line's parentheses are paid for. A selector, params under `except: ["param"]` or behind `@nest`/`@at-root`, and a value under `except: ["value"]` are not; there the discount took a line inside them a step too low (#30, #74, #237)
+	// Where the text is measured a level above its node, its first line's parentheses are paid for. A selector, params under `except: ["param"]` or behind `@nest`/`@at-root`, and a value under `except: ["value"]` are not; there the discount took a line inside them a step too low
 	let firstLineParenthesesArePaidFor = newlineIndentLevel > nodeLevel
 
 	styleSearch(
@@ -290,7 +290,7 @@ export function checkValue (scope: IndentationScope, decl: Declaration, declLeve
 
 	let declString = declarationString(syntax, decl)
 
-	// Asked of the whole text the lines are then measured in, since a break stands in any of the four copies it is printed from: in front of the value or of the colon in `raws.between` (#635), inside the `#{…}` of an interpolated property in `prop`, and in front of the bang or inside the flag in `raws.important`
+	// Asked of the whole text the lines are then measured in, since a break stands in any of the four copies it is printed from: in front of the value or of the colon in `raws.between`, inside the `#{…}` of an interpolated property in `prop`, and in front of the bang or inside the flag in `raws.important`
 	if (!LINE_BREAK.test(declString)) return
 
 	let valueLevel = optionsMatches(secondaryOptions, `except`, `value`) ? declLevel : declLevel + 1
@@ -307,7 +307,7 @@ export function checkValue (scope: IndentationScope, decl: Declaration, declLeve
 export function checkSelector (scope: IndentationScope, ruleNode: Rule, ruleLevel: number): void {
 	let { syntax, secondaryOptions } = scope
 
-	// A Less mixin definition's head is measured as an at-rule's params are, `except` and `ignore` of `param` included (#651); the fix writes to the file's copy
+	// A Less mixin definition's head is measured as an at-rule's params are, `except` and `ignore` of `param` included; the fix writes to the file's copy
 	if (!(syntax.readsRuleParams(ruleNode) && optionsMatches(secondaryOptions, `ignore`, `param`))) checkMultilineBit(scope, syntax.read(ruleNode), syntax.readsRuleParams(ruleNode) && !optionsMatches(secondaryOptions, `except`, `param`) ? ruleLevel + 1 : ruleLevel, ruleNode, ruleLevel)
 }
 
@@ -320,7 +320,7 @@ export function checkSelector (scope: IndentationScope, ruleNode: Rule, ruleLeve
 export function checkAtRuleParams (scope: IndentationScope, atRule: AtRule, ruleLevel: number): void {
 	let { syntax, secondaryOptions, result } = scope
 
-	// The head ends where the params' code does; a comment the parser left behind it in the params opens the swallowed lines (1788576696), which are the block's, asked for the at-rule's own level whatever `except` and `ignore` say: measured with the params, `--fix` put a comment there a level deeper (#510)
+	// The head ends where the params' code does; a comment the parser left behind it in the params opens the swallowed lines, which are the block's, asked for the at-rule's own level whatever `except` and `ignore` say: measured with the params, `--fix` put a comment there a level deeper
 	let { head, swallowedLines } = atRuleHead(syntax, atRule, result)
 
 	// `@nest` and `@at-root` params are selectors
@@ -329,6 +329,6 @@ export function checkAtRuleParams (scope: IndentationScope, atRule: AtRule, rule
 	// Positions are counted from the at-rule's start, filed into the raws by the head's length. Swallowed lines first, since a re-indented params line would move that boundary
 	if (swallowedLines) checkMultilineBit(scope, swallowedLines, ruleLevel, atRule, ruleLevel, head.length)
 
-	// With nothing swallowed, `raws.between` is measured with the params, trimmed as the tokenizer reads whitespace, since a vertical tab or a no-break space alone on the last line is a word (1789421331)
+	// With nothing swallowed, `raws.between` is measured with the params, trimmed as the tokenizer reads whitespace, since a vertical tab or a no-break space alone on the last line is a word
 	if (!optionsMatches(secondaryOptions, `ignore`, `param`)) checkMultilineBit(scope, `${head}${swallowedLines ? `` : atRule.raws.between || ``}`.replace(TRAILING_CSS_WHITESPACE, ``), paramLevel, atRule, ruleLevel)
 }

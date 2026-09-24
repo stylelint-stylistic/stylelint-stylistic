@@ -5,7 +5,7 @@ import { messages as trailingSemicolonMessages } from "../declaration-block-trai
 
 import { messages, ruleName } from "./index.ts"
 
-// The rule reads every line the writers of a run touch, so its check takes the run's last turn (#353): a line another rule's break begins gets its indent in the same run, whatever order the configuration lists the rules in.
+// The rule reads every line the writers of a run touch, so its check takes the run's last turn: a line another rule's break begins gets its indent in the same run, whatever order the configuration lists the rules in.
 let testRule = createTestRule({ ruleName })
 
 testRule({
@@ -15,7 +15,6 @@ testRule({
 
 	reject: [
 		{
-			// See #353
 			description: `a declaration the neighbor's break carries onto a line of its own: the line gets its indent in the same run, where it used to keep the single space and draw no warning`,
 			code: `a {\n\tcolor: red; top: 0;\n}\n`,
 			fixed: `a {\n  color: red;\n  top: 0;\n}\n`,
@@ -46,7 +45,6 @@ testRule({
 
 	reject: [
 		{
-			// See #353
 			description: `a block the neighbor's break opens onto a new line: that line is indented in the same run`,
 			code: `@media screen{\na{b:c}\n}\n`,
 			fixed: `@media screen{\n\ta{\n\t\tb:c}\n}\n`,
@@ -77,7 +75,6 @@ testRule({
 
 	reject: [
 		{
-			// See #353
 			description: `a break written by a lineness-deferred neighbor: this rule's check runs behind even those, so the line that break begins is indented too`,
 			code: `@media screen{\na{b:c;\nd:e}\n}\n`,
 			fixed: `@media screen{\n\ta{\n\t\tb:c;\n\t\td:e}\n}\n`,
@@ -115,7 +112,6 @@ testRule({
 
 	reject: [
 		{
-			// See #509
 			description: `the closing brace of a block whose last at-rule the neighbor puts a semicolon behind: that semicolon hands the run in front of the brace from the at-rule to the block, and the brace is measured in whichever of the two raws holds it`,
 			code: `a {\n\t@extend .b\n\t\t}\n`,
 			fixed: `a {\n\t@extend .b;\n}\n`,
@@ -146,7 +142,6 @@ testRule({
 
 	reject: [
 		{
-			// See #510
 			description: `a comment in front of the semicolon the neighbor takes away, the statement's while the semicolon stands and the block's once it is gone`,
 			code: `a {\n\t@extend .b\n\t/* c */;\n}\n`,
 			fixed: `a {\n\t@extend .b\n\t/* c */\n}\n`,
@@ -168,7 +163,6 @@ testRule({
 			],
 		},
 		{
-			// See #509
 			description: `the same brace where the neighbor takes the semicolon away instead, which leaves the run standing in the block's own raw`,
 			code: `a {\n\t@extend .b;\n\t\t}\n`,
 			fixed: `a {\n\t@extend .b\n}\n`,
@@ -199,7 +193,6 @@ testRule({
 
 	reject: [
 		{
-			// See #569
 			description: `a semicolon the neighbor carries onto a line of its own with a bare break: that line gets its indent in the same run`,
 			code: `a {\n\tcolor: pink;\n}\n`,
 			fixed: `a {\n\tcolor: pink\n\t;\n}\n`,

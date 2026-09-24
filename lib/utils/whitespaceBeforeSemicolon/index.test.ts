@@ -100,7 +100,6 @@ describe(`whitespaceBeforeSemicolon`, () => {
 		expect(askAtRule(`a { @foo bar }`, { [AT_RULE_SPACE_BEFORE]: `always` }, refusing)).toBe(``)
 	})
 
-	// See #710
 	it(`the rules of every namespace in a plain CSS file, which each of them reads`, () => {
 		let scss: Syntax = { ...css, namespace: `scss` }
 
@@ -155,7 +154,6 @@ describe(`writeWhitespaceBeforeSemicolon`, () => {
 		expect(tight.params).toBe(`bar`)
 	})
 
-	// See 1789661964
 	it(`over the run alone behind an escaped space, which is a character of the value, and out of the raw PostCSS parts it into behind a bodiless at-rule's params`, () => {
 		let decl = lastDeclarationOf(`a { b: c\\  ; }`)
 		let atRule = lastAtRuleOf(`a { @foo bar\\ ; }`)
@@ -167,7 +165,6 @@ describe(`writeWhitespaceBeforeSemicolon`, () => {
 		expect(atRule.raws.between).toBe(`  `)
 	})
 
-	// See #374
 	it(`into the raw of a Less mixin call's flag, which that syntax prints behind the at-rule's own raw`, () => {
 		let call = (postcssLess.parse(`a { .m() !important\t; }`).first as Rule).last as AtRule
 
@@ -199,7 +196,6 @@ describe(`keepsEscapedCharacter`, () => {
 		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\\\\\\n; }`), result({}), ` `)).toBe(false)
 	})
 
-	// See 1789661964
 	it(`yes behind an escaped space or tab, which is a character of the value and no run the write reaches`, () => {
 		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\ ; }`), result({}), ``)).toBe(true)
 		expect(keepsEscapedCharacter(css, lastDeclarationOf(`a { b: c\\ ; }`), result({}), `\n`)).toBe(true)

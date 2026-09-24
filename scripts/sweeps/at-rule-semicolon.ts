@@ -1,5 +1,5 @@
 /**
- * A bodiless at-rule's semicolon, spelled and unspelled ([#395](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/395)).
+ * A bodiless at-rule's semicolon, spelled and unspelled.
  *
  * `at-rule-semicolon-space-before` read `raws.between` as the whitespace before the semicolon, which holds only where one is spelled; otherwise the parser runs the at-rule to its parent's closing brace or the file's end and puts what stood there into the raw. Hence the axes.
  *

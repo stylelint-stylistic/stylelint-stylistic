@@ -129,7 +129,6 @@ testRule({
 
 	reject: [
 		{
-			// See #371
 			description: `a value that holds no word of its own: the run behind the colon is taken away, and the one in front of the semicolon is left where the parser filed it, so that the rule asked about that one reaches it still`,
 			code: `a { color:  /*comment*/ ; }`,
 			fixed: `a { color:/*comment*/; }`,
@@ -153,7 +152,7 @@ testRule({
 	],
 })
 
-// Where a value is nothing but whitespace, the run behind the colon is the run the `declaration-block-semicolon-*-before` rules read in front of the semicolon (#416). The library lists the block's rule first and its extra rules behind, so the neighbor runs last in every block below: the order in which it used to be blind to what this rule wrote, and the two took the run in turns.
+// Where a value is nothing but whitespace, the run behind the colon is the run the `declaration-block-semicolon-*-before` rules read in front of the semicolon. The library lists the block's rule first and its extra rules behind, so the neighbor runs last in every block below: the order in which it used to be blind to what this rule wrote, and the two took the run in turns.
 testRule({
 	ruleName,
 	config: [`always`],
@@ -161,7 +160,6 @@ testRule({
 
 	reject: [
 		{
-			// See #416
 			description: `a value that is nothing at all, which the neighbor asks to stay nothing and this rule asks to open with a space: the neighbor is listed last and has the last word, so the space is not written and the warning stands`,
 			code: `a { color:; }`,
 			fixed: `a { color:; }`,
@@ -182,7 +180,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// The neighbor listed behind used to take away the space this rule accepts, and the fixing run came back clean (1789508665)
+			// The neighbor listed behind used to take away the space this rule accepts, and the fixing run came back clean
 			description: `a value that is nothing but the single space this rule asks for, which the neighbor asks to take away: the space stays, and the file rests with the neighbor's warning`,
 			code: `a { color: ; }`,
 			fixed: `a { color: ; }`,
@@ -263,7 +261,7 @@ testRule({
 	],
 })
 
-// A neighbor whose fix the configuration turned off reports the run and cannot rewrite it, so this rule writes past it instead of deferring (#485).
+// A neighbor whose fix the configuration turned off reports the run and cannot rewrite it, so this rule writes past it instead of deferring.
 testRule({
 	ruleName,
 	config: [`always`],
@@ -271,7 +269,6 @@ testRule({
 
 	reject: [
 		{
-			// See #485
 			description: `a value that is nothing but a break, which the neighbor asks to take away and cannot: the space is written, and the neighbor's report stands over it as the configuration asked`,
 			code: `
 				a { color:
@@ -298,14 +295,13 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to the tokenizer, whose reading the shared run follows (#494): the fix writes its space in front of such a character instead of carrying it off with the run.
+// A vertical tab and a no-break space are words to the tokenizer, whose reading the shared run follows: the fix writes its space in front of such a character instead of carrying it off with the run.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// See #494
 			description: `a value that is a vertical tab, which the tokenizer reads as a word: the space is written in front of it, and the character stays`,
 			code: `a { color:\v; }`,
 			fixed: `a { color: \v; }`,
@@ -325,7 +321,6 @@ testRule({
 
 	reject: [
 		{
-			// See #494
 			description: `a vertical tab behind the colon with a space of its own: the space this rule writes opens the value's word, the neighbor's \`never\` takes the run in front of the semicolon, and the character stands between them`,
 			code: `a { color:\v ; }`,
 			fixed: `a { color: \v; }`,
@@ -349,7 +344,7 @@ testRule({
 	],
 })
 
-// `declaration-block-trailing-semicolon: never` takes the semicolon and the run in front of it away, and the block's raw becomes the run behind the colon; this rule reads the run as that rule will leave it in either order (#536).
+// `declaration-block-trailing-semicolon: never` takes the semicolon and the run in front of it away, and the block's raw becomes the run behind the colon; this rule reads the run as that rule will leave it in either order.
 testRule({
 	ruleName,
 	config: [`never`],
@@ -417,7 +412,6 @@ testRule({
 
 	reject: [
 		{
-			// See 1789420319
 			description: `a wordless declaration the brace alone closes, whose run behind the colon is the run in front of the brace: the neighbor is listed last and asks for the break that stands, so the space is not written and the warning stands`,
 			code: `
 				a {

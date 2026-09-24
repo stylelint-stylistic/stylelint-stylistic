@@ -12,7 +12,6 @@ testRule({
 
 	reject: [
 		{
-			// See #716
 			description: `a plain CSS file on one line, with the rule asking for Windows pairs listed under the core's name, which reads the same file`,
 			code: `a { color: red; }`,
 			fixed: `a { color:\r\n red; }`,

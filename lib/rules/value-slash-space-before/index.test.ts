@@ -87,7 +87,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the number in front of a line break and the solidus, where the space would stand behind the backslash as its escaped character, so the warning stands`,
 			code: `a { b: 1\\\n/2 }`,
 			fixed: `a { b: 1\\\n/2 }`,
@@ -96,7 +96,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the solidus, which is a character of the word and no space`,
 			code: `a { b: a\\ /b; }`,
 			fixed: `a { b: a\\  /b; }`,
@@ -105,7 +105,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #560
 			description: `a solidus among the arguments behind a quoted address, which are those of any call`,
 			code: `a { b: url("x", 1/2); }`,
 			fixed: `a { b: url("x", 1 /2); }`,
@@ -123,7 +122,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #665
 			description: `a solidus standing in the text of a block comment whose own opening solidus a backslash stands in front of, beside one of a value`,
 			code: `a { b: 1/2 red \\/*x*/ 1px; }`,
 			fixed: `a { b: 1 /2 red \\/*x*/ 1px; }`,
@@ -132,7 +130,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #665
 			description: `the same comment written inside an address, whose closing parenthesis stands in its text`,
 			code: `a { b: 1/2 url( a\\/* ) */ ) }`,
 			fixed: `a { b: 1 /2 url( a\\/* ) */ ) }`,
@@ -141,7 +138,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #660
 			description: `a solidus standing in the text of a block comment the tokenizer's whitespace parts from the parenthesis of an address, beside one of a value`,
 			code: `a { b: 1/2 url( a /* ) */ ) }`,
 			fixed: `a { b: 1 /2 url( a /* ) */ ) }`,
@@ -263,7 +259,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #496
 			description: `a vertical tab in front of the solidus, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `a { grid-area: 1\v/ 2; }`,
 			fixed: `a { grid-area: 1\v / 2; }`,
@@ -282,7 +277,7 @@ testRule({
 
 	accept: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space in front of the solidus, which is a character of the word and no whitespace`,
 			code: `a { b: a\\ /b; }`,
 		},
@@ -322,7 +317,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the number in front of a line break and the solidus, which the write would turn into an escaped solidus, so the warning stands`,
 			code: `a { b: 1\\\n/2 }`,
 			fixed: `a { b: 1\\\n/2 }`,
@@ -331,7 +326,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789661964)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `a space in front of the solidus behind an escaped space, which is a character of the word and stays`,
 			code: `a { b: a\\  /b; }`,
 			fixed: `a { b: a\\ /b; }`,
@@ -413,7 +408,6 @@ testRule({
 			],
 		},
 		{
-			// See #496
 			description: `a vertical tab at the run in front of the solidus: only the tokenizer's run goes, and the character stays`,
 			code: `a { grid-area: 1\v /2; }`,
 			fixed: `a { grid-area: 1\v/2; }`,
@@ -451,7 +445,7 @@ testRule({
 
 	reject: [
 		{
-			description: `the message spelled out, since asking the rule for its own text would miss one that says the opposite of what the option asks (see #175)`,
+			description: `the message spelled out, since asking the rule for its own text would miss one that says the opposite of what the option asks`,
 			code: `a { grid-area: 1/2; }`,
 			fixed: `a { grid-area: 1 /2; }`,
 			line: 1,

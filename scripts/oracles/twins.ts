@@ -3,7 +3,7 @@
 /**
  * Asks whether every rule says the same about a Windows-break file as about the original.
  *
- * A rule reading one break and not the other is one bug in many faces ([#173](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/173), [#196](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/196), [#204](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/204), [#209](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/209), [#244](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/244), [#245](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/245), [#246](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/246), [#247](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/247)), which no other oracle sees.
+ * A rule reading one break and not the other is one bug in many faces, which no other oracle sees.
  *
  * Rows, reported on the first failing:
  *
@@ -12,7 +12,7 @@
  * - `position-differs` — elsewhere; PostCSS counts a pair as one line.
  * - `parses-differently` — the syntax reads the original alone, once per fixture.
  *
- * The fixture is normalized to line feeds first: a `\r\n` would double, and skipping it would drop the only shapes with whitespace before a break ([#247](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/247)).
+ * The fixture is normalized to line feeds first: a `\r\n` would double, and skipping it would drop the only shapes with whitespace before a break.
  */
 
 import { stdout } from "node:process"
@@ -113,7 +113,7 @@ function label (run: Run): object {
 async function probe (run: Run): Promise<object[]> {
 	if (SPELLING_IS_THE_SUBJECT.has(run.rule)) return []
 
-	// Normalized first, or `\r\n` would double (#247)
+	// Normalized first, or `\r\n` would double
 	let source = normalize(run.code)
 
 	if (!source.includes(`\n`)) return []

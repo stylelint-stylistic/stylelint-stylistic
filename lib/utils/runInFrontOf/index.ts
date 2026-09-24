@@ -15,7 +15,7 @@ let stringifier = new Stringifier(unreachableBuilder)
 /**
  * The whitespace run standing in front of a node in the file the print gives.
  *
- * `raws.before` where the parser filed one. Where it did not — a node a rule of another plugin built and put into the tree, which is the only way to reach one, since every child of a parsed block carries a run of its own — PostCSS invents a run out of what the node's neighbors carry, a line break with the default indent where they carry nothing, and prints it in front of the node; so a reader taking a missing raw for the empty run says nothing about whitespace the file will hold ([#680](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/680)).
+ * `raws.before` where the parser filed one. Where it did not — a node a rule of another plugin built and put into the tree, which is the only way to reach one, since every child of a parsed block carries a run of its own — PostCSS invents a run out of what the node's neighbors carry, a line break with the default indent where they carry nothing, and prints it in front of the node; so a reader taking a missing raw for the empty run says nothing about whitespace the file will hold.
  *
  * The invented run is asked of PostCSS's own stringifier rather than worked out again. None of the syntaxes the plugin reads overrides that computation, and an invented run is whitespace alone, which is the one thing `postcss-styled-syntax` reshapes a printed run for. Reading it off a print of the whole parent instead would cost that print once per node.
  * @param node - The node whose leading run is read.

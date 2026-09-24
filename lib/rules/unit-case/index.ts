@@ -83,7 +83,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let problems: Problem[] = []
 			let hasFixed = false
 
-			// The value parser reads a `//` comment as words and calls, and closes a block comment opening `/*/` on its own star (#378)
+			// The value parser reads a `//` comment as words and calls, and closes a block comment opening `/*/` on its own star
 			let comments = syntax.commentSpans(checkedValue, node, result)
 			// Sought in a copy with the comments blanked, since a brace in a comment closes no interpolation
 			let interpolations = syntax.interpolationSpans(blankComments(checkedValue, comments), node, result)
@@ -97,7 +97,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let whole: Reading = { end: valueNode.value.length, problem: null }
 				let dimension = getDimension(syntax, valueNode)
 
-				// A unit of no length is no unit and is never named, but the number it stands behind was read, and what follows it is a word of its own: `10--2REM` is `10` less `-2REM` to Less (#633)
+				// A unit of no length is no unit and is never named, but the number it stands behind was read, and what follows it is a word of its own: `10--2REM` is `10` less `-2REM` to Less
 				if (!dimension.number) return whole
 
 				let { number, unit, positions } = dimension
@@ -108,7 +108,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (unitStart === undefined || unitLast === undefined) return whole
 
 				let unitEnd = unitLast + 1
-				// The ASCII letters alone: a unit identifier is ASCII case-insensitive, so any other code point recased is another unit, and `ß` has no upper case of its own length (#653)
+				// The ASCII letters alone: a unit identifier is ASCII case-insensitive, so any other code point recased is another unit, and `ß` has no upper case of its own length
 				let expectedUnit = recaseAscii(unit, primary)
 
 				if (unit === expectedUnit) return { end: unitEnd, problem: null }
@@ -135,7 +135,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			/**
 			 * Reads a word dimension by dimension and names every miscased unit it holds.
 			 *
-			 * The parser hands over one word where the grammar reads several: `10PX*2REM`, `10PX%2REM`, `10PX.2REM` and `10PX+2REM` are each two dimensions (#526), so the tokenizer reads the word, each dimension through a node standing where its token does. Escapes are the tokenizer's: `10PX\*2REM` is one dimension with unit `PX\*2REM` (#414), `10PX\\*2REM` two. Each unit carries its own edit, so nothing outside a unit is written (#413, #425).
+			 * The parser hands over one word where the grammar reads several: `10PX*2REM`, `10PX%2REM`, `10PX.2REM` and `10PX+2REM` are each two dimensions, so the tokenizer reads the word, each dimension through a node standing where its token does. Escapes are the tokenizer's: `10PX\*2REM` is one dimension with unit `PX\*2REM`, `10PX\\*2REM` two. Each unit carries its own edit, so nothing outside a unit is written.
 			 * @param valueNode - The value parser node the word belongs to.
 			 * @param text - The word, or what a parted dimension left of it.
 			 * @param index - Where the text stands in the word.
@@ -146,7 +146,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				for (let word of words) {
 					for (let token of tokenize({ css: word.text })) {
-						// A syntax reading no exponent holds a unit where the tokenizer reads a number or a percentage, the letter of the exponent being that unit: `1E5` is `1E` and `5` to Less, `1E5%` is `1E` and `5%` (#646)
+						// A syntax reading no exponent holds a unit where the tokenizer reads a number or a percentage, the letter of the exponent being that unit: `1E5` is `1E` and `5` to Less, `1E5%` is `1E` and `5%`
 						if (token[0] !== TokenType.Dimension && (syntax.readsNumberWithExponent() || (token[0] !== TokenType.Number && token[0] !== TokenType.Percentage))) continue
 
 						let start = word.index + token[2]
@@ -161,7 +161,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 						if (reading.problem) problems.push(reading.problem)
 
-						// What the dimension leaves inside the token is a word of its own to a syntax reading a dimension shorter than the tokenizer does: `10PX-2REM` is two dimensions to Less, as `10PX*2REM` is to the core, `10PX-A` a dimension and a keyword, and `1E5PX` the dimension `1E` beside the dimension `5PX` (#646). Under the core what it leaves is the rest of that same identifier — the escape of a hack taken out of the copy the unit was read in — and no word to read (#633)
+						// What the dimension leaves inside the token is a word of its own to a syntax reading a dimension shorter than the tokenizer does: `10PX-2REM` is two dimensions to Less, as `10PX*2REM` is to the core, `10PX-A` a dimension and a keyword, and `1E5PX` the dimension `1E` beside the dimension `5PX`. Under the core what it leaves is the rest of that same identifier — the escape of a hack taken out of the copy the unit was read in — and no word to read
 						let rest = syntax.readsNumberWithExponent() && syntax.readsUnitAsIdentifier() ? `` : dimensionNode.value.slice(reading.end)
 						// A hyphen ending a unit is Less's operator and no character of the operand, which carries a sign of its own: `10PX--2REM` is `10PX` less `-2REM`, `12PX` compiled, while a third hyphen leaves the keyword `--2REM` and no dimension at all. An escape ends a unit without being an operator, and opens the word standing behind it.
 						let operator = rest.startsWith(`-`) ? 1 : 0
@@ -171,10 +171,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				}
 			}
 
-			// Every quotation mark a comment leaves open is masked, so the parser pairs the marks as the file does (#508)
+			// Every quotation mark a comment leaves open is masked, so the parser pairs the marks as the file does
 			let parsed = valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(checkedValue, comments), comments))
 
-			// The parser breaks a word at the whitespace closing a hexadecimal escape, so `10px\9 2PX` came back as two; the words are welded back, one inside a comment onto nothing (#526)
+			// The parser breaks a word at the whitespace closing a hexadecimal escape, so `10px\9 2PX` came back as two; the words are welded back, one inside a comment onto nothing
 			weldEscapedWords(parsed.nodes, comments)
 
 			parsed.walk((valueNode, at, siblings) => {
@@ -224,7 +224,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		}
 
 		root.walkAtRules((atRule) => {
-			// A variable's value is the syntax's to find: `postcss-less` splits one over the name, the raw behind it and the params (#649)
+			// A variable's value is the syntax's to find: `postcss-less` splits one over the name, the raw behind it and the params
 			let variable = syntax.atRuleVariableValue(atRule)
 
 			if (variable) check(atRule, variable.text, variable.index, variable.write)

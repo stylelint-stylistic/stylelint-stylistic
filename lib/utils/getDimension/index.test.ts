@@ -70,7 +70,7 @@ it(`getDimension`, () => {
 	expect(getDimension(css, valueParser(`.0e1`).nodes[0]).unit).toBe(``)
 	expect(getDimension(css, valueParser(`+.0e1`).nodes[0]).unit).toBe(``)
 	expect(getDimension(css, valueParser(`-.0e1`).nodes[0]).unit).toBe(``)
-	// A character an interpolation is spelled with, standing outside any interpolation, ends the unit in front of it (#426)
+	// A character an interpolation is spelled with, standing outside any interpolation, ends the unit in front of it
 	expect(getDimension(css, valueParser(`10px#fff`).nodes[0]).unit).toBe(`px`)
 	expect(getDimension(css, valueParser(`10PX#FFF`).nodes[0]).unit).toBe(`PX`)
 	expect(getDimension(css, valueParser(`10px@a`).nodes[0]).unit).toBe(`px`)
@@ -84,7 +84,7 @@ it(`getDimension`, () => {
 	expect(getDimension(css, valueParser(`10PX$VAR`).nodes[0]).unit).toBe(`PX`)
 	expect(getDimension(css, valueParser(`10PX*2REM`).nodes[0]).unit).toBe(`PX`)
 
-	// An escaped character is a code point of the identifier it stands in, and ends nothing (#414)
+	// An escaped character is a code point of the identifier it stands in, and ends nothing
 	expect(getDimension(css, valueParser(`10px\\#fff`).nodes[0]).unit).toBe(`px\\#fff`)
 	expect(getDimension(css, valueParser(`10PX\\*2REM`).nodes[0]).unit).toBe(`PX\\*2REM`)
 	expect(getDimension(css, valueParser(`10PX\\*$VAR`).nodes[0]).unit).toBe(`PX\\*`)
@@ -231,7 +231,7 @@ it(`getDimension positions`, () => {
 })
 
 it(`getDimension under a syntax that reads a unit shorter than the identifier`, () => {
-	// The contract's answer is what the reading turns on, so the core's syntax is asked with that one answer changed (#527, #633)
+	// The contract's answer is what the reading turns on, so the core's syntax is asked with that one answer changed
 	let partingSyntax: Syntax = { ...css, readsUnitAsIdentifier: () => false }
 
 	// The unit ends in front of the first escape whatever it spells, and the escaped text is left in the copy and off the unit
@@ -266,7 +266,7 @@ it(`getDimension under a syntax that reads a unit shorter than the identifier`, 
 	expect(getDimension(partingSyntax, valueParser(`10px#fff`).nodes[0]).unit).toBe(`px`)
 	expect(getDimension(partingSyntax, valueParser(`1px!important`).nodes[0]).unit).toBe(`px`)
 
-	// A hyphen ends the unit as an escape does, since Less reads it as the sign of the operand behind it (#633)
+	// A hyphen ends the unit as an escape does, since Less reads it as the sign of the operand behind it
 	expect(getDimension(partingSyntax, valueParser(`10PX-A`).nodes[0]).unit).toBe(`PX`)
 	expect(getDimension(css, valueParser(`10PX-A`).nodes[0]).unit).toBe(`PX-A`)
 	expect(getDimension(partingSyntax, valueParser(`10PX-2REM`).nodes[0]).unit).toBe(`PX`)
@@ -282,7 +282,7 @@ it(`getDimension under a syntax that reads a unit shorter than the identifier`, 
 	expect(getDimension(partingSyntax, valueParser(`10-PX`).nodes[0]).unit).toBe(``)
 	expect(getDimension(css, valueParser(`10-PX`).nodes[0]).unit).toBe(`-PX`)
 
-	// A digit ends the unit as a hyphen does, Less opening another dimension there: `10PX9` is `10PX` and the number `9`, `10PX9PX` two dimensions (#646)
+	// A digit ends the unit as a hyphen does, Less opening another dimension there: `10PX9` is `10PX` and the number `9`, `10PX9PX` two dimensions
 	expect(getDimension(partingSyntax, valueParser(`10PX9`).nodes[0]).unit).toBe(`PX`)
 	expect(getDimension(css, valueParser(`10PX9`).nodes[0]).unit).toBe(`PX9`)
 	expect(getDimension(partingSyntax, valueParser(`10PX9PX`).nodes[0]).unit).toBe(`PX`)
@@ -297,7 +297,7 @@ it(`getDimension under a syntax that reads a unit shorter than the identifier`, 
 })
 
 it(`getDimension under a syntax that reads no exponent`, () => {
-	// The two questions are asked apart: this one moves where the number ends and the unit opens, the other where the unit ends (#646)
+	// The two questions are asked apart: this one moves where the number ends and the unit opens, the other where the unit ends
 	let exponentSyntax: Syntax = { ...css, readsNumberWithExponent: () => false }
 	let lessSyntax: Syntax = { ...css, readsNumberWithExponent: () => false, readsUnitAsIdentifier: () => false }
 

@@ -27,7 +27,6 @@ describe(`getBlockAfter`, () => {
 		expect(run(`a { @extend .b /* c */}`)).toBe(``)
 	})
 
-	// See #538
 	it(`reads the whitespace a custom property with no semicolon swallowed into its value`, () => {
 		expect(run(`a {\n\t--b: red\n}`)).toBe(`\n`)
 		expect(run(`a { --b: red  }`)).toBe(`  `)

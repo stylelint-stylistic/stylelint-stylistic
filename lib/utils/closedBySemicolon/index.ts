@@ -131,7 +131,7 @@ function writtenBy (copy: NeighborCopy, decl: Declaration, result: PostcssResult
 }
 
 /**
- * Reads what the copy of `declaration-block-trailing-semicolon` reading the root leaves behind a declaration, and the syntax that copy reads through ([#715](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/715)).
+ * Reads what the copy of `declaration-block-trailing-semicolon` reading the root leaves behind a declaration, and the syntax that copy reads through.
  * @param decl - The declaration.
  * @param result - The Stylelint result, which holds the configuration.
  * @returns The semicolon and the syntax, or nothing where no copy writes.
@@ -156,7 +156,7 @@ export function trailingSemicolonAsked (decl: Declaration, result: PostcssResult
 /**
  * Asks whether a semicolon closes a declaration once `declaration-block-trailing-semicolon` has run.
  *
- * Without the semicolon the run behind the colon is the next node's raw ([#387](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/387)); reading the boundary as the rule will leave it frees a reader from configuration order ([#536](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/536)).
+ * Without the semicolon the run behind the colon is the next node's raw; reading the boundary as the rule will leave it frees a reader from configuration order.
  * @param decl - The declaration.
  * @param result - The Stylelint result, which holds the configuration.
  * @returns True where a semicolon closes the declaration, or will.
@@ -168,7 +168,7 @@ export function closedBySemicolon (decl: Declaration, result: PostcssResult): bo
 /**
  * Reads a declaration's printed value as `declaration-block-trailing-semicolon` will leave it.
  *
- * Its `never` takes the whitespace in front of the semicolon too ([#479](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/479)) where no flag or inline comment closes the declaration. A `never` copy finding a semicolon takes the run ([#715](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/715)).
+ * Its `never` takes the whitespace in front of the semicolon too where no flag or inline comment closes the declaration. A `never` copy finding a semicolon takes the run.
  * @param syntax - The asking rule's syntax, which reads the value.
  * @param decl - The declaration.
  * @param result - The Stylelint result, which holds the configuration.

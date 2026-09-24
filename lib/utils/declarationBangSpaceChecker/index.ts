@@ -101,7 +101,7 @@ export function declarationBangSpaceChecker (opts: {
 
 			if ((head.length - head.replace(TRAILING_BACKSLASHES, ``).length) % 2 === 1) return
 
-			// A rule may know the fix would break the code; a write parting the name of a bare address from the bang or joining it to the bang switches how PostCSS reads the parentheses, and one changing the character behind a backslash is read with it. The run is measured over the copy with its escapes masked, as the check reads it: an escaped space in front of the bang is a character of a word and no run (1789657288)
+			// A rule may know the fix would break the code; a write parting the name of a bare address from the bang or joining it to the bang switches how PostCSS reads the parentheses, and one changing the character behind a backslash is read with it. The run is measured over the copy with its escapes masked, as the check reads it: an escaped space in front of the bang is a character of a word and no run
 			let isFixable = fix && (!opts.isFixable || opts.isFixable(decl, index)) && fix({ text: runString, index }).every((edit) => !rereadsAnAddress(declString, edit, reading) && editKeepsEscapedCharacter(declString, edit))
 
 			opts.locationChecker({

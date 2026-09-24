@@ -47,7 +47,6 @@ testRule({
 
 	reject: [
 		{
-			// See #153
 			description: `a comma between two bare addresses, whose double slashes open no comment, with an inline comment behind it`,
 			code: `
 				a { b: image-set(url(//a) 1x , // c

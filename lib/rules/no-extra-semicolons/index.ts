@@ -179,7 +179,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		})
 
 		/**
-		 * Reads which semicolons of a raw are no extra ones where `postcss-less` closed the node in front on a semicolon of a `//` comment's text: those of the head that is more of that text, and the first behind the break closing it, which Less closes the node on (#720).
+		 * Reads which semicolons of a raw are no extra ones where `postcss-less` closed the node in front on a semicolon of a `//` comment's text: those of the head that is more of that text, and the first behind the break closing it, which Less closes the node on.
 		 * @param owner - The node whose `raws.before` is read, or the container whose `raws.after` is.
 		 * @param key - Which of the two raws.
 		 * @returns A test of a semicolon's index in the raw.

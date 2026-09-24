@@ -7,7 +7,6 @@ testRule({
 	config: [`always`],
 
 	accept: [
-		// See #208
 		{
 			description: `a comment closing the block behind a declaration without a semicolon, which has no semicolon to space — the fix used to pull the comment up to the declaration`,
 			code: `
@@ -102,7 +101,6 @@ testRule({
 
 	accept: [
 		{
-			// See #208
 			description: `a comment closing the block behind a declaration without a semicolon, which has no semicolon to space — the fix used to close the comment up to the declaration`,
 			code: `a { color: pink /* c */ }`,
 		},
@@ -195,7 +193,6 @@ testRule({
 
 	reject: [
 		{
-			// See #244
 			description: `a form feed in front of the brace, which is whitespace and no line break, so the block is single-line and the semicolon is asked for its space`,
 			code: `a { color: pink;top: 0\f}`,
 			fixed: `a { color: pink; top: 0\f}`,
@@ -359,7 +356,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #49
 			description: `a style attribute of a Vue template`,
 			code: `
 				<template>

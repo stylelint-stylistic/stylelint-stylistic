@@ -50,7 +50,7 @@ const VALUE_SLASH_NEWLINE_OPTIONS = [`always`, `always-multi-line`, `never-multi
 /** `media-feature-slash-space-*` options. */
 const MEDIA_SLASH_SPACE_OPTIONS = [`always`, `never`]
 
-/** Rules about the run in front of a value's solidus ([#550](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/550), [#622](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/622)). */
+/** Rules about the run in front of a value's solidus. */
 const RULES_BEFORE_THE_SOLIDUS: Partial<Record<Whitespace, NeighborRule>> = {
 	space: { name: `value-slash-space-before`, options: VALUE_SLASH_SPACE_OPTIONS },
 	newline: { name: `value-slash-newline-before`, options: VALUE_SLASH_NEWLINE_OPTIONS },
@@ -91,7 +91,7 @@ export type SecondaryOptions = {
 /**
  * Specifies the notation for the value of `aspect-ratio` and for the `<ratio>` of a media feature.
  *
- * The options are settled before the one write, so configuration order changes nothing; a solidus the fix adds is spaced as the `value-slash-*` rules ask, a space where none is configured ([#550](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/550)).
+ * The options are settled before the one write, so configuration order changes nothing; a solidus the fix adds is spaced as the `value-slash-*` rules ask, a space where none is configured.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.

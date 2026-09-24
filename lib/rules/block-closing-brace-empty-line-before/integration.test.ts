@@ -35,7 +35,6 @@ async function expectBothOrders (code: string, partner: object, expected: string
 	expect(partnerFirst).toEqual({ code: expected, warnings: 0 })
 }
 
-// See #678
 describe(`the empty line this rule writes beside a rule that writes the same run in front of the closing brace`, () => {
 	it(`leaves one file in both orders of block-opening-brace-newline-after over a block holding nothing but a comment`, async () => {
 		await expectBothOrders(`a {/*c*/ }\n`, { "@stylistic/block-opening-brace-newline-after": `always` }, `a {/*c*/\n\n }\n`)
@@ -50,7 +49,6 @@ describe(`the empty line this rule writes beside a rule that writes the same run
 	})
 })
 
-// See #690
 describe(`the empty line this rule writes where a stray semicolon stands behind the break, beside a rule taking the semicolon out`, () => {
 	it(`leaves one file in both orders of no-extra-semicolons, the semicolon gone and one empty line before the brace`, async () => {
 		await expectBothOrders(`a {/*c*/\n;}\n`, { "@stylistic/no-extra-semicolons": true }, `a {/*c*/\n\n}\n`)

@@ -54,9 +54,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (!CONTAINS_HEX_COLOR.test(decl.value)) return
 
 			let declValue = syntax.read(decl)
-			// Both kinds: the value parser returns a `//` comment's text as nodes and closes `/*/` on its own star (#378)
+			// Both kinds: the value parser returns a `//` comment's text as nodes and closes `/*/` on its own star
 			let comments = syntax.commentSpans(declValue, decl, result)
-			// Masked so the parser pairs quotation marks as the file does (#508)
+			// Masked so the parser pairs quotation marks as the file does
 			let parsedValue = valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(declValue, comments), comments))
 			// Edited by position rather than printed from the tree, which gives `/*/` back as `/**/`
 			let edits: Edit[] = []

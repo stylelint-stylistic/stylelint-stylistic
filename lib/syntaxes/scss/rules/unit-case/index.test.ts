@@ -20,27 +20,24 @@ testRule({
 			code: `a { margin: calc(100% - #{$margin * 2}); }`,
 		},
 		{
-			// See #234
 			description: `a unit in front of an interpolation whose text holds a bang, in a word that is no standard value`,
 			code: `a { b: 1px#{$aB!=$b}; }`,
 		},
 		{
-			// See #298
 			description: `an upper-case unit in front of an interpolation whose text holds whitespace, which the value parser breaks the word on`,
 			code: `a { b: 10PX#{$aB != $b}; }`,
 		},
 		{
-			// See #296 and #298
 			description: `an upper-case unit written inside an interpolation, where the language reading it is not the one this rule is about`,
 			code: `a { margin: calc(100% - #{$margin * 2PX}); }`,
 		},
 		{
-			// The whitespace closing a hexadecimal escape belongs to the escape, so this is one dimension token, which Sass prints back as it stands; the value parser parts the word at that space, and the rule used to read `2PX` as a dimension of its own. See #526
+			// The whitespace closing a hexadecimal escape belongs to the escape, so this is one dimension token, which Sass prints back as it stands; the value parser parts the word at that space, and the rule used to read `2PX` as a dimension of its own.
 			description: `a lower-case unit whose hack unit's escape swallows the whitespace in front of a second run of digits and letters`,
 			code: `a { b: 10px\\9 2PX; }`,
 		},
 		{
-			// The escape swallows the space and welds the interpolation onto the dimension, and a node holding any text of an interpolation is passed over whole, so the unit goes unnamed where the rule used to name it: the price of the guard, which reads no dimension next to an interpolation. Sass compiles this to `a { b: 10PX\9  1; }` with `$a: 1`. See #526
+			// The escape swallows the space and welds the interpolation onto the dimension, and a node holding any text of an interpolation is passed over whole, so the unit goes unnamed where the rule used to name it: the price of the guard, which reads no dimension next to an interpolation. Sass compiles this to `a { b: 10PX\9  1; }` with `$a: 1`.
 			description: `an upper-case unit whose hack unit's escape swallows the whitespace in front of an interpolation`,
 			code: `a { b: 10PX\\9 #{$a}; }`,
 		},
@@ -48,7 +45,6 @@ testRule({
 
 	reject: [
 		{
-			// See #297
 			description: `a lower-case dimension multiplied by a variable, standing beside a word whose unit is miscased`,
 			code: `a { b: 1PX 10px*$VAR; }`,
 			fixed: `a { b: 1px 10px*$VAR; }`,
@@ -159,7 +155,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #426
 			description: `an upper-case unit with a hash welded to it, which opens no interpolation and is no part of the unit`,
 			code: `a { b: 10PX#FFF; }`,
 			fixed: `a { b: 10px#FFF; }`,
@@ -170,7 +165,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #413
 			description: `an upper-case unit multiplied by a variable spelled in capitals, whose name the fix leaves as it is`,
 			code: `a { b: 10PX*$VAR; }`,
 			fixed: `a { b: 10px*$VAR; }`,
@@ -181,7 +175,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #413
 			description: `a variable spelled in capitals multiplied by an upper-case unit, a word the whole of which is no dimension`,
 			code: `a { b: $VAR*10PX; }`,
 			fixed: `a { b: $VAR*10px; }`,
@@ -192,7 +185,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #425
 			description: `a variable multiplied by an upper-case unit, which used to be reported and never written`,
 			code: `a { b: $var*2REM; }`,
 			fixed: `a { b: $var*2rem; }`,
@@ -203,7 +195,6 @@ testRule({
 			message: messages.expected(`REM`, `rem`),
 		},
 		{
-			// See #425
 			description: `a variable read through a Sass module multiplied by an upper-case unit`,
 			code: `a { b: ns.$v*10PX; }`,
 			fixed: `a { b: ns.$v*10px; }`,
@@ -214,7 +205,6 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// See #414
 			description: `an upper-case unit with the name of a Sass variable welded behind it, which is no part of the unit and stays as it was written`,
 			code: `a { b: 10PX$VAR; }`,
 			fixed: `a { b: 10px$VAR; }`,
@@ -225,7 +215,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// An escaped backslash in front of a digit opens no hexadecimal escape, so the space is the text's, the interpolation a word of its own, and the unit is read; a reading taking the last two characters for an escape would weld the interpolation on and pass the whole word over. See #526
+			// An escaped backslash in front of a digit opens no hexadecimal escape, so the space is the text's, the interpolation a word of its own, and the unit is read; a reading taking the last two characters for an escape would weld the interpolation on and pass the whole word over.
 			description: `an upper-case unit closing on an escaped backslash and a digit, in front of a space and an interpolation`,
 			code: `a { width: 10PX\\\\9 #{$a}; }`,
 			fixed: `a { width: 10px\\\\9 #{$a}; }`,
@@ -236,7 +226,6 @@ testRule({
 			message: messages.expected(`PX\\\\9`, `px\\\\9`),
 		},
 		{
-			// See #526
 			// The escape closes on one of the two spaces, and the second parts the word, so the interpolation stands apart from the dimension and the unit is read.
 			description: `an upper-case unit whose hack unit's escape swallows the first of two spaces in front of an interpolation`,
 			code: `a { width: 10PX\\9  #{$a}; }`,
@@ -248,7 +237,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			// The break ends the comment before it closes the escape the comment's text ends in, and Sass compiles this to `a { b: 1PX 2REM; }`; a word in a comment's text is welded onto nothing, so the dimension on the line below is read. See #526
+			// The break ends the comment before it closes the escape the comment's text ends in, and Sass compiles this to `a { b: 1PX 2REM; }`; a word in a comment's text is welded onto nothing, so the dimension on the line below is read.
 			description: `an upper-case unit on the line below an inline comment whose text ends in a hack unit, whose escape would swallow the break that closes the comment`,
 			code: `a { b: 1PX // 10PX\\9\n2REM; }`,
 			fixed: `a { b: 1px // 10PX\\9\n2rem; }`,
@@ -270,7 +259,7 @@ testRule({
 			],
 		},
 		{
-			// The dimension token is `10PX\*ns`, and the guard against a reading through a Sass module is asked about that token rather than the whole word, so the unit is named where the rule used to say nothing; Sass refuses the word escaped or multiplied, and `lightningcss` prints it as it stands. See #526
+			// The dimension token is `10PX\*ns`, and the guard against a reading through a Sass module is asked about that token rather than the whole word, so the unit is named where the rule used to say nothing; Sass refuses the word escaped or multiplied, and `lightningcss` prints it as it stands.
 			description: `an upper-case unit an escaped star welds to a reading through a Sass module`,
 			code: `a { b: 10PX\\*ns.$V; }`,
 			fixed: `a { b: 10px\\*ns.$V; }`,
@@ -281,7 +270,6 @@ testRule({
 			message: messages.expected(`PX\\*ns`, `px\\*ns`),
 		},
 		{
-			// See #526
 			description: `two upper-case units in one word, a percent sign between them, which is plain CSS's reading and the one this namespace inherits`,
 			code: `a { b: 10PX%2REM; }`,
 			fixed: `a { b: 10px%2rem; }`,
@@ -319,42 +307,34 @@ testRule({
 			code: `a { margin: calc(100% - #{$margin * 2}); }`,
 		},
 		{
-			// See #234
 			description: `a unit in front of an interpolation whose text holds a bang, in a word that is no standard value`,
 			code: `a { b: 10px#{$a!=$b}; }`,
 		},
 		{
-			// See #298
 			description: `a lower-case unit in front of an interpolation whose text holds whitespace, which the value parser breaks the word on`,
 			code: `a { b: 10px#{$aB != $b}; }`,
 		},
 		{
-			// See #298
 			description: `the same unit and interpolation written in a set of media parameters`,
 			code: `@media (min-width: 10px#{$aB != $b}) { a { b: c; } }`,
 		},
 		{
-			// See #298
 			description: `a multiplication of two lower-case dimensions reaching into an interpolation whose text holds whitespace`,
 			code: `a { b: 1px*2rem#{$aB != $b}; }`,
 		},
 		{
-			// See #298
 			description: `a lower-case unit in a word that opens inside an interpolation and reaches out of it, which is that word read from the other side`,
 			code: `a { b: #{$n * 2}10px; }`,
 		},
 		{
-			// See #298
 			description: `the same word opening on the brace that closes the interpolation rather than inside it`,
 			code: `a { b: #{$a }10px; }`,
 		},
 		{
-			// See #296 and #298
 			description: `a lower-case unit written inside an interpolation, where the language reading it is not the one this rule is about`,
 			code: `a { margin: calc(100% - #{$margin * 2px}); }`,
 		},
 		{
-			// See #271
 			description: `a lower-case unit standing in the text of an inline comment the value holds`,
 			code: `
 				a { b: 1PX // 2px
@@ -362,7 +342,6 @@ testRule({
 			`,
 		},
 		{
-			// See #271
 			description: `a lower-case unit standing in the text of an inline comment a set of media parameters holds`,
 			code: `
 				@media (min-width: 100PX // 2px
@@ -370,7 +349,6 @@ testRule({
 			`,
 		},
 		{
-			// See #271
 			description: `a word of a multiplication standing in the text of an inline comment the value holds, whose dimensions the rule would read one at a time`,
 			code: `
 				a { b: 1PX // 2px*3rem
@@ -391,7 +369,6 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			// See #271
 			description: `a lower-case unit on either side of an inline comment whose text holds one as well`,
 			code: `
 				a { b: 1px // 2px
@@ -508,7 +485,6 @@ testRule({
 			endColumn: 11,
 			message: messages.expected(`px`, `PX`),
 		},
-		// See #233
 		{
 			description: `a lower-case unit on either side of an end-of-line comment the value holds`,
 			code: `
@@ -540,7 +516,6 @@ testRule({
 				},
 			],
 		},
-		// See #233
 		{
 			description: `a lower-case unit in front of an end-of-line comment the parameters of a media query hold`,
 			code: `
@@ -562,7 +537,6 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			// See #234
 			description: `a lower-case unit in front of the default flag of a Sass variable`,
 			code: `$a: 1px!default;`,
 			fixed: `$a: 1PX!default;`,
@@ -573,7 +547,6 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			// See #234
 			description: `a lower-case unit in front of the global flag of a Sass variable`,
 			code: `$a: 1px!global;`,
 			fixed: `$a: 1PX!global;`,
@@ -584,7 +557,6 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			// See #425
 			description: `a variable multiplied by a lower-case unit, which used to be reported and never written`,
 			code: `a { b: $var*2rem; }`,
 			fixed: `a { b: $var*2REM; }`,
@@ -595,7 +567,6 @@ testRule({
 			message: messages.expected(`rem`, `REM`),
 		},
 		{
-			// See #414
 			description: `a lower-case unit welded by an escaped star to a second one, which Sass leaves whole where it multiplies the unescaped twin`,
 			code: `a { b: 10px\\*2rem; }`,
 			fixed: `a { b: 10PX\\*2REM; }`,

@@ -5,7 +5,7 @@ import { CSS_LINE_BREAK, LEADING_HEX_ESCAPE } from "../../regexps.ts"
  *
  * An escape is a backslash and up to six hex digits, closed by one whitespace character belonging to the escape, or a backslash and any other single character: `\75 ` and `\u` spell `u`. A number that is no scalar spells the replacement character.
  *
- * A backslash at the end of the text or in front of a line break spells nothing and is a delimiter, the one answer a caller has to read rather than pass on: `\` and a break leave the `url(` behind them an address of its own. The break is the grammar's, {@link CSS_LINE_BREAK}, not PostCSS's: a form feed read as an escaped character once opened a name where the grammar opens none ([#566](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/566)).
+ * A backslash at the end of the text or in front of a line break spells nothing and is a delimiter, the one answer a caller has to read rather than pass on: `\` and a break leave the `url(` behind them an address of its own. The break is the grammar's, {@link CSS_LINE_BREAK}, not PostCSS's: a form feed read as an escaped character once opened a name where the grammar opens none.
  * @param text - The identifier's source.
  * @param index - The index the character is spelled from.
  * @returns The character, or nothing where the backslash spells none, and the index behind it.

@@ -171,7 +171,6 @@ testRule({
 			code: `@media print {\r\n      /*.test2*/\r\n .a {\r\n color: pink;\r\n }\r\n }`,
 		},
 		{
-			// See #672
 			description: `a block holding nothing but a comment, broken behind the brace`,
 			code: `
 				a {
@@ -359,7 +358,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #672
 			description: `a block holding nothing but a comment, with no break anywhere in its head`,
 			code: `a {/*c*/}`,
 			fixed: `
@@ -460,7 +458,6 @@ testRule({
 
 	accept: [
 		{
-			// See #244
 			description: `a form feed between the declarations, which is whitespace and no line break, so the block is single-line and none of this option's business`,
 			code: `a {color: pink;\ftop: 0;}`,
 		},
@@ -545,7 +542,6 @@ testRule({
 			code: `.a {/*.b*/.c { color: pink; } }`,
 		},
 		{
-			// See #672
 			description: `a block holding nothing but a comment, on one line, which the option passes over`,
 			code: `a {/*c*/}`,
 		},
@@ -648,7 +644,6 @@ testRule({
 			message: messages.expectedAfterMultiLine(),
 		},
 		{
-			// See #672
 			description: `a space in front of the break of a block holding nothing but a comment`,
 			code: `
 				a {${S}
@@ -726,7 +721,6 @@ testRule({
 			code: `@media print {\ta {\tcolor: pink; } }`,
 		},
 		{
-			// See #672
 			description: `a block holding nothing but a comment, on one line, which the option passes over`,
 			code: `a {/*c*/}`,
 		},
@@ -863,7 +857,6 @@ testRule({
 			message: messages.rejectedAfterMultiLine(),
 		},
 		{
-			// See #672
 			description: `a block holding nothing but a comment, broken behind the brace`,
 			code: `
 				a {
@@ -964,7 +957,6 @@ testRule({
 	],
 })
 
-// See #409
 describe(`${ruleName} on a run of comments longer than the stack is deep`, () => {
 	let run = `/*c*/`.repeat(COMMENT_RUN_LENGTH)
 
@@ -1043,7 +1035,6 @@ describe(`${ruleName} on the whitespace it carries past a comment`, () => {
 		expect(await fixQuietly(code, `always`)).toEqual({ code, warnings: 0 })
 	})
 
-	// See #410
 	it(`puts it back inside a block holding nothing but comments, which the carry runs through and out onto the closing brace`, async () => {
 		let code = `a {\n/*1*/ /*2*/ /*3*/}`
 
@@ -1079,7 +1070,6 @@ async function race (code: string, option: string, neighbor: string, setting: un
 	return { ours: ours.code, theirs: theirs.code, left: pick(again.results).warnings.map((warning) => warning.text) }
 }
 
-// See #676
 describe(`${ruleName} beside the rules that write the same run`, () => {
 	let closingNewline = `@stylistic/block-closing-brace-newline-before`
 	let closingSpace = `@stylistic/block-closing-brace-space-before`
@@ -1144,7 +1134,6 @@ describe(`${ruleName} beside the rules that write the same run`, () => {
 		expect(await race(`a {\n/*c*/ ;\n}`, `never-multi-line`, closingSpace, `always-single-line`)).toEqual({ ours: `a {/*c*/;\n}`, theirs: `a {/*c*/;\n}`, left: [] })
 	})
 
-	// See #715
 	it(`leaves it where that rule's never-multi-line is listed under the namespace of another syntax, which reads the same plain CSS file`, async () => {
 		expect(await race(`a { /* c */ }`, `always`, `@stylistic/scss/block-closing-brace-newline-before`, `never-multi-line`)).toEqual({ ours: `a { /* c */ }`, theirs: `a { /* c */ }`, left: [messages.expectedAfter()] })
 	})

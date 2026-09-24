@@ -71,10 +71,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// The print opens on the whitespace the node carries, which stands in front of the index the parser gives it
 				let attributeStart = attributeNode.sourceIndex - attributeSelectorString.indexOf(`[`)
 
-				// The parser reads a backslash in front of a tab as no escape and files what follows into parts it prints back in another order, so `[a=\⇥\⇥b]` comes back as `[a=\⇥b⇥]`: an attribute whose parts do not spell the source is passed over, since every edit here is measured in them (1789666655)
+				// The parser reads a backslash in front of a tab as no escape and files what follows into parts it prints back in another order, so `[a=\⇥\⇥b]` comes back as `[a=\⇥b⇥]`: an attribute whose parts do not spell the source is passed over, since every edit here is measured in them
 				if (!selector.startsWith(attributeSelectorString, attributeStart)) return
 
-				// The brackets are sought over the copy with the strings and escapes masked, since the search reads neither: it closes no string at a quotation mark with a backslash in front, so the `]` behind `"b\\"` passed for the string's text, and takes an escaped `\[` or `\]` for a bracket (1789517120). The run beside the bracket is read over the copy with the escapes masked, where an escaped space is a character of the attribute and no run at all (1789661964), and written into the selector at the index it was read at: the parser files an escaped tab in the spaces of a part and prints it back with the whitespace of the source (1789666655)
+				// The brackets are sought over the copy with the strings and escapes masked, since the search reads neither: it closes no string at a quotation mark with a backslash in front, so the `]` behind `"b\\"` passed for the string's text, and takes an escaped `\[` or `\]` for a bracket. The run beside the bracket is read over the copy with the escapes masked, where an escaped space is a character of the attribute and no run at all, and written into the selector at the index it was read at: the parser files an escaped tab in the spaces of a part and prints it back with the whitespace of the source
 				let { searchString, runString } = selectorSearchCopy(attributeSelectorString)
 
 				styleSearch({ source: searchString, target: `[` }, (match) => {
@@ -96,7 +96,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let closeIndex = attributeStart + match.startIndex
 					let run = runInFront(runString, match.startIndex)
 					let edit = { start: closeIndex - run.length, end: closeIndex, text: written }
-					// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `[a=b\⏎]` would come out as `[a=b\ ]`, an escaped space, so the warning stands with no fix (1789664271)
+					// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `[a=b\⏎]` would come out as `[a=b\ ]`, an escaped space, so the warning stands with no fix
 					let keepsTheEscape = editKeepsEscapedCharacter(selector, edit)
 
 					if (prevCharIsSpace && primary === `never`) complain(messages.rejectedClosing, index, keepsTheEscape ? edit : undefined)

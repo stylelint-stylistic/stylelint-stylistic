@@ -8,12 +8,10 @@ testRule({
 
 	accept: [
 		{
-			// See #533
 			description: `a bare address, whose parentheses are the address's and no call's`,
 			code: `a { b: url(a); }`,
 		},
 		{
-			// See #378
 			description: `a call the value parser closed on a parenthesis standing inside a comment opening with a solidus, a star and a solidus, which is no parenthesis the file writes, so the call is left alone as one closed inside an end-of-line comment is`,
 			code: `a { b: f(1 /*/ ) */\n); }`,
 		},
@@ -80,7 +78,6 @@ testRule({
 			code: `a { transform: translate( /*comment*/\n1,\n  1\n); }`,
 		},
 		{
-			// See #329
 			description: `a break inside a call holding nothing else, which is the whole run the parentheses enclose and answers both halves of the option`,
 			code: `a { b: f(\n); }`,
 		},
@@ -88,7 +85,6 @@ testRule({
 
 	reject: [
 		{
-			// See #560
 			description: `a call among the arguments behind a quoted address, which are those of any call while the address's own parentheses stay as written`,
 			code: `a { b: url("x", f(1)); }`,
 			fixed: `a { b: url("x", f(\n1\n)); }`,
@@ -142,7 +138,6 @@ testRule({
 			],
 		},
 		{
-			// See #533
 			description: `a call standing beside a bare address, which gets the breaks while the address is left as the file spells it`,
 			code: `a { b: url(a) f(1); }`,
 			fixed: `a { b: url(a) f(\n1\n); }`,
@@ -339,7 +334,6 @@ testRule({
 			],
 		},
 		{
-			// See #272
 			description: `a call standing behind a comment the value parser does not give back as it read it`,
 			code: `a { b: x/*/*a*/f(1,\n2)c; }`,
 			fixed: `a { b: x/*/*a*/f(\n1,\n2\n)c; }`,
@@ -357,7 +351,6 @@ testRule({
 			],
 		},
 		{
-			// See #378
 			description: `a call standing beside a comment opening with a solidus, a star and a solidus, whose text spells a call of its own that the value parser hands back as a call`,
 			code: `a { b: g(1,\n2) /*/ f(1,\n2) */ 3; }`,
 			fixed: `a { b: g(\n1,\n2\n) /*/ f(1,\n2) */ 3; }`,
@@ -375,8 +368,6 @@ testRule({
 			],
 		},
 		{
-			// See #378
-			// See #506
 			description: `such a comment standing first inside the call, whose break goes behind the comment CSS reads and not behind the star the value parser closed it on`,
 			code: `a { b: f(/*/ c */ 2); }`,
 			fixed: `a { b: f(/*/ c */\n 2\n); }`,
@@ -394,7 +385,6 @@ testRule({
 			],
 		},
 		{
-			// See #506
 			description: `such a comment standing last inside the call, whose closing warning is reported at the character in front of the parenthesis as it is for the twin holding a comment of that width the value parser gives back as it read it, rather than on the parenthesis itself`,
 			code: `a { b: f(\n2 /*/ c */); }`,
 			fixed: `a { b: f(\n2 /*/ c */\n); }`,
@@ -403,7 +393,6 @@ testRule({
 			message: messages.expectedClosing,
 		},
 		{
-			// See #329
 			description: `a call holding nothing at all, whose one run is what both halves of the option are about`,
 			code: `a { b: f(); }`,
 			fixed: `a { b: f(\n); }`,
@@ -414,7 +403,6 @@ testRule({
 			message: messages.expectedOpening,
 		},
 		{
-			// See #329
 			description: `a space inside such a call, which the break is written in front of`,
 			code: `a { b: f( ); }`,
 			fixed: `a { b: f(\n ); }`,
@@ -443,7 +431,6 @@ testRule({
 			],
 		},
 		{
-			// See #669
 			description: `a call whose name a hexadecimal escape welds to the word in front of it, holding a bare address with a quotation mark, where the break behind the parenthesis would hand the parentheses to code and leave a string nothing closes`,
 			code: `a { b: \\61 url(a"b.png); }`,
 			fixed: `a { b: \\61 url(a"b.png\n); }`,
@@ -461,7 +448,6 @@ testRule({
 			],
 		},
 		{
-			// See #669
 			description: `the same call holding a square bracket closed inside it, which leaves the parentheses code the parser closes at their own parenthesis, so both breaks are written`,
 			code: `a { b: \\61 url(a[b]c.png); }`,
 			fixed: `a { b: \\61 url(\na[b]c.png\n); }`,
@@ -546,7 +532,6 @@ testRule({
 
 	accept: [
 		{
-			// See #533
 			description: `a bare address broken across lines, whose parentheses are the address's and no call's`,
 			code: `a { b: url(a\nb); }`,
 		},
@@ -575,7 +560,6 @@ testRule({
 			code: `a { transform: translate(\r\n1, 1\r\n); }`,
 		},
 		{
-			// See #244
 			description: `a form feed as the only break inside the arguments, which is whitespace and no line break, so the function is single-line`,
 			code: `a { b: fn(1,\f2); }`,
 		},
@@ -628,7 +612,6 @@ testRule({
 			`,
 		},
 		{
-			// See #329
 			description: `a break inside a call holding nothing else, the one thing that makes such a call multi-line and the run that answers both halves of the option`,
 			code: `a { b: f(\n); }`,
 		},
@@ -636,7 +619,6 @@ testRule({
 
 	reject: [
 		{
-			// See #669
 			description: `a call whose name a hexadecimal escape welds to the word in front of it, broken in front of its closing parenthesis, where the break behind the opening one would hand the parentheses to code and leave a string nothing closes`,
 			code: `a { b: \\61 url(a"b.png\n); }`,
 			fixed: `a { b: \\61 url(a"b.png\n); }`,
@@ -777,7 +759,6 @@ testRule({
 			message: messages.expectedOpeningMultiLine,
 		},
 		{
-			// See #508
 			description: `a call in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and its text is no call`,
 			code: `a { b: f(1,\n2) /*/ " */ "f(1,\n2)"; }`,
 			fixed: `a { b: f(\n1,\n2\n) /*/ " */ "f(1,\n2)"; }`,
@@ -851,7 +832,6 @@ testRule({
 
 	reject: [
 		{
-			// See #669
 			description: `a call whose name a hexadecimal escape welds to the word in front of it, holding a string with a closing parenthesis, where emptying the run behind the opening parenthesis would close the address's token inside that string and leave its quotation mark unpaired`,
 			code: `a { b: \\61 url(\n a ")" b\n); }`,
 			fixed: `a { b: \\61 url(\n a ")" b); }`,
@@ -869,7 +849,6 @@ testRule({
 			],
 		},
 		{
-			// See #533
 			description: `a call standing beside a bare address, whose breaks are closed up while the address is left as the file spells it`,
 			code: `a { b: url(\na\n) f(\n1\n); }`,
 			fixed: `a { b: url(\na\n) f(1); }`,
@@ -887,7 +866,6 @@ testRule({
 			],
 		},
 		{
-			// See #329
 			description: `a break inside a call holding nothing else, the one run the parentheses enclose, which the option is asked of once`,
 			code: `a { b: f(\n); }`,
 			fixed: `a { b: f(); }`,
@@ -1028,7 +1006,6 @@ testRule({
 			],
 		},
 		{
-			// See #225
 			description: `a double slash of plain CSS opens no comment, so the parenthesis has a line to join and the fix is written`,
 			code: `
 				a {
@@ -1073,8 +1050,6 @@ testRule({
 			],
 		},
 		{
-			// See #378
-			// See #506
 			description: `such a comment standing first inside the call, whose whitespace is emptied around the comment CSS reads and not around the star the value parser closed it on`,
 			code: `a { b: f(\n/*/ c */ 2\n); }`,
 			fixed: `a { b: f(/*/ c */2); }`,
@@ -1092,8 +1067,6 @@ testRule({
 			],
 		},
 		{
-			// See #378
-			// See #506
 			description: `such a comment standing last inside the call, over which the whitespace in front of the closing parenthesis is read as over any other block comment`,
 			code: `a { b: f(f(1,\n2) /*/ c */); }`,
 			fixed: `a { b: f(f(1,\n2)/*/ c */); }`,
@@ -1104,14 +1077,13 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer: the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
 testRule({
 	ruleName,
 	config: [`never-multi-line`],
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab in the run behind the opening parenthesis: only the tokenizer's run goes, and the character stays`,
 			code: `a { b: f( \vx,\ny); }`,
 			fixed: `a { b: f(\vx,\ny); }`,
@@ -1122,7 +1094,6 @@ testRule({
 			message: messages.rejectedOpeningMultiLine,
 		},
 		{
-			// See #496
 			description: `a vertical tab in the run before the closing parenthesis: only the tokenizer's run goes, and the character stays`,
 			code: `a { b: f(x,\ny\v ); }`,
 			fixed: `a { b: f(x,\ny\v); }`,
@@ -1141,7 +1112,6 @@ testRule({
 
 	reject: [
 		{
-			// See #496
 			description: `a break standing behind a vertical tab, a word to the tokenizer: no break opens the runs beside the parentheses, so both are written, and the character stays`,
 			code: `a { b: f(\v\nx,\ny); }`,
 			fixed: `a { b: f(\n\v\nx,\ny\n); }`,

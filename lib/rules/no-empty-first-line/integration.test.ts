@@ -58,7 +58,6 @@ async function expectBothOrders (code: string, expected: {
 	expect(partnerFirst).toEqual(settled)
 }
 
-// See #632
 describe(`the output of no-empty-first-line beside a rule that writes into the head of the file`, () => {
 	it(`opens a file whose first line stands in front of a free semicolon the same way in both orders of no-extra-semicolons`, async () => {
 		await expectBothOrders(`\n;\na {}`, { once: `\na {}`, onceWarnings: 1, twice: `a {}` })
@@ -156,7 +155,6 @@ async function expectEveryOrder (code: string, expected: string, customSyntax?: 
 	for (let { order, settlement } of settled) expect({ order, ...settlement }).toEqual({ order, file: expected, warnings: 0 })
 }
 
-// See #682
 describe(`the output of the three rules that write the head of the file`, () => {
 	it(`leaves one file over a free semicolon between two breaks, where the head raw is the whole file`, async () => {
 		await expectEveryOrder(`\n;\n`, `\n`)

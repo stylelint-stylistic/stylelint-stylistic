@@ -24,7 +24,6 @@ testRule({
 				span { background-color: @myVariable; }
 			`,
 		},
-		// See #357
 		{
 			description: `a call to a Less detached ruleset, which takes no arguments and no space in front of its parentheses`,
 			code: `@dr: { color: red; }; span { @dr(); color: red; }`,

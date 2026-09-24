@@ -12,7 +12,6 @@ testRule({
 
 	accept: [
 		{
-			// See #723
 			description: `a rule standing in the rest of the text of an inline comment a semicolon of that text closed a declaration in, whose colon is no colon of code`,
 			code: `
 				a {

@@ -64,7 +64,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (isLastNodeWithoutSemicolon(decl)) return
 
-			// Under `postcss-less` a semicolon of a `//` comment's text closed the declaration; the one Less closes it on, if any, stands past the comment's break, where the rule does not look (#720)
+			// Under `postcss-less` a semicolon of a `//` comment's text closed the declaration; the one Less closes it on, if any, stands past the comment's break, where the rule does not look
 			if (syntax.closingSemicolonIsCommentText(decl, result)) return
 
 			let nextNode = decl.next()
@@ -101,7 +101,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								let rest = standing.slice(run.length)
 
 								if (primary.startsWith(`always`)) {
-									// Trim up to the break already there, and add one only where none is; a node carrying no raw is written the run PostCSS would have printed in front of it, trimmed or opened as the option asks (#693)
+									// Trim up to the break already there, and add one only where none is; a node carrying no raw is written the run PostCSS would have printed in front of it, trimmed or opened as the option asks
 									let index = run.search(LINE_BREAK)
 
 									nodeToCheck.raws.before = (index >= 0 ? run.slice(index) : getLineBreak(root, result) + run) + rest

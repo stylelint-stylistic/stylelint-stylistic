@@ -7,7 +7,7 @@ import { isRule } from "../typeGuards/index.ts"
 /**
  * Prints a statement through its closing brace.
  *
- * PostCSS files a stray semicolon behind a rule's brace, with the whitespace in front of it, in the rule's `raws.ownSemicolon` and prints that raw behind the brace, so {@link nodeString} of such a rule ends on the semicolon ([#562](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/562)).
+ * PostCSS files a stray semicolon behind a rule's brace, with the whitespace in front of it, in the rule's `raws.ownSemicolon` and prints that raw behind the brace, so {@link nodeString} of such a rule ends on the semicolon.
  * @param statement - The container.
  * @param result - The Stylelint result, which holds the file's syntax.
  * @returns The statement's text without the raw.

@@ -40,7 +40,6 @@ testRule({
 
 	reject: [
 		{
-			// See #193
 			description: `a selector carrying an inline comment, whose fix reaches the copy the file spells, reported in the file's own coordinates`,
 			code: `.a // c\n.b, .c {}`,
 			fixed: `.a // c\n.b,\n .c {}`,

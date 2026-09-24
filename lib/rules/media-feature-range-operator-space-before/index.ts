@@ -52,7 +52,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		root.walkAtRules(MEDIA_AT_RULE, (atRule) => {
 			let fixOperators: [number, string][] = []
 
-			// The run is read and cut over the copy with its escapes masked, so the space of `a\ >b` is not cut (1789657288)
+			// The run is read and cut over the copy with its escapes masked, so the space of `a\ >b` is not cut
 			findMediaOperator(syntax, atRule, result, (match, params, node, runString) => {
 				let problemIndex = match.startIndex - 1 + atRuleParamIndex(node)
 
@@ -63,7 +63,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					err: (message) => {
 						let run = runInFront(runString, match.startIndex)
 
-						// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎>b` would come out as `a\>b`, one identifier, or `a\ >b`, an escaped space, so the warning stands (1789661965)
+						// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎>b` would come out as `a\>b`, one identifier, or `a\ >b`, an escaped space, so the warning stands
 						let isFixable = editKeepsEscapedCharacter(params, { start: match.startIndex - run.length, end: match.startIndex, text: primary === `always` ? ` ` : `` })
 
 						report({

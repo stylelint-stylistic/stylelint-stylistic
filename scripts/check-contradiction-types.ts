@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Holds the type refusing a contradicting pair in the editor in step with the table refusing it at the run ([#743](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/743)).
+ * Holds the type refusing a contradicting pair in the editor in step with the table refusing it at the run.
  *
  * Every pair of a rule and a partner under every option each takes is written out as a call of `defineStylistic`, one per line, and `tsc` is asked which lines it refuses; the run's table is asked the same, and a line either alone refuses is printed. The compiler is driven as a process because TypeScript 7 ships no API to ask it a type question of; once one is back, the pairs can be checked in a program held in memory, without a file or a process, and this script can move into the module's own test file.
  */

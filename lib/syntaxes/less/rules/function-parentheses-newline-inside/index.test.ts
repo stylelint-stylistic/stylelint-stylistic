@@ -12,7 +12,6 @@ testRule({
 
 	accept: [
 		{
-			// See #320
 			description: `a call the parser closed on a parenthesis standing in the text of an inline comment, whose whitespace the option would take out of that text`,
 			code: `
 				a { b: f( 1px // c ) calc(
@@ -20,12 +19,10 @@ testRule({
 			`,
 		},
 		{
-			// See #132
 			description: `a separator of Unicode, which no syntax reads a line in: the comment runs past it to the end of the value, and the parenthesis the parser closed the call on stands in its text`,
 			code: `a { t: translate(1px,\n2px // c\u2028 ); }`,
 		},
 		{
-			// See #320
 			description: `a closing parenthesis written on the line an inline comment runs to, which is the parenthesis the parser closed the call on`,
 			code: `
 				a {
@@ -38,7 +35,6 @@ testRule({
 
 	reject: [
 		{
-			// See #113
 			description: `inline comment before the closing parenthesis: the parenthesis cannot join the comment's line, so the value is left alone and the warning stands`,
 			code: `
 				a {
@@ -57,7 +53,6 @@ testRule({
 			message: messages.rejectedClosingMultiLine,
 		},
 		{
-			// See #113
 			description: `block comment behind the inline one: the fix closes the whole run up, so the parenthesis would land in the inline comment all the same`,
 			code: `
 				a {
@@ -78,7 +73,6 @@ testRule({
 			message: messages.rejectedClosingMultiLine,
 		},
 		{
-			// See #113
 			description: `block comment on the inline comment's own line, where the text of the inline one holds it`,
 			code: `
 				a {
@@ -97,7 +91,6 @@ testRule({
 			message: messages.rejectedClosingMultiLine,
 		},
 		{
-			// See #113
 			description: `a slash of the value standing in front of a comment's own: closing the gap up would open a comment that was never there`,
 			code: `
 				a {
@@ -155,7 +148,6 @@ testRule({
 			message: messages.rejectedClosingMultiLine,
 		},
 		{
-			// See #113 and #506
 			description: `a \`/*/\` the value parser reads as a comment of its own and prints one character longer than the file spells it`,
 			code: `
 				a {
@@ -235,12 +227,10 @@ testRule({
 
 	accept: [
 		{
-			// See #141
 			description: `an inline comment stands between the opening parenthesis and the line break the option asks for`,
 			code: `a { t: translate( // c\n  1px, 2px\n); }`,
 		},
 		{
-			// See #320
 			description: `a call the parser closed on a parenthesis standing in the text of an inline comment, and the call that text opens behind it: the break the option would write in front of that parenthesis is the break that closes the comment, so neither call is touched`,
 			code: `
 				a { t: foo(1px // c) calc(/*b*/
@@ -249,7 +239,6 @@ testRule({
 			`,
 		},
 		{
-			// See #320
 			description: `the same shape without the block comment, which Less compiles to a single call of foo over two arguments: the break written in front of the parenthesis inside the comment used to close that comment and make two calls of the one`,
 			code: `
 				a { t: foo(1px // c) calc(
@@ -257,7 +246,6 @@ testRule({
 			`,
 		},
 		{
-			// See #505
 			description: `an end-of-line comment standing behind a block comment, the break that closes it standing where the option asks for one`,
 			code: `a { b: f(/** c */ // d\n 2\n); }`,
 		},
@@ -270,12 +258,10 @@ testRule({
 
 	accept: [
 		{
-			// See #141
 			description: `an inline comment stands between the opening parenthesis and the line break the option asks for`,
 			code: `a { t: translate( // c\n  1px, 2px\n); }`,
 		},
 		{
-			// See #303
 			description: `an inline comment whose text opens a call the parser closes a line below, the break that closes the comment being the very break the option asks for`,
 			code: `
 				a {
@@ -286,7 +272,6 @@ testRule({
 			`,
 		},
 		{
-			// See #320
 			description: `the same two calls with the outer one already broken behind its opening parenthesis, which leaves the parenthesis inside the comment the only one the option asks a break in front of`,
 			code: `
 				a { t: foo(
@@ -304,12 +289,10 @@ testRule({
 
 	accept: [
 		{
-			// See #141
 			description: `an inline comment whose last character is a division sign, which the value parser hangs the closing break on`,
 			code: `a { t: translate( // see MDN:\n  1px, 2px\n); }`,
 		},
 		{
-			// See #303
 			description: `an inline comment whose text opens a call the parser closes a line below, the break that closes the comment being the very break the option asks for`,
 			code: `
 				a {
@@ -328,17 +311,14 @@ testRule({
 
 	accept: [
 		{
-			// See #129 and #271
 			description: `a call standing in the text of an inline comment, whose arguments the parser reads out of the code a line below`,
 			code: `a { t: foo(1px // c) calc(\n2px); }`,
 		},
 		{
-			// See #271
 			description: `the same call with a space behind its opening parenthesis and a line break in front of its closing one`,
 			code: `a { t: foo(1px // c) calc( 2px\n ); }`,
 		},
 		{
-			// See #303 and #508
 			description: `a quotation mark in the text of the comment and another one a line below it: the first opens no string any more, so the second opens one that runs to the end of the value and takes the parenthesis the file closes the call on, and a call the parser marks unclosed is one this rule reads nothing of`,
 			code: `
 				a {
@@ -351,7 +331,6 @@ testRule({
 
 	reject: [
 		{
-			// See #303 and #557
 			description: `an address whose parentheses open on a double slash, which is text of the address rather than a comment, standing beside a call the option does speak of`,
 			code: `
 				a {
@@ -380,7 +359,6 @@ testRule({
 			],
 		},
 		{
-			// See #271
 			description: `a call a line below an inline comment, gathered by one the parser opened inside that comment's text: the gathering call is left alone and the one it gathered is closed up where it stands`,
 			code: `
 				a { b: f(1px // c) calc(
@@ -396,7 +374,6 @@ testRule({
 			message: messages.rejectedOpeningMultiLine,
 		},
 		{
-			// See #141
 			description: `inline comment after the opening parenthesis: the first argument cannot join the comment's line, so the value is left alone and the warning stands`,
 			code: `a { t: translate(// c\n  1px, 2px); }`,
 			fixed: `a { t: translate(// c\n  1px, 2px); }`,
@@ -405,7 +382,6 @@ testRule({
 			message: messages.rejectedOpeningMultiLine,
 		},
 		{
-			// See #285
 			description: `whitespace behind the parenthesis and whitespace behind an inline comment, of which the fix reaches only the first: the option cannot be satisfied by what it would write, so nothing is written and the problem is reported`,
 			code: `a { t: translate( // c\n /*x*/\n , 1px); }`,
 			fixed: `a { t: translate( // c\n /*x*/\n , 1px); }`,
@@ -414,7 +390,6 @@ testRule({
 			message: messages.rejectedOpeningMultiLine,
 		},
 		{
-			// See #303
 			description: `an inline comment whose text opens a call the parser closes a line below: the whitespace behind the opening parenthesis is the break that closes the comment and the indentation behind it, and nothing of the code the parser filed under that call, and the fix reaches no stretch of it, so nothing is written and the problem is reported`,
 			code: `
 				a {
@@ -433,7 +408,6 @@ testRule({
 			message: messages.rejectedOpeningMultiLine,
 		},
 		{
-			// See #505
 			description: `an end-of-line comment standing behind two block comments, whose whitespace is read on both sides of it: the run behind it is the break that closes it, which no fix may take, so nothing is written and the problem is reported`,
 			code: `a { b: f(/** c */ /** e */ // d\n 2); }`,
 			fixed: `a { b: f(/** c */ /** e */ // d\n 2); }`,

@@ -120,7 +120,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// The run the check reads opens behind that one semicolon, so the fix writes behind it too and keeps whatever stands behind the run; `never` would leave a further semicolon abutting the brace and a new run behind it to judge, so there the warning stands
 			let { semicolon, run, holdsASemicolon } = runBehindBrace(nodeToCheck)
-			// The space twin writes this raw too, and where the two accept no spelling in common only the one that runs last may write it (#698)
+			// The space twin writes this raw too, and where the two accept no spelling in common only the one that runs last may write it
 			let isFixable = typeof nodeToCheck.raws.before === `string`
 				&& (primary.startsWith(`always`) || !holdsASemicolon)
 				&& writesRunBehindBrace(syntax, statement, result, ruleName)

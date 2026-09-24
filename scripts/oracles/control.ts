@@ -3,7 +3,7 @@
 /**
  * Asks of every rule, under every primary option, whether a `//` comment moves a warning against a block comment of the same width in its place.
  *
- * The two files hold the same code in the same columns, so any disagreement is the comment's ([#139](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/139)). Warnings only: declining to write into a comment differs from the twin on purpose.
+ * The two files hold the same code in the same columns, so any disagreement is the comment's. Warnings only: declining to write into a comment differs from the twin on purpose.
  */
 
 import { stdout } from "node:process"
@@ -16,7 +16,7 @@ import { buildRuns, type Run } from "./runs.ts"
 const INLINE_COMMENT = `//${` `}c`
 const BLOCK_COMMENT = `/${`*`.repeat(2)}/`
 
-/** The shapes a comment can stand in; the last two ([#139](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/139)) reach `at-rule-semicolon-space-before` and put the closing break where a rule counting past it lands on the next line. */
+/** The shapes a comment can stand in; the last two reach `at-rule-semicolon-space-before` and put the closing break where a rule counting past it lands on the next line. */
 const CORPUS: [string, string][] = [
 	[`value-continues`, `a { b: 1px ${INLINE_COMMENT}\n\t2px; }\n`],
 	[`value-ends-block`, `a {\n\tcolor: pink ${INLINE_COMMENT}\n}\n`],

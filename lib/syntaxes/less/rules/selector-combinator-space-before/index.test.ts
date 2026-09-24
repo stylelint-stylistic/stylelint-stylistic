@@ -16,7 +16,6 @@ testRule({
 			code: `.a when (@size>=60) and (@size<102) {}`,
 		},
 		{
-			// See #66
 			description: `selector list whose second selector begins with a comment and a combinator`,
 			code: `
 				.a,

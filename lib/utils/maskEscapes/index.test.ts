@@ -33,7 +33,6 @@ describe(`maskEscapes`, () => {
 		expect(maskEscapes(`a\\2c\r\nb`, findEscapeSpans(`a\\2c\r\nb`))).toBe(`axxx\r\nb`)
 	})
 
-	// See 1789657288
 	it(`the whitespace closing a hexadecimal escape left as it is where asked, a break kept either way`, () => {
 		expect(maskEscapes(`a\\2c ,b`, findEscapeSpans(`a\\2c ,b`), true)).toBe(`axxx ,b`)
 		expect(maskEscapes(`a\\2c\t,b`, findEscapeSpans(`a\\2c\t,b`), true)).toBe(`axxx\t,b`)
@@ -47,7 +46,7 @@ describe(`maskEscapes`, () => {
 		}
 	})
 
-	// An interpolation the text never closes is walked twice, by the reader of its expression and by the caller behind it, and a span recorded on both walks would splice the escape in twice (1789883888)
+	// An interpolation the text never closes is walked twice, by the reader of its expression and by the caller behind it, and a span recorded on both walks would splice the escape in twice
 	it(`a copy as long as the text where an interpolation inside an address is never closed`, () => {
 		for (let text of [`url(a#{b\\}c)`, `url(a#{b\\)`, `url(c#{d\\\t  e f)`]) {
 			expect(maskEscapes(text, findEscapeSpans(text, SCSS))).toHaveLength(text.length)

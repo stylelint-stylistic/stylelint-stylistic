@@ -77,7 +77,7 @@ export interface WhitespaceCheckerArgs {
 	/** Allows indentation between the newline and `index`. */
 	allowIndentation?: boolean,
 
-	/** What the file holds in front of `source`, which the parser filed away from it — `rawInFrontOfText` answers for a node. Only `beforeAllowingIndentation` reads it; `before` and `after` ignore it, and the delimiter opening a text is invisible to them either way (1789593917, 1789898713). */
+	/** What the file holds in front of `source`, which the parser filed away from it — `rawInFrontOfText` answers for a node. Only `beforeAllowingIndentation` reads it; `before` and `after` ignore it, and the delimiter opening a text is invisible to them either way. */
 	textBefore?: string,
 }
 
@@ -113,7 +113,7 @@ function complain (args: WhitespaceCheckerArgs, messageFunc: MessageFunction | u
  */
 function expectBeforeAllowingIndentation (args: WhitespaceCheckerArgs, targetWhitespace: TargetWhitespace, messageFunc: MessageFunction | undefined): void {
 	let textBefore = args.textBefore ?? ``
-	// The run in front of a delimiter opening the text lies in the raw the parser filed it in, so the walk goes on into it rather than stopping at the head of the text (1789593917)
+	// The run in front of a delimiter opening the text lies in the raw the parser filed it in, so the walk goes on into it rather than stopping at the head of the text
 	let source = textBefore + args.source
 	let index = args.index + textBefore.length
 

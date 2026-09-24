@@ -22,7 +22,7 @@ export function findInterpolationSpans (text: string): InterpolationSpan[] {
 /**
  * Finds the interpolation span a value-parser node overlaps, where one does.
  *
- * `postcss-value-parser` breaks a value at whitespace, an interpolation with it: the first word of `10px#{$a != $b}` is `10px#{$a`, read as the unit `px$a` of `10` ([#298](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/298)). The whole node is asked about, not its opening position, since a node touching an interpolation is no plain CSS.
+ * `postcss-value-parser` breaks a value at whitespace, an interpolation with it: the first word of `10px#{$a != $b}` is `10px#{$a`, read as the unit `px$a` of `10`. The whole node is asked about, not its opening position, since a node touching an interpolation is no plain CSS.
  * @param valueNode - The node; only its span is read.
  * @param spans - The spans {@link findInterpolationSpans} found in the node's text.
  * @returns The span the node touches, or nothing.

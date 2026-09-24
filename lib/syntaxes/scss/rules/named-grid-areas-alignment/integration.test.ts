@@ -13,7 +13,6 @@ testRule({
 
 	reject: [
 		{
-			// See #715
 			description: `a plain CSS table to pad and a doubled run in front of the solidus, with the neighbor that collapses runs listed under the core's name, which reads the same file`,
 			code: `
 				a {

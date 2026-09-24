@@ -103,7 +103,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #698
 			description: `a stray semicolon behind the brace, behind which the space goes`,
 			code: `a {};b {}`,
 			fixed: `a {}; b {}`,
@@ -231,7 +230,6 @@ testRule({
 			message: messages.rejectedAfter(),
 		},
 		{
-			// See #698
 			description: `a space behind a stray semicolon, which the fix takes away and leaves the semicolon`,
 			code: `a {}; b {}`,
 			fixed: `a {};b {}`,

@@ -163,7 +163,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (!validOptions) return
 
-		// The runs between a grid row's tokens are `named-grid-areas-alignment`'s where it is configured with `alignColumns`: collapsing them would take turns with its padding on each `--fix` (#45). Its fix being live makes no difference, since it reports a hand-written table too
+		// The runs between a grid row's tokens are `named-grid-areas-alignment`'s where it is configured with `alignColumns`: collapsing them would take turns with its padding on each `--fix`. Its fix being live makes no difference, since it reports a hand-written table too
 		let laysTablesOut = neighborCopies(root, result, GRID_ALIGNMENT).some(({ secondary }) => secondary.alignColumns === true)
 
 		root.walkDecls((decl) => {
@@ -174,8 +174,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let owned: Span[] = laysTablesOut && GRID_AREAS_PROPERTY.test(decl.prop)
 				? gridTableLines(value, valueParser(blankComments(value, comments)).nodes).flatMap(({ gaps }) => gaps)
 				: []
-			// A backslash spelling a character makes it one of a word, and the first whitespace character behind a hexadecimal escape closes the escape, so neither is a run of the value: the walk reads the copy with the escapes masked, and the fix writes into the value, where every position holds (1789855320)
-			// A comment's text is no code of the value either, and the walk read it as code: it collapsed a run standing inside a comment, took the character a backslash covered there, which no escape span records, and opened a string on a quotation mark of a comment, which moved the run it then wrote into out of a string of the value (1789885007)
+			// A backslash spelling a character makes it one of a word, and the first whitespace character behind a hexadecimal escape closes the escape, so neither is a run of the value: the walk reads the copy with the escapes masked, and the fix writes into the value, where every position holds
+			// A comment's text is no code of the value either, and the walk read it as code: it collapsed a run standing inside a comment, took the character a backslash covered there, which no escape span records, and opened a string on a quotation mark of a comment, which moved the run it then wrote into out of a string of the value
 			let walked = maskComments(maskEscapes(value, findEscapeSpans(value, syntax.inlineComments(decl, result))), comments)
 			let inString = false
 			let stringChar = ``

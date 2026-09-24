@@ -24,7 +24,6 @@ testRule({
 			code: `a {> /*comment*/ a,> /*comment*/ .b {}}`,
 		},
 		{
-			// See #66
 			description: `scss nesting, selector list interleaved with inline comments`,
 			code: `
 				.some_class {
@@ -58,7 +57,6 @@ testRule({
 			message: messages.expectedBefore(`>`),
 		},
 		{
-			// See #66
 			description: `selector list interleaved with an inline comment: the fix reaches the output`,
 			code: `
 				.a,
@@ -99,7 +97,6 @@ testRule({
 			code: `a { > /*comment*/ a, > /*commenttest*/ .b {}}`,
 		},
 		{
-			// See #66
 			description: `scss nesting, selector list interleaved with inline comments`,
 			code: `
 				.some_class {

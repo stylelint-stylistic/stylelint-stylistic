@@ -8,7 +8,7 @@ testRule({
 
 	accept: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `a backslash ending the value in front of two spaces, the first an escaped space and a character of the value, so one space stands in front of the bang`,
 			code: `a { color: red \\  !important; }`,
 		},
@@ -41,7 +41,6 @@ testRule({
 			code: `a { color: pink/*!important */;}`,
 		},
 		{
-			// See #215
 			description: `the flag standing behind a bare address, whose double slash opens no comment`,
 			code: `a { b: url(http://x) !important; }`,
 		},
@@ -152,7 +151,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #215
 			description: `the flag standing behind a bare address, whose double slash opens no comment`,
 			code: `a { b: url(http://x)!important; }`,
 			fixed: `a { b: url(http://x) !important; }`,
@@ -161,7 +159,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #216
 			description: `a bare address inside a call the plugin knows nothing of: plain CSS spells no comment with a double slash`,
 			code: `a { b: myurl(//a)!important; }`,
 			fixed: `a { b: myurl(//a) !important; }`,
@@ -170,7 +167,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #289
 			description: `a value of nothing but a comment: the run in front of the bang is the tail of the value, and the bang opens the raw of the flag`,
 			code: `a { b: /*c*/\t!important; }`,
 			fixed: `a { b: /*c*/ !important; }`,
@@ -179,7 +175,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #289
 			description: `a value of nothing but the run itself, which the flag's raw does not hold either`,
 			code: `a { b:  !important; }`,
 			fixed: `a { b: !important; }`,
@@ -188,7 +183,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #289
 			description: `a flag the parser does not part from the value: the run in front of it is the tail of what stands between the property and the value`,
 			code: `a { b: /*c*/\t!default; }`,
 			fixed: `a { b: /*c*/ !default; }`,
@@ -197,7 +191,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #239
 			description: `two bangs, the second of them standing behind a comment: both are given their space in one run, and the comment keeps its closing slash`,
 			code: `a { b: 1px!important 2px /*c*/!important; }`,
 			fixed: `a { b: 1px !important 2px /*c*/ !important; }`,
@@ -215,7 +208,6 @@ testRule({
 			],
 		},
 		{
-			// See #239
 			description: `two bangs parted by a double slash, which plain CSS spells no comment with: the pair is left standing`,
 			code: `a { b: 1px!important//!important; }`,
 			fixed: `a { b: 1px !important// !important; }`,
@@ -233,7 +225,6 @@ testRule({
 			],
 		},
 		{
-			// See #239
 			description: `two bangs with nothing between them but a value, which keeps its every character`,
 			code: `a { b: 1px!important 2px!important; }`,
 			fixed: `a { b: 1px !important 2px !important; }`,
@@ -251,7 +242,6 @@ testRule({
 			],
 		},
 		{
-			// See #739
 			description: `a bang behind a bare address holding a quotation mark and a string ending in an escaped backslash, neither of which hides it`,
 			code: `a { b: url(x'y), "c\\\\"!important; }`,
 			fixed: `a { b: url(x'y), "c\\\\" !important; }`,
@@ -286,7 +276,7 @@ testRule({
 
 	accept: [
 		{
-			// The run in front of the delimiter is read over the copy with its escapes masked (1789657288)
+			// The run in front of the delimiter is read over the copy with its escapes masked
 			description: `an escaped space ending the value in front of the bang, which is a character of the value and no whitespace`,
 			code: `a { color: red \\ !important; }`,
 		},
@@ -400,7 +390,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #289
 			description: `a value of nothing but a comment: the run in front of the bang is the tail of the value, and the bang opens the raw of the flag`,
 			code: `a { b: /*c*/\t!important; }`,
 			fixed: `a { b: /*c*/!important; }`,
@@ -409,7 +398,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #289
 			description: `a value of nothing but the run itself, which the flag's raw does not hold either`,
 			code: `a { b:  !important; }`,
 			fixed: `a { b:!important; }`,
@@ -418,7 +406,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #289
 			description: `a flag the parser does not part from the value: the run in front of it is the tail of what stands between the property and the value`,
 			code: `a { b: /*c*/\t!default; }`,
 			fixed: `a { b: /*c*/!default; }`,
@@ -427,7 +414,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #239
 			description: `two bangs, whose whitespace this option takes away rather than writes, which moves the second of them the other way`,
 			code: `a { b: 1px !important 2px !important; }`,
 			fixed: `a { b: 1px!important 2px!important; }`,
@@ -465,14 +451,13 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, so such a character stays where it used to be carried off with the run.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer: the fix rewrites only the run the tokenizer reads beside its anchor, so such a character stays where it used to be carried off with the run.
 testRule({
 	ruleName,
 	config: [`always`],
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab in front of the bang, a word to the tokenizer: the space is written beside the character, which stays`,
 			code: `a { b: c\v!important; }`,
 			fixed: `a { b: c\v !important; }`,
@@ -491,7 +476,6 @@ testRule({
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab at the run before the bang: only the tokenizer's run goes, and the character stays`,
 			code: `a { b: c\v !important; }`,
 			fixed: `a { b: c\v!important; }`,

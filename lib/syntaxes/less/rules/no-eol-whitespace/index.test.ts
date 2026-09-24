@@ -15,7 +15,6 @@ testRule({
 
 	reject: [
 		{
-			// See #254
 			description: `two spaces making up the whole of an inline comment a file ends on`,
 			// This syntax files such a comment as `postcss-scss` files every one: an empty text, the whitespace in the raw in front and nothing in the raw behind.
 			code: `//  `,
@@ -62,7 +61,6 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// See #374
 			description: `a space ending the line behind a mixin call's important flag, with the call's semicolon on the next line`,
 			code: `
 				a {

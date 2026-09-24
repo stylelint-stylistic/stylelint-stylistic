@@ -12,7 +12,6 @@ testRule({
 
 	reject: [
 		{
-			// See #63
 			description: `inline comment between the selector and the opening brace: the brace cannot leave its line, so the code is left alone and the warning stands`,
 			code: `
 				.some-class // v3+
@@ -47,7 +46,6 @@ testRule({
 
 	reject: [
 		{
-			// See #63
 			description: `inline comment between the selector and the opening brace: the brace cannot leave its line, so the code is left alone and the warning stands`,
 			code: `
 				.some-class // v3+
@@ -93,7 +91,6 @@ testRule({
 
 	accept: [
 		{
-			// See #139
 			description: `a single-line block behind a media feature holding an inline comment, which the option leaves alone because the block is on one line however wide the comment is printed`,
 			code: `
 				@media (min-width: 100px // c

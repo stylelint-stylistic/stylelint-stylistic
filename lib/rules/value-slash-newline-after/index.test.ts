@@ -51,7 +51,6 @@ testRule({
 
 	reject: [
 		{
-			// See #560
 			description: `a solidus among the arguments behind a quoted address, which are those of any call`,
 			code: `a { b: url("x", 1/2); }`,
 			fixed: `a { b: url("x", 1/\n2); }`,
@@ -174,7 +173,7 @@ testRule({
 
 	reject: [
 		{
-			description: `the message spelled out, since asking the rule for its own text would miss one that says the opposite of what the option asks (see #175)`,
+			description: `the message spelled out, since asking the rule for its own text would miss one that says the opposite of what the option asks`,
 			code: `a { grid-area:\n\t1 / 2; }`,
 			fixed: `a { grid-area:\n\t1 /\n 2; }`,
 			line: 2,

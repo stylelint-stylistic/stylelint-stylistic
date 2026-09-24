@@ -52,7 +52,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Both kinds, since `postcss-less` leaves a `//` comment of a selector in the raw, where a `/*` inside it opens nothing
 			let comments = syntax.commentSpans(selector, ruleNode, result)
 
-			// Read in a copy of the same length with every comment blanked, so a run inside a comment is reported by no warning and collapsed by no fix (#503); a `//` comment holds no run, since the break closing it ends it, and that break survives the fix, which leaves the first break of every run
+			// Read in a copy of the same length with every comment blanked, so a run inside a comment is reported by no warning and collapsed by no fix; a `//` comment holds no run, since the break closing it ends it, and that break survives the fix, which leaves the first break of every run
 			let blankedSelector = blankComments(selector, comments)
 
 			if (holdsLongerBreakRun(blankedSelector, maxAdjacentNewlines)) {

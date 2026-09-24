@@ -15,7 +15,6 @@ testRule({
 
 	accept: [
 		{
-			// See #387
 			description: `a nested property whose last declaration prints nothing behind its colon, the single space standing in the raw of the block the parser hangs on the outer declaration`,
 			code: `a { font: 2px/3px { family: } }`,
 		},
@@ -23,7 +22,6 @@ testRule({
 
 	reject: [
 		{
-			// See #371
 			description: `a value that is nothing but an inline comment and a flag, whose run behind the colon this syntax keeps in the value's raw`,
 			code: `a { color:  // c\n!important; }`,
 			fixed: `a { color: // c\n!important; }`,
@@ -32,7 +30,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #387
 			description: `the same nested property with two spaces there instead`,
 			code: `a { font: 2px/3px { family:  } }`,
 			fixed: `a { font: 2px/3px { family: } }`,
@@ -41,7 +38,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #387
 			description: `the same run held by the raw of an inline comment written behind that declaration`,
 			code: `a { font: 2px/3px { family:  // c\n} }`,
 			fixed: `a { font: 2px/3px { family: // c\n} }`,
@@ -50,7 +46,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// See #537
 			description: `a declaration standing at the top level of a stylesheet with an inline comment written behind it, a node of this syntax alone, whose two spaces that comment's raw holds`,
 			code: `color:${S}${S}// c`,
 			fixed: `color:${S}// c`,
@@ -67,7 +62,6 @@ testRule({
 
 	reject: [
 		{
-			// See #371
 			description: `the same value, whose run this option takes away without reaching into the text of the comment`,
 			code: `a { color:  // c\n!important; }`,
 			fixed: `a { color:// c\n!important; }`,
@@ -76,7 +70,6 @@ testRule({
 			message: messages.rejectedAfter(),
 		},
 		{
-			// See #537
 			description: `a declaration standing at the top level of a stylesheet with an inline comment written behind it, whose run this option takes away`,
 			code: `color:${S}// c`,
 			fixed: `color:// c`,
@@ -94,7 +87,6 @@ testRule({
 
 	accept: [
 		{
-			// See #389
 			description: `two spaces behind the colon of a value broken by the inline comment in front of its word, whose break is the comment's own end, which this option passes over`,
 			code: `a { color:  // c\n x; }`,
 		},
@@ -102,7 +94,6 @@ testRule({
 
 	reject: [
 		{
-			// See #689
 			description: `a value abutting the colon of a custom property closing its block with no semicolon, ending on an inline comment, whose closing break the parser keeps in the value and which is the block's, no line of the declaration`,
 			code: `
 				a {

@@ -147,7 +147,6 @@ testRule({
 
 	reject: [
 		{
-			// See #196
 			description: `a form feed beside the comma, which is whitespace and no line break, so the break is written in front of it`,
 			code: `a,\fb {}`,
 			fixed: `a,\n\fb {}`,
@@ -478,14 +477,13 @@ testRule({
 	],
 })
 
-// A vertical tab and a no-break space are words to PostCSS's tokenizer (#496): the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
+// A vertical tab and a no-break space are words to PostCSS's tokenizer: the fix rewrites only the run the tokenizer reads beside its anchor, and such a character stays where the fix used to carry it off.
 testRule({
 	ruleName,
 	config: [`never-multi-line`],
 
 	reject: [
 		{
-			// See #496
 			description: `a vertical tab behind a comma's run in a multi-line list: each run is trimmed to the tokenizer's, and the character stays`,
 			code: `a, \vb,\nc {}`,
 			fixed: `a,\vb,c {}`,

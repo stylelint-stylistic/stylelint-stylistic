@@ -78,10 +78,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// No fraction
 			if (!value.includes(`.`)) return
 
-			// Every comment, both kinds; the value parser reads a `//` comment as words, and closes `/*/` on its own star (#378)
+			// Every comment, both kinds; the value parser reads a `//` comment as words, and closes `/*/` on its own star
 			let comments = syntax.commentSpans(value, node, result)
 
-			// Quotation marks a comment leaves open are masked (#508)
+			// Quotation marks a comment leaves open are masked
 			valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(value, comments), comments)).walk((valueNode, at, siblings) => {
 				// A call opening a bare address is passed over whole, and a quoted one walked for the arguments behind its string; the name is read, not matched, so `u\rl(` and `URL(` are `url(`
 				if (opensAnAddress(valueNode, at, siblings) && !quotesItsAddress(valueNode)) return false

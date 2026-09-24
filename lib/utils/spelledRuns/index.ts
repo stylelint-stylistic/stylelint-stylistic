@@ -14,7 +14,7 @@ export type SpelledRun = {
  *
  * A backslash before a line break opens no escape: the identifier ends there, though `postcss-value-parser` keeps the break in the word. One closing the text does: the tokenizer reads it as a replacement character.
  *
- * The whitespace closing a hexadecimal escape belongs to it: `10P\61 X` holds the five runs `10PaX` does, and a word holds that space only where `postcss-value-parser`'s parts have been welded again ([#526](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/526)). A seventh digit is its own character; a Windows pair closes it as one break.
+ * The whitespace closing a hexadecimal escape belongs to it: `10P\61 X` holds the five runs `10PaX` does, and a word holds that space only where `postcss-value-parser`'s parts have been welded again. A seventh digit is its own character; a Windows pair closes it as one break.
  * @param text - The identifier or value text read run by run.
  * @returns The runs.
  */

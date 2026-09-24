@@ -58,7 +58,6 @@ describe(`writesIntoInlineComment`, () => {
 		expect(ask(less, `a {\n\tcolor: red // c\f2px\n\t;\n}`, (root) => block(root).first)).toBe(true)
 	})
 
-	// See #333
 	it(`a form feed the value ends with, which is the trailing run a fix writes into under either syntax, so what the text ends inside is the comment in front of it`, () => {
 		expect(ask(scss, `a {\n\tcolor: red // c\f;\n\ttop: 0;\n}`, (root) => block(root).first)).toBe(true)
 		expect(ask(less, `a {\n\tcolor: red // c\f;\n\ttop: 0;\n}`, (root) => block(root).first)).toBe(true)
@@ -112,7 +111,7 @@ describe(`writesIntoInlineComment`, () => {
 		expect(ask(scss, `a {\n\tcolor: red;\n\t// c\n\ttop: 0;\n}`, (root) => block(root).first?.next(), `;`)).toBe(true)
 	})
 
-	// Every case below spells out the run the fix leaves standing, so nothing of it, the node's trailing whitespace included, is read as room the write goes into. See #231
+	// Every case below spells out the run the fix leaves standing, so nothing of it, the node's trailing whitespace included, is read as room the write goes into.
 	it(`a declaration whose own trailing whitespace holds the break that closes the comment`, () => {
 		expect(ask(scss, `a {\n\tcolor: red // c\n\t;\n}`, (root) => block(root).first, ``)).toBe(false)
 	})

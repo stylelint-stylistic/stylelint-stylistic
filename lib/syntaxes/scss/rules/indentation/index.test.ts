@@ -12,7 +12,6 @@ testRule({
 
 	reject: [
 		{
-			// See #570
 			description: `the closing brace of a Sass nested property written with a value, which this syntax parses as a declaration with a block, at three tabs where one is asked`,
 			code: `a {\n\tfont: 12px {\n\t\tcolor: red;\n\t\t\t}\n}`,
 			fixed: `a {\n\tfont: 12px {\n\t\tcolor: red;\n\t}\n}`,
@@ -21,7 +20,6 @@ testRule({
 			message: messages.expected(`1 tab`),
 		},
 		{
-			// See #570
 			description: `the same brace closing the property's block behind an at-rule with neither block nor semicolon of its own, whose run the at-rule holds`,
 			code: `a {\n\tfont: 12px {\n\t\t@include m\n\t\t\t}\n}`,
 			fixed: `a {\n\tfont: 12px {\n\t\t@include m\n\t}\n}`,
@@ -30,7 +28,6 @@ testRule({
 			message: messages.expected(`1 tab`),
 		},
 		{
-			// See #237
 			description: `the same query read as Sass, which asks the same of it as plain CSS does`,
 			code: `
 				@media (min-width: 100px
@@ -45,7 +42,6 @@ testRule({
 			message: messages.expected(`0 tabs`),
 		},
 		{
-			// See #592
 			description: `an inline comment behind the stylesheet's last at-rule, which has neither a block nor a semicolon, indented a level past the at-rule`,
 			code: `
 				@include x
@@ -68,7 +64,6 @@ testRule({
 
 	accept: [
 		{
-			// See #236
 			description: `a value whose line behind an inline comment already stands at its level`,
 			code: `
 				a {
@@ -78,7 +73,6 @@ testRule({
 			`,
 		},
 		{
-			// See #236
 			description: `a value whose closing line carries the inline comment`,
 			code: `
 				a {
@@ -90,7 +84,6 @@ testRule({
 			`,
 		},
 		{
-			// See #236
 			description: `a block comment behind the brace that opens an interpolation, which the brace must not be read past`,
 			code: `
 				@a {
@@ -102,7 +95,6 @@ testRule({
 			`,
 		},
 		{
-			// See #236
 			description: `a block comment in front of the brace that closes an interpolation, which the brace must not be read past`,
 			code: `
 				@a {
@@ -118,7 +110,6 @@ testRule({
 
 	reject: [
 		{
-			// See #236
 			description: `a value continued on the line behind an inline comment`,
 			code: `
 				a {
@@ -137,7 +128,6 @@ testRule({
 			message: messages.expected(`4 spaces`),
 		},
 		{
-			// See #236
 			description: `the closing parenthesis of a function on the line behind an inline comment`,
 			code: `
 				a {
@@ -156,7 +146,6 @@ testRule({
 			message: messages.expected(`2 spaces`),
 		},
 		{
-			// See #236
 			description: `a function's arguments opening on the line behind an inline comment, whose parenthesis the comment must not hide`,
 			code: `
 				a {
@@ -175,7 +164,6 @@ testRule({
 			message: messages.expected(`4 spaces`),
 		},
 		{
-			// See #236
 			description: `a value carrying two inline comments, every line behind one of them measured`,
 			code: `
 				a {
@@ -197,7 +185,6 @@ testRule({
 			],
 		},
 		{
-			// See #236
 			description: `a selector line holding nothing but an inline comment`,
 			code: `
 				x {
@@ -218,7 +205,6 @@ testRule({
 			message: messages.expected(`2 spaces`),
 		},
 		{
-			// See #236
 			description: `an at-rule's parameters continued on the line behind an inline comment`,
 			code: `
 				@media screen // c
@@ -241,7 +227,6 @@ testRule({
 			message: messages.expected(`2 spaces`),
 		},
 		{
-			// See #236
 			description: `a line holding nothing but an inline comment inside a set of parameters`,
 			code: `
 				@media screen,
@@ -263,7 +248,6 @@ testRule({
 			],
 		},
 		{
-			// See #236
 			description: `a line holding nothing but an inline comment inside a value`,
 			code: `
 				a {
@@ -292,7 +276,6 @@ testRule({
 
 	accept: [
 		{
-			// See #510
 			description: `an inline comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace rather than into a node of its own, standing at the level of the block it is a line of`,
 			code: `
 				a {
@@ -305,7 +288,6 @@ testRule({
 
 	reject: [
 		{
-			// See #236
 			description: `a value continued on the line behind an inline comment, measured in tabs`,
 			code: `
 				a {
@@ -324,7 +306,6 @@ testRule({
 			message: messages.expected(`2 tabs`),
 		},
 		{
-			// See #375 and #510
 			description: `an inline comment standing behind an at-rule with neither a block nor a semicolon, which the parser files into that at-rule's whitespace rather than into a node of its own, indented a level past the block it is a line of`,
 			code: `
 				a {
@@ -343,7 +324,6 @@ testRule({
 			message: messages.expected(`1 tab`),
 		},
 		{
-			// See #452
 			description: `a declaration whose indentation opens with a bare carriage return, whitespace to the parser and part of the run the fix writes over`,
 			code: `a {\n\r\t\tcolor: pink;\n}`,
 			fixed: `a {\n\tcolor: pink;\n}`,
@@ -362,7 +342,6 @@ testRule({
 
 	accept: [
 		{
-			// See #74
 			description: `an interpolation standing first in a selector list`,
 			code: `
 				#{$foo},
@@ -374,7 +353,6 @@ testRule({
 			`,
 		},
 		{
-			// See #74
 			description: `a multi-line pseudo-class standing behind another selector inside a nesting block`,
 			code: `
 				.parent {
@@ -397,7 +375,6 @@ testRule({
 
 	reject: [
 		{
-			// See #64
 			description: `every line of a "with" block is indented`,
 			code: `
 				@use './button' with (
@@ -429,7 +406,6 @@ testRule({
 			],
 		},
 		{
-			// See #65
 			description: `comments within a "with" block are kept`,
 			code: `
 				@use './button' with ( /* Some comment */
@@ -449,7 +425,6 @@ testRule({
 			],
 		},
 		{
-			// See #62
 			description: `comments within a map literal are kept`,
 			code: `
 				$somevar: ( /* some comment */
@@ -477,7 +452,6 @@ testRule({
 
 	accept: [
 		{
-			// See #194
 			description: `a selector carrying an inline comment, every line at its level`,
 			code: `a {
   b // c
@@ -490,7 +464,6 @@ testRule({
 
 	reject: [
 		{
-			// See #194
 			description: `a mis-indented line behind the inline comment of a selector, raised with the comment left standing`,
 			code: `a {
   b // c
@@ -535,7 +508,6 @@ testRule({
 
 	accept: [
 		{
-			// See #237
 			description: `the closing parenthesis of an at-root in the first column, the params of that at-rule standing at its own level rather than one above it`,
 			code: `
 				@at-root (without: media
@@ -555,7 +527,6 @@ testRule({
 			`,
 		},
 		{
-			// See #237
 			description: `an interpolation opened at the end of a line, whose brace does indent the line inside it`,
 			code: `
 				a {
@@ -569,7 +540,6 @@ testRule({
 
 	reject: [
 		{
-			// See #237
 			description: `that closing parenthesis indented by a tab`,
 			code: `
 				@at-root (without: media
@@ -588,7 +558,6 @@ testRule({
 			message: messages.expected(`0 tabs`),
 		},
 		{
-			// See #237
 			description: `the brace closing an interpolation the params opened in the middle of a line, indented by a tab`,
 			code: `
 				@media (min-width: #{$a
@@ -603,7 +572,6 @@ testRule({
 			message: messages.expected(`0 tabs`),
 		},
 		{
-			// See #237
 			description: `the same brace in a value, whose outermost level is the level of the declaration`,
 			code: `
 				a {
@@ -631,7 +599,6 @@ testRule({
 
 	accept: [
 		{
-			// See #509
 			description: `the closing brace of a block whose last statement is an include carrying neither a block nor a semicolon, standing at the level the block does`,
 			code: `
 				a {
@@ -643,7 +610,6 @@ testRule({
 
 	reject: [
 		{
-			// See #509
 			description: `that closing brace indented a level in, the run in front of it standing in the include's whitespace rather than in the block's own`,
 			code: `
 				a {
@@ -687,7 +653,6 @@ testRule({
 
 	reject: [
 		{
-			// See #569
 			description: `a semicolon alone on its line behind a value closed by a \`//\` comment, whose run the parser keeps in its own copy of the value: the line is written through the syntax and the comment is kept`,
 			code: `a {\n\tcolor: pink // c\n\t\t\t;\n}\n`,
 			fixed: `a {\n\tcolor: pink // c\n\t;\n}\n`,
@@ -721,7 +686,6 @@ testRule({
 
 	reject: [
 		{
-			// See #635
 			description: `a variable's value opening on the line behind an inline comment standing after the colon`,
 			code: `a {\n\t$b: // c\n1px;\n}\n`,
 			fixed: `a {\n\t$b: // c\n\t\t1px;\n}\n`,
@@ -739,7 +703,7 @@ testRule({
 
 	reject: [
 		{
-			// The break inside the interpolation is in `prop`, the copy of the declaration the writer counted its offset back from (1789503578)
+			// The break inside the interpolation is in `prop`, the copy of the declaration the writer counted its offset back from
 			description: `a property broken inside its interpolation, whose value opens on the line behind the colon`,
 			code: `a {\n\tfont-#{\n$s}:\n\t\t1px;\n}\n`,
 			fixed: `a {\n\tfont-#{\n\t\t$s}:\n\t\t1px;\n}\n`,
@@ -785,7 +749,7 @@ testRule({
 
 	reject: [
 		{
-			// The break stands in the property alone, where the guard used to ask only the value and the run in front of it (1789926320)
+			// The break stands in the property alone, where the guard used to ask only the value and the run in front of it
 			description: `a property broken inside its interpolation, over a value written on one line`,
 			code: `a {\n\tfont-#{\n$s}: 1px;\n}\n`,
 			fixed: `a {\n\tfont-#{\n\t\t$s}: 1px;\n}\n`,

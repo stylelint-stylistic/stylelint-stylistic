@@ -16,7 +16,7 @@ testRule({
 			code: `a {}\n   `,
 		},
 		{
-			// Pins the reading of a string inside parentheses the tokenizer reads as code behind a solidus glued to the name, whose empty lines are text of the string (1789637913)
+			// Pins the reading of a string inside parentheses the tokenizer reads as code behind a solidus glued to the name, whose empty lines are text of the string
 			description: `empty lines inside a string standing in the parentheses of a bare address whose name a solidus is glued to, which are no empty lines of the stylesheet`,
 			code: `a {\n\tb: 1/url(a "),\n\n\n\nb" ), 2px;\n}\n`,
 		},
@@ -38,7 +38,6 @@ testRule({
 			column: 1,
 			message: messages.expected(0),
 		},
-		// See #481
 		{
 			description: `a blank line in front of the closing brace of a rule`,
 			code: `a {\n\tb: c;\n\n}\n`,
@@ -47,7 +46,6 @@ testRule({
 			column: 1,
 			message: messages.expected(0),
 		},
-		// See #404
 		{
 			description: `a stylesheet holding a line break and a run of spaces, whose one empty line is the line it opens on and whose run ends a line of its own and is left where it stood`,
 			code: `\n   `,
@@ -98,7 +96,6 @@ testRule({
 			message: messages.expected(0),
 		},
 		{
-			// See #598
 			description: `a blank line opening the stylesheet in front of a free semicolon, which stands in the raw of the first rule and is left where it stood`,
 			code: `\n;a {}`,
 			fixed: `;a {}`,
@@ -107,7 +104,6 @@ testRule({
 			message: messages.expected(0),
 		},
 		{
-			// See #598
 			description: `a blank line behind a free semicolon opening the stylesheet, whose run is not the file's first and keeps one break as any run does`,
 			code: `;\n\na {}`,
 			fixed: `;\na {}`,
@@ -116,7 +112,6 @@ testRule({
 			message: messages.expected(0),
 		},
 		{
-			// See #598
 			description: `a blank line opening the stylesheet in front of the indentation of the first rule, which stands in the same raw and is left where it stood`,
 			code: `\n\ta {}`,
 			fixed: `\ta {}`,
@@ -124,7 +119,6 @@ testRule({
 			column: 1,
 			message: messages.expected(0),
 		},
-		// See #601
 		{
 			description: `two blank lines opening a stylesheet behind a byte-order mark, which is no character of the text the positions are counted in`,
 			code: `\uFEFF\n\na {}`,
@@ -143,7 +137,6 @@ testRule({
 			],
 		},
 		{
-			// See #538
 			description: `a blank line in front of the closing brace of a rule a custom property with no semicolon closes, which the parser keeps in that property's value rather than in the block`,
 			code: `a {\n\t--b: red\n\n}\n`,
 			fixed: `a {\n\t--b: red\n}\n`,
@@ -211,7 +204,6 @@ testRule({
 			description: `the same blank lines written with carriage-return line breaks`,
 			code: `a {}\r\n\r\n/** horse */\r\n\r\nb {}`,
 		},
-		// See #404
 		{
 			description: `a stylesheet holding nothing but a line break, which is one empty line and not one for its beginning and one for its end`,
 			code: `\n`,
@@ -224,7 +216,6 @@ testRule({
 			description: `the same stylesheet with a run of spaces written behind the break, which ends a line of its own and hides nothing`,
 			code: `\n   `,
 		},
-		// See #586
 		{
 			description: `a blank line between two rules whose two breaks are spelled differently, which is still one blank line`,
 			code: `a {}\r\n\nb {}`,
@@ -348,7 +339,6 @@ testRule({
 			column: 1,
 			message: messages.expected(1),
 		},
-		// See #481
 		{
 			description: `two blank lines in front of the closing brace of a rule`,
 			code: `a {\n\tb: c;\n\n\n}\n`,
@@ -397,7 +387,6 @@ testRule({
 			column: 1,
 			message: messages.expected(1),
 		},
-		// See #584
 		{
 			description: `two blank lines in front of a stray semicolon standing behind the closing brace of a rule, which the parser keeps in that rule's own raw together with the semicolon`,
 			code: `a {\n\tb {}\n\n\n;\n}\n`,
@@ -439,7 +428,6 @@ testRule({
 			column: 1,
 			message: messages.expected(1),
 		},
-		// See #581
 		{
 			description: `two blank lines between a selector and its opening brace`,
 			code: `a\n\n\n{}\n`,
@@ -553,7 +541,6 @@ testRule({
 			message: messages.expected(1),
 		},
 		{
-			// See #598
 			description: `three blank lines behind a free semicolon opening the stylesheet, which stand in the raw of the first rule and are cut to one as any run is`,
 			code: `;\n\n\n\na {}`,
 			fixed: `;\n\na {}`,
@@ -570,7 +557,6 @@ testRule({
 				},
 			],
 		},
-		// See #404
 		{
 			description: `a stylesheet holding nothing but two line breaks, which are two empty lines and not three, and of which one is taken away`,
 			code: `\n\n`,
@@ -603,7 +589,6 @@ testRule({
 			column: 1,
 			message: messages.expected(1),
 		},
-		// See #601
 		{
 			description: `two blank lines opening a stylesheet behind a byte-order mark, which is no character of the text the positions are counted in`,
 			code: `\uFEFF\n\na {}`,
@@ -629,7 +614,6 @@ testRule({
 				},
 			],
 		},
-		// See #586
 		{
 			description: `three blank lines in front of the closing brace of a rule, whose breaks take turns between a carriage-return pair and a bare newline`,
 			code: `a {\r\n\tb: c;\r\n\n\r\n\n}\r\n`,
@@ -770,7 +754,6 @@ testRule({
 			column: 1,
 			message: messages.expected(1),
 		},
-		// See #582
 		{
 			description: `two blank lines behind a declaration whose value holds a string of blank lines, which are text of the string and lines of no stylesheet`,
 			code: `a {\n\tb: "c\n\n\n\nd";\n}\n\n\ne {}\n`,
@@ -909,7 +892,6 @@ a {color: pink;}
 `,
 		},
 		{
-			// See #585
 			description: `a blank line opening a style attribute, whose run opens on the line the page's markup stands on`,
 			code: `<div style="\n\ncolor: pink"></div>`,
 		},
@@ -917,7 +899,6 @@ a {color: pink;}
 
 	reject: [
 		{
-			// See #585
 			description: `two blank lines opening an embedded stylesheet, whose run opens on a line of its own`,
 			code: `<style>\n\n\na {}\n</style>`,
 			fixed: `<style>\n\na {}\n</style>`,
@@ -987,7 +968,6 @@ a {}
 			column: 1,
 			message: messages.expected(1),
 		},
-		// See #481
 		{
 			description: `two blank lines in front of the closing brace of a rule in an embedded stylesheet`,
 			code: `<style>\na {\n\tb: c;\n\n\n}\n</style>\n`,
@@ -996,7 +976,6 @@ a {}
 			column: 1,
 			message: messages.expected(1),
 		},
-		// See #601
 		{
 			description: `two blank lines between two rules of an embedded stylesheet opening with a byte-order mark, which is a character of the document the lines are placed in`,
 			code: `<style>\uFEFFa {}\n\n\nb {}</style>`,
@@ -1015,14 +994,12 @@ testRule({
 
 	accept: [
 		{
-			// See #585
 			description: `a style attribute opening on a line break, which ends the line of the page's markup and opens no empty one`,
 			code: `<div style="\ncolor: pink"></div>`,
 		},
 	],
 
 	reject: [
-		// See #731
 		{
 			description: `a blank line closing an embedded stylesheet`,
 			code: `<style>\na {}\n\n</style>`,
@@ -1040,7 +1017,6 @@ testRule({
 			message: messages.expected(0),
 		},
 		{
-			// See #585
 			description: `a blank line opening an embedded stylesheet, whose run opens on a line of its own`,
 			code: `<style>\n\na {}\n</style>`,
 			fixed: `<style>\na {}\n</style>`,
@@ -1049,7 +1025,6 @@ testRule({
 			message: messages.expected(0),
 		},
 		{
-			// See #585
 			description: `a blank line opening a style attribute, whose run opens on the line the page's markup stands on`,
 			code: `<div style="\n\ncolor: pink"></div>`,
 			fixed: `<div style="\ncolor: pink"></div>`,
@@ -1058,7 +1033,6 @@ testRule({
 			message: messages.expected(0),
 		},
 		{
-			// See #585
 			description: `blank lines on both sides of a free semicolon holding an embedded stylesheet that gives the parser no node, whose whole text stands in one raw`,
 			code: `<style>\n\n\n;\n\n</style>`,
 			fixed: `<style>\n;\n</style>`,
@@ -1116,7 +1090,6 @@ testRule({
 			description: `a rule closed by two blank lines and a run of spaces, which is exactly the option's count`,
 			code: `a {}\n\n   `,
 		},
-		// See #404
 		{
 			description: `a stylesheet holding nothing but two line breaks, which are exactly the option's count`,
 			code: `\n\n`,
@@ -1180,7 +1153,6 @@ testRule({
 			column: 1,
 			message: messages.expected(2),
 		},
-		// See #481
 		{
 			description: `three blank lines in front of the closing brace of a rule`,
 			code: `a {\n\tb: c;\n\n\n\n}\n`,
@@ -1189,7 +1161,6 @@ testRule({
 			column: 1,
 			message: messages.expected(2),
 		},
-		// See #404
 		{
 			description: `a stylesheet holding nothing but three line breaks, which are three empty lines and not four`,
 			code: `\n\n\n`,
@@ -1230,7 +1201,6 @@ testRule({
 			description: `the same blank lines written with carriage-return line breaks`,
 			code: `a {\r\n display: block;\r\n /*\r\n\r\n\r\n\r\n */\r\n}\r\n\r\n`,
 		},
-		// See #725
 		{
 			description: `blank lines inside a string behind a protocol-relative address, which belong to the string and go uncounted as they do behind no address`,
 			code: `a { b: url(//x.y/z) "c\\\n\n\n\nd" }`,
@@ -1243,7 +1213,7 @@ testRule({
 
 	reject: [
 		{
-			// The escape is masked in the copy the breaks are found over, its closing break left standing (1789649818)
+			// The escape is masked in the copy the breaks are found over, its closing break left standing
 			description: `three blank lines behind the line break closing a hexadecimal escape, which is a line of the file`,
 			code: `a { b: 1\\2c\n\n\n\n}`,
 			fixed: `a { b: 1\\2c\n\n\n}`,
@@ -1275,7 +1245,6 @@ testRule({
 			column: 1,
 			message: messages.expected(2),
 		},
-		// See #586
 		{
 			description: `four blank lines behind a comment whose breaks take turns, which this option counts as the plain one does`,
 			code: `a {}\n\n/*\n\n\n\n\n*/\r\n\n\r\n\n\r\nb {}`,
@@ -1293,7 +1262,6 @@ testRule({
 				},
 			],
 		},
-		// See #725
 		{
 			description: `three blank lines behind an address spelling a double slash, which opens no comment in plain CSS`,
 			code: `a { b: url(http://x.y/z) }\n\n\n\nc {}`,
@@ -1335,7 +1303,6 @@ testRule({
 				},
 			],
 		},
-		// See #582
 		{
 			description: `four blank lines behind a declaration holding a comment in its value, whose own blank lines this option lets stand while the run outside it is cut`,
 			code: `a {\n\tb: c /* x\n\n\n\ny */ d;\n}\n\n\n\n\ne {}\n`,
@@ -1353,7 +1320,6 @@ testRule({
 				},
 			],
 		},
-		// See #581
 		{
 			description: `four blank lines behind a rule holding a comment between its selector and its opening brace, whose own blank lines this option lets stand while the run outside it is cut`,
 			code: `a /* x\n\n\n\ny */ {}\n\n\n\n\nb {}\n`,

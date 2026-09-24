@@ -39,12 +39,10 @@ describe(`searchCopy`, () => {
 		expect(searchCopy(`myurl(//a)red`, cssDecl(`a { b: myurl(//a)red }`), CSS_RESULT).commentSpans).toEqual([])
 	})
 
-	// See #739
 	it(`a string and a quotation mark inside a bare address are masked, so the search opens no string of its own reading`, () => {
 		expect(searchCopy(`url(x'y),"a\\\\",b`, cssDecl(`a { b: url(x'y),"a\\\\",b }`), CSS_RESULT).searchString).toBe(`url(x?y),?????,b`)
 	})
 
-	// See 1789649818
 	it(`an escape is masked, the whitespace closing a hexadecimal one with it, so the search finds no comma in one`, () => {
 		expect(searchCopy(`1,a\\,b\\2c ,c`, cssDecl(`a { b: 1,a\\,b\\2c ,c }`), CSS_RESULT).searchString).toBe(`1,axxbxxxx,c`)
 	})
@@ -53,7 +51,6 @@ describe(`searchCopy`, () => {
 		expect(searchCopy(`1,a\\\\,b`, cssDecl(`a { b: 1,a\\\\,b }`), CSS_RESULT).searchString).toBe(`1,axx,b`)
 	})
 
-	// See 1789657288
 	it(`the copy the runs are read over masks the escapes alone, the comments, the strings and the whitespace closing a hexadecimal escape left as they stand`, () => {
 		expect(searchCopy(`1,a\\ ,b\\2c ,c/*d*/"e"`, cssDecl(`a { b: 1,a\\ ,b\\2c ,c/*d*/"e" }`), CSS_RESULT).runString).toBe(`1,axx,bxxx ,c/*d*/"e"`)
 	})

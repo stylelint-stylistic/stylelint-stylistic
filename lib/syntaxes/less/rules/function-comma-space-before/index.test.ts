@@ -12,12 +12,10 @@ testRule({
 
 	accept: [
 		{
-			// See #135
 			description: `a comma inside the text of an inline comment is no comma of the value`,
 			code: `a { t: translate(1px , // a, b\n  2px); }`,
 		},
 		{
-			// See #153
 			description: `a comma inside the text of an inline comment behind a bare address is no comma of the value`,
 			code: `
 				a { t: image-set(url(//cdn/a.png) 1x , // a, b
@@ -28,7 +26,6 @@ testRule({
 
 	reject: [
 		{
-			// See #135
 			description: `inline comment before the comma: the comma cannot join the comment's line, so the value is left alone and the warning stands`,
 			code: `a { t: translate(1px // c\n  ,2px); }`,
 			fixed: `a { t: translate(1px // c\n  ,2px); }`,
@@ -37,7 +34,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #153
 			description: `an inline comment standing behind a bare address is a comment all the same, and the comma cannot join its line`,
 			code: `
 				a { t: image-set(url(//cdn/a.png) 1x // c
@@ -60,7 +56,6 @@ testRule({
 
 	accept: [
 		{
-			// See #135
 			description: `a comma inside the text of an inline comment is no comma of the value`,
 			code: `a { t: translate(1px, // a , b\n  2px); }`,
 		},
@@ -68,7 +63,6 @@ testRule({
 
 	reject: [
 		{
-			// See #135
 			description: `inline comment before the comma: the comma cannot join the comment's line, so the value is left alone and the warning stands`,
 			code: `a { t: translate(1px // c\n  ,2px); }`,
 			fixed: `a { t: translate(1px // c\n  ,2px); }`,

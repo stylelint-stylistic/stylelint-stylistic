@@ -68,7 +68,7 @@ export function writePrintedText (node: AtRule | Declaration | Rule, text: strin
 		}
 	}
 	else if (isDeclaration(node)) {
-		// The parser keeps a value's trailing whitespace in `raws.value`, out of `decl.value`, except a custom property's; the write is laid out the same way, so a same-pass reader of the value's lineness sees what the next parse would (#487)
+		// The parser keeps a value's trailing whitespace in `raws.value`, out of `decl.value`, except a custom property's; the write is laid out the same way, so a same-pass reader of the value's lineness sees what the next parse would
 		let value = isCustomProperty(node.prop) ? text : text.replace(TRAILING_CSS_WHITESPACE, ``)
 
 		if (value !== text) node.raws.value = { raw: text, value }

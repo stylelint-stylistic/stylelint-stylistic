@@ -101,7 +101,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					if (typeof blockAfter === `string`) setBlockAfter(syntax, node, getChars(blockAfter))
 				}
 
-				// The run in front of a free semicolon behind a closing brace stands in the rule's own raw, together with the semicolon, and reaches no other walk of the pass ([#584](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/584)). Written for a rule alone, since `freeSemicolon` hands the raw to a rule alone; elsewhere such a semicolon lands in the block's `raws.after` or in the next node's `raws.before`, both written already. Nothing but whitespace stands in front of the semicolon there, a comment in front of one being a node of its own, so the raw is written whole as any run is
+				// The run in front of a free semicolon behind a closing brace stands in the rule's own raw, together with the semicolon, and reaches no other walk of the pass. Written for a rule alone, since `freeSemicolon` hands the raw to a rule alone; elsewhere such a semicolon lands in the block's `raws.after` or in the next node's `raws.before`, both written already. Nothing but whitespace stands in front of the semicolon there, a comment in front of one being a node of its own, so the raw is written whole as any run is
 				if (isRule(node) && node.raws.ownSemicolon) node.raws.ownSemicolon = getChars(node.raws.ownSemicolon)
 			})
 
@@ -109,13 +109,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let firstNodeRawsBefore = first && first.raws.before
 			let rootRawsAfter = root.raws.after
 
-			// The raw is written here rather than left to the walk, which reads every run as one standing inside a line; how many empty lines this one closes is the head's own question ([#585](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/585))
+			// The raw is written here rather than left to the walk, which reads every run as one standing inside a line; how many empty lines this one closes is the head's own question
 			if (first && firstNodeRawsBefore) first.raws.before = pastTheOpeningLines(firstNodeRawsBefore, openingLinesAreTaken, writeHead)
 
 			if (rootRawsAfter) {
-				// A root standing in an `html` document, whose tail is written as any run is, zero included, since the file's special case is its own; where such a root got no node this raw is the block entire, so the lines it opens with are the taker's here as they are in a file of its own (#682)
+				// A root standing in an `html` document, whose tail is written as any run is, zero included, since the file's special case is its own; where such a root got no node this raw is the block entire, so the lines it opens with are the taker's here as they are in a file of its own
 				if ((document && document.constructor.name) === `Document`) root.raws.after = first ? getChars(rootRawsAfter) : pastTheOpeningLines(rootRawsAfter, openingLinesAreTaken, (text) => getChars(writeHead(text)))
-				// A root of its own, a file's or a styled template's, whose tail ends the text it stands in. Zero is read as one, a file ending on a break satisfying it. An empty root keeps the whole file here, and its leading run is written as such first, or a break survived every `--fix` (#404)
+				// A root of its own, a file's or a styled template's, whose tail ends the text it stands in. Zero is read as one, a file ending on a break satisfying it. An empty root keeps the whole file here, and its leading run is written as such first, or a break survived every `--fix`
 				else {
 					root.raws.after = first
 						? replaceEmptyLines(primary === 0 ? 1 : primary, rootRawsAfter, true)
@@ -175,7 +175,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				})
 			}
 
-			// Additional check for end of file, skipped where the file's last run is its first, counted already; such a run alone was counted at both ends (#404)
+			// Additional check for end of file, skipped where the file's last run is its first, counted already; such a run alone was counted at both ends
 			if (eof && primary && !opensTheFile) {
 				emptyLines += 1
 
@@ -234,7 +234,7 @@ function countedCopy (syntax: Syntax, node: ChildNode, result: PostcssResult, ig
 }
 
 /**
- * Collapses the runs a comment holds: the two around its text, which are raws of the node, and the ones inside the text, which the check counts as it counts any run of the file. A quotation mark standing inside a comment opens no string, so none of the text is left alone but the host code of a styled interpolation ([#582](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/582)).
+ * Collapses the runs a comment holds: the two around its text, which are raws of the node, and the ones inside the text, which the check counts as it counts any run of the file. A quotation mark standing inside a comment opens no string, so none of the text is left alone but the host code of a styled interpolation.
  * @param syntax - The syntax the rule is built over, which says where an interpolation runs.
  * @param comment - The comment node.
  * @param getChars - What the rule makes of a run it writes; a raw the parser left unfilled comes back empty, as it did before the text was written beside them.
@@ -246,7 +246,7 @@ function writeComment (syntax: Syntax, comment: Comment, getChars: (text: string
 }
 
 /**
- * Collapses the runs a statement holds: the ones between its parts — an at-rule's `raws.afterName`, the `raws.between` of a rule, a declaration or an at-rule, and the raw a flag stands in ([#581](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/581)) — and the ones inside the node's own text, its selector, parameters or value ([#582](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/582)).
+ * Collapses the runs a statement holds: the ones between its parts — an at-rule's `raws.afterName`, the `raws.between` of a rule, a declaration or an at-rule, and the raw a flag stands in — and the ones inside the node's own text, its selector, parameters or value.
  * @param syntax - The syntax the rule is built over, which reads and writes a text.
  * @param node - The node of the walk.
  * @param result - The Stylelint result, which names the syntax the file was parsed with.
@@ -282,7 +282,7 @@ function writeStatementText (syntax: Syntax, node: ChildNode, result: PostcssRes
 }
 
 /**
- * Writes the run a raw opens with and nothing else, so the rest of it is the caller's: the raw of a first node was written by the walk, which reads a run as one standing inside a line, and the raw of a root with no node is written around this call. The narrowing is what keeps zero from taking a free semicolon standing in the raw with the breaks ([#598](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/598)), since `replaceEmptyLines` empties a whole text where it is left no break to keep.
+ * Writes the run a raw opens with and nothing else, so the rest of it is the caller's: the raw of a first node was written by the walk, which reads a run as one standing inside a line, and the raw of a root with no node is written around this call. The narrowing is what keeps zero from taking a free semicolon standing in the raw with the breaks, since `replaceEmptyLines` empties a whole text where it is left no break to keep.
  * @param getChars - What the rule makes of a run it writes.
  * @param headOpensALine - Whether the run stands at the start of a line, closing one empty line per break rather than one fewer.
  * @param text - The raw as it stands.
@@ -293,7 +293,7 @@ function writeHeadRun (getChars: (text: string, isSpecialCase?: boolean) => stri
 }
 
 /**
- * Writes a raw the file opens with, leaving the empty lines `no-empty-first-line` takes off where that rule is the one taking them ([#682](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/682)).
+ * Writes a raw the file opens with, leaving the empty lines `no-empty-first-line` takes off where that rule is the one taking them.
  * @param raw - The raw as it stands.
  * @param openingLinesAreTaken - Whether that rule takes the run off this file.
  * @param write - What this rule makes of the text it may write.
@@ -327,7 +327,7 @@ function breakStart (text: string, lineFeedIndex: number): number {
 }
 
 /**
- * Builds what `style-search` is handed. The search reads comments and strings by rules of its own, so it is told to read neither. A comment the option ignores is blanked with its breaks and every other `//` masked in the text handed in, since the search skipping comments of its own swallows the break behind an address's `//` (#725). A string is blanked, the breaks inside it included, since the search opens one at a quotation mark inside a bare address, closes none behind an escaped backslash, and opens none inside what it took for a comment.
+ * Builds what `style-search` is handed. The search reads comments and strings by rules of its own, so it is told to read neither. A comment the option ignores is blanked with its breaks and every other `//` masked in the text handed in, since the search skipping comments of its own swallows the break behind an address's `//`. A string is blanked, the breaks inside it included, since the search opens one at a quotation mark inside a bare address, closes none behind an escaped backslash, and opens none inside what it took for a comment.
  * @param text - The text the breaks are counted in, or its copy with the ignored comments blanked.
  * @param comments - The comment spans the syntax finds in the text.
  * @returns The search's options.
@@ -335,7 +335,7 @@ function breakStart (text: string, lineFeedIndex: number): number {
 function searchOptions (text: string, comments: CommentSpan[]): Parameters<typeof styleSearch>[0] {
 	return {
 		source: blankComments(text, findStringSpans(blankComments(text, comments), STRING_READING)),
-		// A line feed is a break whatever stands in front of it, so a run spelling its breaks both ways is one run, as PostCSS counts it (#586)
+		// A line feed is a break whatever stands in front of it, so a run spelling its breaks both ways is one run, as PostCSS counts it
 		target: `\n`,
 		comments: `check`,
 		strings: `check`,
@@ -354,7 +354,7 @@ function countedText (root: Root, result: PostcssResult): string {
 
 	let text = ``
 
-	// Printed by the syntax, since PostCSS's stringifier drops a Sass nested property's block and a Less mixin call's `!important`, and widens a `//` comment (#583); without the root's opening piece, which is the byte-order mark PostCSS's stringifier prints and `input.css`, which the indices are resolved in, leaves out, while `sugarss` prints none (#601)
+	// Printed by the syntax, since PostCSS's stringifier drops a Sass nested property's block and a Less mixin call's `!important`, and widens a `//` comment; without the root's opening piece, which is the byte-order mark PostCSS's stringifier prints and `input.css`, which the indices are resolved in, leaves out, while `sugarss` prints none
 	;(nodeSyntax(root, result)?.stringify ?? stringify)(root, (piece, node, type) => {
 		if (node !== root || type !== `start`) text += piece
 	})

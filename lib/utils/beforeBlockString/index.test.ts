@@ -67,7 +67,7 @@ describe(`beforeBlockString`, () => {
 		expect(postcssCheck({}, `@media screen // x\n\t{}`, scss)).toBe(`@media screen // x\n\t`)
 	})
 
-	it(`runs on a Sass nested property written with a value, which this syntax parses as a declaration with a block: its property, value and the run in front of the brace (#570)`, () => {
+	it(`runs on a Sass nested property written with a value, which this syntax parses as a declaration with a block: its property, value and the run in front of the brace`, () => {
 		expect(postcssCheck({}, `font: 12px\n\tserif { family: x; }`, scss)).toBe(`font: 12px\n\tserif `)
 		expect(postcssCheck({}, `font: 12px // c\n{ family: x; }`, scss)).toBe(`font: 12px // c\n`)
 	})

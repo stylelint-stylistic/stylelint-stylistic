@@ -7,7 +7,6 @@ testRule({
 	config: [`always`],
 
 	accept: [
-		// See #208
 		{
 			description: `a comment closing the block behind a declaration without a semicolon, which has no semicolon to break behind`,
 			code: `a { color: pink /* c */ }`,

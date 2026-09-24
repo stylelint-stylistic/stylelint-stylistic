@@ -22,17 +22,14 @@ testRule({
 			code: `a { color: pink; }b { color: red; }`,
 		},
 		{
-			// See #292
 			description: `a space in front of the brace of a block an at-rule with neither a block nor a semicolon closes`,
 			code: `a { @extend .b }`,
 		},
 		{
-			// See #562
 			description: `a space in front of the brace of a block a stray semicolon on the next line stands behind, which is no part of the block`,
 			code: `a { b { color: pink }\n\t; }`,
 		},
 		{
-			// See #562
 			description: `a space in front of the brace of a block a stray semicolon abuts`,
 			code: `a { color: pink };`,
 		},
@@ -40,7 +37,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			// Pins the run in front of the brace read over the copy with the escapes masked
 			description: `a backslash ending the value in front of a space, which spells a character of the value, leaving no run for the option`,
 			code: `a { b: c\\ }`,
 			fixed: `a { b: c\\  }`,
@@ -49,7 +46,7 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the value in front of a line break and the brace, where the space would stand behind the backslash as its escaped character, so the warning stands`,
 			code: `a { b: c \\\n}`,
 			fixed: `a { b: c \\\n}`,
@@ -139,7 +136,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #292
 			description: `a break in front of the brace of a block an at-rule with neither a block nor a semicolon closes, which the parser files into that at-rule rather than into the block`,
 			code: `
 				a {
@@ -180,7 +176,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #562
 			description: `a brace abutting the declaration of a block a stray semicolon stands behind`,
 			code: `a { b { color: pink}; }`,
 			fixed: `a { b { color: pink }; }`,
@@ -189,7 +184,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// See #538
 			description: `two spaces in front of the brace of a block a custom property with no semicolon closes, which the parser keeps in that property's value rather than in the block`,
 			code: `a { --b: red  }`,
 			fixed: `a { --b: red }`,
@@ -221,7 +215,7 @@ testRule({
 
 	accept: [
 		{
-			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			// Pins the run in front of the brace read over the copy with the escapes masked
 			description: `a backslash ending the value in front of a space, which spells a character of the value and no run`,
 			code: `a { b: c\\ }`,
 		},
@@ -238,12 +232,10 @@ testRule({
 			code: `a { color: pink;}b { color: red;}`,
 		},
 		{
-			// See #292
 			description: `a brace abutting an at-rule with neither a block nor a semicolon, which closes the block`,
 			code: `a { @extend .b}`,
 		},
 		{
-			// See #562
 			description: `a block with no whitespace in front of its brace and a space in front of the stray semicolon behind it`,
 			code: `a {color: pink} ;`,
 		},
@@ -251,7 +243,7 @@ testRule({
 
 	reject: [
 		{
-			// Pins the refusal of a write behind a backslash the character it escapes would change behind (1789664271)
+			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the value in front of a line break and the brace, which the write would turn into an escaped brace the file no longer parses, so the warning stands`,
 			code: `a { b: c \\\n}`,
 			fixed: `a { b: c \\\n}`,
@@ -260,7 +252,7 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// Pins the run in front of the brace read over the copy with the escapes masked (1789845987)
+			// Pins the run in front of the brace read over the copy with the escapes masked
 			description: `a space behind a backslash ending the value and a second one in front of the brace, where only the second is a run`,
 			code: `a { b: c\\  }`,
 			fixed: `a { b: c\\ }`,
@@ -365,7 +357,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #292
 			description: `a space in front of the brace of a block an at-rule with neither a block nor a semicolon closes`,
 			code: `a { @extend .b }`,
 			fixed: `a { @extend .b}`,
@@ -414,7 +405,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #562
 			description: `a space in front of the brace of a block a stray semicolon stands behind with a space of its own`,
 			code: `a {b { color: pink } ;}`,
 			fixed: `a {b { color: pink} ;}`,
@@ -423,7 +413,6 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
-			// See #538
 			description: `a space in front of the brace of a block a custom property with no semicolon closes, which the parser keeps in that property's value rather than in the block`,
 			code: `a { --b: red }`,
 			fixed: `a { --b: red}`,
@@ -496,7 +485,6 @@ testRule({
 			`,
 		},
 		{
-			// See #562
 			description: `a space in front of the brace of a single-line block a stray semicolon abuts`,
 			code: `a { color: pink };`,
 		},
@@ -552,7 +540,6 @@ testRule({
 			message: messages.expectedBeforeSingleLine(),
 		},
 		{
-			// See #292
 			description: `a brace abutting an at-rule with neither a block nor a semicolon, which closes a single-line block`,
 			code: `a { @extend .b}`,
 			fixed: `a { @extend .b }`,
@@ -561,7 +548,6 @@ testRule({
 			message: messages.expectedBeforeSingleLine(),
 		},
 		{
-			// See #562
 			description: `a brace abutting the declaration of a single-line block a stray semicolon abuts`,
 			code: `a {color: pink};`,
 			fixed: `a {color: pink };`,
@@ -614,7 +600,6 @@ testRule({
 			`,
 		},
 		{
-			// See #562
 			description: `a single-line block with no whitespace in front of its brace and a space in front of the stray semicolon behind it`,
 			code: `a {color: pink} ;`,
 		},
@@ -678,7 +663,6 @@ testRule({
 			message: messages.rejectedBeforeSingleLine(),
 		},
 		{
-			// See #292
 			description: `a space in front of the brace of a single-line block an at-rule with neither a block nor a semicolon closes`,
 			code: `a { @extend .b }`,
 			fixed: `a { @extend .b}`,
@@ -687,7 +671,6 @@ testRule({
 			message: messages.rejectedBeforeSingleLine(),
 		},
 		{
-			// See #562
 			description: `a space in front of the brace of a single-line block a stray semicolon stands behind with a space of its own`,
 			code: `a {color: pink } ;`,
 			fixed: `a {color: pink} ;`,
@@ -732,12 +715,10 @@ testRule({
 			code: `a { color: pink;\t}b { color: red; }`,
 		},
 		{
-			// See #562
 			description: `a space in front of the brace of a multi-line block a stray semicolon abuts`,
 			code: `a {\n\tcolor: pink };`,
 		},
 		{
-			// See #562
 			description: `a single-line block a stray semicolon on the next line stands behind, which leaves the block single-line`,
 			code: `a { color: pink }\n;`,
 		},
@@ -793,7 +774,6 @@ testRule({
 			message: messages.expectedBeforeMultiLine(),
 		},
 		{
-			// See #292
 			description: `a break in front of the brace of a block an at-rule with neither a block nor a semicolon closes`,
 			code: `
 				a {
@@ -809,7 +789,6 @@ testRule({
 			message: messages.expectedBeforeMultiLine(),
 		},
 		{
-			// See #562
 			description: `a brace abutting the declaration of a multi-line block a stray semicolon abuts`,
 			code: `a {\n\tcolor: pink};`,
 			fixed: `a {\n\tcolor: pink };`,
@@ -854,7 +833,6 @@ testRule({
 			code: `a { color: pink;\t}b { color: red; }`,
 		},
 		{
-			// See #562
 			description: `a single-line block a stray semicolon on the next line stands behind, which leaves the block single-line`,
 			code: `a { color: pink }\n;`,
 		},
@@ -910,7 +888,6 @@ testRule({
 			message: messages.rejectedBeforeMultiLine(),
 		},
 		{
-			// See #292
 			description: `a break in front of the brace of a block an at-rule with neither a block nor a semicolon closes`,
 			code: `
 				a {
@@ -926,7 +903,6 @@ testRule({
 			message: messages.rejectedBeforeMultiLine(),
 		},
 		{
-			// See #562
 			description: `a space in front of the brace of a multi-line block a stray semicolon stands behind with a space of its own`,
 			code: `a {\n\tcolor: pink } ;`,
 			fixed: `a {\n\tcolor: pink} ;`,
@@ -937,7 +913,7 @@ testRule({
 	],
 })
 
-// Two checks deferred for their lineness options run in the plugin's own order rather than the configuration's (#502): the neighbor's subject is a line break, so it speaks first whichever order the configuration lists, and both orders rest on one file.
+// Two checks deferred for their lineness options run in the plugin's own order rather than the configuration's: the neighbor's subject is a line break, so it speaks first whichever order the configuration lists, and both orders rest on one file.
 testRule({
 	ruleName,
 	config: [`always-single-line`],
@@ -945,7 +921,7 @@ testRule({
 
 	reject: [
 		{
-			// See #502. The outer block's closing brace is reported first, the walk of the closing-brace rule visiting the nodes in document order (#570)
+			// The outer block's closing brace is reported first, the walk of the closing-brace rule visiting the nodes in document order
 			description: `an outer block the neighbor's break puts over lines, the neighbor listed behind this rule: the file as it stands is single-line and draws a warning from each rule about each brace, and under the fix the neighbor goes first all the same, so the space in front of the outer closing brace is written no more`,
 			code: `@media(min-width:100px){a{b:c}}\n`,
 			fixed: `@media(min-width:100px){a\n{b:c }}\n`,

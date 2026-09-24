@@ -98,7 +98,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let between = typeof statement.raws.between === `string` ? statement.raws.between : ``
 			let escapes = findEscapeSpans(source, syntax.inlineComments(statement, result))
-			// An escaped space is a character of the head and no run at all, so the run is read over the copy with the escapes masked (1789661964); PostCSS ends the head at the backslash and files the whitespace an escape covering one spells in `raws.between`, which the write keeps in front of the run it rewrites
+			// An escaped space is a character of the head and no run at all, so the run is read over the copy with the escapes masked; PostCSS ends the head at the backslash and files the whitespace an escape covering one spells in `raws.between`, which the write keeps in front of the run it rewrites
 			let escapedHead = between.slice(0, escapeHeadLength(source, escapes, source.length - between.length))
 			let run = between.slice(escapedHead.length)
 			let maskedSource = maskEscapes(source, escapes, true)
@@ -113,7 +113,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let written = primary.startsWith(`always`) ? breakBeforeTheIndentation(run, getLineBreak(root, result)) : run.replace(TRAILING_WHITESPACE, ``)
 					// `never` would put the brace into a `//` comment ending the head: no fix
 					let isFixable = !(primary.startsWith(`never`) && headEndsWithInlineComment)
-						// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: emptying the run of `a\⏎{` would leave `a\{`, which the parser reads no block in (1789664271)
+						// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: emptying the run of `a\⏎{` would leave `a\{`, which the parser reads no block in
 						&& editKeepsEscapedCharacter(`${source}{`, { start: source.length - run.length, end: source.length, text: written })
 
 					report({
