@@ -8,6 +8,11 @@ testRule({
 
 	accept: [
 		{
+			// The search took an escaped bracket in the value for the attribute's closing one (1789517120)
+			description: `an escaped closing bracket in the value, which is a character of the value and no bracket`,
+			code: `[ a=b\\] ] {}`,
+		},
+		{
 			description: `a selector with no attribute in it`,
 			code: `.foo { }`,
 		},
@@ -138,6 +143,25 @@ testRule({
 	],
 
 	reject: [
+		{
+			// The search took an escaped opening bracket in the name for a bracket, and the fix wrote a space into the name (1789517120)
+			description: `an escaped opening bracket in the name, which is a character of the name and no bracket`,
+			code: `[a\\[b=c] {}`,
+			fixed: `[ a\\[b=c ] {}`,
+			warnings: [
+				{ line: 1, column: 2, message: messages.expectedOpening },
+				{ line: 1, column: 7, message: messages.expectedClosing },
+			],
+		},
+		{
+			// The search closed no string at the quotation mark behind an escaped backslash, and the closing bracket passed for the string's text (1789517120)
+			description: `no space in front of the closing bracket behind a string ending in an escaped backslash`,
+			code: `[ a="b\\\\"] {}`,
+			fixed: `[ a="b\\\\" ] {}`,
+			line: 1,
+			column: 9,
+			message: messages.expectedClosing,
+		},
 		{
 			// Pins the run in front of the bracket read over the copy with the escapes masked (1789845987)
 			description: `a backslash ending the value in front of a space, which spells a character of the value, leaving no run for the option`,
@@ -826,6 +850,26 @@ testRule({
 	],
 
 	reject: [
+		{
+			// The search took an escaped opening bracket in the value for a bracket, and the fix took the closing bracket away with the run in front of it (1789517120)
+			description: `an escaped opening bracket in the value, which is a character of the value and no bracket`,
+			code: `[ a=b\\[ ] {}`,
+			fixed: `[a=b\\[] {}`,
+			warnings: [
+				{ line: 1, column: 2, message: messages.rejectedOpening },
+				{ line: 1, column: 8, message: messages.rejectedClosing },
+			],
+		},
+		{
+			// The search closed no string at the quotation mark behind an escaped backslash, and the closing bracket passed for the string's text (1789517120)
+			description: `a space in front of the closing bracket behind a string ending in an escaped backslash`,
+			code: `[ a="b\\\\" ] {}`,
+			fixed: `[a="b\\\\"] {}`,
+			warnings: [
+				{ line: 1, column: 2, message: messages.rejectedOpening },
+				{ line: 1, column: 10, message: messages.rejectedClosing },
+			],
+		},
 		{
 			description: `a space behind an escaped vertical tab in front of the bracket, which the fix takes without touching the escape`,
 			code: `[a=b\\\v ] {}`,

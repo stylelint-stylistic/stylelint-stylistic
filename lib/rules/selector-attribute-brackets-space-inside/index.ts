@@ -74,10 +74,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// The parser reads a backslash in front of a tab as no escape and files what follows into parts it prints back in another order, so `[a=\⇥\⇥b]` comes back as `[a=\⇥b⇥]`: an attribute whose parts do not spell the source is passed over, since every edit here is measured in them (1789666655)
 				if (!selector.startsWith(attributeSelectorString, attributeStart)) return
 
-				// The run beside the bracket is read over the copy with the escapes masked, where an escaped space is a character of the attribute and no run at all (1789661964), and written into the selector at the index it was read at: the parser files an escaped tab in the spaces of a part and prints it back with the whitespace of the source (1789666655)
-				let { runString } = selectorSearchCopy(attributeSelectorString)
+				// The brackets are sought over the copy with the strings and escapes masked, since the search reads neither: it closes no string at a quotation mark with a backslash in front, so the `]` behind `"b\\"` passed for the string's text, and takes an escaped `\[` or `\]` for a bracket (1789517120). The run beside the bracket is read over the copy with the escapes masked, where an escaped space is a character of the attribute and no run at all (1789661964), and written into the selector at the index it was read at: the parser files an escaped tab in the spaces of a part and prints it back with the whitespace of the source (1789666655)
+				let { searchString, runString } = selectorSearchCopy(attributeSelectorString)
 
-				styleSearch({ source: attributeSelectorString, target: `[` }, (match) => {
+				styleSearch({ source: searchString, target: `[` }, (match) => {
 					let nextCharIsSpace = attributeSelectorString[match.startIndex + 1] === ` `
 					let index = attributeNode.sourceIndex + match.startIndex + 1
 					let openIndex = attributeStart + match.startIndex + 1
@@ -90,7 +90,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					if (!nextCharIsSpace && primary === `always`) complain(messages.expectedOpening, index, edit)
 				})
 
-				styleSearch({ source: attributeSelectorString, target: `]` }, (match) => {
+				styleSearch({ source: searchString, target: `]` }, (match) => {
 					let prevCharIsSpace = runString[match.startIndex - 1] === ` `
 					let index = attributeNode.sourceIndex + match.startIndex - 1
 					let closeIndex = attributeStart + match.startIndex
