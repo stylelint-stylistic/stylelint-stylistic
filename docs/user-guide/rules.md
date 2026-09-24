@@ -142,4 +142,4 @@ Here are `stylelint-stylistic` rules, grouped by the _thing_ they apply to (j
 - [`no-multiple-whitespaces`](../../lib/rules/no-multiple-whitespaces/README.md): Disallow multiple whitespaces between property values and function arguments (Autofixable).
 - [`no-extra-semicolons`](../../lib/rules/no-extra-semicolons/README.md): Disallow extra semicolons (Autofixable).
 - [`no-missing-end-of-source-newline`](../../lib/rules/no-missing-end-of-source-newline/README.md): Disallow missing end-of-source newlines (Autofixable).
-- [`unicode-bom`](../../lib/rules/unicode-bom/README.md): Require or disallow Unicode BOM.
+- [`unicode-bom`](../../lib/rules/unicode-bom/README.md): Require or disallow Unicode BOM (Autofixable).
