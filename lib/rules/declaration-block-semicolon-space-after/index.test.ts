@@ -76,6 +76,23 @@ testRule({
 			column: 17,
 			message: messages.expectedAfter(),
 		},
+		{
+			// The parser keeps a free semicolon in the next declaration's leading raw, and the fix writes the space in front of it rather than over it
+			description: `a free semicolon abutting the semicolon of the declaration in front of it`,
+			code: `a { color: pink;;top: 0; }`,
+			fixed: `a { color: pink; ;top: 0; }`,
+			line: 1,
+			column: 17,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a free semicolon behind a break, the break being what the space replaces`,
+			code: `a { color: pink;\n; top: 0; }`,
+			fixed: `a { color: pink; ; top: 0; }`,
+			line: 1,
+			column: 17,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
@@ -120,6 +137,15 @@ testRule({
 			description: `a space behind the semicolon`,
 			code: `a { color: pink; top: 0; }`,
 			fixed: `a { color: pink;top: 0; }`,
+			line: 1,
+			column: 17,
+			message: messages.rejectedAfter(),
+		},
+		{
+			// The parser keeps a free semicolon in the next declaration's leading raw, and the fix takes the space in front of it and keeps it
+			description: `a free semicolon with a space on either side of it`,
+			code: `a { color: pink; ; top: 0; }`,
+			fixed: `a { color: pink;; top: 0; }`,
 			line: 1,
 			column: 17,
 			message: messages.rejectedAfter(),
