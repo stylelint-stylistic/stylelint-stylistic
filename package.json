@@ -54,7 +54,7 @@
 		"postcss-scss": "^4",
 		"postcss-styled-syntax": "^0.7",
 		"stylelint": "github:stylelint/stylelint#v18",
-		"typescript": "^7",
+		"typescript": "next",
 		"vitest": "^4"
 	},
 	"devEngines": {
