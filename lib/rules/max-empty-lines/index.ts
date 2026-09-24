@@ -2,7 +2,7 @@ import { type ChildNode, type Comment, type Container, type Document, type Root,
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, LEADING_LINE_BREAK_RUN, OPENS_WITH_LINE_BREAK, TRAILING_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
+import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, LEADING_LINE_BREAK_RUN, OPENS_WITH_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
@@ -13,6 +13,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { nodeSyntax } from "../../utils/nodeSyntax/index.ts"
+import { opensALine } from "../../utils/opensALine/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
@@ -79,7 +80,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let ignoreComments = optionsMatches(secondaryOptions, `ignore`, `comments`)
 		let getChars = replaceEmptyLines.bind(null, primary)
 		let openingLinesAreTaken = takesTheOpeningLines(root, result)
-		let headOpensALine = opensALine(root, result)
+		let headOpensALine = opensALine(root)
 		let writeHead = writeHeadRun.bind(null, getChars, headOpensALine)
 
 		/** Collapses every run of empty lines to the maximum: `raws.before`, a comment's `left`, text and `right`, the raws between the parts of a statement and the node's own text, the run in front of a closing brace, the run in front of a free semicolon behind one, and the root's head and tail apart from the walk, where a run opening a line of the file counts an empty line more. */
@@ -373,24 +374,6 @@ function replaceEmptyLines (maxLines: number, str: unknown, isSpecialCase: boole
 	if (repeatTimes === 0 || typeof str !== `string`) return ``
 
 	return str.replaceAll(EVERY_RUN_OF_LINE_BREAKS, (run) => run.match(EVERY_LINE_BREAK)?.slice(0, repeatTimes).join(``) ?? run)
-}
-
-/**
- * Asks whether the text counted opens a line of the file, which decides how many empty lines the run standing at its head closes: one per break where it does, and one fewer where the page's text runs in front of it on that line.
- *
- * A file's own text opens one. So does a `<style>` element's block wherever a break follows the opening tag, since `postcss-html` leaves that break in `raws.codeBefore` and the block begins on the line behind it. An inline `style` attribute's block and a styled template's never do: what `codeBefore` ends in is the quotation mark or the backtick, and the run's first break closes the page's line rather than an empty one ([#585](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/585)).
- *
- * The question is put to the text in front of the block rather than to the host it came from, so a block no list of hosts names is answered by what stands there.
- * @param root - The stylesheet.
- * @param result - The Stylelint result, which tells a standalone root from a block of a document.
- * @returns True where nothing but a break stands in front of the text counted.
- */
-function opensALine (root: Root, result: PostcssResult): boolean {
-	if (result.root === root) return true
-
-	let { codeBefore } = root.raws as { codeBefore?: string }
-
-	return !codeBefore || TRAILING_LINE_BREAK.test(codeBefore)
 }
 
 /**

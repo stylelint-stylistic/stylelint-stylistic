@@ -1,7 +1,7 @@
 import type { ChildNode, Container, Node, Root } from "postcss"
 import stylelint, { type PostcssResult, type RuleMessage } from "stylelint"
 
-import { EVERY_LINE_BREAK, LEADING_WHITESPACE_WITHOUT_BREAK, TRAILING_LINE_BREAK } from "../../regexps.ts"
+import { EVERY_LINE_BREAK, LEADING_WHITESPACE_WITHOUT_BREAK } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { carriesABlock } from "../carriesABlock/index.ts"
 import { declarationString } from "../declarationString/index.ts"
@@ -9,6 +9,7 @@ import { getBlockAfter } from "../getBlockAfter/index.ts"
 import { hasBlock } from "../hasBlock/index.ts"
 import { isLastNodeWithoutSemicolon } from "../isLastNodeWithoutSemicolon/index.ts"
 import { fixIndentation, lastLineIndentation, lastLineStart, lineStarts, replaceIndentation } from "../lineIndentation/index.ts"
+import { opensALine } from "../opensALine/index.ts"
 import { runInFrontOf } from "../runInFrontOf/index.ts"
 import { setBlockAfter } from "../setBlockAfter/index.ts"
 import { statementString } from "../statementString/index.ts"
@@ -207,17 +208,6 @@ function closesALine (syntax: Syntax, rule: ChildNode, opensTheFile: boolean): b
 	let following = next ? runInFrontOf(next) : (isRoot(parent) ? parent.raws.after ?? `` : getBlockAfter(syntax, parent) ?? ``)
 
 	return lineStarts(following, syntax.hostCodeSpans(following, holder)).length > 0 || (!next && opensTheFile)
-}
-
-/**
- * Asks whether a root's text opens a line: where it is the file, or where the host code in front of it ends in a break, as the tag of a `<style>` does.
- * @param root - The root.
- * @returns True where it does.
- */
-function opensALine (root: Root): boolean {
-	let { codeBefore } = root.raws
-
-	return codeBefore === undefined ? isTheFile(root) : TRAILING_LINE_BREAK.test(codeBefore)
 }
 
 /**
