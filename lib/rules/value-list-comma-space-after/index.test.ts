@@ -8,6 +8,11 @@ testRule({
 
 	accept: [
 		{
+			// PostCSS's tokenizer takes the parentheses behind the name and a space as one token, which CSS reads as a group; a mask of the token's parentheses alone read the comma among the arguments of the call inside as one of the list (1789505502)
+			description: `a comma among the arguments of a call inside the parentheses standing apart from the name url`,
+			code: `a { b: url (a(b,c).png) 1px; }`,
+		},
+		{
 			// An escape is a character of its word, and the search the commas are found with reads none
 			description: `an escaped comma inside a word, which is no comma of the list`,
 			code: `a { b: 1, a\\,b; }`,
@@ -226,6 +231,23 @@ testRule({
 			fixed: `a { b: url(x'y), c; }`,
 			line: 1,
 			column: 16,
+			message: messages.expectedAfter(),
+		},
+		{
+			// A parenthesis inside a bare address opened a call to the scan, which then held the list behind the address as its arguments (1789505502)
+			description: `a comma behind a bare address holding an opening parenthesis, which is a character of the address and opens no call`,
+			code: `a { b: url(x(y),c; }`,
+			fixed: `a { b: url(x(y), c; }`,
+			line: 1,
+			column: 16,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a comma behind a bare address holding an escaped closing parenthesis and an opening one`,
+			code: `a { b: url(x\\)(y),c; }`,
+			fixed: `a { b: url(x\\)(y), c; }`,
+			line: 1,
+			column: 18,
 			message: messages.expectedAfter(),
 		},
 		{

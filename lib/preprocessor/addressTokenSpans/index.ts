@@ -10,6 +10,9 @@ import { scssTokenize } from "../scssTokenize/index.ts"
 /** A quotation mark, which only an address's parentheses carry inside a `brackets` token. */
 const QUOTATION_MARK = /['"]/u
 
+/** A `(` behind another character, which only an address's parentheses carry inside a `brackets` token. */
+const INNER_OPENING_PARENTHESIS = /.\(/u
+
 /** A word the tokenizer pushed, over the one it pushed in front of it: the stack it pops one of at each `(`, kept as a list so that a node's snapshot of it is a single reference. */
 type StackedWord = {
 	under: StackedWord | undefined,
@@ -228,16 +231,17 @@ function carriedRead (read: string, tokens: [string, string, number?][], node: N
 }
 
 /**
- * Finds the parentheses of the tokens holding a quotation mark, in the coordinates of the text the spans are asked about.
+ * Finds the parentheses of the `brackets` tokens holding what a pattern matches, in the coordinates of the text the spans are asked about.
  * @param tokens - The tokens of the text read.
  * @param start - Where the text opens inside what was read.
+ * @param holding - What a token must hold to be returned.
  * @returns The spans, in source order.
  */
-function spansOf (tokens: [string, string, number?][], start: number): AddressSpan[] {
+function spansOf (tokens: [string, string, number?][], start: number, holding: RegExp): AddressSpan[] {
 	let spans: AddressSpan[] = []
 
 	for (let [name, content, openIndex] of tokens) {
-		if (name !== `brackets` || openIndex === undefined || !QUOTATION_MARK.test(content)) continue
+		if (name !== `brackets` || openIndex === undefined || !holding.test(content)) continue
 
 		let spanStart = openIndex - start
 		let end = spanStart + content.length
@@ -246,6 +250,32 @@ function spansOf (tokens: [string, string, number?][], start: number): AddressSp
 	}
 
 	return spans
+}
+
+/**
+ * Reads a text with the tokenizer and finds its `brackets` tokens holding what a pattern matches.
+ * @param before - Read but not answered for.
+ * @param text - The text the spans are sought in.
+ * @param holding - What a token must hold, and the text too for the tokenizer to be asked at all.
+ * @param [syntax] - The syntax.
+ * @param [from] - The stylesheet's file.
+ * @param [node] - The node the text belongs to.
+ * @returns The spans, or nothing where the tokenizer is out of reach.
+ */
+function tokenSpans (before: string, text: string, holding: RegExp, syntax?: unknown, from?: string, node?: Node): AddressSpan[] | undefined {
+	let read = `${before}${text}`
+
+	if (!holding.test(text) || !read.includes(`(`)) return []
+
+	let tokens = tokensRead(read, syntax, from)
+
+	if (!tokens) return undefined
+
+	let carried = node ? carriedRead(read, tokens, node, syntax, from) : { prefix: ``, tokens }
+
+	if (!carried) return undefined
+
+	return spansOf(carried.tokens, carried.prefix.length + before.length, holding)
 }
 
 /**
@@ -266,17 +296,18 @@ function spansOf (tokens: [string, string, number?][], start: number): AddressSp
  * @returns The spans, in the text's coordinates, in source order, or nothing where the text may hold such a token and the parser's own tokenizer is out of reach.
  */
 export function addressTokenSpans (before: string, text: string, syntax?: unknown, from?: string, node?: Node): AddressSpan[] | undefined {
-	let read = `${before}${text}`
+	return tokenSpans(before, text, QUOTATION_MARK, syntax, from, node)
+}
 
-	if (!QUOTATION_MARK.test(text) || !read.includes(`(`)) return []
-
-	let tokens = tokensRead(read, syntax, from)
-
-	if (!tokens) return undefined
-
-	let carried = node ? carriedRead(read, tokens, node, syntax, from) : { prefix: ``, tokens }
-
-	if (!carried) return undefined
-
-	return spansOf(carried.tokens, carried.prefix.length + before.length)
+/**
+ * Finds the parentheses the syntax's tokenizer takes as one token behind the word `url` where they hold a `(` past the opening one, which is a character of the address and opens no call: PostCSS's tokenizer closes the token on the first `)` no backslash escapes, `postcss-scss`'s at the count of parentheses (1789505502). Both tokenizers give a plain pair of parentheses up as `brackets` only where no `(` stands inside, so such a token can only be an address's. The rest reads as {@link addressTokenSpans} does.
+ * @param before - Read but not answered for.
+ * @param text - The text the spans are sought in, standing right behind `before`.
+ * @param [syntax] - The syntax, as `nodeSyntax` gives it.
+ * @param [from] - The stylesheet's file.
+ * @param [node] - The node the text belongs to.
+ * @returns The spans, in the text's coordinates, in source order, or nothing where the parser's own tokenizer is out of reach.
+ */
+export function parenthesizedAddressTokenSpans (before: string, text: string, syntax?: unknown, from?: string, node?: Node): AddressSpan[] | undefined {
+	return tokenSpans(before, text, INNER_OPENING_PARENTHESIS, syntax, from, node)
 }

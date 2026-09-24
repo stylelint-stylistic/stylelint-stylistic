@@ -61,6 +61,12 @@ export const EVERY_JS_LINE_TERMINATOR = /\r\n|[\n\r\u2028\u2029]/gu
 /** Every quotation mark, either kind. */
 export const EVERY_QUOTATION_MARK = /["']/gu
 
+/** Every parenthesis, either kind. */
+export const EVERY_PARENTHESIS = /[()]/gu
+
+/** Every character but a line feed and a carriage return. */
+export const EVERY_CHARACTER_BUT_A_BREAK = /[^\n\r]/gu
+
 /** Every run of breaks as PostCSS reads them, a Windows pair and a line feed alike, nothing between them: what `max-empty-lines` collapses, whichever way each break is spelled ([#586](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/586)). {@link EVERY_LINE_BREAK_RUN} reads a bare carriage return into a run too. */
 export const EVERY_RUN_OF_LINE_BREAKS = /(?:\r?\n)+/gu
 
