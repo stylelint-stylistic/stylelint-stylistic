@@ -2,7 +2,7 @@ import type { Comment, Node } from "postcss"
 import styleSearch from "style-search"
 import stylelint, { type FixCallback, type PostcssResult } from "stylelint"
 
-import { INLINE_COMMENT_BREAK, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
+import { EVERY_SEMICOLON, INLINE_COMMENT_BREAK, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { closingOffset } from "../../utils/closingOffset/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -58,6 +58,23 @@ function getEndOffsetByNode (node: Node, result: PostcssResult): number {
 	return end === undefined ? getOffsetByNode(node) + nodeString(node, result).length : end - rootStart
 }
 
+/**
+ * Places a semicolon of a raw by the semicolons behind it rather than by characters.
+ *
+ * A rule listed earlier may have rewritten the raw in the same run — trimming a line, taking a break out or adding one — while the text and the node's offsets stay as the parser read them; counted by characters or by breaks from the raw's end, the semicolon then lands on another line of the text, where a disable comment covers it or does not. Neighbors taking whitespace keep every semicolon, so the semicolon with as many semicolons behind it in the raw as it stands is the one with as many behind it in the text, scanning back from the raw's end. Where the text holds too few, it is counted by characters, as before.
+ * @param text - The text the root's offsets index: the file, or an embedded stylesheet's own text.
+ * @param rawEnd - The offset in it the raw ends at.
+ * @param raw - The raw as it stands.
+ * @param semicolon - The semicolon's index in the raw.
+ * @returns Its offset in that text.
+ */
+function placedBySemicolons (text: string, rawEnd: number, raw: string, semicolon: number): number {
+	let behind = (raw.slice(semicolon + 1).match(EVERY_SEMICOLON) ?? []).length
+	let place = [...text.slice(0, rawEnd).matchAll(EVERY_SEMICOLON)].at(-1 - behind)?.index
+
+	return place ?? rawEnd - raw.length + semicolon
+}
+
 /** `true`; the rule has no other setting. */
 export type PrimaryOption = true
 
@@ -77,6 +94,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		if (!validOptions) return
 
 		let fix: FixCallback | undefined
+		// The text the offsets below index: the file, or an embedded stylesheet's own text, whose offsets count from the root's start
+		let text = root.source?.input.css ?? ``
 
 		if (root.raws.after && root.raws.after.trim().length > 0) {
 			let rawAfterRoot = root.raws.after
@@ -93,7 +112,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (!root.source) throw new Error(`The root node must have a source`)
 
-				complain(root.source.input.css.length - rawAfterRoot.length + match.startIndex)
+				complain(placedBySemicolons(text, text.length, rawAfterRoot, match.startIndex))
 			})
 
 			if (fixSemiIndices.length > 0) root.raws.after = removeIndices(rawAfterRoot, fixSemiIndices)
@@ -140,7 +159,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					fixSemiIndices.push(semicolon)
 				}
 
-				complain(offsetOf(raw, semicolon))
+				complain(placedBySemicolons(text, offsetOf(raw, raw.length), raw, semicolon))
 			}
 
 			if (fixSemiIndices.length > 0) (owner.raws as Record<string, unknown>)[key] = removeIndices(raw, fixSemiIndices)

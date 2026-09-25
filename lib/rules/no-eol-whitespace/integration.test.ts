@@ -75,3 +75,14 @@ describe(`a stray semicolon the rule about extra semicolons takes out, standing 
 		expect(results[0]?.warnings.filter(({ rule }) => rule === `@stylistic/no-eol-whitespace`)).toEqual([])
 	})
 })
+
+describe(`a stray semicolon a disable comment keeps from the rule about extra semicolons, beside one that rule takes out on the next line`, () => {
+	// This rule trims the line of the one taken out, which shortens the raw; the neighbor counts the semicolons' places by lines from the raw's end, so the one kept stays on the line the comment covers
+	it(`is kept in both orders`, async () => {
+		let code = `x {\n\ta {\n\t\tb: c;\n\t/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\n\t\t;\n\t\t;\n\t}\n}\n`
+		let output = `x {\n\ta {\n\t\tb: c;\n\t/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\n\t\t;\n\n\t}\n}\n`
+
+		expect(await fix(code, true)).toEqual({ code: output, warnings: 0 })
+		expect(await fix(code, false)).toEqual({ code: output, warnings: 0 })
+	})
+})
