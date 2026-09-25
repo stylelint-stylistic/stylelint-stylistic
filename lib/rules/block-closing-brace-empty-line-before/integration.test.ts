@@ -86,3 +86,14 @@ describe(`a stray semicolon on a line of its own in front of the brace, beside a
 		await expectBothOrders(`a {\n\tb: c;\n\t/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\n;\n}\n`, { "@stylistic/no-extra-semicolons": true }, `a {\n\tb: c;\n\t/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\n;\n\n}\n`, `always-multi-line`)
 	})
 })
+
+describe(`a stray semicolon behind the closing brace of the last nested rule, beside a rule taking it out`, () => {
+	// PostCSS files the semicolon with the run in front of it in the nested rule's raws, so the run in front of this brace is read across both, as the neighbor leaves it
+	it(`leaves one file in both orders of no-extra-semicolons under never`, async () => {
+		await expectBothOrders(`a {\n\tb {}\n;\n}`, { "@stylistic/no-extra-semicolons": true }, `a {\n\tb {}\n}`, `never`)
+	})
+
+	it(`leaves one file in both orders of no-extra-semicolons under always-multi-line, the break the semicolon leaves counted`, async () => {
+		await expectBothOrders(`a {\n\tb {}\n;\n}`, { "@stylistic/no-extra-semicolons": true }, `a {\n\tb {}\n\n}`, `always-multi-line`)
+	})
+})

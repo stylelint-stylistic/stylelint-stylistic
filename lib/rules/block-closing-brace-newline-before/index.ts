@@ -5,12 +5,12 @@ import { EVERY_WHITESPACE, INLINE_COMMENT_BREAK, LEADING_LINE_BREAK, SEMICOLON_R
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
+import { getBlockTail, setBlockTail } from "../../utils/blockTail/index.ts"
 import { carriesABlock } from "../../utils/carriesABlock/index.ts"
 import { closingBraceRunWrites } from "../../utils/closingBraceRunWrites/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { findEscapeSpans } from "../../utils/findCommentSpans/index.ts"
-import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
@@ -20,7 +20,6 @@ import { lastNodeHoldsTheBlockAfter } from "../../utils/lastNodeHoldsTheBlockAft
 import { escapeHeadLength } from "../../utils/maskEscapes/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { statementString } from "../../utils/statementString/index.ts"
 import { isDeclaration } from "../../utils/typeGuards/index.ts"
 import { writesSharedRun } from "../../utils/writesSharedRun/index.ts"
@@ -100,7 +99,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Blockless or empty: nothing to check
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 
-			let blockAfter = getBlockAfter(syntax, statement) || ``
+			let blockAfter = getBlockTail(syntax, statement) || ``
 			// The text is read through the brace, since a free semicolon behind it is printed too
 			let text = statementString(statement, result)
 			// An escaped space is the last character of the block's final node and no run at all: PostCSS ends the node at the backslash and files the whitespace an escape covering one spells in the raw behind it, and the run the options speak of opens behind that character, which the write keeps
@@ -160,9 +159,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					endIndex: index,
 					...(isFixable && {
 						fix: (): void => {
-							if (typeof getBlockAfter(syntax, statement) !== `string`) return
+							if (typeof getBlockTail(syntax, statement) !== `string`) return
 
-							setBlockAfter(syntax, statement, written)
+							setBlockTail(syntax, statement, written)
 						},
 					}),
 				})

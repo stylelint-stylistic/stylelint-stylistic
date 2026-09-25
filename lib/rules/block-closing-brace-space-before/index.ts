@@ -5,12 +5,12 @@ import { INLINE_COMMENT_BREAK, TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
+import { blockTailTaken, getBlockTail, setBlockTail } from "../../utils/blockTail/index.ts"
 import { carriesABlock } from "../../utils/carriesABlock/index.ts"
 import { closingBraceRunWrites } from "../../utils/closingBraceRunWrites/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { findEscapeSpans } from "../../utils/findCommentSpans/index.ts"
-import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
@@ -19,9 +19,8 @@ import { lastNodeHoldsTheBlockAfter } from "../../utils/lastNodeHoldsTheBlockAft
 import { escapeHeadLength, maskEscapes } from "../../utils/maskEscapes/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { statementString } from "../../utils/statementString/index.ts"
-import { straySemicolonsTaken, withoutTaken, writtenAsLeft } from "../../utils/straySemicolonsTaken/index.ts"
+import { withoutTaken, writtenAsLeft } from "../../utils/straySemicolonsTaken/index.ts"
 import { isDeclaration } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesSharedRun } from "../../utils/writesSharedRun/index.ts"
@@ -103,7 +102,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let source = blockString(statement, result)
 			let text = statementString(statement, result)
-			let blockAfter = getBlockAfter(syntax, statement) || ``
+			let blockAfter = getBlockTail(syntax, statement) || ``
 
 			let index = text.length - 2
 
@@ -116,7 +115,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let escapedHead = commentHead ?? blockAfter.slice(0, escapeHeadLength(source, escapes, source.length - 1 - blockAfter.length))
 			let run = blockAfter.slice(escapedHead.length)
 			// As the neighbors taking stray semicolons out leave it, whichever side of them this rule is listed; a semicolon staying is a character in front of the run
-			let taken = new Set([...(lastNodeHoldsTheBlockAfter(statement) ? [] : straySemicolonsTaken(statement, result))].map((at) => at - escapedHead.length).filter((at) => at >= 0))
+			let taken = new Set([...blockTailTaken(statement, result)].map((at) => at - escapedHead.length).filter((at) => at >= 0))
 			let runLeft = withoutTaken(run, taken)
 
 			// The fix writes over only the whitespace ending the block's final raw, so the guard is asked about the whole surviving run, as the neighbors taking stray semicolons out leave it: a break anywhere in it closes a `//` comment the last node left open; where none survives the brace would land in the comment, and the warning stands unfixed. Where the last node has swallowed the final raw the write lands on its own trailing whitespace, which the guard reads when told nothing of the run
@@ -150,9 +149,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						ruleName,
 						...(isFixable && {
 							fix: (): void => {
-								if (typeof getBlockAfter(syntax, statement) !== `string`) return
+								if (typeof getBlockTail(syntax, statement) !== `string`) return
 
-								setBlockAfter(syntax, statement, `${escapedHead}${written}`)
+								setBlockTail(syntax, statement, `${escapedHead}${written}`)
 							},
 						}),
 					})

@@ -76,6 +76,15 @@ describe(`the run in front of the closing brace holding a stray semicolon a neig
 		expect(await fixBesideATaker(code, `always`, noExtra, true)).toEqual({ code: `a { color: pink; ; } /* stylelint-disable-line @stylistic/no-extra-semicolons */`, left: 0 })
 	})
 
+	// PostCSS files a semicolon behind the closing brace of the last nested rule with the run in front of it in that rule's raws, so the run in front of this brace is read across both
+	it.each([
+		[`always`, `a { b { c: d; } }`],
+		[`never`, `a { b { c: d;}}`],
+	])(`is written in one run in either order where the semicolon stands behind a nested rule's brace, under %j`, async (options, output) => {
+		expect(await fixBesideATaker(`a { b { c: d; } ; }`, options, noExtra, true)).toEqual({ code: output, left: 0 })
+		expect(await fixBesideATaker(`a { b { c: d; } ; }`, options, noExtra, false)).toEqual({ code: output, left: 0 })
+	})
+
 	// Without the semicolon the run holds no break, and the brace written behind the whitespace would land in the comment the last node leaves open
 	it.each([{ namespace: `scss`, customSyntax: `postcss-scss` }, { namespace: `less`, customSyntax: `postcss-less` }])(`is left alone behind an inline comment where no break survives the semicolon a neighbor takes, under $customSyntax`, async (syntax) => {
 		let code = `a { color: pink; // c;\n;\n}`
