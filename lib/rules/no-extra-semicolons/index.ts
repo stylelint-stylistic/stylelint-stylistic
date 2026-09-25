@@ -114,12 +114,18 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// A Less mixin last child puts its extra semicolon in `node.raws.after`; mixins are passed over, and the rest of the node with them
 			if (typeof node.raws.after === `string` && node.raws.after.trim().length > 0 && `last` in node && node.last && isAtRule(node.last) && !readsTheRawsOf(syntax, node.last)) return
 
-			takeOut(node, `after`, extraSemicolonsAfter(syntax, node, result), (raw, semicolon) => getOffsetByNode(node) + nodeString(node, result).length - 1 - raw.length + semicolon)
+			let extraAfter = extraSemicolonsAfter(syntax, node, result)
+			let extraOwn = extraSemicolonsOwn(syntax, node)
+			// The print, taken before the fix takes anything out of it, ends on `raws.ownSemicolon`, which stands behind the closing brace `raws.after` ends on
+			let printEnd = extraAfter.length > 0 || extraOwn.length > 0 ? getOffsetByNode(node) + nodeString(node, result).length : 0
+			let ownLength = String(node.raws.ownSemicolon ?? ``).length
+
+			takeOut(node, `after`, extraAfter, (raw, semicolon) => printEnd - ownLength - 1 - raw.length + semicolon)
 
 			// Less closes a `//` comment on a bare carriage return too, where `postcss-less` reads on to a line feed, and the code behind that break is Less's
 			if (isComment(node)) checkCommentCode(node)
 
-			takeOut(node, `ownSemicolon`, extraSemicolonsOwn(syntax, node), (raw, semicolon) => getOffsetByNode(node) + nodeString(node, result).length - raw.length + semicolon)
+			takeOut(node, `ownSemicolon`, extraOwn, (raw, semicolon) => printEnd - raw.length + semicolon)
 		})
 
 		/**

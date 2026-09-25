@@ -157,6 +157,41 @@ testRule({
 			message: messages.rejected,
 		},
 		{
+			// A semicolon in front of a rule's closing brace is placed from the brace, not from the end of the print, which runs on over the stray semicolon PostCSS files behind it
+			description: `a semicolon in front of a closing brace a stray semicolon on the next line follows`,
+			code: `a {b: c;;\n}\n;`,
+			fixed: `a {b: c;\n}\n`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.rejected,
+				},
+				{
+					line: 3,
+					column: 1,
+					message: messages.rejected,
+				},
+			],
+		},
+		{
+			description: `the same with the stray semicolon on the brace's line`,
+			code: `a {b: c;;} ;`,
+			fixed: `a {b: c;} `,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.rejected,
+				},
+				{
+					line: 1,
+					column: 12,
+					message: messages.rejected,
+				},
+			],
+		},
+		{
 			description: `three semicolons standing apart in the stylesheet`,
 			code: `; ; ;`,
 			fixed: `  `,
