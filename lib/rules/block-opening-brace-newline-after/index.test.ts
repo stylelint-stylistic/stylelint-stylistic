@@ -1176,4 +1176,17 @@ describe(`${ruleName} beside the rules that write the same run`, () => {
 			left: [`Unexpected whitespace before "}" of a multi-line block (${closingNewline})`],
 		})
 	})
+
+	// A stray semicolon parts the run in two, the whitespace in front of it this rule's and the whitespace behind it the other rule's
+	it(`writes it where a stray semicolon with a break behind it parts the run from the one the rule about a break in front of the brace writes`, async () => {
+		expect(await race(`a {\n/* c */;\n}`, `never-multi-line`, closingNewline, `always`)).toEqual({ ours: `a {/* c */;\n}`, theirs: `a {/* c */;\n}`, left: [] })
+	})
+
+	it(`writes it beside the rule about a space in front of the brace, which writes behind a stray semicolon alone`, async () => {
+		expect(await race(`a {/* c */ ; }`, `always`, closingSpace, `always`)).toEqual({ ours: `a {/* c */\n ; }`, theirs: `a {/* c */\n ; }`, left: [] })
+	})
+
+	it(`leaves it where no break stands behind the semicolon and the rule about a break in front of the brace puts its own in front of the run`, async () => {
+		expect(await race(`a {/* c */ ; }`, `never-multi-line`, closingNewline, `always`)).toEqual({ ours: `a {/* c */\n ; }`, theirs: `a {/* c */\n ; }`, left: [messages.rejectedAfterMultiLine()] })
+	})
 })

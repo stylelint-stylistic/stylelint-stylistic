@@ -1,4 +1,4 @@
-import { parse } from "postcss"
+import { parse, type Rule } from "postcss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
@@ -83,6 +83,23 @@ describe(`writesBlockAfter`, () => {
 		expect(ask(`never-multi-line`, { [`@stylistic/scss/block-closing-brace-empty-line-before`]: [`never`, { except: [`after-closing-brace`] }], [CLOSING_EMPTY_LINE]: `always-multi-line` }, false)).toBe(false)
 		expect(ask(`never-multi-line`, { [`@stylistic/scss/block-closing-brace-empty-line-before`]: [`never`, { except: [`after-closing-brace`] }], [`@stylistic/less/block-closing-brace-empty-line-before`]: `always-multi-line` }, true)).toBe(false)
 	})
+
+	it(`a run a stray semicolon with a break behind it splits, whose head no neighbor writes but a newline rule taking every break out`, () => {
+		expect(ask(`never-multi-line`, { [CLOSING_NEWLINE]: `always` }, false, `a {/* c */;\n}`)).toBe(true)
+		expect(ask(`never-multi-line`, { [CLOSING_SPACE]: `always` }, false, `a {/* c */;\n}`)).toBe(true)
+		expect(ask(`never-multi-line`, { [CLOSING_EMPTY_LINE]: `always-multi-line` }, false, `a {/* c */;\n}`)).toBe(true)
+		expect(ask(`always`, { [CLOSING_NEWLINE]: `never-multi-line` }, false, `a {/* c */;\n}`)).toBe(false)
+	})
+
+	it(`the same run where no break stands behind the semicolon, or a neighbor takes the semicolon out, which the neighbors write in front of but for the rule about a space`, () => {
+		expect(ask(`never-multi-line`, { [CLOSING_NEWLINE]: `always` }, false, `a {/* c */; }`)).toBe(false)
+		expect(ask(`always`, { [CLOSING_SPACE]: `always` }, false, `a {/* c */; }`)).toBe(true)
+	})
+
+	it(`a run two stray semicolons part with a break between them, which the neighbors write behind the first`, () => {
+		expect(ask(`never-multi-line`, { [CLOSING_EMPTY_LINE]: `always-multi-line` }, false, `a {/* c */ ;\n;}`)).toBe(true)
+		expect(ask(`never-multi-line`, { [CLOSING_NEWLINE]: `always`, "@stylistic/no-extra-semicolons": true }, false, `a {/* c */;\n}`)).toBe(false)
+	})
 })
 
 /**
@@ -90,10 +107,12 @@ describe(`writesBlockAfter`, () => {
  * @param primary - The asking rule's primary option.
  * @param rules - The rules the configuration lists.
  * @param isSingleLine - Whether the block is one line as the write leaves it.
+ * @param code - The stylesheet, whose first rule is the block.
  * @returns What the utility answers.
  */
-function ask (primary: string, rules: Record<string, unknown>, isSingleLine: boolean = false): boolean {
+function ask (primary: string, rules: Record<string, unknown>, isSingleLine: boolean = false, code: string = `a {}`): boolean {
 	let result = { stylelint: { config: { rules } } } as unknown as PostcssResult
+	let block = parse(code).first as Rule
 
-	return writesBlockAfter(parse(`a {}`), result, primary, isSingleLine)
+	return writesBlockAfter(block, result, primary, isSingleLine, block.raws.after ?? ``)
 }
