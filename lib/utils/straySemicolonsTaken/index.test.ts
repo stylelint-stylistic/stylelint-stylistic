@@ -2,7 +2,7 @@ import { parse, type Rule } from "postcss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
-import { straySemicolonsTaken, straySemicolonsTakenBefore, withoutTaken } from "./index.ts"
+import { straySemicolonsReleased, straySemicolonsTaken, straySemicolonsTakenBefore, withoutTaken } from "./index.ts"
 
 describe(`straySemicolonsTaken`, () => {
 	it(`nothing where no rule taking a stray semicolon out is listed`, () => {
@@ -50,6 +50,40 @@ describe(`straySemicolonsTakenBefore`, () => {
 	})
 })
 
+describe(`straySemicolonsReleased`, () => {
+	// `a {/* c */ ;⏎}`: the run in front of the brace starts at offset 10 on line 1
+	let insertion = [{ offset: 10, line: 1, delta: 1 }]
+
+	it(`a semicolon a disable comment keeps on its line, which a break written in front of it moves out of the comment's reach`, () => {
+		let block = parse(`a {/* c */ ;\n}`).first as Rule
+
+		expect([...straySemicolonsReleased(block, `after`, extraRuleResult([{ start: 1, end: 1 }]), insertion)]).toEqual([1])
+		expect([...straySemicolonsReleased(block, `after`, extraRuleResult([{ start: 1, end: 1 }]), [])]).toEqual([])
+	})
+
+	it(`none where the range reaches the line the move lands on`, () => {
+		let block = parse(`a {/* c */ ;\n}`).first as Rule
+
+		expect([...straySemicolonsReleased(block, `after`, extraRuleResult([{ start: 1, end: 5 }]), insertion)]).toEqual([])
+	})
+
+	it(`none where the comment opening a one-line range moves with the semicolon, or the edits stand on lines in front of a range whose comment is not known`, () => {
+		let block = parse(`a {\n/* c */ ;\n}`).first as Rule
+		let comment = block.first
+
+		// The break in front of the comment taken out, as never-multi-line takes it
+		expect([...straySemicolonsReleased(block, `after`, extraRuleResult([{ node: comment, start: 2, end: 2 }]), [{ offset: 3, line: 1, delta: -1 }])]).toEqual([])
+		expect([...straySemicolonsReleased(block, `after`, extraRuleResult([{ start: 2, end: 2 }]), [{ offset: 3, line: 1, delta: -1 }])]).toEqual([])
+	})
+
+	it(`the run in front of a node the same way`, () => {
+		let declaration = (parse(`a {/* c */ ;\nb: c; }`).first as Rule).last
+
+		expect(declaration && [...straySemicolonsReleased(declaration, `before`, extraRuleResult([{ start: 1, end: 1 }]), insertion)]).toEqual([1])
+		expect(declaration && [...straySemicolonsReleased(declaration, `before`, extraRuleResult([]), insertion)]).toEqual([])
+	})
+})
+
 describe(`withoutTaken`, () => {
 	it(`takes the characters at the indices out`, () => {
 		expect(withoutTaken(`\n;\n;\n`, new Set([1, 3]))).toBe(`\n\n\n`)
@@ -75,6 +109,6 @@ function ask (code: string, rules: Record<string, unknown> = {}, disabled: { sta
  * @param disabled - The lines a disable comment for every rule keeps a fix off.
  * @returns The result.
  */
-function extraRuleResult (disabled: { start: number, end: number }[]): PostcssResult {
+function extraRuleResult (disabled: { node?: unknown, start: number, end: number }[]): PostcssResult {
 	return { stylelint: { config: { rules: { "@stylistic/no-extra-semicolons": true } }, disabledRanges: { all: disabled } } } as unknown as PostcssResult
 }

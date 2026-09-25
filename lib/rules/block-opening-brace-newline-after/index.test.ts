@@ -1198,4 +1198,44 @@ describe(`${ruleName} beside the rules that write the same run`, () => {
 	it(`does the same in front of a declaration`, async () => {
 		expect(await race(`a {\n/* c */ ;\nb: c; }`, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: `a {\n/* c */\nb: c; }`, theirs: `a {\n/* c */\nb: c; }`, left: [] })
 	})
+
+	// A break written in front of a semicolon a disable comment keeps from that rule moves it off the line the comment covers, and the rule would take it after all
+	it(`leaves the run where a break in front of it would move a semicolon a disable comment keeps from the rule about extra semicolons off its line`, async () => {
+		let code = `a {/* stylelint-disable-line @stylistic/no-extra-semicolons */ ;\n}`
+
+		expect(await race(code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
+	})
+
+	it(`does the same where the comment covers the next line`, async () => {
+		let code = `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\na {/* c */ ;\n}`
+
+		expect(await race(code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
+	})
+
+	it(`writes it under never-multi-line where the disable comment keeping the semicolon moves up with it`, async () => {
+		let code = `a {\n/* stylelint-disable-line @stylistic/no-extra-semicolons */ ;\n}`
+		let fixed = `a {/* stylelint-disable-line @stylistic/no-extra-semicolons */;\n}`
+
+		expect(await race(code, `never-multi-line`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: fixed, theirs: fixed, left: [] })
+	})
+
+	it(`leaves it under never-multi-line where a semicolon a disable comment keeps stands in front of another comment and would move off the line the disable comment covers`, async () => {
+		let code = `a {\n/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\n;/* d */ b: c;\n}`
+
+		expect(await race(code, `never-multi-line`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.rejectedAfterMultiLine()] })
+	})
+
+	it(`leaves the semicolon a disable comment for another rule's range closes on its line out of the reckoning`, async () => {
+		let code = `/* stylelint-disable color-named */\na {/* stylelint-disable-line @stylistic/no-extra-semicolons */ ; b: c; /* stylelint-enable color-named */ }`
+
+		expect(await race(code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
+	})
+
+	it(`counts the break it writes against the run without the semicolon the rule about extra semicolons takes, one run in both orders`, async () => {
+		let code = `a {/* stylelint-disable-next-line @stylistic/no-extra-semicolons */ ;\n ; b: c; }`
+		let first = await race(code, `always`, `@stylistic/no-extra-semicolons`, true)
+
+		expect(first.ours).toBe(first.theirs)
+		expect(first.left).toEqual([])
+	})
 })

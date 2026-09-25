@@ -1,10 +1,12 @@
+import type { Node } from "postcss"
 import type { PostcssResult } from "stylelint"
 
 /** The name a disable comment gives every rule. */
 const EVERY_RULE = `all`
 
 /** A range a disable comment opens, as Stylelint files it: its lines, and the rules it names if any. */
-type DisabledRange = {
+export type DisabledRange = {
+	node?: Node | undefined,
 	start: number,
 	end?: number | undefined,
 	rules?: string[] | undefined,
@@ -20,11 +22,21 @@ type DisabledRange = {
  * @returns True where the fix is kept off the line.
  */
 export function fixDisabledOnLine (result: PostcssResult, ruleName: string, line: number): boolean {
+	return fixDisabledRanges(result, ruleName).some((range) => range.start <= line && (range.end === undefined || range.end >= line))
+}
+
+/**
+ * Reads the ranges a `stylelint-disable` comment keeps a rule's fix off, as {@link fixDisabledOnLine} reads them: the rule's own, else every rule's, none under `ignoreDisables`. A range carries the node Stylelint files it with: mostly the comment opening it, but the enable comment for a range an enable opens inside a disable of every rule, the rule or declaration for a comment in its raws, and a detached copy for merged `//` comments.
+ * @param result - The Stylelint result.
+ * @param ruleName - The registered name.
+ * @returns The ranges.
+ */
+export function fixDisabledRanges (result: PostcssResult, ruleName: string): DisabledRange[] {
 	let stylelint = result.stylelint as { config?: { ignoreDisables?: boolean }, disabledRanges?: Record<string, DisabledRange[]> } | undefined
 
-	if (stylelint?.config?.ignoreDisables) return false
+	if (stylelint?.config?.ignoreDisables) return []
 
 	let ranges = stylelint?.disabledRanges?.[ruleName] ?? stylelint?.disabledRanges?.[EVERY_RULE] ?? []
 
-	return ranges.some((range) => range.start <= line && (range.end === undefined || range.end >= line) && (!range.rules || range.rules.includes(ruleName)))
+	return ranges.filter((range) => !range.rules || range.rules.includes(ruleName))
 }

@@ -21,7 +21,7 @@ import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
-import { straySemicolonsTaken, straySemicolonsTakenBefore, withoutTaken } from "../../utils/straySemicolonsTaken/index.ts"
+import { type LineEdit, straySemicolonsReleased, straySemicolonsTaken, straySemicolonsTakenBefore, withoutTaken } from "../../utils/straySemicolonsTaken/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesBlockAfter } from "../../utils/writesBlockAfter/index.ts"
 
@@ -77,7 +77,7 @@ function runInFrontOfTheClosingBrace (syntax: Syntax, statement: Rule | AtRule, 
 /**
  * Writes a run as `no-extra-semicolons` leaves it, keeping the semicolons it takes out for it to take.
  *
- * The write is worked out on the run without them, so that it comes out the same whichever side of that rule this one is listed; they stand behind the whitespace the write opens with, where taking them leaves the written run.
+ * The write is worked out on the run without them, so that it comes out the same whichever side of that rule this one is listed. Each stands behind as many breaks of the written whitespace as stood in front of it, as far as the whitespace holds, so that it keeps its line and a disable comment covering none of them covers none after the write either; taking them leaves the written run.
  * @param write - The write over a run.
  * @param run - The run as it stands.
  * @param taken - The indices of the semicolons the neighbor takes out.
@@ -88,8 +88,121 @@ function writtenAsLeft (write: (run: string) => string, run: string, taken: Set<
 
 	let written = write(withoutTaken(run, taken))
 	let opening = written.match(LEADING_CSS_WHITESPACE)?.[0] ?? ``
+	let breakEnds = [0, ...[...opening.matchAll(EVERY_LINE_BREAK)].map((match) => match.index + match[0].length)]
+	let placed = [...taken].map((index) => breakEnds[Math.min(breaksOf(run.slice(0, index)), breakEnds.length - 1)] ?? 0)
 
-	return opening + `;`.repeat(taken.size) + written.slice(opening.length)
+	// From the end, so that each insertion leaves the places in front of it where they stand
+	for (let place of placed.toSorted((a, b) => b - a)) written = `${written.slice(0, place)};${written.slice(place)}`
+
+	return written
+}
+
+/**
+ * Reads something of a node against its own run rather than the one a comment's break was carried onto it with.
+ * @param node - The node.
+ * @param carried - The runs the carry wrote over, by node.
+ * @param read - What is read.
+ * @returns What it read.
+ */
+function withOwnRun<T> (node: Node, carried: Map<Node, string | undefined>, read: () => T): T {
+	if (!carried.has(node)) return read()
+
+	let written = node.raws.before
+	let own = carried.get(node)
+
+	if (typeof own === `string`) node.raws.before = own
+	else delete node.raws.before
+
+	try {
+		return read()
+	}
+	finally {
+		node.raws.before = written
+	}
+}
+
+/**
+ * Counts the breaks of the whitespace a run opens with.
+ * @param run - The run.
+ * @returns The count.
+ */
+function breaksOpening (run: string): number {
+	return (run.match(LEADING_CSS_WHITESPACE)?.[0].match(EVERY_LINE_BREAK) ?? []).length
+}
+
+/**
+ * Counts the breaks of a run.
+ * @param run - The run.
+ * @returns The count.
+ */
+function breaksOf (run: string): number {
+	return (run.match(EVERY_LINE_BREAK) ?? []).length
+}
+
+/**
+ * The edits a write of the run in front of the checked node or of the closing brace makes to the breaks at the head of a block: the breaks it adds to the whitespace the run opens with or takes out of it, counted without the semicolons the neighbor takes and filed at the run's start, since nothing but whitespace and such semicolons stands in front of them, and under `never-multi-line` every break of the comments' runs in front, each where it stands, which that write takes out.
+ * @param statement - The rule or at-rule.
+ * @param primary - The primary option.
+ * @param carried - The runs the carry wrote over, by node.
+ * @param run - The run as it stands.
+ * @param writtenBreaks - The breaks of the whitespace the written run opens with, the semicolons the neighbor takes left out.
+ * @param taken - The semicolons of the run the neighbor takes out.
+ * @param runEnd - Where the run ends in the file, if it has a place.
+ * @param upTo - The node the run stands in front of; the closing brace where none is given.
+ * @returns The edits.
+ */
+function headEdits (statement: Rule | AtRule, primary: string, carried: Map<Node, string | undefined>, run: string, writtenBreaks: number, taken: Set<number>, runEnd: { offset: number | undefined, line: number | undefined } | undefined, upTo?: Node): LineEdit[] {
+	let edits: LineEdit[] = []
+
+	/**
+	 * Files an edit at the start of a run ending where given.
+	 * @param own - The run.
+	 * @param end - Where it ends.
+	 * @param delta - The breaks added.
+	 */
+	function edit (own: string, end: { offset: number | undefined, line: number | undefined } | undefined, delta: number): void {
+		if (delta !== 0 && end?.offset !== undefined && end.line !== undefined) edits.push({ offset: end.offset - own.length, line: end.line - breaksOf(own), delta })
+	}
+
+	if (primary === `never-multi-line`) {
+		for (let node = statement.first; node && node !== upTo; node = node.next()) {
+			let own = withOwnRun(node, carried, () => node.raws.before)
+			let start = node.source?.start
+
+			// Every break of a comment's run goes, each where it stands
+			if (typeof own === `string` && start?.offset !== undefined) {
+				for (let match of own.matchAll(EVERY_LINE_BREAK)) edits.push({ offset: start.offset - own.length + match.index, line: start.line - breaksOf(own.slice(match.index)), delta: -1 })
+			}
+		}
+	}
+
+	edit(run, runEnd, writtenBreaks - breaksOpening(withoutTaken(run, taken)))
+
+	return edits
+}
+
+/**
+ * Asks whether a write releases a stray semicolon a disable comment keeps from `no-extra-semicolons`, in its run or, under `never-multi-line`, in the runs of the comments in front, whose breaks it takes out too; the author chose to keep it, and the write would hand it to that rule after all.
+ * @param statement - The rule or at-rule.
+ * @param primary - The primary option.
+ * @param carried - The runs the carry wrote over, by node.
+ * @param result - The Stylelint result.
+ * @param edits - The write's edits.
+ * @param owner - The node whose run is written, or the statement for the run in front of its closing brace.
+ * @returns True where it does.
+ */
+function releasesAKeptSemicolon (statement: Rule | AtRule, primary: string, carried: Map<Node, string | undefined>, result: PostcssResult, edits: LineEdit[], owner: Node): boolean {
+	let upTo = owner === statement ? undefined : owner
+
+	if (withOwnRun(owner, carried, () => straySemicolonsReleased(owner, owner === statement ? `after` : `before`, result, edits)).size > 0) return true
+
+	if (primary !== `never-multi-line`) return false
+
+	for (let node = statement.first; node && node !== upTo; node = node.next()) {
+		if (withOwnRun(node, carried, () => straySemicolonsReleased(node, `before`, result, edits)).size > 0) return true
+	}
+
+	return false
 }
 
 /**
@@ -253,18 +366,22 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			/**
 			 * Builds the fix that spells the run in front of the closing brace of a block holding nothing but comments.
-			 * @returns The fix, or nothing where the run is not this rule's to write.
+			 * @returns The fix, or nothing where the run is not this rule's to write or the write would release a stray semicolon a disable comment keeps.
 			 */
 			function fixTheTrailingRun (): (() => void) | undefined {
 				let standing = getBlockAfter(syntax, statement)
 
 				if (typeof standing !== `string`) return
 
-				let written = writtenAsLeft((run) => writes.newline(primary, run), standing, straySemicolonsTaken(statement, result))
+				let taken = straySemicolonsTaken(statement, result)
+				let written = writtenAsLeft((run) => writes.newline(primary, run), standing, taken)
 				// The `always` write opens the run with a break; the `never-multi-line` one takes every break out of the block's whitespace in front of what it keeps, so only a comment's own text or a break behind a stray semicolon can leave the block multi-line
 				let isSingleLine = primary === `never-multi-line` && !LINE_BREAK.test(written) && nodes.every((node) => isSingleLineString(nodeString(node, result)))
 
-				if (!writesBlockAfter(statement, result, primary, isSingleLine, standing)) return
+				// A stray semicolon a disable comment keeps from `no-extra-semicolons` is the author's to keep; the block's end offset stands behind its brace
+				let end = statement.source?.end
+
+				if (!writesBlockAfter(statement, result, primary, isSingleLine, standing) || releasesAKeptSemicolon(statement, primary, backupCommentNextBefores, result, headEdits(statement, primary, backupCommentNextBefores, standing, breaksOpening(writes.newline(primary, withoutTaken(standing, taken))), taken, end && { offset: end.offset === undefined ? undefined : end.offset - 1, line: end.line }), statement)) return
 
 				return (): void => {
 					if (primary === `never-multi-line`) restoreCarriedBreaks()
@@ -278,9 +395,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			 *
 			 * The run the fix reads is the one the check read, so a node carrying no raw is written the run PostCSS would have printed in front of it, trimmed or opened as the option asks.
 			 * @param nodeToFix - The first non-comment node of the block.
-			 * @returns The fix.
+			 * @returns The fix, or nothing where it would move a semicolon a disable comment keeps out of the comment's reach.
 			 */
-			function fixTheCheckedRun (nodeToFix: Node): () => void {
+			function fixTheCheckedRun (nodeToFix: Node): (() => void) | undefined {
+				let own = withOwnRun(nodeToFix, backupCommentNextBefores, () => runInFrontOf(nodeToFix))
+				let taken = withOwnRun(nodeToFix, backupCommentNextBefores, () => straySemicolonsTakenBefore(nodeToFix, result))
+				let writtenBreaks = breaksOpening(primary.startsWith(`always`) && backupCommentNextBefores.has(nodeToFix) ? spellTheCarriedRun(runInFrontOf(nodeToFix), backupCommentNextBefores.get(nodeToFix)) : writes.newline(primary, withoutTaken(own, taken)))
+
+				if (releasesAKeptSemicolon(statement, primary, backupCommentNextBefores, result, headEdits(statement, primary, backupCommentNextBefores, own, writtenBreaks, taken, nodeToFix.source?.start, nodeToFix), nodeToFix)) return
+
 				return (): void => {
 					let nodeToFixRaws = nodeToFix.raws
 
