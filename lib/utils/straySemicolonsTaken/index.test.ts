@@ -2,7 +2,7 @@ import { parse, type Rule } from "postcss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
-import { straySemicolonsReleased, straySemicolonsTaken, straySemicolonsTakenBefore, withoutTaken } from "./index.ts"
+import { releasesAKeptSemicolon, straySemicolonsReleased, straySemicolonsTaken, straySemicolonsTakenBefore, withoutTaken } from "./index.ts"
 
 describe(`straySemicolonsTaken`, () => {
 	it(`nothing where no rule taking a stray semicolon out is listed`, () => {
@@ -81,6 +81,22 @@ describe(`straySemicolonsReleased`, () => {
 
 		expect(declaration && [...straySemicolonsReleased(declaration, `before`, extraRuleResult([{ start: 1, end: 1 }]), insertion)]).toEqual([1])
 		expect(declaration && [...straySemicolonsReleased(declaration, `before`, extraRuleResult([]), insertion)]).toEqual([])
+	})
+})
+
+describe(`releasesAKeptSemicolon`, () => {
+	// `a {/* c */ b: c;; }` behind a comment line: the declaration's run starts at offset 18 on line 2
+	let code = `/* x */\na {/* c */ b: c;; }`
+	let insertion = [{ offset: 18, line: 2, delta: 1 }]
+
+	it(`a semicolon anywhere behind the edit that a covering range no longer reaches`, () => {
+		expect(releasesAKeptSemicolon(parse(code), extraRuleResult([{ start: 2, end: 2 }]), insertion)).toBe(true)
+	})
+
+	it(`none without a range, without an edit, or where the range reaches the moved line`, () => {
+		expect(releasesAKeptSemicolon(parse(code), extraRuleResult([]), insertion)).toBe(false)
+		expect(releasesAKeptSemicolon(parse(code), extraRuleResult([{ start: 2, end: 2 }]), [])).toBe(false)
+		expect(releasesAKeptSemicolon(parse(code), extraRuleResult([{ start: 2, end: 3 }]), insertion)).toBe(false)
 	})
 })
 

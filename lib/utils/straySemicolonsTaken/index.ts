@@ -4,7 +4,7 @@ import type { PostcssResult } from "stylelint"
 import { ENABLE_COMMAND, EVERY_LINE_BREAK, EVERY_SEMICOLON, LINE_DISABLE_COMMAND } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { trailingSemicolonAsked } from "../closedBySemicolon/index.ts"
-import { extraSemicolonsAfter, extraSemicolonsBefore } from "../extraSemicolonsAfter/index.ts"
+import { extraSemicolonsAfter, extraSemicolonsBefore, extraSemicolonsOwn } from "../extraSemicolonsAfter/index.ts"
 import { type DisabledRange, fixDisabledOnLine, fixDisabledRanges } from "../fixDisabledOnLine/index.ts"
 import { hasBlock } from "../hasBlock/index.ts"
 import { lastNonCommentNode } from "../lastNonCommentNode/index.ts"
@@ -129,7 +129,7 @@ export type LineEdit = {
 }
 
 /**
- * Counts the lines what stands at an offset moves by: every edit in front of it.
+ * Counts the lines what stands at an offset moves by: every edit in front of it or at it, since a break a write puts at an offset goes in front of what stands there.
  * @param edits - The write's edits.
  * @param offset - The offset in the file.
  * @returns The lines, negative for a move up.
@@ -137,7 +137,7 @@ export type LineEdit = {
 function shiftAt (edits: LineEdit[], offset: number): number {
 	let shift = 0
 
-	for (let edit of edits) if (edit.offset < offset) shift += edit.delta
+	for (let edit of edits) if (edit.offset <= offset) shift += edit.delta
 
 	return shift
 }
@@ -228,35 +228,71 @@ function reaches ({ start, end }: { start: number, end?: number | undefined }, l
 	return start <= line && (end === undefined || end >= line)
 }
 
+/** A raw `no-extra-semicolons` takes semicolons out of. */
+type SemicolonRaw = `before` | `after` | `ownSemicolon`
+
 /**
- * Places a raw in the file: the offset it starts at and the line it ends on.
- * @param owner - The node whose `raws.before`, or the container whose `raws.after`, it is.
- * @param key - Which of the two raws.
+ * Places a raw in the file: the offset it starts at, and the line a character of it stands on.
+ * @param owner - The node whose `raws.before` or `raws.ownSemicolon`, or the container whose `raws.after`, it is.
+ * @param key - Which of the raws.
  * @param raw - The raw.
- * @returns The place, each half nothing where the node has none.
+ * @returns The offset, and the line by index; nothing where the node has no place.
  */
-function placeOf (owner: Node, key: `before` | `after`, raw: string): { rawStart: number | undefined, endLine: number | undefined } {
+function placeOf (owner: Node, key: SemicolonRaw, raw: string): { rawStart: number | undefined, lineAt: (index: number) => number | undefined } {
+	if (key === `ownSemicolon`) {
+		// PostCSS moves the rule's end behind the last semicolon it files there, so the raw ends where the node does
+		let end = owner.source?.end
+
+		return { rawStart: end?.offset === undefined ? undefined : end.offset - raw.length, lineAt: (index) => lineInRaw(raw, index, end?.line) }
+	}
+
+	if (owner.type === `root` && key === `after`) {
+		// The root's tail runs to the end of its text; a root a document holds counts its nodes from the document's start and has no place of its own here
+		let text = owner.parent ? undefined : owner.source?.input.css
+
+		if (text === undefined) return { rawStart: text, lineAt: (index) => lineInRaw(raw, index, text) }
+
+		let start = text.length - raw.length
+
+		return { rawStart: start, lineAt: (index) => (text.slice(0, start + index).match(EVERY_LINE_BREAK) ?? []).length + 1 }
+	}
+
 	let end = key === `before` ? owner.source?.start : owner.source?.end
 
 	// A block's end offset stands behind its brace
-	return { rawStart: end?.offset === undefined ? undefined : end.offset - (key === `after` ? 1 : 0) - raw.length, endLine: end?.line }
+	return { rawStart: end?.offset === undefined ? undefined : end.offset - (key === `after` ? 1 : 0) - raw.length, lineAt: (index) => lineInRaw(raw, index, end?.line) }
+}
+
+/**
+ * Finds the semicolons `no-extra-semicolons` finds extra in one raw of a node.
+ * @param syntax - The syntax the copy reads through.
+ * @param owner - The node.
+ * @param key - Which of its raws.
+ * @param result - The Stylelint result.
+ * @returns The indices in the raw.
+ */
+function extraSemicolonsIn (syntax: Syntax, owner: Node, key: SemicolonRaw, result: PostcssResult): number[] {
+	if (key === `before`) return extraSemicolonsBefore(syntax, owner, result)
+	if (key === `after`) return extraSemicolonsAfter(syntax, owner, result)
+
+	return extraSemicolonsOwn(syntax, owner)
 }
 
 /**
  * Finds the stray semicolons of a raw that `no-extra-semicolons` finds extra but a disable comment keeps from its fix, and that a write moves out of every such comment's reach, the comments moving with the text around them; such a write would hand them to that rule after all. Where the raw has no place in the file, every one a comment keeps is counted.
- * @param owner - The node whose `raws.before`, or the container whose `raws.after`, is read.
- * @param key - Which of the two raws.
+ * @param owner - The node whose `raws.before` or `raws.ownSemicolon`, or the container whose `raws.after`, is read.
+ * @param key - Which of the raws.
  * @param result - The Stylelint result, which holds the configuration.
  * @param edits - The write's edits.
  * @returns The semicolons' indices in the raw.
  */
-export function straySemicolonsReleased (owner: Node, key: `before` | `after`, result: PostcssResult, edits: LineEdit[]): Set<number> {
+export function straySemicolonsReleased (owner: Node, key: SemicolonRaw, result: PostcssResult, edits: LineEdit[]): Set<number> {
 	let raw = owner.raws[key]
 	let released: Set<number> = new Set()
 
 	if (typeof raw !== `string` || !raw.includes(`;`) || edits.every((edit) => edit.delta === 0)) return released
 
-	let { rawStart, endLine } = placeOf(owner, key, raw)
+	let { rawStart, lineAt } = placeOf(owner, key, raw)
 	let taken: Set<number> = new Set()
 
 	for (let { fixDisabled, name, syntax } of neighborCopies(owner, result, NO_EXTRA_SEMICOLONS)) {
@@ -264,8 +300,8 @@ export function straySemicolonsReleased (owner: Node, key: `before` | `after`, r
 
 		let ranges = fixDisabledRanges(result, name)
 
-		for (let index of key === `before` ? extraSemicolonsBefore(syntax, owner, result) : extraSemicolonsAfter(syntax, owner, result)) {
-			let line = lineInRaw(raw, index, endLine)
+		for (let index of extraSemicolonsIn(syntax, owner, key, result)) {
+			let line = lineAt(index)
 
 			if (line === undefined || !ranges.some((range) => reaches(range, line))) taken.add(index)
 			else if (rawStart === undefined || !ranges.some((range) => reaches(movedRange(range, edits, name), line + shiftAt(edits, rawStart + index)))) released.add(index)
@@ -275,4 +311,85 @@ export function straySemicolonsReleased (owner: Node, key: `before` | `after`, r
 	for (let index of taken) released.delete(index)
 
 	return released
+}
+
+/**
+ * Asks whether a raw holds a semicolon `no-extra-semicolons` finds extra but a disable comment on its line keeps from every live copy's fix.
+ * @param owner - The node whose raw it is.
+ * @param key - Which of its raws.
+ * @param raw - The raw.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns True where it does.
+ */
+function holdsAKeptSemicolon (owner: Node, key: SemicolonRaw, raw: string, result: PostcssResult): boolean {
+	let { lineAt } = placeOf(owner, key, raw)
+	let held: Set<number> = new Set()
+	let taken: Set<number> = new Set()
+
+	for (let { fixDisabled, name, syntax } of neighborCopies(owner, result, NO_EXTRA_SEMICOLONS)) {
+		if (fixDisabled) continue
+
+		let ranges = fixDisabledRanges(result, name)
+
+		for (let index of extraSemicolonsIn(syntax, owner, key, result)) {
+			let line = lineAt(index)
+
+			if (line !== undefined && ranges.some((range) => reaches(range, line))) held.add(index)
+			else taken.add(index)
+		}
+	}
+
+	return [...held].some((index) => !taken.has(index))
+}
+
+/** The raws holding a semicolon a disable comment keeps from `no-extra-semicolons`, per result, gathered once: a write never adds such a semicolon, so a raw holding none keeps holding none. */
+let keptRawsByResult: WeakMap<PostcssResult, [Node, SemicolonRaw][]> = new WeakMap()
+
+/**
+ * Gathers the raws of a stylesheet holding a semicolon a disable comment keeps from `no-extra-semicolons`.
+ * @param root - The stylesheet.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns The owners and their raws.
+ */
+function keptRaws (root: Container, result: PostcssResult): [Node, SemicolonRaw][] {
+	let known = keptRawsByResult.get(result)
+
+	if (known) return known
+
+	let raws: [Node, SemicolonRaw][] = []
+
+	/**
+	 * Files one node's raws holding a kept semicolon.
+	 * @param node - The node.
+	 */
+	function file (node: Node): void {
+		for (let key of [`before`, `after`, `ownSemicolon`] as const) {
+			let raw: unknown = node.raws[key]
+
+			if (typeof raw === `string` && raw.includes(`;`) && holdsAKeptSemicolon(node, key, raw, result)) raws.push([node, key])
+		}
+	}
+
+	root.walk(file)
+	file(root)
+	keptRawsByResult.set(result, raws)
+
+	return raws
+}
+
+/**
+ * Asks whether a write releases any stray semicolon a disable comment keeps from `no-extra-semicolons`, anywhere in the stylesheet: the write moves everything behind it, the raws of the nodes behind the edited one, nested blocks and the root's next statements included, and a semicolon on a line a `-next-line` comment covers moves off it wherever it stands. The semicolons `no-extra-semicolons` reads in the text of a Less `//` comment are not asked about.
+ *
+ * The raws holding such semicolons are gathered once per stylesheet, and only where a live copy of that rule has a range its fix is kept off, so a file without such comments costs nothing and one with them a walk.
+ * @param root - The stylesheet.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @param edits - The write's edits.
+ * @returns True where it does.
+ */
+export function releasesAKeptSemicolon (root: Container, result: PostcssResult, edits: LineEdit[]): boolean {
+	if (edits.every((edit) => edit.delta === 0)) return false
+
+	if (!neighborCopies(root, result, NO_EXTRA_SEMICOLONS).some(({ fixDisabled, name }) => !fixDisabled && fixDisabledRanges(result, name).length > 0)) return false
+
+	return keptRaws(root, result).some(([node, key]) => straySemicolonsReleased(node, key, result, edits).size > 0)
 }

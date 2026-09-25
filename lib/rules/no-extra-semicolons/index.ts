@@ -6,7 +6,7 @@ import { INLINE_COMMENT_BREAK, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
-import { extraSemicolonsAfter, extraSemicolonsBefore, noExtraUnderComment, readsTheRawsOf } from "../../utils/extraSemicolonsAfter/index.ts"
+import { extraSemicolonsAfter, extraSemicolonsBefore, extraSemicolonsOwn, noExtraUnderComment, readsTheRawsOf } from "../../utils/extraSemicolonsAfter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { report } from "../../utils/report/index.ts"
@@ -109,67 +109,43 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		root.walk((node) => {
 			if (!readsTheRawsOf(syntax, node)) return
 
-			let extraBefore = extraSemicolonsBefore(syntax, node, result)
-
-			if (extraBefore.length > 0 && typeof node.raws.before === `string`) {
-				let rawBeforeNode = node.raws.before
-				let fixSemiIndices: number[] = []
-
-				for (let semicolon of extraBefore) {
-					fix = (): void => {
-						fixSemiIndices.push(semicolon)
-					}
-
-					complain(getOffsetByNode(node) - rawBeforeNode.length + semicolon)
-				}
-
-				if (fixSemiIndices.length > 0) node.raws.before = removeIndices(rawBeforeNode, fixSemiIndices)
-			}
+			takeOut(node, `before`, extraSemicolonsBefore(syntax, node, result), (raw, semicolon) => getOffsetByNode(node) - raw.length + semicolon)
 
 			// A Less mixin last child puts its extra semicolon in `node.raws.after`; mixins are passed over, and the rest of the node with them
 			if (typeof node.raws.after === `string` && node.raws.after.trim().length > 0 && `last` in node && node.last && isAtRule(node.last) && !readsTheRawsOf(syntax, node.last)) return
 
-			let extraAfter = extraSemicolonsAfter(syntax, node, result)
-
-			if (extraAfter.length > 0 && typeof node.raws.after === `string`) {
-				let rawAfterNode = node.raws.after
-				let fixSemiIndices: number[] = []
-
-				for (let semicolon of extraAfter) {
-					fix = (): void => {
-						fixSemiIndices.push(semicolon)
-					}
-
-					complain(getOffsetByNode(node) + nodeString(node, result).length - 1 - rawAfterNode.length + semicolon)
-				}
-
-				if (fixSemiIndices.length > 0) node.raws.after = removeIndices(rawAfterNode, fixSemiIndices)
-			}
+			takeOut(node, `after`, extraSemicolonsAfter(syntax, node, result), (raw, semicolon) => getOffsetByNode(node) + nodeString(node, result).length - 1 - raw.length + semicolon)
 
 			// Less closes a `//` comment on a bare carriage return too, where `postcss-less` reads on to a line feed, and the code behind that break is Less's
 			if (isComment(node)) checkCommentCode(node)
 
-			if (typeof node.raws.ownSemicolon === `string`) {
-				let rawOwnSemicolon = node.raws.ownSemicolon
-				let allowedSemi = 0
-
-				let fixSemiIndices: number[] = []
-
-				styleSearch({ source: rawOwnSemicolon, target: `;` }, (match, count) => {
-					if (count === allowedSemi) return
-
-					fix = (): void => {
-						fixSemiIndices.push(match.startIndex)
-					}
-
-					let index = getOffsetByNode(node) + nodeString(node, result).length - rawOwnSemicolon.length + match.startIndex
-
-					complain(index)
-				})
-
-				if (fixSemiIndices.length > 0) node.raws.ownSemicolon = removeIndices(rawOwnSemicolon, fixSemiIndices)
-			}
+			takeOut(node, `ownSemicolon`, extraSemicolonsOwn(syntax, node), (raw, semicolon) => getOffsetByNode(node) + nodeString(node, result).length - raw.length + semicolon)
 		})
+
+		/**
+		 * Reports the extra semicolons of one raw of a node and takes them out.
+		 * @param owner - The node.
+		 * @param key - The raw.
+		 * @param semicolons - The indices of the extra semicolons in the raw.
+		 * @param offsetOf - The offset in the source of a semicolon of the raw.
+		 */
+		function takeOut (owner: Node, key: `before` | `after` | `ownSemicolon`, semicolons: number[], offsetOf: (raw: string, semicolon: number) => number): void {
+			let raw: unknown = owner.raws[key]
+
+			if (semicolons.length === 0 || typeof raw !== `string`) return
+
+			let fixSemiIndices: number[] = []
+
+			for (let semicolon of semicolons) {
+				fix = (): void => {
+					fixSemiIndices.push(semicolon)
+				}
+
+				complain(offsetOf(raw, semicolon))
+			}
+
+			if (fixSemiIndices.length > 0) (owner.raws as Record<string, unknown>)[key] = removeIndices(raw, fixSemiIndices)
+		}
 
 		/**
 		 * Reports the semicolons of the code a `//` comment node holds that close nothing.

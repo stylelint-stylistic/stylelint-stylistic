@@ -21,7 +21,7 @@ import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
-import { type LineEdit, straySemicolonsReleased, straySemicolonsTaken, straySemicolonsTakenBefore, withoutTaken } from "../../utils/straySemicolonsTaken/index.ts"
+import { type LineEdit, releasesAKeptSemicolon, straySemicolonsTaken, straySemicolonsTakenBefore, withoutTaken } from "../../utils/straySemicolonsTaken/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesBlockAfter } from "../../utils/writesBlockAfter/index.ts"
 
@@ -182,27 +182,32 @@ function headEdits (statement: Rule | AtRule, primary: string, carried: Map<Node
 }
 
 /**
- * Asks whether a write releases a stray semicolon a disable comment keeps from `no-extra-semicolons`, in its run or, under `never-multi-line`, in the runs of the comments in front, whose breaks it takes out too; the author chose to keep it, and the write would hand it to that rule after all.
+ * Asks whether a write releases a stray semicolon a disable comment keeps from `no-extra-semicolons` anywhere in the stylesheet, reading the runs a comment's break was carried onto as their own; the author chose to keep such a semicolon, and the write would hand it to that rule after all.
  * @param statement - The rule or at-rule.
- * @param primary - The primary option.
  * @param carried - The runs the carry wrote over, by node.
  * @param result - The Stylelint result.
  * @param edits - The write's edits.
- * @param owner - The node whose run is written, or the statement for the run in front of its closing brace.
  * @returns True where it does.
  */
-function releasesAKeptSemicolon (statement: Rule | AtRule, primary: string, carried: Map<Node, string | undefined>, result: PostcssResult, edits: LineEdit[], owner: Node): boolean {
-	let upTo = owner === statement ? undefined : owner
+function releasesAKeptSemicolonAnywhere (statement: Rule | AtRule, carried: Map<Node, string | undefined>, result: PostcssResult, edits: LineEdit[]): boolean {
+	let written: Map<Node, string | undefined> = new Map()
 
-	if (withOwnRun(owner, carried, () => straySemicolonsReleased(owner, owner === statement ? `after` : `before`, result, edits)).size > 0) return true
+	for (let [node, own] of carried) {
+		written.set(node, node.raws.before)
 
-	if (primary !== `never-multi-line`) return false
-
-	for (let node = statement.first; node && node !== upTo; node = node.next()) {
-		if (withOwnRun(node, carried, () => straySemicolonsReleased(node, `before`, result, edits)).size > 0) return true
+		if (typeof own === `string`) node.raws.before = own
+		else delete node.raws.before
 	}
 
-	return false
+	try {
+		return releasesAKeptSemicolon(statement.root(), result, edits)
+	}
+	finally {
+		for (let [node, run] of written) {
+			if (run === undefined) delete node.raws.before
+			else node.raws.before = run
+		}
+	}
 }
 
 /**
@@ -381,7 +386,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A stray semicolon a disable comment keeps from `no-extra-semicolons` is the author's to keep; the block's end offset stands behind its brace
 				let end = statement.source?.end
 
-				if (!writesBlockAfter(statement, result, primary, isSingleLine, standing) || releasesAKeptSemicolon(statement, primary, backupCommentNextBefores, result, headEdits(statement, primary, backupCommentNextBefores, standing, breaksOpening(writes.newline(primary, withoutTaken(standing, taken))), taken, end && { offset: end.offset === undefined ? undefined : end.offset - 1, line: end.line }), statement)) return
+				if (!writesBlockAfter(statement, result, primary, isSingleLine, standing) || releasesAKeptSemicolonAnywhere(statement, backupCommentNextBefores, result, headEdits(statement, primary, backupCommentNextBefores, standing, breaksOpening(writes.newline(primary, withoutTaken(standing, taken))), taken, end && { offset: end.offset === undefined ? undefined : end.offset - 1, line: end.line }))) return
 
 				return (): void => {
 					if (primary === `never-multi-line`) restoreCarriedBreaks()
@@ -402,7 +407,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let taken = withOwnRun(nodeToFix, backupCommentNextBefores, () => straySemicolonsTakenBefore(nodeToFix, result))
 				let writtenBreaks = breaksOpening(primary.startsWith(`always`) && backupCommentNextBefores.has(nodeToFix) ? spellTheCarriedRun(runInFrontOf(nodeToFix), backupCommentNextBefores.get(nodeToFix)) : writes.newline(primary, withoutTaken(own, taken)))
 
-				if (releasesAKeptSemicolon(statement, primary, backupCommentNextBefores, result, headEdits(statement, primary, backupCommentNextBefores, own, writtenBreaks, taken, nodeToFix.source?.start, nodeToFix), nodeToFix)) return
+				if (releasesAKeptSemicolonAnywhere(statement, backupCommentNextBefores, result, headEdits(statement, primary, backupCommentNextBefores, own, writtenBreaks, taken, nodeToFix.source?.start, nodeToFix))) return
 
 				return (): void => {
 					let nodeToFixRaws = nodeToFix.raws

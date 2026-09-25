@@ -89,3 +89,23 @@ export function extraSemicolonsBefore (syntax: Syntax, node: Node, result: Postc
 
 	return indices
 }
+
+/**
+ * Finds the semicolons `no-extra-semicolons` takes out of a node's `raws.ownSemicolon`, the run PostCSS files behind a rule's closing brace: every one, none where {@link readsTheRawsOf} passes the node over.
+ * @param syntax - The syntax the rule is built over.
+ * @param node - The node.
+ * @returns The semicolons' indices in the raw.
+ */
+export function extraSemicolonsOwn (syntax: Syntax, node: Node): number[] {
+	let own = node.raws.ownSemicolon
+
+	if (typeof own !== `string` || !readsTheRawsOf(syntax, node)) return []
+
+	let indices: number[] = []
+
+	styleSearch({ source: own, target: `;` }, (match) => {
+		indices.push(match.startIndex)
+	})
+
+	return indices
+}

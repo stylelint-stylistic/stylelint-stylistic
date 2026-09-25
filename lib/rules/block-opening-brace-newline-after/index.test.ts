@@ -1238,4 +1238,30 @@ describe(`${ruleName} beside the rules that write the same run`, () => {
 		expect(first.ours).toBe(first.theirs)
 		expect(first.left).toEqual([])
 	})
+
+	// The break written at the head moves everything behind it, and a semicolon further along the line a `-next-line` comment covers moves off it too
+	it(`leaves the run where the break it writes would move a semicolon further along the covered line off it`, async () => {
+		let code = `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\na {/* c */ b: c;; }`
+
+		expect(await race(code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
+	})
+
+	it(`still writes the head of a block standing behind such a semicolon`, async () => {
+		let code = `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\na { b: c; }; d { e: f; }`
+		let fixed = `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\na { b: c; }; d {\n e: f; }`
+
+		expect(await race(code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: fixed, theirs: fixed, left: [messages.expectedAfter()] })
+	})
+
+	it(`does the same for a semicolon on the line behind a rule's brace, which PostCSS files behind the rule`, async () => {
+		let code = `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */ a {b: c;}\n;`
+
+		expect(await race(code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
+	})
+
+	it(`does the same for a semicolon opening the run the break goes in front of`, async () => {
+		let code = `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\na {; b: c; }`
+
+		expect(await race(code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
+	})
 })
