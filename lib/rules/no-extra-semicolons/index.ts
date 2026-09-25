@@ -27,42 +27,18 @@ export let meta = {
 }
 
 /**
- * Finds the source index of a node's first character.
- * @param node - The node whose start is located in the source.
- * @returns The index, or 0 inside a document.
+ * Finds the index of a node's first character in its root's text, which `report` counts a root's index from: the node's offset less the root's, since a root a document holds, a `<style>` block's or a template's, counts its nodes' offsets from the document's start.
+ * @param node - The node whose start is located.
+ * @returns The index.
+ * @throws {Error} Where the node or its root has no start offset.
  */
 function getOffsetByNode (node: Node): number {
-	if (node.parent && `document` in node.parent && node.parent.document) return 0
+	let start = node.source?.start?.offset
+	let rootStart = node.root().source?.start?.offset
 
-	let root = node.root()
+	if (start === undefined || rootStart === undefined) throw new Error(`The node and its root must have a start offset`)
 
-	if (!root.source) throw new Error(`The root node must have a source`)
-
-	if (!node.source) throw new Error(`The node must have a source`)
-
-	if (!node.source.start) throw new Error(`The source must have a start position`)
-
-	let string = root.source.input.css
-	let nodeColumn = node.source.start.column
-	let nodeLine = node.source.start.line
-	let line = 1
-	let column = 1
-	let index = 0
-
-	for (let i = 0; i < string.length; i += 1) {
-		if (column === nodeColumn && nodeLine === line) {
-			index = i
-			break
-		}
-
-		if (string[i] === `\n`) {
-			column = 1
-			line += 1
-		}
-		else column += 1
-	}
-
-	return index
+	return start - rootStart
 }
 
 /** `true`; the rule has no other setting. */

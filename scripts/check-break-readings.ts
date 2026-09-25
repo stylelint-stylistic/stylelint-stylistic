@@ -61,7 +61,6 @@ const DEBT: Record<string, string[]> = {
 		`const LINE_BREAK_CHARACTERS = [\`\\n\`]`,
 		`if (string.charAt(eolWhitespaceIndex) === \`\\r\`) eolWhitespaceIndex -= 1`,
 	],
-	"lib/rules/no-extra-semicolons/index.ts": [`if (string[i] === \`\\n\`) {`],
 	"lib/utils/isWhitespace/index.ts": [`return [\` \`, \`\\n\`, \`\\t\`, \`\\r\`, \`\\f\`].includes(char)`],
 	"lib/utils/whitespaceChecker/index.ts": [
 		`return char === \`\\n\``,

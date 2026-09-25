@@ -1090,3 +1090,50 @@ a {
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [true],
+	customSyntax: `postcss-html`,
+
+	accept: [
+		{
+			// A root a document holds counts its nodes' offsets from the document's start, and the warning is placed in the root's text
+			description: `an extra semicolon of a style block a disable comment covers`,
+			code: `<p>x</p>\n<style>\n/* stylelint-disable-next-line ${ruleName} */\na {/* c */ b: c;; }\n</style>`,
+		},
+	],
+
+	reject: [
+		{
+			description: `extra semicolons of a style block below the document's first lines`,
+			code: `<p>x</p>\n<style>\na {/* c */ b: c;; }\nx { a {b: c;;} ; }\n</style>`,
+			fixed: `<p>x</p>\n<style>\na {/* c */ b: c; }\nx { a {b: c;}  }\n</style>`,
+			warnings: [
+				{
+					line: 3,
+					column: 17,
+					message: messages.rejected,
+				},
+				{
+					line: 4,
+					column: 13,
+					message: messages.rejected,
+				},
+				{
+					line: 4,
+					column: 16,
+					message: messages.rejected,
+				},
+			],
+		},
+		{
+			description: `an extra semicolon of an inline style attribute behind the document's first line`,
+			code: `<p>x</p>\n<div style="a: b; ;c: d">y</div>`,
+			fixed: `<p>x</p>\n<div style="a: b; c: d">y</div>`,
+			line: 2,
+			column: 19,
+			message: messages.rejected,
+		},
+	],
+})
