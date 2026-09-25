@@ -92,8 +92,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let text = statementString(statement, result)
 			let index = text.length - 1
 
-			if (text[index - 1] === `\r`) index -= 1
-
 			let expectEmptyLineBefore = ((): boolean => {
 				let childNodeTypes = statement.nodes.map((item) => item.type)
 

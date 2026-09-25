@@ -151,6 +151,15 @@ testRule({
 			message: messages.expected,
 		},
 		{
+			// A bare carriage return is whitespace of the line to PostCSS, as a form feed is, so the brace behind it is the one reported
+			description: `a brace behind a bare carriage return in a block broken over lines`,
+			code: `a {\n\tcolor: pink;\r}`,
+			fixed: `a {\n\tcolor: pink;\n\n\r}`,
+			line: 2,
+			column: 15,
+			message: messages.expected,
+		},
+		{
 			description: `a stray semicolon behind the break, which stays on its own line while the run's first break is doubled`,
 			code: `a { color: pink;;\n;\n}`,
 			fixed: `a { color: pink;;\n\n;\n}`,
