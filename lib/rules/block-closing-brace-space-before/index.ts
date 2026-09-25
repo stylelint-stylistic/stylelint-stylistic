@@ -21,6 +21,7 @@ import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { statementString } from "../../utils/statementString/index.ts"
+import { straySemicolonsTaken, withoutTaken, writtenAsLeft } from "../../utils/straySemicolonsTaken/index.ts"
 import { isDeclaration } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesSharedRun } from "../../utils/writesSharedRun/index.ts"
@@ -114,18 +115,22 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let commentHead = syntax.commentTextHead(statement, `after`, result)
 			let escapedHead = commentHead ?? blockAfter.slice(0, escapeHeadLength(source, escapes, source.length - 1 - blockAfter.length))
 			let run = blockAfter.slice(escapedHead.length)
+			// As the neighbors taking stray semicolons out leave it, whichever side of them this rule is listed; a semicolon staying is a character in front of the run
+			let taken = new Set([...(lastNodeHoldsTheBlockAfter(statement) ? [] : straySemicolonsTaken(statement, result))].map((at) => at - escapedHead.length).filter((at) => at >= 0))
+			let runLeft = withoutTaken(run, taken)
 
-			// The fix writes over only the whitespace ending the block's final raw, so the guard is asked about the whole surviving run: a break anywhere in it closes a `//` comment the last node left open; where none survives the brace would land in the comment, and the warning stands unfixed. Where the last node has swallowed the final raw the write lands on its own trailing whitespace, which the guard reads when told nothing of the run
+			// The fix writes over only the whitespace ending the block's final raw, so the guard is asked about the whole surviving run, as the neighbors taking stray semicolons out leave it: a break anywhere in it closes a `//` comment the last node left open; where none survives the brace would land in the comment, and the warning stands unfixed. Where the last node has swallowed the final raw the write lands on its own trailing whitespace, which the guard reads when told nothing of the run
 			let { last } = statement
 
 			if (!last) throw new Error(`The block must hold a node`)
 
-			let isFixable = !syntax.writesIntoInlineComment(last, result, lastNodeHoldsTheBlockAfter(statement) ? undefined : `${escapedHead}${run.replace(TRAILING_WHITESPACE, ``)}`)
+			let isFixable = !syntax.writesIntoInlineComment(last, result, lastNodeHoldsTheBlockAfter(statement) ? undefined : `${escapedHead}${runLeft.replace(TRAILING_WHITESPACE, ``)}`)
 
 			// Behind a wordless declaration the colon rules read this run too, and the two settle who writes
 			if (isFixable) isFixable = writesTheRunInFrontOfTheBrace(syntax, result, ruleName, last)
 
-			let written = writes.space(primary, run)
+			// The semicolons the neighbors take stay for them to take, the run written as they leave it
+			let written = writtenAsLeft((standing) => writes.space(primary, standing), run, taken)
 
 			if (isFixable && commentHead !== null) isFixable = INLINE_COMMENT_BREAK.test(written)
 
@@ -133,8 +138,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (isFixable) isFixable = editKeepsEscapedCharacter(source, { start: source.length - 1 - run.length, end: source.length - 1, text: written })
 
 			checker.before({
-				source: maskEscapes(source, escapes, true),
-				index: source.length - 1,
+				source: maskEscapes(`${source.slice(0, source.length - 1 - run.length)}${runLeft}}`, escapes, true),
+				index: source.length - 1 - run.length + runLeft.length,
 				err: (msg) => {
 					report({
 						message: msg,
