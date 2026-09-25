@@ -4,6 +4,7 @@ import type { PostcssResult } from "stylelint"
 import { ENABLE_COMMAND, EVERY_LINE_BREAK, EVERY_SEMICOLON, LINE_DISABLE_COMMAND } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { trailingSemicolonAsked } from "../closedBySemicolon/index.ts"
+import { closingOffset } from "../closingOffset/index.ts"
 import { extraSemicolonsAfter, extraSemicolonsBefore, extraSemicolonsOwn } from "../extraSemicolonsAfter/index.ts"
 import { type DisabledRange, fixDisabledOnLine, fixDisabledRanges } from "../fixDisabledOnLine/index.ts"
 import { hasBlock } from "../hasBlock/index.ts"
@@ -106,9 +107,7 @@ export function withoutTaken (run: string, taken: Set<number>): string {
 }
 
 /**
- * Finds the stray semicolons of a node's `raws.before` that `no-extra-semicolons` takes out in the same run, each where no disable comment keeps its fix off the semicolon's line, so that a rule reading that run reads it as it will stand whichever side of the neighbor it is listed.
- *
- * `declaration-block-trailing-semicolon` takes none of them: the semicolons it takes stand behind the node closing the block.
+ * Finds the stray semicolons of a node's `raws.before` that a neighbor takes out in the same run, so that a rule reading that run reads it as it will stand whichever side of the neighbor it is listed: `no-extra-semicolons` each where no disable comment keeps its fix off the semicolon's line, and `declaration-block-trailing-semicolon` every one in front of a comment standing behind the node closing the block, where it leaves no semicolon behind that node.
  * @param node - The node.
  * @param result - The Stylelint result, which holds the configuration.
  * @returns The semicolons' indices in the raw.
@@ -117,6 +116,11 @@ export function straySemicolonsTakenBefore (node: Node, result: PostcssResult): 
 	let before = node.raws.before
 
 	if (typeof before !== `string` || !before.includes(`;`)) return new Set()
+
+	let parent = node.parent as Container | undefined
+	let last = parent ? lastNonCommentNode(parent) : null
+
+	if (parent && last && isComment(node) && parent.index(node) > parent.index(last) && (isDeclaration(last) || (isAtRule(last) && !hasBlock(last))) && trailingSemicolonAsked(last, result) === false) return new Set([...before.matchAll(EVERY_SEMICOLON)].map((match) => match.index))
 
 	return takenByNoExtra(node, result, before, node.source?.start?.line, (syntax) => extraSemicolonsBefore(syntax, node, result))
 }
@@ -179,7 +183,7 @@ function enables (text: string, ruleName: string): boolean {
  * @param ruleName - The rule's registered name.
  * @returns The offset, or nothing.
  */
-function closingOffset (root: Node | undefined, line: number, ruleName: string): number | undefined {
+function enablingOffset (root: Node | undefined, line: number, ruleName: string): number | undefined {
 	let offsets: number[] = []
 
 	if (root && `walkComments` in root) {
@@ -194,7 +198,7 @@ function closingOffset (root: Node | undefined, line: number, ruleName: string):
 }
 
 /**
- * Moves a disabled range as the write moves the comments bounding it: its start with the node Stylelint files it with, the whole of a range a `-line` or `-next-line` comment opens with that comment, its end with the comment closing it where {@link closingOffset} finds one, the whole of a one-line range none closes with its start, and else its end by the edits on the lines in front of it, which reads an edit on the end's own line as leaving the end where it is — a range read narrower than it may be.
+ * Moves a disabled range as the write moves the comments bounding it: its start with the node Stylelint files it with, the whole of a range a `-line` or `-next-line` comment opens with that comment, its end with the comment closing it where {@link enablingOffset} finds one, the whole of a one-line range none closes with its start, and else its end by the edits on the lines in front of it, which reads an edit on the end's own line as leaving the end where it is — a range read narrower than it may be.
  * @param range - The range.
  * @param edits - The write's edits.
  * @param ruleName - The rule's registered name.
@@ -208,7 +212,7 @@ function movedRange (range: DisabledRange, edits: LineEdit[], ruleName: string):
 
 	if (range.node && isComment(range.node) && LINE_DISABLE_COMMAND.test(range.node.text)) return { start, end: start }
 
-	let closing = closingOffset(range.node?.root(), range.end, ruleName)
+	let closing = enablingOffset(range.node?.root(), range.end, ruleName)
 
 	// A `-line` comment Stylelint read inside a node's raws files the range with the node; with no comment closing a one-line range, it moves whole
 	if (closing === undefined && range.end === range.start) return { start, end: start }
@@ -241,9 +245,9 @@ type SemicolonRaw = `before` | `after` | `ownSemicolon`
 function placeOf (owner: Node, key: SemicolonRaw, raw: string): { rawStart: number | undefined, lineAt: (index: number) => number | undefined } {
 	if (key === `ownSemicolon`) {
 		// PostCSS moves the rule's end behind the last semicolon it files there, so the raw ends where the node does
-		let end = owner.source?.end
+		let end = closingOffset(owner)
 
-		return { rawStart: end?.offset === undefined ? undefined : end.offset - raw.length, lineAt: (index) => lineInRaw(raw, index, end?.line) }
+		return { rawStart: end === undefined ? undefined : end - raw.length, lineAt: (index) => lineInRaw(raw, index, owner.source?.end?.line) }
 	}
 
 	if (owner.type === `root` && key === `after`) {
@@ -257,10 +261,18 @@ function placeOf (owner: Node, key: SemicolonRaw, raw: string): { rawStart: numb
 		return { rawStart: start, lineAt: (index) => (text.slice(0, start + index).match(EVERY_LINE_BREAK) ?? []).length + 1 }
 	}
 
-	let end = key === `before` ? owner.source?.start : owner.source?.end
+	if (key === `before`) {
+		let start = owner.source?.start
 
-	// A block's end offset stands behind its brace
-	return { rawStart: end?.offset === undefined ? undefined : end.offset - (key === `after` ? 1 : 0) - raw.length, lineAt: (index) => lineInRaw(raw, index, end?.line) }
+		return { rawStart: start?.offset === undefined ? undefined : start.offset - raw.length, lineAt: (index) => lineInRaw(raw, index, start?.line) }
+	}
+
+	// A block's end stands behind its brace, and behind `raws.ownSemicolon` where PostCSS files one there
+	let end = closingOffset(owner)
+	let own = String(owner.raws.ownSemicolon ?? ``)
+	let endLine = owner.source?.end?.line
+
+	return { rawStart: end === undefined ? undefined : end - own.length - 1 - raw.length, lineAt: (index) => (endLine === undefined ? undefined : lineInRaw(raw, index, endLine - (own.match(EVERY_LINE_BREAK) ?? []).length)) }
 }
 
 /**
@@ -392,4 +404,59 @@ export function releasesAKeptSemicolon (root: Container, result: PostcssResult, 
 	if (!neighborCopies(root, result, NO_EXTRA_SEMICOLONS).some(({ fixDisabled, name }) => !fixDisabled && fixDisabledRanges(result, name).length > 0)) return false
 
 	return keptRaws(root, result).some(([node, key]) => straySemicolonsReleased(node, key, result, edits).size > 0)
+}
+
+/**
+ * Finds the stray semicolons of a rule's `raws.ownSemicolon` that `no-extra-semicolons` takes out in the same run: every one where no disable comment keeps its fix off the semicolon's line.
+ * @param node - The rule.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns The semicolons' indices in the raw.
+ */
+export function straySemicolonsTakenOwn (node: Node, result: PostcssResult): Set<number> {
+	let own = node.raws.ownSemicolon
+
+	if (typeof own !== `string` || !own.includes(`;`)) return new Set()
+
+	return takenByNoExtra(node, result, own, node.source?.end?.line, (syntax) => extraSemicolonsOwn(syntax, node))
+}
+
+/**
+ * Finds the offsets in a stylesheet's text of every stray semicolon a neighbor takes out in the same run — `no-extra-semicolons` from any raw it reads, `declaration-block-trailing-semicolon: never` from a block's tail and the comments behind the node closing it — so that a rule reading the text reads it as the neighbors leave it. A semicolon whose raw has no place in the text is left out.
+ * @param root - The stylesheet.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns The offsets, counted from the start of the root's text.
+ */
+export function straySemicolonOffsetsTaken (root: Container, result: PostcssResult): Set<number> {
+	let offsets: Set<number> = new Set()
+	let rootStart = root.source?.start?.offset ?? 0
+
+	/**
+	 * Files the taken semicolons of one raw.
+	 * @param owner - The node whose raw it is.
+	 * @param key - Which of its raws.
+	 * @param taken - The indices taken.
+	 */
+	function file (owner: Node, key: SemicolonRaw, taken: Set<number>): void {
+		let raw = owner.raws[key]
+
+		if (taken.size === 0 || typeof raw !== `string`) return
+
+		let { rawStart } = placeOf(owner, key, raw)
+
+		if (rawStart === undefined) return
+
+		// The root's own tail is placed in its text already
+		let base = owner === root ? rawStart : rawStart - rootStart
+
+		for (let index of taken) offsets.add(base + index)
+	}
+
+	root.walk((node) => {
+		file(node, `before`, straySemicolonsTakenBefore(node, result))
+		if (`nodes` in node) file(node, `after`, straySemicolonsTaken(node as Container, result))
+		file(node, `ownSemicolon`, straySemicolonsTakenOwn(node, result))
+	})
+	file(root, `after`, straySemicolonsTaken(root, result))
+
+	return offsets
 }

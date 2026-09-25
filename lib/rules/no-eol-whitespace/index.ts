@@ -1,8 +1,8 @@
-import type { Root } from "postcss"
+import type { Container, Node, Root } from "postcss"
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { EVERY_LINE_BREAK, LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
+import { EVERY_CHARACTER_BUT_A_SEMICOLON, EVERY_LINE_BREAK, LINE_BREAK, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE, TRAILING_SPACES_AND_TABS, TRAILING_SPACES_TABS_AND_TAKEN_MARKS, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -12,6 +12,8 @@ import { maskStrings } from "../../utils/maskStrings/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { semicolonsTakenAlready } from "../../utils/semicolonsTakenAlready/index.ts"
+import { straySemicolonOffsetsTaken, straySemicolonsTaken, straySemicolonsTakenBefore, straySemicolonsTakenOwn } from "../../utils/straySemicolonsTaken/index.ts"
 import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
 
 let { utils: { validateOptions } } = stylelint
@@ -28,6 +30,9 @@ export let meta = {
 }
 
 const WHITESPACES_TO_REJECT = new Set([` `, `\t`])
+
+/** The mark a stray semicolon a neighbor takes out is read as: absent, neither code nor whitespace. */
+const TAKEN_MARK = `\0`
 
 /** The break as a string, since `styleSearch` takes no pattern. */
 const LINE_BREAK_CHARACTERS = [`\n`]
@@ -71,6 +76,9 @@ function findErrorStartIndex (lastEOLIndex: number, string: string, options: {
 	// A Windows pair's carriage return belongs to the break
 	if (string.charAt(eolWhitespaceIndex) === `\r`) eolWhitespaceIndex -= 1
 
+	// A semicolon a neighbor takes out is no character of the line
+	while (string.charAt(eolWhitespaceIndex) === TAKEN_MARK) eolWhitespaceIndex -= 1
+
 	// No whitespace before the break
 	if (!WHITESPACES_TO_REJECT.has(string.charAt(eolWhitespaceIndex))) return -1
 
@@ -81,7 +89,7 @@ function findErrorStartIndex (lastEOLIndex: number, string: string, options: {
 		if (beforeNewlineIndex >= 0 || isRootFirst) {
 			let line = string.slice(Math.max(0, beforeNewlineIndex), eolWhitespaceIndex)
 
-			if (isOnlyWhitespace(line)) return -1
+			if (isOnlyWhitespace(line.replaceAll(TAKEN_MARK, ``))) return -1
 		}
 	}
 
@@ -154,28 +162,82 @@ function eachEolWhitespace (scope: EolScope, string: string, callback: (index: n
 }
 
 /**
+ * Asks whether nothing but whitespace follows a rule on its line, reading the raw behind it — the next node's `raws.before`, else its container's `raws.after` — as it stands and as the neighbors leave it, so that the last line of its `raws.ownSemicolon` ends there as far as whitespace at its end goes. The end of the root ends a line too, which for a root a document holds is the end of its block.
+ * @param scope - The run.
+ * @param node - The rule.
+ * @returns True where it does.
+ */
+function breakFollows (scope: EolScope, node: Node): boolean {
+	let next = node.next()
+	let container = node.parent as Container | undefined
+	let behind = next ? next.raws.before : container?.raws.after
+
+	if (typeof behind !== `string`) return false
+
+	let taken = new Set<number>()
+
+	if (next) taken = straySemicolonsTakenBefore(next, scope.result)
+	else if (container) taken = straySemicolonsTaken(container, scope.result)
+
+	let read = maskTaken(behind, taken).replaceAll(TAKEN_MARK, ``)
+
+	return OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(read) || (!next && container === scope.root && WHITESPACE_OR_NOTHING.test(read))
+}
+
+/**
+ * Reads a text with the stray semicolons a neighbor takes out marked as absent.
+ * @param text - The text.
+ * @param taken - The semicolons' indices in it.
+ * @returns The text as read.
+ */
+function maskTaken (text: string, taken: Set<number>): string {
+	if (taken.size === 0) return text
+
+	let read = ``
+
+	for (let index = 0; index < text.length; index += 1) read += taken.has(index) ? TAKEN_MARK : text.charAt(index)
+
+	return read
+}
+
+/**
+ * Trims the trailing spaces and tabs of a piece of a text, reading it with the semicolons a neighbor takes out marked, and keeps those semicolons for the neighbor to take.
+ * @param piece - The piece.
+ * @param read - The same piece as read.
+ * @returns The piece trimmed.
+ */
+function trimKeepingTaken (piece: string, read: string): string {
+	let trailing = read.length - read.replace(TRAILING_SPACES_TABS_AND_TAKEN_MARKS, ``).length
+
+	return piece.slice(0, piece.length - trailing) + piece.slice(piece.length - trailing).replaceAll(EVERY_CHARACTER_BUT_A_SEMICOLON, ``)
+}
+
+/**
  * Trims the end of every line of a text.
  * @param scope - The run.
  * @param value - The text.
  * @param fixFn - Takes the trimmed text.
- * @param options - For `eachEolWhitespace`.
+ * @param options - For `eachEolWhitespace`, and the stray semicolons of the text a neighbor takes out.
  */
 function fixText (scope: EolScope, value: string | undefined, fixFn: (text: string) => void, options?: {
 	isRootFirst?: boolean,
 	isPlainText?: boolean,
+	taken?: Set<number>,
 }): void {
 	if (!value) return
 
+	let taken = options?.taken ?? new Set()
+	// A stray semicolon a neighbor takes out is read as absent, and stays for the neighbor to take
+	let read = maskTaken(value, taken)
 	let fixed = ``
 	let lastIndex = 0
 
 	eachEolWhitespace(
 		scope,
-		value,
+		read,
 		(index) => {
 			let newlineIndex = index + 1
-
-			fixed += fixString(value.slice(lastIndex, newlineIndex))
+			fixed += trimKeepingTaken(value.slice(lastIndex, newlineIndex), read.slice(lastIndex, newlineIndex))
 			lastIndex = newlineIndex
 		},
 		options,
@@ -202,7 +264,7 @@ function fixRoot (scope: EolScope): void {
 			(fixed) => {
 				node.raws.before = fixed
 			},
-			{ isRootFirst },
+			{ isRootFirst, taken: straySemicolonsTakenBefore(node, scope.result) },
 		)
 		isRootFirst = false
 
@@ -277,16 +339,21 @@ function fixRoot (scope: EolScope): void {
 		if (isAtRule(node) || isRule(node)) {
 			fixText(scope, node.raws.after, (fixed) => {
 				node.raws.after = fixed
-			})
+			}, { taken: straySemicolonsTaken(node, scope.result) })
 		}
 
-		// A stray semicolon behind a rule's closing brace, which PostCSS files with the run in front of it in the rule's own `raws.ownSemicolon`
+		// A stray semicolon behind a rule's closing brace, which PostCSS files with the run in front of it in the rule's own `raws.ownSemicolon`; the break ending its last line stands in the raw behind it
 		if (typeof node.raws.ownSemicolon === `string`) {
-			fixText(scope, node.raws.ownSemicolon, (fixed) => {
-				node.raws.ownSemicolon = fixed
-			})
+			// A break standing in for the one behind the raw, taken off again
+			let lineEnd = breakFollows(scope, node) ? LINE_BREAK_CHARACTERS.join(``) : ``
+
+			fixText(scope, `${node.raws.ownSemicolon}${lineEnd}`, (fixed) => {
+				node.raws.ownSemicolon = fixed.slice(0, fixed.length - lineEnd.length)
+			}, { taken: straySemicolonsTakenOwn(node, scope.result) })
 		}
 	})
+
+	let rootTaken = straySemicolonsTaken(root, scope.result)
 
 	fixText(
 		scope,
@@ -294,13 +361,16 @@ function fixRoot (scope: EolScope): void {
 		(fixed) => {
 			root.raws.after = fixed
 		},
-		{ isRootFirst },
+		{ isRootFirst, taken: rootTaken },
 	)
 
 	if (typeof root.raws.after === `string`) {
-		let lastEOL = lastLineBreakIndex(root.raws.after)
+		let after = root.raws.after
+		let lastEOL = lastLineBreakIndex(after)
+		// Asked again, since the trim above may have shortened the tail
+		let read = maskTaken(after, straySemicolonsTaken(root, scope.result))
 
-		if (lastEOL !== root.raws.after.length - 1) root.raws.after = root.raws.after.slice(0, lastEOL + 1) + fixString(root.raws.after.slice(lastEOL + 1))
+		if (lastEOL !== after.length - 1) root.raws.after = after.slice(0, lastEOL + 1) + trimKeepingTaken(after.slice(lastEOL + 1), read.slice(lastEOL + 1))
 	}
 }
 
@@ -334,9 +404,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		if (!validOptions) return
 
 		let ignoreEmptyLines = optionsMatches(secondaryOptions, `ignore`, `empty-lines`)
+		// Read as the neighbors taking stray semicolons out leave it, so that the verdict is one whichever side of them this rule is listed
+		let text = (root.source && root.source.input.css) || ``
+		let rootString = maskTaken(text, new Set([...straySemicolonOffsetsTaken(root, result), ...semicolonsTakenAlready(root, text, result)]))
 		let scope: EolScope = { syntax, root, result, ignoreEmptyLines }
-
-		let rootString = (root.source && root.source.input.css) || ``
 
 		/**
 		 * Reports trailing whitespace at an index.

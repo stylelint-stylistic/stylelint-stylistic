@@ -369,3 +369,12 @@ export const ENABLE_COMMAND = /^stylelint-enable(?:\s+(?!--)(.*?))?(?:\s+--(?:\s
 
 /** A comment disabling one line, its own or the next. */
 export const LINE_DISABLE_COMMAND = /^stylelint-disable-(?:next-)?line\b/u
+
+/** Every character but a semicolon. */
+export const EVERY_CHARACTER_BUT_A_SEMICOLON = /[^;]/gu
+
+/** The trailing spaces, tabs and marks of a text where a neighbor takes stray semicolons out, the marks standing for them. */
+export const TRAILING_SPACES_TABS_AND_TAKEN_MARKS = /[ \t\0]+$/u
+
+/** A character a semicolon behind it closes nothing of: whitespace, a brace or another semicolon. */
+export const CLOSES_NOTHING_IN_FRONT = /[\s{};]/u

@@ -1264,4 +1264,11 @@ describe(`${ruleName} beside the rules that write the same run`, () => {
 
 		expect(await race(code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
 	})
+
+	// The tail of a block a stray semicolon behind its brace follows ends in front of that semicolon's run, and a kept semicolon there stands on the brace's line
+	it(`leaves the run where the break it writes would move a kept semicolon in front of the brace of a block a stray semicolon follows`, async () => {
+		let code = `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\na { b: c; ;\n}\n  ;`
+
+		expect(await race(code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\na { b: c; ;\n}\n  `, theirs: `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\na { b: c; ;\n}\n  `, left: [messages.expectedAfter()] })
+	})
 })

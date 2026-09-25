@@ -41,7 +41,7 @@ export function noExtraUnderComment (syntax: Syntax, owner: Node, key: `before` 
 /**
  * Finds the semicolons `no-extra-semicolons` takes out of a container's `raws.after`, the run in front of its closing brace.
  *
- * Every one is extra, but for those {@link noExtraUnderComment} reads as closing a node. The rule passes the raw over behind a last child that is an at-rule the syntax calls no standard one, a Less mixin call putting its own semicolon there, and in a container {@link readsTheRawsOf} passes over.
+ * Every one is extra, but for those {@link noExtraUnderComment} reads as closing a node. The rule passes a block's raw over behind a last child that is an at-rule the syntax calls no standard one, a Less mixin call putting its own semicolon there, though not the root's, and in a container {@link readsTheRawsOf} passes over.
  * @param syntax - The syntax the rule is built over.
  * @param container - The container.
  * @param result - The Stylelint result.
@@ -54,7 +54,8 @@ export function extraSemicolonsAfter (syntax: Syntax, container: Node, result: P
 
 	let last = `last` in container ? (container as Container).last : undefined
 
-	if (last && isAtRule(last) && !readsTheRawsOf(syntax, last)) return []
+	// The rule reads the root's tail on its own, with no such pass
+	if (container.type !== `root` && last && isAtRule(last) && !readsTheRawsOf(syntax, last)) return []
 
 	let readsAsNoExtra = noExtraUnderComment(syntax, container, `after`, result)
 	let indices: number[] = []
