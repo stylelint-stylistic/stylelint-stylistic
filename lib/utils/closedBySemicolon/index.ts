@@ -1,7 +1,7 @@
 import type { AtRule, ChildNode, Declaration, Node } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { SEMICOLONS_OR_WHITESPACE, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
+import { EVERY_LINE_BREAK, SEMICOLONS_OR_WHITESPACE, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { fixDisabledOnLine } from "../fixDisabledOnLine/index.ts"
 import { hasBlock } from "../hasBlock/index.ts"
@@ -91,11 +91,45 @@ export function semicolonOutlivesTheFlag (node: Node): boolean {
 }
 
 /**
+ * Counts the breaks of a text.
+ * @param text - The text.
+ * @returns The count.
+ */
+function breaksOf (text: string): number {
+	return (text.match(EVERY_LINE_BREAK) ?? []).length
+}
+
+/**
+ * Finds the line `declaration-block-trailing-semicolon` reports a node closing a block on under `never`, where a disable comment keeps its fix off: the line of the last semicolon behind the node, in the block's tail or in front of a comment behind the node.
+ * @param node - The node closing the block.
+ * @returns The line, or nothing where no semicolon stands behind the node's own, whose line is the node's last.
+ */
+function reportLineOf (node: AtRule | Declaration): number | undefined {
+	let container = node.parent
+
+	if (!container?.nodes) return undefined
+
+	let after = container.raws.after
+	let end = container.source?.end?.line
+
+	if (typeof after === `string` && after.includes(`;`) && end !== undefined && !isRoot(container)) return end - breaksOf(String(container.raws.ownSemicolon ?? ``)) - breaksOf(after.slice(after.lastIndexOf(`;`)))
+
+	for (let sibling of container.nodes.slice(container.index(node) + 1).toReversed()) {
+		let before = sibling.raws.before
+		let start = sibling.source?.start?.line
+
+		if (typeof before === `string` && before.includes(`;`) && start !== undefined) return start - breaksOf(before.slice(before.lastIndexOf(`;`)))
+	}
+
+	return undefined
+}
+
+/**
  * Asks whether a copy of `declaration-block-trailing-semicolon` can fix a node: fix on, secondaries it takes, no disable on the line under its name, closing a block, not alone under `ignore: single-declaration`.
  * @param copy - The copy, as `neighborCopies` reads it.
  * @param decl - The declaration or bodiless at-rule.
  * @param result - The Stylelint result, whose disable ranges are read.
- * @param reportLine - The line the copy reports on, where the caller knows it; else the node's last.
+ * @param reportLine - The line the copy reports on, where the caller knows it; else the line of the last semicolon behind the node, else the node's last.
  * @returns True where the fix reaches the declaration.
  */
 function reaches (copy: NeighborCopy, decl: AtRule | Declaration, result: PostcssResult, reportLine?: number): boolean {
@@ -105,7 +139,7 @@ function reaches (copy: NeighborCopy, decl: AtRule | Declaration, result: Postcs
 
 	if (!parent || !closesADeclarationBlock(copy.syntax, decl)) return false
 
-	let line = reportLine ?? decl.source?.end?.line ?? decl.source?.start?.line
+	let line = reportLine ?? reportLineOf(decl) ?? decl.source?.end?.line ?? decl.source?.start?.line
 
 	if (line !== undefined && fixDisabledOnLine(result, copy.name, line)) return false
 
@@ -115,11 +149,11 @@ function reaches (copy: NeighborCopy, decl: AtRule | Declaration, result: Postcs
 /**
  * Asks what one copy of `declaration-block-trailing-semicolon` writes behind a declaration or a bodiless at-rule, reading it through the syntax of its own namespace: a semicolon under a live `always`, none under a live `never`, nothing where its fix cannot write.
  *
- * `always` writes behind no node with a block and none an inline comment closes; `never` takes no semicolon PostCSS writes regardless or the language requires; neither acts on a flag a comment's text set. The disable line is the declaration's last, where `always` reports.
+ * `always` writes behind no node with a block and none an inline comment closes; `never` takes no semicolon PostCSS writes regardless or the language requires; neither acts on a flag a comment's text set. The disable line is where the copy reports. `never` refuses its fix too where taking the whitespace in front of the semicolon would hand a backslash ending the node what the file holds behind it; that guard is the rule's own and is not asked here, so such a semicolon reads as taken although it stays.
  * @param copy - The copy.
  * @param decl - The declaration or bodiless at-rule.
  * @param result - The Stylelint result, which holds the configuration.
- * @param reportLine - The line the copy reports on, where the caller knows it; else the node's last.
+ * @param reportLine - The line the copy reports on, where the caller knows it; else the line of the last semicolon behind the node, else the node's last.
  * @returns True for a semicolon, false for none, nothing where the copy leaves it.
  */
 function writtenBy (copy: NeighborCopy, decl: AtRule | Declaration, result: PostcssResult, reportLine?: number): boolean | undefined {
@@ -136,7 +170,7 @@ function writtenBy (copy: NeighborCopy, decl: AtRule | Declaration, result: Post
  * Reads what the copy of `declaration-block-trailing-semicolon` reading the root leaves behind a declaration or a bodiless at-rule, and the syntax that copy reads through.
  * @param decl - The declaration or bodiless at-rule.
  * @param result - The Stylelint result, which holds the configuration.
- * @param reportLine - The line the copy reports on, where the caller knows it; else the node's last.
+ * @param reportLine - The line the copy reports on, where the caller knows it; else the line of the last semicolon behind the node, else the node's last.
  * @returns The semicolon and the syntax, or nothing where no copy writes.
  */
 function lastWrite (decl: AtRule | Declaration, result: PostcssResult, reportLine?: number): { semicolon: boolean, syntax: Syntax } | undefined {
@@ -150,7 +184,7 @@ function lastWrite (decl: AtRule | Declaration, result: PostcssResult, reportLin
  * Asks what `declaration-block-trailing-semicolon` leaves behind a declaration or a bodiless at-rule, as its last writing copy leaves it.
  * @param decl - The declaration or bodiless at-rule.
  * @param result - The Stylelint result, which holds the configuration.
- * @param reportLine - The line the copy reports on, where the caller knows it; else the node's last.
+ * @param reportLine - The line the copy reports on, where the caller knows it; else the line of the last semicolon behind the node, else the node's last.
  * @returns True for a semicolon, false for none, nothing where the rule leaves it.
  */
 export function trailingSemicolonAsked (decl: AtRule | Declaration, result: PostcssResult, reportLine?: number): boolean | undefined {

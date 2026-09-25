@@ -308,7 +308,7 @@ testRule({
 	],
 })
 
-// The whitespace in front of the semicolon `never` takes away goes with it. The two blocks below run the neighbor first, the order in which the run it wrote used to outlive the semicolon, and the third runs this rule first, pinning that both orders rest on one file.
+// The whitespace in front of the semicolon `never` takes away goes with it, and the neighbors reading that whitespace do not read a semicolon this rule takes out. The two blocks below run the neighbor first, the order in which the run it wrote used to outlive the semicolon, and the third runs this rule first, pinning that both orders rest on one file.
 testRule({
 	ruleName: spaceBeforeRuleName,
 	config: [`always`],
@@ -316,25 +316,14 @@ testRule({
 
 	reject: [
 		{
-			description: `the space the neighbor writes in front of the semicolon, which the strip takes along instead of leaving it in front of the brace`,
+			description: `a semicolon with no space in front of it where the neighbor asks for one, which the neighbor leaves unread since the strip takes the semicolon out`,
 			code: `a { aspect-ratio: 2; }`,
 			fixed: `a { aspect-ratio: 2 }`,
-			warnings: [
-				{
-					line: 1,
-					column: 19,
-					endLine: 1,
-					endColumn: 20,
-					message: spaceBeforeMessages.expectedBefore(),
-				},
-				{
-					line: 1,
-					column: 20,
-					endLine: 1,
-					endColumn: 21,
-					message: messages.rejected,
-				},
-			],
+			line: 1,
+			column: 20,
+			endLine: 1,
+			endColumn: 21,
+			message: messages.rejected,
 		},
 	],
 })
@@ -346,25 +335,14 @@ testRule({
 
 	reject: [
 		{
-			description: `the break the newline neighbor writes there, which goes the same way`,
+			description: `the same where the newline neighbor asks for a break, which it leaves unread the same way`,
 			code: `a { aspect-ratio: 2; }`,
 			fixed: `a { aspect-ratio: 2 }`,
-			warnings: [
-				{
-					line: 1,
-					column: 19,
-					endLine: 1,
-					endColumn: 20,
-					message: newlineBeforeMessages.expectedBefore(),
-				},
-				{
-					line: 1,
-					column: 20,
-					endLine: 1,
-					endColumn: 21,
-					message: messages.rejected,
-				},
-			],
+			line: 1,
+			column: 20,
+			endLine: 1,
+			endColumn: 21,
+			message: messages.rejected,
 		},
 	],
 })
@@ -415,25 +393,14 @@ testRuleListedFirst({
 
 	reject: [
 		{
-			description: `the same pair the other way round, resting on the same file: the semicolon goes first, and the run the neighbor asked for goes unwritten with it`,
+			description: `the same pair the other way round, resting on the same file`,
 			code: `a { aspect-ratio: 2; }`,
 			fixed: `a { aspect-ratio: 2 }`,
-			warnings: [
-				{
-					line: 1,
-					column: 20,
-					endLine: 1,
-					endColumn: 21,
-					message: messages.rejected,
-				},
-				{
-					line: 1,
-					column: 19,
-					endLine: 1,
-					endColumn: 20,
-					message: spaceBeforeMessages.expectedBefore(),
-				},
-			],
+			line: 1,
+			column: 20,
+			endLine: 1,
+			endColumn: 21,
+			message: messages.rejected,
 		},
 	],
 })

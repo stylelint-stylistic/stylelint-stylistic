@@ -4,6 +4,7 @@ import { SPACES_AND_TABS_ONLY } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { betweenTailAfterColon } from "../../utils/betweenTailAfterColon/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
+import { trailingSemicolonAsked } from "../../utils/closedBySemicolon/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findEscapeSpans } from "../../utils/findCommentSpans/index.ts"
@@ -65,7 +66,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!isAtRule(parentRule) && !isRule(parentRule) && !isInlineStyleAttribute(parentRule)) return
 
-			if (isLastNodeWithoutSemicolon(decl)) return
+			// Not read where no semicolon closes the declaration, or where the rule about a trailing semicolon takes it out in the same run, whichever side of this one it is listed
+			if (isLastNodeWithoutSemicolon(decl) || trailingSemicolonAsked(decl, result) === false) return
 
 			// Under `postcss-less` a semicolon of a `//` comment's text closed the declaration; the one Less closes it on, if any, stands past the comment's break, where the rule does not look
 			if (syntax.closingSemicolonIsCommentText(decl, result)) return

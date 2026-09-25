@@ -1,3 +1,7 @@
+import stylelint from "stylelint"
+import { describe, expect, it } from "vitest"
+
+import plugins from "../../index.ts"
 import { messages as colonNewlineAfterMessages } from "../declaration-colon-newline-after/index.ts"
 import { messages as colonSpaceAfterMessages } from "../declaration-colon-space-after/index.ts"
 
@@ -206,4 +210,50 @@ testRule({
 			],
 		},
 	],
+})
+
+/**
+ * Spells warnings as their line, column and rule.
+ * @param warnings - The warnings.
+ * @returns The spellings.
+ */
+function where (warnings: { line: number, column: number, rule: string }[] | undefined): string[] {
+	return (warnings ?? []).map(({ line, column, rule }) => `${line}:${column} ${rule}`)
+}
+
+/**
+ * Fixes one snippet under a rule about the whitespace in front of a semicolon and `declaration-block-trailing-semicolon: never`, in the order given, and reads the output back.
+ * @param code - The snippet.
+ * @param rule - The rule about the whitespace in front of a semicolon, and its setting.
+ * @param thatRuleFirst - Whether it is listed first.
+ * @returns The file the pass left, the warnings the pass reported, and those the pair has about the file.
+ */
+async function fix (code: string, rule: [string, unknown], thatRuleFirst: boolean): Promise<{
+	code: string,
+	reported: string[],
+	left: string[],
+}> {
+	let pair: [string, unknown][] = [rule, [`@stylistic/declaration-block-trailing-semicolon`, `never`]]
+	let config = { plugins, rules: Object.fromEntries(thatRuleFirst ? pair : pair.toReversed()) }
+	let fixed = await stylelint.lint({ code, config, fix: true })
+	let read = await stylelint.lint({ code: fixed.code ?? code, config })
+
+	return { code: fixed.code ?? code, reported: where(fixed.results[0]?.warnings), left: where(read.results[0]?.warnings) }
+}
+
+describe(`the whitespace in front of a semicolon the rule about a trailing semicolon takes out in the same run`, () => {
+	let rule: [string, unknown] = [`@stylistic/declaration-block-semicolon-newline-before`, [`always`, { disableFix: true }]]
+
+	// The semicolon is gone once the pass is over, so this rule has nothing to say about the break in front of it whichever side it is listed
+	it(`draws no warning of this rule, its fix off, in either order`, async () => {
+		expect(await fix(`a { b: c ; }`, rule, true)).toEqual({ code: `a { b: c }`, reported: [], left: [] })
+		expect(await fix(`a { b: c ; }`, rule, false)).toEqual({ code: `a { b: c }`, reported: [], left: [] })
+	})
+
+	it(`still draws it where a disable comment on the line of a second semicolon keeps that rule's fix off, and the semicolon stays`, async () => {
+		let code = `a {\n  b: c ;\n  ; /* stylelint-disable-line @stylistic/declaration-block-trailing-semicolon */\n}`
+		let { reported } = await fix(code, rule, true)
+
+		expect(reported.some((warning) => warning.startsWith(`2:`) && warning.endsWith(`declaration-block-semicolon-newline-before`))).toBe(true)
+	})
 })
