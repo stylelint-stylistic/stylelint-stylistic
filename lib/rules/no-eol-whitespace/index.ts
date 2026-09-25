@@ -279,6 +279,13 @@ function fixRoot (scope: EolScope): void {
 				node.raws.after = fixed
 			})
 		}
+
+		// A stray semicolon behind a rule's closing brace, which PostCSS files with the run in front of it in the rule's own `raws.ownSemicolon`
+		if (typeof node.raws.ownSemicolon === `string`) {
+			fixText(scope, node.raws.ownSemicolon, (fixed) => {
+				node.raws.ownSemicolon = fixed
+			})
+		}
 	})
 
 	fixText(

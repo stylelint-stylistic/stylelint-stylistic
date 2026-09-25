@@ -1,5 +1,5 @@
 /**
- * A run of empty lines in front of a free semicolon standing behind a rule's closing brace, under `max-empty-lines`.
+ * A run of lines in front of a free semicolon standing behind a rule's closing brace, empty or ending in whitespace, under `max-empty-lines` and `no-eol-whitespace`.
  *
  * PostCSS files such a semicolon, with the whitespace in front of it, in the rule's `raws.ownSemicolon`, a raw the fix's walk never read, so the run was reported and never written, and `--fix` returned the file with the warning gone.
  *
@@ -34,11 +34,12 @@ const LENGTHS: Record<string, number> = {
 	four: 4,
 }
 
-/** A second stray semicolon splits the run in two, and the parser hands the rule the first of them alone; an indentation on every empty line makes them no empty lines to the rule. */
+/** A second stray semicolon splits the run in two, and the parser hands the rule the first of them alone; an indentation on every empty line makes them no empty lines to `max-empty-lines` and whitespace at the end of a line to `no-eol-whitespace`; spaces in front of every break are whitespace at the end of a line too, which `no-eol-whitespace` writes in `raws.ownSemicolon` where the semicolon stands and in another raw where it does not. */
 const FILLINGS: Record<string, (run: string) => string> = {
 	nothing: (run) => run,
 	straySemicolon: (run) => `${run};${run}`,
 	indented: (run) => run.replaceAll(`⏎`, `⏎\t`).replace(/\t$/u, ``),
+	trailingSpaces: (run) => run.replaceAll(`⏎`, `  ⏎`),
 }
 
 /** Whether the semicolon stands there; without it the same run is the block's `raws.after` or the next node's `raws.before`, and those are the controls. */
@@ -77,7 +78,7 @@ const corpus: Sweep[`corpus`] = multiply({ place: keysOf(PLACES), block: keysOf(
 	return spell(template.replace(`§`, inside).replace(`¶`, fill(`⏎`.repeat(breaks))).replace(`‡`, mark))
 })
 
-/** The primaries `scripts/oracles/options.ts` lists and the zero the core's suite measures. */
-const configs: Sweep[`configs`] = [0, 1, 2].map((primary) => ({ rule: `max-empty-lines`, primary }))
+/** The primaries `scripts/oracles/options.ts` lists and the zero the core's suite measures, and `no-eol-whitespace`, which writes the same raw. */
+const configs: Sweep[`configs`] = [...[0, 1, 2].map((primary) => ({ rule: `max-empty-lines`, primary })), { rule: `no-eol-whitespace`, primary: true }]
 
 export { configs, corpus, name }

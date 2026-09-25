@@ -127,6 +127,15 @@ testRule({
 			message: messages.rejected,
 		},
 		{
+			// PostCSS files a stray semicolon behind a rule's closing brace with the run in front of it in the rule's own `raws.ownSemicolon`, and the fix writes that raw too
+			description: `two spaces behind a rule's closing brace on a line a stray semicolon follows`,
+			code: `a {}  \n  ;`,
+			fixed: `a {}\n  ;`,
+			line: 1,
+			column: 6,
+			message: messages.rejected,
+		},
+		{
 			description: `two spaces at the end of the first line of a comment`,
 			code: `/* foo  \nbar */ a { color: pink; }`,
 			fixed: `/* foo\nbar */ a { color: pink; }`,
