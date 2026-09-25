@@ -456,6 +456,14 @@ testRule({
 			message: messages.rejected,
 		},
 		{
+			description: `a semicolon in the tail of a block whose last rule a stray semicolon follows on a line of its own, which the warning stands on`,
+			code: `x {\n\ta {\n\t\tb: c;\n\t\t;\n\t}\n\n\t;\n}`,
+			fixed: `x {\n\ta {\n\t\tb: c\n\t\t\n\t}\n\n\t;\n}`,
+			line: 4,
+			column: 3,
+			message: messages.rejected,
+		},
+		{
 			description: `a custom property with a comment closing the block behind its semicolon, which PostCSS writes back wherever a sibling follows, so the comment moves into the value, where the parser files it once the semicolon is gone`,
 			code: `a { --x: pink; /* keep me */ }`,
 			fixed: `a { --x: pink /* keep me */ }`,

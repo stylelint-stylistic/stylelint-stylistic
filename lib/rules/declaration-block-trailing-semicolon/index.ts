@@ -7,6 +7,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { betweenTailAfterColon } from "../../utils/betweenTailAfterColon/index.ts"
 import { closesADeclarationBlock, semicolonOutlivesTheFlag } from "../../utils/closedBySemicolon/index.ts"
+import { closingOffset } from "../../utils/closingOffset/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
@@ -71,18 +72,16 @@ function offsetsOf (node: Node, result?: PostcssResult): {
 /**
  * Returns the offset of the block's closing brace.
  *
- * A free semicolon behind the brace goes into `raws.ownSemicolon`, and PostCSS ends the container at its offset plus the raw's length, so the brace is twice that length back. An inline `style` root has no brace and ends where the root does.
+ * PostCSS files a free semicolon behind the brace, with the run in front of it, in `raws.ownSemicolon` and ends the container right behind that raw, so the brace stands the raw's length and one back from the end. The end is read through {@link closingOffset}, which does not trust an end `postcss-less` counted in another text. An inline `style` root has no brace and ends where the root does.
  * @param container - The container the block belongs to.
  * @returns The offset in the file the block ends at, or nothing for a block with no place in it.
  */
 function blockEnd (container: Container): number | undefined {
-	let end = offsetsOf(container)?.end
+	if (isRoot(container)) return offsetsOf(container)?.end
 
-	if (end === undefined || isRoot(container)) return end
+	let end = closingOffset(container)
 
-	let ownSemicolon = container.raws.ownSemicolon
-
-	return ownSemicolon ? end - (2 * ownSemicolon.length) : end - 1
+	return end === undefined ? end : end - String(container.raws.ownSemicolon ?? ``).length - 1
 }
 
 /**
