@@ -81,7 +81,7 @@ export function closesADeclarationBlock (syntax: Syntax, node: ChildNode): boole
 /**
  * Asks whether PostCSS writes the semicolon behind a node whatever the block's `raws.semicolon` says.
  *
- * `pushBody` writes one behind a childless at-rule and a custom property wherever a sibling follows, so `never` has nothing to take; restated rather than printed per warning, and false under a PostCSS older than 8.5.22.
+ * `pushBody` writes one behind a childless at-rule and a custom property wherever a sibling follows, so `never` takes it only by moving the siblings, the comments behind the node, into it; restated rather than printed per warning, and false under a PostCSS older than 8.5.22.
  * @param node - The at-rule or declaration a sibling follows.
  * @returns True where clearing the flag leaves the semicolon.
  */
@@ -155,7 +155,7 @@ function reaches (copy: NeighborCopy, decl: AtRule | Declaration, result: Postcs
 /**
  * Asks what one copy of `declaration-block-trailing-semicolon` writes behind a declaration or a bodiless at-rule, reading it through the syntax of its own namespace: a semicolon under a live `always`, none under a live `never`, nothing where its fix cannot write.
  *
- * `always` writes behind no node with a block and none an inline comment closes; `never` takes no semicolon PostCSS writes regardless or the language requires; neither acts on a flag a comment's text set. The disable line is where the copy reports. `never` refuses its fix too where taking the whitespace in front of the semicolon would hand a backslash ending the node what the file holds behind it; that guard is the rule's own and is not asked here, so such a semicolon reads as taken although it stays.
+ * `always` writes behind no node with a block and none an inline comment closes; `never` takes no semicolon the language requires, and takes one PostCSS writes regardless of the flag by moving the comments behind the node into it; neither acts on a flag a comment's text set. The disable line is where the copy reports. `never` refuses its fix too where taking the whitespace in front of the semicolon would hand a backslash ending the node what the file holds behind it; that guard is the rule's own and is not asked here, so such a semicolon reads as taken although it stays.
  * @param copy - The copy.
  * @param decl - The declaration or bodiless at-rule.
  * @param result - The Stylelint result, which holds the configuration.
@@ -168,7 +168,7 @@ function writtenBy (copy: NeighborCopy, decl: AtRule | Declaration, result: Post
 
 	if (copy.option === `always`) return !hasBlock(decl) && !syntax.writesIntoInlineComment(decl, result, whitespaceBeforeSemicolon(syntax, decl, result)) ? true : undefined
 
-	return !semicolonOutlivesTheFlag(decl) && !syntax.requiresTrailingSemicolon(decl, result) ? false : undefined
+	return syntax.requiresTrailingSemicolon(decl, result) ? undefined : false
 }
 
 /**

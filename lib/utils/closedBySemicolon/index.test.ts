@@ -90,8 +90,8 @@ describe(`trailingSemicolonAsked`, () => {
 		expect(trailingSemicolonAsked(parse(`b: `).first as Declaration, result({ [TRAILING]: `always` }))).toBeUndefined()
 	})
 
-	it(`a custom property a comment stands behind, whose semicolon PostCSS writes whatever the flag says, so never takes nothing away`, () => {
-		expect(asked(`a { --b: ; /*c*/ }`, { [TRAILING]: `never` })).toBeUndefined()
+	it(`a custom property a comment stands behind, whose semicolon never takes away by moving the comment into the value`, () => {
+		expect(asked(`a { --b: ; /*c*/ }`, { [TRAILING]: `never` })).toBe(false)
 		expect(asked(`a { --b: ; }`, { [TRAILING]: `never` })).toBe(false)
 	})
 

@@ -2,6 +2,7 @@ import type { Declaration, Document, Node, Root } from "postcss"
 import type { AtRule } from "postcss-less"
 import type { PostcssResult } from "stylelint"
 
+import { isInlineComment } from "../../../preprocessor/isInlineComment/index.ts"
 import { printedText } from "../../../preprocessor/printedText/index.ts"
 import { inlineCommentReading } from "../../../preprocessor/readsInlineComments/index.ts"
 import { WHITESPACE_OR_NOTHING } from "../../../regexps.ts"
@@ -10,7 +11,7 @@ import { findCommentSpans } from "../../../utils/findCommentSpans/index.ts"
 import { hasBlock } from "../../../utils/hasBlock/index.ts"
 import { isCustomProperty } from "../../../utils/isCustomProperty/index.ts"
 import { nodeSyntax } from "../../../utils/nodeSyntax/index.ts"
-import { isAtRule, isDeclaration, isSyntax } from "../../../utils/typeGuards/index.ts"
+import { isAtRule, isComment, isDeclaration, isSyntax } from "../../../utils/typeGuards/index.ts"
 import { isLessDetachedRulesetCall } from "../isLessDetachedRulesetCall/index.ts"
 
 /** The verdict of {@link readsAsLess}, per syntax. */
@@ -84,9 +85,20 @@ function spellsNoValue (decl: Declaration, result: PostcssResult): boolean {
 }
 
 /**
+ * Asks whether a `//` comment stands among the comments behind a node.
+ * @param node - The node.
+ * @returns True where one does.
+ */
+function isFollowedByAnInlineComment (node: Node): boolean {
+	for (let next = node.next(); next; next = next.next()) if (isComment(next) && isInlineComment(next)) return true
+
+	return false
+}
+
+/**
  * Asks whether the syntax refuses to part with the semicolon behind a node.
  *
- * CSS and Sass make a block's trailing semicolon optional behind every node, which `never` of `declaration-block-trailing-semicolon` rests on; Less reads every blockless at-rule to its semicolon and refuses `a { @extend .b }` without one. A plain declaration's value is read the same way Less reads any other expression, through a grammar this plugin does not carry, so whether the value in front of the semicolon still compiles once it is gone is not a question asked here at all — the semicolon stays behind every plain declaration, the same safe answer a Less at-rule already gets, rather than a guess a written value could turn out wrong. A custom property's value is read permissively enough that only {@link spellsNoValue} still costs it the semicolon. {@link isLessAtRule} says which nodes are at-rules to Less; a disagreement costs a warning its fix, never a file Less refuses.
+ * CSS and Sass make a block's trailing semicolon optional behind every node, which `never` of `declaration-block-trailing-semicolon` rests on; Less reads every blockless at-rule to its semicolon and refuses `a { @extend .b }` without one. A plain declaration's value is read the same way Less reads any other expression, through a grammar this plugin does not carry, so whether the value in front of the semicolon still compiles once it is gone is not a question asked here at all — the semicolon stays behind every plain declaration, the same safe answer a Less at-rule already gets, rather than a guess a written value could turn out wrong. A custom property's value is read permissively enough that only {@link spellsNoValue} still costs it the semicolon, and a `//` comment behind it: without the semicolon Less reads the comment into the value behind an `!important` (`--x: 1 !important // c` compiles to `--x: 1 !important // c;`), and `postcss-less` reads a semicolon the comment's text holds as the value's own. A `//` comment behind a mixin call or a detached ruleset call keeps the semicolon too: Less compiles the call alike without it, but `postcss-less` then files the comment into the call's parameters, where a write moving it in would leave a tree the next parse does not build. {@link isLessAtRule} says which nodes are at-rules to Less; a disagreement costs a warning its fix, never a file Less refuses.
  *
  * An embedded stylesheet is asked under its own block's syntax.
  * @param node - The node whose trailing semicolon is asked about.
@@ -98,8 +110,8 @@ export function requiresTrailingSemicolon (node: Node, result: PostcssResult): b
 	if (hasBlock(node)) return false
 
 	let asked = isDeclaration(node)
-		? !isCustomProperty(node.prop) || spellsNoValue(node, result)
-		: isAtRule(node) && isLessAtRule(node)
+		? !isCustomProperty(node.prop) || spellsNoValue(node, result) || isFollowedByAnInlineComment(node)
+		: isAtRule(node) && (isLessAtRule(node) || isFollowedByAnInlineComment(node))
 
 	if (!asked) return false
 

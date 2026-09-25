@@ -1,4 +1,5 @@
-import type { AtRule, ChildNode, Container, Declaration, Node } from "postcss"
+import { type AtRule, type ChildNode, type Container, type Declaration, Input, type Node } from "postcss"
+import tokenize from "postcss/lib/tokenize"
 import stylelint, { type PostcssResult } from "stylelint"
 
 import { EVERY_SEMICOLON, INLINE_COMMENT_BREAK, TRAILING_CSS_WHITESPACE, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
@@ -16,6 +17,7 @@ import { lastSemicolonLeft, noExtraSemicolonsTaken } from "../../utils/noExtraSe
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { type TrailingCommentRun, trailingCommentRun } from "../../utils/trailingCommentRun/index.ts"
 import { isAtRule, isComment, isDeclaration, isRoot } from "../../utils/typeGuards/index.ts"
 import { keepsEscapedCharacter, readWhitespaceBeforeSemicolon, takingTheSemicolonKeepsEscapedCharacter, whitespaceBeforeSemicolon, writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
@@ -244,6 +246,68 @@ function takeTheTrailingSemicolonsAway (syntax: Syntax, node: AtRule | Declarati
 }
 
 /**
+ * Returns a value's text without the comments PostCSS's tokenizer reads in it, as the parser lays the value out beside its raw; a `//` is no comment to it.
+ * @param text - The value's text.
+ * @returns The value.
+ */
+function withoutComments (text: string): string {
+	let tokenizer = tokenize(new Input(text), { ignoreErrors: true })
+	let value = ``
+
+	while (!tokenizer.endOfFile()) {
+		let token = tokenizer.nextToken()
+
+		if (token[0] !== `comment`) value += token[1]
+	}
+
+	return value
+}
+
+/**
+ * Moves the comments behind the node closing a block into the node, with the runs around them through the closing brace.
+ *
+ * PostCSS writes the semicolon behind a custom property or a bodiless at-rule wherever a sibling follows it, so clearing the flag alone leaves the semicolon. Without it the parser files what follows such a node into the node itself — the raw of a custom property's value, which keeps its comments out of the value itself, the raw behind an `!important`, a bodiless at-rule's `raws.between` — so the text is written there as the parser lays it out, and the file comes out as it stood less its semicolons.
+ * @param syntax - The syntax the rule is built over, which writes a value.
+ * @param node - The node closing the block.
+ * @param result - The Stylelint result, whose syntax prints the comments.
+ */
+function moveTheCommentsIn (syntax: Syntax, node: AtRule | Declaration, result: PostcssResult): void {
+	let { parent } = node
+
+	if (!parent) throw new Error(`The node must stand in a block`)
+
+	let behind = parent.nodes.slice(parent.index(node) + 1)
+	let text = behind.map((sibling) => runInFrontOf(sibling) + nodeString(sibling, result)).join(``) + String(parent.raws.after ?? ``)
+
+	for (let sibling of behind) sibling.remove()
+
+	parent.raws.after = ``
+
+	if (!isDeclaration(node)) {
+		node.raws.between = String(node.raws.between ?? ``) + text
+
+		return
+	}
+
+	if (node.important) {
+		node.raws.important = String(node.raws.important ?? ` !important`) + text
+
+		return
+	}
+
+	let raw = syntax.read(node) + text
+
+	syntax.write(node, raw)
+
+	let value = withoutComments(raw)
+
+	if (value !== raw) {
+		node.raws.value = { raw, value }
+		node.value = value
+	}
+}
+
+/**
  * Returns the text standing behind the node closing the block: the first raw behind it where it spells anything, else the node behind it, else the closing brace.
  * @param node - The node closing the block.
  * @param result - The Stylelint result.
@@ -304,7 +368,7 @@ function swallowingAtRule (node: ChildNode): AtRule | undefined {
 /**
  * Asks whether the warning over a node can carry a fix.
  *
- * Under `always`, no for a node with a block (`postcss-scss` drops a Sass nested property's semicolon), where the flag is the text of an inline comment ending the node, which a break written in front of the semicolon would take out of it, and where a backslash ending the node would read the written text as part of it. Where such a comment ends the node and the semicolon would land inside it, yes only where the run holding the comment can move behind the semicolon ({@link trailingCommentRun}), which the fix then writes in front of the comment. Under `never`, no for the semicolon PostCSS writes regardless of the flag and the ones the syntax requires, which under Less are the semicolon behind a bodiless at-rule and the one behind a declaration it reads no value in, and none either where taking the run in front of the flag's semicolon away would leave a backslash ending the node reading what the file holds behind it. The warning then stands over code the fix leaves alone.
+ * Under `always`, no for a node with a block (`postcss-scss` drops a Sass nested property's semicolon), where the flag is the text of an inline comment ending the node, which a break written in front of the semicolon would take out of it, and where a backslash ending the node would read the written text as part of it. Where such a comment ends the node and the semicolon would land inside it, yes only where the run holding the comment can move behind the semicolon ({@link trailingCommentRun}), which the fix then writes in front of the comment. Under `never`, no for the semicolons the syntax requires — under Less the semicolon behind a bodiless at-rule, the one behind a declaration it reads no value in and the one behind a custom property, a mixin call or a detached ruleset call a `//` comment follows, under Sass the one behind a custom property a comment follows and behind a bodiless at-rule a block comment follows — and for the semicolon PostCSS writes behind such a node where the flag is the text of a `//` comment, since the comments behind the node move into it only with the flag cleared, and none either where taking the run in front of the flag's semicolon away would leave a backslash ending the node reading what the file holds behind it. The warning then stands over code the fix leaves alone.
  * @param syntax - The syntax the rule is built over.
  * @param node - The node the semicolon stands behind.
  * @param primary - The primary option.
@@ -318,7 +382,10 @@ function swallowingAtRule (node: ChildNode): AtRule | undefined {
  */
 function isFixable (syntax: Syntax, node: AtRule | Declaration, primary: `always` | `never`, spelledBetween: string | undefined, result: PostcssResult, flagIsCommentText: boolean, whitespace: string, raws: HeldRaw[], trailingRun: TrailingCommentRun | null): boolean {
 	if (primary === `never`) {
-		if (semicolonOutlivesTheFlag(node) || syntax.requiresTrailingSemicolon(node, result)) return false
+		if (syntax.requiresTrailingSemicolon(node, result)) return false
+
+		// The comments behind such a node move into it with the semicolon gone, and a flag the text of an inline comment set stays
+		if (semicolonOutlivesTheFlag(node) && flagIsCommentText) return false
 
 		// The run is taken away with the flag's own semicolon alone, so anywhere else the character behind a backslash ending the node keeps its place
 		if (!node.parent?.raws.semicolon || syntax.writesIntoInlineComment(node, result)) return true
@@ -470,7 +537,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								// A whitespace-only value shares its run with the colon, and a colon rule listed earlier may have written onto the tail of `raws.between`; that tail and the value are read as one run, as the semicolon rules do
 								else if (isDeclaration(node) && whitespace && !(!node.important && WHITESPACE_OR_NOTHING.test(syntax.read(node)) && betweenTailAfterColon(syntax, node, result) + syntax.read(node) === whitespace)) writeWhitespaceBeforeSemicolon(syntax, node, result, whitespace)
 							}
-							else if (primary === `never`) takeTheTrailingSemicolonsAway(syntax, node, result, raws, flagIsCommentText)
+							else if (primary === `never`) {
+								takeTheTrailingSemicolonsAway(syntax, node, result, raws, flagIsCommentText)
+
+								if (semicolonOutlivesTheFlag(node)) moveTheCommentsIn(syntax, node, result)
+							}
 						},
 					}),
 				})

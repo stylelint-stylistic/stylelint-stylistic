@@ -473,3 +473,34 @@ describe(`the semicolons behind the node closing a block with no \`no-extra-semi
 		expect(fixed.code).toBe(code)
 	})
 })
+
+/**
+ * Fixes one snippet under a namespace's copy of this rule at `never` and reads the warnings the pass left.
+ * @param code - The snippet.
+ * @param namespace - The namespace, which names the custom syntax too.
+ * @returns The file the pass left and where the warnings it left stand.
+ */
+async function fixUnder (code: string, namespace: `scss` | `less`): Promise<{ code: string, left: string[] }> {
+	let config = { plugins, rules: { [`@stylistic/${namespace}/declaration-block-trailing-semicolon`]: `never` } }
+	let fixed = await stylelint.lint({ code, config, fix: true, customSyntax: `postcss-${namespace}` })
+
+	return { code: fixed.code ?? code, left: (fixed.results[0]?.warnings ?? []).map(({ line, column }) => `${line}:${column}`) }
+}
+
+describe(`the semicolon behind a custom property or a bodiless at-rule a comment follows, under a preprocessor`, () => {
+	// Sass and Less were asked with the semicolon and without it: where the output parts, the language requires the semicolon, and the warning stands over code the fix leaves alone
+	it.each([
+		[`a {\n\t--x: 1; // c\n}\n`, `scss`, `a {\n\t--x: 1; // c\n}\n`, [`2:8`]],
+		[`a {\n\t--x: 1; /* c */\n}\n`, `scss`, `a {\n\t--x: 1; /* c */\n}\n`, [`2:8`]],
+		[`a {\n\t@include m; /* c */\n}\n`, `scss`, `a {\n\t@include m; /* c */\n}\n`, [`2:12`]],
+		[`a {\n\t@include m; // c\n}\n`, `scss`, `a {\n\t@include m // c\n}\n`, []],
+		[`a {\n\t--x: 1; // c\n}\n`, `less`, `a {\n\t--x: 1; // c\n}\n`, [`2:8`]],
+		[`a {\n\t--x: 1 !important; // c\n}\n`, `less`, `a {\n\t--x: 1 !important; // c\n}\n`, [`2:19`]],
+		[`a {\n\t--x: 1; /* c */\n}\n`, `less`, `a {\n\t--x: 1 /* c */\n}\n`, []],
+		[`a {\n\t.m(); // c\n}\n`, `less`, `a {\n\t.m(); // c\n}\n`, [`2:6`]],
+		[`a {\n\t.m(); /* c */\n}\n`, `less`, `a {\n\t.m() /* c */\n}\n`, []],
+		[`a {\n\t@v: 1; // c\n}\n`, `less`, `a {\n\t@v: 1; // c\n}\n`, [`2:7`]],
+	] as const)(`in %j under %s`, async (code, namespace, output, left) => {
+		expect(await fixUnder(code, namespace)).toEqual({ code: output, left })
+	})
+})

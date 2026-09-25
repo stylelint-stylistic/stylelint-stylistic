@@ -8,6 +8,7 @@ import { css } from "../css/index.ts"
 import type { Syntax } from "../index.ts"
 
 import { readsSlashAsOperator } from "./readsSlashAsOperator/index.ts"
+import { requiresTrailingSemicolon } from "./requiresTrailingSemicolon/index.ts"
 
 /** The at-rules Sass reads an address behind: its own two in lower case alone, since dart-sass passes `@USE` through as plain CSS. */
 const SCSS_ADDRESS_AT_RULES: AddressAtRules = { names: [{ name: `import`, anyCase: true }, { name: `use`, anyCase: false }, { name: `forward`, anyCase: false }] }
@@ -37,4 +38,5 @@ export let scss: Syntax = {
 	readsQuoteInsideAddressAsString: () => true,
 	// Sass loads a module by the string behind `@use` and `@forward` as it does behind `@import`
 	addressAtRules: () => SCSS_ADDRESS_AT_RULES,
+	requiresTrailingSemicolon,
 }
