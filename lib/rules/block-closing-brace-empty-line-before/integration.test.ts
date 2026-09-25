@@ -25,11 +25,12 @@ async function fix (code: string, rules: object): Promise<{
  * @param code - The snippet.
  * @param partner - The other rule of the pair, as a configuration of one rule.
  * @param expected - The file both orders are to leave.
+ * @param setting - This rule's setting.
  * @returns Nothing.
  */
-async function expectBothOrders (code: string, partner: object, expected: string): Promise<void> {
-	let thisRuleFirst = await fix(code, { "@stylistic/block-closing-brace-empty-line-before": [`never`, { except: [`after-closing-brace`] }], ...partner })
-	let partnerFirst = await fix(code, { ...partner, "@stylistic/block-closing-brace-empty-line-before": [`never`, { except: [`after-closing-brace`] }] })
+async function expectBothOrders (code: string, partner: object, expected: string, setting: unknown = [`never`, { except: [`after-closing-brace`] }]): Promise<void> {
+	let thisRuleFirst = await fix(code, { "@stylistic/block-closing-brace-empty-line-before": setting, ...partner })
+	let partnerFirst = await fix(code, { ...partner, "@stylistic/block-closing-brace-empty-line-before": setting })
 
 	expect(thisRuleFirst).toEqual({ code: expected, warnings: 0 })
 	expect(partnerFirst).toEqual({ code: expected, warnings: 0 })
@@ -56,5 +57,32 @@ describe(`the empty line this rule writes where a stray semicolon stands behind 
 
 	it(`leaves one file in both orders of no-extra-semicolons where a tab stands between the break and the semicolon`, async () => {
 		await expectBothOrders(`a {/*c*/\n\t;}\n`, { "@stylistic/no-extra-semicolons": true }, `a {/*c*/\n\n\t}\n`)
+	})
+})
+
+describe(`a stray semicolon on a line of its own in front of the brace, beside a rule taking it out`, () => {
+	// The semicolon a neighbor takes out is read as the whitespace it leaves, so both orders read the run the neighbor leaves
+	it(`leaves one file in both orders of no-extra-semicolons under never`, async () => {
+		await expectBothOrders(`a {\n\tb: c;\n;\n}\n`, { "@stylistic/no-extra-semicolons": true }, `a {\n\tb: c;\n}\n`, `never`)
+	})
+
+	it(`leaves one file in both orders of declaration-block-trailing-semicolon under never`, async () => {
+		await expectBothOrders(`a {\n\tb: c;\n;\n}\n`, { "@stylistic/declaration-block-trailing-semicolon": `never` }, `a {\n\tb: c\n}\n`, `never`)
+	})
+
+	it(`leaves one file in both orders of declaration-block-trailing-semicolon under never behind a bodiless at-rule`, async () => {
+		await expectBothOrders(`a {\n\t@import "b";\n;\n}\n`, { "@stylistic/declaration-block-trailing-semicolon": `never` }, `a {\n\t@import "b"\n}\n`, `never`)
+	})
+
+	it(`leaves one file in both orders of no-extra-semicolons under always-multi-line, the break the semicolon leaves counted`, async () => {
+		await expectBothOrders(`a {\n\tb: c;\n;\n}\n`, { "@stylistic/no-extra-semicolons": true }, `a {\n\tb: c;\n\n}\n`, `always-multi-line`)
+	})
+
+	it(`leaves one file in both orders of declaration-block-trailing-semicolon under never where a disable comment stands on the declaration's line, which that rule reads on the semicolon's`, async () => {
+		await expectBothOrders(`a {\n\tb: c; /* stylelint-disable-line @stylistic/declaration-block-trailing-semicolon */\n;\n}\n`, { "@stylistic/declaration-block-trailing-semicolon": `never` }, `a {\n\tb: c /* stylelint-disable-line @stylistic/declaration-block-trailing-semicolon */\n}\n`, `never`)
+	})
+
+	it(`leaves the semicolon a disable comment keeps from no-extra-semicolons on its line under always-multi-line, the empty line written behind it`, async () => {
+		await expectBothOrders(`a {\n\tb: c;\n\t/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\n;\n}\n`, { "@stylistic/no-extra-semicolons": true }, `a {\n\tb: c;\n\t/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\n;\n\n}\n`, `always-multi-line`)
 	})
 })

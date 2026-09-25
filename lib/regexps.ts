@@ -43,7 +43,7 @@ export const GRID_AREAS_PROPERTY = /^(?:grid-template-areas|grid-template|grid)$
 /** Every run of tokenizer whitespace; a no-break space and a vertical tab are words. The narrowing of `\s+`. */
 export const EVERY_CSS_WHITESPACE_RUN = /[ \t\n\r\f]+/gu
 
-/** Every run of breaks leaving an empty line, the first break captured; a stray semicolon may stand between two breaks, since the readers measure whitespace with semicolons out. */
+/** Every run of breaks leaving an empty line, the first break captured; a stray semicolon may stand between two breaks, where a neighbor takes it out and leaves whitespace. */
 export const EVERY_EMPTY_LINE_RUN = /(\r?\n)(?:[\t ;]*\r?\n)+/gu
 
 /** Every escape, quoted run and block comment. */

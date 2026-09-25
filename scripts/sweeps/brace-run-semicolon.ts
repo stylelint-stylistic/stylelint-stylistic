@@ -39,7 +39,7 @@ const LASTS: Record<string, string> = {
 	comment: `/* c */`,
 }
 
-/** Where the semicolon stands against the run's first whitespace and its first break, which is what the writes part on. The two runs without a semicolon are the controls. */
+/** Where the semicolon stands against the run's first whitespace and its first break, which is what the writes part on, and against an empty line on either side of a semicolon standing on a line of its own. The two runs without a semicolon are the controls. */
 const RUNS: Record<string, string> = {
 	breakOnly: `⏎`,
 	spaceOnly: ` `,
@@ -49,6 +49,9 @@ const RUNS: Record<string, string> = {
 	withoutABreak: ` ; `,
 	twice: ` ; ;⏎`,
 	aroundTheBreak: ` ;⏎;`,
+	ownLine: `⏎;⏎`,
+	emptyLineInFront: `⏎⏎;⏎`,
+	emptyLineBehind: `⏎;⏎⏎`,
 }
 
 const name: Sweep[`name`] = `brace-run-semicolon`

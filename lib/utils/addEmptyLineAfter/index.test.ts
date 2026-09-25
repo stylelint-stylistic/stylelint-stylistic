@@ -54,8 +54,13 @@ describe(`addEmptyLineAfter`, () => {
 		expect(run(`a {\r\n;}`)).toBe(`a {\r\n\r\n;}`)
 	})
 
-	it(`doubles the run's first break, leaving a stray semicolon on its own line behind it`, () => {
-		expect(run(`a {color: pink;;\n;\n}`)).toBe(`a {color: pink;;\n\n;\n}`)
+	it(`doubles the run's first break where a neighbor takes the stray semicolon behind it out`, () => {
+		expect(run(`a {color: pink;;\n;\n}`, 0, {}, [2])).toBe(`a {color: pink;;\n\n;\n}`)
+	})
+
+	it(`doubles the break closing the line of the last stray semicolon no neighbor takes out, which keeps its line`, () => {
+		expect(run(`a {color: pink;;\n;\n}`)).toBe(`a {color: pink;;\n;\n\n}`)
+		expect(run(`a {color: pink;\n;\r\n;\n}`, 0, {}, [4])).toBe(`a {color: pink;\n;\r\n\r\n;\n}`)
 	})
 
 	it(`writes the break the file ends its lines with where the whitespace in front of the brace holds none`, () => {
@@ -98,12 +103,13 @@ describe(`addEmptyLineAfter`, () => {
  * @param css - The stylesheet.
  * @param index - Which statement of it, counted from the top.
  * @param rules - The rules the configuration lists.
+ * @param taken - The indices of the semicolons of the block's final raw a neighbor takes out.
  * @returns The stylesheet as it prints after the fix.
  */
-function run (css: string, index: number = 0, rules: Record<string, unknown> = {}): string {
+function run (css: string, index: number = 0, rules: Record<string, unknown> = {}, taken: number[] = []): string {
 	let root = parse(css)
 
-	addEmptyLineAfter(syntax, root.nodes[index] as Rule, { stylelint: { config: { rules } } } as unknown as PostcssResult)
+	addEmptyLineAfter(syntax, root.nodes[index] as Rule, { stylelint: { config: { rules } } } as unknown as PostcssResult, new Set(taken))
 
 	return root.toString()
 }

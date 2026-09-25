@@ -6,15 +6,34 @@ import { getBlockAfter } from "../getBlockAfter/index.ts"
 import { setBlockAfter } from "../setBlockAfter/index.ts"
 
 /**
- * Removes the empty lines after a node, in place. The lines come out of the block's final raw ({@link getBlockAfter}). A run is written back as its first break, keeping the file's spelling. A semicolon between the breaks stays, or the readers, which measure without semicolons, would report `\n;\n` every run.
+ * Removes the empty lines after a node, in place. The lines come out of the block's final raw ({@link getBlockAfter}). A run is written back as its first break, keeping the file's spelling.
+ *
+ * A stray semicolon a neighbor takes out in the same run is read as the whitespace it leaves, so a run of breaks around it is one run; it stays in the raw, since taking it is the neighbor's, with its warning and its disable comments. Any other semicolon is a character of the line it stands on and parts two runs.
  * @param syntax - The syntax the rule is built over, which the raw is read and written through.
  * @param node - The node whose final raw holds the lines.
+ * @param taken - The indices of the raw's semicolons a neighbor takes out.
  * @returns The node.
  */
-export function removeEmptyLinesAfter<T extends Container> (syntax: Syntax, node: T): T {
+export function removeEmptyLinesAfter<T extends Container> (syntax: Syntax, node: T, taken: Set<number> = new Set()): T {
 	let blockAfter = getBlockAfter(syntax, node)
 
-	setBlockAfter(syntax, node, blockAfter ? blockAfter.replaceAll(EVERY_EMPTY_LINE_RUN, (run, first) => first + (run.match(EVERY_SEMICOLON) || []).join(``)) : ``)
+	if (!blockAfter) {
+		setBlockAfter(syntax, node, ``)
+
+		return node
+	}
+
+	// A semicolon staying stands for a character no run crosses; the copy keeps every index
+	let masked = blockAfter.replaceAll(EVERY_SEMICOLON, (semicolon, index: number) => (taken.has(index) ? semicolon : `x`))
+	let written = ``
+	let from = 0
+
+	for (let match of masked.matchAll(EVERY_EMPTY_LINE_RUN)) {
+		written += blockAfter.slice(from, match.index) + (match[1] ?? ``) + (match[0].match(EVERY_SEMICOLON) ?? []).join(``)
+		from = match.index + match[0].length
+	}
+
+	setBlockAfter(syntax, node, written + blockAfter.slice(from))
 
 	return node
 }

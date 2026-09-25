@@ -1,7 +1,7 @@
 import type { Container } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { CAPTURED_LINE_BREAK, LINE_BREAK, WHITESPACE } from "../../regexps.ts"
+import { CAPTURED_LINE_BREAK, EVERY_SEMICOLON, LINE_BREAK, WHITESPACE } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { getBlockAfter } from "../getBlockAfter/index.ts"
 import { getLineBreak } from "../getLineBreak/index.ts"
@@ -12,14 +12,24 @@ import { setBlockAfter } from "../setBlockAfter/index.ts"
  * @param syntax - The syntax the rule is built over, which the raw is read and written through.
  * @param node - The node whose block gets the empty line.
  * @param result - The Stylelint result.
+ * @param taken - The indices of the raw's semicolons a neighbor takes out.
  * @returns The node, mutated.
  */
-export function addEmptyLineAfter<T extends Container> (syntax: Syntax, node: T, result: PostcssResult): T {
+export function addEmptyLineAfter<T extends Container> (syntax: Syntax, node: T, result: PostcssResult, taken: Set<number> = new Set()): T {
 	let blockAfter = getBlockAfter(syntax, node)
 
 	if (typeof blockAfter !== `string`) return node
 
-	// Doubling the run's first break keeps the brace's indentation and leaves everything else of the run where it stands, a stray semicolon behind the break included: the readers measure the run with its first run of semicolons taken out, so the empty line counts wherever the semicolon is, and a rule taking the semicolon out leaves the same file whichever side of this one it is listed
+	// A semicolon no neighbor takes keeps its line, which a disable comment may be read on, so the break closing the line of the last one is doubled
+	let staying = [...blockAfter.matchAll(EVERY_SEMICOLON)].findLast((match) => !taken.has(match.index))?.index
+
+	if (staying !== undefined && LINE_BREAK.test(blockAfter.slice(staying))) {
+		setBlockAfter(syntax, node, blockAfter.slice(0, staying) + blockAfter.slice(staying).replace(CAPTURED_LINE_BREAK, `$1$1`))
+
+		return node
+	}
+
+	// Doubling the run's first break keeps the brace's indentation and leaves everything else of the run where it stands, a stray semicolon behind the break included: a neighbor taking the semicolon out leaves the two breaks an empty line, so the same file comes out whichever side of this one it is listed
 	if (LINE_BREAK.test(blockAfter)) {
 		setBlockAfter(syntax, node, blockAfter.replace(CAPTURED_LINE_BREAK, `$1$1`))
 

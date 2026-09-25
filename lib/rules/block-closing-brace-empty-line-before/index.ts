@@ -1,7 +1,6 @@
 import type { ChildNode, Container } from "postcss"
 import stylelint from "stylelint"
 
-import { SEMICOLON_RUN } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { addEmptyLineAfter } from "../../utils/addEmptyLineAfter/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
@@ -13,11 +12,13 @@ import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
 import { hasEmptyLine } from "../../utils/hasEmptyLine/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
+import { lastNodeHoldsTheBlockAfter } from "../../utils/lastNodeHoldsTheBlockAfter/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { removeEmptyLinesAfter } from "../../utils/removeEmptyLinesAfter/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { statementString } from "../../utils/statementString/index.ts"
+import { straySemicolonsTaken, withoutTaken } from "../../utils/straySemicolonsTaken/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -85,8 +86,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		function check (statement: ChildNode & Container): void {
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 
-			// Minus a stray semicolon
-			let before = (getBlockAfter(syntax, statement) || ``).replace(SEMICOLON_RUN, ``)
+			// As the neighbors taking stray semicolons out leave it; a semicolon staying is a character of its line
+			let taken = lastNodeHoldsTheBlockAfter(statement) ? new Set<number>() : straySemicolonsTaken(statement, result)
+			let before = withoutTaken(getBlockAfter(syntax, statement) || ``, taken)
 
 			// Counted from the text through the brace: the printed copy ends on a stray `raws.ownSemicolon`, and the index landed inside that raw
 			let text = statementString(statement, result)
@@ -116,12 +118,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				endIndex: index,
 				fix () {
 					if (!expectEmptyLineBefore) {
-						removeEmptyLinesAfter(syntax, statement)
+						removeEmptyLinesAfter(syntax, statement, taken)
 
 						return
 					}
 
-					addEmptyLineAfter(syntax, statement, result)
+					addEmptyLineAfter(syntax, statement, result, taken)
 				},
 			})
 		}

@@ -55,10 +55,20 @@ describe(`removeEmptyLineBefore`, () => {
 		expect(run(`a {\r\n  }`)).toBe(`a {\r\n  }`)
 	})
 
-	it(`keeps a stray semicolon standing between two breaks and takes the empty line`, () => {
-		expect(run(`a {\n;\n}`)).toBe(`a {\n;}`)
-		expect(run(`a {\r\n;\r\n}`)).toBe(`a {\r\n;}`)
-		expect(run(`a {\n;;\n}`)).toBe(`a {\n;;}`)
+	it(`keeps a stray semicolon a neighbor takes out between two breaks and takes the empty line it leaves`, () => {
+		expect(run(`a {\n;\n}`, [1])).toBe(`a {\n;}`)
+		expect(run(`a {\r\n;\r\n}`, [2])).toBe(`a {\r\n;}`)
+		expect(run(`a {\n;;\n}`, [1, 2])).toBe(`a {\n;;}`)
+	})
+
+	it(`reads a stray semicolon staying as a character of its line, parting the breaks around it`, () => {
+		expect(run(`a {\n;\n}`)).toBe(`a {\n;\n}`)
+		expect(run(`a {\n\n;\n\n}`)).toBe(`a {\n;\n}`)
+		expect(run(`a {\r\n\r\n;\r\n}`)).toBe(`a {\r\n;\r\n}`)
+	})
+
+	it(`parts the breaks at the semicolon staying where another one is taken`, () => {
+		expect(run(`a {\n;\n;\n}`, [3])).toBe(`a {\n;\n;}`)
 	})
 
 	it(`takes the empty line out of the whitespace an at-rule with neither a block nor a semicolon swallowed`, () => {
@@ -74,12 +84,13 @@ describe(`removeEmptyLineBefore`, () => {
 /**
  * Runs the fix over the first statement of a stylesheet and prints what it left.
  * @param css - The stylesheet.
+ * @param taken - The indices of the semicolons of the block's final raw a neighbor takes out.
  * @returns The stylesheet as it prints after the fix.
  */
-function run (css: string): string {
+function run (css: string, taken: number[] = []): string {
 	let root = parse(css)
 
-	removeEmptyLinesAfter(syntax, root.nodes[0] as Rule)
+	removeEmptyLinesAfter(syntax, root.nodes[0] as Rule, new Set(taken))
 
 	return root.toString()
 }

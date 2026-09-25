@@ -118,6 +118,15 @@ testRule({
 
 	reject: [
 		{
+			// With no rule taking the semicolon out, the line it stands on is no empty line, and the empty line goes behind it
+			description: `a stray semicolon on a line of its own between the last node and the brace`,
+			code: `a {\ncolor: pink;\n;\n}`,
+			fixed: `a {\ncolor: pink;\n;\n\n}`,
+			line: 4,
+			column: 1,
+			message: messages.expected,
+		},
+		{
 			description: `a nested block with a stray semicolon on the line behind its brace, marked on the brace rather than inside the raw the semicolon stands in`,
 			code: `a {\n\tb {\n\t\tc: d\n\t}\n\t;\n}`,
 			fixed: `a {\n\tb {\n\t\tc: d\n\n\t}\n\t;\n\n}`,
@@ -160,9 +169,9 @@ testRule({
 			message: messages.expected,
 		},
 		{
-			description: `a stray semicolon behind the break, which stays on its own line while the run's first break is doubled`,
+			description: `a stray semicolon behind the break, which keeps its line while the break closing that line is doubled`,
 			code: `a { color: pink;;\n;\n}`,
-			fixed: `a { color: pink;;\n\n;\n}`,
+			fixed: `a { color: pink;;\n;\n\n}`,
 			line: 3,
 			column: 1,
 			message: messages.expected,
@@ -390,6 +399,11 @@ testRule({
 			code: `a { color: pink;;\n;}`,
 		},
 		{
+			// With no rule taking the semicolon out, the line it stands on is no empty line
+			description: `a stray semicolon on a line of its own between the last node and the brace`,
+			code: `a {\ncolor: pink;\n;\n}`,
+		},
+		{
 			description: `the break spelled with a carriage return`,
 			code: `a {color: pink;\r\n}`,
 		},
@@ -471,10 +485,19 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			description: `the same with line feeds, which used to draw a warning no run of the fix could clear`,
-			code: `a {\ncolor: pink;\n;\n}`,
-			fixed: `a {\ncolor: pink;\n;}`,
-			line: 4,
+			// A stray semicolon staying is a character of the line it stands on, and the empty line is read on either side of it
+			description: `an empty line in front of a stray semicolon standing on its own line, the line of the semicolon kept`,
+			code: `a {\ncolor: pink;\n\n;\n}`,
+			fixed: `a {\ncolor: pink;\n;\n}`,
+			line: 5,
+			column: 1,
+			message: messages.rejected,
+		},
+		{
+			description: `the same empty line behind the semicolon`,
+			code: `a {\ncolor: pink;\n;\n\n}`,
+			fixed: `a {\ncolor: pink;\n;\n}`,
+			line: 5,
 			column: 1,
 			message: messages.rejected,
 		},

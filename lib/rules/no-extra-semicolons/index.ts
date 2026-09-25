@@ -2,10 +2,11 @@ import type { Comment, Node } from "postcss"
 import styleSearch from "style-search"
 import stylelint, { type FixCallback } from "stylelint"
 
-import { CHARSET_AT_RULE_NAME, INLINE_COMMENT_BREAK, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
+import { INLINE_COMMENT_BREAK, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
+import { extraSemicolonsAfter, noExtraUnderComment, readsTheRawsOf } from "../../utils/extraSemicolonsAfter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { report } from "../../utils/report/index.ts"
@@ -86,7 +87,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		if (root.raws.after && root.raws.after.trim().length > 0) {
 			let rawAfterRoot = root.raws.after
-			let readsAsNoExtra = noExtraUnderComment(root, `after`)
+			let readsAsNoExtra = noExtraUnderComment(syntax, root, `after`, result)
 
 			let fixSemiIndices: number[] = []
 
@@ -106,17 +107,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		}
 
 		root.walk((node) => {
-			// A `@charset` is no at-rule to a reader of its own text, but the semicolons around it are the file's, and are read as around any node
-			if (isAtRule(node) && !syntax.isStandardAtRule(node) && !CHARSET_AT_RULE_NAME.test(node.name)) return
-
-			if (node.type === `rule` && !syntax.isStandardRule(node)) return
+			if (!readsTheRawsOf(syntax, node)) return
 
 			if (node.raws.before && node.raws.before.trim().length > 0) {
 				let rawBeforeNode = node.raws.before
 				let allowedSemi = 0
 
 				let rawBeforeIndexStart = 0
-				let readsAsNoExtra = noExtraUnderComment(node, `before`)
+				let readsAsNoExtra = noExtraUnderComment(syntax, node, `before`, result)
 
 				let fixSemiIndices: number[] = []
 
@@ -133,26 +131,22 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (fixSemiIndices.length > 0) node.raws.before = removeIndices(rawBeforeNode, fixSemiIndices)
 			}
 
-			if (typeof node.raws.after === `string` && node.raws.after.trim().length > 0) {
+			// A Less mixin last child puts its extra semicolon in `node.raws.after`; mixins are passed over, and the rest of the node with them
+			if (typeof node.raws.after === `string` && node.raws.after.trim().length > 0 && `last` in node && node.last && isAtRule(node.last) && !readsTheRawsOf(syntax, node.last)) return
+
+			let extraAfter = extraSemicolonsAfter(syntax, node, result)
+
+			if (extraAfter.length > 0 && typeof node.raws.after === `string`) {
 				let rawAfterNode = node.raws.after
-
-				// A Less mixin last child puts its extra semicolon in `node.raws.after`; mixins are passed over
-				if (`last` in node && node.last && node.last.type === `atrule` && !syntax.isStandardAtRule(node.last) && !CHARSET_AT_RULE_NAME.test(node.last.name)) return
-
-				let readsAsNoExtra = noExtraUnderComment(node, `after`)
 				let fixSemiIndices: number[] = []
 
-				styleSearch({ source: rawAfterNode, target: `;` }, (match) => {
-					if (readsAsNoExtra(match.startIndex)) return
-
+				for (let semicolon of extraAfter) {
 					fix = (): void => {
-						fixSemiIndices.push(match.startIndex)
+						fixSemiIndices.push(semicolon)
 					}
 
-					let index = getOffsetByNode(node) + nodeString(node, result).length - 1 - rawAfterNode.length + match.startIndex
-
-					complain(index)
-				})
+					complain(getOffsetByNode(node) + nodeString(node, result).length - 1 - rawAfterNode.length + semicolon)
+				}
 
 				if (fixSemiIndices.length > 0) node.raws.after = removeIndices(rawAfterNode, fixSemiIndices)
 			}
@@ -181,23 +175,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (fixSemiIndices.length > 0) node.raws.ownSemicolon = removeIndices(rawOwnSemicolon, fixSemiIndices)
 			}
 		})
-
-		/**
-		 * Reads which semicolons of a raw are no extra ones where `postcss-less` closed the node in front on a semicolon of a `//` comment's text: those of the head that is more of that text, and the first behind the break closing it, which Less closes the node on.
-		 * @param owner - The node whose `raws.before` is read, or the container whose `raws.after` is.
-		 * @param key - Which of the two raws.
-		 * @returns A test of a semicolon's index in the raw.
-		 */
-		function noExtraUnderComment (owner: Node, key: `before` | `after`): (index: number) => boolean {
-			let raw = owner.raws[key]
-			let head = syntax.commentTextHead(owner, key, result)
-
-			if (head === null || typeof raw !== `string`) return () => false
-
-			let closing = raw.indexOf(`;`, head.length)
-
-			return (index) => index < head.length || index === closing
-		}
 
 		/**
 		 * Reports the semicolons of the code a `//` comment node holds that close nothing.
