@@ -2,13 +2,13 @@ import { type ChildNode, type Comment, type Container, type Document, type Root,
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, LEADING_LINE_BREAK_RUN, OPENS_WITH_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
+import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, EVERY_SEMICOLON, LEADING_LINE_BREAK_RUN, OPENS_WITH_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
+import { blockTailTaken, getBlockTail, setBlockTail } from "../../utils/blockTail/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { type CommentSpan, findStringSpans } from "../../utils/findCommentSpans/index.ts"
-import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
@@ -17,7 +17,7 @@ import { opensALine } from "../../utils/opensALine/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
+import { straySemicolonOffsetsTaken, straySemicolonsTakenBefore, straySemicolonsTakenOwn, writtenAsLeft } from "../../utils/straySemicolonsTaken/index.ts"
 import { takesTheOpeningLines } from "../../utils/takesTheOpeningLines/index.ts"
 import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
 import { isNumber } from "../../utils/validateTypes/index.ts"
@@ -83,49 +83,43 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let openingLinesAreTaken = takesTheOpeningLines(root, result)
 		let headOpensALine = opensALine(root)
 		let writeHead = writeHeadRun.bind(null, getChars, headOpensALine)
+		let isFixed = false
 
 		/** Collapses every run of empty lines to the maximum: `raws.before`, a comment's `left`, text and `right`, the raws between the parts of a statement and the node's own text, the run in front of a closing brace, the run in front of a free semicolon behind one, and the root's head and tail apart from the walk, where a run opening a line of the file counts an empty line more. */
 		function fix (): void {
+			// Every warning hands this fix over, and it collapses every run at once; a second pass would read the semicolons the neighbors take against the lines of a raw it had shortened already
+			if (isFixed) return
+
+			isFixed = true
+
 			let { first } = root
 
 			root.walk((node) => {
 				if (isComment(node) && !ignoreComments) writeComment(syntax, node, getChars)
 
-				if (node.raws.before) node.raws.before = node === first ? pastTheOpeningLines(node.raws.before, openingLinesAreTaken, getChars) : getChars(node.raws.before)
+				if (!writeAcrossTheFreeSemicolon(node, result, getChars) && node.raws.before) node.raws.before = node === first ? pastTheOpeningLines(node.raws.before, openingLinesAreTaken, getChars) : writtenAsLeft(getChars, node.raws.before, straySemicolonsTakenBefore(node, result))
 
 				writeStatementText(syntax, node, result, ignoreComments, getChars)
 
+				// The run in front of the closing brace, behind a free semicolon behind the last rule's brace too, as the neighbors taking semicolons leave it
 				if (carriesABlock(node)) {
-					let blockAfter = getBlockAfter(syntax, node)
+					let tail = getBlockTail(syntax, node)
 
-					if (typeof blockAfter === `string`) setBlockAfter(syntax, node, getChars(blockAfter))
+					if (typeof tail === `string`) setBlockTail(syntax, node, writtenAsLeft(getChars, tail, blockTailTaken(node, result)))
 				}
 
-				// The run in front of a free semicolon behind a closing brace stands in the rule's own raw, together with the semicolon, and reaches no other walk of the pass. Written for a rule alone, since `freeSemicolon` hands the raw to a rule alone; elsewhere such a semicolon lands in the block's `raws.after` or in the next node's `raws.before`, both written already. Nothing but whitespace stands in front of the semicolon there, a comment in front of one being a node of its own, so the raw is written whole as any run is
-				if (isRule(node) && node.raws.ownSemicolon) node.raws.ownSemicolon = getChars(node.raws.ownSemicolon)
+				// The run in front of a free semicolon behind a closing brace stands in the rule's own raw, together with the semicolon; behind a node it runs on into that node's raw, and behind the last node of a block into the block's tail, both written with it above. Only behind the root's last node is the raw written alone, the root's tail being written apart below
+				if (isRule(node) && node.raws.ownSemicolon && !node.next() && node.parent?.type === `root`) node.raws.ownSemicolon = getChars(node.raws.ownSemicolon)
 			})
 
-			let { document } = root as { document?: Document }
-			let firstNodeRawsBefore = first && first.raws.before
-			let rootRawsAfter = root.raws.after
-
-			// The raw is written here rather than left to the walk, which reads every run as one standing inside a line; how many empty lines this one closes is the head's own question
-			if (first && firstNodeRawsBefore) first.raws.before = pastTheOpeningLines(firstNodeRawsBefore, openingLinesAreTaken, writeHead)
-
-			if (rootRawsAfter) {
-				// A root standing in an `html` document, whose tail is written as any run is, zero included, since the file's special case is its own; where such a root got no node this raw is the block entire, so the lines it opens with are the taker's here as they are in a file of its own
-				if ((document && document.constructor.name) === `Document`) root.raws.after = first ? getChars(rootRawsAfter) : pastTheOpeningLines(rootRawsAfter, openingLinesAreTaken, (text) => getChars(writeHead(text)))
-				// A root of its own, a file's or a styled template's, whose tail ends the text it stands in. Zero is read as one, a file ending on a break satisfying it. An empty root keeps the whole file here, and its leading run is written as such first, or a break survived every `--fix`
-				else {
-					root.raws.after = first
-						? replaceEmptyLines(primary === 0 ? 1 : primary, rootRawsAfter, true)
-						: pastTheOpeningLines(rootRawsAfter, openingLinesAreTaken, (text) => replaceEmptyLines(primary === 0 ? 1 : primary, writeHead(text), true))
-				}
-			}
+			writeTheRootsEnds(root, primary, openingLinesAreTaken, getChars, writeHead)
 		}
 
 		let emptyLines = 0
 		let lastIndex = -1
+		// A line holding nothing but stray semicolons a neighbor takes out in the same run is read as it will stand, empty, whichever side of the neighbor this rule is listed
+		let taken = straySemicolonOffsetsTaken(root, result)
+
 		let rootString = countedText(root, result)
 
 		// A file ending on a break counts one empty line more, and spaces and tabs behind the last break are `no-eol-whitespace`'s line, so the end is measured in front of them
@@ -152,7 +146,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Additional check for beginning of file, where the text counted opens a line of it
 			let opensTheText = !matchStartIndex && headOpensALine
 
-			if (opensTheText || lastIndex === matchStartIndex) emptyLines += 1
+			if (opensTheText || lastIndex === matchStartIndex || onlyTakenBetween(taken, lastIndex, matchStartIndex)) emptyLines += 1
 			else emptyLines = 0
 
 			opensTheFile = opensTheText || (opensTheFile && lastIndex === matchStartIndex)
@@ -194,6 +188,86 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			}
 		}
 	}
+}
+
+/**
+ * Writes the root's head and tail apart from the walk, which reads every run as one standing inside a line.
+ * @param root - The root.
+ * @param primary - The most empty lines allowed.
+ * @param openingLinesAreTaken - Whether `no-empty-first-line` takes the lines the file opens with.
+ * @param getChars - What the rule makes of a run it writes.
+ * @param writeHead - What it makes of the run the text opens with.
+ */
+function writeTheRootsEnds (root: Root, primary: number, openingLinesAreTaken: boolean, getChars: (text: string, isSpecialCase?: boolean) => string, writeHead: (text: string) => string): void {
+	let { first } = root
+	let { document } = root as { document?: Document }
+	let firstNodeRawsBefore = first && first.raws.before
+	let rootRawsAfter = root.raws.after
+
+	// The raw is written here rather than left to the walk, which reads every run as one standing inside a line; how many empty lines this one closes is the head's own question
+	if (first && firstNodeRawsBefore) first.raws.before = pastTheOpeningLines(firstNodeRawsBefore, openingLinesAreTaken, writeHead)
+
+	if (rootRawsAfter) {
+		// A root standing in an `html` document, whose tail is written as any run is, zero included, since the file's special case is its own; where such a root got no node this raw is the block entire, so the lines it opens with are the taker's here as they are in a file of its own
+		if ((document && document.constructor.name) === `Document`) root.raws.after = first ? getChars(rootRawsAfter) : pastTheOpeningLines(rootRawsAfter, openingLinesAreTaken, (text) => getChars(writeHead(text)))
+		// A root of its own, a file's or a styled template's, whose tail ends the text it stands in. Zero is read as one, a file ending on a break satisfying it. An empty root keeps the whole file here, and its leading run is written as such first, or a break survived every `--fix`
+		else {
+			root.raws.after = first
+				? replaceEmptyLines(primary === 0 ? 1 : primary, rootRawsAfter, true)
+				: pastTheOpeningLines(rootRawsAfter, openingLinesAreTaken, (text) => replaceEmptyLines(primary === 0 ? 1 : primary, writeHead(text), true))
+		}
+	}
+}
+
+/**
+ * Asks whether nothing but semicolons the neighbors take stands between two points of the text.
+ * @param taken - The offsets of those semicolons.
+ * @param from - The first point.
+ * @param to - The second point.
+ * @returns True where nothing else does.
+ */
+function onlyTakenBetween (taken: Set<number>, from: number, to: number): boolean {
+	if (from < 0 || to <= from) return false
+
+	for (let index = from; index < to; index += 1) if (!taken.has(index)) return false
+
+	return true
+}
+
+/**
+ * Writes the run in front of a node standing behind a free semicolon behind a rule's closing brace, where a line opens in the rule's own raw and runs on into the node's: the two are written as one run, the semicolons the neighbors take kept for them.
+ * @param node - The node.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @param getChars - What the rule makes of a run it writes.
+ * @returns True where the node stands there and its run is written.
+ */
+function writeAcrossTheFreeSemicolon (node: ChildNode, result: PostcssResult, getChars: (text: string) => string): boolean {
+	let previous = node.prev()
+
+	if (!previous || !isRule(previous) || typeof previous.raws.ownSemicolon !== `string` || typeof node.raws.before !== `string`) return false
+
+	let own = previous.raws.ownSemicolon
+	let taken = new Set([...straySemicolonsTakenOwn(previous, result), ...[...straySemicolonsTakenBefore(node, result)].map((index) => index + own.length)])
+	let [ownWritten, beforeWritten] = partedAtTheHeld(writtenAsLeft(getChars, own + node.raws.before, taken), own)
+
+	previous.raws.ownSemicolon = ownWritten
+	node.raws.before = beforeWritten
+
+	return true
+}
+
+/**
+ * Parts a run written across a rule's `raws.ownSemicolon` and the raw behind it: the first as many semicolons as the rule's raw held, with what stands in front of them, go back into it, the rest into the other. A write keeps the semicolons in their order.
+ * @param written - The run written.
+ * @param own - The rule's raw as it stood.
+ * @returns The two raws.
+ */
+function partedAtTheHeld (written: string, own: string): [string, string] {
+	let held = (own.match(EVERY_SEMICOLON) ?? []).length
+	let end = held === 0 ? undefined : [...written.matchAll(EVERY_SEMICOLON)][held - 1]
+	let cut = end ? end.index + 1 : 0
+
+	return [written.slice(0, cut), written.slice(cut)]
 }
 
 /**

@@ -1,7 +1,7 @@
 import type { Container, Node } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { ENABLE_COMMAND, EVERY_LINE_BREAK, EVERY_SEMICOLON, LEADING_CSS_WHITESPACE, LINE_DISABLE_COMMAND } from "../../regexps.ts"
+import { ENABLE_COMMAND, EVERY_LINE_BREAK, EVERY_SEMICOLON, LEADING_CSS_WHITESPACE, LEADING_SPACES_AND_TABS, LINE_DISABLE_COMMAND, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { trailingSemicolonAsked } from "../closedBySemicolon/index.ts"
 import { closingOffset } from "../closingOffset/index.ts"
@@ -59,7 +59,7 @@ export function withoutTaken (run: string, taken: Set<number>): string {
 /**
  * Writes a run as `no-extra-semicolons` leaves it, keeping the semicolons it takes out for it to take.
  *
- * The write is worked out on the run without them, so that it comes out the same whichever side of that rule this one is listed. Each stands behind as many breaks of the written whitespace as stood in front of it, as far as the whitespace holds, so that it keeps its line where the write keeps the breaks around it; taking them leaves the written run.
+ * The write is worked out on the run without them, so that it comes out the same whichever side of that rule this one is listed. Each stands behind as many breaks of the written whitespace as stood in front of it, as far as the whitespace holds, so that it keeps its line where the write keeps the breaks around it, and behind as many of the spaces and tabs opening that written line as stood in front of it on its own; taking them leaves the written run.
  * @param write - The write over a run.
  * @param run - The run as it stands.
  * @param taken - The indices of the semicolons the neighbor takes out.
@@ -71,7 +71,13 @@ export function writtenAsLeft (write: (run: string) => string, run: string, take
 	let written = write(withoutTaken(run, taken))
 	let opening = written.match(LEADING_CSS_WHITESPACE)?.[0] ?? ``
 	let breakEnds = [0, ...[...opening.matchAll(EVERY_LINE_BREAK)].map((match) => match.index + match[0].length)]
-	let placed = [...taken].map((index) => breakEnds[Math.min((run.slice(0, index).match(EVERY_LINE_BREAK) ?? []).length, breakEnds.length - 1)] ?? 0)
+	let placed = [...taken].map((index) => {
+		let place = breakEnds[Math.min((run.slice(0, index).match(EVERY_LINE_BREAK) ?? []).length, breakEnds.length - 1)] ?? 0
+		// Behind the spaces and tabs that stood in front of it on its line, as far as the written line holds them, so that a rule reading the line's end in between reads them where they stand
+		let inFront = (run.slice(0, index).match(TRAILING_SPACES_AND_TABS)?.[0] ?? ``).length
+
+		return place + Math.min(inFront, (written.slice(place).match(LEADING_SPACES_AND_TABS)?.[0] ?? ``).length)
+	})
 
 	// From the end, so that each insertion leaves the places in front of it where they stand
 	for (let place of placed.toSorted((a, b) => b - a)) written = `${written.slice(0, place)};${written.slice(place)}`
