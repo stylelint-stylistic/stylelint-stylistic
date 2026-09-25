@@ -67,10 +67,10 @@ export const LEADING_BYTE_ORDER_MARK = /^\uFEFF/u
 /** Every parenthesis, either kind. */
 export const EVERY_PARENTHESIS = /[()]/gu
 
-/** Every character but a line feed and a carriage return. */
-export const EVERY_CHARACTER_BUT_A_BREAK = /[^\n\r]/gu
+/** Every character but a line feed, the one character PostCSS counts a line by: a carriage return, bare or opening a Windows pair, matches with the rest. */
+export const EVERY_CHARACTER_BUT_A_LINE_FEED = /[^\n]/gu
 
-/** Every run of breaks as PostCSS reads them, a Windows pair and a line feed alike, nothing between them: what `max-empty-lines` collapses, whichever way each break is spelled. {@link EVERY_LINE_BREAK_RUN} reads a bare carriage return into a run too. */
+/** Every run of breaks as PostCSS reads them, a Windows pair and a line feed alike, nothing between them: what `max-empty-lines` collapses, whichever way each break is spelled. */
 export const EVERY_RUN_OF_LINE_BREAKS = /(?:\r?\n)+/gu
 
 /** Every line ending in a break, break included. */
@@ -81,9 +81,6 @@ export const EVERY_LINE_BREAK = /\r?\n/gu
 
 /** Every break and the indentation behind it, where content or the end follows, the break captured; the indentation is tokenizer whitespace short of a break, form feed and bare carriage return among it, which a fix stopping at spaces and tabs wrote nothing over. */
 export const EVERY_LINE_BREAK_AND_INDENT = /(\r?\n)(?:[ \t\f]|\r(?!\n))*(?=\S|$)/gu
-
-/** Every run of line feeds and carriage returns, a Windows pair counting as two, and the empty run everywhere else. */
-export const EVERY_LINE_BREAK_RUN = /[\r\n]*/gu
 
 /** The indentation of every content line, captured; the line start is spelled since `m` also begins a line after the two Unicode separators. */
 export const EVERY_LINE_INDENT_WITH_CONTENT = /(?:^|\n)([\t ]*)\S/gu
@@ -136,8 +133,8 @@ export const INLINE_COMMENT_BREAK_OR_FORM_FEED = /[\n\r\f]/u
 /** The character a preprocessor's interpolation opens with in front of its `{`: Sass's `#` and Less's `@`. Spelled as {@link NAME_CHARACTER_BESIDE_IDENTIFIER} is, which asks another question of the same two characters. The third spelling of {@link EVERY_INTERPOLATION}, postcss-simple-vars' `$(…)`, closes on a parenthesis and carries no brace to ask about, and a template's braces ({@link TPL_INTERPOLATION}) are left out here as they are there: no engine reads a call behind `${p}url(`, and `@csstools/css-tokenizer` reads the address. */
 export const INTERPOLATION_MARK = /[#@]/u
 
-/** The last line, its break excluded; nothing where the text ends in one. */
-export const LAST_LINE = /[^\r\n]+$/u
+/** The last line as PostCSS counts lines, its break excluded, a bare carriage return being a character of the line; nothing where the text ends in a break. */
+export const LAST_LINE = /[^\n]+$/u
 
 /** A leading block comment, breaks aside, its content captured. */
 export const LEADING_BLOCK_COMMENT = /^[^\S\n]*\/\*([\s\S]*?)\*\//u

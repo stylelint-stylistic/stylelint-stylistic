@@ -146,6 +146,37 @@ testRule({
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
+			// PostCSS counts a Windows pair as one line
+			description: `rows broken over lines with Windows pairs`,
+			code: `a {\r\n\tgrid-template-areas:\r\n\t\t"a  b"\r\n\t\t"c d";\r\n}`,
+			fixed: `a {\r\n\tgrid-template-areas:\r\n\t\t"a b"\r\n\t\t"c d";\r\n}`,
+			line: 3,
+			column: 3,
+			endLine: 4,
+			endColumn: 8,
+			message: messages.expected(`grid-template-areas`),
+		},
+		{
+			description: `the same rows parted by bare carriage returns, which PostCSS counts no line by`,
+			code: `a {\n\tgrid-template-areas:\r\t\t"a  b"\r\t\t"c d";\n}`,
+			fixed: `a {\n\tgrid-template-areas:\r\t\t"a b"\r\t\t"c d";\n}`,
+			line: 2,
+			column: 25,
+			endLine: 2,
+			endColumn: 39,
+			message: messages.expected(`grid-template-areas`),
+		},
+		{
+			description: `the same rows behind a line feed with a bare carriage return opening the next line, a character of that line`,
+			code: `a {\n\tgrid-template-areas:\n\r\t\t"a  b"\n\r\t\t"c d";\n}`,
+			fixed: `a {\n\tgrid-template-areas:\n\r\t\t"a b"\n\r\t\t"c d";\n}`,
+			line: 3,
+			column: 4,
+			endLine: 4,
+			endColumn: 9,
+			message: messages.expected(`grid-template-areas`),
+		},
+		{
 			description: `columns that do not line up`,
 			code: `
 				a {
@@ -1876,6 +1907,17 @@ testRule({
 	],
 
 	reject: [
+		{
+			// A comment opening a line keeps it out of the table, and a bare carriage return behind the comment is no break of that line
+			description: `a row a comment opens on its line, a bare carriage return standing between them, which stays out of the table`,
+			code: `a {\n\tgrid-template-areas:\n\t\t"a b" 1fr\n\t\t/* c */\r"ccc  ddd" 2fr;\n}`,
+			fixed: `a {\n\tgrid-template-areas:\n\t\t"a   b" 1fr\n\t\t/* c */\r"ccc ddd" 2fr;\n}`,
+			line: 3,
+			column: 3,
+			endLine: 4,
+			endColumn: 25,
+			message: messages.expected(`grid-template-areas`),
+		},
 		{
 			description: `the issue's example with an empty list of names on the row that has none, its columns not laid out`,
 			code: `

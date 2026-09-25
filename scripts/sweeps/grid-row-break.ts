@@ -1,7 +1,7 @@
 /**
  * A line break in the value of `grid-template-areas`: inside a row, outside every row, and both.
  *
- * `named-grid-areas-alignment` padded a row's cells by whether the whole value spans lines, and every row fix collapses the breaks inside a row, so a value whose only break stood in a row flipped between runs. A bare carriage return and a form feed are no line to PostCSS, so they are the control for the reading of a break. The indented layout's break is `raws.between`'s, so it must move wherever the inline one does.
+ * `named-grid-areas-alignment` padded a row's cells by whether the whole value spans lines, and every row fix collapses the breaks inside a row, so a value whose only break stood in a row flipped between runs. A bare carriage return and a form feed are no line to PostCSS, so they are the control for the reading of a break. The indented layout's break is `raws.between`'s, so it must move wherever the inline one does. A row a comment opens behind a break, with the break under test between the comment and the row, and `alignColumns`, which lays the rows out as a table, were added when the table reader came to read a line as PostCSS does: behind a bare carriage return it took the row into the table.
  */
 
 import { keysOf, multiply } from "../harness/matrix.ts"
@@ -35,6 +35,8 @@ const PLACES: Record<string, (character: string) => string> = {
 	insideDiv: (character) => `"a  b",${character}"cc  c"`,
 	insideRowAndBetweenRows: (character) => `"a${character}b"${character}"cc  c"`,
 	insideRowAndComment: (character) => `"a${character}b" /*${character}*/ "cc  c"`,
+	// The row a comment opens behind a line break stays out of the table, and the character standing between the comment and the row decides whether a break stands there
+	commentOpeningRow: (character) => `"a b" 1fr\n\t\t/* c */${character}"ccc  ddd" 2fr`,
 }
 
 /** The value beside the property and under it; the second's break is `raws.between`'s. */
@@ -59,6 +61,7 @@ const configs: Sweep[`configs`] = [
 	{ rule: `named-grid-areas-alignment`, primary: true },
 	{ rule: `named-grid-areas-alignment`, primary: true, secondary: { gap: 2 } },
 	{ rule: `named-grid-areas-alignment`, primary: true, secondary: { alignQuotes: true } },
+	{ rule: `named-grid-areas-alignment`, primary: true, secondary: { alignColumns: true } },
 	{ rule: `string-quotes`, primary: `single` },
 ]
 

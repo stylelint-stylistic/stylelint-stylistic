@@ -1,7 +1,7 @@
 import valueParser, { type Node, type StringNode } from "postcss-value-parser"
 import stylelint from "stylelint"
 
-import { EVERY_CSS_WHITESPACE_RUN, EVERY_LINE_BREAK_RUN, GRID_AREAS_PROPERTY, LAST_LINE, LEADING_CSS_WHITESPACE, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
+import { EVERY_CSS_WHITESPACE_RUN, EVERY_LINE_BREAK, GRID_AREAS_PROPERTY, LAST_LINE, LEADING_CSS_WHITESPACE, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
@@ -225,8 +225,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (between === undefined || !source?.start || !source.end) throw new Error(`The declaration must carry its raws and a source`)
 
-			let extraStartLines = (between.match(EVERY_LINE_BREAK_RUN) ?? [])
-				.reduce((acc, newLineBlock) => acc + newLineBlock.length, 0)
+			// Lines as PostCSS counts them: a Windows pair is one break, and a bare carriage return is a character of its line
+			let extraStartLines = (between.match(EVERY_LINE_BREAK) ?? []).length
 
 			let extraStartColumns = extraStartLines === 0
 				? declarationValueIndex(declaration) + source.start.column
