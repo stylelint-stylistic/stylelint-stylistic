@@ -12,6 +12,20 @@ testRule({
 
 	accept: [
 		{
+			// The code Less reads behind the carriage return closing the comment is a declaration its semicolon closes
+			description: `a declaration behind a bare carriage return in the text of a double-slash comment`,
+			code: `a {\n\tcolor: pink; // c\r top: 0;\n}\n`,
+		},
+		{
+			// A semicolon inside a string or a call's arguments is text of it, and taking one away changes what Less compiles
+			description: `semicolons inside a string and inside an address behind a bare carriage return in such a comment`,
+			code: `a {\n\tcolor: pink; // c\r content: "a;;"; background: url(a;;b);\n}\n`,
+		},
+		{
+			description: `a semicolon behind a form feed in such a comment, which Less reads as the comment's text`,
+			code: `a {\n\tcolor: pink; // c\f;\n}\n`,
+		},
+		{
 			description: `an import closed by its own semicolon`,
 			code: `@import 'x.css';`,
 		},
@@ -68,6 +82,48 @@ testRule({
 	],
 
 	reject: [
+		{
+			// Less closes a double-slash comment on a bare carriage return, where the parser reads on to the line feed and keeps the semicolon in the comment's text
+			description: `a semicolon behind a bare carriage return in the text of a double-slash comment behind a declaration`,
+			code: `a {\n\tcolor: pink; // c\r;\n}\n`,
+			fixed: `a {\n\tcolor: pink; // c\r\n}\n`,
+			line: 2,
+			column: 20,
+			message: messages.rejected,
+		},
+		{
+			description: `two such semicolons, one behind the other`,
+			code: `a {\n\tcolor: pink; // c\r; ;\n}\n`,
+			fixed: `a {\n\tcolor: pink; // c\r \n}\n`,
+			warnings: [
+				{
+					line: 2,
+					column: 20,
+					message: messages.rejected,
+				},
+				{
+					line: 2,
+					column: 22,
+					message: messages.rejected,
+				},
+			],
+		},
+		{
+			description: `a second semicolon behind a mixin call Less reads in such a comment`,
+			code: `a {\n\tcolor: pink; // c\r .m();;\n}\n`,
+			fixed: `a {\n\tcolor: pink; // c\r .m();\n}\n`,
+			line: 2,
+			column: 26,
+			message: messages.rejected,
+		},
+		{
+			description: `a second semicolon behind a declaration Less reads in such a comment`,
+			code: `a {\n\tcolor: pink; // c\r top: 0; ;\n}\n`,
+			fixed: `a {\n\tcolor: pink; // c\r top: 0; \n}\n`,
+			line: 2,
+			column: 29,
+			message: messages.rejected,
+		},
 		{
 			description: `a second semicolon behind a declaration standing after a mixin call`,
 			code: `a { .mixin();\ncolor: red;; }`,

@@ -1,15 +1,16 @@
-import type { Node } from "postcss"
+import type { Comment, Node } from "postcss"
 import styleSearch from "style-search"
 import stylelint, { type FixCallback } from "stylelint"
 
-import { CHARSET_AT_RULE_NAME } from "../../regexps.ts"
+import { CHARSET_AT_RULE_NAME, INLINE_COMMENT_BREAK, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { isAtRule } from "../../utils/typeGuards/index.ts"
+import { isAtRule, isComment } from "../../utils/typeGuards/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -156,6 +157,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (fixSemiIndices.length > 0) node.raws.after = removeIndices(rawAfterNode, fixSemiIndices)
 			}
 
+			// Less closes a `//` comment on a bare carriage return too, where `postcss-less` reads on to a line feed, and the code behind that break is Less's
+			if (isComment(node)) checkCommentCode(node)
+
 			if (typeof node.raws.ownSemicolon === `string`) {
 				let rawOwnSemicolon = node.raws.ownSemicolon
 				let allowedSemi = 0
@@ -196,6 +200,27 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		}
 
 		/**
+		 * Reports the semicolons of the code a `//` comment node holds that close nothing.
+		 * @param comment - The comment node.
+		 */
+		function checkCommentCode (comment: Comment): void {
+			let code = syntax.inlineCommentCode(comment)
+			let left = comment.raws.left ?? ``
+			let fixSemiIndices: number[] = []
+
+			for (let index of code === null ? [] : semicolonsClosingNothing(code)) {
+				fix = (): void => {
+					fixSemiIndices.push(index - left.length)
+				}
+
+				// The node prints as `//`, its `raws.left` and its text
+				complain(getOffsetByNode(comment) + 2 + index)
+			}
+
+			if (fixSemiIndices.length > 0) comment.text = removeIndices(comment.text, fixSemiIndices)
+		}
+
+		/**
 		 * Reports an extra semicolon.
 		 * @param index - The offset of the semicolon in the source.
 		 */
@@ -211,6 +236,26 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			})
 		}
 	}
+}
+
+/**
+ * Finds the semicolons of the code a `//` comment node holds that close nothing: those with only whitespace between them and the break closing the comment or the semicolon in front. Strings and the arguments of calls are text, and so is a semicolon a backslash escapes.
+ * @param code - The copy of the comment's `raws.left` and text with all but the code blanked.
+ * @returns The semicolons' indices in the copy.
+ */
+function semicolonsClosingNothing (code: string): number[] {
+	let indices: number[] = []
+	let opens = code.search(INLINE_COMMENT_BREAK) + 1
+
+	styleSearch({ source: code, target: `;`, functionArguments: `skip` }, (match) => {
+		if (match.startIndex < opens || !editKeepsEscapedCharacter(code, { start: match.startIndex, end: match.startIndex + 1, text: `` })) return
+
+		if (WHITESPACE_OR_NOTHING.test(code.slice(opens, match.startIndex))) indices.push(match.startIndex)
+
+		opens = match.startIndex + 1
+	})
+
+	return indices
 }
 
 /**
