@@ -1,7 +1,7 @@
 import type { ChildNode, Container, Node, Root } from "postcss"
 import type { PostcssResult, RuleMessage } from "stylelint"
 
-import { EVERY_LINE_BREAK, LEADING_WHITESPACE_WITHOUT_BREAK } from "../../regexps.ts"
+import { EVERY_LINE_BREAK, EVERY_SEMICOLON, LEADING_CSS_WHITESPACE, LEADING_WHITESPACE_WITHOUT_BREAK } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { carriesABlock } from "../carriesABlock/index.ts"
 import { declarationString } from "../declarationString/index.ts"
@@ -14,6 +14,7 @@ import { report } from "../report/index.ts"
 import { runInFrontOf } from "../runInFrontOf/index.ts"
 import { setBlockAfter } from "../setBlockAfter/index.ts"
 import { statementString } from "../statementString/index.ts"
+import { straySemicolonsTakenOwn, withoutTaken, writtenAsLeft } from "../straySemicolonsTaken/index.ts"
 import { isAtRule, isDeclaration, isRoot, isRule } from "../typeGuards/index.ts"
 import { readWhitespaceBeforeSemicolon, writeWhitespaceBeforeSemicolon } from "../whitespaceBeforeSemicolon/index.ts"
 
@@ -67,7 +68,7 @@ export function semicolonLineChecker ({ node, syntax, result, checkedRuleName, m
 /**
  * Checks the line of a node standing behind a free semicolon behind a rule's closing brace, for `indentation`.
  *
- * PostCSS files such a semicolon, with the break and the run in front of it, into the rule's `raws.ownSemicolon`, so the node's own raw holds no break and the node's check passed the line over. The line opens in that raw, and is read and written there as the node's check reads and writes `raws.before`, where the parser files the same semicolon behind a declaration or an at-rule's block: the run in front of the semicolon is asked for the node's level, and the warning stands on the node. A break inside a styled template's interpolation opens no line of the stylesheet.
+ * PostCSS files such a semicolon, with the break and the run in front of it, into the rule's `raws.ownSemicolon`, so the node's own raw holds no break and the node's check passed the line over. The line opens in that raw and runs on into the leading whitespace of the node's `raws.before`, and is read and written across the two as the node's check reads and writes `raws.before`, where the parser files the same semicolon behind a declaration or an at-rule's block: the head of the line is asked for the node's level, and the warning stands on the node. A break inside a styled template's interpolation opens no line of the stylesheet.
  * @param options - The node, the syntax, the result, the rule's name and message, the indentation asked for and how the message words it.
  * @param options.node - The node walked.
  * @param options.syntax - The syntax that finds the host code in the raws.
@@ -96,8 +97,17 @@ export function ownSemicolonLineChecker ({ node, syntax, result, checkedRuleName
 
 	let before = runInFrontOf(node)
 	let spans = syntax.hostCodeSpans(run, previous)
+	let beforeSpans = syntax.hostCodeSpans(before, node)
 
-	if (lastLineStart(before, syntax.hostCodeSpans(before, node)) >= 0 || lastLineStart(run, spans) < 0 || lastLineIndentation(run, spans) === expectedIndentation) return
+	if (lastLineStart(before, beforeSpans) >= 0 || lastLineStart(run, spans) < 0) return
+
+	// The line's head runs on into the node's own raw where no semicolon stays in front of it: `no-extra-semicolons` takes one out and leaves the whitespace on both sides, so the head is read as it leaves it, whichever side of it this rule is listed. A styled template's host code keeps the head in the rule's raw
+	let readsAcross = spans.length === 0 && beforeSpans.length === 0
+	let leading = readsAcross ? before.match(LEADING_CSS_WHITESPACE)?.[0] ?? `` : ``
+	let taken = readsAcross ? straySemicolonsTakenOwn(previous, result) : new Set<number>()
+	let head = run + leading
+
+	if (lastLineIndentation(withoutTaken(head, taken), spans) === expectedIndentation) return
 
 	report({
 		message,
@@ -106,7 +116,18 @@ export function ownSemicolonLineChecker ({ node, syntax, result, checkedRuleName
 		result,
 		ruleName: checkedRuleName,
 		fix () {
-			previous.raws.ownSemicolon = fixIndentation(run, expectedIndentation, spans)
+			// The write mirrors the reading: in a run this rule takes the last turn, so the neighbor has taken its semicolons already; a check alone still sees them, and they stay for the neighbor. The rule's raw keeps as many as it held
+			let written = writtenAsLeft((text) => fixIndentation(text, expectedIndentation, spans), head, taken)
+			let held = (run.match(EVERY_SEMICOLON) ?? []).length
+			let end = [...written.matchAll(EVERY_SEMICOLON)][held - 1]
+
+			if (held > 0 && !end) throw new Error(`The write must keep every semicolon of the rule's raw`)
+
+			let cut = end ? end.index + 1 : written.length
+
+			previous.raws.ownSemicolon = written.slice(0, cut)
+
+			if (leading || cut < written.length) node.raws.before = written.slice(cut) + before.slice(leading.length)
 		},
 	})
 }

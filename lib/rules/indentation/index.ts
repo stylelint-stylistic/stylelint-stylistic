@@ -1,12 +1,12 @@
 import type { ChildNode, Container } from "postcss"
-import stylelint from "stylelint"
+import stylelint, { type PostcssResult } from "stylelint"
 
 import { TRAILING_LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
+import { blockTailTaken, getBlockTail, setBlockTail } from "../../utils/blockTail/index.ts"
 import { carriesABlock } from "../../utils/carriesABlock/index.ts"
 import { defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import type { InterpolationSpan } from "../../utils/findInterpolationSpans/index.ts"
 import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { fixIndentation, lastLineIndentation, lastLineStart, writeIndentationBefore } from "../../utils/lineIndentation/index.ts"
@@ -16,6 +16,7 @@ import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { freeSemicolonLineChecker, ownSemicolonLineChecker, semicolonLineChecker } from "../../utils/semicolonLineChecker/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { statementString } from "../../utils/statementString/index.ts"
+import { withoutTaken, writtenAsLeft } from "../../utils/straySemicolonsTaken/index.ts"
 import { isAtRule, isDeclaration, isRoot, isRule } from "../../utils/typeGuards/index.ts"
 import { isBoolean, isNumber } from "../../utils/validateTypes/index.ts"
 
@@ -82,27 +83,34 @@ function checkNodeLine (scope: IndentationScope, node: ChildNode, nodeLevel: num
 }
 
 /**
- * Finds the raw a block's closing brace opens its line in: the run in front of the brace, read wherever the parser filed it — behind an at-rule with neither block nor semicolon it is in `raws.between`, trimmed by `checkAtRuleParams` — and, where that run holds no break, the `raws.ownSemicolon` of the block's last node, a rule whose free semicolon PostCSS files there with the break and the run in front of it, so the brace stands on the semicolon's line.
+ * Finds the run a block's closing brace opens its line in: the run in front of the brace, read wherever the parser filed it — behind an at-rule with neither block nor semicolon it is in `raws.between`, trimmed by `checkAtRuleParams` — and read on from behind the `raws.ownSemicolon` of the block's last node, a rule whose free semicolon PostCSS files there with the break and the run in front of it ({@link getBlockTail}). A stray semicolon a neighbor takes out in the same run is read as gone, so the brace's line is read as the neighbor leaves it, whichever side of it this rule is listed; one staying is a character of the line. A styled template's host code in either raw keeps the reading to the raw holding the brace's line, as the parser filed it.
  * @param syntax - The syntax that reads the run and finds the host code in it.
  * @param node - The node whose block is closed.
- * @returns The run, its host code spans and how to write it, or nothing where no break opens the brace's line.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns The indentation opening the brace's line and how to write it, or nothing where no break opens that line.
  */
-function braceLine (syntax: Syntax, node: Container): { run: string, spans: InterpolationSpan[], write: (run: string) => void } | undefined {
+function braceLine (syntax: Syntax, node: Container, result: PostcssResult): { indentation: string, write: (whitespace: string) => void } | undefined {
 	let blockAfter = getBlockAfter(syntax, node) ?? ``
 	let blockAfterSpans = syntax.hostCodeSpans(blockAfter, node)
-
-	if (lastLineStart(blockAfter, blockAfterSpans) >= 0) return { run: blockAfter, spans: blockAfterSpans, write: (run) => setBlockAfter(syntax, node, run) }
-
 	let { last } = node
 	let ownSemicolon = last && isRule(last) ? last.raws.ownSemicolon : undefined
+	let ownSpans = last && typeof ownSemicolon === `string` ? syntax.hostCodeSpans(ownSemicolon, last) : []
 
-	if (!last || typeof ownSemicolon !== `string`) return undefined
+	if (blockAfterSpans.length > 0 || ownSpans.length > 0) {
+		if (lastLineStart(blockAfter, blockAfterSpans) >= 0) return { indentation: lastLineIndentation(blockAfter, blockAfterSpans), write: (whitespace) => setBlockAfter(syntax, node, fixIndentation(blockAfter, whitespace, blockAfterSpans)) }
 
-	let spans = syntax.hostCodeSpans(ownSemicolon, last)
+		if (!last || typeof ownSemicolon !== `string` || lastLineStart(ownSemicolon, ownSpans) < 0) return undefined
 
-	if (lastLineStart(ownSemicolon, spans) < 0) return undefined
+		return { indentation: lastLineIndentation(ownSemicolon, ownSpans), write: (whitespace) => { last.raws.ownSemicolon = fixIndentation(ownSemicolon, whitespace, ownSpans) } }
+	}
 
-	return { run: ownSemicolon, spans, write: (run) => { last.raws.ownSemicolon = run } }
+	let tail = getBlockTail(syntax, node) ?? ``
+	let taken = blockTailTaken(node, result)
+	let read = withoutTaken(tail, taken)
+
+	if (lastLineStart(read) < 0) return undefined
+
+	return { indentation: lastLineIndentation(read), write: (whitespace) => setBlockTail(syntax, node, writtenAsLeft((text) => fixIndentation(text, whitespace), tail, taken)) }
 }
 
 /**
@@ -120,10 +128,10 @@ function checkClosingBrace (scope: IndentationScope, node: ChildNode, nodeLevel:
 	// `indentClosingBrace` puts the brace a level deeper
 	let closingBraceLevel = secondaryOptions.indentClosingBrace ? nodeLevel + 1 : nodeLevel
 	let expectedClosingBraceIndentation = indentChar.repeat(closingBraceLevel)
-	let line = braceLine(syntax, node)
+	let line = braceLine(syntax, node, result)
 
 	// The brace's indentation is the whitespace opening the last line of that run, as a node's is the whitespace opening the last line of `raws.before`. What stands behind it is on the brace's line: a styled template's interpolation, or a free semicolon
-	if (line && lastLineIndentation(line.run, line.spans) !== expectedClosingBraceIndentation) {
+	if (line && line.indentation !== expectedClosingBraceIndentation) {
 		// The statement's own text ends on the brace, where the printed copy ends on a stray `raws.ownSemicolon`
 		let problemIndex = statementString(node, result).length - 1
 
@@ -136,7 +144,7 @@ function checkClosingBrace (scope: IndentationScope, node: ChildNode, nodeLevel:
 			result,
 			ruleName,
 			fix () {
-				line.write(fixIndentation(line.run, expectedClosingBraceIndentation, line.spans))
+				line.write(expectedClosingBraceIndentation)
 			},
 		})
 	}
