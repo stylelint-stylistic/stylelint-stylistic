@@ -114,8 +114,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A comment's `(` is its own; an unclosed comment holds the rest of the query, so the walk goes on inside
 				if (findCommentSpanHolding(node, comments)) return
 
-				// The parentheses of a call opening an address are no parentheses of the query, and the whitespace behind its `(` is what parts the parenthesis from the address, which is what a tokenizer reads one token by: taking it away hands a string's `)` the end of the address and makes text of a comment. Passed over, and the walk goes no further in where the address is bare, as it does in both `function-parentheses-*-inside` rules; the calls among a quoted address's arguments are walked.
-				if (opensAnAddress(node, at, siblings)) return quotesItsAddress(node) ? undefined : false
+				// The whitespace behind a bare address's `(` is what parts the parenthesis from the address, which is what a tokenizer reads one token by: taking it away hands a string's `)` the end of the address and makes text of a comment. Passed over, and the walk goes no further in, as it does in both `function-parentheses-*-inside` rules. A quoted address's parentheses are the call's own and are checked like any call's, the write behind the `(` asking below whether it switches how the tokenizer reads them.
+				if (opensAnAddress(node, at, siblings) && !quotesItsAddress(node)) return false
 
 				if (node.type === `function`) {
 					// A feature the file never closes holds the rest of the params, since PostCSS reads an at-rule's params past every brace while a `(` is open, and its `after` is empty whatever stands there; a fix at its end wrote a space at the end of the file every run. The whole feature goes, as it does in both `function-parentheses-*-inside` rules, and the walk goes on inside, where a closed call ends on a `)` of its own.

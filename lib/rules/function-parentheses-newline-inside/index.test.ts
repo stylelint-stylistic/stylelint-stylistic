@@ -85,10 +85,21 @@ testRule({
 
 	reject: [
 		{
-			description: `a call among the arguments behind a quoted address, which are those of any call while the address's own parentheses stay as written`,
+			// A string opening the parentheses makes them a call's to every tokenizer, so they are broken as any call's
+			description: `a quoted address on one line with a call among its arguments`,
 			code: `a { b: url("x", f(1)); }`,
-			fixed: `a { b: url("x", f(\n1\n)); }`,
+			fixed: `a { b: url(\n"x", f(\n1\n)\n); }`,
 			warnings: [
+				{
+					line: 1,
+					column: 12,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 20,
+					message: messages.expectedClosing,
+				},
 				{
 					line: 1,
 					column: 19,

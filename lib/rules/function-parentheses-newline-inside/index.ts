@@ -209,8 +209,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A narrowing here is not carried into a nested function
 				let functionNode = valueNode
 
-				// The parentheses of a call opening an address are the address's: a space or a break written behind the `(` parts a bare address from the parenthesis, which is what a tokenizer reads one token by, and `postcss-scss` reads a quoted one behind such a space as a token counting parentheses, which a string holding one leaves unclosed. Passed over, and the walk goes no further in where the address is bare, as it does in the four rules that ask this question of a node they would otherwise read inside; behind a quoted address stand arguments, whose calls are walked. The name is the file's spelling rather than the parser's, which is wider than what a parser takes a url token by.
-				if (opensAnAddress(valueNode, at, siblings)) return quotesItsAddress(valueNode) ? undefined : false
+				// The parentheses of a bare address are the address's: a space or a break written behind the `(` parts it from the parenthesis, which is what a tokenizer reads one token by, so the call is passed over and the walk goes no further in. A quoted address's parentheses are the call's own and are checked like any call's, the write behind the `(` asking below whether it switches how the tokenizer reads them, since `postcss-scss` reads a quoted address behind a space as a token counting parentheses, which a string holding an unpaired one leaves unclosed or closes early. The name is the file's spelling rather than the parser's, which is wider than what a parser takes a url token by.
+				if (opensAnAddress(valueNode, at, siblings) && !quotesItsAddress(valueNode)) return false
 
 				// A call in a comment's text is skipped, but its nested calls are walked: a call opened inside a comment reaches past its close
 				if (findCommentSpanHolding(valueNode, comments)) return

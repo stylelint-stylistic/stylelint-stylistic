@@ -661,10 +661,6 @@ testRule({
 
 	accept: [
 		{
-			description: `the spaces inside a quoted address's own parentheses, where postcss-scss would read a token of a string holding a parenthesis`,
-			code: `a { b: url( "a", format("woff2") ); }`,
-		},
-		{
 			description: `a call the value parser closed on a parenthesis standing inside a comment opening with a solidus, a star and a solidus, which is no parenthesis the file writes, so the call is left alone as one closed inside an end-of-line comment is`,
 			code: `a { b: f(1 /*/ ) */ ); }`,
 		},
@@ -700,10 +696,38 @@ testRule({
 
 	reject: [
 		{
-			description: `a call among the arguments behind a quoted address, which are those of any call while the spaces of the address's own parentheses stay`,
-			code: `a { b: url( "a", format( "woff2" ) ); }`,
-			fixed: `a { b: url( "a", format("woff2") ); }`,
+			// A string opening the parentheses makes them a call's to every tokenizer, so they are closed up as any call's
+			description: `the spaces inside a quoted address's own parentheses, which are a call's`,
+			code: `a { b: url( "a", format("woff2") ); }`,
+			fixed: `a { b: url("a", format("woff2")); }`,
 			warnings: [
+				{
+					line: 1,
+					column: 12,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 33,
+					message: messages.rejectedClosing,
+				},
+			],
+		},
+		{
+			description: `the same address with a spaced call among its arguments`,
+			code: `a { b: url( "a", format( "woff2" ) ); }`,
+			fixed: `a { b: url("a", format("woff2")); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 12,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 35,
+					message: messages.rejectedClosing,
+				},
 				{
 					line: 1,
 					column: 25,
@@ -769,10 +793,20 @@ testRule({
 			],
 		},
 		{
-			description: `an address standing beside the call that names its format, which is spaced out while the address is left as the file spells it`,
+			description: `a spaced address standing beside a spaced call that names its format`,
 			code: `@font-face { src: url( "a.woff2" ) format( "woff2" ); }`,
-			fixed: `@font-face { src: url( "a.woff2" ) format("woff2"); }`,
+			fixed: `@font-face { src: url("a.woff2") format("woff2"); }`,
 			warnings: [
+				{
+					line: 1,
+					column: 23,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 33,
+					message: messages.rejectedClosing,
+				},
 				{
 					line: 1,
 					column: 43,

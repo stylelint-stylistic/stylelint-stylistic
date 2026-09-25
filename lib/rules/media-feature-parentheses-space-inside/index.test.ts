@@ -417,10 +417,21 @@ testRule({
 			],
 		},
 		{
-			description: `a call among the arguments behind a quoted address, which are those of any call while the address's own parentheses stay as written`,
+			// A string opening the parentheses makes them a call's to every tokenizer, so they are closed up as any call's
+			description: `a spaced quoted address with a spaced call among its arguments`,
 			code: `@media (c: url( "x", f( 1 ) )) {}`,
-			fixed: `@media (c: url( "x", f(1) )) {}`,
+			fixed: `@media (c: url("x", f(1))) {}`,
 			warnings: [
+				{
+					line: 1,
+					column: 13,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 28,
+					message: messages.rejectedClosing,
+				},
 				{
 					line: 1,
 					column: 23,

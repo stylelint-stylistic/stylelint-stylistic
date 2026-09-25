@@ -123,6 +123,42 @@ testRule({
 
 	reject: [
 		{
+			// The token postcss-scss reads behind the written space closes at the parenthesis code closes at
+			description: `a quoted address with no space inside its parentheses`,
+			code: `a { b: url("a"); }`,
+			fixed: `a { b: url( "a" ); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 12,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 14,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
+			// Behind a space postcss-scss reads the parentheses as a token counting the ones the string holds, which never closes
+			description: `the same address with a string holding an opening parenthesis nothing closes`,
+			code: `a { b: url("a(b.png"); }`,
+			fixed: `a { b: url("a(b.png" ); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 12,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 20,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
 			// The value parser closes the address on the inline comment's parenthesis, which Sass reads as a comment
 			description: `a call holding an address with an inline comment with a closing parenthesis, whose closing parenthesis stands against the address's on the line below`,
 			code: `
