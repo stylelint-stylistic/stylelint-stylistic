@@ -12,6 +12,7 @@ import { nodeString } from "../../utils/nodeString/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
+import { straySemicolonsTakenBefore, withoutTaken, writtenAsLeftBefore } from "../../utils/straySemicolonsTaken/index.ts"
 import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
@@ -73,9 +74,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let problemIndex = nodeString(decl, result).length + 1
 
-			// The run behind the semicolon is the next node's leading run: the raw where the parser filed one, and otherwise the run PostCSS prints in front of a node a rule of another plugin built without one
+			// The run behind the semicolon is the next node's leading run: the raw where the parser filed one, and otherwise the run PostCSS prints in front of a node a rule of another plugin built without one. A free semicolon of it `no-extra-semicolons` takes out in the same run is read as gone, so that the run is judged as it will stand whichever side of that rule this one is listed
+			let taken = straySemicolonsTakenBefore(nextDecl, result)
+
 			checker.after({
-				source: runInFrontOf(nextDecl) + nodeString(nextDecl, result),
+				source: withoutTaken(runInFrontOf(nextDecl), taken) + nodeString(nextDecl, result),
 				index: -1,
 				lineCheckStr: blockString(parentRule, result),
 				err: (m) => {
@@ -87,17 +90,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						result,
 						ruleName,
 						fix: (): void => {
-							// A free semicolon may stand in this raw with the whitespace around it, and the check reads it as the character behind the run, so the write spells the leading run alone
-							let standing = runInFrontOf(nextDecl)
-							let rest = standing.slice((standing.match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0].length)
+							// A free semicolon may stand in this raw with the whitespace around it, and the check reads one it keeps as the character behind the run, so the write spells the leading run alone; one the neighbor takes out stays for it to take, the run written as it leaves it where it still takes it
+							nextDecl.raws.before = writtenAsLeftBefore(nextDecl, (run) => {
+								let rest = run.slice((run.match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0].length)
 
-							if (primary.startsWith(`always`)) {
-								nextDecl.raws.before = ` ${rest}`
-
-								return
-							}
-
-							if (primary.startsWith(`never`)) nextDecl.raws.before = rest
+								return primary.startsWith(`always`) ? ` ${rest}` : rest
+							}, result)
 						},
 					})
 				},

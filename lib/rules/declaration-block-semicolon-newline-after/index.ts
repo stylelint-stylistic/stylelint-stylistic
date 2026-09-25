@@ -14,6 +14,7 @@ import { nodeString } from "../../utils/nodeString/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
+import { straySemicolonsTakenBefore, withoutTaken, writtenAsLeftBefore } from "../../utils/straySemicolonsTaken/index.ts"
 import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
@@ -81,8 +82,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Under `never-multi-line` the fix takes the whitespace in front of the checked node, and the break opening it may close an inline comment, so the block is left alone; the `always` options keep the break. The semicolon is handed in with the declaration, since the write lands behind it; behind a comment node there is none
 			let isFixable = primary.startsWith(`always`) || !syntax.writesIntoInlineComment(previousNode, result, previousNode === decl ? `;` : ``)
 
+			// A free semicolon of the checked node's run `no-extra-semicolons` takes out in the same run is read as gone, so that the run is judged as it will stand whichever side of that rule this one is listed
+			let taken = straySemicolonsTakenBefore(nodeToCheck, result)
+
 			checker.afterOneOnly({
-				source: runInFrontOf(nodeToCheck) + nodeString(nodeToCheck, result),
+				source: withoutTaken(runInFrontOf(nodeToCheck), taken) + nodeString(nodeToCheck, result),
 				index: -1,
 				lineCheckStr: blockString(parentRule, result),
 				err: (m) => {
@@ -95,21 +99,20 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						ruleName,
 						...(isFixable && {
 							fix: (): void => {
-								// A free semicolon may stand in this raw with the whitespace around it, and the check reads it as the character behind the run, so the write spells the leading run alone
-								let standing = runInFrontOf(nodeToCheck)
-								let run = (standing.match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0]
-								let rest = standing.slice(run.length)
+								// A free semicolon may stand in this raw with the whitespace around it, and the check reads one it keeps as the character behind the run, so the write spells the leading run alone; one the neighbor takes out stays for it to take, the run written as it leaves it where it still takes it
+								nodeToCheck.raws.before = writtenAsLeftBefore(nodeToCheck, (standing) => {
+									let run = (standing.match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0]
+									let rest = standing.slice(run.length)
 
-								if (primary.startsWith(`always`)) {
-									// Trim up to the break already there, and add one only where none is; a node carrying no raw is written the run PostCSS would have printed in front of it, trimmed or opened as the option asks
-									let index = run.search(LINE_BREAK)
+									if (primary.startsWith(`always`)) {
+										// Trim up to the break already there, and add one only where none is; a node carrying no raw is written the run PostCSS would have printed in front of it, trimmed or opened as the option asks
+										let index = run.search(LINE_BREAK)
 
-									nodeToCheck.raws.before = (index >= 0 ? run.slice(index) : getLineBreak(root, result) + run) + rest
+										return (index >= 0 ? run.slice(index) : getLineBreak(root, result) + run) + rest
+									}
 
-									return
-								}
-
-								if (primary === `never-multi-line`) nodeToCheck.raws.before = rest
+									return rest
+								}, result)
 							},
 						}),
 					})

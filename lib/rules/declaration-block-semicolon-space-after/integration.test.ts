@@ -13,18 +13,19 @@ function where (warnings: { line: number, column: number, rule: string }[] | und
 }
 
 /**
- * Fixes one snippet under this rule and `declaration-block-trailing-semicolon: never`, in the order given, and reads the output back.
+ * Fixes one snippet under this rule and a neighbor, in the order given, and reads the output back.
  * @param code - The snippet.
  * @param options - The setting of this rule.
  * @param thisRuleFirst - Whether it is listed first.
+ * @param neighbor - The neighbor and its setting, `declaration-block-trailing-semicolon: never` unless given.
  * @returns The file the pass left, the warnings the pass reported, and those the pair has about the file.
  */
-async function fix (code: string, options: unknown, thisRuleFirst: boolean): Promise<{
+async function fix (code: string, options: unknown, thisRuleFirst: boolean, neighbor: [string, unknown] = [`@stylistic/declaration-block-trailing-semicolon`, `never`]): Promise<{
 	code: string,
 	reported: string[],
 	left: string[],
 }> {
-	let pair: [string, unknown][] = [[`@stylistic/declaration-block-semicolon-space-after`, options], [`@stylistic/declaration-block-trailing-semicolon`, `never`]]
+	let pair: [string, unknown][] = [[`@stylistic/declaration-block-semicolon-space-after`, options], neighbor]
 	let config = { plugins, rules: Object.fromEntries(thisRuleFirst ? pair : pair.toReversed()) }
 	let fixed = await stylelint.lint({ code, config, fix: true })
 	let read = await stylelint.lint({ code: fixed.code ?? code, config })
@@ -61,5 +62,46 @@ describe(`the whitespace behind a semicolon the rule about a trailing semicolon 
 
 		expect(left).toBe(code)
 		expect(reported.some((warning) => warning.startsWith(`2:`) && warning.endsWith(`declaration-block-semicolon-space-after`))).toBe(true)
+	})
+})
+
+describe(`the whitespace behind a semicolon in front of a free one \`no-extra-semicolons\` takes out in the same run`, () => {
+	let neighbor: [string, unknown] = [`@stylistic/no-extra-semicolons`, true]
+
+	// The free semicolon is gone once the pass is over, so the run is judged and written as it will stand, and either order leaves the file the check finds clean
+	it.each([
+		[`a { b: c; ; d: e; }`, `always`, `a { b: c; d: e; }`],
+		[`a { b: c;; d: e; }`, `always`, `a { b: c; d: e; }`],
+		[`a { b: c;  ;  d: e; }`, `always`, `a { b: c; d: e; }`],
+		[`a {\n  b: c;\n  ;\n  d: e;\n}`, `always`, `a {\n  b: c; d: e;\n}`],
+		[`a { b: c; ; d: e; }`, `never`, `a { b: c;d: e; }`],
+		[`a { b: c; ; ; d: e; }`, `never`, `a { b: c;d: e; }`],
+		[`a { b: c; ; /* x */ d: e; }`, `never`, `a { b: c;/* x */ d: e; }`],
+	])(`is written in %j under %j in one run in either order`, async (code, options, output) => {
+		expect(await fix(code, options, true, neighbor)).toEqual({ code: output, reported: [], left: [] })
+		expect(await fix(code, options, false, neighbor)).toEqual({ code: output, reported: [], left: [] })
+	})
+
+	it(`draws the warning of this rule, its fix off, in either order`, async () => {
+		let options = [`always`, { disableFix: true }]
+
+		expect(await fix(`a { b: c; ; d: e; }`, options, true, neighbor)).toEqual({ code: `a { b: c;  d: e; }`, reported: [`1:10 @stylistic/declaration-block-semicolon-space-after`], left: [`1:10 @stylistic/declaration-block-semicolon-space-after`] })
+		expect(await fix(`a { b: c; ; d: e; }`, options, false, neighbor)).toEqual({ code: `a { b: c;  d: e; }`, reported: [`1:10 @stylistic/declaration-block-semicolon-space-after`], left: [`1:10 @stylistic/declaration-block-semicolon-space-after`] })
+	})
+
+	it(`reads a free semicolon a disable comment keeps from that rule's fix as the character behind the run`, async () => {
+		let code = `a { b: c; ; d: e; } /* stylelint-disable-line @stylistic/no-extra-semicolons */`
+
+		expect(await fix(code, `never`, true, neighbor)).toEqual({ code: `a { b: c;; d: e; } /* stylelint-disable-line @stylistic/no-extra-semicolons */`, reported: [], left: [] })
+	})
+
+	// Written without the break behind it, the free semicolon would stand on the line of the next node, which the comment covers, and stay; the run is then written as the check reads it with the semicolon standing, and the next pass reaches the file the other order leaves
+	it(`is written as before where the write would bring the free semicolon under a disable comment of that rule`, async () => {
+		let code = `a { b: c;\n  ;\n  d: e; } /* stylelint-disable-line @stylistic/no-extra-semicolons */`
+		let first = await fix(code, `always`, true, neighbor)
+		let second = await fix(first.code, `always`, true, neighbor)
+
+		expect(first.code).toBe(`a { b: c; \n  d: e; } /* stylelint-disable-line @stylistic/no-extra-semicolons */`)
+		expect(second.code).toBe((await fix(code, `always`, false, neighbor)).code)
 	})
 })

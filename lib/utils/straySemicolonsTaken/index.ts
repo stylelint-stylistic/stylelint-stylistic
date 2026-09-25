@@ -1,7 +1,7 @@
 import type { Container, Node } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { ENABLE_COMMAND, EVERY_LINE_BREAK, EVERY_SEMICOLON, LINE_DISABLE_COMMAND } from "../../regexps.ts"
+import { ENABLE_COMMAND, EVERY_LINE_BREAK, EVERY_SEMICOLON, LEADING_CSS_WHITESPACE, LINE_DISABLE_COMMAND } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { trailingSemicolonAsked } from "../closedBySemicolon/index.ts"
 import { closingOffset } from "../closingOffset/index.ts"
@@ -10,6 +10,7 @@ import { type DisabledRange, fixDisabledOnLine, fixDisabledRanges } from "../fix
 import { hasBlock } from "../hasBlock/index.ts"
 import { lastNonCommentNode } from "../lastNonCommentNode/index.ts"
 import { neighborCopies, type NeighborRuleSetting } from "../neighborSettings/index.ts"
+import { runInFrontOf } from "../runInFrontOf/index.ts"
 import { isAtRule, isComment, isDeclaration } from "../typeGuards/index.ts"
 
 /** The rule taking every extra semicolon out. */
@@ -107,6 +108,29 @@ export function withoutTaken (run: string, taken: Set<number>): string {
 }
 
 /**
+ * Writes a run as `no-extra-semicolons` leaves it, keeping the semicolons it takes out for it to take.
+ *
+ * The write is worked out on the run without them, so that it comes out the same whichever side of that rule this one is listed. Each stands behind as many breaks of the written whitespace as stood in front of it, as far as the whitespace holds, so that it keeps its line where the write keeps the breaks around it; taking them leaves the written run.
+ * @param write - The write over a run.
+ * @param run - The run as it stands.
+ * @param taken - The indices of the semicolons the neighbor takes out.
+ * @returns The run to write.
+ */
+export function writtenAsLeft (write: (run: string) => string, run: string, taken: Set<number>): string {
+	if (taken.size === 0) return write(run)
+
+	let written = write(withoutTaken(run, taken))
+	let opening = written.match(LEADING_CSS_WHITESPACE)?.[0] ?? ``
+	let breakEnds = [0, ...[...opening.matchAll(EVERY_LINE_BREAK)].map((match) => match.index + match[0].length)]
+	let placed = [...taken].map((index) => breakEnds[Math.min((run.slice(0, index).match(EVERY_LINE_BREAK) ?? []).length, breakEnds.length - 1)] ?? 0)
+
+	// From the end, so that each insertion leaves the places in front of it where they stand
+	for (let place of placed.toSorted((a, b) => b - a)) written = `${written.slice(0, place)};${written.slice(place)}`
+
+	return written
+}
+
+/**
  * Finds the stray semicolons of a node's `raws.before` that a neighbor takes out in the same run, so that a rule reading that run reads it as it will stand whichever side of the neighbor it is listed: `no-extra-semicolons` each where no disable comment keeps its fix off the semicolon's line, and `declaration-block-trailing-semicolon` every one in front of a comment standing behind the node closing the block, where it leaves no semicolon behind that node.
  * @param node - The node.
  * @param result - The Stylelint result, which holds the configuration.
@@ -123,6 +147,36 @@ export function straySemicolonsTakenBefore (node: Node, result: PostcssResult): 
 	if (parent && last && isComment(node) && parent.index(node) > parent.index(last) && (isDeclaration(last) || (isAtRule(last) && !hasBlock(last))) && trailingSemicolonAsked(last, result) === false) return new Set([...before.matchAll(EVERY_SEMICOLON)].map((match) => match.index))
 
 	return takenByNoExtra(node, result, before, node.source?.start?.line, (syntax) => extraSemicolonsBefore(syntax, node, result))
+}
+
+/**
+ * Writes the run in front of a node as `no-extra-semicolons` leaves it, where that rule still takes every semicolon it took once the run is written.
+ *
+ * The neighbor reads a semicolon's line back from the node's start by the breaks behind it, so a write taking those breaks out moves it onto the node's line, where a disable comment may keep its fix off; the semicolon then stays, and the run is written as the check reads it with the semicolon standing, as it was before the neighbor was asked.
+ * @param node - The node.
+ * @param write - The write over a run.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns The run to write.
+ */
+export function writtenAsLeftBefore (node: Node, write: (run: string) => string, result: PostcssResult): string {
+	let run = runInFrontOf(node)
+	let taken = straySemicolonsTakenBefore(node, result)
+	let written = writtenAsLeft(write, run, taken)
+
+	if (taken.size === 0) return written
+
+	let { raws } = node
+	let hasRaw = Object.hasOwn(raws, `before`)
+	let standing = raws.before
+
+	raws.before = written
+
+	let stillTaken = straySemicolonsTakenBefore(node, result).size
+
+	if (hasRaw) raws.before = standing
+	else delete raws.before
+
+	return stillTaken === taken.size ? written : write(run)
 }
 
 /** A write's change to the breaks at one place of the file: `delta` breaks added at `offset`, which stands on `line`, taken out where negative. */

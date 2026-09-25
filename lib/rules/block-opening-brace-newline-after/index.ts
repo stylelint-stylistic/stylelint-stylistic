@@ -21,7 +21,7 @@ import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
-import { type LineEdit, releasesAKeptSemicolon, straySemicolonsTaken, straySemicolonsTakenBefore, withoutTaken } from "../../utils/straySemicolonsTaken/index.ts"
+import { type LineEdit, releasesAKeptSemicolon, straySemicolonsTaken, straySemicolonsTakenBefore, withoutTaken, writtenAsLeft } from "../../utils/straySemicolonsTaken/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesBlockAfter } from "../../utils/writesBlockAfter/index.ts"
 
@@ -72,29 +72,6 @@ function runInFrontOfTheClosingBrace (syntax: Syntax, statement: Rule | AtRule, 
 	let lastBefore = statement.last ? runInFrontOf(statement.last) : ``
 
 	return (!OPENS_WITH_LINE_BREAK.test(after) && LINE_BREAK.test(lastBefore)) ? lastBefore : after
-}
-
-/**
- * Writes a run as `no-extra-semicolons` leaves it, keeping the semicolons it takes out for it to take.
- *
- * The write is worked out on the run without them, so that it comes out the same whichever side of that rule this one is listed. Each stands behind as many breaks of the written whitespace as stood in front of it, as far as the whitespace holds, so that it keeps its line and a disable comment covering none of them covers none after the write either; taking them leaves the written run.
- * @param write - The write over a run.
- * @param run - The run as it stands.
- * @param taken - The indices of the semicolons the neighbor takes out.
- * @returns The run to write.
- */
-function writtenAsLeft (write: (run: string) => string, run: string, taken: Set<number>): string {
-	if (taken.size === 0) return write(run)
-
-	let written = write(withoutTaken(run, taken))
-	let opening = written.match(LEADING_CSS_WHITESPACE)?.[0] ?? ``
-	let breakEnds = [0, ...[...opening.matchAll(EVERY_LINE_BREAK)].map((match) => match.index + match[0].length)]
-	let placed = [...taken].map((index) => breakEnds[Math.min(breaksOf(run.slice(0, index)), breakEnds.length - 1)] ?? 0)
-
-	// From the end, so that each insertion leaves the places in front of it where they stand
-	for (let place of placed.toSorted((a, b) => b - a)) written = `${written.slice(0, place)};${written.slice(place)}`
-
-	return written
 }
 
 /**
