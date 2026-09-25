@@ -229,6 +229,40 @@ testRule({
 			message: messages.rejected,
 		},
 		{
+			// A bare carriage return is whitespace of the line to PostCSS, as a form feed is, and the rule read it as a line break with indentation behind it
+			description: `a bare carriage return and a tab run behind it`,
+			code: `a {\n\tb: c\r\t\td;\n}`,
+			fixed: `a {\n\tb: c d;\n}`,
+			line: 2,
+			column: 6,
+			message: messages.rejected,
+		},
+		{
+			description: `the same carriage return between two spaces`,
+			code: `a { b: c \r d; e: f }`,
+			fixed: `a { b: c d; e: f }`,
+			line: 1,
+			column: 9,
+			message: messages.rejected,
+		},
+		{
+			// A backslash in front of a line break is a delimiter, and a space written in place of the break would be read as its escape
+			description: `a run opening on a bare carriage return behind a backslash, which a written space would escape`,
+			code: `a { b: c\\\r  d; e: f }`,
+			fixed: `a { b: c\\\rd; e: f }`,
+			line: 1,
+			column: 10,
+			message: messages.rejected,
+		},
+		{
+			description: `the same run opening on a form feed`,
+			code: `a { b: c\\\f  d; e: f }`,
+			fixed: `a { b: c\\\fd; e: f }`,
+			line: 1,
+			column: 10,
+			message: messages.rejected,
+		},
+		{
 			// A quotation mark inside a bare address is a character of it, and the walk opened a string there that nothing closed
 			description: `two spaces behind a bare address holding a quotation mark`,
 			code: `a { b: url(c"d)  e; f: g }`,
@@ -501,5 +535,18 @@ describe(`a run inside a string a compiler reads in the parentheses of a url()`,
 
 	it(`leaves an escaped string under the Less parser`, async () => {
 		expect(await fixUnder(`@stylistic/less/no-multiple-whitespaces`, `a { b: url(~"c  d")  e }`, less)).toBe(`a { b: url(~"c  d") e }`)
+	})
+})
+
+// Less and Sass end a double-slash comment at a bare carriage return, and a run opening on it took the break away and carried the comment on over the code behind
+describe(`a run behind a double-slash comment a bare carriage return closes`, () => {
+	let code = `a {\n\tb: c // x\r  y\n\t\td;\n}`
+
+	it(`leaves the break closing the comment under the SCSS parser`, async () => {
+		expect(await fixUnder(`@stylistic/scss/no-multiple-whitespaces`, code, scss)).toBe(code)
+	})
+
+	it(`leaves the break closing the comment under the Less parser`, async () => {
+		expect(await fixUnder(`@stylistic/less/no-multiple-whitespaces`, code, less)).toBe(code)
 	})
 })

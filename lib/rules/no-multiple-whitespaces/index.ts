@@ -1,11 +1,12 @@
 import valueParser from "postcss-value-parser"
 import stylelint from "stylelint"
 
-import { GRID_AREAS_PROPERTY } from "../../regexps.ts"
+import { GRID_AREAS_PROPERTY, LEADING_LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { type AddressSpan, type CommentSpan, findAddressSpans, findEscapeSpans, findStringSpans, type StringSpan } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { gridTableLines, type Span } from "../../utils/gridTableLines/index.ts"
@@ -32,21 +33,23 @@ export let meta = {
 const GRID_ALIGNMENT: { name: string, options: (string | true)[] } = { name: `named-grid-areas-alignment`, options: [true] }
 
 /**
- * Checks whether a character is a newline.
- * @param char - The character.
- * @returns True for a newline.
+ * Asks whether a break of the value stands at a position, as PostCSS reads one: a line feed, or the carriage return of a Windows pair. A bare carriage return is whitespace of the line, as a form feed is.
+ * @param text - The text.
+ * @param index - The position.
+ * @returns True on a break.
  */
-function isNewline (char: string): boolean {
-	return char === `\n` || char === `\r`
+function isLineBreakAt (text: string, index: number): boolean {
+	return LEADING_LINE_BREAK.test(text.slice(index, index + 2))
 }
 
 /**
- * Checks whether a character is inline whitespace.
- * @param char - The character.
- * @returns True for whitespace other than a newline.
+ * Asks whether whitespace of the line stands at a position.
+ * @param text - The text.
+ * @param index - The position.
+ * @returns True for whitespace other than a break.
  */
-function isInlineWhitespace (char: string): boolean {
-	return isWhitespace(char) && !isNewline(char)
+function isInlineWhitespaceAt (text: string, index: number): boolean {
+	return isWhitespace(text.charAt(index)) && !isLineBreakAt(text, index)
 }
 
 /** The letter every character of a comment and every quotation mark outside a string are written as, the same stand-in {@link maskEscapes} uses. */
@@ -70,7 +73,7 @@ function maskComments (text: string, spans: CommentSpan[]): string {
 		let comment = ``
 
 		// Counted in code units, as the walk reads the copy: a spread would write one letter over a surrogate pair and move every position behind it
-		for (let at = start; at < end; at += 1) comment += isNewline(text.charAt(at)) ? text.charAt(at) : COMMENT_MASK
+		for (let at = start; at < end; at += 1) comment += isLineBreakAt(text, at) ? text.charAt(at) : COMMENT_MASK
 
 		pieces.push(text.slice(index, start), comment)
 		index = end
@@ -153,7 +156,7 @@ function handleStringChar (char: string, inString: boolean, stringChar: string, 
 }
 
 /**
- * Replaces each run with one space, from the end so no replacement shifts the next.
+ * Replaces each run with one space, from the end so no replacement shifts the next. A form feed or a bare carriage return opening a run behind a backslash is a line break to the grammar, which makes that backslash a delimiter, and a space written in its place would be read as the backslash's escape: `c\<FF>  d` came out as `c\ d`, one identifier where two stood. Such a run keeps its first character instead, which is the one whitespace the rule asks for.
  * @param value - The text the runs stand in.
  * @param errors - The runs.
  * @returns The fixed value.
@@ -165,7 +168,10 @@ function fixWhitespaceErrors (value: string, errors: {
 	let newValue = value
 
 	for (let e of errors.toReversed()) {
-		newValue = `${newValue.slice(0, e.start)} ${newValue.slice(e.start + e.count)}`
+		let edit = { start: e.start, end: e.start + e.count, text: ` ` }
+		let written = editKeepsEscapedCharacter(value, edit) ? edit.text : value.charAt(e.start)
+
+		newValue = `${newValue.slice(0, e.start)}${written}${newValue.slice(e.start + e.count)}`
 	}
 
 	return newValue
@@ -210,6 +216,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let strings = marked ? findStringSpans(value, reading) : []
 			let addresses = marked ? findAddressSpans(value, reading) : []
 			let walked = maskMarksOutsideStrings(maskComments(maskEscapes(value, findEscapeSpans(value, reading)), comments), strings, addresses)
+			// The character closing a `//` comment ends the line to the compiler reading it, a bare carriage return and a form feed included, and a run opening on it would take that character away and carry the comment on over the code behind
+			let commentBreaks = new Set(comments.filter(({ isInline }) => isInline).map(({ end }) => end))
 			let inString = false
 			let stringChar = ``
 			let afterNewline = true
@@ -232,15 +240,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					continue
 				}
 
-				if (isNewline(char)) {
+				if (isLineBreakAt(walked, i) || commentBreaks.has(i)) {
 					afterNewline = true
 					continue
 				}
 
-				if (isInlineWhitespace(char)) {
+				if (isInlineWhitespaceAt(walked, i)) {
 					// Indentation behind a newline is left alone
 					if (afterNewline) {
-						while (i < walked.length && isInlineWhitespace(walked.charAt(i))) i += 1
+						while (i < walked.length && isInlineWhitespaceAt(walked, i)) i += 1
 						afterNewline = false
 						i -= 1
 						continue
@@ -249,7 +257,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let whitespaceStart = i
 					let whitespaceCount = 0
 
-					while (i < walked.length && isInlineWhitespace(walked.charAt(i))) {
+					while (i < walked.length && isInlineWhitespaceAt(walked, i)) {
 						whitespaceCount += 1
 						i += 1
 					}
