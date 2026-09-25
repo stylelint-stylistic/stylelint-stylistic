@@ -6,7 +6,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { type CommentSpan, findEscapeSpans } from "../../utils/findCommentSpans/index.ts"
+import { type AddressSpan, type CommentSpan, findAddressSpans, findEscapeSpans, findStringSpans, type StringSpan } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { gridTableLines, type Span } from "../../utils/gridTableLines/index.ts"
 import { isWhitespace } from "../../utils/isWhitespace/index.ts"
@@ -49,7 +49,7 @@ function isInlineWhitespace (char: string): boolean {
 	return isWhitespace(char) && !isNewline(char)
 }
 
-/** The letter every character of a comment is written as, the same stand-in {@link maskEscapes} uses. */
+/** The letter every character of a comment and every quotation mark outside a string are written as, the same stand-in {@link maskEscapes} uses. */
 const COMMENT_MASK = `x`
 
 /**
@@ -79,6 +79,34 @@ function maskComments (text: string, spans: CommentSpan[]): string {
 	pieces.push(text.slice(index))
 
 	return pieces.join(``)
+}
+
+/** A Sass or Less interpolation, or a Less escaped string, whose strings a compiler reads inside a bare address while the tokenizer and the comment walk read none there. */
+const COMPILED_STRING_IN_ADDRESS = /#\{|@\{|~["']/u
+
+/**
+ * Writes every quotation mark standing in no string of the value as a letter, so the walk opens a string only where the syntax reads one. A mark inside the parentheses of a lower-case `url(` that the tokenizer takes as one token is a character of the address, and the walk opened a string there that no mark of the value closed; behind `url( `, `URL(` or `1/url(`, and inside parentheses Sass reads as code, the mark does open a string, which the spans hold.
+ *
+ * An address holding an interpolation or a Less escaped string keeps its marks, as the walk read them before: Sass reads the string of `url(#{"c  d"})` and Less that of `url(~"c  d")`, and the spans hold neither.
+ * @param text - The value the walk runs over.
+ * @param strings - The string spans the comment walk found in it.
+ * @param addresses - The address spans it found.
+ * @returns The copy, as long as the text.
+ */
+function maskMarksOutsideStrings (text: string, strings: StringSpan[], addresses: AddressSpan[]): string {
+	let compiled = addresses.filter(({ start, end }) => COMPILED_STRING_IN_ADDRESS.test(text.slice(start, end)))
+
+	return text.replaceAll(/["']/gu, (mark, index: number) => holds(strings, index) || holds(compiled, index) ? mark : COMMENT_MASK)
+}
+
+/**
+ * Asks whether a span holds a position.
+ * @param spans - The spans.
+ * @param index - The position.
+ * @returns True where one of them holds it.
+ */
+function holds (spans: Array<{ start: number, end: number }>, index: number): boolean {
+	return spans.some(({ start, end }) => index >= start && index < end)
 }
 
 /**
@@ -176,7 +204,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				: []
 			// A backslash spelling a character makes it one of a word, and the first whitespace character behind a hexadecimal escape closes the escape, so neither is a run of the value: the walk reads the copy with the escapes masked, and the fix writes into the value, where every position holds
 			// A comment's text is no code of the value either, and the walk read it as code: it collapsed a run standing inside a comment, took the character a backslash covered there, which no escape span records, and opened a string on a quotation mark of a comment, which moved the run it then wrote into out of a string of the value
-			let walked = maskComments(maskEscapes(value, findEscapeSpans(value, syntax.inlineComments(decl, result))), comments)
+			let reading = syntax.inlineComments(decl, result)
+			// A quotation mark inside a bare address is a character of it, and the walk opened a string there that no mark of the value closed, which hid every run behind it
+			let marked = value.includes(`"`) || value.includes(`'`)
+			let strings = marked ? findStringSpans(value, reading) : []
+			let addresses = marked ? findAddressSpans(value, reading) : []
+			let walked = maskMarksOutsideStrings(maskComments(maskEscapes(value, findEscapeSpans(value, reading)), comments), strings, addresses)
 			let inString = false
 			let stringChar = ``
 			let afterNewline = true

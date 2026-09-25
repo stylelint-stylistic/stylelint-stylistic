@@ -229,6 +229,32 @@ testRule({
 			message: messages.rejected,
 		},
 		{
+			// A quotation mark inside a bare address is a character of it, and the walk opened a string there that nothing closed
+			description: `two spaces behind a bare address holding a quotation mark`,
+			code: `a { b: url(c"d)  e; f: g }`,
+			fixed: `a { b: url(c"d) e; f: g }`,
+			line: 1,
+			column: 16,
+			message: messages.rejected,
+		},
+		{
+			description: `the same run behind an address holding a single quotation mark, and a run inside a second address holding one`,
+			code: `a { b: url(c'd)  e, url(f'g  h); i: j }`,
+			fixed: `a { b: url(c'd) e, url(f'g h); i: j }`,
+			warnings: [
+				{
+					line: 1,
+					column: 16,
+					message: messages.rejected,
+				},
+				{
+					line: 1,
+					column: 28,
+					message: messages.rejected,
+				},
+			],
+		},
+		{
 			// The carriage return closing the escape is a character of it rather than a break of the value, so the run behind it is one the rule used to read as indentation
 			description: `two spaces behind a hexadecimal escape a carriage return closes inside a bare address`,
 			code: `a { b: url(c\\2c\r  d) }`,
@@ -454,5 +480,26 @@ describe(`a run inside a double-slash comment of a value`, () => {
 
 	it(`collapses the same run under Less, whose parentheses hold the address whole`, async () => {
 		expect(await fixUnder(`@stylistic/less/no-multiple-whitespaces`, `a { b: url(http://x/y  z.png) }`, less)).toBe(`a { b: url(http://x/y z.png) }`)
+	})
+})
+
+// A quotation mark inside the parentheses of a lower-case `url()` is a character of the address to the tokenizer, while a compiler may read a string there
+describe(`a run inside a string a compiler reads in the parentheses of a url()`, () => {
+	let code = `a { b: url(c"d  e")  f }`
+
+	it(`leaves the string and collapses the run behind it under the SCSS parser`, async () => {
+		expect(await fixUnder(`@stylistic/scss/no-multiple-whitespaces`, code, scss)).toBe(`a { b: url(c"d  e") f }`)
+	})
+
+	it(`collapses both runs under plain CSS, which reads no string there`, async () => {
+		expect(await fixUnder(ruleName, code)).toBe(`a { b: url(c"d e") f }`)
+	})
+
+	it(`leaves a string inside an interpolation under the SCSS parser`, async () => {
+		expect(await fixUnder(`@stylistic/scss/no-multiple-whitespaces`, `a { b: url(c#{"d  e"})  f }`, scss)).toBe(`a { b: url(c#{"d  e"}) f }`)
+	})
+
+	it(`leaves an escaped string under the Less parser`, async () => {
+		expect(await fixUnder(`@stylistic/less/no-multiple-whitespaces`, `a { b: url(~"c  d")  e }`, less)).toBe(`a { b: url(~"c  d") e }`)
 	})
 })
