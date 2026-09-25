@@ -22,6 +22,19 @@ testRule({
 			description: `a value line holding a form feed alone, which is an empty line and not measured`,
 			code: `a {\n\tmargin: 0\n\f\n\t\t1px;\n}`,
 		},
+		{
+			// A form feed or a bare carriage return is whitespace of the line to PostCSS, so the parenthesis in front of it still ends the line and raises the one behind
+			description: `a line behind a parenthesis a form feed follows on its line`,
+			code: `a {\n\tb: (\f\n\t\t1px\n\t);\n}`,
+		},
+		{
+			description: `the same line behind two bare carriage returns and a Windows pair`,
+			code: `a {\r\n\tb: (\r\r\r\n\t\t1px\r\n\t);\r\n}`,
+		},
+		{
+			description: `a line behind the brace of a map a form feed follows on its line`,
+			code: `a {\n\tb: fn({\f\n\t\tc: d\n\t});\n}`,
+		},
 	],
 
 	reject: [

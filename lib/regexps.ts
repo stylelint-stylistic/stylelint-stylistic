@@ -229,11 +229,11 @@ export const NON_SPACE = /[^ ]/u
 /** A CSS number without sign or exponent as the whole text; `aspect-ratio-notation` leaves a word carrying either alone. */
 export const NUMBER_WITHOUT_SIGN_OR_EXPONENT = /^(?:\d+(?:\.\d+)?|\.\d+)$/u
 
-/** A `{` ending a text, spaces and tabs aside. */
-export const OPENING_BRACE_AT_END = /\{[ \t]*$/u
+/** A `{` ending a text, whitespace of the line aside: spaces, tabs, form feeds and bare carriage returns, none of which PostCSS counts a line by; the caller cuts a Windows pair's carriage return off. */
+export const OPENING_BRACE_AT_END = /\{[ \t\f\r]*$/u
 
-/** A `(` ending a text, only spaces, tabs and block comments behind it. */
-export const OPENING_PARENTHESIS_AT_END = /\([ \t]*(?:\/\*(?:[^*]|\*(?!\/))*\*\/[ \t]*)*$/u
+/** A `(` ending a text, only block comments and whitespace of the line behind it, the whitespace as {@link OPENING_BRACE_AT_END} reads it. */
+export const OPENING_PARENTHESIS_AT_END = /\([ \t\f\r]*(?:\/\*(?:[^*]|\*(?!\/))*\*\/[ \t\f\r]*)*$/u
 
 /** The head of an identifier-character run that is no identifier: a digit, a hyphen and a digit, or a lone hyphen; `--` opens one whatever follows. */
 export const OPENS_NO_IDENTIFIER = /^-?\d|^-$/u
