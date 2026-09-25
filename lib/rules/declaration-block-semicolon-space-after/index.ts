@@ -3,6 +3,7 @@ import stylelint from "stylelint"
 import { LEADING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
+import { trailingSemicolonAsked } from "../../utils/closedBySemicolon/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isInlineStyleAttribute } from "../../utils/isInlineStyleAttribute/index.ts"
@@ -60,7 +61,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!isAtRule(parentRule) && !isRule(parentRule) && !isInlineStyleAttribute(parentRule)) return
 
-			if (isLastNodeWithoutSemicolon(decl)) return
+			// Not read where no semicolon closes the declaration, or where the rule about a trailing semicolon takes it out in the same run, whichever side of this one it is listed: the run behind it is then another node's
+			if (isLastNodeWithoutSemicolon(decl) || trailingSemicolonAsked(decl, result) === false) return
 
 			// Under `postcss-less` a semicolon of a `//` comment's text closed the declaration; the one Less closes it on, if any, stands past the comment's break, where the rule does not look
 			if (syntax.closingSemicolonIsCommentText(decl, result)) return
