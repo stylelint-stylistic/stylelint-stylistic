@@ -1,7 +1,7 @@
 import type { AtRule, ChildNode, Node, Rule } from "postcss"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { EVERY_LINE_BREAK, LEADING_CSS_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
+import { EVERY_LINE_BREAK, LEADING_CSS_WHITESPACE, LINE_BREAK, OPENS_WITH_LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { beforeBlockString } from "../../utils/beforeBlockString/index.ts"
@@ -60,7 +60,7 @@ function fixWouldCommentOutTheBlock (syntax: Syntax, statement: Rule | AtRule, n
 /**
  * The run the closing brace of a block holding nothing but comments stands behind.
  *
- * Such a block has that brace where the checked node would stand, so the carry chains onto it: the block's own trailing raw takes the break in front of it exactly as a node's `raws.before` would. The last comment's run is read the way every other is, so a comment carrying no raw is the run PostCSS prints in front of it.
+ * Such a block has that brace where the checked node would stand, so the carry chains onto it: the block's own trailing raw takes the break in front of it exactly as a node's `raws.before` would. The last comment's run is read the way every other is, so a comment carrying no raw is the run PostCSS prints in front of it. The carry is asked of the whitespace the raw opens with, since a break behind a stray semicolon is no break after the comment.
  * @param syntax - The syntax the rule is built over, which the raw is read through.
  * @param statement - The rule or at-rule whose block holds nothing but comments.
  * @returns The trailing raw, or the run carried past the last comment.
@@ -69,7 +69,7 @@ function runInFrontOfTheClosingBrace (syntax: Syntax, statement: Rule | AtRule):
 	let after = getBlockAfter(syntax, statement) ?? ``
 	let lastBefore = statement.last ? runInFrontOf(statement.last) : ``
 
-	return (!LINE_BREAK.test(after) && LINE_BREAK.test(lastBefore)) ? lastBefore : after
+	return (!OPENS_WITH_LINE_BREAK.test(after) && LINE_BREAK.test(lastBefore)) ? lastBefore : after
 }
 
 /**
@@ -185,8 +185,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				let carried = runInFrontOf(comment)
 
-				// PostCSS reads a line feed as a break, with or without a carriage return in front
-				if (!LINE_BREAK.test(carried) || LINE_BREAK.test(runInFrontOf(nextNode))) return
+				// PostCSS reads a line feed as a break, with or without a carriage return in front; the node's run is asked of the whitespace it opens with, since a break behind a stray semicolon there is no break in front of the node
+				if (!LINE_BREAK.test(carried) || OPENS_WITH_LINE_BREAK.test(runInFrontOf(nextNode))) return
 
 				backupCommentNextBefores.set(nextNode, nextNode.raws.before)
 				nextNode.raws.before = carried

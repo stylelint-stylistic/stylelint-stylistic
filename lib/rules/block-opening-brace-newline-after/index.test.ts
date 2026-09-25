@@ -198,6 +198,15 @@ testRule({
 				/*2*/}
 			`,
 		},
+		{
+			// The break carried off the comment is asked of the whitespace the next run opens with, and a break behind a stray semicolon there is no break after the comment
+			description: `a comment behind a break with a stray semicolon and a break behind it, in a block holding nothing else`,
+			code: `a {\n/* c */;\n}`,
+		},
+		{
+			description: `the same comment and semicolon in front of a declaration`,
+			code: `a {\n/* c */;\nb: c; }`,
+		},
 	],
 
 	reject: [
@@ -549,6 +558,11 @@ testRule({
 			description: `a run of comments alone on the one line of a block`,
 			code: `a {/*1*/ /*2*/}`,
 		},
+		{
+			// A break behind a stray semicolon is no break after the comment in front of it
+			description: `a comment behind a break with a stray semicolon and a break behind it, in a multi-line block`,
+			code: `a {\n/* c */;\nb: c; }`,
+		},
 	],
 
 	reject: [
@@ -742,6 +756,23 @@ testRule({
 			description: `a space behind the brace of a multi-line block`,
 			code: `a { color: pink;\nbackground: orange; }`,
 			fixed: `a {color: pink;\nbackground: orange; }`,
+			line: 1,
+			column: 4,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		{
+			// The break carried off the comment is read as the one after the brace, whether or not a space stands in front of the stray semicolon behind the comment
+			description: `a comment behind the break behind the brace, with a stray semicolon abutting it and a break behind the semicolon`,
+			code: `a {\n/* c */;\n}`,
+			fixed: `a {/* c */;\n}`,
+			line: 1,
+			column: 4,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		{
+			description: `the same comment and semicolon in front of a declaration`,
+			code: `a {\n/* c */;\nb: c; }`,
+			fixed: `a {/* c */;\nb: c; }`,
 			line: 1,
 			column: 4,
 			message: messages.rejectedAfterMultiLine(),
