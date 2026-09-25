@@ -52,10 +52,6 @@ const DEBT: Record<string, string[]> = {
 	],
 	"lib/rules/indentation/lines.ts": [`target: \`\\n\`,`],
 	"lib/rules/max-empty-lines/index.ts": [`target: \`\\n\`,`],
-	"lib/preprocessor/findRewrittenCommentSpans/index.ts": [
-		`let lineBreakIndex = spelled.indexOf(\`\\n\`, spelledIndex)`,
-		`let rewrittenLineBreakIndex = rewritten.indexOf(\`\\n\`, rewrittenIndex)`,
-	],
 	"lib/rules/max-line-length/index.ts": [
 		`styleSearch({ source: maskStrings(rootString, syntax.commentSpans(rootString, root, result)), target: [\`\\n\`], comments: \`check\` }, (match) => checkNewline(match))`,
 		`let nextNewlineIndex = rootString.indexOf(\`\\n\`, match.endIndex)`,
