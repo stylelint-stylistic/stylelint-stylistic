@@ -253,7 +253,7 @@ function fixRoot (scope: EolScope): void {
 				})
 			}
 			else {
-				// An inline comment ends on a line feed only, so a bare carriage return or form feed at the file's end stays in `raws.right`
+				// `postcss-less` runs an inline comment to a line feed, so a bare carriage return or form feed ending the file stays in its `raws.right`; `postcss-scss` ends the comment on either and leaves them to the root's `raws.after`
 				fixText(scope, node.raws.right, (fixed) => {
 					node.raws.right = fixed
 				})
