@@ -16,6 +16,15 @@ testRule({
 
 	accept: [
 		{
+			// The grammar ends a string on a bare carriage return as a bad string, and the mark behind it opens one PostCSS reads as closing: a run written there moved the value's code into a string running to the end of the file
+			description: `a run behind a string a bare carriage return breaks off`,
+			code: `a { b: "c\r"\r  d; e: f }`,
+		},
+		{
+			description: `a string a form feed breaks off, with runs PostCSS reads inside it`,
+			code: `a { b: "c\f  d  e"; f: g }`,
+		},
+		{
 			// The run is read over the copy with the escapes masked, so the character a backslash covers is none of it
 			description: `an escaped tab and a space behind it, where the tab is a character of the word and the space the only whitespace`,
 			code: `a { b: c\\\t ; d: e }`,
@@ -226,6 +235,15 @@ testRule({
 			fixed: `a { b: url(c d) }`,
 			line: 1,
 			column: 13,
+			message: messages.rejected,
+		},
+		{
+			// A backslash in front of the break continues the string over it, a Windows pair included, so the run behind the string is still read
+			description: `two spaces behind a string a backslash continues over a Windows pair`,
+			code: `a { b: "c\\\r\n  d"  e; f: g }`,
+			fixed: `a { b: "c\\\r\n  d" e; f: g }`,
+			line: 2,
+			column: 5,
 			message: messages.rejected,
 		},
 		{

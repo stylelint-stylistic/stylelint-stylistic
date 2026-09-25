@@ -1,7 +1,7 @@
 import valueParser from "postcss-value-parser"
 import stylelint from "stylelint"
 
-import { GRID_AREAS_PROPERTY, LEADING_LINE_BREAK } from "../../regexps.ts"
+import { CRLF, CSS_LINE_BREAK, GRID_AREAS_PROPERTY, LEADING_LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
@@ -113,12 +113,22 @@ function holds (spans: Array<{ start: number, end: number }>, index: number): bo
 }
 
 /**
- * Checks whether the quote at a position is escaped.
+ * Asks whether a line break inside a string is one a backslash continues the string over, the line feed of a Windows pair asking about the pair.
+ * @param value - The text.
+ * @param pos - The break's position.
+ * @returns True where the string goes on behind the break.
+ */
+function continuesTheString (value: string, pos: number): boolean {
+	return isEscapedAt(value, CRLF.test(value.slice(pos - 1, pos + 1)) ? pos - 1 : pos)
+}
+
+/**
+ * Checks whether the character at a position, a quote or a line break, is escaped.
  * @param value - The string.
- * @param pos - The quote's position.
+ * @param pos - The character's position.
  * @returns True where escaped.
  */
-function isEscapedQuote (value: string, pos: number): boolean {
+function isEscapedAt (value: string, pos: number): boolean {
 	let backslashCount = 0
 
 	for (let j = pos - 1; j >= 0 && value[j] === `\\`; j -= 1) backslashCount += 1
@@ -144,7 +154,7 @@ function handleStringChar (char: string, inString: boolean, stringChar: string, 
 		return { inString: true, stringChar: char, skip: true }
 	}
 
-	if (inString && char === stringChar && !isEscapedQuote(value, pos)) {
+	if (inString && char === stringChar && !isEscapedAt(value, pos)) {
 		return { inString: false, stringChar: ``, skip: true }
 	}
 
@@ -155,16 +165,80 @@ function handleStringChar (char: string, inString: boolean, stringChar: string, 
 	return { inString, stringChar, skip: false }
 }
 
+/** A run of whitespace the rule collapses, by its start in the value and its length. */
+type Run = {
+	start: number,
+	count: number,
+}
+
+/**
+ * Finds the runs of more than one whitespace character of the line in the copy the walk reads, passing over indentation behind a break, the text of strings and the runs a neighbor owns, and stopping at a string a line break breaks off.
+ * @param walked - The copy, as long as the value.
+ * @param owned - The runs `named-grid-areas-alignment` lays a table out by.
+ * @param commentBreaks - The positions of the characters closing a `//` comment, which end the line to the compiler reading it.
+ * @returns The runs, in order.
+ */
+function findRuns (walked: string, owned: Span[], commentBreaks: Set<number>): Run[] {
+	let inString = false
+	let stringChar = ``
+	let afterNewline = true
+
+	let errors: Run[] = []
+
+	// Walk the characters for whitespace runs
+	for (let i = 0; i < walked.length; i += 1) {
+		let char = walked.charAt(i)
+
+		// The grammar ends a string on a line break no backslash continues, a bare carriage return and a form feed included, as a bad string, and reads what follows as code, while PostCSS reads the string on to its closing mark: a run behind the break is code to the one and text of a string to the other, and a mark behind it opens a string to the grammar that the walk read as closing one. Such a value is no CSS, and the walk writes nothing from the break on
+		if (inString && CSS_LINE_BREAK.test(char) && !continuesTheString(walked, i)) break
+
+		let stringState = handleStringChar(char, inString, stringChar, walked, i)
+		inString = stringState.inString
+		stringChar = stringState.stringChar
+
+		if (stringState.skip) {
+			afterNewline = false
+			continue
+		}
+
+		if (isLineBreakAt(walked, i) || commentBreaks.has(i)) {
+			afterNewline = true
+			continue
+		}
+
+		if (isInlineWhitespaceAt(walked, i)) {
+			// Indentation behind a newline is left alone
+			if (afterNewline) {
+				while (i < walked.length && isInlineWhitespaceAt(walked, i)) i += 1
+				afterNewline = false
+				i -= 1
+				continue
+			}
+
+			let whitespaceStart = i
+			let whitespaceCount = 0
+
+			while (i < walked.length && isInlineWhitespaceAt(walked, i)) {
+				whitespaceCount += 1
+				i += 1
+			}
+
+			if (whitespaceCount > 1 && !owned.some(({ start, end }) => whitespaceStart >= start && whitespaceStart + whitespaceCount <= end)) errors.push({ start: whitespaceStart, count: whitespaceCount })
+			i -= 1
+		}
+		afterNewline = false
+	}
+
+	return errors
+}
+
 /**
  * Replaces each run with one space, from the end so no replacement shifts the next. A form feed or a bare carriage return opening a run behind a backslash is a line break to the grammar, which makes that backslash a delimiter, and a space written in its place would be read as the backslash's escape: `c\<FF>  d` came out as `c\ d`, one identifier where two stood. Such a run keeps its first character instead, which is the one whitespace the rule asks for.
  * @param value - The text the runs stand in.
  * @param errors - The runs.
  * @returns The fixed value.
  */
-function fixWhitespaceErrors (value: string, errors: {
-	start: number,
-	count: number,
-}[]): string {
+function fixWhitespaceErrors (value: string, errors: Run[]): string {
 	let newValue = value
 
 	for (let e of errors.toReversed()) {
@@ -218,55 +292,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let walked = maskMarksOutsideStrings(maskComments(maskEscapes(value, findEscapeSpans(value, reading)), comments), strings, addresses)
 			// The character closing a `//` comment ends the line to the compiler reading it, a bare carriage return and a form feed included, and a run opening on it would take that character away and carry the comment on over the code behind
 			let commentBreaks = new Set(comments.filter(({ isInline }) => isInline).map(({ end }) => end))
-			let inString = false
-			let stringChar = ``
-			let afterNewline = true
-
-			let errors: {
-				start: number,
-				count: number,
-			}[] = []
-
-			// Walk the characters for whitespace runs
-			for (let i = 0; i < walked.length; i += 1) {
-				let char = walked.charAt(i)
-
-				let stringState = handleStringChar(char, inString, stringChar, walked, i)
-				inString = stringState.inString
-				stringChar = stringState.stringChar
-
-				if (stringState.skip) {
-					afterNewline = false
-					continue
-				}
-
-				if (isLineBreakAt(walked, i) || commentBreaks.has(i)) {
-					afterNewline = true
-					continue
-				}
-
-				if (isInlineWhitespaceAt(walked, i)) {
-					// Indentation behind a newline is left alone
-					if (afterNewline) {
-						while (i < walked.length && isInlineWhitespaceAt(walked, i)) i += 1
-						afterNewline = false
-						i -= 1
-						continue
-					}
-
-					let whitespaceStart = i
-					let whitespaceCount = 0
-
-					while (i < walked.length && isInlineWhitespaceAt(walked, i)) {
-						whitespaceCount += 1
-						i += 1
-					}
-
-					if (whitespaceCount > 1 && !owned.some(({ start, end }) => whitespaceStart >= start && whitespaceStart + whitespaceCount <= end)) errors.push({ start: whitespaceStart, count: whitespaceCount })
-					i -= 1
-				}
-				afterNewline = false
-			}
+			let errors = findRuns(walked, owned, commentBreaks)
 
 			for (let error of errors) {
 				report({
