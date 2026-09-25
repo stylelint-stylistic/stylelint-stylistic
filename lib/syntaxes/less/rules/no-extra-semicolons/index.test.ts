@@ -83,6 +83,24 @@ testRule({
 
 	reject: [
 		{
+			// postcss-less ends a rule opened in front of such a comment in the text it reads the rest of the file with, so the rule's end is not the file's
+			description: `semicolons in front of and behind the closing brace of a rule holding a double-slash comment whose apostrophe opens a string over its break`,
+			code: `a { // don't\n  b: url('x');;\n} ;\n`,
+			fixed: `a { // don't\n  b: url('x');\n} \n`,
+			warnings: [
+				{
+					line: 2,
+					column: 15,
+					message: messages.rejected,
+				},
+				{
+					line: 3,
+					column: 3,
+					message: messages.rejected,
+				},
+			],
+		},
+		{
 			// Less closes a double-slash comment on a bare carriage return, where the parser reads on to the line feed and keeps the semicolon in the comment's text
 			description: `a semicolon behind a bare carriage return in the text of a double-slash comment behind a declaration`,
 			code: `a {\n\tcolor: pink; // c\r;\n}\n`,

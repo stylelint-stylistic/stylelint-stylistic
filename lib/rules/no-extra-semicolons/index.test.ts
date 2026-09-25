@@ -175,6 +175,24 @@ testRule({
 			],
 		},
 		{
+			// PostCSS prints `<!--` as `\3c !--`, so a place counted from the end of the print lands past the file's end
+			description: `semicolons in front of and behind the closing brace of a rule whose selector holds an opening HTML comment`,
+			code: `a[x="<!--"] {b: c;;} ;`,
+			fixed: `a[x="\\3c !--"] {b: c;} `,
+			warnings: [
+				{
+					line: 1,
+					column: 19,
+					message: messages.rejected,
+				},
+				{
+					line: 1,
+					column: 22,
+					message: messages.rejected,
+				},
+			],
+		},
+		{
 			description: `the same with the stray semicolon on the brace's line`,
 			code: `a {b: c;;} ;`,
 			fixed: `a {b: c;} `,

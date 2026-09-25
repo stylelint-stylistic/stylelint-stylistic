@@ -1,9 +1,10 @@
 import type { Comment, Node } from "postcss"
 import styleSearch from "style-search"
-import stylelint, { type FixCallback } from "stylelint"
+import stylelint, { type FixCallback, type PostcssResult } from "stylelint"
 
 import { INLINE_COMMENT_BREAK, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import { closingOffset } from "../../utils/closingOffset/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { extraSemicolonsAfter, extraSemicolonsBefore, extraSemicolonsOwn, noExtraUnderComment, readsTheRawsOf } from "../../utils/extraSemicolonsAfter/index.ts"
@@ -39,6 +40,22 @@ function getOffsetByNode (node: Node): number {
 	if (start === undefined || rootStart === undefined) throw new Error(`The node and its root must have a start offset`)
 
 	return start - rootStart
+}
+
+/**
+ * Finds the index behind a container's last character in its root's text, counted as {@link getOffsetByNode} counts: from the parser's end where {@link closingOffset} trusts it, else from the length of the print, which runs longer than the file where PostCSS escapes `<style` or `<!--`.
+ * @param node - The container.
+ * @param result - The Stylelint result, which holds the file's syntax.
+ * @returns The index.
+ * @throws {Error} Where the root has no start offset.
+ */
+function getEndOffsetByNode (node: Node, result: PostcssResult): number {
+	let end = closingOffset(node)
+	let rootStart = node.root().source?.start?.offset
+
+	if (rootStart === undefined) throw new Error(`The root must have a start offset`)
+
+	return end === undefined ? getOffsetByNode(node) + nodeString(node, result).length : end - rootStart
 }
 
 /** `true`; the rule has no other setting. */
@@ -92,16 +109,16 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let extraAfter = extraSemicolonsAfter(syntax, node, result)
 			let extraOwn = extraSemicolonsOwn(syntax, node)
-			// The print, taken before the fix takes anything out of it, ends on `raws.ownSemicolon`, which stands behind the closing brace `raws.after` ends on
-			let printEnd = extraAfter.length > 0 || extraOwn.length > 0 ? getOffsetByNode(node) + nodeString(node, result).length : 0
+			// The node ends on `raws.ownSemicolon`, which stands behind the closing brace `raws.after` ends on
+			let end = extraAfter.length > 0 || extraOwn.length > 0 ? getEndOffsetByNode(node, result) : 0
 			let ownLength = String(node.raws.ownSemicolon ?? ``).length
 
-			takeOut(node, `after`, extraAfter, (raw, semicolon) => printEnd - ownLength - 1 - raw.length + semicolon)
+			takeOut(node, `after`, extraAfter, (raw, semicolon) => end - ownLength - 1 - raw.length + semicolon)
 
 			// Less closes a `//` comment on a bare carriage return too, where `postcss-less` reads on to a line feed, and the code behind that break is Less's
 			if (isComment(node)) checkCommentCode(node)
 
-			takeOut(node, `ownSemicolon`, extraOwn, (raw, semicolon) => printEnd - raw.length + semicolon)
+			takeOut(node, `ownSemicolon`, extraOwn, (raw, semicolon) => end - raw.length + semicolon)
 		})
 
 		/**
