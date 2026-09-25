@@ -1,6 +1,7 @@
 import stylelint from "stylelint"
 
 import { css } from "../../syntaxes/css/index.ts"
+import { trailingSemicolonAsked } from "../../utils/closedBySemicolon/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { findEscapeSpans } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -56,7 +57,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (!syntax.isStandardAtRule(atRule)) return
 
 			// The check asks about the position one past the at-rule, as though a semicolon stood there; where the file spells none the at-rule runs to its container's `}` or the end of the file, and the position is somebody else's
-			if (isLastNodeWithoutSemicolon(atRule)) return
+			// Not read where no semicolon closes the at-rule, or where the rule about a trailing semicolon takes it out in the same run, whichever side of this one it is listed
+			if (isLastNodeWithoutSemicolon(atRule) || trailingSemicolonAsked(atRule, result) === false) return
 
 			// `report` counts an index from the node's own start, so the raw whitespace in front of the at-rule stays out of the text the position is measured in
 			let atRuleString = nodeString(atRule, result)
