@@ -291,8 +291,8 @@ function fixRoot (scope: EolScope): void {
 			})
 		}
 
-		// The run behind a Less mixin call's flag, which the `less` namespace hands to the flag's raw
-		if (isAtRule(node) && typeof node.raws.important === `string`) {
+		// The run behind a Less mixin call's flag, which the `less` namespace hands to the flag's raw, and behind a declaration's, where the parser files the comments and the whitespace behind the flag up to the node's end
+		if ((isAtRule(node) || isDeclaration(node)) && typeof node.raws.important === `string`) {
 			fixText(scope, node.raws.important, (fixed) => {
 				node.raws.important = fixed
 			})

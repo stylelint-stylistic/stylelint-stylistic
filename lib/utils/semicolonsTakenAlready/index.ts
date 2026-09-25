@@ -1,9 +1,10 @@
 import type { Container, Node, Root } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { CLOSES_NOTHING_IN_FRONT } from "../../regexps.ts"
+import { CLOSES_NOTHING_IN_FRONT, TRAILING_CSS_WHITESPACE, TRAILING_SEMICOLON } from "../../regexps.ts"
 import { closingOffset } from "../closingOffset/index.ts"
 import { nodeString } from "../nodeString/index.ts"
+import { isComment } from "../typeGuards/index.ts"
 
 /**
  * Finds the semicolons of a raw's text in the file that a rule listed earlier has already taken out of the raw: walking back from the raw's end, a semicolon the file spells and the raw no longer holds, and past the raw's start the semicolons up to what stands in front of it, which the raw held at its head. The walk stops where the two part otherwise, since another write changed the raw there.
@@ -52,6 +53,34 @@ function endIn (node: Node | undefined, rootStart: number, result: PostcssResult
 }
 
 /**
+ * Finds the text a rule listed earlier moved into the node closing a block from behind it: `declaration-block-trailing-semicolon: never` writes the comments behind a custom property or a bodiless at-rule, with the runs around them, into the node, where it takes the semicolon PostCSS writes behind such a node. Where the print spells the node as the file does, less that semicolon and the run in front of it, and goes on past it, what it holds past the part both spell is that text, standing in front of the block's tail.
+ * @param node - The block's last node.
+ * @param text - The root's text.
+ * @param rootStart - The root's offset.
+ * @param result - The Stylelint result, which holds the file's syntax.
+ * @returns The moved text and where it opens in the root's text, or nothing where nothing was moved.
+ */
+function movedIn (node: Node | undefined, text: string, rootStart: number, result: PostcssResult): { tail: string, start: number } | undefined {
+	let start = node?.source?.start?.offset
+
+	if (!node || start === undefined || isComment(node) || `nodes` in node) return undefined
+
+	let printed = nodeString(node, result)
+	let from = start - rootStart
+	let common = 0
+
+	while (common < printed.length && printed[common] === text[from + common]) common += 1
+
+	// The node itself as the file spells it, less the flag's semicolon and the run in front of it, which that rule takes; a print parting from the file inside it was changed otherwise, as PostCSS's escape of `<!--` changes it, and nothing was moved
+	let end = node.source?.end?.offset
+	let spelled = end === undefined ? `` : text.slice(from, end - rootStart).replace(TRAILING_SEMICOLON, ``).replace(TRAILING_CSS_WHITESPACE, ``)
+
+	if (common === printed.length || common < spelled.length) return undefined
+
+	return { tail: printed.slice(common), start: from + common }
+}
+
+/**
  * Finds the offsets of the stray semicolons rules listed earlier have taken out of the raws `no-extra-semicolons` reads, which the file still spells.
  * @param root - The stylesheet.
  * @param text - Its text.
@@ -75,10 +104,21 @@ export function semicolonsTakenAlready (root: Root, text: string, result: Postcs
 		let brace = end - rootStart - own.length
 
 		if (own) takenAlready(text, own, end - rootStart, brace, offsets)
-		if (typeof node.raws.after === `string`) takenAlready(text, node.raws.after, brace - 1, endIn((node as Container).last, rootStart, result), offsets)
+		if (typeof node.raws.after !== `string`) return
+
+		let moved = movedIn((node as Container).last, text, rootStart, result)
+
+		if (moved) takenAlready(text, moved.tail + node.raws.after, brace - 1, moved.start, offsets)
+		else takenAlready(text, node.raws.after, brace - 1, endIn((node as Container).last, rootStart, result), offsets)
 	})
 
-	if (typeof root.raws.after === `string` && !root.parent) takenAlready(text, root.raws.after, text.length, endIn(root.last, rootStart, result), offsets)
+	if (typeof root.raws.after === `string`) {
+		// A root's tail ends where its text does, an embedded one's too, which holds the moved text as a block does
+		let moved = movedIn(root.last, text, rootStart, result)
+
+		if (moved) takenAlready(text, moved.tail + root.raws.after, text.length, moved.start, offsets)
+		else if (!root.parent) takenAlready(text, root.raws.after, text.length, endIn(root.last, rootStart, result), offsets)
+	}
 
 	return offsets
 }

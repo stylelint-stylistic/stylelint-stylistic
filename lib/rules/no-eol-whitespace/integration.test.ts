@@ -86,3 +86,28 @@ describe(`a stray semicolon a disable comment keeps from the rule about extra se
 		expect(await fix(code, false)).toEqual({ code: output, warnings: 0 })
 	})
 })
+
+describe(`the whitespace in front of a stray semicolon the rule about a trailing semicolon takes out behind a custom property or a bodiless at-rule, moving the comment between into it`, () => {
+	let neighbor: [string, unknown] = [`@stylistic/declaration-block-trailing-semicolon`, `never`]
+
+	// That rule writes the comments behind such a node into it, so the semicolons it took are read in the node's print rather than in the block's tail
+	it.each([
+		[`a {\n\t--x: 1; /* c */ ;\n}\n`, `a {\n\t--x: 1 /* c */\n}\n`],
+		[`a {\n\t@apply x; /* c */ ;\n}\n`, `a {\n\t@apply x /* c */\n}\n`],
+		[`a {\n\t--x: 1 !important; /* c */ ;\n}\n`, `a {\n\t--x: 1 !important /* c */\n}\n`],
+	])(`is taken out in one pass in both orders in %j`, async (code, output) => {
+		expect(await fix(code, true, neighbor)).toEqual({ code: output, warnings: 0 })
+		expect(await fix(code, false, neighbor)).toEqual({ code: output, warnings: 0 })
+	})
+
+	// PostCSS prints `<!--` escaped, so the node's print parts from the file inside the node, where nothing was moved, and the semicolon the file still needs is read as it stands
+	it.each([
+		[`<style>\na {\n\t--x: "<!--" ;\n}\n</style>\n`, `postcss-html`],
+		[`const a = styled.a\`\n\t--x: "<!--" ;\n\``, `postcss-styled-syntax`],
+	])(`draws no warning alone where the print escapes the text in %j`, async (code, customSyntax) => {
+		let rule = customSyntax === `postcss-styled-syntax` ? `@stylistic/styled/no-eol-whitespace` : `@stylistic/no-eol-whitespace`
+		let result = await stylelint.lint({ code, customSyntax, config: { plugins, rules: { [rule]: true } } })
+
+		expect(result.results[0]?.warnings).toEqual([])
+	})
+})

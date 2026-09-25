@@ -319,6 +319,9 @@ export const TRAILING_BACKSLASHES = /\\*$/u
 /** The trailing whitespace as the tokenizer reads it; the narrowing of {@link TRAILING_WHITESPACE}. */
 export const TRAILING_CSS_WHITESPACE = /[ \t\n\r\f]*$/u
 
+/** A semicolon ending a text. */
+export const TRAILING_SEMICOLON = /;$/u
+
 /** A trailing hexadecimal escape, its closing whitespace aside, which `postcss-value-parser` returns as a divider. */
 export const TRAILING_HEX_ESCAPE = /\\[\da-f]{1,6}$/iu
 
