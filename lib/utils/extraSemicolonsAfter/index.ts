@@ -65,3 +65,27 @@ export function extraSemicolonsAfter (syntax: Syntax, container: Node, result: P
 
 	return indices
 }
+
+/**
+ * Finds the semicolons `no-extra-semicolons` takes out of a node's `raws.before`, the run in front of it.
+ *
+ * Every one is extra, but for those {@link noExtraUnderComment} reads as closing a node, and none where {@link readsTheRawsOf} passes the node over.
+ * @param syntax - The syntax the rule is built over.
+ * @param node - The node.
+ * @param result - The Stylelint result.
+ * @returns The semicolons' indices in the raw.
+ */
+export function extraSemicolonsBefore (syntax: Syntax, node: Node, result: PostcssResult): number[] {
+	let before = node.raws.before
+
+	if (typeof before !== `string` || before.trim().length === 0 || !readsTheRawsOf(syntax, node)) return []
+
+	let readsAsNoExtra = noExtraUnderComment(syntax, node, `before`, result)
+	let indices: number[] = []
+
+	styleSearch({ source: before, target: `;` }, (match) => {
+		if (!readsAsNoExtra(match.startIndex)) indices.push(match.startIndex)
+	})
+
+	return indices
+}

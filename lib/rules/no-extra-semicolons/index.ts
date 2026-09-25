@@ -6,7 +6,7 @@ import { INLINE_COMMENT_BREAK, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
-import { extraSemicolonsAfter, noExtraUnderComment, readsTheRawsOf } from "../../utils/extraSemicolonsAfter/index.ts"
+import { extraSemicolonsAfter, extraSemicolonsBefore, noExtraUnderComment, readsTheRawsOf } from "../../utils/extraSemicolonsAfter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { report } from "../../utils/report/index.ts"
@@ -109,24 +109,19 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		root.walk((node) => {
 			if (!readsTheRawsOf(syntax, node)) return
 
-			if (node.raws.before && node.raws.before.trim().length > 0) {
+			let extraBefore = extraSemicolonsBefore(syntax, node, result)
+
+			if (extraBefore.length > 0 && typeof node.raws.before === `string`) {
 				let rawBeforeNode = node.raws.before
-				let allowedSemi = 0
-
-				let rawBeforeIndexStart = 0
-				let readsAsNoExtra = noExtraUnderComment(syntax, node, `before`, result)
-
 				let fixSemiIndices: number[] = []
 
-				styleSearch({ source: rawBeforeNode, target: `;` }, (match, count) => {
-					if (count === allowedSemi || readsAsNoExtra(match.startIndex)) return
-
+				for (let semicolon of extraBefore) {
 					fix = (): void => {
-						fixSemiIndices.push(match.startIndex - rawBeforeIndexStart)
+						fixSemiIndices.push(semicolon)
 					}
 
-					complain(getOffsetByNode(node) - rawBeforeNode.length + match.startIndex)
-				})
+					complain(getOffsetByNode(node) - rawBeforeNode.length + semicolon)
+				}
 
 				if (fixSemiIndices.length > 0) node.raws.before = removeIndices(rawBeforeNode, fixSemiIndices)
 			}

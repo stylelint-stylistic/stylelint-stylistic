@@ -21,6 +21,7 @@ import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
+import { straySemicolonsTaken, straySemicolonsTakenBefore, withoutTaken } from "../../utils/straySemicolonsTaken/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesBlockAfter } from "../../utils/writesBlockAfter/index.ts"
 
@@ -60,16 +61,35 @@ function fixWouldCommentOutTheBlock (syntax: Syntax, statement: Rule | AtRule, n
 /**
  * The run the closing brace of a block holding nothing but comments stands behind.
  *
- * Such a block has that brace where the checked node would stand, so the carry chains onto it: the block's own trailing raw takes the break in front of it exactly as a node's `raws.before` would. The last comment's run is read the way every other is, so a comment carrying no raw is the run PostCSS prints in front of it. The carry is asked of the whitespace the raw opens with, since a break behind a stray semicolon is no break after the comment.
+ * Such a block has that brace where the checked node would stand, so the carry chains onto it: the block's own trailing raw takes the break in front of it exactly as a node's `raws.before` would. The last comment's run is read the way every other is, so a comment carrying no raw is the run PostCSS prints in front of it. The carry is asked of the whitespace the raw opens with, since a break behind a stray semicolon is no break after the comment, and of the raw as `no-extra-semicolons` leaves it, so that the verdict is one whichever side of that rule this one is listed.
  * @param syntax - The syntax the rule is built over, which the raw is read through.
  * @param statement - The rule or at-rule whose block holds nothing but comments.
+ * @param result - The Stylelint result, which holds the configuration.
  * @returns The trailing raw, or the run carried past the last comment.
  */
-function runInFrontOfTheClosingBrace (syntax: Syntax, statement: Rule | AtRule): string {
-	let after = getBlockAfter(syntax, statement) ?? ``
+function runInFrontOfTheClosingBrace (syntax: Syntax, statement: Rule | AtRule, result: PostcssResult): string {
+	let after = withoutTaken(getBlockAfter(syntax, statement) ?? ``, straySemicolonsTaken(statement, result))
 	let lastBefore = statement.last ? runInFrontOf(statement.last) : ``
 
 	return (!OPENS_WITH_LINE_BREAK.test(after) && LINE_BREAK.test(lastBefore)) ? lastBefore : after
+}
+
+/**
+ * Writes a run as `no-extra-semicolons` leaves it, keeping the semicolons it takes out for it to take.
+ *
+ * The write is worked out on the run without them, so that it comes out the same whichever side of that rule this one is listed; they stand behind the whitespace the write opens with, where taking them leaves the written run.
+ * @param write - The write over a run.
+ * @param run - The run as it stands.
+ * @param taken - The indices of the semicolons the neighbor takes out.
+ * @returns The run to write.
+ */
+function writtenAsLeft (write: (run: string) => string, run: string, taken: Set<number>): string {
+	if (taken.size === 0) return write(run)
+
+	let written = write(withoutTaken(run, taken))
+	let opening = written.match(LEADING_CSS_WHITESPACE)?.[0] ?? ``
+
+	return opening + `;`.repeat(taken.size) + written.slice(opening.length)
 }
 
 /**
@@ -186,7 +206,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let carried = runInFrontOf(comment)
 
 				// PostCSS reads a line feed as a break, with or without a carriage return in front; the node's run is asked of the whitespace it opens with, since a break behind a stray semicolon there is no break in front of the node
-				if (!LINE_BREAK.test(carried) || OPENS_WITH_LINE_BREAK.test(runInFrontOf(nextNode))) return
+				// The node's run as `no-extra-semicolons` leaves it, so that the verdict is one whichever side of that rule this one is listed
+				if (!LINE_BREAK.test(carried) || OPENS_WITH_LINE_BREAK.test(withoutTaken(runInFrontOf(nextNode), straySemicolonsTakenBefore(nextNode, result)))) return
 
 				backupCommentNextBefores.set(nextNode, nextNode.raws.before)
 				nextNode.raws.before = carried
@@ -212,7 +233,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			checker.afterOneOnly({
 				// A block closes on `}` in every syntax the plugin reads, and all the check asks of that character is that it is not whitespace
-				source: nodeToCheck ? runInFrontOf(nodeToCheck) + nodeString(nodeToCheck, result) : `${runInFrontOfTheClosingBrace(syntax, statement)}}`,
+				source: nodeToCheck ? runInFrontOf(nodeToCheck) + nodeString(nodeToCheck, result) : `${runInFrontOfTheClosingBrace(syntax, statement, result)}}`,
 				index: -1,
 				lineCheckStr: blockString(statement, result),
 				err: (m) => {
@@ -239,7 +260,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (typeof standing !== `string`) return
 
-				let written = writes.newline(primary, standing)
+				let written = writtenAsLeft((run) => writes.newline(primary, run), standing, straySemicolonsTaken(statement, result))
 				// The `always` write opens the run with a break; the `never-multi-line` one takes every break out of the block's whitespace in front of what it keeps, so only a comment's own text or a break behind a stray semicolon can leave the block multi-line
 				let isSingleLine = primary === `never-multi-line` && !LINE_BREAK.test(written) && nodes.every((node) => isSingleLineString(nodeString(node, result)))
 
@@ -268,7 +289,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 						nodeToFixRaws.before = backupCommentNextBefores.has(nodeToFix)
 							? spellTheCarriedRun(standing, backupCommentNextBefores.get(nodeToFix))
-							: writes.newline(primary, standing)
+							: writtenAsLeft((run) => writes.newline(primary, run), standing, straySemicolonsTakenBefore(nodeToFix, result))
 
 						backupCommentNextBefores.delete(nodeToFix)
 
@@ -281,7 +302,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						// The comments in front lose their breaks; the checked node's run loses the whitespace it opens with, and a stray semicolon behind it stays with whatever follows it
 						for (let comment = statement.first; comment && comment !== nodeToFix; comment = comment.next()) unbreakTheRunInFrontOf(comment)
 
-						nodeToFixRaws.before = writes.newline(primary, nodeToFixRaws.before ?? ``)
+						nodeToFixRaws.before = writtenAsLeft((run) => writes.newline(primary, run), nodeToFixRaws.before ?? ``, straySemicolonsTakenBefore(nodeToFix, result))
 					}
 				}
 			}

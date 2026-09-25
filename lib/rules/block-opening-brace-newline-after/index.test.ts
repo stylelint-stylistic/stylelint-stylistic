@@ -1189,4 +1189,13 @@ describe(`${ruleName} beside the rules that write the same run`, () => {
 	it(`leaves it where no break stands behind the semicolon and the rule about a break in front of the brace puts its own in front of the run`, async () => {
 		expect(await race(`a {/* c */ ; }`, `never-multi-line`, closingNewline, `always`)).toEqual({ ours: `a {/* c */\n ; }`, theirs: `a {/* c */\n ; }`, left: [messages.rejectedAfterMultiLine()] })
 	})
+
+	// The run is read and written as `no-extra-semicolons` leaves it, and the semicolon it takes stays in the write for it to take
+	it(`reads the run behind a comment of the head as the rule about extra semicolons leaves it, one file in both orders`, async () => {
+		expect(await race(`a {\n/* c */ ;\n}`, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: `a {\n/* c */\n}`, theirs: `a {\n/* c */\n}`, left: [] })
+	})
+
+	it(`does the same in front of a declaration`, async () => {
+		expect(await race(`a {\n/* c */ ;\nb: c; }`, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: `a {\n/* c */\nb: c; }`, theirs: `a {\n/* c */\nb: c; }`, left: [] })
+	})
 })

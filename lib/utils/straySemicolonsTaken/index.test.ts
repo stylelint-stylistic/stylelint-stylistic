@@ -2,7 +2,7 @@ import { parse, type Rule } from "postcss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
-import { straySemicolonsTaken, withoutTaken } from "./index.ts"
+import { straySemicolonsTaken, straySemicolonsTakenBefore, withoutTaken } from "./index.ts"
 
 describe(`straySemicolonsTaken`, () => {
 	it(`nothing where no rule taking a stray semicolon out is listed`, () => {
@@ -35,6 +35,21 @@ describe(`straySemicolonsTaken`, () => {
 	})
 })
 
+describe(`straySemicolonsTakenBefore`, () => {
+	it(`every semicolon in front of a node a live no-extra-semicolons takes out, but one a disable comment keeps its fix off`, () => {
+		let declaration = (parse(`a {\n/* c */ ;\n;b: c; }`).first as Rule).last
+
+		expect(declaration && [...straySemicolonsTakenBefore(declaration, extraRuleResult([]))]).toEqual([1, 3])
+		expect(declaration && [...straySemicolonsTakenBefore(declaration, extraRuleResult([{ start: 2, end: 2 }]))]).toEqual([3])
+	})
+
+	it(`nothing where no-extra-semicolons is not listed`, () => {
+		let declaration = (parse(`a {\n/* c */ ;\nb: c; }`).first as Rule).last
+
+		expect(declaration && [...straySemicolonsTakenBefore(declaration, { stylelint: { config: { rules: {} } } } as unknown as PostcssResult)]).toEqual([])
+	})
+})
+
 describe(`withoutTaken`, () => {
 	it(`takes the characters at the indices out`, () => {
 		expect(withoutTaken(`\n;\n;\n`, new Set([1, 3]))).toBe(`\n\n\n`)
@@ -53,4 +68,13 @@ function ask (code: string, rules: Record<string, unknown> = {}, disabled: { sta
 	let result = { stylelint: { config: { rules }, disabledRanges: { all: disabled } } } as unknown as PostcssResult
 
 	return [...straySemicolonsTaken(parse(code).first as Rule, result)].toSorted((a, b) => a - b)
+}
+
+/**
+ * A result listing no-extra-semicolons alone.
+ * @param disabled - The lines a disable comment for every rule keeps a fix off.
+ * @returns The result.
+ */
+function extraRuleResult (disabled: { start: number, end: number }[]): PostcssResult {
+	return { stylelint: { config: { rules: { "@stylistic/no-extra-semicolons": true } }, disabledRanges: { all: disabled } } } as unknown as PostcssResult
 }

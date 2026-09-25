@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 
-import { extraSemicolonsAfter, readsTheRawsOf } from "./index.ts"
+import { extraSemicolonsAfter, extraSemicolonsBefore, readsTheRawsOf } from "./index.ts"
 
 /** A syntax calling every at-rule no standard one, as the Less one calls a mixin call. */
 const REFUSING: Syntax = { ...css, isStandardAtRule: () => false }
@@ -43,5 +43,19 @@ describe(`readsTheRawsOf`, () => {
 
 		expect(atRule && readsTheRawsOf(REFUSING, atRule)).toBe(false)
 		expect(charset && readsTheRawsOf(REFUSING, charset)).toBe(true)
+	})
+})
+
+describe(`extraSemicolonsBefore`, () => {
+	it(`every semicolon of the run in front of a node`, () => {
+		let block = parse(`a {\n/* c */ ;\n;b: c; }`).first as Rule
+
+		expect(block.last && extraSemicolonsBefore(css, block.last, RESULT)).toEqual([1, 3])
+	})
+
+	it(`nothing in front of a node the syntax calls no standard one`, () => {
+		let block = parse(`a {;@m;}`).first as Rule
+
+		expect(block.first && extraSemicolonsBefore(REFUSING, block.first, RESULT)).toEqual([])
 	})
 })

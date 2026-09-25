@@ -1,9 +1,9 @@
-import type { Container } from "postcss"
+import type { Container, Node } from "postcss"
 import type { PostcssResult } from "stylelint"
 
 import { EVERY_LINE_BREAK, EVERY_SEMICOLON } from "../../regexps.ts"
 import { trailingSemicolonAsked } from "../closedBySemicolon/index.ts"
-import { extraSemicolonsAfter } from "../extraSemicolonsAfter/index.ts"
+import { extraSemicolonsAfter, extraSemicolonsBefore } from "../extraSemicolonsAfter/index.ts"
 import { fixDisabledOnLine } from "../fixDisabledOnLine/index.ts"
 import { hasBlock } from "../hasBlock/index.ts"
 import { lastNonCommentNode } from "../lastNonCommentNode/index.ts"
@@ -14,6 +14,17 @@ import { isAtRule, isDeclaration } from "../typeGuards/index.ts"
 const NO_EXTRA_SEMICOLONS: NeighborRuleSetting = {
 	name: `no-extra-semicolons`,
 	options: [true],
+}
+
+/**
+ * Counts the line a character of a raw stands on back from the line the raw ends on.
+ * @param raw - The raw.
+ * @param index - The character's index in the raw.
+ * @param endLine - The line of what closes the raw, if it has a place.
+ * @returns The line, or nothing where the raw's end has no place.
+ */
+function lineInRaw (raw: string, index: number, endLine: number | undefined): number | undefined {
+	return endLine === undefined ? undefined : endLine - (raw.slice(index).match(EVERY_LINE_BREAK) ?? []).length
 }
 
 /**
@@ -39,7 +50,7 @@ export function straySemicolonsTaken (statement: Container, result: PostcssResul
 	 * @returns The line, or nothing where the brace has no place.
 	 */
 	function lineOf (index: number): number | undefined {
-		return braceLine === undefined || typeof after !== `string` ? undefined : braceLine - (after.slice(index).match(EVERY_LINE_BREAK) ?? []).length
+		return typeof after === `string` ? lineInRaw(after, index, braceLine) : undefined
 	}
 
 	// That rule reports on the last semicolon behind the node, the raw's last, and a disable comment is read on that line
@@ -76,4 +87,33 @@ export function withoutTaken (run: string, taken: Set<number>): string {
 	for (let index = 0; index < run.length; index += 1) if (!taken.has(index)) rest += run.charAt(index)
 
 	return rest
+}
+
+/**
+ * Finds the stray semicolons of a node's `raws.before` that `no-extra-semicolons` takes out in the same run, each where no disable comment keeps its fix off the semicolon's line, so that a rule reading that run reads it as it will stand whichever side of the neighbor it is listed.
+ *
+ * `declaration-block-trailing-semicolon` takes none of them: the semicolons it takes stand behind the node closing the block.
+ * @param node - The node.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns The semicolons' indices in the raw.
+ */
+export function straySemicolonsTakenBefore (node: Node, result: PostcssResult): Set<number> {
+	let before = node.raws.before
+	let taken: Set<number> = new Set()
+
+	if (typeof before !== `string` || !before.includes(`;`)) return taken
+
+	let nodeLine = node.source?.start?.line
+
+	for (let { fixDisabled, name, syntax } of neighborCopies(node, result, NO_EXTRA_SEMICOLONS)) {
+		if (fixDisabled) continue
+
+		for (let index of extraSemicolonsBefore(syntax, node, result)) {
+			let line = lineInRaw(before, index, nodeLine)
+
+			if (line === undefined || !fixDisabledOnLine(result, name, line)) taken.add(index)
+		}
+	}
+
+	return taken
 }
