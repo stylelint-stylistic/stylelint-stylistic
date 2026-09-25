@@ -85,6 +85,15 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
+			// The space closing the escape is part of it, so the escaped letter and the name are one name, which CSS reads as `aurl`, a call whose parentheses hold arguments
+			description: `the comma inside the parentheses of a call whose name a hexadecimal escape in front welds into a name other than url`,
+			code: `a { b: \\61 url(a,"b"); }`,
+			fixed: `a { b: \\61 url(a, "b"); }`,
+			line: 1,
+			column: 17,
+			message: messages.expectedAfter(),
+		},
+		{
 			// The space standing behind the comment is another run, so the comma carries none
 			description: `a comment abutting the comma, with the space behind the comment`,
 			code: `a { b: f(1,/* c */ 2); }`,

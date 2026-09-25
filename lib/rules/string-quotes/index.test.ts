@@ -121,6 +121,23 @@ testRule({
 			message: messages.expected(`single`),
 		},
 		{
+			// The space closing the escape is part of it, so the escaped letter and the name are one name, which CSS reads as `aurl`, a call whose parentheses hold a string
+			description: `a string inside the parentheses of a call whose name a hexadecimal escape in front welds into a name other than url`,
+			code: `a { b: \\61 url(a"b"c); }`,
+			fixed: `a { b: \\61 url(a'b'c); }`,
+			line: 1,
+			column: 17,
+			message: messages.expected(`single`),
+		},
+		{
+			description: `the same call with a line break closing the escape`,
+			code: `a { b: \\61\nurl(a"b"c); }`,
+			fixed: `a { b: \\61\nurl(a'b'c); }`,
+			line: 2,
+			column: 6,
+			message: messages.expected(`single`),
+		},
+		{
 			description: `an attribute value spelling a preprocessor construct, which is text rather than syntax`,
 			code: `[title=":extend(x)"] {}`,
 			fixed: `[title=':extend(x)'] {}`,

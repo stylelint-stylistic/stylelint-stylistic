@@ -101,6 +101,31 @@ describe(`hideParenthesesInUrlStrings`, () => {
 		expect(hideParenthesesInUrlStrings(`#FFF\\\n\\75 rl(1PX)`)).toBe(`#FFF \n\\75 rl(1PX)`)
 	})
 
+	// The parser reads an address behind the call it names `url`, where CSS reads a call named `aurl`
+	it(`the first letter of a url a hexadecimal escape in front welds into a name other than url, which takes the weld`, () => {
+		expect(hideParenthesesInUrlStrings(`\\61 url(a"b"c)`)).toBe(`\\61 _rl(a"b"c)`)
+		expect(hideParenthesesInUrlStrings(`\\61\r\nurl(a"b"c)`)).toBe(`\\61\r\n_rl(a"b"c)`)
+		expect(hideParenthesesInUrlStrings(`\\61 \\62 url(a,"b")`)).toBe(`\\61 \\62 _rl(a,"b")`)
+		expect(hideParenthesesInUrlStrings(`x\\9 url(a) f(\\61\turl(b))`)).toBe(`x\\9 _rl(a) f(\\61\t_rl(b))`)
+	})
+
+	it(`the same url where the name stays url, the parser reads no address, or the call would close on another parenthesis or leave a string open, which takes none`, () => {
+		expect(hideParenthesesInUrlStrings(`\\75 rl(a)`)).toBe(`\\75 rl(a)`)
+		expect(hideParenthesesInUrlStrings(`\\61  url(a)`)).toBe(`\\61  url(a)`)
+		expect(hideParenthesesInUrlStrings(`x\\\\9 url(a)`)).toBe(`x\\\\9 url(a)`)
+		expect(hideParenthesesInUrlStrings(`\\61 url("a")`)).toBe(`\\61 url("a")`)
+		expect(hideParenthesesInUrlStrings(`\\61 URL(a)`)).toBe(`\\61 URL(a)`)
+		expect(hideParenthesesInUrlStrings(`\\61 url(a(b).png)`)).toBe(`\\61 url(a(b).png)`)
+		expect(hideParenthesesInUrlStrings(`\\61 url(a(b.png)`)).toBe(`\\61 url(a(b.png)`)
+		expect(hideParenthesesInUrlStrings(`\\61 url(a"b.png)`)).toBe(`\\61 url(a"b.png)`)
+	})
+
+	it(`the same url behind an escape a double-slash comment holds, which the break closing the comment leaves a name of its own`, () => {
+		let text = `c // \\61\nurl(a,"b")`
+
+		expect(hideParenthesesInUrlStrings(text, findCommentSpans(text))).toBe(text)
+	})
+
 	it(`such a divider in front of an escape that spells a name of its own, and one dividing the escapes of a name, behind which the tail spells no address`, () => {
 		expect(hideParenthesesInUrlStrings(`\\\n\\61 rl(a(b).png)`)).toBe(`\\\n\\61 rl(a(b).png)`)
 		expect(hideParenthesesInUrlStrings(`\\\n\\75 \\\n\\72 l(a(b).png)`)).toBe(`\\\n\\75 \\\n\\72 l(a(b).png)`)
