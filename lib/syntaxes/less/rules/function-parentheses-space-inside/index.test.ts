@@ -285,6 +285,11 @@ testRule({
 			description: `the separator under a single-line option, which the guard is asked under as well: a function whose only break is one no syntax reads a line in is single-line, and the comment holds the parenthesis the parser closed the call on`,
 			code: `a { t: translate(1px, 2px // c\u2028 ); }`,
 		},
+		{
+			// Less closes an inline comment on a bare carriage return, which ends the line to it, so the call is broken over lines
+			description: `a call a bare carriage return inside an inline comment breaks, the break standing in front of the parenthesis`,
+			code: `a { transform: translate(1px, 2px// keep me\r); }`,
+		},
 	],
 })
 testRule({

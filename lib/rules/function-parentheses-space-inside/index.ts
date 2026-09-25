@@ -58,6 +58,16 @@ function isFunctionParsedAsWritten (syntax: Syntax, valueNode: FunctionNode, com
 }
 
 /**
+ * Asks whether a `//` comment the syntax closes stands inside a function, which ends a line to the language wherever it closes.
+ * @param valueNode - The function.
+ * @param comments - The value's comment spans.
+ * @returns True where such a comment closes short of the function's `)`.
+ */
+function closesAnInlineComment (valueNode: FunctionNode, comments: CommentSpan[]): boolean {
+	return comments.some(({ start, end, isInline }) => isInline && start > valueNode.sourceIndex && end < valueNode.sourceEndIndex - 1)
+}
+
+/**
  * Asks whether the fix puts the `)` into a `//` comment the line break in front of it closes.
  * @param syntax - The syntax the rule is built over.
  * @param declValue - The whole value the function stands in.
@@ -180,8 +190,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (valueNode.nodes.length === 0) return
 
 				let functionString = valueParser.stringify(valueNode)
-				// The `-single-line` forms ask nothing of a function broken over lines
-				let asked = primary.endsWith(`-single-line`) && !isSingleLineString(functionString) ? undefined : ASKED[primary]
+				// The `-single-line` forms ask nothing of a function broken over lines, and a `//` comment the language closes inside it breaks its line wherever PostCSS counts none, on a bare carriage return, or under Sass a form feed
+				let asked = primary.endsWith(`-single-line`) && (!isSingleLineString(functionString) || closesAnInlineComment(valueNode, comments)) ? undefined : ASKED[primary]
 				let [openingMessage, closingMessage] = SIDE_MESSAGES[primary]
 
 				// Check opening ...

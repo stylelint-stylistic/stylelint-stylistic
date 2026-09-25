@@ -238,15 +238,28 @@ testRule({
 	config: [`always-single-line`],
 	customSyntax: `postcss-scss`,
 
-	reject: [
+	accept: [
 		{
-			// A form feed closes an inline comment under Sass, and PostCSS counts no line in one, so the call is still single-line
-			description: `a form feed inside an inline comment, which closes it and leaves the run in front of the parenthesis code the fix cannot shorten without moving the parenthesis into the comment`,
+			// Sass closes an inline comment on a form feed, which ends the line to it, so the call is broken over lines as it is behind a line feed
+			description: `a call a form feed inside an inline comment breaks, the run in front of the parenthesis being more than a space`,
 			code: `a { transform: translate( 1px, 2px// keep me\f ); }`,
-			fixed: `a { transform: translate( 1px, 2px// keep me\f ); }`,
-			line: 1,
-			column: 46,
-			message: messages.expectedClosingSingleLine,
+		},
+		{
+			description: `the same call broken by a bare carriage return`,
+			code: `a { transform: translate( 1px, 2px// keep me\r ); }`,
+		},
+	],
+})
+testRule({
+	ruleName,
+	config: [`never-single-line`],
+	customSyntax: `postcss-scss`,
+
+	accept: [
+		{
+			// Sass closes an inline comment on a bare carriage return, which ends the line to it, so the call is broken over lines
+			description: `a call a bare carriage return inside an inline comment breaks, the break standing in front of the parenthesis`,
+			code: `a { transform: translate(1px, 2px// keep me\r); }`,
 		},
 	],
 })
