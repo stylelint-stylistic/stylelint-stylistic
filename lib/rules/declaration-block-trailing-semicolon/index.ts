@@ -12,6 +12,7 @@ import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { lastNodeHoldsTheBlockAfter } from "../../utils/lastNodeHoldsTheBlockAfter/index.ts"
 import { nextNonCommentNode } from "../../utils/nextNonCommentNode/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
+import { lastSemicolonLeft, noExtraSemicolonsTaken } from "../../utils/noExtraSemicolonsTaken/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -36,7 +37,7 @@ export let meta = {
 /** A raw behind the node closing a block, or the `raws.left` and text of a `//` comment holding code: owner, key, file offset, which a raw of a node another rule built without a source has none of, text, and a copy of the text as long as it with all but its code blanked. */
 type HeldRaw = {
 	owner: Node,
-	key: string,
+	key: `before` | `after` | `text`,
 	start: number | undefined,
 	text: string,
 	code: string,
@@ -172,9 +173,19 @@ function endsOnSemicolon (node: ChildNode, raws: HeldRaw[], flagIsCommentText: b
 }
 
 /**
- * Returns the index of the last semicolon behind the node closing the block.
+ * Finds the last semicolon of a raw's code that `no-extra-semicolons` leaves in the same run.
+ * @param raw - The raw behind the node.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns The index in the raw, or nothing where it leaves none.
+ */
+function lastLeftIn (raw: HeldRaw, result: PostcssResult): number | undefined {
+	return lastSemicolonLeft(raw.code, raw.key === `text` ? new Set() : noExtraSemicolonsTaken(raw.owner, raw.key, result))
+}
+
+/**
+ * Returns the index of the last semicolon behind the node closing the block that `no-extra-semicolons` leaves in the same run.
  *
- * `raws.semicolon` covers only the semicolon right behind the node; further ones sit in a following comment's `raws.before` or the block's `raws.after`. The index is counted in the file, as `report` reads it, so it may reach past the node's end; a raw another rule rewrote in the same `--fix` pass shifts it.
+ * `raws.semicolon` covers only the semicolon right behind the node; further ones sit in a following comment's `raws.before` or the block's `raws.after`. One that rule takes out of `raws.before` or `raws.after` is passed over whichever side of it this one is listed, so the warning, and the disable comment read on its line, stand on a semicolon that stays either way; one in the code a `//` comment holds is not asked about. The index is counted in the file, as `report` reads it, so it may reach past the node's end; a raw another rule rewrote in the same `--fix` pass shifts it.
  * @param node - The node closing the block.
  * @param result - The Stylelint result, which {@link offsetsOf} reads the syntax from.
  * @param raws - The raws behind the node.
@@ -183,11 +194,11 @@ function endsOnSemicolon (node: ChildNode, raws: HeldRaw[], flagIsCommentText: b
  */
 function trailingSemicolonIndex (node: ChildNode, result: PostcssResult, raws: HeldRaw[], flagIsCommentText: boolean): number | undefined {
 	let offsets = offsetsOf(node, result)
-	let holder = raws.findLast((raw) => spellsSemicolon(raw))
+	let holder = raws.findLast((raw) => lastLeftIn(raw, result) !== undefined)
 	// A semicolon with no place in the file, or behind a node with none, is reported at the node's end, as a missing one is
 	let nodeEnd = nodeString(node, result).trim().length - 1
 
-	if (holder) return offsets && holder.start !== undefined ? holder.start + holder.code.lastIndexOf(`;`) - offsets.start : nodeEnd
+	if (holder) return offsets && holder.start !== undefined ? holder.start + (lastLeftIn(holder, result) as number) - offsets.start : nodeEnd
 
 	// The flag's semicolon is the first behind the node, so it is asked last; the node's span ends on it
 	if (!node.parent?.raws.semicolon || flagIsCommentText) return undefined

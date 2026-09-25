@@ -6,59 +6,18 @@ import type { Syntax } from "../../syntaxes/index.ts"
 import { trailingSemicolonAsked } from "../closedBySemicolon/index.ts"
 import { closingOffset } from "../closingOffset/index.ts"
 import { extraSemicolonsAfter, extraSemicolonsBefore, extraSemicolonsOwn } from "../extraSemicolonsAfter/index.ts"
-import { type DisabledRange, fixDisabledOnLine, fixDisabledRanges } from "../fixDisabledOnLine/index.ts"
+import { type DisabledRange, fixDisabledRanges } from "../fixDisabledOnLine/index.ts"
 import { hasBlock } from "../hasBlock/index.ts"
 import { lastNonCommentNode } from "../lastNonCommentNode/index.ts"
-import { neighborCopies, type NeighborRuleSetting } from "../neighborSettings/index.ts"
+import { neighborCopies } from "../neighborSettings/index.ts"
+import { lineInRaw, NO_EXTRA_SEMICOLONS, noExtraSemicolonsTaken, takenByNoExtra } from "../noExtraSemicolonsTaken/index.ts"
 import { runInFrontOf } from "../runInFrontOf/index.ts"
 import { isAtRule, isComment, isDeclaration } from "../typeGuards/index.ts"
-
-/** The rule taking every extra semicolon out. */
-const NO_EXTRA_SEMICOLONS: NeighborRuleSetting = {
-	name: `no-extra-semicolons`,
-	options: [true],
-}
-
-/**
- * Counts the line a character of a raw stands on back from the line the raw ends on.
- * @param raw - The raw.
- * @param index - The character's index in the raw.
- * @param endLine - The line of what closes the raw, if it has a place.
- * @returns The line, or nothing where the raw's end has no place.
- */
-function lineInRaw (raw: string, index: number, endLine: number | undefined): number | undefined {
-	return endLine === undefined ? undefined : endLine - (raw.slice(index).match(EVERY_LINE_BREAK) ?? []).length
-}
-
-/**
- * Finds the semicolons of a raw that live copies of `no-extra-semicolons` take out: those they find extra where no disable comment on their line keeps the fix off.
- * @param node - The node whose raw it is, whose root the copies read.
- * @param result - The Stylelint result, which holds the configuration.
- * @param raw - The raw.
- * @param endLine - The line of what closes the raw, if it has a place.
- * @param extra - The semicolons a copy reading through a syntax finds extra.
- * @returns The indices in the raw.
- */
-function takenByNoExtra (node: Node, result: PostcssResult, raw: string, endLine: number | undefined, extra: (syntax: Syntax) => number[]): Set<number> {
-	let taken: Set<number> = new Set()
-
-	for (let { fixDisabled, name, syntax } of neighborCopies(node, result, NO_EXTRA_SEMICOLONS)) {
-		if (fixDisabled) continue
-
-		for (let index of extra(syntax)) {
-			let line = lineInRaw(raw, index, endLine)
-
-			if (line === undefined || !fixDisabledOnLine(result, name, line)) taken.add(index)
-		}
-	}
-
-	return taken
-}
 
 /**
  * Finds the stray semicolons of a block's `raws.after`, the run in front of its closing brace, that a neighbor takes out in the same run, so that a rule reading that run reads it as it will stand whichever side of the neighbor it is listed.
  *
- * Two rules take them. `declaration-block-trailing-semicolon` takes every one where it leaves no semicolon behind the node closing the block, a declaration or a bodiless at-rule, its disable comments read on the line of the last semicolon, where it reports. `no-extra-semicolons` takes those {@link extraSemicolonsAfter} finds, each where no disable comment keeps its fix off the semicolon's line. A semicolon staying is a character of the run as much as its whitespace is.
+ * Two rules take them. `declaration-block-trailing-semicolon` takes every one where it leaves no semicolon behind the node closing the block, a declaration or a bodiless at-rule, its disable comments read on the line it reports on, that of the last semicolon behind the node `no-extra-semicolons` leaves. `no-extra-semicolons` takes those {@link extraSemicolonsAfter} finds, each where no disable comment keeps its fix off the semicolon's line. A semicolon staying is a character of the run as much as its whitespace is.
  * @param statement - The node carrying the block.
  * @param result - The Stylelint result, which holds the configuration.
  * @returns The semicolons' indices in the raw.
@@ -69,26 +28,16 @@ export function straySemicolonsTaken (statement: Container, result: PostcssResul
 
 	if (typeof after !== `string` || !after.includes(`;`)) return taken
 
-	let braceLine = statement.source?.end?.line
 	let last = lastNonCommentNode(statement)
 
-	/**
-	 * Counts the line a character of the raw stands on back from the brace, which closes the raw.
-	 * @param index - The character's index in the raw.
-	 * @returns The line, or nothing where the brace has no place.
-	 */
-	function lineOf (index: number): number | undefined {
-		return typeof after === `string` ? lineInRaw(after, index, braceLine) : undefined
-	}
-
-	// That rule reports on the last semicolon behind the node, the raw's last, and a disable comment is read on that line
-	if (last && (isDeclaration(last) || (isAtRule(last) && !hasBlock(last))) && trailingSemicolonAsked(last, result, lineOf(after.lastIndexOf(`;`))) === false) {
+	// That rule reports on the last semicolon behind the node the other leaves, and a disable comment is read on that line
+	if (last && (isDeclaration(last) || (isAtRule(last) && !hasBlock(last))) && trailingSemicolonAsked(last, result) === false) {
 		for (let match of after.matchAll(EVERY_SEMICOLON)) taken.add(match.index)
 
 		return taken
 	}
 
-	return takenByNoExtra(statement, result, after, braceLine, (syntax) => extraSemicolonsAfter(syntax, statement, result))
+	return noExtraSemicolonsTaken(statement, `after`, result)
 }
 
 /**
@@ -146,7 +95,7 @@ export function straySemicolonsTakenBefore (node: Node, result: PostcssResult): 
 
 	if (parent && last && isComment(node) && parent.index(node) > parent.index(last) && (isDeclaration(last) || (isAtRule(last) && !hasBlock(last))) && trailingSemicolonAsked(last, result) === false) return new Set([...before.matchAll(EVERY_SEMICOLON)].map((match) => match.index))
 
-	return takenByNoExtra(node, result, before, node.source?.start?.line, (syntax) => extraSemicolonsBefore(syntax, node, result))
+	return noExtraSemicolonsTaken(node, `before`, result)
 }
 
 /**

@@ -49,6 +49,15 @@ describe(`the whitespace in front of a stray semicolon the rule about extra semi
 		expect(await fix(`@import "x";  \n  ;\n`, false)).toEqual({ code: `@import "x";\n\n`, warnings: 0 })
 	})
 
+	// The block's closing brace stands a line above the end PostCSS gives a rule with a free semicolon behind its brace, so the line of a semicolon in the block's tail is counted from the brace
+	it(`is kept in front of a semicolon in a block's tail a disable comment keeps, where a free semicolon stands behind the brace on a later line`, async () => {
+		let code = `x {\n\ta {\n\t\tb: c;\n\t/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\n\t\t; \n\t}\n\n\t;\n}`
+		let output = `x {\n\ta {\n\t\tb: c;\n\t/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\n\t\t;\n\t}\n\n\n}`
+
+		expect(await fix(code, true)).toEqual({ code: output, warnings: 0 })
+		expect(await fix(code, false)).toEqual({ code: output, warnings: 0 })
+	})
+
 	it(`is taken out in one pass in both orders in front of a comment behind the last declaration, whose semicolons the rule about a trailing semicolon takes`, async () => {
 		let neighbor: [string, unknown] = [`@stylistic/declaration-block-trailing-semicolon`, `never`]
 

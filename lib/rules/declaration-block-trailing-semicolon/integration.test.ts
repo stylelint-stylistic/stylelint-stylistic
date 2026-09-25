@@ -1,3 +1,7 @@
+import stylelint from "stylelint"
+import { describe, expect, it } from "vitest"
+
+import plugins from "../../index.ts"
 import { ruleName as atRuleSpaceBeforeRuleName } from "../at-rule-semicolon-space-before/index.ts"
 import { messages as newlineBeforeMessages, ruleName as newlineBeforeRuleName } from "../declaration-block-semicolon-newline-before/index.ts"
 import { messages as spaceBeforeMessages, ruleName as spaceBeforeRuleName } from "../declaration-block-semicolon-space-before/index.ts"
@@ -422,4 +426,50 @@ testRuleListedFirst({
 			message: messages.expected,
 		},
 	],
+})
+
+/**
+ * Fixes one snippet under this rule's `never` and `no-extra-semicolons`, in the order given, and reads the output back.
+ * @param code - The snippet.
+ * @param thisRuleFirst - Whether this rule is listed first.
+ * @returns The file the pass left, the lines this rule reported on in the pass, and the count of the warnings the pair has about the file.
+ */
+async function fixBesideNoExtra (code: string, thisRuleFirst: boolean): Promise<{ code: string, reported: number[], left: number }> {
+	let pair: [string, unknown][] = [[ruleName, `never`], [`@stylistic/no-extra-semicolons`, true]]
+	let config = { plugins, rules: Object.fromEntries(thisRuleFirst ? pair : pair.toReversed()) }
+	let fixed = await stylelint.lint({ code, config, fix: true })
+	let read = await stylelint.lint({ code: fixed.code ?? code, config })
+
+	return { code: fixed.code ?? code, reported: (fixed.results[0]?.warnings ?? []).filter((warning) => warning.rule === ruleName).map((warning) => warning.line), left: read.results[0]?.warnings.length ?? 0 }
+}
+
+describe(`the semicolons behind the node closing a block beside \`no-extra-semicolons\``, () => {
+	// A free semicolon that rule takes out is passed over, so the warning and the disable comment read on its line stand on a semicolon that stays whichever side of that rule this one is listed
+	it.each([true, false])(`are taken where a disable comment covers only a free one the neighbor takes, this rule listed first: %s`, async (thisRuleFirst) => {
+		let code = `a {\n\tb: c;\n\t/* stylelint-disable-next-line ${ruleName} */\n;\n}`
+
+		expect(await fixBesideNoExtra(code, thisRuleFirst)).toEqual({ code: `a {\n\tb: c\n\t/* stylelint-disable-next-line ${ruleName} */\n\n}`, reported: [], left: 0 })
+	})
+
+	it.each([true, false])(`are kept where a disable comment covers the declaration's own, this rule listed first: %s`, async (thisRuleFirst) => {
+		let code = `a {\n\tb: c; /* stylelint-disable-line ${ruleName} */\n\t;\n}`
+
+		expect(await fixBesideNoExtra(code, thisRuleFirst)).toEqual({ code: `a {\n\tb: c; /* stylelint-disable-line ${ruleName} */\n\t\n}`, reported: [], left: 0 })
+	})
+
+	it(`are all taken where that rule keeps the free one`, async () => {
+		let code = `a {\n\tb: c;\n\t; /* stylelint-disable-line @stylistic/no-extra-semicolons */\n}`
+
+		expect(await fixBesideNoExtra(code, true)).toEqual({ code: `a {\n\tb: c\n\t /* stylelint-disable-line @stylistic/no-extra-semicolons */\n}`, reported: [], left: 0 })
+	})
+})
+
+describe(`the semicolons behind the node closing a block with no \`no-extra-semicolons\` beside`, () => {
+	it(`are reported on the last one, whose line a disable comment covers`, async () => {
+		let code = `a {\n\tb: c;\n\t; /* stylelint-disable-line ${ruleName} */\n}`
+		let config = { plugins, rules: { [ruleName]: `never` } }
+		let fixed = await stylelint.lint({ code, config, fix: true })
+
+		expect(fixed.code).toBe(code)
+	})
 })
