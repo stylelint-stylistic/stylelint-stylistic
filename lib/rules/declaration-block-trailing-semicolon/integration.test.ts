@@ -504,3 +504,17 @@ describe(`the semicolon behind a custom property or a bodiless at-rule a comment
 		expect(await fixUnder(code, namespace)).toEqual({ code: output, left })
 	})
 })
+
+describe(`the warning over the flag's semicolon in a nested block of a styled template`, () => {
+	// `postcss-styled-syntax` ends a declaration on its value rather than on the semicolon behind it, so the semicolon is found in the text behind the node
+	it.each([
+		[`const a = styled.div\`\n\ta {\n\t\td: e;\n\t}\n\``, `3:7`],
+		[`const a = styled.div\`\n\ta {\n\t\td: e ;\n\t}\n\``, `3:8`],
+		[`const a = styled.div\`\n\t@media print {\n\t\td: e;\n\t}\n\``, `3:7`],
+	])(`stands on the semicolon in %j`, async (code, place) => {
+		let config = { plugins, rules: { "@stylistic/styled/declaration-block-trailing-semicolon": [`never`, { disableFix: true }] } }
+		let result = await stylelint.lint({ code, config, customSyntax: `postcss-styled-syntax` })
+
+		expect((result.results[0]?.warnings ?? []).map(({ line, column }) => `${line}:${column}`)).toEqual([place])
+	})
+})

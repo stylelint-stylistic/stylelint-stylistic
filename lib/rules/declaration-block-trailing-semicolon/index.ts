@@ -2,7 +2,7 @@ import { type AtRule, type ChildNode, type Container, type Declaration, Input, t
 import tokenize from "postcss/lib/tokenize"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { EVERY_SEMICOLON, INLINE_COMMENT_BREAK, TRAILING_CSS_WHITESPACE, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
+import { EVERY_SEMICOLON, INLINE_COMMENT_BREAK, LEADING_CSS_WHITESPACE, TRAILING_CSS_WHITESPACE, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { betweenTailAfterColon } from "../../utils/betweenTailAfterColon/index.ts"
@@ -201,10 +201,21 @@ function trailingSemicolonIndex (node: ChildNode, result: PostcssResult, raws: H
 
 	if (holder) return offsets && holder.start !== undefined ? holder.start + (lastLeftIn(holder, result) as number) - offsets.start : nodeEnd
 
-	// The flag's semicolon is the first behind the node, so it is asked last; the node's span ends on it
+	// The flag's semicolon is the first behind the node, so it is asked last; PostCSS ends a declaration's span on it, `postcss-styled-syntax` on the value in front of it, so it is found in the text from the span's last character on, past the whitespace in front of it
 	if (!node.parent?.raws.semicolon || flagIsCommentText) return undefined
 
-	return offsets ? offsets.end - 1 - offsets.start : nodeEnd
+	if (!offsets) return nodeEnd
+
+	let root = node.root()
+	let text = root.source?.input.css ?? ``
+	let rootStart = root.source?.start?.offset ?? 0
+	let last = offsets.end - 1 - rootStart
+
+	if (text[last] === `;`) return offsets.end - 1 - offsets.start
+
+	let semicolon = last + 1 + (text.slice(last + 1).match(LEADING_CSS_WHITESPACE)?.[0].length ?? 0)
+
+	return text[semicolon] === `;` ? semicolon + rootStart - offsets.start : offsets.end - 1 - offsets.start
 }
 
 /**
