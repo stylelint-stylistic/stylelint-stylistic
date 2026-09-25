@@ -1394,6 +1394,32 @@ testRule({
 			message: messages.rejectedBefore(`=`),
 		},
 		{
+			// The parser hands an attribute opening a selector of a list the whitespace in front of it, and its print opens on that whitespace
+			description: `a space in front of the operator of an attribute standing behind a space inside the parentheses of a negation`,
+			code: `a:not( [a =b] ) {}`,
+			fixed: `a:not( [a=b] ) {}`,
+			line: 1,
+			column: 11,
+			message: messages.rejectedBefore(`=`),
+		},
+		{
+			description: `the same attributes in a list, one behind a line break and one behind a comma`,
+			code: `a:is(\n\t[a =b], [c =d]\n) {}`,
+			fixed: `a:is(\n\t[a=b], [c=d]\n) {}`,
+			warnings: [
+				{
+					line: 2,
+					column: 5,
+					message: messages.rejectedBefore(`=`),
+				},
+				{
+					line: 2,
+					column: 13,
+					message: messages.rejectedBefore(`=`),
+				},
+			],
+		},
+		{
 			description: `a space in front of the equals operator`,
 			code: `[target =_blank] { }`,
 			fixed: `[target=_blank] { }`,

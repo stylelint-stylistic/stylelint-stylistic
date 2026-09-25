@@ -368,6 +368,15 @@ testRule({
 			message: messages.expectedAfter(`=`),
 		},
 		{
+			// The parser hands an attribute opening a selector of a list the whitespace in front of it, and its print opens on that whitespace
+			description: `no space behind the operator of an attribute standing behind a space inside the parentheses of a negation`,
+			code: `a:not( [a=b] ) {}`,
+			fixed: `a:not( [a= b] ) {}`,
+			line: 1,
+			column: 10,
+			message: messages.expectedAfter(`=`),
+		},
+		{
 			description: `no space after the equals operator`,
 			code: `[target=_blank] { }`,
 			fixed: `[target= _blank] { }`,

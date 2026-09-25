@@ -11,6 +11,8 @@
  *
  * A second break behind the hexadecimal escape was added because the character closing such an escape stands in the run `selector-descendant-combinator-no-non-space` writes: the one break the corpus already held leaves nothing behind the escape, so no fixture carried a combinator the write could take away.
  *
+ * An attribute inside the parentheses of a negation behind a space was added because `postcss-selector-parser` hands the attribute that space, and its print opens on it in front of the index the parser gives the attribute: the operator's rules measured the print from that index and passed every such attribute over.
+ *
  * `no-multiple-whitespaces` is here because it reads every run of a value rather than one beside a delimiter, and the texts here put an escape in front of a run in a value already.
  *
  * The five address shapes were added when the escapes standing in the code of a bare address came to be recorded: the walk steps over a `url()`'s parentheses in one, so no rule reading a copy with the escapes masked saw one inside them. The comma shapes put a delimiter behind the escape, where a shorter run is what an `always` option writes into, and no rule reads a comma inside a bare address at all; the selector shapes carry the same addresses through `selectorSearchCopy`; and the quoted shape is the control, an escape inside a string being that string's under either side.
@@ -66,6 +68,8 @@ const corpus: Sweep[`corpus`] = place(
 		combinatorAfter: (text) => `a>${text}b { c: d }`,
 		attribute: (text) => `[a${text}=b] { c: d }`,
 		attributeAfter: (text) => `[a=${text}b] { c: d }`,
+		negatedAttribute: (text) => `a:not( [a${text}=b] ) { c: d }`,
+		negatedAttributeAfter: (text) => `a:not( [a=${text}b] ) { c: d }`,
 		bracket: (text) => `[a=b${text}] { c: d }`,
 		bracketFlag: (text) => `[a=b ${text}] { c: d }`,
 		parenthesis: (text) => `a:not(b${text}) { c: d }`,
