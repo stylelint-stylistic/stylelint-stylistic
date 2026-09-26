@@ -134,11 +134,19 @@ describe(`a line of nothing but spaces and tabs the rule about the whitespace en
 		expect(await fixBesideNoEol(code, maximum, true, false)).toEqual({ code: output, left: 0 })
 	})
 
-	it(`is not where a disable comment keeps that rule off some line of the file`, async () => {
+	it(`is not where a disable comment keeps that rule off such a line`, async () => {
 		let code = `a {}\n/* stylelint-disable @stylistic/no-eol-whitespace */\n  \n  \n/* stylelint-enable @stylistic/no-eol-whitespace */\nb {}`
 
 		expect(await fixBesideNoEol(code, 0, true, true)).toEqual({ code, left: 0 })
 		expect(await fixBesideNoEol(code, 0, true, false)).toEqual({ code, left: 0 })
+	})
+
+	// A comment disabling every rule on its own line keeps that rule off no line of spaces
+	it(`is where a disable comment keeps that rule off another line of the file`, async () => {
+		let code = `a {}\n\n  \n\n/* stylelint-disable-line */\n\n\nb {}`
+
+		expect(await fixBesideNoEol(code, 1, true, true)).toEqual({ code: `a {}\n\n/* stylelint-disable-line */\n\nb {}`, left: 0 })
+		expect(await fixBesideNoEol(code, 1, true, false)).toEqual({ code: `a {}\n\n/* stylelint-disable-line */\n\nb {}`, left: 0 })
 	})
 
 	it(`leaves the runs inside a comment the option passes over as they are`, async () => {
