@@ -1,4 +1,4 @@
-import type { AtRule, Comment, Container, Declaration, Node, Rule } from "postcss"
+import type { AtRule, Comment, Container, Declaration, Node, Root, Rule } from "postcss"
 import stylelint, { type PostcssResult } from "stylelint"
 
 import { OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE, TRAILING_LINE_BREAK, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
@@ -8,6 +8,7 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { fixDisabledOnLine, fixDisabledRanges } from "../../utils/fixDisabledOnLine/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
+import { afterSpan, beforeSpan, braceOffset, headSpan, ownSemicolonSpan, type Span, tailSpan } from "../../utils/rawSpans/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { semicolonsTakenAlready } from "../../utils/semicolonsTakenAlready/index.ts"
@@ -17,8 +18,7 @@ import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuar
 import { backslashesBehindHead, backslashesBehindStatement, isEscaped } from "./escapes.ts"
 import { trimTheLastNodesEnd } from "./lastNodesEnd.ts"
 import { byRank, lineInFile, type LineOf, linesBackFrom, linesFound, linesOnFrom, rootsLastLine } from "./lines.ts"
-import { eachEolWhitespace, type EolRun, type EolScope, fixString, fixText, keptAt, lastLineBreakIndex, LINE_BREAK_CHARACTERS, runsOf, type TextOptions, WHITESPACES_TO_REJECT } from "./runs.ts"
-import { afterSpan, beforeSpan, braceOffset, headSpan, ownSemicolonSpan, type Span, tailSpan } from "./spans.ts"
+import { eachEolWhitespace, type EolRun, type EolScope, fixString, fixText, keptAt, lastLineBreakIndex, LINE_BREAK_CHARACTERS, runsOf, spelledRun, type TextOptions, WHITESPACES_TO_REJECT } from "./runs.ts"
 import { maskTaken, TAKEN_MARK, trimKeepingTaken } from "./taken.ts"
 
 let { utils: { validateOptions } } = stylelint
@@ -42,6 +42,16 @@ export type SecondaryOptions = {
 
 	/** `empty-lines` allows whitespace on a line holding nothing else. */
 	ignore?: `empty-lines` | `empty-lines`[],
+}
+
+/**
+ * Asks whether a run opens its line, which then holds nothing but whitespace and the stray semicolons the neighbors take out.
+ * @param text - The root's text, those semicolons marked.
+ * @param start - Where the run opens.
+ * @returns True where it does.
+ */
+function opensItsLine (text: string, start: number): boolean {
+	return WHITESPACE_OR_NOTHING.test(text.slice(lastLineBreakIndex(text, start - 1) + 1, start).replaceAll(TAKEN_MARK, ``))
 }
 
 /**
@@ -250,6 +260,18 @@ function fixBlockEnd (scope: EolScope, node: Node): void {
 }
 
 /**
+ * Finds the span of the root's tail the fix reads runs in: up to the last break, since the run of the last line, which no break ends, the check reads at the text's end and the fix trims apart.
+ * @param root - The root.
+ * @param result - The Stylelint result, which holds the file's syntax.
+ * @returns The span.
+ */
+function tailRuns (root: Root, result: PostcssResult): Span {
+	let [from, to] = tailSpan(root, result)
+
+	return [from, Math.max(from, lastLineBreakIndex((root.source?.input.css ?? ``).slice(0, to)) + 1)]
+}
+
+/**
  * Trims the ends of the lines of the root's tail, and the end of its last line, which a disable comment may keep.
  * @param scope - The run.
  * @param isRootFirst - Whether the tail opens the root.
@@ -268,7 +290,7 @@ function fixRootsEnd (scope: EolScope, isRootFirst: boolean): void {
 			options: { isRootFirst, lead, taken: straySemicolonsTaken(root, scope.result), lastBreakWritten: scope.sourceEndsWithoutBreak },
 			fallback: linesBackFrom(lastLine, root.raws.after ?? ``),
 		},
-	], tailSpan(root, scope.result))
+	], tailRuns(root, scope.result))
 
 	if (scope.kept?.(lastLine)) return
 
@@ -378,7 +400,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		}, { isRootFirst: true, endsALine: true })
 
 		// The fix reads its runs against the ones the check finds, where a disable comment keeps some line
-		if (kept) scope.found = { offsets: found.map(({ index }) => index), lines: found.map(({ index }) => lineInFile(root, index)) }
+		if (kept) {
+			let lines = found.map(({ index }) => lineInFile(root, index))
+
+			let keptLines = lines.map((line) => kept(line))
+
+			scope.found = { offsets: found.map(({ index }) => index), lines, spelled: found.map(({ start, index }) => spelledRun(rootString, start, index)), kept: keptLines, stays: found.map(({ start }, rank) => !opensItsLine(rootString, start) || keptLines[rank] === true) }
+		}
 		let isFixed = false
 
 		/**

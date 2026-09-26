@@ -2,7 +2,7 @@ import { type ChildNode, type Comment, type Container, type Document, type Root,
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, EVERY_RUN_OF_LINE_BREAKS_PAST_BLANK_LINES, EVERY_SEMICOLON, LEADING_BYTE_ORDER_MARK, LEADING_LINE_BREAK_RUN, LEADING_LINE_BREAK_RUN_PAST_BLANK_LINES, OPENS_WITH_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
+import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, EVERY_RUN_OF_LINE_BREAKS_PAST_BLANK_LINES, EVERY_SEMICOLON, LEADING_LINE_BREAK_RUN, LEADING_LINE_BREAK_RUN_PAST_BLANK_LINES, OPENS_WITH_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
@@ -22,9 +22,10 @@ import { takesTheOpeningLines } from "../../utils/takesTheOpeningLines/index.ts"
 import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
 import { isNumber } from "../../utils/validateTypes/index.ts"
 
-import { blankLineOffsets, blankLinesGo } from "./blankLines.ts"
-import { anchorsOf, type NodePlaces, placeInText } from "./placeInText.ts"
-import { type PrintEscape, printEscapes, takenInPrint, textIndex } from "./printEscapes.ts"
+import { blankLineOffsets, lineOf } from "./blankLines.ts"
+import { keepingLines, readBlankLines } from "./keptBlankLines.ts"
+import { type NodePlaces, placeOfWarnings } from "./placeInText.ts"
+import { printEscapes, takenInPrint } from "./printEscapes.ts"
 import { printWithTaken } from "./printWithTaken.ts"
 
 let { utils: { validateOptions } } = stylelint
@@ -84,8 +85,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		if (!validOptions) return
 
 		let ignoreComments = optionsMatches(secondaryOptions, `ignore`, `comments`)
-		// A line of nothing but spaces and tabs is empty once a live `no-eol-whitespace` has run, and counted and written as one
-		let blankLinesTaken = blankLinesGo(root, result)
+		let { blankLines, masks, blankLinesTaken } = readBlankLines(root, result)
 		let runs = blankLinesTaken ? EVERY_RUN_OF_LINE_BREAKS_PAST_BLANK_LINES : EVERY_RUN_OF_LINE_BREAKS
 
 		/**
@@ -110,26 +110,25 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			isFixed = true
 
-			let { first } = root
+			keepingLines(root, masks, () => {
+				root.walk((node) => {
+					if (isComment(node) && !ignoreComments) writeComment(syntax, node, getChars, runs)
 
-			root.walk((node) => {
-				if (isComment(node) && !ignoreComments) writeComment(syntax, node, getChars, runs)
+					if (!writeAcrossTheFreeSemicolon(node, result, getChars) && node.raws.before) node.raws.before = node === root.first ? pastTheOpeningLines(node.raws.before, openingLinesAreTaken, getChars, straySemicolonsTakenBefore(node, result)) : writtenAsLeft(getChars, node.raws.before, straySemicolonsTakenBefore(node, result))
 
-				if (!writeAcrossTheFreeSemicolon(node, result, getChars) && node.raws.before) node.raws.before = node === first ? pastTheOpeningLines(node.raws.before, openingLinesAreTaken, getChars, straySemicolonsTakenBefore(node, result)) : writtenAsLeft(getChars, node.raws.before, straySemicolonsTakenBefore(node, result))
+					writeStatementText(syntax, node, result, ignoreComments, getChars, runs)
 
-				writeStatementText(syntax, node, result, ignoreComments, getChars, runs)
+					// The run in front of the closing brace, behind a free semicolon behind the last rule's brace too, as the neighbors taking semicolons leave it
+					if (carriesABlock(node)) {
+						let tail = getBlockTail(syntax, node)
 
-				// The run in front of the closing brace, behind a free semicolon behind the last rule's brace too, as the neighbors taking semicolons leave it
-				if (carriesABlock(node)) {
-					let tail = getBlockTail(syntax, node)
+						if (typeof tail === `string`) setBlockTail(syntax, node, writtenAsLeft(getChars, tail, blockTailTaken(node, result)))
+					}
 
-					if (typeof tail === `string`) setBlockTail(syntax, node, writtenAsLeft(getChars, tail, blockTailTaken(node, result)))
-				}
-
-				// The run in front of a free semicolon behind a closing brace stands in the rule's own raw, together with the semicolon; behind a node it runs on into that node's raw, and behind the last node of a block into the block's tail, both written with it above. Behind the root's last node it runs on into the root's tail, written with it apart below where the neighbors take the semicolon
+					// The run in front of a free semicolon behind a closing brace stands in the rule's own raw, together with the semicolon; behind a node it runs on into that node's raw, and behind the last node of a block into the block's tail, both written with it above. Behind the root's last node it runs on into the root's tail, written with it apart below where the neighbors take the semicolon
+				})
+				writeTheRootsEnds(root, result, primary, openingLinesAreTaken, getChars, writeHead, runs)
 			})
-
-			writeTheRootsEnds(root, result, primary, openingLinesAreTaken, getChars, writeHead, runs)
 		}
 
 		let emptyLines = 0
@@ -142,7 +141,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let taken = counted.taken ?? takenInPrint(straySemicolonOffsetsTaken(root, result), escapes)
 		let placed = placeOfWarnings(root, counted, escapes)
 
-		if (blankLinesTaken) for (let offset of blankLineOffsets(rootString, taken)) taken.add(offset)
+		if (blankLinesTaken) for (let offset of blankLineOffsets(rootString, taken)) if (!blankLines.kept.has(lineOf(root, placed(offset)))) taken.add(offset)
 
 		// A file ending on a break counts one empty line more, and spaces and tabs behind the last break are `no-eol-whitespace`'s line, so the end is measured in front of them, and in front of the semicolons the neighbors take there
 		let endOfFile = [...rootString].map((character, index) => (taken.has(index) ? ` ` : character)).join(``).replace(TRAILING_SPACES_AND_TABS, ``).length
@@ -508,24 +507,6 @@ function countedText (root: Root, result: PostcssResult): { text: string, taken?
 	let printed = printWithTaken(root, result, print, false)
 
 	return { text: printed.text, taken: withRootTail(root, result, printed.text, printed.taken), places: printed }
-}
-
-/**
- * Carries the offsets of the print the empty lines are counted in into the file, where a warning is placed and where Stylelint reads its line and whether a disable comment covers it: past the escapes where the print parts from the file only there, else by the nodes both hold where a rule listed earlier wrote the print. The document an embedded root is placed in, which the offsets count in, holds a byte-order mark the root's text leaves out and its print keeps.
- * @param root - The root.
- * @param counted - The print, and where each node opens and ends in it.
- * @param counted.text - The print.
- * @param counted.places - Where each node opens and ends in it, if told.
- * @param escapes - The print's escapes, or nothing where it parts from the file otherwise.
- * @returns The carrier.
- */
-function placeOfWarnings (root: Root, counted: { text: string, places?: NodePlaces }, escapes: PrintEscape[] | undefined): (index: number) => number {
-	let parsed = root.source?.input.css ?? counted.text
-	let mark = LEADING_BYTE_ORDER_MARK.test(counted.text) && !LEADING_BYTE_ORDER_MARK.test(parsed) ? counted.text.charAt(0) : ``
-	let text = `${mark}${parsed}`
-	let anchors = escapes !== undefined || !counted.places || counted.text === text ? undefined : anchorsOf(counted.places, (root.source?.start?.offset ?? 0) - mark.length, counted.text, text)
-
-	return (index) => (anchors ? placeInText(anchors, counted.text, text, index) : textIndex(index, escapes))
 }
 
 /**

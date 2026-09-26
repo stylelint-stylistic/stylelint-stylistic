@@ -14,22 +14,23 @@ const NO_EOL_WHITESPACE: NeighborRuleSetting = {
 	options: [true],
 }
 
+/** How `no-eol-whitespace` leaves the lines of nothing but spaces and tabs in the same run: whether a copy whose fix is on and which does not pass them over with `ignore: empty-lines` empties them, and the lines of the file a disable comment keeps from every such copy, which keep their spaces. */
+export type BlankLines = { go: boolean, kept: Set<number> }
+
 /**
- * Asks whether `no-eol-whitespace` empties the lines of nothing but spaces and tabs in the same run: a copy whose fix is on, which does not pass such lines over with `ignore: empty-lines`, and which no disable comment keeps off such a line of the file, since a run is written with no line to ask. Such a line is then empty once the run is over, and is counted and written as one whichever side of that rule this one is listed. The lines are read as that rule reads them, on the root's text without the stray semicolons the neighbors take out.
+ * Reads how `no-eol-whitespace` leaves the lines of nothing but spaces and tabs, as that rule reads them, on the root's text without the stray semicolons the neighbors take out. A line it empties is empty once the run is over, and is counted and written as one whichever side of that rule this one is listed; a line it keeps holds its spaces on either side.
  * @param root - The stylesheet.
  * @param result - The Stylelint result, which holds the configuration.
- * @returns True where it does.
+ * @returns How it leaves them.
  */
-export function blankLinesGo (root: Root, result: PostcssResult): boolean {
+export function blankLinesRead (root: Root, result: PostcssResult): BlankLines {
 	let copies = neighborCopies(root, result, NO_EOL_WHITESPACE).filter(({ fixDisabled, secondary }) => !fixDisabled && !optionsMatches(secondary, `ignore`, `empty-lines`))
 
-	if (copies.length === 0) return false
+	if (copies.length === 0) return { go: false, kept: new Set() }
 
-	if (copies.some(({ name }) => fixDisabledRanges(result, name).length === 0)) return true
+	if (copies.some(({ name }) => fixDisabledRanges(result, name).length === 0)) return { go: true, kept: new Set() }
 
-	let lines = blankLines(root, result)
-
-	return copies.some(({ name }) => !lines.some((line) => fixDisabledOnLine(result, name, line)))
+	return { go: true, kept: new Set(blankLines(root, result).filter((line) => copies.every(({ name }) => fixDisabledOnLine(result, name, line)))) }
 }
 
 /**
@@ -39,7 +40,7 @@ export function blankLinesGo (root: Root, result: PostcssResult): boolean {
  * @returns The line, counted from one in the file.
  * @throws {Error} Where the offset stands past the text.
  */
-function lineOf (root: Root, offset: number): number {
+export function lineOf (root: Root, offset: number): number {
 	let line = root.source?.input.fromOffset(offset)?.line
 
 	if (line === undefined) throw new Error(`A space of the root's text must stand on a line of its input`)

@@ -37,6 +37,12 @@ export const EVERY_ASCII_UPPER_CASE_RUN = /[A-Z]+/gu
 /** Every block comment delimiter. */
 export const EVERY_COMMENT_DELIMITER = /(\*\/|\/\*)/gu
 
+/** Every character `max-empty-lines` writes a space or a tab of a kept line of spaces as while it collapses runs of empty lines: U+E000 and U+E001, from Unicode's private use area. */
+export const EVERY_KEPT_LINE_MASK = /[\uE000\uE001]/gu
+
+/** Every space and every tab. */
+export const EVERY_SPACE_OR_TAB = /[ \t]/gu
+
 /** The properties spelling grid rows as strings, any case. */
 export const GRID_AREAS_PROPERTY = /^(?:grid-template-areas|grid-template|grid)$/iu
 
@@ -60,6 +66,9 @@ export const EVERY_JS_LINE_TERMINATOR = /\r\n|[\n\r\u2028\u2029]/gu
 
 /** Every quotation mark, either kind. */
 export const EVERY_QUOTATION_MARK = /["']/gu
+
+/** A character {@link EVERY_KEPT_LINE_MASK} matches. */
+export const KEPT_LINE_MASK = /[\uE000\uE001]/u
 
 /** A byte order mark opening a text, which PostCSS prints back in front of a root whose input carried one. */
 export const LEADING_BYTE_ORDER_MARK = /^\uFEFF/u

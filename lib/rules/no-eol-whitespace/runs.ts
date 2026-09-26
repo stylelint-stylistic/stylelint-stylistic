@@ -146,12 +146,13 @@ export function runsOf (scope: EolScope, value: string | undefined, options?: Te
  * @param index - The run's place.
  * @param rank - How many runs of the text stand in front of it.
  * @param runs - How many the text holds.
+ * @param spelled - What the run spells.
  * @returns True where it does.
  */
-export function keptAt (scope: EolScope, lineOf: LineOf | undefined, index: number, rank = 0, runs = 1): boolean {
+export function keptAt (scope: EolScope, lineOf: LineOf | undefined, index: number, rank = 0, runs = 1, spelled = ``): boolean {
 	if (!scope.kept || !lineOf) return false
 
-	let line = lineOf(index, rank, runs)
+	let line = lineOf(index, rank, runs, spelled)
 
 	return line !== undefined && scope.kept(line)
 }
@@ -213,6 +214,17 @@ export function eachEolWhitespace (scope: EolScope, string: string, callback: (r
 }
 
 /**
+ * Reads what a run spells, the stray semicolons a neighbor takes out left out.
+ * @param read - The text, those semicolons marked.
+ * @param start - Where the run opens.
+ * @param index - Its last space or tab.
+ * @returns The spelling.
+ */
+export function spelledRun (read: string, start: number, index: number): string {
+	return read.slice(start, index + 1).replaceAll(TAKEN_MARK, ``)
+}
+
+/**
  * Trims the end of every line of a text.
  * @param scope - The run.
  * @param value - The text.
@@ -231,7 +243,7 @@ export function fixText (scope: EolScope, value: string | undefined, fixFn: (tex
 
 	for (let [rank, { index, start }] of runs.entries()) {
 		// A line a disable comment keeps the fix off keeps its end
-		if (keptAt(scope, options?.lineOf, index, rank, runs.length)) continue
+		if (keptAt(scope, options?.lineOf, index, rank, runs.length, spelledRun(read, start, index))) continue
 
 		let newlineIndex = index + 1
 		fixed += value.slice(lastIndex, start) + trimKeepingTaken(value.slice(start, newlineIndex), read.slice(start, newlineIndex))

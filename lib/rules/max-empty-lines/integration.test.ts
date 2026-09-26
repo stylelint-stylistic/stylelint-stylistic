@@ -141,6 +141,15 @@ describe(`a line of nothing but spaces and tabs the rule about the whitespace en
 		expect(await fixBesideNoEol(code, 0, true, false)).toEqual({ code, left: 0 })
 	})
 
+	// A line of spaces a disable comment keeps from that rule holds its spaces and stands, and the others go, whichever side of that rule this one is listed
+	it.each([
+		[`a {}\n/* stylelint-disable-next-line */\n  \n\n\n  \nb {}\n`, `a {}\n/* stylelint-disable-next-line */\n  \n\nb {}\n`],
+		[`a {\n  b: c;\n/* stylelint-disable-next-line */\n  \n\n\n  \n}\n`, `a {\n  b: c;\n/* stylelint-disable-next-line */\n  \n\n}\n`],
+	])(`is counted empty in %j but for the line a disable comment keeps`, async (code, output) => {
+		expect(await fixBesideNoEol(code, 1, true, true)).toEqual({ code: output, left: 0 })
+		expect(await fixBesideNoEol(code, 1, true, false)).toEqual({ code: output, left: 0 })
+	})
+
 	// A comment disabling every rule on its own line keeps that rule off no line of spaces
 	it(`is where a disable comment keeps that rule off another line of the file`, async () => {
 		let code = `a {}\n\n  \n\n/* stylelint-disable-line */\n\n\nb {}`
@@ -190,6 +199,49 @@ describe(`a warning about empty lines the rules listed earlier wrote lines in fr
 			let fixed = await stylelint.lint({ code, config, fix: true })
 
 			expect(fixed.code).toBe(output)
+		}
+	})
+})
+
+/**
+ * Fixes a snippet under this rule and the rules about stray semicolons and the whitespace ending a line, in the order given.
+ * @param code - The snippet.
+ * @param order - The rules in the order listed.
+ * @returns The file the pass left.
+ */
+async function fixInOrder (code: string, order: string[]): Promise<string | undefined> {
+	let config = { plugins, rules: Object.fromEntries(order.map((name) => [name, name === ruleName ? 1 : true])) }
+
+	return (await stylelint.lint({ code, config, fix: true })).code
+}
+
+describe(`a line of spaces a disable comment keeps from the rule about the whitespace ending a line`, () => {
+	let keep = `/* stylelint-disable-next-line @stylistic/no-eol-whitespace */`
+	let orders = [
+		[ruleName, `@stylistic/no-extra-semicolons`, `@stylistic/no-eol-whitespace`],
+		[`@stylistic/no-extra-semicolons`, ruleName, `@stylistic/no-eol-whitespace`],
+		[`@stylistic/no-eol-whitespace`, `@stylistic/no-extra-semicolons`, ruleName],
+	]
+
+	// Its spaces and tabs stand as spelled, whichever order the rules are listed in, while a neighbor takes lines of spaces and semicolons out around it
+	it.each([
+		[`a {}\n${keep}\n\t\t\n\n\n  \nb {}\n`, `a {}\n${keep}\n\t\t\n\nb {}\n`],
+		[`\n;\na {\n${keep}\n    \n}\n  ;\nb {}\n`, `\na {\n${keep}\n    \n}\n\nb {}\n`],
+		[`${keep}\na {  \n  \n \t \n;\n\t  \n${keep}\n  \n}\n`, `${keep}\na {  \n\n${keep}\n  \n}\n`],
+	])(`stands in %j`, async (code, output) => {
+		for (let order of orders) {
+			// eslint-disable-next-line no-await-in-loop -- the orders are read one after another
+			expect(await fixInOrder(code, order)).toBe(output)
+		}
+	})
+
+	// The fix writes a kept space as a character of Unicode's private use area while it collapses runs, and leaves a file spelling one to the reading of old
+	it(`leaves the characters of Unicode's private use area a file spells as they are`, async () => {
+		let code = `a {\n\tb/**/: c;\n${keep}\n  \n\n  \n}\n`
+
+		for (let order of orders) {
+			// eslint-disable-next-line no-await-in-loop -- the orders are read one after another
+			expect(await fixInOrder(code, order)).toContain(`/**/`)
 		}
 	})
 })

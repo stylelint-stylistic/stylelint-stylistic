@@ -1,6 +1,8 @@
-import type { Node } from "postcss"
+import type { Node, Root } from "postcss"
 
-import { EVERY_LINE_BREAK } from "../../regexps.ts"
+import { EVERY_LINE_BREAK, LEADING_BYTE_ORDER_MARK } from "../../regexps.ts"
+
+import { type PrintEscape, textIndex } from "./printEscapes.ts"
 
 /** A place both the print and the text hold: where a node opens or ends in each, or where both open or end. */
 type Anchor = { print: number, text: number }
@@ -121,4 +123,22 @@ export function placeInText (anchors: Anchor[], print: string, text: string, ind
 	if (behind === 0 || !found) return Math.max(0, anchor.text - (anchor.print - index))
 
 	return front.text + found.index
+}
+
+/**
+ * Carries the offsets of the print the empty lines are counted in into the file, where a warning is placed and where Stylelint reads its line and whether a disable comment covers it: past the escapes where the print parts from the file only there, else by the nodes both hold where a rule listed earlier wrote the print. The document an embedded root is placed in, which the offsets count in, holds a byte-order mark the root's text leaves out and its print keeps.
+ * @param root - The root.
+ * @param counted - The print, and where each node opens and ends in it.
+ * @param counted.text - The print.
+ * @param counted.places - Where each node opens and ends in it, if told.
+ * @param escapes - The print's escapes, or nothing where it parts from the file otherwise.
+ * @returns The carrier.
+ */
+export function placeOfWarnings (root: Root, counted: { text: string, places?: NodePlaces }, escapes: PrintEscape[] | undefined): (index: number) => number {
+	let parsed = root.source?.input.css ?? counted.text
+	let mark = LEADING_BYTE_ORDER_MARK.test(counted.text) && !LEADING_BYTE_ORDER_MARK.test(parsed) ? counted.text.charAt(0) : ``
+	let text = `${mark}${parsed}`
+	let anchors = escapes !== undefined || !counted.places || counted.text === text ? undefined : anchorsOf(counted.places, (root.source?.start?.offset ?? 0) - mark.length, counted.text, text)
+
+	return (index) => (anchors ? placeInText(anchors, counted.text, text, index) : textIndex(index, escapes))
 }
