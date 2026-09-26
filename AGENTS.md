@@ -27,6 +27,8 @@ Whatever the question — which reading is right, what a fix may write, wher
 3. Less, with `postcss-html` for `lang="less"`
 4. styled, and every other CSS-in-JS
 
+The output does not depend on the order the configuration lists the rules in: any sorting of the same rules gives the same file and the same warnings, an override's scope over the common list aside. Where rules act on each other — one writes what another reads or writes — the rule or util that answers for it reads the neighbors' settings first (whether a neighbor is live, with which option, with its fix on) and answers so that the answer is one whether the neighbor has run yet or not: it reads the text as the neighbor will leave it, and the same text once the neighbor has left it. Where no file satisfies both settings, the pair is refused as contradicting, never arbitrated by the order.
+
 ## Architecture
 
 A Stylelint plugin (`@stylistic/stylelint-plugin`) that restores the stylistic rules Stylelint removed in v16 and adds rules of its own. How many there are is `lib/rules/index.ts`'s to say; no number is written here, since a written one falls behind. Pure ESM. `make build` (`tsc -p tsconfig.build.json`) writes `lib/` to `dist/` — every module beside its `.d.ts`, the tests left out — and `dist/` is what the package publishes and what `exports` points at; it is never committed, and `make release` builds it before publishing.
