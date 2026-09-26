@@ -35,6 +35,33 @@ describe(`straySemicolonsTaken`, () => {
 	})
 })
 
+describe(`the line of a stray semicolon in a raw a rule listed earlier rewrote`, () => {
+	// A write taking breaks out of the raw moves its lines, while the file keeps them; the semicolon is read on its line in the file, where the neighbor places its warning
+	it(`is read in the file for the root's tail, a block's tail and the run in front of a node`, () => {
+		let root = parse(`a {}\n ;\n\n\n ;\n\n\n`)
+
+		root.raws.after = `\n ;;\n \n`
+
+		let block = parse(`a {\n ;\n\n\n ;\n}`).first as Rule
+
+		block.raws.after = `\n ;;\n`
+
+		let node = parse(`a {}\n ;\n\n\n ;\nb {}`).last
+
+		if (node) node.raws.before = `\n ;;\n`
+
+		expect([...straySemicolonsTaken(root, extraRuleResult([{ start: 2, end: 2 }]))]).toEqual([3])
+		expect([...straySemicolonsTaken(block, extraRuleResult([{ start: 2, end: 2 }]))]).toEqual([3])
+		expect(node && [...straySemicolonsTakenBefore(node, extraRuleResult([{ start: 2, end: 2 }]))]).toEqual([3])
+	})
+
+	it(`is read in the file past a declaration's own semicolon in front of the run, which the count from the raw's end never reaches`, () => {
+		let block = parse(`a {\n  b: c;\n ;\n\n\n ;\n}`).first as Rule
+
+		expect([...straySemicolonsTaken(block, extraRuleResult([{ start: 3, end: 3 }]))]).toEqual([7])
+	})
+})
+
 describe(`straySemicolonsTakenBefore`, () => {
 	it(`every semicolon in front of a node a live no-extra-semicolons takes out, but one a disable comment keeps its fix off`, () => {
 		let declaration = (parse(`a {\n/* c */ ;\n;b: c; }`).first as Rule).last

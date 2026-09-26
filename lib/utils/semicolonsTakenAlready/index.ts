@@ -83,6 +83,60 @@ function movedIn (node: Node | undefined, text: string, rootStart: number, resul
 }
 
 /**
+ * Finds the semicolons one raw of a node held that a rule listed earlier has taken out, which the file still spells: the run in front of a node, `raws.ownSemicolon`, or a container's tail — a root's own ends its text, an embedded root's too, and a block's text moved into its last node by `declaration-block-trailing-semicolon: never` is read with it.
+ * @param node - The node whose raw it is.
+ * @param key - Which of its raws.
+ * @param text - The root's text.
+ * @param result - The Stylelint result, which holds the file's syntax.
+ * @returns The offsets.
+ */
+export function semicolonsTakenAlreadyIn (node: Node, key: `before` | `after` | `ownSemicolon`, text: string, result: PostcssResult): Set<number> {
+	let offsets: Set<number> = new Set()
+	let rootStart = node.root().source?.start?.offset ?? 0
+	let raw = node.raws[key]
+
+	if (typeof raw !== `string`) return offsets
+
+	if (key === `before`) {
+		let start = node.source?.start?.offset
+
+		if (start !== undefined) takenAlready(text, raw, start - rootStart, endIn(node.prev(), rootStart, result), offsets)
+
+		return offsets
+	}
+
+	if (node.type === `root`) {
+		let root = node as Root
+		let moved = movedIn(root.last, text, rootStart, result)
+
+		if (moved) takenAlready(text, moved.tail + raw, text.length, moved.start, offsets)
+		else takenAlready(text, raw, text.length, endIn(root.last, rootStart, result), offsets)
+
+		return offsets
+	}
+
+	let end = `nodes` in node ? closingOffset(node) : undefined
+
+	if (end === undefined) return offsets
+
+	let own = String(node.raws.ownSemicolon ?? ``)
+	let brace = end - rootStart - own.length
+
+	if (key === `ownSemicolon`) {
+		takenAlready(text, raw, end - rootStart, brace, offsets)
+
+		return offsets
+	}
+
+	let moved = movedIn((node as Container).last, text, rootStart, result)
+
+	if (moved) takenAlready(text, moved.tail + raw, brace - 1, moved.start, offsets)
+	else takenAlready(text, raw, brace - 1, endIn((node as Container).last, rootStart, result), offsets)
+
+	return offsets
+}
+
+/**
  * Finds the offsets of the stray semicolons rules listed earlier have taken out of the raws `no-extra-semicolons` reads, which the file still spells.
  * @param root - The stylesheet.
  * @param text - Its text.
@@ -91,36 +145,27 @@ function movedIn (node: Node | undefined, text: string, rootStart: number, resul
  */
 export function semicolonsTakenAlready (root: Root, text: string, result: PostcssResult): Set<number> {
 	let offsets: Set<number> = new Set()
-	let rootStart = root.source?.start?.offset ?? 0
+
+	/**
+	 * Files the offsets of one raw.
+	 * @param node - The node whose raw it is.
+	 * @param key - Which of its raws.
+	 */
+	function file (node: Node, key: `before` | `after` | `ownSemicolon`): void {
+		for (let offset of semicolonsTakenAlreadyIn(node, key, text, result)) offsets.add(offset)
+	}
 
 	root.walk((node) => {
-		let start = node.source?.start?.offset
+		file(node, `before`)
 
-		if (typeof node.raws.before === `string` && start !== undefined) takenAlready(text, node.raws.before, start - rootStart, endIn(node.prev(), rootStart, result), offsets)
+		if (!(`nodes` in node)) return
 
-		let end = `nodes` in node ? closingOffset(node) : undefined
+		if (node.raws.ownSemicolon) file(node, `ownSemicolon`)
 
-		if (end === undefined) return
-
-		let own = String(node.raws.ownSemicolon ?? ``)
-		let brace = end - rootStart - own.length
-
-		if (own) takenAlready(text, own, end - rootStart, brace, offsets)
-		if (typeof node.raws.after !== `string`) return
-
-		let moved = movedIn((node as Container).last, text, rootStart, result)
-
-		if (moved) takenAlready(text, moved.tail + node.raws.after, brace - 1, moved.start, offsets)
-		else takenAlready(text, node.raws.after, brace - 1, endIn((node as Container).last, rootStart, result), offsets)
+		file(node, `after`)
 	})
-
-	if (typeof root.raws.after === `string`) {
-		// A root's tail ends where its text does, an embedded one's too, which holds the moved text as a block does
-		let moved = movedIn(root.last, text, rootStart, result)
-
-		if (moved) takenAlready(text, moved.tail + root.raws.after, text.length, moved.start, offsets)
-		else if (!root.parent) takenAlready(text, root.raws.after, text.length, endIn(root.last, rootStart, result), offsets)
-	}
+	// An embedded root's tail is left to the per-raw question: the readers asking what the neighbor takes place no semicolon there, and a mask read on one side of the neighbor alone would make the order decide
+	if (!root.parent) file(root, `after`)
 
 	return offsets
 }

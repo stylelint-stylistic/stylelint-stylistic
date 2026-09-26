@@ -10,7 +10,7 @@ import { type DisabledRange, fixDisabledRanges } from "../fixDisabledOnLine/inde
 import { hasBlock } from "../hasBlock/index.ts"
 import { lastNonCommentNode } from "../lastNonCommentNode/index.ts"
 import { neighborCopies } from "../neighborSettings/index.ts"
-import { lineInRaw, NO_EXTRA_SEMICOLONS, noExtraSemicolonsTaken, takenByNoExtra } from "../noExtraSemicolonsTaken/index.ts"
+import { lineInRaw, NO_EXTRA_SEMICOLONS, noExtraSemicolonsTaken, semicolonLine, takenByNoExtra } from "../noExtraSemicolonsTaken/index.ts"
 import { runInFrontOf } from "../runInFrontOf/index.ts"
 import { isAtRule, isComment, isDeclaration } from "../typeGuards/index.ts"
 
@@ -107,7 +107,7 @@ export function straySemicolonsTakenBefore (node: Node, result: PostcssResult): 
 /**
  * Writes the run in front of a node as `no-extra-semicolons` leaves it, where that rule still takes every semicolon it took once the run is written.
  *
- * The neighbor reads a semicolon's line back from the node's start by the breaks behind it, so a write taking those breaks out moves it onto the node's line, where a disable comment may keep its fix off; the semicolon then stays, and the run is written as the check reads it with the semicolon standing, as it was before the neighbor was asked.
+ * The line is read where the neighbor places it ({@link semicolonLine}), which a write leaves in place. Where the file does not answer, the line is read back from the node's start by the breaks behind it, so a write taking those breaks out moves it onto the node's line, where a disable comment may keep its fix off; the semicolon then stays, and the run is written as the check reads it with the semicolon standing, as it was before the neighbor was asked.
  * @param node - The node.
  * @param write - The write over a run.
  * @param result - The Stylelint result, which holds the configuration.
@@ -245,13 +245,33 @@ function reaches ({ start, end }: { start: number, end?: number | undefined }, l
 type SemicolonRaw = `before` | `after` | `ownSemicolon`
 
 /**
- * Places a raw in the file: the offset it starts at, and the line a character of it stands on.
+ * Places a raw in the file: the offset it starts at, and the line a semicolon of it stands on, read where `no-extra-semicolons` places its warning ({@link semicolonLine}) and back from the raw's end where the file does not answer. The offset counts characters back from the raw's end.
+ * @param owner - The node whose `raws.before` or `raws.ownSemicolon`, or the container whose `raws.after`, it is.
+ * @param key - Which of the raws.
+ * @param raw - The raw.
+ * @param result - The Stylelint result, which holds the file's syntax.
+ * @returns The offset, and the line by index; nothing where the node has no place.
+ */
+function placeOf (owner: Node, key: SemicolonRaw, raw: string, result: PostcssResult): { rawStart: number | undefined, lineAt: (index: number) => number | undefined } {
+	let { rawStart, lineAt } = placeByCharacters(owner, key, raw)
+	let rootStart = owner.root().source?.start?.offset ?? 0
+	// The nodes' offsets count from the document's start, the root's text from the root's
+	let rawEnd = rawStart === undefined ? undefined : rawStart - rootStart + raw.length
+
+	// A root's own tail ends that text
+	if (owner.type === `root` && key === `after`) rawEnd = owner.source?.input.css.length
+
+	return { rawStart, lineAt: (index) => semicolonLine(owner, key, index, rawEnd, result) ?? lineAt(index) }
+}
+
+/**
+ * Places a raw in the file by characters counted back from its end: the offset it starts at, and the line a character of it stands on.
  * @param owner - The node whose `raws.before` or `raws.ownSemicolon`, or the container whose `raws.after`, it is.
  * @param key - Which of the raws.
  * @param raw - The raw.
  * @returns The offset, and the line by index; nothing where the node has no place.
  */
-function placeOf (owner: Node, key: SemicolonRaw, raw: string): { rawStart: number | undefined, lineAt: (index: number) => number | undefined } {
+function placeByCharacters (owner: Node, key: SemicolonRaw, raw: string): { rawStart: number | undefined, lineAt: (index: number) => number | undefined } {
 	if (key === `ownSemicolon`) {
 		// PostCSS moves the rule's end behind the last semicolon it files there, so the raw ends where the node does
 		let end = closingOffset(owner)
@@ -313,7 +333,7 @@ export function straySemicolonsReleased (owner: Node, key: SemicolonRaw, result:
 
 	if (typeof raw !== `string` || !raw.includes(`;`) || edits.every((edit) => edit.delta === 0)) return released
 
-	let { rawStart, lineAt } = placeOf(owner, key, raw)
+	let { rawStart, lineAt } = placeOf(owner, key, raw, result)
 	let taken: Set<number> = new Set()
 
 	for (let { fixDisabled, name, syntax } of neighborCopies(owner, result, NO_EXTRA_SEMICOLONS)) {
@@ -343,7 +363,7 @@ export function straySemicolonsReleased (owner: Node, key: SemicolonRaw, result:
  * @returns True where it does.
  */
 function holdsAKeptSemicolon (owner: Node, key: SemicolonRaw, raw: string, result: PostcssResult): boolean {
-	let { lineAt } = placeOf(owner, key, raw)
+	let { lineAt } = placeOf(owner, key, raw, result)
 	let held: Set<number> = new Set()
 	let taken: Set<number> = new Set()
 
@@ -426,7 +446,9 @@ export function straySemicolonsTakenOwn (node: Node, result: PostcssResult): Set
 
 	if (typeof own !== `string` || !own.includes(`;`)) return new Set()
 
-	return takenByNoExtra(node, result, own, node.source?.end?.line, (syntax) => extraSemicolonsOwn(syntax, node))
+	let closing = closingOffset(node)
+
+	return takenByNoExtra(node, `ownSemicolon`, result, node.source?.end?.line, closing === undefined ? undefined : closing - (node.root().source?.start?.offset ?? 0), (syntax) => extraSemicolonsOwn(syntax, node))
 }
 
 /**
@@ -450,7 +472,7 @@ export function straySemicolonOffsetsTaken (root: Container, result: PostcssResu
 
 		if (taken.size === 0 || typeof raw !== `string`) return
 
-		let { rawStart } = placeOf(owner, key, raw)
+		let { rawStart } = placeOf(owner, key, raw, result)
 
 		if (rawStart === undefined) return
 

@@ -95,13 +95,12 @@ describe(`the whitespace behind a semicolon in front of a free one \`no-extra-se
 		expect(await fix(code, `never`, true, neighbor)).toEqual({ code: `a { b: c;; d: e; } /* stylelint-disable-line @stylistic/no-extra-semicolons */`, reported: [], left: [] })
 	})
 
-	// Written without the break behind it, the free semicolon would stand on the line of the next node, which the comment covers, and stay; the run is then written as the check reads it with the semicolon standing, and the next pass reaches the file the other order leaves
-	it(`is written as before where the write would bring the free semicolon under a disable comment of that rule`, async () => {
+	// That rule reads the free semicolon's line where the file spells it, off the comment's line, and a write taking the break behind it moves none of that; both orders reach one file in one run
+	it(`is written where the write brings the free semicolon onto the line a disable comment of that rule covers`, async () => {
 		let code = `a { b: c;\n  ;\n  d: e; } /* stylelint-disable-line @stylistic/no-extra-semicolons */`
-		let first = await fix(code, `always`, true, neighbor)
-		let second = await fix(first.code, `always`, true, neighbor)
+		let output = `a { b: c; d: e; } /* stylelint-disable-line @stylistic/no-extra-semicolons */`
 
-		expect(first.code).toBe(`a { b: c; \n  d: e; } /* stylelint-disable-line @stylistic/no-extra-semicolons */`)
-		expect(second.code).toBe((await fix(code, `always`, false, neighbor)).code)
+		expect((await fix(code, `always`, true, neighbor)).code).toBe(output)
+		expect((await fix(code, `always`, false, neighbor)).code).toBe(output)
 	})
 })
