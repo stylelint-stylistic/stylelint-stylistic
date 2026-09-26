@@ -90,4 +90,14 @@ describe(`a line holding nothing but a stray semicolon the rule about extra semi
 
 		expect((result.results[0]?.warnings ?? []).filter((warning) => warning.rule === ruleName).map(({ line, column }) => `${line}:${column}`)).toEqual([`2:2`, `3:1`, `4:1`])
 	})
+
+	// Placed in the print the empty lines are counted in, by where the syntax's stringifier writes the raw holding it
+	it.each([
+		[`postcss-scss`, `@stylistic/scss/`, `a {\n  font: 12px {\n    family: x;\n\n\n;\n  }\n\n\n;\n}`, [`6:2`, `10:2`]],
+		[`postcss-styled-syntax`, `@stylistic/styled/`, `const A = styled.div\`\n  color: red;\n;\n\n\n;\n\`;\nconst B = styled.p\`\n  top: 0;\n;\n\n\n;\n\`;\n`, [`5:1`, `6:2`, `12:1`, `13:2`]],
+	])(`is counted empty under %s in a Sass nested property's block and in the tail of a template host code follows`, async (customSyntax, namespace, code, warnings) => {
+		let result = await stylelint.lint({ code, customSyntax, config: { plugins, rules: { [`${namespace}max-empty-lines`]: 2, [`${namespace}no-extra-semicolons`]: true } } })
+
+		expect((result.results[0]?.warnings ?? []).filter((warning) => warning.rule === `${namespace}max-empty-lines`).map(({ line, column }) => `${line}:${column}`)).toEqual(warnings)
+	})
 })

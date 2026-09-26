@@ -212,4 +212,17 @@ describe(`the output of the three rules that write the head of the file`, () => 
 	it(`does the same in a single run where the semicolon stands on the first line in front of a rule`, async () => {
 		await expectEveryOrder(`;\n\n\na {}`, `a {}`, undefined, 1)
 	})
+
+	it.each([
+		[`;\n\n; /* stylelint-disable-line @stylistic/no-extra-semicolons */\n;\n\na {}`, `; /* stylelint-disable-line @stylistic/no-extra-semicolons */\n\na {}`],
+		[`;\r\n\r\n; /* stylelint-disable-line @stylistic/no-extra-semicolons */\r\n;\r\n;\r\n\r\na {}`, `; /* stylelint-disable-line @stylistic/no-extra-semicolons */\r\n\r\na {}`],
+		[`\n; /* stylelint-disable-line @stylistic/no-extra-semicolons */\n\n;`, `; /* stylelint-disable-line @stylistic/no-extra-semicolons */\n`],
+		[`\n; /* stylelint-disable-line @stylistic/no-extra-semicolons */\n;\n`, `; /* stylelint-disable-line @stylistic/no-extra-semicolons */\n`],
+	])(`does the same in a single run where a rule listed earlier has written the head in front of a semicolon the neighbor takes, in %j`, async (code, expected) => {
+		await expectEveryOrder(code, expected, undefined, 1)
+	})
+
+	it(`does the same in a single run inside a style element`, async () => {
+		await expectEveryOrder(`<style>\n;\n\n; /* stylelint-disable-line @stylistic/no-extra-semicolons */\n;\n\na {}\n</style>\n`, `<style>\n; /* stylelint-disable-line @stylistic/no-extra-semicolons */\n\na {}\n</style>\n`, `postcss-html`, 1)
+	})
 })

@@ -23,6 +23,7 @@ import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuar
 import { isNumber } from "../../utils/validateTypes/index.ts"
 
 import { printEscapes, takenInPrint, textIndex } from "./printEscapes.ts"
+import { printWithTaken } from "./printWithTaken.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -119,10 +120,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let emptyLines = 0
 		let lastIndex = -1
 		// A line holding nothing but stray semicolons a neighbor takes out in the same run is read as it will stand, empty, whichever side of the neighbor this rule is listed
-		let rootString = countedText(root, result)
+		let counted = countedText(root, result)
+		let rootString = counted.text
 		// The print parts from the file where PostCSS escapes a `<`, and the neighbors' semicolons and the warnings are carried across
 		let escapes = rootString === (root.source?.input.css ?? rootString) ? [] : printEscapes(root.source?.input.css ?? ``, rootString)
-		let taken = takenInPrint(straySemicolonOffsetsTaken(root, result), escapes)
+		let taken = counted.taken ?? takenInPrint(straySemicolonOffsetsTaken(root, result), escapes)
 
 		// A file ending on a break counts one empty line more, and spaces and tabs behind the last break are `no-eol-whitespace`'s line, so the end is measured in front of them, and in front of the semicolons the neighbors take there
 		let endOfFile = [...rootString].map((character, index) => (taken.has(index) ? ` ` : character)).join(``).replace(TRAILING_SPACES_AND_TABS, ``).length
@@ -456,23 +458,44 @@ function searchOptions (text: string, comments: CommentSpan[]): Parameters<typeo
 }
 
 /**
- * Prints the text the breaks are counted in, as the file the warnings are placed in holds it.
+ * Prints the text the breaks are counted in, as the file the warnings are placed in holds it, with the stray semicolons the neighbors take out placed in it where the print is the stringifier's own.
  * @param root - The root checked.
  * @param result - The Stylelint result, which holds the file's syntax and tells a standalone root from a block of a document.
- * @returns The root's text.
+ * @returns The root's text, and the semicolons' offsets in it, nothing where they are to be carried over from the file.
  */
-function countedText (root: Root, result: PostcssResult): string {
-	// A block embedded in a document is placed in the document's text, which keeps a byte-order mark; a styled template's root hangs in its document, whose stringifier prints the host code around it
-	if (result.root !== root) return root.parent ? root.toString() : nodeString(root, result)
+function countedText (root: Root, result: PostcssResult): { text: string, taken?: Set<number> } {
+	let print = nodeSyntax(root, result)?.stringify ?? stringify
 
-	let text = ``
+	// A block embedded in a document is placed in the document's text, which keeps a byte-order mark; a styled template's root hangs in its document, whose stringifier prints the host code around it. The semicolons are placed in the stringifier's own print where the root's text stands in it once
+	if (result.root !== root) {
+		let text = root.parent ? root.toString() : nodeString(root, result)
+		let printed = printWithTaken(root, result, print, true)
+		// A styled template's print holds the host code around the root's text
+		let at = printed.text.indexOf(text)
+
+		if (at < 0 || printed.text.indexOf(text, at + 1) >= 0) return { text }
+
+		return { text, taken: withRootTail(root, result, text, new Set([...printed.taken].map((offset) => offset - at).filter((offset) => offset >= 0 && offset < text.length))) }
+	}
 
 	// Printed by the syntax, since PostCSS's stringifier drops a Sass nested property's block and a Less mixin call's `!important`, and widens a `//` comment; without the root's opening piece, which is the byte-order mark PostCSS's stringifier prints and `input.css`, which the indices are resolved in, leaves out, while `sugarss` prints none
-	;(nodeSyntax(root, result)?.stringify ?? stringify)(root, (piece, node, type) => {
-		if (node !== root || type !== `start`) text += piece
-	})
+	let printed = printWithTaken(root, result, print, false)
 
-	return text
+	return { text: printed.text, taken: withRootTail(root, result, printed.text, printed.taken) }
+}
+
+/**
+ * Adds the stray semicolons the neighbors take out of the root's own tail, which ends the root's text.
+ * @param root - The root.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @param text - The root's text.
+ * @param taken - The semicolons placed in it so far.
+ * @returns Those and the tail's.
+ */
+function withRootTail (root: Root, result: PostcssResult, text: string, taken: Set<number>): Set<number> {
+	let tailStart = text.length - String(root.raws.after ?? ``).length
+
+	return new Set([...taken, ...[...straySemicolonsTaken(root, result)].map((index) => tailStart + index)])
 }
 
 /**
