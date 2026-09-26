@@ -55,4 +55,24 @@ describe(`a line holding nothing but a stray semicolon the rule about extra semi
 
 		expect(fixed.code).toBe(`a {}\nb {}`)
 	})
+
+	// The root's tail opens in the last rule's own raw behind a semicolon behind its brace, and the head in front of the first node, where the line holding the semicolon opens the file
+	it.each([
+		[`a {}\n;\n`, 0, `a {}\n`],
+		[`a {}\n\n\n;\n`, 1, `a {}\n`],
+		[`;\n\n\na {}`, 0, `a {}`],
+		[`;;\n\na {}`, 1, `\na {}`],
+	])(`is written at the stylesheet's ends in %j at most %i in either order`, async (code, maximum, output) => {
+		expect(await fixBesideNoExtra(code, maximum, true)).toEqual({ code: output, left: 0 })
+		expect(await fixBesideNoExtra(code, maximum, false)).toEqual({ code: output, left: 0 })
+	})
+
+	// A file ending on a taken semicolon ends in front of it, and a stylesheet holding nothing but such semicolons is written as the neighbor leaves it
+	it.each([
+		[`a {}\n\n\n;`, 2, `a {}\n\n`],
+		[`;\n`, 0, ``],
+	])(`is written where the file ends on the semicolon in %j at most %i in either order`, async (code, maximum, output) => {
+		expect(await fixBesideNoExtra(code, maximum, true)).toEqual({ code: output, left: 0 })
+		expect(await fixBesideNoExtra(code, maximum, false)).toEqual({ code: output, left: 0 })
+	})
 })
