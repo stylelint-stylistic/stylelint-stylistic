@@ -138,7 +138,8 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 		for (let { slash, checkIndex } of checks) {
 			let span = spanAt(runText, checkIndex, position, whitespace, writes)
 			// Refused before the report, since a fixer cannot decline
-			let isFixable = writesTheSpan(syntax, reading, text, span, written, position)
+			// The run in front of a solidus opening the text is the raw in front of it, which the text's span does not hold: a space written there moves into the raw at the next parse, and a run to empty is not in the text to take; only a break written in front of the solidus stands
+			let isFixable = !(position === `before` && slash.index === 0 && (whitespace === `space` || !writes)) && writesTheSpan(syntax, reading, text, span, written, position)
 
 			opts.locationChecker({
 				source: runText,

@@ -59,6 +59,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			checkedRuleName: ruleName,
 			// The run in front of the comma may hold the break closing an inline comment, which no fix may write over
 			isFixable: (selector, index, inlineComments, ruleNode, runString) => {
+				// The run in front of a comma opening the selector is `raws.before`, which the fix does not write: a space written into the selector goes into that raw at the next parse, and every run grows it
+				if (index === 0) return false
+
 				let runStart = selector.slice(0, index).trimEnd().length
 
 				if (inlineComments.some((inlineComment) => runStart <= inlineComment.endIndex && inlineComment.endIndex < index)) return false

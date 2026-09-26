@@ -77,7 +77,7 @@ export interface WhitespaceCheckerArgs {
 	/** Allows indentation between the newline and `index`. */
 	allowIndentation?: boolean,
 
-	/** What the file holds in front of `source`, which the parser filed away from it — `rawInFrontOfText` answers for a node. Only `beforeAllowingIndentation` reads it; `before` and `after` ignore it, and the delimiter opening a text is invisible to them either way. */
+	/** What the file holds in front of `source`, which the parser filed away from it — `rawInFrontOfText` answers for a node. The checks in front of the index read it, so that a delimiter opening the text is read against the run in front of it; `after` ignores it. */
 	textBefore?: string,
 }
 
@@ -147,12 +147,16 @@ function expectBefore (args: WhitespaceCheckerArgs, targetWhitespace: TargetWhit
 		return
 	}
 
-	let { source, index } = args
+	// The run in front of a delimiter opening the text lies in the raw the parser filed it in, so it is read there rather than taken for the start of the file
+	let textBefore = args.textBefore ?? ``
+	let source = textBefore + args.source
+	let index = args.index + textBefore.length
 
 	let oneCharBefore = source[index - 1]
 	let twoCharsBefore = source[index - 2]
 
-	if (isNullish(oneCharBefore)) return
+	// Where the raw in front of the text is given and holds nothing, the whitespace asked for is missing, as `expectBeforeAllowingIndentation` reads it; a text read without it has no run there to ask of
+	if (isNullish(oneCharBefore) && args.textBefore === undefined) return
 
 	if (targetWhitespace === `space` && oneCharBefore === ` ` && (args.onlyOneChar || isNullish(twoCharsBefore) || !isWhitespace(twoCharsBefore))) return
 
@@ -165,7 +169,8 @@ function expectBefore (args: WhitespaceCheckerArgs, targetWhitespace: TargetWhit
  * @param messageFunc - Builds the warning text from the character checked.
  */
 function rejectBefore (args: WhitespaceCheckerArgs, messageFunc: MessageFunction | undefined): void {
-	let oneCharBefore = args.source[args.index - 1]
+	let textBefore = args.textBefore ?? ``
+	let oneCharBefore = (textBefore + args.source)[args.index + textBefore.length - 1]
 
 	if (!isNullish(oneCharBefore) && isWhitespace(oneCharBefore)) complain(args, messageFunc)
 }

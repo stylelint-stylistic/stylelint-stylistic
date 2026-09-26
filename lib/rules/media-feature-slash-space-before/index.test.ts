@@ -73,6 +73,15 @@ testRule({
 	],
 
 	reject: [
+		// The run in front of a solidus opening the parameters is read in the at-rule's raw behind its name, which the fix does not write
+		{
+			description: `nothing in front of a solidus opening the parameters, behind the name`,
+			code: `@media/(x) {}`,
+			fixed: `@media/(x) {}`,
+			line: 1,
+			column: 7,
+			message: messages.expectedBefore(),
+		},
 		{
 			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the number in front of a line break and the solidus, where the space would stand behind the backslash as its escaped character, so the warning stands`,
@@ -258,6 +267,15 @@ testRule({
 	],
 
 	reject: [
+		// The run in front of a solidus opening the parameters is read in the at-rule's raw behind its name, which the fix does not write
+		{
+			description: `a break in front of a solidus opening the parameters, behind the name`,
+			code: `@media\n/(x) {}`,
+			fixed: `@media\n/(x) {}`,
+			line: 2,
+			column: 1,
+			message: messages.rejectedBefore(),
+		},
 		{
 			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the number in front of a line break and the solidus, which the write would turn into an escaped solidus, so the warning stands`,

@@ -63,6 +63,15 @@ testRule({
 	],
 
 	reject: [
+		// The run in front of a comma opening the parameters is read in the at-rule's raw behind its name, where the fix does not write
+		{
+			description: `a break in front of a comma opening the parameters, behind the name`,
+			code: `@media\n,a { b { c: d } }`,
+			fixed: `@media\n,a { b { c: d } }`,
+			line: 2,
+			column: 1,
+			message: messages.expectedBefore(),
+		},
 		{
 			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the query in front of a line break and the comma, where the space would stand behind the backslash as its escaped character, so the warning stands`,
@@ -247,6 +256,15 @@ testRule({
 	],
 
 	reject: [
+		// The run in front of a comma opening the parameters is read in the at-rule's raw behind its name, where the fix does not write
+		{
+			description: `a space in front of a comma opening the parameters, behind the name`,
+			code: `@media ,a { b { c: d } }`,
+			fixed: `@media ,a { b { c: d } }`,
+			line: 1,
+			column: 8,
+			message: messages.rejectedBefore(),
+		},
 		{
 			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the query in front of a line break and the comma, which the write would turn into an escaped comma, so the warning stands`,

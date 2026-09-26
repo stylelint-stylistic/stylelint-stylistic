@@ -60,6 +60,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			checkedRuleName: ruleName,
 			// The fix's whitespace ends this text, and its break would close an inline comment standing there, taking the comma into the comment: leave the parameters alone
 			isFixable: (params, index, atRule, runString) => {
+				// The run in front of a comma opening the parameters is `raws.afterName`, which the fix does not write: a space written into the parameters goes into that raw at the next parse, and every run grows it
+				if (index === 0) return false
+
 				if (syntax.endsWithInlineComment(params.slice(0, index), syntax.inlineComments(atRule, result))) return false
 
 				let run = runInFront(runString, index)

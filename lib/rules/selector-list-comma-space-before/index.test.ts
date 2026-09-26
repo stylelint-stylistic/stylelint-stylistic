@@ -67,6 +67,23 @@ testRule({
 	],
 
 	reject: [
+		// The run in front of a comma opening the selector is read in the raw in front of it, where the fix does not write
+		{
+			description: `a break in front of a comma opening the selector, in the raw in front of it`,
+			code: `x {}\n,a { b: c }`,
+			fixed: `x {}\n,a { b: c }`,
+			line: 2,
+			column: 1,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `nothing in front of a comma opening the selector behind a rule`,
+			code: `x {},a { b: c }`,
+			fixed: `x {},a { b: c }`,
+			line: 1,
+			column: 5,
+			message: messages.expectedBefore(),
+		},
 		{
 			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the selector in front of a line break and the comma, where the space would stand behind the backslash as its escaped character, so the warning stands`,
@@ -272,6 +289,15 @@ testRule({
 	],
 
 	reject: [
+		// The run in front of a comma opening the selector is read in the raw in front of it, where the fix does not write
+		{
+			description: `a break in front of a comma opening the selector, in the raw in front of it`,
+			code: `x {}\n,a { b: c }`,
+			fixed: `x {}\n,a { b: c }`,
+			line: 2,
+			column: 1,
+			message: messages.rejectedBefore(),
+		},
 		{
 			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the selector in front of a line break and the comma, which the write would turn into an escaped comma, so the warning stands`,

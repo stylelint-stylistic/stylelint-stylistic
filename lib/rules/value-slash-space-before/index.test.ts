@@ -86,6 +86,15 @@ testRule({
 	],
 
 	reject: [
+		// The run in front of a solidus opening the value is read in the declaration's raw behind the colon, where the fix does not write
+		{
+			description: `nothing in front of a solidus opening the value, behind the colon`,
+			code: `a { grid-area:/2 }`,
+			fixed: `a { grid-area:/2 }`,
+			line: 1,
+			column: 15,
+			message: messages.expectedBefore(),
+		},
 		{
 			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the number in front of a line break and the solidus, where the space would stand behind the backslash as its escaped character, so the warning stands`,
@@ -316,6 +325,15 @@ testRule({
 	],
 
 	reject: [
+		// The run in front of a solidus opening the value is read in the declaration's raw behind the colon, where the fix does not write
+		{
+			description: `a break in front of a solidus opening the value, behind the colon`,
+			code: `a { grid-area:\n/2 }`,
+			fixed: `a { grid-area:\n/2 }`,
+			line: 2,
+			column: 1,
+			message: messages.rejectedBefore(),
+		},
 		{
 			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the number in front of a line break and the solidus, which the write would turn into an escaped solidus, so the warning stands`,
