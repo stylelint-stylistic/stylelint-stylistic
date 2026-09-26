@@ -16,6 +16,8 @@ import { semicolonsTakenAlready } from "../../utils/semicolonsTakenAlready/index
 import { straySemicolonOffsetsTaken, straySemicolonsTaken, straySemicolonsTakenBefore, straySemicolonsTakenOwn } from "../../utils/straySemicolonsTaken/index.ts"
 import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
 
+import { trimTheLastNodesEnd } from "./lastNodesEnd.ts"
+
 let { utils: { validateOptions } } = stylelint
 
 let shortName = `no-eol-whitespace`
@@ -372,6 +374,8 @@ function fixRoot (scope: EolScope): void {
 
 		if (lastEOL !== after.length - 1) root.raws.after = after.slice(0, lastEOL + 1) + trimKeepingTaken(after.slice(lastEOL + 1), read.slice(lastEOL + 1))
 	}
+
+	trimTheLastNodesEnd(scope.syntax, scope.root, scope.result)
 }
 
 /**
