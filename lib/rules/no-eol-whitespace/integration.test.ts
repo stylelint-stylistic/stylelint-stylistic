@@ -203,3 +203,55 @@ describe(`the whitespace ending a stylesheet's text behind its last node`, () =>
 		expect(fixed.code).toBe(`--x: a\\ `)
 	})
 })
+
+describe(`a line a disable comment keeps the fix off`, () => {
+	let alone = { plugins, rules: { "@stylistic/no-eol-whitespace": true } }
+
+	// The fix of a warning on another line trims every line at once, and asks of each line whether the fix is kept off it
+	it.each([
+		[`behind a node`, `a {}  \n/* stylelint-disable-next-line */\nb {}  \nc {}  \n`, `a {}\n/* stylelint-disable-next-line */\nb {}  \nc {}\n`],
+		[`of nothing but whitespace`, `a {}  \n/* stylelint-disable-next-line */\n  \n  \nc {}\n`, `a {}\n/* stylelint-disable-next-line */\n  \n\nc {}\n`],
+		[`inside a value`, `a {  \n/* stylelint-disable-next-line */\n  b: c  \n    d;  \n}\n`, `a {\n/* stylelint-disable-next-line */\n  b: c  \n    d;\n}\n`],
+		[`inside a selector`, `x {}  \n/* stylelint-disable-next-line */\na,  \nb {}\n`, `x {}\n/* stylelint-disable-next-line */\na,  \nb {}\n`],
+		[`inside a comment`, `x {}  \n/* stylelint-disable-next-line */\n/* a  \n  b  */\n`, `x {}\n/* stylelint-disable-next-line */\n/* a  \n  b  */\n`],
+		[`in front of a closing brace`, `a {  \n  b: c;\n/* stylelint-disable-next-line */\n  \n}\n`, `a {\n  b: c;\n/* stylelint-disable-next-line */\n  \n}\n`],
+		[`ending the stylesheet`, `a {}  \n/* stylelint-disable-next-line */\n  `, `a {}\n/* stylelint-disable-next-line */\n  `],
+		[`behind a disable comment on it`, `a {} /* stylelint-disable-line */  \nb {}  \n`, `a {} /* stylelint-disable-line */  \nb {}\n`],
+		[`inside a range of this rule`, `a {}  \n/* stylelint-disable @stylistic/no-eol-whitespace */\nb {}  \n  \n/* stylelint-enable @stylistic/no-eol-whitespace */\nc {}  \n`, `a {}\n/* stylelint-disable @stylistic/no-eol-whitespace */\nb {}  \n  \n/* stylelint-enable @stylistic/no-eol-whitespace */\nc {}\n`],
+	])(`keeps its end %s`, async (_, code, output) => {
+		expect((await stylelint.lint({ code, config: alone, fix: true })).code).toBe(output)
+	})
+
+	// PostCSS ends the rule on a stray semicolon behind it, and its lines are read from the brace
+	it.each([
+		[`a {}  \n;  /* stylelint-disable-line */\nb {}  \n`, `a {}\n;  /* stylelint-disable-line */\nb {}\n`],
+		[`/* stylelint-disable-next-line */\na {}  \n;  \nb {}\n`, `/* stylelint-disable-next-line */\na {}  \n;\nb {}\n`],
+		[`a {\n  b: c;\n/* stylelint-disable-next-line */\n  \n}  \n;\nx {}  \n`, `a {\n  b: c;\n/* stylelint-disable-next-line */\n  \n}\n;\nx {}\n`],
+	])(`keeps its end around a stray semicolon on the line behind a rule in %j`, async (code, output) => {
+		expect((await stylelint.lint({ code, config: alone, fix: true })).code).toBe(output)
+	})
+
+	it(`keeps its end inside a style element`, async () => {
+		let code = `<p>\n</p>\n<style>\na {}  \n/* stylelint-disable-next-line */\nb {}  \nc {}  \n</style>\n`
+
+		expect((await stylelint.lint({ code, config: alone, fix: true, customSyntax: `postcss-html` })).code).toBe(`<p>\n</p>\n<style>\na {}\n/* stylelint-disable-next-line */\nb {}  \nc {}\n</style>\n`)
+	})
+
+	// The rule about empty lines listed first writes the run behind it with fewer breaks, and the run is read by rank against the file
+	it(`keeps its end in both orders beside the rule about empty lines`, async () => {
+		let code = `a {}  \n/* stylelint-disable-next-line */\nb {}  \n\n\n\nc {}  \n`
+
+		expect(await fix(code, true, [`@stylistic/max-empty-lines`, 1])).toEqual({ code: `a {}\n/* stylelint-disable-next-line */\nb {}  \n\nc {}\n`, warnings: 0 })
+		expect(await fix(code, false, [`@stylistic/max-empty-lines`, 1])).toEqual({ code: `a {}\n/* stylelint-disable-next-line */\nb {}  \n\nc {}\n`, warnings: 0 })
+	})
+
+	// A neighbor listed earlier takes breaks out of a value or a block's head, and the runs are read by rank against the file
+	it.each([
+		[`a {\n  b: f(1,  \n\n\n    2, /* stylelint-disable-line */  \n    3,  \n    4);\n}\n`, [`@stylistic/function-max-empty-lines`, 0], `a {\n  b: f(1,\n    2, /* stylelint-disable-line */  \n    3,\n    4);\n}\n`],
+		[`a,  \n\n\nb, /* stylelint-disable-line */  \nc,  \nd {}`, [`@stylistic/selector-max-empty-lines`, 0], `a,\nb, /* stylelint-disable-line */  \nc,\nd {}`],
+		[`a /* stylelint-disable-next-line */  \n{  \n\n\n\n  b: c;  \n}\n`, [`@stylistic/max-empty-lines`, 1], `a /* stylelint-disable-next-line */\n{  \n\n  b: c;\n}\n`],
+	] as [string, [string, unknown], string][])(`keeps its end in both orders in %j beside %j`, async (code, neighbor, output) => {
+		expect(await fix(code, true, neighbor)).toEqual({ code: output, warnings: 0 })
+		expect(await fix(code, false, neighbor)).toEqual({ code: output, warnings: 0 })
+	})
+})

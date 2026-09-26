@@ -57,8 +57,8 @@ const DEBT: Record<string, string[]> = {
 		`let nextNewlineIndex = rootString.indexOf(\`\\n\`, match.endIndex)`,
 		`if (rootString[nextNewlineIndex - 1] === \`\\r\`) nextNewlineIndex -= 1`,
 	],
-	"lib/rules/no-eol-whitespace/index.ts": [
-		`const LINE_BREAK_CHARACTERS = [\`\\n\`]`,
+	"lib/rules/no-eol-whitespace/runs.ts": [
+		`export const LINE_BREAK_CHARACTERS = [\`\\n\`]`,
 		`if (string.charAt(eolWhitespaceIndex) === \`\\r\`) eolWhitespaceIndex -= 1`,
 	],
 	"lib/utils/isWhitespace/index.ts": [`return [\` \`, \`\\n\`, \`\\t\`, \`\\r\`, \`\\f\`].includes(char)`],

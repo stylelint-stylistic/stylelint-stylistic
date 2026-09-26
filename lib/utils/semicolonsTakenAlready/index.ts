@@ -51,7 +51,7 @@ function takenAlready (text: string, raw: string, end: number, start: number, in
  * @param result - The Stylelint result, which holds the file's syntax.
  * @returns The offset.
  */
-function endIn (node: Node | undefined, rootStart: number, result: PostcssResult): number {
+export function endIn (node: Node | undefined, rootStart: number, result: PostcssResult): number {
 	if (!node) return 0
 
 	let end = `nodes` in node ? closingOffset(node) : node.source?.end?.offset
