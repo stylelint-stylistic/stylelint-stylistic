@@ -10,12 +10,13 @@ import { straySemicolonsTaken, straySemicolonsTakenBefore, straySemicolonsTakenO
  * @param result - The Stylelint result, which holds the configuration.
  * @param print - The stringifier, called with a builder.
  * @param keepsTheOpening - Whether the root's opening piece is printed.
- * @returns The print and the semicolons' offsets in it.
+ * @returns The print, the semicolons' offsets in it, and where each node's own first piece opens in it and its last ends.
  */
-export function printWithTaken (root: Root, result: PostcssResult, print: (root: Root, builder: Builder) => void, keepsTheOpening: boolean): { text: string, taken: Set<number> } {
+export function printWithTaken (root: Root, result: PostcssResult, print: (root: Root, builder: Builder) => void, keepsTheOpening: boolean): { text: string, taken: Set<number>, starts: Map<Node, number>, ends: Map<Node, number> } {
 	let text = ``
 	let taken: Set<number> = new Set()
-	let started: Set<Node> = new Set()
+	let starts: Map<Node, number> = new Map()
+	let ends: Map<Node, number> = new Map()
 
 	/**
 	 * Files the semicolons of one raw.
@@ -31,8 +32,8 @@ export function printWithTaken (root: Root, result: PostcssResult, print: (root:
 
 		let at = text.length
 
-		if (node && node !== root && !started.has(node)) {
-			started.add(node)
+		if (node && node !== root && !starts.has(node)) {
+			starts.set(node, at)
 			file(straySemicolonsTakenBefore(node, result), at - String(node.raws.before ?? ``).length)
 		}
 
@@ -41,7 +42,9 @@ export function printWithTaken (root: Root, result: PostcssResult, print: (root:
 		if (node && type === `end` && piece !== `}`) file(straySemicolonsTakenOwn(node, result), at)
 
 		text += piece
+
+		if (node && node !== root) ends.set(node, text.length)
 	})
 
-	return { text, taken }
+	return { text, taken, starts, ends }
 }

@@ -2,7 +2,7 @@ import { type ChildNode, type Comment, type Container, type Document, type Root,
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, EVERY_RUN_OF_LINE_BREAKS_PAST_BLANK_LINES, EVERY_SEMICOLON, LEADING_LINE_BREAK_RUN, LEADING_LINE_BREAK_RUN_PAST_BLANK_LINES, OPENS_WITH_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
+import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, EVERY_RUN_OF_LINE_BREAKS_PAST_BLANK_LINES, EVERY_SEMICOLON, LEADING_BYTE_ORDER_MARK, LEADING_LINE_BREAK_RUN, LEADING_LINE_BREAK_RUN_PAST_BLANK_LINES, OPENS_WITH_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
@@ -23,7 +23,8 @@ import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuar
 import { isNumber } from "../../utils/validateTypes/index.ts"
 
 import { blankLineOffsets, blankLinesGo } from "./blankLines.ts"
-import { printEscapes, takenInPrint, textIndex } from "./printEscapes.ts"
+import { anchorsOf, type NodePlaces, placeInText } from "./placeInText.ts"
+import { type PrintEscape, printEscapes, takenInPrint, textIndex } from "./printEscapes.ts"
 import { printWithTaken } from "./printWithTaken.ts"
 
 let { utils: { validateOptions } } = stylelint
@@ -139,6 +140,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		// The print parts from the file where PostCSS escapes a `<`, and the neighbors' semicolons and the warnings are carried across
 		let escapes = rootString === (root.source?.input.css ?? rootString) ? [] : printEscapes(root.source?.input.css ?? ``, rootString)
 		let taken = counted.taken ?? takenInPrint(straySemicolonOffsetsTaken(root, result), escapes)
+		let placed = placeOfWarnings(root, counted, escapes)
 
 		if (blankLinesTaken) for (let offset of blankLineOffsets(rootString, taken)) taken.add(offset)
 
@@ -181,8 +183,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					message: messages.expected,
 					messageArgs: [primary],
 					node,
-					index: textIndex(matchStartIndex, escapes),
-					endIndex: textIndex(matchStartIndex, escapes),
+					index: placed(matchStartIndex),
+					endIndex: placed(matchStartIndex),
 					result,
 					ruleName,
 					fix,
@@ -198,8 +200,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						message: messages.expected,
 						messageArgs: [primary],
 						node,
-						index: textIndex(matchEndIndex, escapes),
-						endIndex: textIndex(matchEndIndex, escapes),
+						index: placed(matchEndIndex),
+						endIndex: placed(matchEndIndex),
 						result,
 						ruleName,
 						fix,
@@ -487,7 +489,7 @@ function searchOptions (text: string, comments: CommentSpan[]): Parameters<typeo
  * @param result - The Stylelint result, which holds the file's syntax and tells a standalone root from a block of a document.
  * @returns The root's text, and the semicolons' offsets in it, nothing where they are to be carried over from the file.
  */
-function countedText (root: Root, result: PostcssResult): { text: string, taken?: Set<number> } {
+function countedText (root: Root, result: PostcssResult): { text: string, taken?: Set<number>, places?: NodePlaces } {
 	let print = nodeSyntax(root, result)?.stringify ?? stringify
 
 	// A block embedded in a document is placed in the document's text, which keeps a byte-order mark; a styled template's root hangs in its document, whose stringifier prints the host code around it. The semicolons are placed in the stringifier's own print where the root's text stands in it once
@@ -499,13 +501,31 @@ function countedText (root: Root, result: PostcssResult): { text: string, taken?
 
 		if (at < 0 || printed.text.indexOf(text, at + 1) >= 0) return { text }
 
-		return { text, taken: withRootTail(root, result, text, new Set([...printed.taken].map((offset) => offset - at).filter((offset) => offset >= 0 && offset < text.length))) }
+		return { text, taken: withRootTail(root, result, text, new Set([...printed.taken].map((offset) => offset - at).filter((offset) => offset >= 0 && offset < text.length))), places: { starts: new Map([...printed.starts].map(([node, start]) => [node, start - at])), ends: new Map([...printed.ends].map(([node, end]) => [node, end - at])) } }
 	}
 
 	// Printed by the syntax, since PostCSS's stringifier drops a Sass nested property's block and a Less mixin call's `!important`, and widens a `//` comment; without the root's opening piece, which is the byte-order mark PostCSS's stringifier prints and `input.css`, which the indices are resolved in, leaves out, while `sugarss` prints none
 	let printed = printWithTaken(root, result, print, false)
 
-	return { text: printed.text, taken: withRootTail(root, result, printed.text, printed.taken) }
+	return { text: printed.text, taken: withRootTail(root, result, printed.text, printed.taken), places: printed }
+}
+
+/**
+ * Carries the offsets of the print the empty lines are counted in into the file, where a warning is placed and where Stylelint reads its line and whether a disable comment covers it: past the escapes where the print parts from the file only there, else by the nodes both hold where a rule listed earlier wrote the print. The document an embedded root is placed in, which the offsets count in, holds a byte-order mark the root's text leaves out and its print keeps.
+ * @param root - The root.
+ * @param counted - The print, and where each node opens and ends in it.
+ * @param counted.text - The print.
+ * @param counted.places - Where each node opens and ends in it, if told.
+ * @param escapes - The print's escapes, or nothing where it parts from the file otherwise.
+ * @returns The carrier.
+ */
+function placeOfWarnings (root: Root, counted: { text: string, places?: NodePlaces }, escapes: PrintEscape[] | undefined): (index: number) => number {
+	let parsed = root.source?.input.css ?? counted.text
+	let mark = LEADING_BYTE_ORDER_MARK.test(counted.text) && !LEADING_BYTE_ORDER_MARK.test(parsed) ? counted.text.charAt(0) : ``
+	let text = `${mark}${parsed}`
+	let anchors = escapes !== undefined || !counted.places || counted.text === text ? undefined : anchorsOf(counted.places, (root.source?.start?.offset ?? 0) - mark.length, counted.text, text)
+
+	return (index) => (anchors ? placeInText(anchors, counted.text, text, index) : textIndex(index, escapes))
 }
 
 /**

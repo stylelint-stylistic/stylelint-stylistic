@@ -163,3 +163,33 @@ describe(`a line of nothing but spaces and tabs the rule about the whitespace en
 		expect(await fixBesideNoEol(code, 1, [true, { ignore: [`empty-lines`] }], false)).toEqual({ code, left: 0 })
 	})
 })
+
+describe(`a warning about empty lines the rules listed earlier wrote lines in front of`, () => {
+	// Stylelint reads the line of a warning in the file, and the rules listed first took the file's first line and the characters of later lines out
+	it.each([
+		[[`@stylistic/no-empty-first-line`, `@stylistic/no-extra-semicolons`, `@stylistic/no-eol-whitespace`, ruleName]],
+		[[`@stylistic/no-extra-semicolons`, `@stylistic/no-eol-whitespace`, ruleName, `@stylistic/no-empty-first-line`]],
+		[[ruleName, `@stylistic/no-empty-first-line`, `@stylistic/no-extra-semicolons`, `@stylistic/no-eol-whitespace`]],
+	])(`stands on the line of the file it is about, past a comment disabling this rule on its own line, in the order %j`, async (order) => {
+		let code = `  \na {}\n/* stylelint-disable-line @stylistic/max-empty-lines */\n ;\n \nb {} \n`
+		let config = { plugins, rules: Object.fromEntries(order.map((name) => [name, name === ruleName ? 1 : true])) }
+		let fixed = await stylelint.lint({ code, config, fix: true })
+
+		expect(fixed.code).toBe(`a {}\n/* stylelint-disable-line @stylistic/max-empty-lines */\n\nb {}\n`)
+	})
+
+	// A neighbor writing a break behind the empty lines, or taking the file's first lines out in front of its end, leaves the warning on its line
+	it.each([
+		[`a { /* stylelint-disable-next-line @stylistic/max-empty-lines */\n\n\n}b {}\n`, [`@stylistic/block-closing-brace-newline-after`, `always`], `a { /* stylelint-disable-next-line @stylistic/max-empty-lines */\n\n}\nb {}\n`],
+		[`  \n\na {} /* stylelint-disable-line @stylistic/max-empty-lines */\n\n\n`, [`@stylistic/no-empty-first-line`, true], `a {} /* stylelint-disable-line @stylistic/max-empty-lines */\n`],
+	] as [string, [string, unknown], string][])(`stands on the line of the file it is about in %j beside %j in either order`, async (code, [name, setting], output) => {
+		for (let thisRuleFirst of [true, false]) {
+			let pair: [string, unknown][] = [[ruleName, 1], [name, setting]]
+			let config = { plugins, rules: Object.fromEntries(thisRuleFirst ? pair : pair.toReversed()) }
+			// eslint-disable-next-line no-await-in-loop -- the orders are read one after another
+			let fixed = await stylelint.lint({ code, config, fix: true })
+
+			expect(fixed.code).toBe(output)
+		}
+	})
+})
