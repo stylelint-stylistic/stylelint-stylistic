@@ -226,10 +226,12 @@ describe(`the output of the three rules that write the head of the file`, () => 
 		await expectEveryOrder(`<style>\n;\n\n; /* stylelint-disable-line @stylistic/no-extra-semicolons */\n;\n\na {}\n</style>\n`, `<style>\n; /* stylelint-disable-line @stylistic/no-extra-semicolons */\n\na {}\n</style>\n`, `postcss-html`, 1)
 	})
 
-	// The rule trimming the end of a line leaves the head raw shorter than the file spells it, which the reading of the semicolons already taken out walks past
+	// The rule trimming the end of a line and the rule collapsing empty lines leave the head raw and the root's tail shorter than the file spells them, which the reading of the semicolons already taken out reads past
 	it.each([
 		[`;\n \n; /* stylelint-disable-line @stylistic/no-extra-semicolons */\na {}`, `; /* stylelint-disable-line @stylistic/no-extra-semicolons */\na {}`],
 		[`;  \n\n;\t/* stylelint-disable-line @stylistic/no-extra-semicolons */`, `;\t/* stylelint-disable-line @stylistic/no-extra-semicolons */`],
+		[` ;\n\n`, `\n`],
+		[`\t;\n\n\n`, `\n`],
 	])(`does the same in a single run beside the rule about the whitespace ending a line, in %j`, async (code, expected) => {
 		let names = [...Object.keys(HEAD_WRITERS), `no-eol-whitespace`]
 		let settled = await Promise.all(orders(names).map(async (order) => {

@@ -27,6 +27,9 @@ export function lineInRaw (raw: string, index: number, endLine: number | undefin
 	return endLine === undefined ? undefined : endLine - (raw.slice(index).match(EVERY_LINE_BREAK) ?? []).length
 }
 
+/** The lines {@link semicolonLine} answered in a run, by the result, the node and the question. */
+let lines = new WeakMap<object, WeakMap<Node, Map<string, number | undefined>>>()
+
 /**
  * Finds the line a semicolon of a raw stands on in the file, read at its place ({@link semicolonOffset}) past the semicolons `semicolonsTakenAlreadyIn` finds a rule listed earlier took out — where the neighbor places its warning, as far as that reading finds them.
  * @param node - The node whose raw it is, whose root holds the file.
@@ -43,10 +46,24 @@ export function semicolonLine (node: Node, key: `before` | `after` | `ownSemicol
 
 	if (rawEnd === undefined || input === undefined || typeof raw !== `string` || rawEnd > input.css.length) return undefined
 
+	// A pass holds its file, configuration and disable comments; the line reads the raw as it stands, which the question names, and the semicolons already taken out of it, which the per-raw answer keeps for the pass
+	let pass = result.stylelint ?? result
+	let byNode = lines.get(pass) ?? new WeakMap<Node, Map<string, number | undefined>>()
+	let asked = byNode.get(node) ?? new Map<string, number | undefined>()
+	let question = `${key}:${rawEnd}:${index}:${raw}`
+
+	lines.set(pass, byNode)
+	byNode.set(node, asked)
+
+	if (asked.has(question)) return asked.get(question)
+
 	let offset = semicolonOffset(input.css, rawEnd, raw, index, semicolonsTakenAlreadyIn(node, key, input.css, result))
 	let line = offset === undefined ? undefined : input.fromOffset(offset)?.line
+	let answer = line === undefined ? undefined : (root.source?.start?.line ?? 1) + line - 1
 
-	return line === undefined ? undefined : (root.source?.start?.line ?? 1) + line - 1
+	asked.set(question, answer)
+
+	return answer
 }
 
 /**

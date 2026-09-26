@@ -12,6 +12,9 @@ export type DisabledRange = {
 	rules?: string[] | undefined,
 }
 
+/** The ranges read for a rule, by the list Stylelint filed them in. */
+let readRanges = new WeakMap<DisabledRange[], Map<string, DisabledRange[]>>()
+
 /**
  * Asks whether a `stylelint-disable` comment keeps a rule's fix off a line.
  *
@@ -36,7 +39,13 @@ export function fixDisabledRanges (result: PostcssResult, ruleName: string): Dis
 
 	if (stylelint?.config?.ignoreDisables) return []
 
-	let ranges = stylelint?.disabledRanges?.[ruleName] ?? stylelint?.disabledRanges?.[EVERY_RULE] ?? []
+	let all = stylelint?.disabledRanges?.[ruleName] ?? stylelint?.disabledRanges?.[EVERY_RULE] ?? []
+	// Stylelint files the ranges before any rule runs, so a list read once stands for the run
+	let byName = readRanges.get(all) ?? new Map<string, DisabledRange[]>()
+	let ranges = byName.get(ruleName) ?? all.filter((range) => !range.rules || range.rules.includes(ruleName))
 
-	return ranges.filter((range) => !range.rules || range.rules.includes(ruleName))
+	byName.set(ruleName, ranges)
+	readRanges.set(all, byName)
+
+	return ranges
 }

@@ -12,6 +12,8 @@ import { lastNonCommentNode } from "../lastNonCommentNode/index.ts"
 import { neighborCopies } from "../neighborSettings/index.ts"
 import { lineInRaw, NO_EXTRA_SEMICOLONS, noExtraSemicolonsTaken, semicolonLine, takenByNoExtra } from "../noExtraSemicolonsTaken/index.ts"
 import { runInFrontOf } from "../runInFrontOf/index.ts"
+import { semicolonOffset } from "../semicolonOffset/index.ts"
+import { semicolonsTakenAlreadyIn } from "../semicolonsTakenAlready/index.ts"
 import { isAtRule, isComment, isDeclaration } from "../typeGuards/index.ts"
 
 /**
@@ -460,6 +462,7 @@ export function straySemicolonsTakenOwn (node: Node, result: PostcssResult): Set
 export function straySemicolonOffsetsTaken (root: Container, result: PostcssResult): Set<number> {
 	let offsets: Set<number> = new Set()
 	let rootStart = root.source?.start?.offset ?? 0
+	let text = root.source?.input.css ?? ``
 
 	/**
 	 * Files the taken semicolons of one raw.
@@ -478,8 +481,10 @@ export function straySemicolonOffsetsTaken (root: Container, result: PostcssResu
 
 		// The root's own tail is placed in its text already
 		let base = owner === root ? rawStart : rawStart - rootStart
+		// A rule listed earlier may have rewritten the raw, which stays where it ends while its start moves; the semicolon is placed where the neighbor places its warning, past those already taken out of the raw, and by characters where the file holds too few
+		let passed = semicolonsTakenAlreadyIn(owner, key, text, result)
 
-		for (let index of taken) offsets.add(base + index)
+		for (let index of taken) offsets.add(semicolonOffset(text, base + raw.length, raw, index, passed) ?? base + index)
 	}
 
 	root.walk((node) => {
