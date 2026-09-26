@@ -386,6 +386,24 @@ testRule({
 	],
 
 	reject: [
+		// A list opening with a comma holds the break in front of it, which the raw in front of the text files, so it stays multi-line once the next comma is fixed and the first one's warning stands unfixed
+		{
+			description: `breaks in front of a comma opening the parameters and of the next one`,
+			code: `@media\n,a\n,b {}`,
+			fixed: `@media\n,a,b {}`,
+			warnings: [
+				{
+					line: 2,
+					column: 1,
+					message: messages.rejectedBeforeMultiLine(),
+				},
+				{
+					line: 3,
+					column: 1,
+					message: messages.rejectedBeforeMultiLine(),
+				},
+			],
+		},
 		{
 			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the query in front of a line break and the comma, which the write would turn into an escaped comma, so the warning stands`,

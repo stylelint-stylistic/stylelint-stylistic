@@ -4,7 +4,7 @@ import type { PostcssResult } from "stylelint"
 
 import type { SelectorCopies, Syntax } from "../../syntaxes/index.ts"
 import type { InlineComment } from "../../syntaxes/index.ts"
-import { rawInFrontOfText } from "../rawInFrontOfText/index.ts"
+import { listLines, rawInFrontOfText } from "../rawInFrontOfText/index.ts"
 import { report } from "../report/index.ts"
 import { selectorSearchCopy } from "../selectorSearchCopy/index.ts"
 import type { WhitespaceChecker } from "../whitespaceChecker/index.ts"
@@ -62,7 +62,9 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 			},
 		)
 
-		for (let index of commaIndices) checkDelimiter(selector, runString, index, rule, copies, textBefore)
+		let lineCheckStr = listLines(rule, runString, commaIndices[0] === 0, opts.result)
+
+		for (let index of commaIndices) checkDelimiter(selector, runString, index, rule, copies, textBefore, lineCheckStr)
 	})
 
 	/**
@@ -73,12 +75,14 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 	 * @param node - The rule the warning is reported on.
 	 * @param copies - The selector, opened by the syntax.
 	 * @param textBefore - What the file holds in front of the selector, where a comma opening it has its run.
+	 * @param lineCheckStr - What the list's lineness is asked of.
 	 */
-	function checkDelimiter (source: string, runString: string, index: number, node: Rule, copies: SelectorCopies, textBefore: string): void {
+	function checkDelimiter (source: string, runString: string, index: number, node: Rule, copies: SelectorCopies, textBefore: string, lineCheckStr: string): void {
 		opts.locationChecker({
 			source: runString,
 			index,
 			textBefore,
+			lineCheckStr,
 			err: (message) => {
 				let sourceIndex = copies.toSourceIndex(index)
 				// Before the report, since Stylelint counts a fixer as applied whatever it does

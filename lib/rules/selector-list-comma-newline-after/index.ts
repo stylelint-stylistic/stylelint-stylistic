@@ -6,6 +6,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { listLines } from "../../utils/rawInFrontOfText/index.ts"
 import { report } from "../../utils/report/index.ts"
 import { rereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -79,9 +80,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				},
 			)
 
+			// A comma opening the selector opens the list with an empty item, and the run in front of it is among the list's lines, as for the other rules of the list
+			let lineCheckStr = listLines(ruleNode, selector, checks[0]?.commaIndex === 0, result)
+
 			for (let { commaIndex, checkIndex } of checks) {
 				checker.afterOneOnly({
 					source: selector,
+					lineCheckStr,
 					index: checkIndex,
 					err: (m) => {
 						// A `never` fix may take the break closing an inline comment: reported unfixed. The `always` options take nothing

@@ -7,7 +7,7 @@ import { LEADING_BLOCK_COMMENT, MEDIA_AT_RULE, OPENS_WITH_INLINE_COMMENT } from 
 import type { Syntax } from "../../syntaxes/index.ts"
 import { atRuleParamIndex } from "../atRuleParamIndex/index.ts"
 import { findFunctionArgumentSpans } from "../findFunctionArgumentSpans/index.ts"
-import { rawInFrontOfText } from "../rawInFrontOfText/index.ts"
+import { listLines, rawInFrontOfText } from "../rawInFrontOfText/index.ts"
 import { report } from "../report/index.ts"
 import { assertString } from "../validateTypes/index.ts"
 import type { WhitespaceChecker } from "../whitespaceChecker/index.ts"
@@ -77,7 +77,9 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 		// The run in front of a comma opening the parameters lies in `raws.afterName`, comments and all
 		let textBefore = rawInFrontOfText(atRule)
 
-		for (let { comma, pastComments } of commas) checkComma(params, runString, opts.allowTrailingComments ? pastComments : comma, atRule, textBefore)
+		let lineCheckStr = listLines(atRule, runString, commas[0]?.comma === 0, opts.result)
+
+		for (let { comma, pastComments } of commas) checkComma(params, runString, opts.allowTrailingComments ? pastComments : comma, atRule, textBefore, lineCheckStr)
 	})
 
 	/**
@@ -87,12 +89,14 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 	 * @param index - The comma's index.
 	 * @param node - The at-rule.
 	 * @param textBefore - What the file holds in front of the parameters, where a comma opening them has its run.
+	 * @param lineCheckStr - What the list's lineness is asked of.
 	 */
-	function checkComma (source: string, runString: string, index: number, node: AtRule, textBefore: string): void {
+	function checkComma (source: string, runString: string, index: number, node: AtRule, textBefore: string, lineCheckStr: string): void {
 		opts.locationChecker({
 			source: runString,
 			index,
 			textBefore,
+			lineCheckStr,
 			err: (message) => {
 				let commaIndex = index + atRuleParamIndex(node)
 				// Asked here, not in front of the check, so parameters in order are not read once per comma

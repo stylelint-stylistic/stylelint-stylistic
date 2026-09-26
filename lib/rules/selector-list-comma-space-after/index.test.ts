@@ -361,6 +361,11 @@ testRule({
 	config: [`always-single-line`],
 
 	accept: [
+		// A list opening with a comma behind a break is multi-line, as it is where the break stands in front of a later comma, so a single-line option asks nothing of it
+		{
+			description: `a break in front of a comma opening the selector`,
+			code: `x {}\n,b,c {}`,
+		},
 		{
 			description: `a space after the comma of a single-line list`,
 			code: `a, b {}`,

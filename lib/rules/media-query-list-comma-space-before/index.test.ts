@@ -368,6 +368,11 @@ testRule({
 	config: [`always-single-line`],
 
 	accept: [
+		// A list opening with a comma behind a break is multi-line, as it is where the break stands in front of a later comma, so a single-line option asks nothing of it
+		{
+			description: `a break in front of a comma opening the list`,
+			code: `@media\n,a {}`,
+		},
 		{
 			description: `a space in front of the comma of a single-line list`,
 			code: `@media screen and (color) ,projection and (color) {}`,
@@ -455,6 +460,11 @@ testRule({
 	config: [`never-single-line`],
 
 	accept: [
+		// A list opening with a comma behind a break is multi-line, as it is where the break stands in front of a later comma, so a single-line option asks nothing of it
+		{
+			description: `a break in front of a comma opening the list`,
+			code: `@media\n,a {}`,
+		},
 		{
 			description: `no space in front of the comma of a single-line list`,
 			code: `@media screen and (color), projection and (color) {}`,

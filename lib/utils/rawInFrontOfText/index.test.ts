@@ -2,9 +2,12 @@ import { AtRule, Declaration, parse, Rule } from "postcss"
 import html from "postcss-html"
 import less from "postcss-less"
 import scss from "postcss-scss"
+import stylelint from "stylelint"
 import { describe, expect, it } from "vitest"
 
-import { rawInFrontOfText } from "./index.ts"
+import plugins from "../../index.ts"
+
+import { listLines, rawInFrontOfText } from "./index.ts"
 
 /** A parser, as the syntaxes declare theirs over a document as well as a root. */
 type Parser = { parse: (source: string) => ReturnType<typeof parse> }
@@ -69,5 +72,41 @@ describe(`rawInFrontOfText`, () => {
 	it(`hands back the empty raw where the parser filed none`, () => {
 		expect(rawInFrontOfText(new AtRule({ name: `media`, params: `a` }))).toBe(``)
 		expect(rawInFrontOfText(new Declaration({ prop: `color`, value: `pink` }))).toBe(``)
+	})
+})
+
+describe(`listLines`, () => {
+	// The run in front of a comma opening the text stands inside the list; in front of an item it stands in front of the list
+	it(`reads the run in front of a comma opening a selector with the selector, and nothing in front of an item`, () => {
+		let root = parse(`x {}\n,a {}\nb {}`)
+		let [, opening, item] = root.nodes as Rule[]
+
+		expect(listLines(opening as Rule, `,a`, true, { stylelint: {} } as never)).toBe(`\n,a`)
+		expect(listLines(item as Rule, `b`, false, { stylelint: {} } as never)).toBe(`b`)
+	})
+
+	it(`reads the whole raw behind an at-rule's name, a comment in it included`, () => {
+		let atRule = parse(`@media\n/* c */ ,a {}`).first as AtRule
+
+		expect(listLines(atRule, `,a`, true, { stylelint: {} } as never)).toBe(`\n/* c */ ,a`)
+	})
+
+	// A neighbor rewriting the run behind the brace leaves it as it writes it, so the list reads the same in front of the write and behind it
+	it.each([
+		[`@stylistic/block-closing-brace-space-after`, `always-single-line`],
+		[`@stylistic/block-closing-brace-newline-after`, `always`],
+	])(`leaves the run out where %s %s writes it, whichever side it is listed`, async (name, option) => {
+		let code = `x {}\n,b, c {}`
+
+		for (let thisFirst of [true, false]) {
+			let pair: [string, unknown][] = [[`@stylistic/selector-list-comma-newline-before`, `always-multi-line`], [name, option]]
+			let config = { plugins, rules: Object.fromEntries(thisFirst ? pair : pair.toReversed()) }
+			// eslint-disable-next-line no-await-in-loop -- the orders are read one after another
+			let fixed = await stylelint.lint({ code, config, fix: true })
+			// eslint-disable-next-line no-await-in-loop -- the fixed text is read back in turn
+			let read = await stylelint.lint({ code: fixed.code ?? code, config })
+
+			expect(read.results[0]?.warnings).toEqual([])
+		}
 	})
 })

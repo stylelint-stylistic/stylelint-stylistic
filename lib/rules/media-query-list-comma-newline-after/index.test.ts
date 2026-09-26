@@ -351,6 +351,24 @@ testRule({
 	],
 
 	reject: [
+		// A list opening with a comma behind a break is multi-line, as it is where the break stands in front of a later comma
+		{
+			description: `a break in front of a comma opening the parameters`,
+			code: `@media\n,a, b {}`,
+			fixed: `@media\n,\na,\n b {}`,
+			warnings: [
+				{
+					line: 2,
+					column: 1,
+					message: messages.expectedAfterMultiLine(),
+				},
+				{
+					line: 2,
+					column: 3,
+					message: messages.expectedAfterMultiLine(),
+				},
+			],
+		},
 		{
 			description: `the first comma of a multi-line list, with no newline after it`,
 			code: `@media screen and (color),projection and (color),\nprint {}`,
