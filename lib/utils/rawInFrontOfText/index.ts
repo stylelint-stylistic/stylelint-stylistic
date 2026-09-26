@@ -2,8 +2,8 @@ import type { Node } from "postcss"
 import type { PostcssResult } from "stylelint"
 
 import { TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
-import { neighborCopies, type NeighborRuleSetting } from "../neighborSettings/index.ts"
 import { runInFrontOf } from "../runInFrontOf/index.ts"
+import { edgeRunAsked } from "../textEdge/index.ts"
 import { isAtRule, isDeclaration } from "../typeGuards/index.ts"
 
 /**
@@ -26,22 +26,10 @@ export function rawInFrontOfText (node: Node): string {
 	return codeBefore + runInFrontOf(node)
 }
 
-/** The rules writing the run in front of a node standing behind a closing brace, in its `raws.before`. */
-const BRACE_RUN_WRITERS: NeighborRuleSetting[] = [
-	{ name: `block-closing-brace-newline-after`, options: [`always`, `always-single-line`, `never-single-line`, `always-multi-line`, `never-multi-line`] },
-	{ name: `block-closing-brace-space-after`, options: [`always`, `never`, `always-single-line`, `never-single-line`, `always-multi-line`, `never-multi-line`] },
-]
-
-/** The rules writing the run behind an at-rule's name, in its `raws.afterName`. */
-const NAME_RUN_WRITERS: NeighborRuleSetting[] = [
-	{ name: `at-rule-name-newline-after`, options: [`always`, `always-multi-line`] },
-	{ name: `at-rule-name-space-after`, options: [`always`, `always-single-line`] },
-]
-
 /**
  * Reads the text whose lineness a list asks, where a delimiter opens it: the list's first item is empty, and the run in front of that delimiter, which the parser files in the raw in front of the text, stands inside the list, as the run in front of any later delimiter does. Behind an at-rule's name the whole raw stands there, comments and all; in front of a rule its trailing run does, a comment in front of it being a node of its own. Where an item opens the text, the run in front of it stands in front of the list.
  *
- * Where a live neighbor writes that raw — the rules behind a closing brace in front of a rule, the rules behind an at-rule's name — the run is not read, since it stands as that neighbor leaves it, and a list read with it would read one way in front of the write and another behind it, whichever side of the neighbor the asking rule is listed.
+ * Where a live neighbor writes that raw (`edgeRunAsked`) the run is read as that neighbor leaves it, so that the list reads alike in front of the write and behind it, whichever side of the neighbor the asking rule is listed.
  * @param node - The node whose text it is.
  * @param text - The text.
  * @param opensWithDelimiter - Whether a delimiter opens the text.
@@ -51,12 +39,14 @@ const NAME_RUN_WRITERS: NeighborRuleSetting[] = [
 export function listLines (node: Node, text: string, opensWithDelimiter: boolean, result: PostcssResult): string {
 	if (!opensWithDelimiter) return text
 
-	let prev = node.prev()
-	let writers = isAtRule(node) ? NAME_RUN_WRITERS : (prev && `nodes` in prev ? BRACE_RUN_WRITERS : [])
-
-	if (writers.some((writer) => neighborCopies(node, result, writer).some(({ fixDisabled }) => !fixDisabled))) return text
-
 	let raw = rawInFrontOfText(node)
+	let run = isAtRule(node) ? raw : (TRAILING_CSS_WHITESPACE.exec(raw)?.[0] ?? ``)
+	let asked = edgeRunAsked(node, result)
 
-	return `${isAtRule(node) ? raw : (TRAILING_CSS_WHITESPACE.exec(raw)?.[0] ?? ``)}${text}`
+	// The run is read as the neighbors writing it leave it: a break where every one asks one, none where they ask a space or nothing, as it stands where only the indentation is theirs
+	if (asked.every((spelling) => spelling === `noIndentation`)) return `${run}${text}`
+
+	if (asked.every((spelling) => spelling === `newline`)) return `\n${text}`
+
+	return text
 }

@@ -9,6 +9,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { mediaQueryListCommaWhitespaceChecker } from "../../utils/mediaQueryListCommaWhitespaceChecker/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFront } from "../../utils/runInFront/index.ts"
+import { edgeRunOutOfReach, edgeRunOwned, writeEdgeRun } from "../../utils/textEdge/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
 let { utils: { validateOptions } } = stylelint
@@ -60,8 +61,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			checkedRuleName: ruleName,
 			// The fix's whitespace ends this text, and its break would close an inline comment standing there, taking the comma into the comment: leave the parameters alone
 			isFixable: (params, index, atRule, runString) => {
-				// The run in front of a comma opening the parameters is `raws.afterName`, which the fix does not write: a space written into the parameters goes into that raw at the next parse, and every run grows it
-				if (index === 0) return false
+				// The run in front of a comma opening the parameters is `raws.afterName`, written there where it is the stylesheet's and no live neighbor writing that raw asks otherwise; emptied, it would join the name to the parameters, so `never` is left unfixed
+				if (index === 0) return primary.includes(`always`) && !edgeRunOutOfReach(atRule, syntax, result, `space`) && !edgeRunOwned(atRule, result, `space`)
 
 				if (syntax.endsWithInlineComment(params.slice(0, index), syntax.inlineComments(atRule, result))) return false
 
@@ -92,6 +93,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let params = syntax.read(atRule)
 
 				for (let [index, run] of commas.toSorted(([a], [b]) => b - a)) {
+					if (index === 0) {
+						writeEdgeRun(atRule, () => ` `)
+
+						continue
+					}
+
 					let beforeComma = params.slice(0, index - run.length)
 					let afterComma = params.slice(index)
 

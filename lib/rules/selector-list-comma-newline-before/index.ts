@@ -10,6 +10,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFront } from "../../utils/runInFront/index.ts"
 import { selectorListCommaWhitespaceChecker } from "../../utils/selectorListCommaWhitespaceChecker/index.ts"
+import { edgeRunOutOfReach, edgeRunOwned, type EdgeWrite, writeEdgeRun } from "../../utils/textEdge/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
 let { utils: { validateOptions } } = stylelint
@@ -60,8 +61,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			checkedRuleName: ruleName,
 			// `never-multi-line` may take away the break closing a `//` comment and put the comma into it; report and leave the code. `always` only adds a break.
 			isFixable: (selector, index, inlineComments, ruleNode, runString) => {
-				// The run in front of a comma opening the selector is `raws.before`, other rules' to write; a break written into the selector goes into that raw at the next parse, the comma opens the selector again, and every run grows the file by a line
-				if (index === 0) return false
+				// The run in front of a comma opening the selector is at the end of `raws.before`, written there where it is the stylesheet's and no live neighbor writing that raw asks otherwise
+				if (index === 0) {
+					let written: EdgeWrite = primary.startsWith(`always`) ? `newline` : `none`
+
+					return !edgeRunOutOfReach(ruleNode, syntax, result, written) && !edgeRunOwned(ruleNode, result, written)
+				}
 
 				let runStart = selector.slice(0, index).trimEnd().length
 				let closesInlineComment = inlineComments.some((inlineComment) => runStart <= inlineComment.endIndex && inlineComment.endIndex < index)
@@ -94,6 +99,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let { selector } = copies
 
 				for (let [index, run] of commas.toSorted(([a], [b]) => b - a)) {
+					if (index === 0) {
+						writeEdgeRun(ruleNode, (edge) => (primary.startsWith(`always`) ? getLineBreak(root, result) + (edge.match(TRAILING_SPACES_AND_TABS)?.[0] ?? ``) : ``))
+
+						continue
+					}
+
 					let beforeSelector = selector.slice(0, index)
 					let afterSelector = selector.slice(index)
 

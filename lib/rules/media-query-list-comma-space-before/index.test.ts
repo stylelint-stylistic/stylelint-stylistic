@@ -63,11 +63,11 @@ testRule({
 	],
 
 	reject: [
-		// The run in front of a comma opening the parameters is read in the at-rule's raw behind its name, where the fix does not write
+		// The run in front of a comma opening the parameters is read in the at-rule's raw behind its name, written there where no live neighbor writing that raw asks otherwise
 		{
 			description: `a break in front of a comma opening the parameters, behind the name`,
 			code: `@media\n,a { b { c: d } }`,
-			fixed: `@media\n,a { b { c: d } }`,
+			fixed: `@media ,a { b { c: d } }`,
 			line: 2,
 			column: 1,
 			message: messages.expectedBefore(),
@@ -256,7 +256,7 @@ testRule({
 	],
 
 	reject: [
-		// The run in front of a comma opening the parameters is read in the at-rule's raw behind its name, where the fix does not write
+		// The run in front of a comma opening the parameters is read in the at-rule's raw behind its name, which the fix does not empty, since that would join the name to the parameters
 		{
 			description: `a space in front of a comma opening the parameters, behind the name`,
 			code: `@media ,a { b { c: d } }`,

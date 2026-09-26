@@ -86,11 +86,11 @@ testRule({
 	],
 
 	reject: [
-		// The run in front of a solidus opening the value is read in the declaration's raw behind the colon, where the fix does not write
+		// The run in front of a solidus opening the value is read in the declaration's raw behind the colon, written there where no live neighbor writing that raw asks otherwise
 		{
 			description: `nothing in front of a solidus opening the value, behind the colon`,
 			code: `a { grid-area:/2 }`,
-			fixed: `a { grid-area:/2 }`,
+			fixed: `a { grid-area: /2 }`,
 			line: 1,
 			column: 15,
 			message: messages.expectedBefore(),
@@ -325,11 +325,11 @@ testRule({
 	],
 
 	reject: [
-		// The run in front of a solidus opening the value is read in the declaration's raw behind the colon, where the fix does not write
+		// The run in front of a solidus opening the value is read in the declaration's raw behind the colon, written there where no live neighbor writing that raw asks otherwise
 		{
 			description: `a break in front of a solidus opening the value, behind the colon`,
 			code: `a { grid-area:\n/2 }`,
-			fixed: `a { grid-area:\n/2 }`,
+			fixed: `a { grid-area:/2 }`,
 			line: 2,
 			column: 1,
 			message: messages.rejectedBefore(),

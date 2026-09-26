@@ -67,11 +67,11 @@ testRule({
 	],
 
 	reject: [
-		// The run in front of a comma opening the selector is read in the raw in front of it, where the fix does not write
+		// The run in front of a comma opening the selector is read in the raw in front of it, written there where no live neighbor writing that raw asks otherwise
 		{
 			description: `a break in front of a comma opening the selector, in the raw in front of it`,
 			code: `x {}\n,a { b: c }`,
-			fixed: `x {}\n,a { b: c }`,
+			fixed: `x {} ,a { b: c }`,
 			line: 2,
 			column: 1,
 			message: messages.expectedBefore(),
@@ -79,7 +79,7 @@ testRule({
 		{
 			description: `nothing in front of a comma opening the selector behind a rule`,
 			code: `x {},a { b: c }`,
-			fixed: `x {},a { b: c }`,
+			fixed: `x {} ,a { b: c }`,
 			line: 1,
 			column: 5,
 			message: messages.expectedBefore(),
@@ -289,11 +289,11 @@ testRule({
 	],
 
 	reject: [
-		// The run in front of a comma opening the selector is read in the raw in front of it, where the fix does not write
+		// The run in front of a comma opening the selector is read in the raw in front of it, written there where no live neighbor writing that raw asks otherwise
 		{
 			description: `a break in front of a comma opening the selector, in the raw in front of it`,
 			code: `x {}\n,a { b: c }`,
-			fixed: `x {}\n,a { b: c }`,
+			fixed: `x {},a { b: c }`,
 			line: 2,
 			column: 1,
 			message: messages.rejectedBefore(),

@@ -1,7 +1,7 @@
 import type { AtRule } from "postcss"
 import stylelint from "stylelint"
 
-import { TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
+import { EVERY_RUN_IN_FRONT_OF_A_COMMA, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { breakAtRereadsParentheses } from "../../utils/breakRereadsParentheses/index.ts"
@@ -9,9 +9,11 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { mediaQueryListCommaWhitespaceChecker } from "../../utils/mediaQueryListCommaWhitespaceChecker/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFront } from "../../utils/runInFront/index.ts"
+import { edgeRunOutOfReach, edgeRunOwned, type EdgeWrite, writeEdgeRun } from "../../utils/textEdge/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
 let { utils: { validateOptions } } = stylelint
@@ -62,8 +64,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			checkedRuleName: ruleName,
 			// `never-multi-line` may take away the break closing a `//` comment and put the comma into it; report and leave the parameters. `always` only adds a break.
 			isFixable: (params, index, atRule, runString) => {
-				// The run in front of a comma opening the parameters is `raws.afterName`, the at-rule name rules' to write; a break written into the parameters goes into that raw and is asked for again
-				if (index === 0) return false
+				// The run in front of a comma opening the parameters is `raws.afterName`, written there where it is the stylesheet's and no live neighbor writing that raw asks otherwise; emptied, it would join the name to the parameters, so `never-multi-line` writes one space, which leaves the list on one line
+				if (index === 0) {
+					let written: EdgeWrite = primary.startsWith(`always`) ? `newline` : `space`
+					// The space leaves the list on one line only where no break stands in it once the runs in front of its commas are taken out, as this fix takes them
+					let listAfter = primary === `never-multi-line` ? params.replace(EVERY_RUN_IN_FRONT_OF_A_COMMA, ``) : ``
+
+					return isSingleLineString(listAfter) && !edgeRunOutOfReach(atRule, syntax, result, written) && !edgeRunOwned(atRule, result, written)
+				}
 
 				let closesInlineComment = syntax.endsWithInlineComment(params.slice(0, index), syntax.inlineComments(atRule, result))
 
@@ -99,6 +107,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let params = syntax.read(atRule)
 
 				for (let [index, run] of commas.toSorted(([a], [b]) => b - a)) {
+					if (index === 0) {
+						writeEdgeRun(atRule, (edge) => (primary.startsWith(`always`) ? getLineBreak(root, result) + (edge.match(TRAILING_SPACES_AND_TABS)?.[0] ?? ``) : ` `))
+
+						continue
+					}
+
 					let beforeComma = params.slice(0, index)
 					let afterComma = params.slice(index)
 

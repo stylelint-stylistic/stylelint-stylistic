@@ -139,9 +139,10 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			description: `a comma opening the parameters, whose whitespace is the at-rule name's and out of the fixer's reach, so the warning stands and nothing is written`,
+			description: `a comma opening the parameters, whose run behind the at-rule's name is written there`,
 			code: `@media ,screen and (color) {}`,
-			fixed: `@media ,screen and (color) {}`,
+			fixed: `@media
+ ,screen and (color) {}`,
 			line: 1,
 			column: 8,
 			message: messages.expectedBefore(),
@@ -386,11 +387,11 @@ testRule({
 	],
 
 	reject: [
-		// A list opening with a comma holds the break in front of it, which the raw in front of the text files, so it stays multi-line once the next comma is fixed and the first one's warning stands unfixed
+		// The run behind the name is not emptied, which would join the name to the parameters, but one space leaves the list on one line, where the option asks nothing
 		{
 			description: `breaks in front of a comma opening the parameters and of the next one`,
 			code: `@media\n,a\n,b {}`,
-			fixed: `@media\n,a,b {}`,
+			fixed: `@media ,a,b {}`,
 			warnings: [
 				{
 					line: 2,

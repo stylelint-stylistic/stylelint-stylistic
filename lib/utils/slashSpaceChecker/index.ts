@@ -1,7 +1,7 @@
 import type { AtRule, Declaration, Root } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { LEADING_CSS_WHITESPACE, MEDIA_AT_RULE, SPACES_THEN_BLOCK_COMMENT, SPACES_THEN_INLINE_COMMENT, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
+import { LEADING_CSS_WHITESPACE, MEDIA_AT_RULE, SPACES_THEN_BLOCK_COMMENT, SPACES_THEN_INLINE_COMMENT, TRAILING_CSS_WHITESPACE, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import type { InlineCommentReading, Syntax } from "../../syntaxes/index.ts"
 import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import { atRuleParamIndex } from "../atRuleParamIndex/index.ts"
@@ -16,6 +16,8 @@ import { matchesStringOrRegExp } from "../matchesStringOrRegExp/index.ts"
 import { rawInFrontOfText } from "../rawInFrontOfText/index.ts"
 import { report } from "../report/index.ts"
 import { rereadsAnAddress } from "../rereadsAnAddress/index.ts"
+import { edgeRunOutOfReach, edgeRunOwned, type EdgeWrite, textBeforeAsLeft, writeEdgeRun } from "../textEdge/index.ts"
+import { isAtRule } from "../typeGuards/index.ts"
 import type { WhitespaceChecker } from "../whitespaceChecker/index.ts"
 
 /** The solidus rules' options. */
@@ -121,11 +123,13 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 	return (node, text, textIndex, lineCheckStr, readsGroups) => {
 		let reading = syntax.inlineComments(node, result)
 		// A solidus opening the text has its run in the raw in front of it, `raws.between` of a declaration or `raws.afterName` of an at-rule
-		let textBefore = rawInFrontOfText(node)
+		let textBefore = textBeforeAsLeft(node, rawInFrontOfText(node), result)
 		// The run beside the solidus is read over the copy with its escapes masked, where an escaped space is a character of a word and no run; the guards read the text the write lands in
 		let runText = maskEscapes(text, findEscapeSpans(text, reading), true)
 		let written = writes ? (whitespace === `newline` ? getLineBreak(node, result) : ` `) : ``
 		let edits: Edit[] = []
+		// What the fix writes in front of a solidus opening the text, in the raw in front of it
+		let edge: { written?: string } = {}
 
 		let checks: { slash: SeparatorSlash, checkIndex: number }[] = []
 
@@ -137,9 +141,11 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 
 		for (let { slash, checkIndex } of checks) {
 			let span = spanAt(runText, checkIndex, position, whitespace, writes)
+			// The run in front of a solidus opening the text is at the end of the raw in front of it, written there where no live neighbor writes that raw; emptied behind an at-rule's name, it would join the name to the parameters
+			let opensTheText = position === `before` && slash.index === 0
 			// Refused before the report, since a fixer cannot decline
-			// The run in front of a solidus opening the text is the raw in front of it, which the text's span does not hold: a space written there moves into the raw at the next parse, and a run to empty is not in the text to take; only a break written in front of the solidus stands
-			let isFixable = !(position === `before` && slash.index === 0 && (whitespace === `space` || !writes)) && writesTheSpan(syntax, reading, text, span, written, position)
+			let edgeWritten: EdgeWrite = writes ? (whitespace === `newline` ? `newline` : `space`) : `none`
+			let isFixable = opensTheText ? (writes || !isAtRule(node)) && !edgeRunOutOfReach(node, syntax, result, edgeWritten) && !edgeRunOwned(node, result, edgeWritten) : writesTheSpan(syntax, reading, text, span, written, position)
 
 			opts.locationChecker({
 				source: runText,
@@ -155,13 +161,25 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 						endIndex: index,
 						result,
 						ruleName: opts.checkedRuleName,
-						...(isFixable && { fix: (): void => { edits.push({ ...span, text: written }) } }),
+						...(isFixable && {
+							fix: (): void => {
+								if (opensTheText) edge.written = written
+								else edits.push({ ...span, text: written })
+							},
+						}),
 					})
 				},
 			})
 		}
 
 		if (edits.length > 0) syntax.write(node, applyEditsFromEnd(text, edits))
+
+		// A break is written in front of the spaces and tabs ending the run, which become the indentation of the solidus's line
+		if (edge.written !== undefined) {
+			let run = edge.written
+
+			writeEdgeRun(node, (standing) => (whitespace === `newline` && run ? run + (standing.match(TRAILING_SPACES_AND_TABS)?.[0] ?? ``) : run))
+		}
 	}
 }
 

@@ -211,12 +211,12 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// The run in front of such a comma is `raws.before`, which this rule does not write: a break written into the selector lands in that raw at the next parse, the comma opens the selector again, and every run grows the file by a line
-			description: `a comma opening the selector of the first rule of the file`,
-			code: `,a {}`,
-			fixed: `,a {}`,
+			// The run in front of such a comma is at the end of `raws.before`, where the break is written, no neighbor writing that raw behind a comment
+			description: `a comma opening the selector of a rule behind a comment`,
+			code: `/* c */,a {}`,
+			fixed: `/* c */\n,a {}`,
 			line: 1,
-			column: 1,
+			column: 8,
 			message: messages.expectedBefore(),
 		},
 	],
@@ -332,11 +332,11 @@ testRule({
 	],
 
 	reject: [
-		// A list opening with a comma holds the break in front of it, which the raw in front of the text files, so it stays multi-line once the next comma is fixed and the first one's warning stands unfixed
+		// A list opening with a comma holds the break in front of it, which the raw in front of the text files, so the list is multi-line, and the run in front of it, at the end of that raw, goes as the next one does
 		{
 			description: `breaks in front of a comma opening a selector and of the next one`,
 			code: `a {}\n,b\n,c {}`,
-			fixed: `a {}\n,b,c {}`,
+			fixed: `a {},b,c {}`,
 			warnings: [
 				{
 					line: 2,
@@ -450,7 +450,8 @@ testRule({
 		{
 			description: `a comma opening an embedded stylesheet that starts on the opening tag's own line`,
 			code: `<style>,a { b: c }</style>`,
-			fixed: `<style>,a { b: c }</style>`,
+			fixed: `<style>
+,a { b: c }</style>`,
 			line: 1,
 			column: 8,
 			message: messages.expectedBefore(),

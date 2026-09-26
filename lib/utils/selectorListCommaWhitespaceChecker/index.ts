@@ -7,6 +7,7 @@ import type { InlineComment } from "../../syntaxes/index.ts"
 import { listLines, rawInFrontOfText } from "../rawInFrontOfText/index.ts"
 import { report } from "../report/index.ts"
 import { selectorSearchCopy } from "../selectorSearchCopy/index.ts"
+import { textBeforeAsLeft } from "../textEdge/index.ts"
 import type { WhitespaceChecker } from "../whitespaceChecker/index.ts"
 
 export interface SelectorListCommaWhitespaceCheckerOptions {
@@ -46,7 +47,7 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 		let copies = opts.syntax.selectorCopies(rule)
 		let { selector } = copies
 
-		let textBefore = rawInFrontOfText(rule)
+		let textBefore = textBeforeAsLeft(rule, rawInFrontOfText(rule), opts.result)
 		let commaIndices: number[] = []
 		// The search reads a string and an escape by rules of its own, so the commas are found and checked over the copies and reported at the selector's index; the whitespace is read over the second copy, where an escaped space is a character of a name and no run
 		let { searchString, runString } = selectorSearchCopy(selector)

@@ -73,11 +73,11 @@ testRule({
 	],
 
 	reject: [
-		// The run in front of a solidus opening the parameters is read in the at-rule's raw behind its name, which the fix does not write
+		// The run in front of a solidus opening the parameters is read in the at-rule's raw behind its name, written there where no live neighbor writing that raw asks otherwise
 		{
 			description: `nothing in front of a solidus opening the parameters, behind the name`,
 			code: `@media/(x) {}`,
-			fixed: `@media/(x) {}`,
+			fixed: `@media /(x) {}`,
 			line: 1,
 			column: 7,
 			message: messages.expectedBefore(),
@@ -267,7 +267,7 @@ testRule({
 	],
 
 	reject: [
-		// The run in front of a solidus opening the parameters is read in the at-rule's raw behind its name, which the fix does not write
+		// The run in front of a solidus opening the parameters is read in the at-rule's raw behind its name, which the fix does not empty, since that would join the name to the parameters
 		{
 			description: `a break in front of a solidus opening the parameters, behind the name`,
 			code: `@media\n/(x) {}`,

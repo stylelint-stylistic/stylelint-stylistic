@@ -10,6 +10,9 @@ export const ASPECT_RATIO_PROPERTY = /^aspect-ratio$/iu
 /** The first line break, captured. */
 export const CAPTURED_LINE_BREAK = /(\r?\n)/u
 
+/** The colon a declaration's `raws.between` opens with, with the whitespace around it. */
+export const COLON_AND_WHITESPACE = /^[ \t\n\r\f]*:[ \t\n\r\f]*/u
+
 /** A hex color anywhere. */
 export const CONTAINS_HEX_COLOR = /#[\da-z]+/iu
 
@@ -39,6 +42,9 @@ export const EVERY_COMMENT_DELIMITER = /(\*\/|\/\*)/gu
 
 /** Every character `max-empty-lines` writes a space or a tab of a kept line of spaces as while it collapses runs of empty lines: U+E000 and U+E001, from Unicode's private use area. */
 export const EVERY_KEPT_LINE_MASK = /[\uE000\uE001]/gu
+
+/** Every run of tokenizer whitespace standing in front of a comma. */
+export const EVERY_RUN_IN_FRONT_OF_A_COMMA = /[ \t\n\r\f]+(?=,)/gu
 
 /** Every space and every tab. */
 export const EVERY_SPACE_OR_TAB = /[ \t]/gu

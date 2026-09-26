@@ -15,11 +15,14 @@ export type NeighborRule = {
 
 /**
  * Reads the primary option out of a setting.
- * @param setting - A rule's configured value: a keyword or `true`, or an array opening with one.
- * @returns The option, where it is a keyword or `true`.
+ * @param setting - A rule's configured value: a keyword, a count or `true`, or an array opening with one.
+ * @returns The option, where it is a keyword or `true`, or a count spelled as a string.
  */
 function primaryOf (setting: unknown): string | true | undefined {
 	let option: unknown = Array.isArray(setting) ? setting[0] : setting
+
+	// A count, as `max-empty-lines` and `indentation` take, is read as its spelling
+	if (typeof option === `number`) return String(option)
 
 	return typeof option === `string` || option === true ? option : undefined
 }

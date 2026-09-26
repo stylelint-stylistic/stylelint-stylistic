@@ -183,11 +183,11 @@ testRule({
 	],
 
 	reject: [
-		// The run in front of a solidus opening the value is read in the declaration's raw behind the colon, which the fix does not write
+		// The run in front of a solidus opening the value is read in the declaration's raw behind the colon, written there where no live neighbor writing that raw asks otherwise
 		{
 			description: `a break in front of a solidus opening the value, behind the colon`,
 			code: `a { grid-area:\n/2 }`,
-			fixed: `a { grid-area:\n/2 }`,
+			fixed: `a { grid-area:/2 }`,
 			line: 2,
 			column: 1,
 			message: messages.rejectedBeforeMultiLine(),

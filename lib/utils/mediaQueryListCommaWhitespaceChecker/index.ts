@@ -9,6 +9,7 @@ import { atRuleParamIndex } from "../atRuleParamIndex/index.ts"
 import { findFunctionArgumentSpans } from "../findFunctionArgumentSpans/index.ts"
 import { listLines, rawInFrontOfText } from "../rawInFrontOfText/index.ts"
 import { report } from "../report/index.ts"
+import { textBeforeAsLeft } from "../textEdge/index.ts"
 import { assertString } from "../validateTypes/index.ts"
 import type { WhitespaceChecker } from "../whitespaceChecker/index.ts"
 
@@ -75,7 +76,7 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 		})
 
 		// The run in front of a comma opening the parameters lies in `raws.afterName`, comments and all
-		let textBefore = rawInFrontOfText(atRule)
+		let textBefore = textBeforeAsLeft(atRule, rawInFrontOfText(atRule), opts.result)
 
 		let lineCheckStr = listLines(atRule, runString, commas[0]?.comma === 0, opts.result)
 
