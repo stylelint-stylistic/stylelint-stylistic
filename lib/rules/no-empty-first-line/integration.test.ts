@@ -101,6 +101,14 @@ describe(`the output of no-empty-first-line beside a rule that writes into the h
 
 		await expectBothOrders(code, { once: code, onceWarnings: 0, twice: code })
 	})
+
+	it.each([
+		[`;\n\n; /* stylelint-disable-line @stylistic/no-extra-semicolons */\na {}`, `; /* stylelint-disable-line @stylistic/no-extra-semicolons */\na {}`],
+		[`;\n; /* stylelint-disable-line @stylistic/no-extra-semicolons */\n\na {}`, `; /* stylelint-disable-line @stylistic/no-extra-semicolons */\n\na {}`],
+		[`\n;\n; /* stylelint-disable-line @stylistic/no-extra-semicolons */\n`, `; /* stylelint-disable-line @stylistic/no-extra-semicolons */\n`],
+	])(`reads the lines in front of a semicolon a disable comment keeps as empty where the neighbor takes the one they hold, in %j`, async (code, once) => {
+		await expectBothOrders(code, { once, onceWarnings: 0, twice: once })
+	})
 })
 
 /** The three rules that write the head of the file, by the short names the orders are spelled with. */
