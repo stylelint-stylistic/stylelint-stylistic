@@ -1,7 +1,7 @@
 import styleSearch from "style-search"
 import stylelint from "stylelint"
 
-import { LEADING_CSS_WHITESPACE, WHITESPACE_THEN_BLOCK_COMMENT, WHITESPACE_THEN_INLINE_COMMENT } from "../../regexps.ts"
+import { LEADING_CSS_WHITESPACE, LEADING_WHITESPACE_WITHOUT_BREAK, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE, WHITESPACE_THEN_BLOCK_COMMENT, WHITESPACE_THEN_INLINE_COMMENT } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
@@ -117,7 +117,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let beforeSelector = fixedSelector.slice(0, index)
 					let afterSelector = fixedSelector.slice(index)
 
-					if (primary.startsWith(`always`)) afterSelector = getLineBreak(root, result) + afterSelector
+					// Trim to the break already there, adding one only where none stands, so that no line of whitespace alone is left in front of it
+					if (primary.startsWith(`always`)) afterSelector = OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(afterSelector) ? afterSelector.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : getLineBreak(root, result) + afterSelector
 					else if (primary.startsWith(`never-multi-line`)) afterSelector = afterSelector.replace(LEADING_CSS_WHITESPACE, ``)
 
 					fixedSelector = beforeSelector + afterSelector

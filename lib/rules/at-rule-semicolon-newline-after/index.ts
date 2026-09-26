@@ -1,6 +1,6 @@
 import stylelint from "stylelint"
 
-import { CHARSET_AT_RULE_NAME } from "../../regexps.ts"
+import { CHARSET_AT_RULE_NAME, LEADING_WHITESPACE_WITHOUT_BREAK, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
@@ -8,9 +8,10 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { nextNonCommentNode } from "../../utils/nextNonCommentNode/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
-import { rawNodeString } from "../../utils/rawNodeString/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
+import { straySemicolonsTakenBefore, withoutTaken, writtenAsLeftBefore } from "../../utils/straySemicolonsTaken/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
 let { utils: { validateOptions } } = stylelint
@@ -65,9 +66,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (!nodeToCheck) return
 
 			let problemIndex = nodeString(atRule, result).length + 1
+			// A free semicolon of the checked node's run `no-extra-semicolons` takes out in the same run is read as gone, so that the run is judged as it will stand whichever side of that rule this one is listed
+			let taken = straySemicolonsTakenBefore(nodeToCheck, result)
 
 			checker.afterOneOnly({
-				source: rawNodeString(nodeToCheck, result),
+				source: withoutTaken(runInFrontOf(nodeToCheck), taken) + nodeString(nodeToCheck, result),
 				index: -1,
 				err: (msg) => {
 					report({
@@ -78,7 +81,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						result,
 						ruleName,
 						fix () {
-							nodeToCheck.raws.before = getLineBreak(root, result) + nodeToCheck.raws.before
+							// Trim to the break already there, adding one only where none stands; a free semicolon the neighbor takes out stays for it to take, the run written as it leaves it
+							nodeToCheck.raws.before = writtenAsLeftBefore(nodeToCheck, (standing) => (OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(standing) ? standing.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : getLineBreak(root, result) + standing), result)
 						},
 					})
 				},

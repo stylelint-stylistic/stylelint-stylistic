@@ -1,7 +1,7 @@
 import type { Declaration } from "postcss"
 import stylelint from "stylelint"
 
-import { LEADING_CSS_WHITESPACE, SPACES_THEN_BLOCK_COMMENT, SPACES_THEN_INLINE_COMMENT } from "../../regexps.ts"
+import { LEADING_CSS_WHITESPACE, LEADING_WHITESPACE_WITHOUT_BREAK, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE, SPACES_THEN_BLOCK_COMMENT, SPACES_THEN_INLINE_COMMENT } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { breakAtRereadsParentheses } from "../../utils/breakRereadsParentheses/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
@@ -100,7 +100,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let beforeValue = value.slice(0, valueIndex + 1)
 					let afterValue = value.slice(valueIndex + 1)
 
-					if (primary.startsWith(`always`)) afterValue = getLineBreak(root, result) + afterValue
+					// Trim to the break already there, adding one only where none stands, so that no line of whitespace alone is left in front of it
+					if (primary.startsWith(`always`)) afterValue = OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(afterValue) ? afterValue.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : getLineBreak(root, result) + afterValue
 					else if (primary.startsWith(`never-multi-line`)) afterValue = afterValue.replace(LEADING_CSS_WHITESPACE, ``)
 
 					syntax.write(decl, beforeValue + afterValue)

@@ -147,6 +147,14 @@ testRule({
 
 	reject: [
 		{
+			description: `spaces and a tab between the comma and a break the file spells, which go rather than stand as a line of their own`,
+			code: `a, \t\nb {}`,
+			fixed: `a,\nb {}`,
+			line: 1,
+			column: 2,
+			message: messages.expectedAfter(),
+		},
+		{
 			description: `a form feed beside the comma, which is whitespace and no line break, so the break is written in front of it`,
 			code: `a,\fb {}`,
 			fixed: `a,\n\fb {}`,

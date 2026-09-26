@@ -67,6 +67,14 @@ testRule({
 
 	reject: [
 		{
+			description: `spaces and a tab between the comma and a break the file spells, which go rather than stand as a line of their own`,
+			code: `a { background-size: 0, \t\n0; }`,
+			fixed: `a { background-size: 0,\n0; }`,
+			line: 1,
+			column: 23,
+			message: messages.expectedAfter(),
+		},
+		{
 			description: `a space after the comma`,
 			code: `a { background-size: 0, 0; }`,
 			fixed: `a { background-size: 0,\n 0; }`,

@@ -101,6 +101,14 @@ testRule({
 
 	reject: [
 		{
+			description: `spaces and a tab between the semicolon and a break the file spells, which go rather than stand as a line of their own`,
+			code: `@import "x"; \t\na {}`,
+			fixed: `@import "x";\na {}`,
+			line: 1,
+			column: 13,
+			message: messages.expectedAfter(),
+		},
+		{
 			description: `an at-rule spelled without a space in front of its options, with a declaration standing behind its semicolon`,
 			code: `span { @layer(l); color: red; }`,
 			fixed: `span { @layer(l);\n color: red; }`,
