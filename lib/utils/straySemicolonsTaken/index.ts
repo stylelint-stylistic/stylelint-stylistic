@@ -59,9 +59,24 @@ export function withoutTaken (run: string, taken: Set<number>): string {
 }
 
 /**
+ * Reads the offset of the kept semicolon a count names.
+ * @param kept - The offsets of the kept semicolons, in order.
+ * @param count - How many stand up to it, counted from one.
+ * @returns The offset.
+ * @throws {Error} Where the write dropped a kept semicolon.
+ */
+function atKept (kept: number[], count: number): number {
+	let offset = kept[count - 1]
+
+	if (offset === undefined) throw new Error(`The write must keep every semicolon no-extra-semicolons keeps, in their order`)
+
+	return offset
+}
+
+/**
  * Writes a run as `no-extra-semicolons` leaves it, keeping the semicolons it takes out for it to take.
  *
- * The write is worked out on the run without them, so that it comes out the same whichever side of that rule this one is listed. Each stands behind as many breaks of the written whitespace as stood in front of it, as far as the whitespace holds, so that it keeps its line where the write keeps the breaks around it, and behind as many of the spaces and tabs opening that written line as stood in front of it on its own; taking them leaves the written run.
+ * The write is worked out on the run without them, so that it comes out the same whichever side of that rule this one is listed. Each stands behind the semicolons kept in front of it in the run, which the write keeps in their order, so that the neighbor takes the same semicolons it takes from the file; from the last of them, it stands behind as many breaks of the written whitespace as stood in front of it, as far as the whitespace holds, so that it keeps its line where the write keeps the breaks around it, and behind as many of the spaces and tabs opening that written line as stood in front of it on its own, the semicolons taken with it left out of the count; taking them leaves the written run.
  * @param write - The write over a run.
  * @param run - The run as it stands.
  * @param taken - The indices of the semicolons the neighbor takes out.
@@ -71,12 +86,18 @@ export function writtenAsLeft (write: (run: string) => string, run: string, take
 	if (taken.size === 0) return write(run)
 
 	let written = write(withoutTaken(run, taken))
-	let opening = written.match(LEADING_CSS_WHITESPACE)?.[0] ?? ``
-	let breakEnds = [0, ...[...opening.matchAll(EVERY_LINE_BREAK)].map((match) => match.index + match[0].length)]
+	let keptInRun = [...run.matchAll(EVERY_SEMICOLON)].map(({ index }) => index).filter((index) => !taken.has(index))
+	let keptInWritten = [...written.matchAll(EVERY_SEMICOLON)].map(({ index }) => index)
 	let placed = [...taken].map((index) => {
-		let place = breakEnds[Math.min((run.slice(0, index).match(EVERY_LINE_BREAK) ?? []).length, breakEnds.length - 1)] ?? 0
+		// Behind the semicolons kept in front of it, which the write keeps in their order, and read on from the last of them
+		let keptInFront = keptInRun.filter((kept) => kept < index).length
+		let runAnchor = keptInFront > 0 ? atKept(keptInRun, keptInFront) + 1 : 0
+		let writtenAnchor = keptInFront > 0 ? atKept(keptInWritten, keptInFront) + 1 : 0
+		let opening = written.slice(writtenAnchor).match(LEADING_CSS_WHITESPACE)?.[0] ?? ``
+		let breakEnds = [0, ...[...opening.matchAll(EVERY_LINE_BREAK)].map((match) => match.index + match[0].length)]
+		let place = writtenAnchor + (breakEnds[Math.min((run.slice(runAnchor, index).match(EVERY_LINE_BREAK) ?? []).length, breakEnds.length - 1)] ?? 0)
 		// Behind the spaces and tabs that stood in front of it on its line, as far as the written line holds them, so that a rule reading the line's end in between reads them where they stand
-		let inFront = (run.slice(0, index).match(TRAILING_SPACES_AND_TABS)?.[0] ?? ``).length
+		let inFront = (withoutTaken(run.slice(0, index), taken).slice(withoutTaken(run.slice(0, runAnchor), taken).length).match(TRAILING_SPACES_AND_TABS)?.[0] ?? ``).length
 
 		return place + Math.min(inFront, (written.slice(place).match(LEADING_SPACES_AND_TABS)?.[0] ?? ``).length)
 	})

@@ -2,7 +2,7 @@ import { parse, type Rule } from "postcss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
-import { releasesAKeptSemicolon, straySemicolonsReleased, straySemicolonsTaken, straySemicolonsTakenBefore, withoutTaken } from "./index.ts"
+import { releasesAKeptSemicolon, straySemicolonsReleased, straySemicolonsTaken, straySemicolonsTakenBefore, withoutTaken, writtenAsLeft } from "./index.ts"
 
 describe(`straySemicolonsTaken`, () => {
 	it(`nothing where no rule taking a stray semicolon out is listed`, () => {
@@ -127,6 +127,19 @@ describe(`releasesAKeptSemicolon`, () => {
 	})
 })
 
+describe(`writtenAsLeft`, () => {
+	// Collapsing the breaks must not bring the taken semicolon in front of the kept one, or the neighbor takes other semicolons than it takes from the file; where none is kept in front, it is placed from the run's start
+	it(`places a semicolon the neighbor takes behind the semicolons kept in front of it, and where none stands in front, from the run's start`, () => {
+		expect(writtenAsLeft(collapse, `\n ;\n\n\n;\n\n\n`, new Set([6]))).toBe(`\n ;\n\n;`)
+		expect(writtenAsLeft(collapse, `\n;\n\n\n ;\n\n\n`, new Set([1]))).toBe(`\n;\n ;\n\n`)
+	})
+
+	it(`leaves a run a write leaves alone as it stands, two taken semicolons on one line included`, () => {
+		expect(writtenAsLeft((run) => run, `\n ; ;\n`, new Set([2, 4]))).toBe(`\n ; ;\n`)
+		expect(writtenAsLeft((run) => run, `\n\t;\t;\t;\n`, new Set([2, 4]))).toBe(`\n\t;\t;\t;\n`)
+	})
+})
+
 describe(`withoutTaken`, () => {
 	it(`takes the characters at the indices out`, () => {
 		expect(withoutTaken(`\n;\n;\n`, new Set([1, 3]))).toBe(`\n\n\n`)
@@ -154,4 +167,13 @@ function ask (code: string, rules: Record<string, unknown> = {}, disabled: { sta
  */
 function extraRuleResult (disabled: { node?: unknown, start: number, end: number }[]): PostcssResult {
 	return { stylelint: { config: { rules: { "@stylistic/no-extra-semicolons": true } }, disabledRanges: { all: disabled } } } as unknown as PostcssResult
+}
+
+/**
+ * Collapses every run of line feeds to two, a write of `max-empty-lines: 1`.
+ * @param run - The run.
+ * @returns The run written.
+ */
+function collapse (run: string): string {
+	return run.replaceAll(/\n+/gu, (breaks) => breaks.slice(0, 2))
 }
