@@ -2,7 +2,7 @@ import type { Container, Node, Root } from "postcss"
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { EVERY_CHARACTER_BUT_A_SEMICOLON, EVERY_LINE_BREAK, LINE_BREAK, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE, TRAILING_SPACES_AND_TABS, TRAILING_SPACES_TABS_AND_TAKEN_MARKS, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
+import { EVERY_LINE_BREAK, LINE_BREAK, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE, SPACE_OR_TAB, SPACE_TAB_OR_CARRIAGE_RETURN, TRAILING_LINE_BREAK, TRAILING_SPACES_AND_TABS, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -18,6 +18,7 @@ import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuar
 
 import { backslashesBehindHead, backslashesBehindStatement, isEscaped } from "./escapes.ts"
 import { trimTheLastNodesEnd } from "./lastNodesEnd.ts"
+import { maskTaken, TAKEN_MARK, trimKeepingTaken } from "./taken.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -33,9 +34,6 @@ export let meta = {
 }
 
 const WHITESPACES_TO_REJECT = new Set([` `, `\t`])
-
-/** The mark a stray semicolon a neighbor takes out is read as: absent, neither code nor whitespace. */
-const TAKEN_MARK = `\0`
 
 /** The break as a string, since `styleSearch` takes no pattern. */
 const LINE_BREAK_CHARACTERS = [`\n`]
@@ -84,8 +82,9 @@ function findErrorStartIndex (lastEOLIndex: number, string: string, options: {
 	ignoreEmptyLines: boolean,
 	isRootFirst: boolean,
 	escapes?: Escapes | undefined,
+	lastBreakWritten?: boolean,
 }): EolRun | undefined {
-	let { ignoreEmptyLines, isRootFirst, escapes } = options
+	let { ignoreEmptyLines, isRootFirst, escapes, lastBreakWritten = false } = options
 
 	let eolWhitespaceIndex = lastEOLIndex - 1
 
@@ -100,7 +99,10 @@ function findErrorStartIndex (lastEOLIndex: number, string: string, options: {
 
 	let start = eolWhitespaceIndex
 
-	while (WHITESPACES_TO_REJECT.has(string.charAt(start - 1)) || string.charAt(start - 1) === TAKEN_MARK) start -= 1
+	// A bare carriage return is a whitespace character of the line, and in front of a break the run goes on past it; the trim takes it with the spaces and tabs around it, which left against the break it would make a Windows pair of. At the end of the text the run stops at it, and so it does in front of a last break the file did not spell, which a neighbor wrote: the answer read off the file is one whichever side of that neighbor this rule is listed
+	let crossesReturns = lastEOLIndex < string.length && !(lastBreakWritten && !LINE_BREAK.test(string.slice(lastEOLIndex + 1)))
+
+	while ((crossesReturns ? SPACE_TAB_OR_CARRIAGE_RETURN : SPACE_OR_TAB).test(string.charAt(start - 1)) || string.charAt(start - 1) === TAKEN_MARK) start -= 1
 
 	if (escapes && !escapes.inComment(start - 1) && isEscaped(string, start, escapes.lead)) start += 1
 
@@ -130,12 +132,13 @@ export type SecondaryOptions = {
 	ignore?: `empty-lines` | `empty-lines`[],
 }
 
-/** What a run of the rule reads everywhere: the syntax, the root, the result, and whether empty lines are passed over. */
+/** What a run of the rule reads everywhere: the syntax, the root, the result, whether empty lines are passed over, and whether the file handed to the parser ends without a break. */
 type EolScope = {
 	syntax: Syntax,
 	root: Root,
 	result: PostcssResult,
 	ignoreEmptyLines: boolean,
+	sourceEndsWithoutBreak: boolean,
 }
 
 /**
@@ -143,13 +146,14 @@ type EolScope = {
  * @param scope - The run.
  * @param string - The text.
  * @param callback - Takes the run.
- * @param options - `isRootFirst` marks the root's first token, `isPlainText` prose, `lead` the backslashes the text in front ends on, and `endsALine` a text whose end ends a line too.
+ * @param options - `isRootFirst` marks the root's first token, `isPlainText` prose, `lead` the backslashes the text in front ends on, `endsALine` a text whose end ends a line too, and `lastBreakWritten` a last break a neighbor wrote.
  */
 function eachEolWhitespace (scope: EolScope, string: string, callback: (run: EolRun) => void, options: {
 	isRootFirst?: boolean,
 	isPlainText?: boolean,
 	lead?: number,
 	endsALine?: boolean,
+	lastBreakWritten?: boolean,
 } = {}): void {
 	let { syntax, root, result, ignoreEmptyLines } = scope
 	let { isRootFirst = false, isPlainText = false, lead = 0, endsALine = false } = options
@@ -166,6 +170,7 @@ function eachEolWhitespace (scope: EolScope, string: string, callback: (run: Eol
 			ignoreEmptyLines,
 			isRootFirst,
 			escapes,
+			lastBreakWritten: options.lastBreakWritten ?? false,
 		})
 
 		if (run) callback(run)
@@ -216,34 +221,6 @@ function breakFollows (scope: EolScope, node: Node): boolean {
 }
 
 /**
- * Reads a text with the stray semicolons a neighbor takes out marked as absent.
- * @param text - The text.
- * @param taken - The semicolons' indices in it.
- * @returns The text as read.
- */
-function maskTaken (text: string, taken: Set<number>): string {
-	if (taken.size === 0) return text
-
-	let read = ``
-
-	for (let index = 0; index < text.length; index += 1) read += taken.has(index) ? TAKEN_MARK : text.charAt(index)
-
-	return read
-}
-
-/**
- * Trims the trailing spaces and tabs of a piece of a text, reading it with the semicolons a neighbor takes out marked, and keeps those semicolons for the neighbor to take.
- * @param piece - The piece.
- * @param read - The same piece as read.
- * @returns The piece trimmed.
- */
-function trimKeepingTaken (piece: string, read: string): string {
-	let trailing = read.length - read.replace(TRAILING_SPACES_TABS_AND_TAKEN_MARKS, ``).length
-
-	return piece.slice(0, piece.length - trailing) + piece.slice(piece.length - trailing).replaceAll(EVERY_CHARACTER_BUT_A_SEMICOLON, ``)
-}
-
-/**
  * Trims the end of every line of a text.
  * @param scope - The run.
  * @param value - The text.
@@ -255,6 +232,7 @@ function fixText (scope: EolScope, value: string | undefined, fixFn: (text: stri
 	isPlainText?: boolean,
 	lead?: number,
 	taken?: Set<number>,
+	lastBreakWritten?: boolean,
 }): void {
 	if (!value) return
 
@@ -394,7 +372,7 @@ function fixRoot (scope: EolScope): void {
 		(fixed) => {
 			root.raws.after = fixed
 		},
-		{ isRootFirst, lead, taken: rootTaken },
+		{ isRootFirst, lead, taken: rootTaken, lastBreakWritten: scope.sourceEndsWithoutBreak },
 	)
 
 	if (typeof root.raws.after === `string`) {
@@ -405,7 +383,10 @@ function fixRoot (scope: EolScope): void {
 		// Asked again, since the trim above may have shortened the tail
 		let read = maskTaken(after, straySemicolonsTaken(root, scope.result))
 
-		if (start < after.length) root.raws.after = after.slice(0, start) + trimKeepingTaken(after.slice(start), read.slice(start))
+		// Under `ignore: empty-lines` a last line of nothing but whitespace is passed over, as the check passes it
+		let opensALine = lastLineStart > 0 || !root.first
+
+		if (start < after.length && !(scope.ignoreEmptyLines && opensALine && WHITESPACE_OR_NOTHING.test(read.slice(start).replaceAll(TAKEN_MARK, ``)))) root.raws.after = after.slice(0, start) + trimKeepingTaken(after.slice(start), read.slice(start), false)
 	}
 
 	trimTheLastNodesEnd(scope.syntax, scope.root, scope.result)
@@ -444,7 +425,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		// Read as the neighbors taking stray semicolons out leave it, so that the verdict is one whichever side of them this rule is listed
 		let text = (root.source && root.source.input.css) || ``
 		let rootString = maskTaken(text, new Set([...straySemicolonOffsetsTaken(root, result), ...semicolonsTakenAlready(root, text, result)]))
-		let scope: EolScope = { syntax, root, result, ignoreEmptyLines }
+		let scope: EolScope = { syntax, root, result, ignoreEmptyLines, sourceEndsWithoutBreak: !TRAILING_LINE_BREAK.test(text) }
+		let isFixed = false
 
 		/**
 		 * Reports trailing whitespace at an index.
@@ -459,6 +441,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				result,
 				ruleName,
 				fix: () => {
+					// Every warning hands the fix over, and it trims every line at once; a second pass would read the lines the first wrote
+					if (isFixed) return
+
+					isFixed = true
 					fixRoot(scope)
 				},
 			})

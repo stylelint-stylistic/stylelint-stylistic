@@ -139,6 +139,16 @@ testRule({
 
 	reject: [
 		{
+			// A bare carriage return is a whitespace character of the line, and the trim takes it with the spaces around it, which left against the break it would make a Windows pair of
+			autoStripIndent: false,
+			description: `spaces around a bare carriage return ending a line`,
+			code: `a {}\n  \r  \nb {}`,
+			fixed: `a {}\n\nb {}`,
+			line: 2,
+			column: 5,
+			message: messages.rejected,
+		},
+		{
 			description: `a space behind a space a backslash escapes, which stays`,
 			code: `a { color: a\\  \n}`,
 			fixed: `a { color: a\\ \n}`,
@@ -776,6 +786,16 @@ testRule({
 	],
 
 	reject: [
+		{
+			// The fix the other warning hands over passes over a last line of nothing but whitespace, as the check does
+			autoStripIndent: false,
+			description: `a space at the end of a line in front of a last line of nothing but spaces`,
+			code: `a {}  \nb {}\n  `,
+			fixed: `a {}\nb {}\n  `,
+			line: 1,
+			column: 6,
+			message: messages.rejected,
+		},
 		{
 			description: `a space behind a declaration, which the option does not cover`,
 			code: `a { color: pink; \n}`,

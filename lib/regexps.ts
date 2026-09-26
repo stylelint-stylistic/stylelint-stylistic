@@ -388,8 +388,14 @@ export const LINE_DISABLE_COMMAND = /^stylelint-disable-(?:next-)?line\b/u
 /** Every character but a semicolon. */
 export const EVERY_CHARACTER_BUT_A_SEMICOLON = /[^;]/gu
 
-/** The trailing spaces, tabs and marks of a text where a neighbor takes stray semicolons out, the marks standing for them. */
+/** A space, a tab or a carriage return: a character of a line's trailing run in front of a break, a bare carriage return being a whitespace character of the line. */
+export const SPACE_TAB_OR_CARRIAGE_RETURN = /[ \t\r]/u
+
+/** The trailing spaces, tabs and marks of a text where a neighbor takes stray semicolons out, the marks standing for them: a line's trailing run at the end of the text. */
 export const TRAILING_SPACES_TABS_AND_TAKEN_MARKS = /[ \t\0]+$/u
+
+/** The trailing spaces, tabs, bare carriage returns and marks of a text where a neighbor takes stray semicolons out, the marks standing for them: a line's trailing run in front of a break, a bare carriage return being a whitespace character of the line. */
+export const TRAILING_SPACES_TABS_CARRIAGE_RETURNS_AND_TAKEN_MARKS = /[ \t\r\0]+$/u
 
 /** A character a semicolon behind it closes nothing of: whitespace, a brace or another semicolon. */
 export const CLOSES_NOTHING_IN_FRONT = /[\s{};]/u
