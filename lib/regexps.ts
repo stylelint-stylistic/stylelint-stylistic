@@ -322,6 +322,9 @@ export const TRAILING_CSS_WHITESPACE = /[ \t\n\r\f]*$/u
 /** A semicolon ending a text. */
 export const TRAILING_SEMICOLON = /;$/u
 
+/** The escape PostCSS's stringifier prints for a `<` opening `<!--`, `<style` or `</style` (`escapeHTMLInCSS`), read at a text's start. */
+export const LEADING_ESCAPED_LESS_THAN = /^\\3c /u
+
 /** A trailing hexadecimal escape, its closing whitespace aside, which `postcss-value-parser` returns as a divider. */
 export const TRAILING_HEX_ESCAPE = /\\[\da-f]{1,6}$/iu
 

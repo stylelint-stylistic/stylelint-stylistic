@@ -75,4 +75,19 @@ describe(`a line holding nothing but a stray semicolon the rule about extra semi
 		expect(await fixBesideNoExtra(code, maximum, true)).toEqual({ code: output, left: 0 })
 		expect(await fixBesideNoExtra(code, maximum, false)).toEqual({ code: output, left: 0 })
 	})
+
+	// PostCSS prints the `<` of `<!--` escaped, three characters longer, and the lines are counted in the print, so the neighbor's semicolons are carried past the escape
+	it.each([
+		[`a[x="<!--"] {}\n;\nb {}`, `a[x="\\3c !--"] {}\nb {}`],
+		[`a[x="</style>"] {\n\tb: c;\n;\n}`, `a[x="\\3c /style>"] {\n\tb: c;\n}`],
+	])(`is counted empty behind an escaped text in %j in either order`, async (code, output) => {
+		expect(await fixBesideNoExtra(code, 0, true)).toEqual({ code: output, left: 0 })
+		expect(await fixBesideNoExtra(code, 0, false)).toEqual({ code: output, left: 0 })
+	})
+
+	it(`places the warning on the file's line behind an escaped text`, async () => {
+		let result = await stylelint.lint({ code: `a[x="<!--"] {}\n;\n\n\nb {}`, config: { plugins, rules: { [ruleName]: 0, "@stylistic/no-extra-semicolons": true } } })
+
+		expect((result.results[0]?.warnings ?? []).filter((warning) => warning.rule === ruleName).map(({ line, column }) => `${line}:${column}`)).toEqual([`2:2`, `3:1`, `4:1`])
+	})
 })

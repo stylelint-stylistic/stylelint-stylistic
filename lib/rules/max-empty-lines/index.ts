@@ -22,6 +22,8 @@ import { takesTheOpeningLines } from "../../utils/takesTheOpeningLines/index.ts"
 import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
 import { isNumber } from "../../utils/validateTypes/index.ts"
 
+import { printEscapes, takenInPrint, textIndex } from "./printEscapes.ts"
+
 let { utils: { validateOptions } } = stylelint
 
 let shortName = `max-empty-lines`
@@ -117,9 +119,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let emptyLines = 0
 		let lastIndex = -1
 		// A line holding nothing but stray semicolons a neighbor takes out in the same run is read as it will stand, empty, whichever side of the neighbor this rule is listed
-		let taken = straySemicolonOffsetsTaken(root, result)
-
 		let rootString = countedText(root, result)
+		// The print parts from the file where PostCSS escapes a `<`, and the neighbors' semicolons and the warnings are carried across
+		let escapes = rootString === (root.source?.input.css ?? rootString) ? [] : printEscapes(root.source?.input.css ?? ``, rootString)
+		let taken = takenInPrint(straySemicolonOffsetsTaken(root, result), escapes)
 
 		// A file ending on a break counts one empty line more, and spaces and tabs behind the last break are `no-eol-whitespace`'s line, so the end is measured in front of them, and in front of the semicolons the neighbors take there
 		let endOfFile = [...rootString].map((character, index) => (taken.has(index) ? ` ` : character)).join(``).replace(TRAILING_SPACES_AND_TABS, ``).length
@@ -160,8 +163,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					message: messages.expected,
 					messageArgs: [primary],
 					node,
-					index: matchStartIndex,
-					endIndex: matchStartIndex,
+					index: textIndex(matchStartIndex, escapes),
+					endIndex: textIndex(matchStartIndex, escapes),
 					result,
 					ruleName,
 					fix,
@@ -177,8 +180,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						message: messages.expected,
 						messageArgs: [primary],
 						node,
-						index: matchEndIndex,
-						endIndex: matchEndIndex,
+						index: textIndex(matchEndIndex, escapes),
+						endIndex: textIndex(matchEndIndex, escapes),
 						result,
 						ruleName,
 						fix,
