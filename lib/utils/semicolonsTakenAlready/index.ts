@@ -1,13 +1,13 @@
 import type { Container, Node, Root } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { CLOSES_NOTHING_IN_FRONT, TRAILING_CSS_WHITESPACE, TRAILING_SEMICOLON } from "../../regexps.ts"
+import { CLOSES_NOTHING_IN_FRONT, SPACE_OR_TAB, TRAILING_CSS_WHITESPACE, TRAILING_SEMICOLON } from "../../regexps.ts"
 import { closingOffset } from "../closingOffset/index.ts"
 import { nodeString } from "../nodeString/index.ts"
 import { isComment } from "../typeGuards/index.ts"
 
 /**
- * Finds the semicolons of a raw's text in the file that a rule listed earlier has already taken out of the raw: walking back from the raw's end, a semicolon the file spells and the raw no longer holds, and past the raw's start the semicolons up to what stands in front of it, which the raw held at its head. The walk stops where the two part otherwise, since another write changed the raw there.
+ * Finds the semicolons of a raw's text in the file that a rule listed earlier has already taken out of the raw: walking back from the raw's end, a semicolon the file spells and the raw no longer holds, and past the raw's start the semicolons up to what stands in front of it, which the raw held at its head. A space or tab the raw no longer holds is walked past too, since a writer such as `no-eol-whitespace` trims the end of the line such a semicolon stood on. The walk stops where the two part otherwise, since another write changed the raw there.
  * @param text - The root's text.
  * @param raw - The raw as it stands.
  * @param end - Where the raw ends in the text.
@@ -21,15 +21,17 @@ function takenAlready (text: string, raw: string, end: number, start: number, in
 	for (; index >= start && rawIndex >= 0; index -= 1) {
 		if (text.charAt(index) === raw.charAt(rawIndex)) rawIndex -= 1
 		else if (text.charAt(index) === `;`) into.add(index)
-		else return
+		else if (!SPACE_OR_TAB.test(text.charAt(index))) return
 	}
 
 	let head: number[] = []
 
-	for (; index >= start && text.charAt(index) === `;`; index -= 1) head.push(index)
+	for (; index >= start && (text.charAt(index) === `;` || SPACE_OR_TAB.test(text.charAt(index))); index -= 1) if (text.charAt(index) === `;`) head.push(index)
 
 	// A semicolon against the code in front closes that code rather than standing in the raw
-	if (head.length > 0 && index >= 0 && !CLOSES_NOTHING_IN_FRONT.test(text.charAt(index))) head.pop()
+	let first = head.at(-1)
+
+	if (first !== undefined && first > 0 && !CLOSES_NOTHING_IN_FRONT.test(text.charAt(first - 1))) head.pop()
 
 	for (let semicolon of head) into.add(semicolon)
 }

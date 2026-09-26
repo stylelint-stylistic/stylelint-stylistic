@@ -225,4 +225,22 @@ describe(`the output of the three rules that write the head of the file`, () => 
 	it(`does the same in a single run inside a style element`, async () => {
 		await expectEveryOrder(`<style>\n;\n\n; /* stylelint-disable-line @stylistic/no-extra-semicolons */\n;\n\na {}\n</style>\n`, `<style>\n; /* stylelint-disable-line @stylistic/no-extra-semicolons */\n\na {}\n</style>\n`, `postcss-html`, 1)
 	})
+
+	// The rule trimming the end of a line leaves the head raw shorter than the file spells it, which the reading of the semicolons already taken out walks past
+	it.each([
+		[`;\n \n; /* stylelint-disable-line @stylistic/no-extra-semicolons */\na {}`, `; /* stylelint-disable-line @stylistic/no-extra-semicolons */\na {}`],
+		[`;  \n\n;\t/* stylelint-disable-line @stylistic/no-extra-semicolons */`, `;\t/* stylelint-disable-line @stylistic/no-extra-semicolons */`],
+	])(`does the same in a single run beside the rule about the whitespace ending a line, in %j`, async (code, expected) => {
+		let names = [...Object.keys(HEAD_WRITERS), `no-eol-whitespace`]
+		let settled = await Promise.all(orders(names).map(async (order) => {
+			let rules = Object.fromEntries(order.map((name) => [`@stylistic/${name}`, HEAD_WRITERS[name] ?? true]))
+			let options = { config: { plugins, rules } }
+			let file = (await stylelint.lint({ code, fix: true, ...options })).code ?? code
+			let read = await stylelint.lint({ code: file, ...options })
+
+			return { order, file, warnings: pick(read.results).warnings.length }
+		}))
+
+		for (let { order, file, warnings } of settled) expect({ order, file, warnings }).toEqual({ order, file: expected, warnings: 0 })
+	})
 })
