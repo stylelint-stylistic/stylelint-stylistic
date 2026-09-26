@@ -16,6 +16,7 @@ import { semicolonsTakenAlready } from "../../utils/semicolonsTakenAlready/index
 import { straySemicolonOffsetsTaken, straySemicolonsTaken, straySemicolonsTakenBefore, straySemicolonsTakenOwn } from "../../utils/straySemicolonsTaken/index.ts"
 import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
 
+import { backslashesBehindHead, backslashesBehindStatement, isEscaped } from "./escapes.ts"
 import { trimTheLastNodesEnd } from "./lastNodesEnd.ts"
 
 let { utils: { validateOptions } } = stylelint
@@ -60,18 +61,31 @@ function lastLineBreakIndex (string: string, from: number = string.length - 1): 
 	return -1
 }
 
+/** How a text reads backslashes: the ones the text in front ends on, and whether a place is inside a comment, whose backslashes are text. */
+type Escapes = {
+	lead: number,
+	inComment: (index: number) => boolean,
+}
+
+/** A line's trailing whitespace: `index`, the last space or tab, where the problem is reported; `start`, where the run a fix takes opens. */
+type EolRun = {
+	index: number,
+	start: number,
+}
+
 /**
- * Finds where a line's trailing whitespace starts.
+ * Finds a line's trailing whitespace. A space or tab a backslash escapes is a character of the word in front of it, so the run opens behind it, and a line ending on one alone ends on no whitespace.
  * @param lastEOLIndex - The line's end.
  * @param string - The source.
- * @param options - Whether empty lines are ignored, and whether the line opens the root.
- * @returns The start index, or -1.
+ * @param options - Whether empty lines are ignored, whether the line opens the root, and how the text reads backslashes, where it is code rather than prose.
+ * @returns The run, or nothing.
  */
 function findErrorStartIndex (lastEOLIndex: number, string: string, options: {
 	ignoreEmptyLines: boolean,
 	isRootFirst: boolean,
-}): number {
-	let { ignoreEmptyLines, isRootFirst } = options
+	escapes?: Escapes | undefined,
+}): EolRun | undefined {
+	let { ignoreEmptyLines, isRootFirst, escapes } = options
 
 	let eolWhitespaceIndex = lastEOLIndex - 1
 
@@ -82,7 +96,15 @@ function findErrorStartIndex (lastEOLIndex: number, string: string, options: {
 	while (string.charAt(eolWhitespaceIndex) === TAKEN_MARK) eolWhitespaceIndex -= 1
 
 	// No whitespace before the break
-	if (!WHITESPACES_TO_REJECT.has(string.charAt(eolWhitespaceIndex))) return -1
+	if (!WHITESPACES_TO_REJECT.has(string.charAt(eolWhitespaceIndex))) return undefined
+
+	let start = eolWhitespaceIndex
+
+	while (WHITESPACES_TO_REJECT.has(string.charAt(start - 1)) || string.charAt(start - 1) === TAKEN_MARK) start -= 1
+
+	if (escapes && !escapes.inComment(start - 1) && isEscaped(string, start, escapes.lead)) start += 1
+
+	if (start > eolWhitespaceIndex) return undefined
 
 	if (ignoreEmptyLines) {
 		// Only whitespace since the previous break
@@ -91,11 +113,11 @@ function findErrorStartIndex (lastEOLIndex: number, string: string, options: {
 		if (beforeNewlineIndex >= 0 || isRootFirst) {
 			let line = string.slice(Math.max(0, beforeNewlineIndex), eolWhitespaceIndex)
 
-			if (isOnlyWhitespace(line.replaceAll(TAKEN_MARK, ``))) return -1
+			if (isOnlyWhitespace(line.replaceAll(TAKEN_MARK, ``))) return undefined
 		}
 	}
 
-	return eolWhitespaceIndex
+	return { index: eolWhitespaceIndex, start }
 }
 
 /** `true`; the rule has no other setting. */
@@ -117,50 +139,57 @@ type EolScope = {
 }
 
 /**
- * Calls back with the index of each line's trailing whitespace.
+ * Calls back with each line's trailing whitespace.
  * @param scope - The run.
  * @param string - The text.
- * @param callback - Takes the index.
- * @param options - `isRootFirst` marks the root's first token, `isPlainText` prose.
+ * @param callback - Takes the run.
+ * @param options - `isRootFirst` marks the root's first token, `isPlainText` prose, `lead` the backslashes the text in front ends on, and `endsALine` a text whose end ends a line too.
  */
-function eachEolWhitespace (scope: EolScope, string: string, callback: (index: number) => void, options: {
+function eachEolWhitespace (scope: EolScope, string: string, callback: (run: EolRun) => void, options: {
 	isRootFirst?: boolean,
 	isPlainText?: boolean,
+	lead?: number,
+	endsALine?: boolean,
 } = {}): void {
 	let { syntax, root, result, ignoreEmptyLines } = scope
-	let { isRootFirst = false, isPlainText = false } = options
+	let { isRootFirst = false, isPlainText = false, lead = 0, endsALine = false } = options
+	let commentSpans = isPlainText ? [] : syntax.commentSpans(string, root, result)
+	// Prose reads a backslash as a character like any other, and a text whose backslashes a host language cooks tells nothing of the stylesheet's
+	let escapes = isPlainText || !syntax.readsBackslashesAsWritten(root) ? undefined : { lead, inComment: (index: number): boolean => commentSpans.some(({ start, end }) => start <= index && index < end) }
 
 	/**
 	 * Reports the whitespace at a line ending.
 	 * @param startIndex - The line ending.
 	 */
 	function handleEol (startIndex: number): void {
-		let index = findErrorStartIndex(startIndex, string, {
+		let run = findErrorStartIndex(startIndex, string, {
 			ignoreEmptyLines,
 			isRootFirst,
+			escapes,
 		})
 
-		if (index > -1) callback(index)
+		if (run) callback(run)
 	}
 
 	// A CSS scan of prose takes an apostrophe for an unclosed string
 	if (isPlainText) {
 		for (let { index } of string.matchAll(EVERY_LINE_BREAK)) handleEol(index)
-
-		return
+	}
+	else {
+		styleSearch(
+			{
+				// The search reads a string by rules of its own, so it is handed none
+				source: maskStrings(string, commentSpans),
+				target: LINE_BREAK_CHARACTERS,
+				comments: `check`,
+			},
+			(match) => {
+				handleEol(match.startIndex)
+			},
+		)
 	}
 
-	styleSearch(
-		{
-			// The search reads a string by rules of its own, so it is handed none
-			source: maskStrings(string, syntax.commentSpans(string, root, result)),
-			target: LINE_BREAK_CHARACTERS,
-			comments: `check`,
-		},
-		(match) => {
-			handleEol(match.startIndex)
-		},
-	)
+	if (endsALine) handleEol(string.length)
 }
 
 /**
@@ -224,6 +253,7 @@ function trimKeepingTaken (piece: string, read: string): string {
 function fixText (scope: EolScope, value: string | undefined, fixFn: (text: string) => void, options?: {
 	isRootFirst?: boolean,
 	isPlainText?: boolean,
+	lead?: number,
 	taken?: Set<number>,
 }): void {
 	if (!value) return
@@ -237,9 +267,9 @@ function fixText (scope: EolScope, value: string | undefined, fixFn: (text: stri
 	eachEolWhitespace(
 		scope,
 		read,
-		(index) => {
+		({ index, start }) => {
 			let newlineIndex = index + 1
-			fixed += trimKeepingTaken(value.slice(lastIndex, newlineIndex), read.slice(lastIndex, newlineIndex))
+			fixed += value.slice(lastIndex, start) + trimKeepingTaken(value.slice(start, newlineIndex), read.slice(start, newlineIndex))
 			lastIndex = newlineIndex
 		},
 		options,
@@ -266,7 +296,7 @@ function fixRoot (scope: EolScope): void {
 			(fixed) => {
 				node.raws.before = fixed
 			},
-			{ isRootFirst, taken: straySemicolonsTakenBefore(node, scope.result) },
+			{ isRootFirst, lead: backslashesBehindStatement(syntax, node.prev(), scope.result), taken: straySemicolonsTakenBefore(node, scope.result) },
 		)
 		isRootFirst = false
 
@@ -290,7 +320,7 @@ function fixRoot (scope: EolScope): void {
 		if (isAtRule(node) || isRule(node) || isDeclaration(node)) {
 			fixText(scope, node.raws.between, (fixed) => {
 				node.raws.between = fixed
-			})
+			}, { lead: backslashesBehindHead(syntax, node, scope.result) })
 		}
 
 		// The run behind a Less mixin call's flag, which the `less` namespace hands to the flag's raw, and behind a declaration's, where the parser files the comments and the whitespace behind the flag up to the node's end
@@ -341,7 +371,7 @@ function fixRoot (scope: EolScope): void {
 		if (isAtRule(node) || isRule(node)) {
 			fixText(scope, node.raws.after, (fixed) => {
 				node.raws.after = fixed
-			}, { taken: straySemicolonsTaken(node, scope.result) })
+			}, { lead: backslashesBehindStatement(syntax, node.last, scope.result), taken: straySemicolonsTaken(node, scope.result) })
 		}
 
 		// A stray semicolon behind a rule's closing brace, which PostCSS files with the run in front of it in the rule's own `raws.ownSemicolon`; the break ending its last line stands in the raw behind it
@@ -356,6 +386,7 @@ function fixRoot (scope: EolScope): void {
 	})
 
 	let rootTaken = straySemicolonsTaken(root, scope.result)
+	let lead = backslashesBehindStatement(syntax, root.last, scope.result)
 
 	fixText(
 		scope,
@@ -363,16 +394,18 @@ function fixRoot (scope: EolScope): void {
 		(fixed) => {
 			root.raws.after = fixed
 		},
-		{ isRootFirst, taken: rootTaken },
+		{ isRootFirst, lead, taken: rootTaken },
 	)
 
 	if (typeof root.raws.after === `string`) {
 		let after = root.raws.after
-		let lastEOL = lastLineBreakIndex(after)
+		// A space or tab a backslash in front of the tail escapes opens no run
+		let lastLineStart = lastLineBreakIndex(after) + 1
+		let start = lastLineStart === 0 && WHITESPACES_TO_REJECT.has(after.charAt(0)) && syntax.readsBackslashesAsWritten(root) && isEscaped(after, 0, lead) ? 1 : lastLineStart
 		// Asked again, since the trim above may have shortened the tail
 		let read = maskTaken(after, straySemicolonsTaken(root, scope.result))
 
-		if (lastEOL !== after.length - 1) root.raws.after = after.slice(0, lastEOL + 1) + trimKeepingTaken(after.slice(lastEOL + 1), read.slice(lastEOL + 1))
+		if (start < after.length) root.raws.after = after.slice(0, start) + trimKeepingTaken(after.slice(start), read.slice(start))
 	}
 
 	trimTheLastNodesEnd(scope.syntax, scope.root, scope.result)
@@ -431,14 +464,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			})
 		}
 
-		eachEolWhitespace(scope, rootString, reportFromIndex, { isRootFirst: true })
-
-		let errorIndex = findErrorStartIndex(rootString.length, rootString, {
-			ignoreEmptyLines,
-			isRootFirst: true,
-		})
-
-		if (errorIndex > -1) reportFromIndex(errorIndex)
+		eachEolWhitespace(scope, rootString, ({ index }) => {
+			reportFromIndex(index)
+		}, { isRootFirst: true, endsALine: true })
 	}
 }
 

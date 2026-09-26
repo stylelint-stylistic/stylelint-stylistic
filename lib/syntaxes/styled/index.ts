@@ -28,6 +28,8 @@ export let styled: Syntax = {
 	},
 	valueEmbedsHostCode: (decl: Declaration) => isStyledSyntaxDeclaration(decl) && decl.value.includes(`\${`),
 	hostCodeSpans,
+	// A template's source holds its escapes before JavaScript cooks them; plain CSS the namespace reads too holds them as written
+	readsBackslashesAsWritten: (root: Root) => root.raws.styledSyntaxRangeStart === undefined,
 }
 
 /**

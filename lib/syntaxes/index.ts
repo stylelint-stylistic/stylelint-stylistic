@@ -298,6 +298,15 @@ export type Syntax = {
 	readsUpperCaseAtRuleName (): boolean,
 
 	/**
+	 * Asks whether a root's text holds its backslashes as the stylesheet reads them.
+	 *
+	 * A styled template's text is its JavaScript source, where the host language cooks the escapes before the stylesheet is read: `\\ ` in the source is the stylesheet's escaped space and `\ ` a plain one, so a count of the backslashes in front of a character answers nothing about the stylesheet.
+	 * @param root - The root.
+	 * @returns True where they are.
+	 */
+	readsBackslashesAsWritten (root: Root): boolean,
+
+	/**
 	 * Asks whether the syntax reads a quotation mark inside the parentheses of a `url()` that open on no quotation mark as opening a string.
 	 *
 	 * To CSS such parentheses are a bad-url token to the first `)` under every spelling of the name, the mark a character of it, and Less refuses the file; Sass reads the parentheses as code and the string as a string, which it prints double-quoted.

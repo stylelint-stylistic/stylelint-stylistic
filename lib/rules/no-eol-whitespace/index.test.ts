@@ -114,9 +114,62 @@ testRule({
 			description: `two spaces making up the whole of a comment, which stand in front of its closing delimiter rather than at the end of a line`,
 			code: `/*  */\na {}`,
 		},
+		{
+			description: `a space a backslash escapes at the end of a value closing a block`,
+			code: `a { color: a\\ \n}`,
+		},
+		{
+			autoStripIndent: false,
+			description: `the same value written with a carriage-return line break`,
+			code: `a { color: a\\ \r\n}\r\n`,
+		},
+		{
+			description: `a tab a backslash escapes at the end of a value followed by a comment`,
+			code: `a { color: a\\\t\n/* c */ }`,
+		},
+		{
+			description: `a space a backslash escapes at the end of a selector, of an at-rule's params and of a property`,
+			code: `a\\ \n{}\n@media b\\ \n{}\nc { color\\ \n: red; }`,
+		},
+		{
+			description: `a space a backslash escapes at the end of a stylesheet`,
+			code: `a { color: red }\nb: a\\ `,
+		},
 	],
 
 	reject: [
+		{
+			description: `a space behind a space a backslash escapes, which stays`,
+			code: `a { color: a\\  \n}`,
+			fixed: `a { color: a\\ \n}`,
+			line: 1,
+			column: 15,
+			message: messages.rejected,
+		},
+		{
+			description: `a space behind a backslash another backslash escapes`,
+			code: `a { color: a\\\\ \n}`,
+			fixed: `a { color: a\\\\\n}`,
+			line: 1,
+			column: 15,
+			message: messages.rejected,
+		},
+		{
+			description: `a space behind a backslash at the end of a line of a comment, where a backslash escapes nothing`,
+			code: `/* a\\ \n*/`,
+			fixed: `/* a\\\n*/`,
+			line: 1,
+			column: 6,
+			message: messages.rejected,
+		},
+		{
+			description: `a space behind a space a backslash escapes at the end of a stylesheet`,
+			code: `b: a\\  `,
+			fixed: `b: a\\ `,
+			line: 1,
+			column: 7,
+			message: messages.rejected,
+		},
 		{
 			autoStripIndent: false,
 			description: `a space in front of the only newline in the stylesheet`,

@@ -5,10 +5,11 @@ import { LINE_BREAK, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE, TRAILING_SPACES_
 import type { Syntax } from "../../syntaxes/index.ts"
 import { trailingSemicolonAsked } from "../../utils/closedBySemicolon/index.ts"
 import { declarationEndsTheStylesheet } from "../../utils/declarationEndsTheStylesheet/index.ts"
-import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import type { NeighborRule } from "../../utils/neighborSettings/index.ts"
 import { isDeclaration } from "../../utils/typeGuards/index.ts"
 import { type Whitespace, whitespaceAsked } from "../../utils/whitespaceAsked/index.ts"
+
+import { isEscaped } from "./escapes.ts"
 
 /** The rules writing the run behind a declaration's colon, which a value of whitespace alone is. */
 const RULES_BEHIND_THE_COLON: Record<Whitespace, NeighborRule> = {
@@ -25,12 +26,13 @@ const RULES_BEHIND_THE_COLON: Record<Whitespace, NeighborRule> = {
 /**
  * Trims the spaces and tabs a text ends on, but for one a backslash escapes, which is a character of the word in front of it.
  * @param text - The text.
+ * @param readsEscapes - Whether the text holds its backslashes as the stylesheet reads them.
  * @returns The trimmed text.
  */
-function trimTheEnd (text: string): string {
+function trimTheEnd (text: string, readsEscapes: boolean): string {
 	let trimmed = text.replace(TRAILING_SPACES_AND_TABS, ``)
 
-	return editKeepsEscapedCharacter(text, { start: trimmed.length, end: text.length, text: `` }) ? trimmed : text.slice(0, trimmed.length + 1)
+	return readsEscapes && trimmed.length < text.length && isEscaped(text, trimmed.length, 0) ? text.slice(0, trimmed.length + 1) : trimmed
 }
 
 /**
@@ -44,14 +46,16 @@ export function trimTheLastNodesEnd (syntax: Syntax, root: Root, result: Postcss
 
 	if (!last || !isDeclaration(last) || root.raws.semicolon || (root.raws.after && !OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(root.raws.after)) || trailingSemicolonAsked(last, result)) return
 
+	let readsEscapes = syntax.readsBackslashesAsWritten(root)
+
 	if (typeof last.raws.important === `string`) {
-		last.raws.important = trimTheEnd(last.raws.important)
+		last.raws.important = trimTheEnd(last.raws.important, readsEscapes)
 
 		return
 	}
 
 	let value = syntax.read(last)
-	let trimmed = trimTheEnd(value)
+	let trimmed = trimTheEnd(value, readsEscapes)
 
 	// A value of nothing but that whitespace is the run behind the colon, which the colon's rules write where they read it; written here as they ask, so the order of the rules does not decide the file. Where no break stands behind the colon yet, `declaration-colon-newline-after` breaks it; `declaration-colon-space-after` passes over a run ending a file, though not one ending an inline `style` attribute
 	if (trimmed === `` && value !== `` && !LINE_BREAK.test(last.raws.between ?? ``)) trimmed = whitespaceAsked(last, result, declarationEndsTheStylesheet(last) ? { newline: RULES_BEHIND_THE_COLON.newline } : RULES_BEHIND_THE_COLON, () => true)

@@ -100,6 +100,8 @@ export let css: Syntax = {
 	readsUnitAsIdentifier: () => true,
 	// CSS reads an at-rule name ASCII case-insensitively
 	readsUpperCaseAtRuleName: () => true,
+	// A stylesheet's own text holds its escapes as written
+	readsBackslashesAsWritten: () => true,
 	// A quotation mark inside a bare address is a character of it: `URL(a"b"c)` is a bad-url token to the first `)`, as lightningcss reads it
 	readsQuoteInsideAddressAsString: () => false,
 	addressAtRules: () => CSS_ADDRESS_AT_RULES,

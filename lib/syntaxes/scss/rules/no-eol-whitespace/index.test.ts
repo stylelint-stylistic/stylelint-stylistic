@@ -29,9 +29,21 @@ testRule({
 			description: `two spaces making up the whole of a block comment under this syntax`,
 			code: `/*  */\na {}`,
 		},
+		{
+			description: `a space a backslash escapes at the end of a variable's value`,
+			code: `$x: a\\ \n`,
+		},
 	],
 
 	reject: [
+		{
+			description: `a space behind a backslash at the end of an end-of-line comment behind a value, where a backslash escapes nothing`,
+			code: `a { color: b // x\\ \n}`,
+			fixed: `a { color: b // x\\\n}`,
+			line: 1,
+			column: 19,
+			message: messages.rejected,
+		},
 		{
 			description: `two spaces making up the whole of an end-of-line comment, which the syntax files where the trim of the comment's end reaches them`,
 			code: `//  \nb {}`,

@@ -15,6 +15,14 @@ testRule({
 
 	reject: [
 		{
+			description: `a space behind a backslash at the end of an end-of-line comment behind a value, where a backslash escapes nothing`,
+			code: `a { color: b // x\\ \n}`,
+			fixed: `a { color: b // x\\\n}`,
+			line: 1,
+			column: 19,
+			message: messages.rejected,
+		},
+		{
 			description: `two spaces making up the whole of an inline comment a file ends on`,
 			// This syntax files such a comment as `postcss-scss` files every one: an empty text, the whitespace in the raw in front and nothing in the raw behind.
 			code: `//  `,
