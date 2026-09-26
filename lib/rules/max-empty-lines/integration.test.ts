@@ -101,3 +101,57 @@ describe(`a line holding nothing but a stray semicolon the rule about extra semi
 		expect((result.results[0]?.warnings ?? []).filter((warning) => warning.rule === `${namespace}max-empty-lines`).map(({ line, column }) => `${line}:${column}`)).toEqual(warnings)
 	})
 })
+
+/**
+ * Fixes one snippet under this rule and `no-eol-whitespace`, in the order given, and reads the output back.
+ * @param code - The snippet.
+ * @param maximum - The most empty lines this rule allows.
+ * @param neighbor - The setting of the rule about the whitespace ending a line.
+ * @param thisRuleFirst - Whether this rule is listed first.
+ * @returns The file the pass left and the count of the warnings the pair has about it.
+ */
+async function fixBesideNoEol (code: string, maximum: number, neighbor: unknown, thisRuleFirst: boolean): Promise<{ code: string, left: number }> {
+	let pair: [string, unknown][] = [[ruleName, maximum], [`@stylistic/no-eol-whitespace`, neighbor]]
+	let config = { plugins, rules: Object.fromEntries(thisRuleFirst ? pair : pair.toReversed()) }
+	let fixed = await stylelint.lint({ code, config, fix: true })
+	let read = await stylelint.lint({ code: fixed.code ?? code, config })
+
+	return { code: fixed.code ?? code, left: read.results[0]?.warnings.length ?? 0 }
+}
+
+describe(`a line of nothing but spaces and tabs the rule about the whitespace ending a line empties`, () => {
+	// The line is empty once that rule has trimmed it, so it is counted as one whichever side of that rule this one is listed
+	it.each([
+		[`a {}\n  \n  \n  \nb {}`, 1, `a {}\n\nb {}`],
+		[`a {\n  b: c;\n  \n\t\n  \n}`, 1, `a {\n  b: c;\n\n}`],
+		[`a {}\n \n`, 1, `a {}\n`],
+		[`/* a\n  \n  \n*/`, 1, `/* a\n\n*/`],
+		[`a { b: c,\n  \n  \n  d; }`, 0, `a { b: c,\n  d; }`],
+		[`a {}\r\n  \r\n  \r\nb {}`, 1, `a {}\r\n\r\nb {}`],
+		[`\n \n`, 0, ``],
+	])(`is counted empty in %j at most %i in either order`, async (code, maximum, output) => {
+		expect(await fixBesideNoEol(code, maximum, true, true)).toEqual({ code: output, left: 0 })
+		expect(await fixBesideNoEol(code, maximum, true, false)).toEqual({ code: output, left: 0 })
+	})
+
+	it(`is not where a disable comment keeps that rule off some line of the file`, async () => {
+		let code = `a {}\n/* stylelint-disable @stylistic/no-eol-whitespace */\n  \n  \n/* stylelint-enable @stylistic/no-eol-whitespace */\nb {}`
+
+		expect(await fixBesideNoEol(code, 0, true, true)).toEqual({ code, left: 0 })
+		expect(await fixBesideNoEol(code, 0, true, false)).toEqual({ code, left: 0 })
+	})
+
+	it(`leaves the runs inside a comment the option passes over as they are`, async () => {
+		let code = `a { b: x\n/* c\n\n\n\n */\n  y; }`
+		let result = await stylelint.lint({ code, fix: true, config: { plugins, rules: { [ruleName]: [1, { ignore: [`comments`] }] } } })
+
+		expect(result.code).toBe(code)
+	})
+
+	it(`is not where that rule passes empty lines over`, async () => {
+		let code = `a {}\n  \n  \n  \nb {}`
+
+		expect(await fixBesideNoEol(code, 1, [true, { ignore: [`empty-lines`] }], true)).toEqual({ code, left: 0 })
+		expect(await fixBesideNoEol(code, 1, [true, { ignore: [`empty-lines`] }], false)).toEqual({ code, left: 0 })
+	})
+})

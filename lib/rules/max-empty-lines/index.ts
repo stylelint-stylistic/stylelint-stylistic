@@ -2,7 +2,7 @@ import { type ChildNode, type Comment, type Container, type Document, type Root,
 import styleSearch from "style-search"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, EVERY_SEMICOLON, LEADING_LINE_BREAK_RUN, OPENS_WITH_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
+import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, EVERY_RUN_OF_LINE_BREAKS_PAST_BLANK_LINES, EVERY_SEMICOLON, LEADING_LINE_BREAK_RUN, LEADING_LINE_BREAK_RUN_PAST_BLANK_LINES, OPENS_WITH_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
@@ -22,6 +22,7 @@ import { takesTheOpeningLines } from "../../utils/takesTheOpeningLines/index.ts"
 import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
 import { isNumber } from "../../utils/validateTypes/index.ts"
 
+import { blankLineOffsets, blankLinesGo } from "./blankLines.ts"
 import { printEscapes, takenInPrint, textIndex } from "./printEscapes.ts"
 import { printWithTaken } from "./printWithTaken.ts"
 
@@ -82,10 +83,23 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		if (!validOptions) return
 
 		let ignoreComments = optionsMatches(secondaryOptions, `ignore`, `comments`)
-		let getChars = replaceEmptyLines.bind(null, primary)
+		// A line of nothing but spaces and tabs is empty once a live `no-eol-whitespace` has run, and counted and written as one
+		let blankLinesTaken = blankLinesGo(root, result)
+		let runs = blankLinesTaken ? EVERY_RUN_OF_LINE_BREAKS_PAST_BLANK_LINES : EVERY_RUN_OF_LINE_BREAKS
+
+		/**
+		 * Collapses the runs of a text to the maximum.
+		 * @param text - The text.
+		 * @param isSpecialCase - Whether at the end of file.
+		 * @returns The text written.
+		 */
+		function getChars (text: string | undefined, isSpecialCase?: boolean): string {
+			return replaceEmptyLines(primary, text, isSpecialCase, runs)
+		}
+
 		let openingLinesAreTaken = takesTheOpeningLines(root, result)
 		let headOpensALine = opensALine(root)
-		let writeHead = writeHeadRun.bind(null, getChars, headOpensALine)
+		let writeHead = writeHeadRun.bind(null, getChars, headOpensALine, blankLinesTaken ? LEADING_LINE_BREAK_RUN_PAST_BLANK_LINES : LEADING_LINE_BREAK_RUN)
 		let isFixed = false
 
 		/** Collapses every run of empty lines to the maximum: `raws.before`, a comment's `left`, text and `right`, the raws between the parts of a statement and the node's own text, the run in front of a closing brace, the run in front of a free semicolon behind one, and the root's head and tail apart from the walk, where a run opening a line of the file counts an empty line more. */
@@ -98,11 +112,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let { first } = root
 
 			root.walk((node) => {
-				if (isComment(node) && !ignoreComments) writeComment(syntax, node, getChars)
+				if (isComment(node) && !ignoreComments) writeComment(syntax, node, getChars, runs)
 
 				if (!writeAcrossTheFreeSemicolon(node, result, getChars) && node.raws.before) node.raws.before = node === first ? pastTheOpeningLines(node.raws.before, openingLinesAreTaken, getChars, straySemicolonsTakenBefore(node, result)) : writtenAsLeft(getChars, node.raws.before, straySemicolonsTakenBefore(node, result))
 
-				writeStatementText(syntax, node, result, ignoreComments, getChars)
+				writeStatementText(syntax, node, result, ignoreComments, getChars, runs)
 
 				// The run in front of the closing brace, behind a free semicolon behind the last rule's brace too, as the neighbors taking semicolons leave it
 				if (carriesABlock(node)) {
@@ -114,7 +128,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// The run in front of a free semicolon behind a closing brace stands in the rule's own raw, together with the semicolon; behind a node it runs on into that node's raw, and behind the last node of a block into the block's tail, both written with it above. Behind the root's last node it runs on into the root's tail, written with it apart below where the neighbors take the semicolon
 			})
 
-			writeTheRootsEnds(root, result, primary, openingLinesAreTaken, getChars, writeHead)
+			writeTheRootsEnds(root, result, primary, openingLinesAreTaken, getChars, writeHead, runs)
 		}
 
 		let emptyLines = 0
@@ -125,6 +139,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		// The print parts from the file where PostCSS escapes a `<`, and the neighbors' semicolons and the warnings are carried across
 		let escapes = rootString === (root.source?.input.css ?? rootString) ? [] : printEscapes(root.source?.input.css ?? ``, rootString)
 		let taken = counted.taken ?? takenInPrint(straySemicolonOffsetsTaken(root, result), escapes)
+
+		if (blankLinesTaken) for (let offset of blankLineOffsets(rootString, taken)) taken.add(offset)
 
 		// A file ending on a break counts one empty line more, and spaces and tabs behind the last break are `no-eol-whitespace`'s line, so the end is measured in front of them, and in front of the semicolons the neighbors take there
 		let endOfFile = [...rootString].map((character, index) => (taken.has(index) ? ` ` : character)).join(``).replace(TRAILING_SPACES_AND_TABS, ``).length
@@ -202,8 +218,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
  * @param openingLinesAreTaken - Whether `no-empty-first-line` takes the lines the file opens with.
  * @param getChars - What the rule makes of a run it writes.
  * @param writeHead - What it makes of the run the text opens with.
+ * @param runs - What a run is, as `replaceEmptyLines` takes it.
  */
-function writeTheRootsEnds (root: Root, result: PostcssResult, primary: number, openingLinesAreTaken: boolean, getChars: (text: string, isSpecialCase?: boolean) => string, writeHead: (text: string) => string): void {
+function writeTheRootsEnds (root: Root, result: PostcssResult, primary: number, openingLinesAreTaken: boolean, getChars: (text: string, isSpecialCase?: boolean) => string, writeHead: (text: string) => string, runs: RegExp): void {
 	let { first, last } = root
 	let { document } = root as { document?: Document }
 	let firstNodeRawsBefore = first && first.raws.before
@@ -224,7 +241,7 @@ function writeTheRootsEnds (root: Root, result: PostcssResult, primary: number, 
 	 * @returns It written.
 	 */
 	function writeTail (text: string): string {
-		return isDocumentBlock || !isEofNode(result.root, root) ? getChars(text) : replaceEmptyLines(primary === 0 ? 1 : primary, text, true)
+		return isDocumentBlock || !isEofNode(result.root, root) ? getChars(text) : replaceEmptyLines(primary === 0 ? 1 : primary, text, true, runs)
 	}
 
 	// Behind a free semicolon behind the last rule's brace the tail opens in that rule's own raw, and the two are written as one run, the semicolons the neighbors take kept for them
@@ -312,14 +329,18 @@ function partedAtTheHeld (written: string, own: string): [string, string] {
  * @param getChars - What the rule makes of a run it writes.
  * @param text - The text as the file spells it.
  * @param blanked - The copy of it the runs are read off, as long as the text.
+ * @param runs - What a run is, as `replaceEmptyLines` takes it.
  * @returns The text written.
  */
-function writeRuns (getChars: (text: string) => string, text: string, blanked: string): string {
+function writeRuns (getChars: (text: string) => string, text: string, blanked: string, runs: RegExp): string {
 	let pieces = []
 	let index = 0
 
-	for (let run of blanked.matchAll(EVERY_RUN_OF_LINE_BREAKS)) {
-		pieces.push(text.slice(index, run.index), getChars(run[0]))
+	for (let run of blanked.matchAll(runs)) {
+		let spelled = text.slice(run.index, run.index + run[0].length)
+
+		// A line the copy blanks is no line of spaces, so where a run passes one, the runs of breaks the copy holds are written alone, as they would be with no such line read
+		pieces.push(text.slice(index, run.index), spelled === run[0] ? getChars(spelled) : writeRuns(getChars, spelled, run[0], EVERY_RUN_OF_LINE_BREAKS))
 		index = run.index + run[0].length
 	}
 
@@ -349,10 +370,11 @@ function countedCopy (syntax: Syntax, node: ChildNode, result: PostcssResult, ig
  * @param syntax - The syntax the rule is built over, which says where an interpolation runs.
  * @param comment - The comment node.
  * @param getChars - What the rule makes of a run it writes; a raw the parser left unfilled comes back empty, as it did before the text was written beside them.
+ * @param runs - What a run is, as `replaceEmptyLines` takes it.
  */
-function writeComment (syntax: Syntax, comment: Comment, getChars: (text: string | undefined) => string): void {
+function writeComment (syntax: Syntax, comment: Comment, getChars: (text: string | undefined) => string, runs: RegExp): void {
 	comment.raws.left = getChars(comment.raws.left)
-	comment.text = writeRuns(getChars, comment.text, blankComments(comment.text, syntax.hostCodeSpans(comment.text, comment)))
+	comment.text = writeRuns(getChars, comment.text, blankComments(comment.text, syntax.hostCodeSpans(comment.text, comment)), runs)
 	comment.raws.right = getChars(comment.raws.right)
 }
 
@@ -363,8 +385,9 @@ function writeComment (syntax: Syntax, comment: Comment, getChars: (text: string
  * @param result - The Stylelint result, which names the syntax the file was parsed with.
  * @param ignoreComments - Whether the option passes the empty lines inside comments over.
  * @param getChars - What the rule makes of a run it writes.
+ * @param runs - What a run is, as `replaceEmptyLines` takes it.
  */
-function writeStatementText (syntax: Syntax, node: ChildNode, result: PostcssResult, ignoreComments: boolean, getChars: (text: string) => string): void {
+function writeStatementText (syntax: Syntax, node: ChildNode, result: PostcssResult, ignoreComments: boolean, getChars: (text: string) => string, runs: RegExp): void {
 	if (isComment(node)) return
 
 	/**
@@ -373,7 +396,7 @@ function writeStatementText (syntax: Syntax, node: ChildNode, result: PostcssRes
 	 * @returns The text written.
 	 */
 	function write (text: string): string {
-		return writeRuns(getChars, text, countedCopy(syntax, node, result, ignoreComments, text))
+		return writeRuns(getChars, text, countedCopy(syntax, node, result, ignoreComments, text), runs)
 	}
 
 	if (isAtRule(node) && node.raws.afterName) node.raws.afterName = write(node.raws.afterName)
@@ -396,11 +419,12 @@ function writeStatementText (syntax: Syntax, node: ChildNode, result: PostcssRes
  * Writes the run a raw opens with and nothing else, so the rest of it is the caller's: the raw of a first node was written by the walk, which reads a run as one standing inside a line, and the raw of a root with no node is written around this call. The narrowing is what keeps zero from taking a free semicolon standing in the raw with the breaks, since `replaceEmptyLines` empties a whole text where it is left no break to keep.
  * @param getChars - What the rule makes of a run it writes.
  * @param headOpensALine - Whether the run stands at the start of a line, closing one empty line per break rather than one fewer.
+ * @param head - The run the raw opens with: breaks alone, or breaks with the lines of nothing but spaces and tabs between them.
  * @param text - The raw as it stands.
  * @returns The raw written.
  */
-function writeHeadRun (getChars: (text: string, isSpecialCase?: boolean) => string, headOpensALine: boolean, text: string): string {
-	return text.replace(LEADING_LINE_BREAK_RUN, (run) => getChars(run, headOpensALine))
+function writeHeadRun (getChars: (text: string, isSpecialCase?: boolean) => string, headOpensALine: boolean, head: RegExp, text: string): string {
+	return text.replace(head, (run) => getChars(run, headOpensALine))
 }
 
 /**
@@ -503,14 +527,20 @@ function withRootTail (root: Root, result: PostcssResult, text: string, taken: S
  * @param maxLines - The maximum.
  * @param str - The string.
  * @param isSpecialCase - Whether at the end of file.
+ * @param runs - What a run is: breaks alone, or breaks with the lines of nothing but spaces and tabs between them where a neighbor empties those.
  * @returns The collapsed string.
  */
-function replaceEmptyLines (maxLines: number, str: unknown, isSpecialCase: boolean = false): string {
+function replaceEmptyLines (maxLines: number, str: unknown, isSpecialCase: boolean = false, runs: RegExp = EVERY_RUN_OF_LINE_BREAKS): string {
 	let repeatTimes = isSpecialCase ? maxLines : maxLines + 1
 
 	if (repeatTimes === 0 || typeof str !== `string`) return ``
 
-	return str.replaceAll(EVERY_RUN_OF_LINE_BREAKS, (run) => run.match(EVERY_LINE_BREAK)?.slice(0, repeatTimes).join(``) ?? run)
+	// A run within the maximum stays as spelled, its blank lines' spaces the neighbor's to take
+	return str.replaceAll(runs, (run) => {
+		let breaks = run.match(EVERY_LINE_BREAK) ?? []
+
+		return breaks.length > repeatTimes ? breaks.slice(0, repeatTimes).join(``) : run
+	})
 }
 
 /**

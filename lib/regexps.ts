@@ -73,6 +73,12 @@ export const EVERY_CHARACTER_BUT_A_LINE_FEED = /[^\n]/gu
 /** Every run of breaks as PostCSS reads them, a Windows pair and a line feed alike, nothing between them: what `max-empty-lines` collapses, whichever way each break is spelled. */
 export const EVERY_RUN_OF_LINE_BREAKS = /(?:\r?\n)+/gu
 
+/** Every run of breaks with the lines of nothing but spaces and tabs between them: the run {@link EVERY_RUN_OF_LINE_BREAKS} matches once those lines are emptied. */
+export const EVERY_RUN_OF_LINE_BREAKS_PAST_BLANK_LINES = /\r?\n(?:[ \t]*\r?\n)*/gu
+
+/** The run of breaks a text opens with, with the spaces and tabs in front of it and the lines of nothing but them between them: {@link LEADING_LINE_BREAK_RUN} once those are trimmed. */
+export const LEADING_LINE_BREAK_RUN_PAST_BLANK_LINES = /^[ \t]*\r?\n(?:[ \t]*\r?\n)*/u
+
 /** Every line ending in a break, break included. */
 export const EVERY_LINE_WITH_BREAK = /[^\n]*\n/gu
 
