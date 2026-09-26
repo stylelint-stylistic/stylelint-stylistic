@@ -151,6 +151,9 @@ export const LEADING_COLON_AND_WHITESPACE = /^:[ \t\n\r\f]*/u
 /** The leading tokenizer whitespace; a vertical tab and a no-break space are words. The narrowing of {@link LEADING_WHITESPACE}. */
 export const LEADING_CSS_WHITESPACE = /^[ \t\n\r\f]*/u
 
+/** The leading run of tokenizer whitespace and semicolons: the head of a file in front of its first node, where every semicolon is a stray one. */
+export const LEADING_CSS_WHITESPACE_AND_SEMICOLONS = /^[ \t\n\r\f;]*/u
+
 /** The leading word, up to the first tokenizer whitespace, the complement of {@link LEADING_CSS_WHITESPACE}, for cutting a run `postcss-value-parser` read too wide. */
 export const LEADING_CSS_WORD = /^[^ \t\n\r\f]*/u
 

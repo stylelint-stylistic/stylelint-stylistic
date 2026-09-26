@@ -31,6 +31,12 @@ describe(`takesTheOpeningLines`, () => {
 		expect(ask(`\t;\n`, { "@stylistic/no-empty-first-line": true })).toBe(false)
 	})
 
+	it(`a file opening on a line holding nothing but a semicolon the neighbor takes out, which it leaves empty`, () => {
+		expect(ask(`;\n\na {}\n`, { "@stylistic/no-empty-first-line": true, "@stylistic/no-extra-semicolons": true })).toBe(true)
+		expect(ask(`;\n\na {}\n`, { "@stylistic/no-empty-first-line": true })).toBe(false)
+		expect(ask(`\n;\n`, { "@stylistic/no-empty-first-line": true, "@stylistic/no-extra-semicolons": true })).toBe(false)
+	})
+
 	it(`a file of whitespace alone, which the rule accepts`, () => {
 		expect(ask(`\n\n`, { "@stylistic/no-empty-first-line": true })).toBe(false)
 		expect(ask(``, { "@stylistic/no-empty-first-line": true })).toBe(false)

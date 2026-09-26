@@ -17,7 +17,7 @@ import { opensALine } from "../../utils/opensALine/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import { straySemicolonOffsetsTaken, straySemicolonsTaken, straySemicolonsTakenBefore, straySemicolonsTakenOwn, writtenAsLeft } from "../../utils/straySemicolonsTaken/index.ts"
+import { straySemicolonOffsetsTaken, straySemicolonsTaken, straySemicolonsTakenBefore, straySemicolonsTakenOwn, withoutTaken, writtenAsLeft } from "../../utils/straySemicolonsTaken/index.ts"
 import { takesTheOpeningLines } from "../../utils/takesTheOpeningLines/index.ts"
 import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
 import { isNumber } from "../../utils/validateTypes/index.ts"
@@ -99,7 +99,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			root.walk((node) => {
 				if (isComment(node) && !ignoreComments) writeComment(syntax, node, getChars)
 
-				if (!writeAcrossTheFreeSemicolon(node, result, getChars) && node.raws.before) node.raws.before = node === first ? pastTheOpeningLines(node.raws.before, openingLinesAreTaken, getChars) : writtenAsLeft(getChars, node.raws.before, straySemicolonsTakenBefore(node, result))
+				if (!writeAcrossTheFreeSemicolon(node, result, getChars) && node.raws.before) node.raws.before = node === first ? pastTheOpeningLines(node.raws.before, openingLinesAreTaken, getChars, straySemicolonsTakenBefore(node, result)) : writtenAsLeft(getChars, node.raws.before, straySemicolonsTakenBefore(node, result))
 
 				writeStatementText(syntax, node, result, ignoreComments, getChars)
 
@@ -212,7 +212,7 @@ function writeTheRootsEnds (root: Root, result: PostcssResult, primary: number, 
 	if (first && firstNodeRawsBefore) {
 		let taken = straySemicolonsTakenBefore(first, result)
 
-		first.raws.before = pastTheOpeningLines(firstNodeRawsBefore, openingLinesAreTaken, (text) => writtenAsLeft(writeHead, text, new Set([...taken].map((index) => index - (firstNodeRawsBefore.length - text.length)).filter((index) => index >= 0))))
+		first.raws.before = pastTheOpeningLines(firstNodeRawsBefore, openingLinesAreTaken, (text) => writtenAsLeft(writeHead, text, new Set([...taken].map((index) => index - (firstNodeRawsBefore.length - text.length)).filter((index) => index >= 0))), taken)
 	}
 
 	// A root standing in an `html` document, or a styled template host code follows, whose tail is written as any run is, zero included, since the file's special case is the check's only where the root ends the file; a root ending the file, where zero is read as one, a file ending on a break satisfying it
@@ -250,7 +250,7 @@ function writeTheRootsEnds (root: Root, result: PostcssResult, primary: number, 
 	else {
 		let taken = straySemicolonsTaken(root, result)
 
-		root.raws.after = pastTheOpeningLines(rootRawsAfter, openingLinesAreTaken, (text) => writtenAsLeft((run) => writeTail(writeHead(run)), text, new Set([...taken].map((index) => index - (rootRawsAfter.length - text.length)).filter((index) => index >= 0))))
+		root.raws.after = pastTheOpeningLines(rootRawsAfter, openingLinesAreTaken, (text) => writtenAsLeft((run) => writeTail(writeHead(run)), text, new Set([...taken].map((index) => index - (rootRawsAfter.length - text.length)).filter((index) => index >= 0))), taken)
 	}
 }
 
@@ -402,18 +402,22 @@ function writeHeadRun (getChars: (text: string, isSpecialCase?: boolean) => stri
 }
 
 /**
- * Writes a raw the file opens with, leaving the empty lines `no-empty-first-line` takes off where that rule is the one taking them.
+ * Writes a raw the file opens with, leaving the empty lines `no-empty-first-line` takes off where that rule is the one taking them. That rule reads them past the stray semicolons a neighbor takes out, so the run left alone runs on over those, which stay in it for the neighbor to take.
  * @param raw - The raw as it stands.
  * @param openingLinesAreTaken - Whether that rule takes the run off this file.
  * @param write - What this rule makes of the text it may write.
+ * @param taken - The indices of the semicolons of the raw a neighbor takes out.
  * @returns The run left alone and the rest written.
  */
-function pastTheOpeningLines (raw: string, openingLinesAreTaken: boolean, write: (text: string) => string): string {
+function pastTheOpeningLines (raw: string, openingLinesAreTaken: boolean, write: (text: string) => string, taken: Set<number>): string {
 	if (!openingLinesAreTaken) return write(raw)
 
-	let opening = OPENS_WITH_LINE_BREAK.exec(raw)?.[0] ?? ``
+	let opening = OPENS_WITH_LINE_BREAK.exec(withoutTaken(raw, taken))?.[0].length ?? 0
+	let end = 0
 
-	return opening + write(raw.slice(opening.length))
+	for (let kept = 0; kept < opening; end += 1) if (!taken.has(end)) kept += 1
+
+	return raw.slice(0, end) + write(raw.slice(end))
 }
 
 /**

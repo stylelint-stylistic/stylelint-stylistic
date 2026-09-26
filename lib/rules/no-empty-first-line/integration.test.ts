@@ -40,7 +40,7 @@ async function fixTwice (code: string, rules: object, customSyntax?: string): Pr
  * @param code - The snippet.
  * @param expected - What the runs are to leave.
  * @param expected.once - The file both orders leave.
- * @param expected.onceWarnings - How many warnings the pair has about that file, one wherever the neighbor's own write has left an empty line where the semicolon stood.
+ * @param expected.onceWarnings - How many warnings the pair has about that file.
  * @param expected.twice - The file the run after that leaves, which the pair has nothing to say about.
  * @param customSyntax - The syntax to parse the snippet with, where it is not a plain stylesheet.
  * @returns Nothing.
@@ -60,31 +60,46 @@ async function expectBothOrders (code: string, expected: {
 
 describe(`the output of no-empty-first-line beside a rule that writes into the head of the file`, () => {
 	it(`opens a file whose first line stands in front of a free semicolon the same way in both orders of no-extra-semicolons`, async () => {
-		await expectBothOrders(`\n;\na {}`, { once: `\na {}`, onceWarnings: 1, twice: `a {}` })
+		await expectBothOrders(`\n;\na {}`, { once: `a {}`, onceWarnings: 0, twice: `a {}` })
 	})
 
 	it(`does the same where the file opens with two empty lines`, async () => {
-		await expectBothOrders(`\n\n;\na {}`, { once: `\na {}`, onceWarnings: 1, twice: `a {}` })
+		await expectBothOrders(`\n\n;\na {}`, { once: `a {}`, onceWarnings: 0, twice: `a {}` })
 	})
 
 	it(`does the same where spaces stand in the empty line and around the semicolon`, async () => {
-		await expectBothOrders(`  \n  ;  \na {}`, { once: `    \na {}`, onceWarnings: 1, twice: `a {}` })
+		await expectBothOrders(`  \n  ;  \na {}`, { once: `a {}`, onceWarnings: 0, twice: `a {}` })
 	})
 
 	it(`does the same with a carriage-return line break`, async () => {
-		await expectBothOrders(`\r\n;\r\na {}`, { once: `\r\na {}`, onceWarnings: 1, twice: `a {}` })
+		await expectBothOrders(`\r\n;\r\na {}`, { once: `a {}`, onceWarnings: 0, twice: `a {}` })
 	})
 
 	it(`does the same where a comment is what the semicolon stands in front of`, async () => {
-		await expectBothOrders(`\n;\n/* c */`, { once: `\n/* c */`, onceWarnings: 1, twice: `/* c */` })
+		await expectBothOrders(`\n;\n/* c */`, { once: `/* c */`, onceWarnings: 0, twice: `/* c */` })
 	})
 
 	it(`does the same where the file holds nothing but the semicolon, which leaves the root no node and the runs a stylesheet of whitespace alone`, async () => {
-		await expectBothOrders(`\n;\n`, { once: `\n`, onceWarnings: 0, twice: `\n` })
+		await expectBothOrders(`\n;\n`, { once: `\n\n`, onceWarnings: 0, twice: `\n\n` })
 	})
 
 	it(`does the same inside a style element, whose own opening break the page keeps`, async () => {
-		await expectBothOrders(`<style>\n\n;\na {}</style>`, { once: `<style>\n\na {}</style>`, onceWarnings: 1, twice: `<style>\na {}</style>` }, `postcss-html`)
+		await expectBothOrders(`<style>\n\n;\na {}</style>`, { once: `<style>\na {}</style>`, onceWarnings: 0, twice: `<style>\na {}</style>` }, `postcss-html`)
+	})
+
+	it.each([
+		[`;\n\n\na {}`],
+		[`\n;\n\na {}`],
+		[`;;\n\na {}`],
+		[` ; \n\na {}`],
+	])(`does the same where the semicolon stands on the first line of %j, which the neighbor leaves empty`, async (code) => {
+		await expectBothOrders(code, { once: `a {}`, onceWarnings: 0, twice: `a {}` })
+	})
+
+	it(`reads a semicolon a disable comment keeps from the neighbor as a character of its line`, async () => {
+		let code = `; /* stylelint-disable-line @stylistic/no-extra-semicolons */\n\na {}`
+
+		await expectBothOrders(code, { once: code, onceWarnings: 0, twice: code })
 	})
 })
 
@@ -113,13 +128,14 @@ function orders (names: string[]): string[][] {
 }
 
 /**
- * Fixes a snippet under one order of the three until the runs stop moving it.
+ * Fixes a snippet under one order of the three until the runs stop moving it, or as many runs as given.
  * @param code - The snippet.
  * @param order - The rules in the order the configuration is to spell them.
  * @param customSyntax - The syntax to parse the snippet with, where it is not a plain stylesheet.
+ * @param runs - The most runs.
  * @returns The file the runs left and how many warnings the three have about it.
  */
-async function settle (code: string, order: string[], customSyntax?: string): Promise<{ file: string, warnings: number }> {
+async function settle (code: string, order: string[], customSyntax?: string, runs = 8): Promise<{ file: string, warnings: number }> {
 	let rules: Record<string, unknown> = {}
 
 	for (let name of order) rules[`@stylistic/${name}`] = HEAD_WRITERS[name]
@@ -127,7 +143,7 @@ async function settle (code: string, order: string[], customSyntax?: string): Pr
 	let options = { config: { plugins, rules }, ...(customSyntax && { customSyntax }) }
 	let file = code
 
-	for (let run = 0; run < 8; run += 1) {
+	for (let run = 0; run < runs; run += 1) {
 		// eslint-disable-next-line no-await-in-loop
 		let answer = await stylelint.lint({ code: file, fix: true, ...options })
 		let next = answer.code ?? file
@@ -147,10 +163,11 @@ async function settle (code: string, order: string[], customSyntax?: string): Pr
  * @param code - The snippet.
  * @param expected - The file every order is to leave.
  * @param customSyntax - The syntax to parse the snippet with, where it is not a plain stylesheet.
+ * @param runs - The most runs each order is given.
  * @returns Nothing.
  */
-async function expectEveryOrder (code: string, expected: string, customSyntax?: string): Promise<void> {
-	let settled = await Promise.all(orders(Object.keys(HEAD_WRITERS)).map(async (order) => ({ order, settlement: await settle(code, order, customSyntax) })))
+async function expectEveryOrder (code: string, expected: string, customSyntax?: string, runs?: number): Promise<void> {
+	let settled = await Promise.all(orders(Object.keys(HEAD_WRITERS)).map(async (order) => ({ order, settlement: await settle(code, order, customSyntax, runs) })))
 
 	for (let { order, settlement } of settled) expect({ order, ...settlement }).toEqual({ order, file: expected, warnings: 0 })
 }
@@ -168,12 +185,12 @@ describe(`the output of the three rules that write the head of the file`, () => 
 		await expectEveryOrder(`\n;\n\n`, `\n`)
 	})
 
-	it(`does the same where the file ends on the semicolon, which leaves it no line ending to keep`, async () => {
-		await expectEveryOrder(`\n;`, ``)
+	it(`does the same where the file ends on the semicolon, which leaves a stylesheet of a single break`, async () => {
+		await expectEveryOrder(`\n;`, `\n`)
 	})
 
 	it(`does the same where the empty second line carries a space`, async () => {
-		await expectEveryOrder(`\n \n;\n`, `\n`)
+		await expectEveryOrder(`\n \n;\n`, `\n \n`)
 	})
 
 	it(`does the same with a carriage-return line break`, async () => {
@@ -182,5 +199,9 @@ describe(`the output of the three rules that write the head of the file`, () => 
 
 	it(`does the same inside a style element, whose root keeps the block in the raw the page's own runs stand outside of`, async () => {
 		await expectEveryOrder(`<style>\n\n\n;\n</style>\n`, `<style>\n\n</style>\n`, `postcss-html`)
+	})
+
+	it(`does the same in a single run where the semicolon stands on the first line in front of a rule`, async () => {
+		await expectEveryOrder(`;\n\n\na {}`, `a {}`, undefined, 1)
 	})
 })

@@ -6,7 +6,8 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
-import type { EmbeddedSource } from "../../utils/typeGuards/index.ts"
+import { straySemicolonsTaken, straySemicolonsTakenBefore, writtenAsLeft } from "../../utils/straySemicolonsTaken/index.ts"
+import { openingLineBreaks } from "../../utils/takesTheOpeningLines/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -51,19 +52,11 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: Prim
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, { actual: primary })
 
-		let source: EmbeddedSource | undefined = root.source
+		if (!validOptions) return
 
-		if (!validOptions || source?.inline || source?.lang === `object-literal`) return
+		let lines = openingLineBreaks(root, result)
 
-		let rootString = (root.source && root.source.input.css) || ``
-
-		if (!rootString.trim()) return
-
-		let opening = OPENS_WITH_LINE_BREAK.exec(rootString)
-
-		if (opening) {
-			let lines = [...opening[0].matchAll(EVERY_LINE_BREAK)].length
-
+		if (lines > 0) {
 			report({
 				message: messages.rejected,
 				node: root,
@@ -76,14 +69,15 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: Prim
 					if (first === undefined) {
 						if (root.raws.after === undefined) throw new Error(`The root node must keep the file in its trailing raw.`)
 
-						root.raws.after = takeOpeningLines(root.raws.after, lines)
+						root.raws.after = writtenAsLeft((run) => takeOpeningLines(run, lines), root.raws.after, straySemicolonsTaken(root, result))
 
 						return
 					}
 
 					if (first.raws.before === undefined) throw new Error(`The first node must have spaces before.`)
 
-					first.raws.before = takeOpeningLines(first.raws.before, lines)
+					// A stray semicolon a neighbor takes out stays for it to take
+					first.raws.before = writtenAsLeft((run) => takeOpeningLines(run, lines), first.raws.before, straySemicolonsTakenBefore(first, result))
 				},
 			})
 		}
