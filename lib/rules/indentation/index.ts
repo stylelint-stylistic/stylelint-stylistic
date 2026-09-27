@@ -63,8 +63,7 @@ function checkNodeLine (scope: IndentationScope, node: ChildNode, nodeLevel: num
 	let expectedOpeningBraceLevel = opensTheStylesheetsLine ? nodeLevel - embeddedLevel : nodeLevel
 	let expectedOpeningBraceIndentation = indentChar.repeat(expectedOpeningBraceLevel)
 
-	// A node built with no source is passed over, as it was when its missing raw read as no run and before `report` could place a problem on one
-	if (node.source && (beforeBreaks || (isFirstChild && (!getDocument(parent) || (parent.raws.codeBefore && TRAILING_LINE_BREAK.test(parent.raws.codeBefore))))) && lastLineIndentation(before, beforeSpans) !== expectedOpeningBraceIndentation) {
+	if ((beforeBreaks || (isFirstChild && (!getDocument(parent) || (parent.raws.codeBefore && TRAILING_LINE_BREAK.test(parent.raws.codeBefore))))) && lastLineIndentation(before, beforeSpans) !== expectedOpeningBraceIndentation) {
 		report({
 			message: messages.expected,
 			messageArgs: [legibleExpectation(expectedOpeningBraceLevel - (opensTheStylesheetsLine ? 0 : hostLevel))],
