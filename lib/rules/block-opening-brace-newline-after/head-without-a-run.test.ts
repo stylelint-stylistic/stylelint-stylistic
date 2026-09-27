@@ -128,18 +128,19 @@ testRule({
 })
 
 describe(`the run PostCSS prints in front of a head node the file spells none in front of`, () => {
-	it(`is the whitespace never-multi-line refuses over a block holding one comment, and the fix takes it out`, async () => {
+	// The run is pinned to what PostCSS prints, a break and its indentation, and the fix writes it as it writes the same run the file spells
+	it(`is the whitespace never-multi-line refuses over a block holding one comment, and the fix takes its break out`, async () => {
 		expect(await fixAndRead(`a {/*1*/\n}`, `never-multi-line`)).toEqual({
 			warnings: [`1:4 ${messages.rejectedAfterMultiLine()}`],
-			fixed: `a {/*1*/}`,
+			fixed: `a {    /*1*/}`,
 			left: 0,
 		})
 	})
 
-	it(`is the whitespace never-multi-line refuses over a block whose one comment the file spells no run in front of, and the fix takes it out`, async () => {
+	it(`is the whitespace never-multi-line refuses over a block whose one comment the file spells no run in front of, and the fix takes its break out`, async () => {
 		expect(await fixAndRead(`a {/*c*/}`, `never-multi-line`)).toEqual({
 			warnings: [`1:4 ${messages.rejectedAfterMultiLine()}`],
-			fixed: `a {/*c*/}`,
+			fixed: `a {    /*c*/}`,
 			left: 0,
 		})
 	})

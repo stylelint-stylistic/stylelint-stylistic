@@ -51,10 +51,10 @@ testRule({
 })
 
 describe(`the run PostCSS prints in front of a declaration the file spells none in front of`, () => {
-	// The line check reads the file, which still spells the breaks the syntax took off the tree, so the break between the second and the third line is reported twice here, by the line and by the node; a plugin filling an empty block leaves no such line in the file
-	it(`is a line feed windows refuses, reported on the declaration, and the fix respells it along with the file's own breaks`, async () => {
+	// The run is pinned to what PostCSS prints and read as a raw, so a break the file spells as well is reported once, by its line
+	it(`is a line feed windows refuses, and the fix respells it along with the file's own breaks`, async () => {
 		expect(await fixAndRead(`a {\ncolor: pink;\ntop: 0;\n}`, `windows`)).toEqual({
-			warnings: [`1:4 ${messages.expected(`windows`)}`, `2:13 ${messages.expected(`windows`)}`, `3:8 ${messages.expected(`windows`)}`, `2:1 ${messages.expected(`windows`)}`, `3:1 ${messages.expected(`windows`)}`],
+			warnings: [`1:4 ${messages.expected(`windows`)}`, `2:13 ${messages.expected(`windows`)}`, `3:8 ${messages.expected(`windows`)}`],
 			fixed: `a {\r\n    color: pink;\r\n    top: 0;\r\n}`,
 			left: 0,
 		})

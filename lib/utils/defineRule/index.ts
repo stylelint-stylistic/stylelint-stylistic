@@ -7,6 +7,7 @@ import { asksForTheCharsetRule, CHARSET_RULE_MESSAGE } from "../asksForTheCharse
 import { refuseContradictingSettings } from "../contradictingSettings/index.ts"
 import { copyReadingTheRoot } from "../copyReadingTheRoot/index.ts"
 import { deferCheck, deferFinalCheck, deferHeadCheck, defersToRunEnd, flushDeferredChecks, lastConfiguredPluginRule, linenessRank, registerPluginRule } from "../defersToRunEnd/index.ts"
+import { pinInventedRaws } from "../pinInventedRaws/index.ts"
 import { report } from "../report/index.ts"
 import type { RuleCheck } from "../ruleCheck/index.ts"
 
@@ -93,6 +94,8 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 					}
 
 					syntax.restore(root, result)
+					// A node another plugin's rule built carries none of the raws the rules read and write, and PostCSS invents them in print out of its neighbors
+					pinInventedRaws(root)
 					check(root, result)
 
 					return

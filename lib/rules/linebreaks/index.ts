@@ -113,20 +113,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			}
 		}
 
-		// A node a rule of another plugin built without a `raws.before` gets a run PostCSS prints in front of it, what its neighbors carry or a break with the default indent where they carry none, which no line of the file holds yet and the file the fix leaves will; it is reported on the node, whose place is the one it was built with. One built with no source is passed over, as it was before `report` could place a problem on one
-		root.walk((node) => {
-			if (typeof node.raws.before === `string` || !node.source || !hasError(runInFrontOf(node))) return
-
-			report({
-				message: messages.expected,
-				messageArgs: [primary],
-				node,
-				result,
-				ruleName,
-				fix,
-			})
-		})
-
 		/**
 		 * Checks whether a string's line breaks are not the option's.
 		 * @param dataToCheck - The string.
