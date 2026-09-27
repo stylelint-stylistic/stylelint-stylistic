@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Open Graph image</title>
+<!-- The card the site is shared as. Rendered to `docs/public/og.png` at 1200×630; every size is read off the width of the card, as the design draws it. -->
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;700&family=Geist+Mono:wght@400&display=swap");
+
+* {
+	margin: 0;
+	box-sizing: border-box;
+}
+
+body {
+	container-type: inline-size;
+	position: relative;
+	display: flex;
+	align-items: center;
+	width: 1200px;
+	height: 630px;
+	padding: 0 7%;
+	overflow: hidden;
+	font-family: Geist, sans-serif;
+	background: #101517;
+}
+
+body::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background:
+		radial-gradient(60% 100% at 85% 25%, rgb(0 173 208 / 0.35), transparent 60%),
+		radial-gradient(55% 90% at 10% 90%, rgb(66 122 231 / 0.28), transparent 62%);
+}
+
+.card {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 5%;
+	width: 100%;
+}
+
+.lines {
+	display: flex;
+	flex-direction: column;
+	gap: 2.2%;
+}
+
+.package {
+	display: flex;
+	align-items: center;
+	gap: 2.2%;
+	font-family: Geist Mono, monospace;
+	font-size: 2.7cqw;
+	color: #c3cbce;
+}
+
+.title {
+	font-size: 6.4cqw;
+	font-weight: 700;
+	line-height: 1.05;
+	letter-spacing: -0.03em;
+	color: #fff;
+}
+
+.title em {
+	background: linear-gradient(100deg, #2ad5e5, #75a9ff);
+	background-clip: text;
+	font-style: normal;
+	color: transparent;
+}
+
+.tagline {
+	font-size: 2.7cqw;
+	line-height: 1.35;
+	color: #a4b0b4;
+}
+
+.mark {
+	display: block;
+	height: auto;
+}
+
+.package .mark {
+	width: 5cqw;
+}
+
+.card > .mark {
+	flex: none;
+	width: 24cqw;
+}
+</style>
+</head>
+<body>
+<div class="card">
+	<div class="lines">
+		<p class="package">
+			<svg class="mark" viewBox="0 0 412 395" fill="url(#gd)" aria-hidden="true"><g fill-rule="evenodd"><path d="M208.805 393.054c45.057-161.12 43.75-161.848 76.32-276.73l7.832 4.523c4.255 2.458 7.738.448 7.738-4.455V61.606c8.643-30.27 15.416-53.66 17.4-60.693h35.287L412 55.217l-38.498 33.27 29.11 31.473-191.86 273.094c-.938 1.542-2.244 1.19-1.947 0zm20.96-347.278c1.733 0 3.148.958 3.148 2.147V76c0 1.186-1.415 2.15-3.147 2.15H182.37c-1.742 0-3.153-.96-3.153-2.15V47.923c0-1.185 1.41-2.147 3.153-2.147h47.396z"></path>
+  <path d="M288.265 14.688l-52.14 30.1c.605.92.973 1.98.973 3.136v28.078c0 1.457-.565 2.77-1.496 3.83l52.663 30.402c3.59 2.073 6.535.377 6.535-3.764V18.456c0-4.145-2.944-5.836-6.535-3.768zM175.03 76V47.923c0-1.15.368-2.21.966-3.13l-52.14-30.105c-3.588-2.068-6.53-.376-6.53 3.768v88.013c0 4.14 2.938 5.84 6.53 3.76l52.66-30.405c-.926-1.06-1.487-2.37-1.487-3.827z"></path>
+  <path d="M201.248 393.054h1.947c-45.05-161.12-43.753-161.848-76.32-276.73l-7.833 4.523c-4.253 2.458-7.737.448-7.737-4.455V61.606C102.66 31.336 95.89 7.946 93.9.913H58.617L0 55.217l38.494 33.27-29.11 31.473 191.864 273.094z"></path>
+  <circle cx="204.572" cy="122.538" r="14.231"></circle>
+  <circle cx="204.572" cy="207.156" r="14.231"></circle>
+  <circle cx="204.572" cy="291.785" r="14.23"></circle></g></svg>
+			<span>@stylistic/stylelint-plugin</span>
+		</p>
+		<p class="title">Stylistic Formatting<br>for <em>Stylelint</em></p>
+		<p class="tagline">Formatting and Linting in one go,<br>with fully customizable rules</p>
+	</div>
+	<svg class="mark" viewBox="0 0 412 395" fill="url(#gd)" aria-hidden="true"><g fill-rule="evenodd"><path d="M208.805 393.054c45.057-161.12 43.75-161.848 76.32-276.73l7.832 4.523c4.255 2.458 7.738.448 7.738-4.455V61.606c8.643-30.27 15.416-53.66 17.4-60.693h35.287L412 55.217l-38.498 33.27 29.11 31.473-191.86 273.094c-.938 1.542-2.244 1.19-1.947 0zm20.96-347.278c1.733 0 3.148.958 3.148 2.147V76c0 1.186-1.415 2.15-3.147 2.15H182.37c-1.742 0-3.153-.96-3.153-2.15V47.923c0-1.185 1.41-2.147 3.153-2.147h47.396z"></path>
+  <path d="M288.265 14.688l-52.14 30.1c.605.92.973 1.98.973 3.136v28.078c0 1.457-.565 2.77-1.496 3.83l52.663 30.402c3.59 2.073 6.535.377 6.535-3.764V18.456c0-4.145-2.944-5.836-6.535-3.768zM175.03 76V47.923c0-1.15.368-2.21.966-3.13l-52.14-30.105c-3.588-2.068-6.53-.376-6.53 3.768v88.013c0 4.14 2.938 5.84 6.53 3.76l52.66-30.405c-.926-1.06-1.487-2.37-1.487-3.827z"></path>
+  <path d="M201.248 393.054h1.947c-45.05-161.12-43.753-161.848-76.32-276.73l-7.833 4.523c-4.253 2.458-7.737.448-7.737-4.455V61.606C102.66 31.336 95.89 7.946 93.9.913H58.617L0 55.217l38.494 33.27-29.11 31.473 191.864 273.094z"></path>
+  <circle cx="204.572" cy="122.538" r="14.231"></circle>
+  <circle cx="204.572" cy="207.156" r="14.231"></circle>
+  <circle cx="204.572" cy="291.785" r="14.23"></circle></g></svg>
+</div>
+<svg width="0" height="0" aria-hidden="true">
+	<defs>
+		<linearGradient id="gd" x1="0" y1="0" x2="0.85" y2="1">
+			<stop offset="0" stop-color="#2ad5e5"></stop>
+			<stop offset="1" stop-color="#75a9ff"></stop>
+		</linearGradient>
+	</defs>
+</svg>
+</body>
+</html>

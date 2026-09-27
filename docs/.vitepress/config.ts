@@ -11,6 +11,9 @@ import { readRules } from "./readRules.ts"
 /** The root of the repository, which is the root the site is built from: every README of a rule and of a namespace stays where it lies, and `rewritePath` names the page it is served as. */
 const ROOT = fileURLToPath(new URL(`../../`, import.meta.url))
 
+/** The site itself, which a card has to name in full. */
+const SITE = `https://stylelint-stylistic.github.io/`
+
 /** The repository on GitHub, where every page of the site is edited. */
 const REPOSITORY = `https://github.com/stylelint-stylistic/stylelint-stylistic`
 
@@ -81,13 +84,21 @@ let contribute: DefaultTheme.SidebarItem[] = [
 
 export default defineConfig({
 	title: `Stylelint Stylistic`,
-	description: `Stylistic rules for Stylelint, in plugin form`,
+	description: `Formatting and Linting in one go, with fully customizable rules`,
 
 	// A browser takes the SVG icon where it reads one, the `.ico` where it does not, and iOS takes the PNG.
 	head: [
 		[`link`, { rel: `icon`, type: `image/svg+xml`, href: `/favicon.svg` }],
 		[`link`, { rel: `alternate icon`, href: `/favicon.ico`, sizes: `32x32` }],
 		[`link`, { rel: `manifest`, href: `/manifest.webmanifest` }],
+
+		// The card a chat or a feed shows in place of the address; `docs/og/index.html` is what `og.png` is rendered from.
+		[`meta`, { property: `og:type`, content: `website` }],
+		[`meta`, { property: `og:url`, content: SITE }],
+		[`meta`, { property: `og:title`, content: `Stylelint Stylistic` }],
+		[`meta`, { property: `og:description`, content: `Formatting and Linting in one go, with fully customizable rules` }],
+		[`meta`, { property: `og:image`, content: `${SITE}og.png` }],
+		[`meta`, { name: `twitter:card`, content: `summary_large_image` }],
 	],
 
 	// No switch: the scheme follows the system alone, which is `theme/style.css`'s to answer, and VitePress writes neither the `dark` class nor the script that restores a choice.
