@@ -38,6 +38,9 @@ const FONT_PRELOAD = /\n {4}<link rel="preload" [^>]*as="font"[^>]*>/gu
 /** A stylesheet VitePress links as a preload too, which a stylesheet in the head gains nothing from: the browser finds it early and fetches it first anyway. */
 const STYLESHEET_PRELOAD = /<link rel="preload stylesheet"([^>]*?) as="style"/gu
 
+/** The stand-in for the default theme's overflow engine of the navbar. */
+const NO_NAV_OVERFLOW = fileURLToPath(new URL(`theme/no-nav-overflow.ts`, import.meta.url))
+
 let { version } = JSON.parse(readFileSync(`${ROOT}package.json`, `utf8`)) as { version: string }
 
 /**
@@ -192,7 +195,11 @@ export default defineConfig({
 		},
 	},
 	// The public directory is resolved against `srcDir`, which here is the root of the repository, so the site's own one has to be named.
-	vite: { publicDir: `docs/public` },
+	vite: {
+		publicDir: `docs/public`,
+		// The bar folds its units into a `⋯` menu as it runs short of room, which for a single icon trades it for another one; the theme's engine for it is replaced, and the burger alone folds the bar on a narrow screen.
+		resolve: { alias: [{ find: /^\.\.\/composables\/nav-overflow$/u, replacement: NO_NAV_OVERFLOW }] },
+	},
 	themeConfig: {
 		logo: `/logo.svg`,
 		nav: [
