@@ -88,6 +88,7 @@ export default defineConfig({
 
 	// A browser takes the SVG icon where it reads one, the `.ico` where it does not, and iOS takes the PNG.
 	head: [
+		[`meta`, { name: `viewport`, content: `width=device-width` }],
 		[`link`, { rel: `icon`, type: `image/svg+xml`, href: `/favicon.svg` }],
 		[`link`, { rel: `alternate icon`, href: `/favicon.ico`, sizes: `32x32` }],
 		[`link`, { rel: `manifest`, href: `/manifest.webmanifest` }],
@@ -100,6 +101,12 @@ export default defineConfig({
 		[`meta`, { property: `og:image`, content: `${SITE}og.png` }],
 		[`meta`, { name: `twitter:card`, content: `summary_large_image` }],
 	],
+	transformHtml: (html) => {
+		let first = [`<meta name="viewport" content="width=device-width">`]
+		let content = html
+		for (let tag of first) content = content.replace(`\n    ${tag}`, ``)
+		return content.replace(`<meta charset="utf-8">`, `$&\n    ${first.join(`\n    `)}`)
+	},
 
 	// No switch: the scheme follows the system alone, which is `theme/style.css`'s to answer, and VitePress writes neither the `dark` class nor the script that restores a choice.
 	appearance: false,
