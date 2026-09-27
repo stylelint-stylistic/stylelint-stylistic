@@ -89,6 +89,7 @@ export default defineConfig({
 	// A browser takes the SVG icon where it reads one, the `.ico` where it does not, and iOS takes the PNG.
 	head: [
 		[`meta`, { name: `viewport`, content: `width=device-width` }],
+		[`meta`, { name: `color-scheme`, content: `light dark` }],
 		[`link`, { rel: `icon`, type: `image/svg+xml`, href: `/favicon.svg` }],
 		[`link`, { rel: `alternate icon`, href: `/favicon.ico`, sizes: `32x32` }],
 		[`link`, { rel: `manifest`, href: `/manifest.webmanifest` }],
@@ -102,7 +103,10 @@ export default defineConfig({
 		[`meta`, { name: `twitter:card`, content: `summary_large_image` }],
 	],
 	transformHtml: (html) => {
-		let first = [`<meta name="viewport" content="width=device-width">`]
+		let first = [
+			`<meta name="viewport" content="width=device-width">`,
+			`<meta name="color-scheme" content="light dark">`,
+		]
 		let content = html
 		for (let tag of first) content = content.replace(`\n    ${tag}`, ``)
 		return content.replace(`<meta charset="utf-8">`, `$&\n    ${first.join(`\n    `)}`)
