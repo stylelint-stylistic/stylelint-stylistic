@@ -2,6 +2,7 @@ import stylelint from "stylelint"
 
 import { LEADING_WHITESPACE_WITHOUT_BREAK, LINE_BREAK, OPENS_WITH_BLOCK_COMMENT, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE, TRAILING_WHITESPACE_WITHOUT_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import { runHandedToTheBlock } from "../../utils/closedBySemicolon/index.ts"
 import { colonIndexInBetween } from "../../utils/colonIndexInBetween/index.ts"
 import { declarationColonSource } from "../../utils/declarationColonSource/index.ts"
 import { declarationValueAsSpelled } from "../../utils/declarationValueAsSpelled/index.ts"
@@ -82,7 +83,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			function finishTheRun (): void {
 				if (!finishesTheRun) return
 
-				syntax.write(decl, syntax.read(decl).replace(TRAILING_WHITESPACE_WITHOUT_BREAK, ``))
+				// The run `declaration-block-trailing-semicolon` hands to the block stands behind the semicolon, out of the shared run
+				let value = syntax.read(decl)
+				let handed = runHandedToTheBlock(decl, result)
+
+				syntax.write(decl, value.slice(0, value.length - handed.length).replace(TRAILING_WHITESPACE_WITHOUT_BREAK, ``) + handed)
 
 				if (syntax.read(decl) === `` && decl.raws.between) decl.raws.between = decl.raws.between.replace(TRAILING_WHITESPACE_WITHOUT_BREAK, ``)
 			}
@@ -140,9 +145,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								// Only the text in front of the break moves; the run behind it stays in the value for the semicolon rules
 								moveDeclarationValueHeadIntoBetween(syntax, decl, headLength)
 
+								// A break opening the run `declaration-block-trailing-semicolon` hands to the block is none behind the colon
 								let valueAfter = syntax.read(decl)
 
-								if (OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(valueAfter)) syntax.write(decl, valueAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``))
+								if (OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(valueAfter.slice(0, valueAfter.length - runHandedToTheBlock(decl, result).length))) syntax.write(decl, valueAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``))
 								else decl.raws.between += getLineBreak(root, result)
 
 								finishTheRun()

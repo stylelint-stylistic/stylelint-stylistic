@@ -2,6 +2,7 @@ import stylelint from "stylelint"
 import { describe, expect, it } from "vitest"
 
 import plugins from "../../index.ts"
+import { messages as trailingSemicolonMessages } from "../declaration-block-trailing-semicolon/index.ts"
 import { messages as colonNewlineAfterMessages } from "../declaration-colon-newline-after/index.ts"
 import { messages as colonSpaceAfterMessages } from "../declaration-colon-space-after/index.ts"
 
@@ -182,6 +183,40 @@ testRule({
 			endLine: 1,
 			endColumn: 12,
 			message: messages.rejectedBefore(),
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: {
+		"@stylistic/declaration-colon-newline-after": `always`,
+		"@stylistic/declaration-block-trailing-semicolon": `always`,
+	},
+
+	reject: [
+		{
+			// The semicolon's writer hands the space in front of the brace to the block and writes the space this rule asks for in front of the semicolon, so the colon rule behind reads a space behind the comment and leaves this rule's run alone.
+			description: `a custom property whose value is a comment alone, closing its block with no semicolon and a space in front of the brace`,
+			code: `a { --b: /*c*/ }`,
+			fixed: `a { --b: /*c*/ ; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 15,
+					message: colonNewlineAfterMessages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 15,
+					message: trailingSemicolonMessages.expected,
+				},
+			],
 		},
 	],
 })

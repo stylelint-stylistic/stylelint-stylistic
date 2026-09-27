@@ -31,18 +31,17 @@ function plainText (node: AtRule | Declaration | Rule): string {
 /**
  * Returns a node's text as the file spells it.
  *
- * PostCSS keeps the text with its comments in a raw beside the comment-less copy on the node, and `postcss-scss` prints from a `scss` copy of its own with the raw's `//` comments rewritten. Warnings are counted in the printed copy and a fix can reach no other, so `scss` is read first, then the raw, then the node's own text.
+ * PostCSS keeps the text with its comments in a raw beside the comment-less copy on the node, and `postcss-scss` prints from a `scss` copy of its own with the raw's `//` comments rewritten. Warnings are counted in the printed copy and a fix can reach no other, so `scss` is read first, then the raw, both only while the raw's `value` is the node's own text, as the stringifiers print them; otherwise the node's own text.
  * @param node - The declaration, rule or at-rule.
  * @returns The text as spelled.
  */
 export function printedText (node: AtRule | Declaration | Rule): string {
 	let syntaxRaw = rawsOf(node)
+	let plain = plainText(node)
 
-	if (!syntaxRaw) return plainText(node)
+	if (!syntaxRaw || syntaxRaw.value !== plain) return plain
 
-	if (typeof syntaxRaw.scss === `string`) return syntaxRaw.scss
-
-	return syntaxRaw.raw || plainText(node)
+	return typeof syntaxRaw.scss === `string` ? syntaxRaw.scss : syntaxRaw.raw
 }
 
 /** The reading of the syntax that keeps a `scss` copy beside the raw, which is `postcss-scss` reading Sass: its tokenizer closes a `//` comment on a form feed as well. */

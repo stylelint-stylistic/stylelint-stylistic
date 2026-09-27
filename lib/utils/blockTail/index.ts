@@ -1,11 +1,12 @@
 import type { Container } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { EVERY_SEMICOLON, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
+import { EVERY_SEMICOLON } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { trailingSemicolonAsked } from "../closedBySemicolon/index.ts"
 import { getBlockAfter } from "../getBlockAfter/index.ts"
 import { lastNodeHoldsTheBlockAfter } from "../lastNodeHoldsTheBlockAfter/index.ts"
+import { printsOnlyWhitespaceBehindTheColon } from "../runHeldForTheBlock/index.ts"
 import { setBlockAfter } from "../setBlockAfter/index.ts"
 import { straySemicolonsTaken, straySemicolonsTakenOwn } from "../straySemicolonsTaken/index.ts"
 import { isDeclaration } from "../typeGuards/index.ts"
@@ -70,7 +71,7 @@ export function runStandsBehindTheSemicolon (syntax: Syntax, statement: Containe
 
 	let { last } = statement
 
-	return isDeclaration(last) && !last.important && WHITESPACE_OR_NOTHING.test(syntax.read(last)) && trailingSemicolonAsked(last, result) === true
+	return isDeclaration(last) && printsOnlyWhitespaceBehindTheColon(syntax, last, result) && trailingSemicolonAsked(last, result) === true
 }
 
 /**

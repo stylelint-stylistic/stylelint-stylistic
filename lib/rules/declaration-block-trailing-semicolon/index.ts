@@ -351,6 +351,19 @@ function textBehindTheWrite (node: ChildNode, result: PostcssResult, raws: HeldR
 }
 
 /**
+ * Returns the run a declaration ends on behind its colon, read across the tail of `raws.between` and the value as one text.
+ * @param syntax - The syntax reading the value.
+ * @param decl - The declaration.
+ * @param result - The Stylelint result.
+ * @returns The run.
+ */
+function trailingRunBehindTheColon (syntax: Syntax, decl: Declaration, result: PostcssResult): string {
+	let text = betweenTailAfterColon(syntax, decl, result) + syntax.read(decl)
+
+	return text.slice(text.replace(TRAILING_CSS_WHITESPACE, ``).length)
+}
+
+/**
  * Returns the run an `always` write leaves in front of the semicolon.
  *
  * Where no whitespace is asked for, the node keeps its own run, unless the run moves to the block: an at-rule's, or the one a custom property keeps for the block ({@link runHeldForTheBlock}).
@@ -552,8 +565,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								if (bodilessAtRule) {
 									if (whitespace) writeWhitespaceBeforeSemicolon(syntax, bodilessAtRule, result, whitespace)
 								}
-								// A whitespace-only value shares its run with the colon, and a colon rule listed earlier may have written onto the tail of `raws.between`; that tail and the value are read as one run, as the semicolon rules do
-								else if (isDeclaration(node) && whitespace && !(!node.important && WHITESPACE_OR_NOTHING.test(syntax.read(node)) && betweenTailAfterColon(syntax, node, result) + syntax.read(node) === whitespace)) writeWhitespaceBeforeSemicolon(syntax, node, result, whitespace)
+								// A whitespace-only value shares its run with the colon, and a colon rule listed earlier may have written onto the tail of `raws.between`, behind a comment it moved there from a custom property's value too; where the run the text behind the colon ends on, read across that tail and the value, is the whitespace asked for already, none is written
+								else if (isDeclaration(node) && whitespace && !(!node.important && WHITESPACE_OR_NOTHING.test(syntax.read(node)) && trailingRunBehindTheColon(syntax, node, result) === whitespace)) writeWhitespaceBeforeSemicolon(syntax, node, result, whitespace)
 							}
 							else if (primary === `never`) {
 								takeTheTrailingSemicolonsAway(syntax, node, result, raws, flagIsCommentText)

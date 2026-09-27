@@ -63,8 +63,8 @@ describe(`declarationValueAsSpelled`, () => {
 		expect(valueOf(`--b: x\n`)).toBe(`x`)
 	})
 
-	it(`the same custom property as the trailing-semicolon rule will leave it: closed where its always writes the semicolon behind the run, open where its never takes the semicolon and the run`, () => {
-		expect(valueOf(`a { --b: x\n}`, { [TRAILING]: `always` })).toBe(`x\n`)
+	it(`the same custom property as the trailing-semicolon rule will leave it: closed where its always writes the semicolon in front of the run and hands the run to the block, open where its never takes the semicolon and the run`, () => {
+		expect(valueOf(`a { --b: x\n}`, { [TRAILING]: `always` })).toBe(`x`)
 		expect(valueOf(`a { --b: x\n; }`, { [TRAILING]: `never` })).toBe(`x`)
 	})
 

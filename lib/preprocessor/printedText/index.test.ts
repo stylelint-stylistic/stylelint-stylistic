@@ -32,6 +32,23 @@ describe(`printedText`, () => {
 	it(`reads the raw where the syntax keeps the comment in no copy of its own`, () => {
 		expect(printedText(lessRule(`a // c\n, b {}`))).toBe(`a // c\n, b`)
 	})
+
+	it(`reads an emptied raw as empty, as the stringifier prints it`, () => {
+		let node = decl(`a { --b: /* c */ }`)
+
+		writePrintedText(node, ``)
+
+		expect(printedText(node)).toBe(``)
+	})
+
+	it(`reads the node's own text where the raw no longer stands for it, as the stringifier prints it`, () => {
+		let node = decl(`a { --b: /* c */ }`)
+
+		node.raws.value = { value: `stale`, raw: `` }
+
+		expect(printedText(node)).toBe(node.value)
+		expect(node.toString()).toBe(`--b:${node.value}`)
+	})
 })
 
 describe(`writePrintedText`, () => {

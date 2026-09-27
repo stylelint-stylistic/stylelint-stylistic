@@ -1,3 +1,4 @@
+import { messages as braceNewlineBeforeMessages } from "../block-closing-brace-newline-before/index.ts"
 import { messages as semicolonNewlineBeforeMessages } from "../declaration-block-semicolon-newline-before/index.ts"
 import { messages as trailingSemicolonMessages } from "../declaration-block-trailing-semicolon/index.ts"
 
@@ -316,6 +317,145 @@ testRule({
 					column: 10,
 					endLine: 1,
 					endColumn: 11,
+					message: trailingSemicolonMessages.expected,
+				},
+			],
+		},
+		{
+			// The semicolon listed behind hands the run a custom property keeps for the closing brace to the block, so the run behind the comment is empty once it has run.
+			description: `a custom property whose value is a comment alone, closing its block with no semicolon, with a space in front of the brace`,
+			code: `a { --b: /*c*/ }`,
+			fixed: `
+				a { --b: /*c*/
+				; }
+			`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 15,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 15,
+					message: trailingSemicolonMessages.expected,
+				},
+			],
+		},
+		{
+			// The break in front of the brace is the block's once the semicolon listed behind has run, so it is no break behind the colon.
+			description: `the same custom property on a line of its own, whose break in front of the brace is the block's`,
+			code: `
+				a {
+					--b: /*c*/
+				}
+			`,
+			fixed: `
+				a {
+					--b: /*c*/
+				;
+				}
+			`,
+			warnings: [
+				{
+					line: 2,
+					column: 11,
+					endLine: 2,
+					endColumn: 12,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 2,
+					column: 11,
+					endLine: 2,
+					endColumn: 12,
+					message: trailingSemicolonMessages.expected,
+				},
+			],
+		},
+	],
+})
+
+// A third rule listed between this rule and `declaration-block-trailing-semicolon: always` reads the run a custom property keeps for the closing brace as the semicolon's writer hands it to the block, behind the break this rule writes past a comment.
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: {
+		"@stylistic/declaration-block-semicolon-newline-before": `always`,
+		"@stylistic/declaration-block-trailing-semicolon": `always`,
+	},
+
+	reject: [
+		{
+			// The break written behind the comment is the one the semicolon's newline rule asks for, so the semicolon's writer adds none.
+			description: `a custom property whose value is a comment alone, closing its block with no semicolon and a space in front of the brace, beside a rule asking for a break in front of the semicolon`,
+			code: `a { --b: /*c*/ }`,
+			fixed: `
+				a { --b: /*c*/
+				; }
+			`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 15,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 15,
+					message: trailingSemicolonMessages.expected,
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: {
+		"@stylistic/block-closing-brace-newline-before": `always`,
+		"@stylistic/declaration-block-trailing-semicolon": `always`,
+	},
+
+	reject: [
+		{
+			// The space behind the comment is the block's once the semicolon is written, so the brace rule writes its break into the block rather than into the value.
+			description: `a custom property whose value is a comment alone, closing its block with no semicolon and a space in front of the brace, beside a rule asking for a break in front of the brace`,
+			code: `a { --b: /*c*/ }`,
+			fixed: `
+				a { --b: /*c*/
+				;
+				 }
+			`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 15,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 15,
+					endLine: 1,
+					endColumn: 16,
+					message: braceNewlineBeforeMessages.expectedBefore,
+				},
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 15,
 					message: trailingSemicolonMessages.expected,
 				},
 			],

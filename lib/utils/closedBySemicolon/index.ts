@@ -13,6 +13,7 @@ import { neighborCopies, type NeighborCopy } from "../neighborSettings/index.ts"
 import { nextNonCommentNode } from "../nextNonCommentNode/index.ts"
 import { lastSemicolonLeft, noExtraSemicolonsTaken } from "../noExtraSemicolonsTaken/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
+import { runHeldInTheValue } from "../runHeldForTheBlock/index.ts"
 import { isAtRule, isComment, isDeclaration, isRoot } from "../typeGuards/index.ts"
 import { whitespaceBeforeSemicolon } from "../whitespaceBeforeSemicolon/index.ts"
 
@@ -209,7 +210,7 @@ export function closedBySemicolon (decl: Declaration, result: PostcssResult): bo
 /**
  * Reads a declaration's printed value as `declaration-block-trailing-semicolon` will leave it.
  *
- * Its `never` takes the whitespace in front of the semicolon too where no flag or inline comment closes the declaration. A `never` copy finding a semicolon takes the run.
+ * Its `never` takes the whitespace in front of the semicolon too where no flag or inline comment closes the declaration. A `never` copy finding a semicolon takes the run; an `always` copy writing one hands the run a custom property keeps for the closing brace to the block and writes the whitespace the semicolon rules ask for in its place.
  * @param syntax - The asking rule's syntax, which reads the value.
  * @param decl - The declaration.
  * @param result - The Stylelint result, which holds the configuration.
@@ -224,5 +225,20 @@ export function valueAsClosed (syntax: Syntax, decl: Declaration, result: Postcs
 
 	if (copy && decl.parent?.raws.semicolon && writtenBy(copy, decl, result) === false && !copy.syntax.writesIntoInlineComment(decl, result)) return value.replace(TRAILING_CSS_WHITESPACE, ``)
 
-	return value
+	let handed = runHandedToTheBlock(decl, result)
+
+	// The write leaves in front of the semicolon the whitespace the semicolon rules ask for
+	return handed ? value.slice(0, value.length - handed.length) + whitespaceBeforeSemicolon(syntax, decl, result) : value
+}
+
+/**
+ * Reads the run a custom property closing its block without a semicolon keeps for the closing brace in its value, where an `always` copy of `declaration-block-trailing-semicolon` will write the semicolon in front of it and hand the run to the block ({@link runHeldInTheValue}).
+ * @param decl - The declaration.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns The run, empty behind a flag, where no such copy writes, and where the value keeps its run.
+ */
+export function runHandedToTheBlock (decl: Declaration, result: PostcssResult): string {
+	let [copy] = neighborCopies(decl, result, TRAILING_SEMICOLON_RULE)
+
+	return copy && writtenBy(copy, decl, result) === true ? runHeldInTheValue(copy.syntax, decl, result) : ``
 }
