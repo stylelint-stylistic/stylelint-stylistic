@@ -27,5 +27,16 @@ export default defineConfig({
 				"import/no-unassigned-import": `off`,
 			},
 		},
+		{
+			// A TypeScript file carries its types in its signatures, and a JSDoc type beside them would be a second copy to fall out of step. The script of a single-file component is one. The shared config will carry this once it is released with it; until then it stands here.
+			files: [
+				`**/*.ts`,
+				`**/*.vue`,
+			],
+			rules: {
+				"jsdoc/require-param-type": `off`,
+				"jsdoc/require-returns-type": `off`,
+			},
+		},
 	],
 })

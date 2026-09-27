@@ -1,6 +1,15 @@
+---
+aside: false
+outline: false
+pageClass: rules-page
+---
+
 # Rules
 
 Here are `stylelint-stylistic` rules, grouped by the _thing_ they apply to (just like in [Stylelint](https://stylelint.io/user-guide/about-rules)).
+
+<!-- The list below is the file's: the registry test reads it, the sidebar of the site is built out of it, and GitHub shows it. The site shows the table instead, which `RulesTable` builds out of the same list; the component renders no slot, so what stands inside it never reaches the page. -->
+<RulesTable>
 
 ## Color
 
@@ -129,6 +138,7 @@ Here are `stylelint-stylistic` rules, grouped by the _thing_ they apply to (j
 - [`aspect-ratio-notation`](../../lib/rules/aspect-ratio-notation/README.md): Specify the notation for the value of `aspect-ratio` (Autofixable).
 
 ## Named grid areas
+
 - [`named-grid-areas-alignment`](../../lib/rules/named-grid-areas-alignment/README.md): Require cell tokens (and optionally ending quotes) within `grid-template-areas` to be aligned (Autofixable).
 
 ## General / Sheet
@@ -143,3 +153,5 @@ Here are `stylelint-stylistic` rules, grouped by the _thing_ they apply to (j
 - [`no-extra-semicolons`](../../lib/rules/no-extra-semicolons/README.md): Disallow extra semicolons (Autofixable).
 - [`no-missing-end-of-source-newline`](../../lib/rules/no-missing-end-of-source-newline/README.md): Disallow missing end-of-source newlines (Autofixable).
 - [`unicode-bom`](../../lib/rules/unicode-bom/README.md): Require or disallow Unicode BOM (Autofixable).
+
+</RulesTable>

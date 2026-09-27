@@ -6,6 +6,8 @@ import { type DefaultTheme, defineConfig } from "vitepress"
 
 import { namespaces } from "../../lib/syntaxes/index.ts"
 
+import { readRules } from "./readRules.ts"
+
 /** The root of the repository, which is the root the site is built from: every README of a rule and of a namespace stays where it lies, and `rewritePath` names the page it is served as. */
 const ROOT = fileURLToPath(new URL(`../../`, import.meta.url))
 
@@ -24,10 +26,6 @@ const REWRITES: [RegExp, string][] = [
 /** A link to a Markdown file of the repository, written relative to the file it stands in: no scheme, no leading slash, no bare anchor; the path and the anchor apart. */
 const RELATIVE_MARKDOWN_LINK = /^(?![a-z]+:|\/|#)([^#]+\.md)(#.*)?$/u
 
-/** The heading of a group in the rule list, and the entry of a rule under it. */
-const RULE_GROUP_HEADING = /^## (.+)$/u
-const RULE_ENTRY = /^- \[`([a-z-]+)`\]/u
-
 let { version } = JSON.parse(readFileSync(`${ROOT}package.json`, `utf8`)) as { version: string }
 
 /**
@@ -45,25 +43,21 @@ function rewritePath (page: string): string {
 
 /**
  * Reads the groups of the hand-written rule list, so that the sidebar of the rule pages follows the file the registry test guards.
- * @returns One sidebar group per `##` heading of the list, holding one item per rule linked under it.
+ * @returns One sidebar group per heading of the list, holding one item per rule named under it.
  */
 function readRuleGroups (): DefaultTheme.SidebarItem[] {
 	let groups: DefaultTheme.SidebarItem[] = []
-	let source = readFileSync(`${ROOT}docs/user-guide/rules.md`, `utf8`)
 
-	for (let line of source.split(`\n`)) {
-		let heading = RULE_GROUP_HEADING.exec(line)?.[1]
+	for (let { name, group } of readRules()) {
+		let last = groups.at(-1)
 
-		if (heading !== undefined) {
-			groups.push({ text: heading, collapsed: true, items: [] })
+		if (last?.text !== group) {
+			last = { text: group, collapsed: true, items: [] }
 
-			continue
+			groups.push(last)
 		}
 
-		let name = RULE_ENTRY.exec(line)?.[1]
-		let group = groups.at(-1)
-
-		if (name !== undefined && group) group.items?.push({ text: name, link: `/rules/${name}` })
+		last.items?.push({ text: name, link: `/rules/${name}` })
 	}
 
 	return groups

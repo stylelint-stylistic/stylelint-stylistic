@@ -184,3 +184,8 @@
 	font-weight: 500;
 	letter-spacing: 0;
 }
+
+/* The rule list is a table, not prose: its page gives up the outline column and is laid out wider than a page of text, up to the width the theme gives its widest. */
+.rules-page .VPDoc .content-container {
+	max-width: 1104px;
+}
