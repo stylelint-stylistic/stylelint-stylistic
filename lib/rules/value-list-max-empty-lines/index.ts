@@ -7,6 +7,7 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runHeldInTheValue } from "../../utils/runHeldForTheBlock/index.ts"
 import { isNumber } from "../../utils/validateTypes/index.ts"
 
 let { utils: { validateOptions } } = stylelint
@@ -46,7 +47,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		if (!validOptions) return
 
 		root.walkDecls((decl) => {
-			let value = syntax.read(decl)
+			let written = syntax.read(decl)
+			// The run a custom property keeps for the closing brace is the block's, not the list's
+			let held = runHeldInTheValue(syntax, decl, result)
+			let value = written.slice(0, written.length - held.length)
 
 			// Both kinds, since a `/*` written inside a `//` comment opens no comment under a syntax that spells one
 			let comments = syntax.commentSpans(value, decl, result)
@@ -64,7 +68,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					result,
 					ruleName,
 					fix () {
-						syntax.write(decl, collapseBreakRuns(value, blankedValue, maxAdjacentNewlines))
+						syntax.write(decl, collapseBreakRuns(value, blankedValue, maxAdjacentNewlines) + held)
 					},
 				})
 			}

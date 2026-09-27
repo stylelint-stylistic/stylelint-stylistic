@@ -80,6 +80,18 @@ testRule({
 			description: `the same comment written with carriage-return line breaks`,
 			code: `a { padding: 10px /*\r\n\r\n\r\n\r\n\r\n\r\n*/ 10px 10px 10px }`,
 		},
+		{
+			// A custom property closing the block without a semicolon keeps the run in front of the brace in its value, where an ordinary property hands it to the block, and the run is the block's either way
+			description: `blank lines in front of the closing brace behind a custom property's value`,
+			code: `
+				a {
+					c: d;
+					--b: red
+
+
+				}
+			`,
+		},
 	],
 
 	reject: [
@@ -216,6 +228,49 @@ testRule({
 			fixed: `a { padding: 10px\n \n\t\n10px 10px 10px }`,
 			line: 1,
 			column: 5,
+			message: messages.expected(0),
+		},
+		{
+			description: `blank lines inside a custom property's value closing the block, where the blank lines in front of the brace stay as written`,
+			code: `
+				a {
+					c: d;
+					--b: red,
+
+
+					blue
+
+
+				}
+			`,
+			fixed: `
+				a {
+					c: d;
+					--b: red,
+					blue
+
+
+				}
+			`,
+			line: 3,
+			column: 2,
+			message: messages.expected(0),
+		},
+		{
+			// Only the block's last node keeps the run in front of the closing brace, so the blank lines in front of an earlier declaration's semicolon are the value's
+			description: `blank lines in front of the semicolon of a declaration followed by a custom property closing the block`,
+			code: `a {\n\tb: red\n\n\n;\n\t--z: q\n}`,
+			fixed: `a {\n\tb: red\n;\n\t--z: q\n}`,
+			line: 2,
+			column: 2,
+			message: messages.expected(0),
+		},
+		{
+			description: `the same blank lines behind a custom property that does not close the block`,
+			code: `a {\n\t--b: red\n\n\n;\n\t--z: q\n}`,
+			fixed: `a {\n\t--b: red\n;\n\t--z: q\n}`,
+			line: 2,
+			column: 2,
 			message: messages.expected(0),
 		},
 	],

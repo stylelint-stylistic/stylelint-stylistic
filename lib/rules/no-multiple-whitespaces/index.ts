@@ -15,6 +15,7 @@ import { maskEscapes } from "../../utils/maskEscapes/index.ts"
 import { neighborCopies } from "../../utils/neighborSettings/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runHeldInTheValue } from "../../utils/runHeldForTheBlock/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -275,7 +276,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let laysTablesOut = neighborCopies(root, result, GRID_ALIGNMENT).some(({ secondary }) => secondary.alignColumns === true)
 
 		root.walkDecls((decl) => {
-			let value = syntax.read(decl)
+			let written = syntax.read(decl)
+			// The run a custom property keeps for the closing brace is the block's, not the value's
+			let held = runHeldInTheValue(syntax, decl, result)
+			let value = written.slice(0, written.length - held.length)
 			let valueIndex = declarationValueIndex(decl)
 			// A comment opens on a solidus, so a value spelling none holds none, and the scan is worth nothing there
 			let comments = value.includes(`/`) ? syntax.commentSpans(value, decl, result) : []
@@ -303,7 +307,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					result,
 					ruleName,
 					fix () {
-						syntax.write(decl, fixWhitespaceErrors(value, errors))
+						syntax.write(decl, fixWhitespaceErrors(value, errors) + held)
 					},
 				})
 			}

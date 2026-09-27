@@ -1,3 +1,4 @@
+import { messages as trailingSemicolonMessages, ruleName as trailingSemicolonRuleName } from "../declaration-block-trailing-semicolon/index.ts"
 import { messages as namedGridAreasAlignmentMessages } from "../named-grid-areas-alignment/index.ts"
 
 import { messages, ruleName } from "./index.ts"
@@ -43,6 +44,43 @@ testRule({
 					message: namedGridAreasAlignmentMessages.expected(`grid-template`),
 				},
 			],
+		},
+	],
+})
+
+let testTrailingSemicolonListedFirst = createTestRule({ ruleName: trailingSemicolonRuleName })
+
+testRule({
+	ruleName,
+	config: [true],
+	extraRules: { [trailingSemicolonRuleName]: `always` },
+
+	reject: [
+		{
+			// The run a custom property keeps in front of the closing brace is the block's, which the semicolon rule writes its semicolon in front of, so this rule leaves it whichever of the two runs first
+			description: `a custom property closing the block with no semicolon, a tab and a space in front of the brace, this rule listed first`,
+			code: `a { --b: red\t }`,
+			fixed: `a { --b: red;\t }`,
+			line: 1,
+			column: 12,
+			message: trailingSemicolonMessages.expected,
+		},
+	],
+})
+
+testTrailingSemicolonListedFirst({
+	ruleName: trailingSemicolonRuleName,
+	config: [`always`],
+	extraRules: { [ruleName]: true },
+
+	reject: [
+		{
+			description: `the same block with the semicolon rule listed first`,
+			code: `a { --b: red\t }`,
+			fixed: `a { --b: red;\t }`,
+			line: 1,
+			column: 12,
+			message: trailingSemicolonMessages.expected,
 		},
 	],
 })

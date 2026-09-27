@@ -125,6 +125,11 @@ testRule({
 				}
 			`,
 		},
+		{
+			// A custom property closing the block without a semicolon keeps the run in front of the brace in its value, where an ordinary property hands it to the block, and the run is the block's either way
+			description: `a tab and a space in front of the closing brace behind a custom property's value`,
+			code: `a { --b: red\t }`,
+		},
 	],
 
 	reject: [
@@ -456,6 +461,31 @@ testRule({
 					message: messages.rejected,
 				},
 			],
+		},
+		{
+			description: `a doubled run inside a custom property's value closing the block, where the run in front of the brace stays as written`,
+			code: `a { --b: red  blue\t }`,
+			fixed: `a { --b: red blue\t }`,
+			line: 1,
+			column: 13,
+			message: messages.rejected,
+		},
+		{
+			// Only the block's last node keeps the run in front of the closing brace, so the run in front of an earlier declaration's semicolon is the value's
+			description: `a tab and a space in front of the semicolon of a declaration followed by a custom property closing the block`,
+			code: `a { b: red\t ; --z: q }`,
+			fixed: `a { b: red ; --z: q }`,
+			line: 1,
+			column: 11,
+			message: messages.rejected,
+		},
+		{
+			description: `the same run behind a custom property that does not close the block`,
+			code: `a { --b: red\t ; --z: q }`,
+			fixed: `a { --b: red ; --z: q }`,
+			line: 1,
+			column: 13,
+			message: messages.rejected,
 		},
 	],
 })
