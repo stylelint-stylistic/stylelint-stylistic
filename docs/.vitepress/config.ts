@@ -35,6 +35,9 @@ const GEIST_LATIN = /geist(?:-mono)?-latin-wght-normal\.[\w-]+\.woff2$/u
 /** A font's preload as `transformHead` writes it, on a line of its own. */
 const FONT_PRELOAD = /\n {4}<link rel="preload" [^>]*as="font"[^>]*>/gu
 
+/** A stylesheet VitePress links as a preload too, which a stylesheet in the head gains nothing from: the browser finds it early and fetches it first anyway. */
+const STYLESHEET_PRELOAD = /<link rel="preload stylesheet"([^>]*?) as="style"/gu
+
 let { version } = JSON.parse(readFileSync(`${ROOT}package.json`, `utf8`)) as { version: string }
 
 /**
@@ -120,6 +123,7 @@ export default defineConfig({
 		let fonts = content.match(FONT_PRELOAD)?.join(``) ?? ``
 		content = content.replace(FONT_PRELOAD, ``)
 		content = content.replace(/\n {4}<link rel="preload stylesheet"/u, `${fonts}$&`)
+		content = content.replace(STYLESHEET_PRELOAD, `<link rel="stylesheet"$1`)
 		return content.replace(`<meta charset="utf-8">`, `$&\n    ${first.join(`\n    `)}`)
 	},
 
