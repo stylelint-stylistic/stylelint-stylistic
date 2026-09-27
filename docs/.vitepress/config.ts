@@ -83,12 +83,22 @@ let userGuide: DefaultTheme.SidebarItem[] = [
 	{ text: `Custom syntaxes`, link: `/user-guide/custom-syntaxes`, items: syntaxItems },
 ]
 
-let contribute: DefaultTheme.SidebarItem[] = [
-	{ text: `Contributing`, link: `/contributing` },
-	{ text: `Writing rules`, link: `/developer-guide/rules` },
+let contribute: DefaultTheme.SidebarItem[] = [{ text: `Contributing`, link: `/contributing` }]
+
+let developerGuide: DefaultTheme.SidebarItem[] = [{ text: `Writing rules`, link: `/developer-guide/rules` }]
+
+let maintainerGuide: DefaultTheme.SidebarItem[] = [
 	{ text: `Issues`, link: `/maintainer-guide/issues` },
 	{ text: `Pull requests`, link: `/maintainer-guide/pull-requests` },
 	{ text: `Releases`, link: `/maintainer-guide/releases` },
+]
+
+/** The guides by the reader they are written for: whoever uses the plugin, whoever wants to help, whoever writes a rule, and whoever maintains the repository. */
+let guides: DefaultTheme.SidebarItem[] = [
+	{ text: `User guide`, items: userGuide },
+	{ text: `Contribute`, items: contribute },
+	{ text: `Developer guide`, items: developerGuide },
+	{ text: `Maintainer guide`, items: maintainerGuide },
 ]
 
 export default defineConfig({
@@ -186,7 +196,7 @@ export default defineConfig({
 	themeConfig: {
 		logo: `/logo.svg`,
 		nav: [
-			{ text: `Guide`, items: [{ items: userGuide }, { items: contribute }] },
+			{ text: `Guide`, items: guides.map(({ text, items }) => ({ text, items: items as DefaultTheme.NavItemWithLink[] })) },
 			{ text: `Rules`, link: `/user-guide/rules` },
 			{ text: `Changelog`, link: `/changelog` },
 			{ text: `v${version}`, link: `${REPOSITORY}/releases` },
@@ -194,10 +204,7 @@ export default defineConfig({
 		sidebar: {
 			"/rules/": readRuleGroups(),
 			"/syntaxes/": [{ text: `Custom syntaxes`, link: `/user-guide/custom-syntaxes`, items: syntaxItems }],
-			"/": [
-				{ text: `User guide`, items: userGuide },
-				{ text: `Contribute`, items: contribute },
-			],
+			"/": guides,
 		},
 		outline: `deep`,
 		editLink: {
