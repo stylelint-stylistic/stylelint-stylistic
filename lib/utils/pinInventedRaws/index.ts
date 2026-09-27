@@ -17,6 +17,9 @@ let stringifier = new Stringifier(unreachableBuilder)
 /** A raw to pin: the node's raws, the key, and what PostCSS prints there. */
 type Pin = [raws: Record<string, unknown>, key: string, value: unknown]
 
+/** The empty blocks whose run in front of the closing brace a pin wrote, by the root pinned, with what it wrote. */
+let emptyBlocks = new WeakMap<Root, Map<AnyNode, unknown>>()
+
 /**
  * Pins the raws PostCSS invents in print for the nodes that carry none: those a rule of another plugin built and put into the tree, which carry no `source` and none of the raws a parsed node carries, the nodes of a copy whose raws such a rule cleaned, and any raw such a rule took off a parsed node — the run in front of each, the run behind an at-rule's name, the run behind a declaration's colon or in front of a block's opening brace, the run in front of its closing brace and whether the last node of a block holding any is closed by a semicolon — each as PostCSS prints it now, out of what the neighbors carry. A parser files all of them but the semicolon of an empty block, which nothing prints and which is left, since a node put into the block later would find it stale.
  *
@@ -55,9 +58,47 @@ export function pinInventedRaws (root: Root): void {
 
 		if (!isDeclaration(node)) ask(node, `between`, () => stringifier.raw(node, `between`, `beforeOpen`))
 
-		ask(node, `after`, () => stringifier.raw(node, `after`, (container.nodes?.length ?? 0) > 0 ? undefined : `emptyBody`))
+		if ((container.nodes?.length ?? 0) > 0) ask(node, `after`, () => stringifier.raw(node, `after`))
+		else if (container.raws.after === undefined) {
+			let invented = stringifier.raw(node, `after`, `emptyBody`)
+			let blocks = emptyBlocks.get(root) ?? new Map<AnyNode, unknown>()
+
+			emptyBlocks.set(root, blocks)
+			blocks.set(node, invented)
+			pins.push([container.raws as Record<string, unknown>, `after`, invented])
+		}
 		if ((container.nodes?.length ?? 0) > 0) ask(node, `semicolon`, () => stringifier.raw(node, `semicolon`))
 	})
 
 	for (let [raws, key, value] of pins) raws[key] = value
+}
+
+/**
+ * Takes the pin off the run in front of the closing brace of an empty block, once every rule of the plugin has read the root: a node a rule of another plugin puts into the block later is printed with the run PostCSS invents in front of a closing brace behind nodes, not with the one it invented for an empty block. The pin stays where a rule wrote another run, where the block holds nodes by then, and where PostCSS, asked afresh, would print the empty block otherwise, since a write elsewhere changed what it invents out of; the pins taken off together are asked together, until none of those left prints otherwise.
+ * @param root - The root pinned.
+ */
+export function unpinEmptyBlocks (root: Root): void {
+	let blocks = emptyBlocks.get(root)
+
+	if (!blocks) return
+
+	emptyBlocks.delete(root)
+
+	let taken = [...blocks].map(([block, pinned]) => ({ block, raws: block.raws as Record<string, unknown>, pinned })).filter(({ block, raws, pinned }) => raws.after === pinned && ((block as Container).nodes?.length ?? 0) === 0 && block.root() === root)
+
+	for (let { raws } of taken) delete raws.after
+
+	for (let changed = true; changed;) {
+		changed = false
+		delete (root as Root & { rawCache?: unknown }).rawCache
+
+		for (let { block, raws, pinned } of taken) {
+			if (raws.after !== undefined || stringifier.raw(block, `after`, `emptyBody`) === pinned) continue
+
+			raws.after = pinned
+			changed = true
+		}
+	}
+
+	delete (root as Root & { rawCache?: unknown }).rawCache
 }

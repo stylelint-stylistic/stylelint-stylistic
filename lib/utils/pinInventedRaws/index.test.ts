@@ -1,8 +1,10 @@
-import { AtRule, Comment, type Root, Rule } from "postcss"
+import { AtRule, Comment, parse, type Root, Rule } from "postcss"
 import stylelint from "stylelint"
 import { describe, expect, it } from "vitest"
 
 import plugins from "../../index.ts"
+
+import { pinInventedRaws, unpinEmptyBlocks } from "./index.ts"
 
 /**
  * Builds a rule of another plugin, listed in front of the plugin's, which puts nodes it builds into the tree, carrying no `source` and no raws.
@@ -91,5 +93,59 @@ describe(`the raws PostCSS invents for a node another plugin's rule built`, () =
 		let both = await stylelint.lint({ code, config: { plugins: [builder(build), ...plugins], rules: { "test/builder": true, "@stylistic/color-hex-case": `lower`, "@stylistic/number-leading-zero": `always` } }, fix: true })
 
 		expect(both.code).toBe(alone.code)
+	})
+})
+
+/**
+ * Builds an empty rule in front of the plugin's rules.
+ * @param root - The root.
+ */
+function empty (root: Root): void {
+	root.append(new Rule({ selector: `.e` }))
+}
+
+/**
+ * Fills that rule behind the plugin's rules.
+ * @param root - The root.
+ */
+function late (root: Root): void {
+	root.walkRules(`.e`, (statement) => {
+		statement.append({ prop: `top`, value: `0` }, { prop: `left`, value: `0` })
+	})
+}
+
+/** A rule of another plugin, listed behind the plugin's, which fills the empty rule. */
+let filler = stylelint.createPlugin(`test/filler`, Object.assign(() => (root: Root): void => {
+	late(root)
+}, { ruleName: `test/filler`, messages: {} }) as unknown as stylelint.Rule)
+
+describe(`the run in front of the closing brace of an empty block another plugin's rule built`, () => {
+	// PostCSS invents the run in front of an empty block's brace otherwise than in front of a brace behind nodes, so a run pinned for the empty block and left in place would close a block filled later on its last line
+	it(`the brace of a block filled behind the plugin's rules, placed as with no rule of the plugin configured`, async () => {
+		let code = `a {\n  color: red;\n}\n`
+		let plugged = [builder(empty), filler]
+		let alone = await stylelint.lint({ code, config: { plugins: plugged, rules: { "test/builder": true, "test/filler": true } }, fix: true })
+		let behind = await stylelint.lint({ code, config: { plugins: [...plugged, ...plugins], rules: { "test/builder": true, "@stylistic/color-hex-case": `lower`, "test/filler": true } }, fix: true })
+
+		expect(behind.code).toBe(alone.code)
+	})
+
+	// A pin taken off with others is put back where PostCSS would now invent the empty block's run otherwise: here out of the run written in front of the other block's brace
+	it(`the brace of an empty block beside one whose run is written`, () => {
+		let root = parse(`a { color: red }`)
+
+		let written = new Rule({ selector: `.e` })
+
+		root.append(written, new Rule({ selector: `.f` }))
+		pinInventedRaws(root)
+		written.raws.after = `\n`
+		unpinEmptyBlocks(root)
+
+		expect(root.toString()).toBe(`a { color: red }\n.e {\n}\n.f {}`)
+	})
+
+	// The pin stays where a rule wrote another run
+	it(`the brace a rule indents`, async () => {
+		expect(await fixBuilt(`a {\n}`, (root) => { root.append(new AtRule({ name: `media`, params: `print` }).append(new Rule({ selector: `.c` }))) }, [`@stylistic/indentation`, `tab`])).toEqual({ code: `a {\n}\n@media print {\n\t.c {\n\t}\n}`, left: 0 })
 	})
 })

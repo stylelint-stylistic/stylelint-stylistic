@@ -7,7 +7,7 @@ import { asksForTheCharsetRule, CHARSET_RULE_MESSAGE } from "../asksForTheCharse
 import { refuseContradictingSettings } from "../contradictingSettings/index.ts"
 import { copyReadingTheRoot } from "../copyReadingTheRoot/index.ts"
 import { deferCheck, deferFinalCheck, deferHeadCheck, defersToRunEnd, flushDeferredChecks, lastConfiguredPluginRule, linenessRank, registerPluginRule } from "../defersToRunEnd/index.ts"
-import { pinInventedRaws } from "../pinInventedRaws/index.ts"
+import { pinInventedRaws, unpinEmptyBlocks } from "../pinInventedRaws/index.ts"
 import { report } from "../report/index.ts"
 import type { RuleCheck } from "../ruleCheck/index.ts"
 
@@ -125,7 +125,11 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 				else if (defersToRunEnd(primary) && last !== undefined) deferCheck(root, rank, () => guarded(root, result))
 				else guarded(root, result)
 
-				if (ruleName === last) flushDeferredChecks(root)
+				if (ruleName !== last) return
+
+				flushDeferredChecks(root)
+				// Every rule of the plugin has read the root, and a rule of another plugin listed behind may yet fill a block
+				unpinEmptyBlocks(root as Root)
 			}
 		}
 
