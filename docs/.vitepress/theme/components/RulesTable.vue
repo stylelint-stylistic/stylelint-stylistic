@@ -36,15 +36,15 @@ let shown = computed(() => filterRules(rules, query.value, fixableOnly.value))
 			<colgroup>
 				<col class="rules__column--name">
 				<col>
-				<col class="rules__column--fixable">
 				<col class="rules__column--thing">
+				<col class="rules__column--fixable">
 			</colgroup>
 			<thead>
 				<tr>
 					<th scope="col">Rule</th>
 					<th scope="col">Description</th>
-					<th scope="col">Fixable</th>
 					<th scope="col">Thing</th>
+					<th scope="col">Fixable</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -53,10 +53,10 @@ let shown = computed(() => filterRules(rules, query.value, fixableOnly.value))
 						<a :href="`/rules/${rule.name}`">{{ rule.name }}</a>
 					</th>
 					<td class="rules__description">{{ rule.description }}</td>
+					<td class="rules__thing">{{ rule.group }}</td>
 					<td>
 						<span v-if="rule.fixable" class="rules__badge">fix</span>
 					</td>
-					<td class="rules__thing">{{ rule.group }}</td>
 				</tr>
 			</tbody>
 		</table>
