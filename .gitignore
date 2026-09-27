@@ -4,3 +4,5 @@ node_modules/
 tmp/
 *.log
 .claude/settings.local.json
+docs/.vitepress/cache/
+docs/.vitepress/dist/

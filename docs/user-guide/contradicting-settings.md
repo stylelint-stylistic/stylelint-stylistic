@@ -56,4 +56,4 @@ The pairs are: `at-rule-name-*-after`, `block-closing-brace-*-after`, `block-cl
 
 ### One rule under two namespaces
 
-Two copies of one rule, `@stylistic/unit-case` and `@stylistic/scss/unit-case`, never contradict each other: a stylesheet is read by one copy of a rule — the one of its own family, the core's over plain CSS and the namespace's over its syntax — and the other yields (see [Custom syntaxes](../../README.md#custom-syntaxes)). A `-newline-` rule under one namespace and its `-space-` rule under another are read as the pair they are wherever both read the stylesheet.
+Two copies of one rule, `@stylistic/unit-case` and `@stylistic/scss/unit-case`, never contradict each other: a stylesheet is read by one copy of a rule — the one of its own family, the core's over plain CSS and the namespace's over its syntax — and the other yields (see [Custom syntaxes](./custom-syntaxes.md)). A `-newline-` rule under one namespace and its `-space-` rule under another are read as the pair they are wherever both read the stylesheet.

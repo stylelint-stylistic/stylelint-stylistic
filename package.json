@@ -55,7 +55,9 @@
 		"postcss-styled-syntax": "^0.7",
 		"stylelint": "github:stylelint/stylelint#v18",
 		"typescript": "next",
-		"vitest": "^4"
+		"vitepress": "next",
+		"vitest": "^4",
+		"vue": "^3"
 	},
 	"devEngines": {
 		"runtime": {

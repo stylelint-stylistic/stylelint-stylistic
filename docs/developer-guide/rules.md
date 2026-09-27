@@ -182,7 +182,7 @@ let meta = {
 };
 ```
 
-Pass `fix` callback to the [`report` utility](./plugins.md#stylelintutilsreport):
+Pass `fix` callback to the [`report` utility](https://stylelint.io/developer-guide/plugins#stylelintutilsreport):
 
 ```diff js
 function rule({ ruleName, messages }, primary, secondary) {

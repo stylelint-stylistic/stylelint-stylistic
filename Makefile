@@ -39,6 +39,18 @@ prose-check: ## 🔤 Check that markdown prose is bound
 	beautypography --check
 .PHONY: prose-check
 
+docs-dev: ## 🌐 Serve the docs site with live reload
+	vitepress dev docs
+.PHONY: docs-dev
+
+docs-build: ## 📚 Build the docs site into docs/.vitepress/dist/
+	vitepress build docs
+.PHONY: docs-build
+
+docs-preview: ## 👀 Serve the built docs site
+	vitepress preview docs
+.PHONY: docs-preview
+
 oracles: ## 🔮 Compare every oracle's answer about the base with its answer about the working tree [BASE=] [HEAD=]
 	./scripts/oracles/compare.ts $(BASE) $(HEAD)
 .PHONY: oracles
@@ -71,7 +83,7 @@ packages-check: build ## 📦 Check that the built plugin needs none of the synt
 verify: ## ✅ Run every check the CI runs
 	@test -z "$(FILE)$(LINT_FLAGS)$(TEST_FLAGS)" || { printf "\t❌ $(ANSI_BOLD)verify runs every check over the whole tree, and takes no FILE, LINT_FLAGS or TEST_FLAGS$(ANSI_RESET)\n\n"; exit 2; }
 	tree=$$(./scripts/verified.ts tree)
-	$(MAKE) --no-print-directory check lint test prose-check breaks-check types-check build packages-check
+	$(MAKE) --no-print-directory check lint test prose-check breaks-check types-check build packages-check docs-build
 	./scripts/verified.ts record $$tree
 .PHONY: verify
 
