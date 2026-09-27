@@ -25,3 +25,8 @@ jobs:
       - run: make release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docs:
+    needs: release
+    uses: ./.github/workflows/docs.yaml
+    secrets: inherit

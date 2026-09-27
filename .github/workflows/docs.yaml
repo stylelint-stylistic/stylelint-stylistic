@@ -1,0 +1,42 @@
+name: Docs
+
+# The site is published when the `deploy-docs` branch is pushed at the commit it is to be built from, so that a push to `main` never republishes it by itself; the release workflow calls this one, so that a release publishes the site it releases.
+on:
+  push:
+    branches:
+      - deploy-docs
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+# One deployment at a time, and none skipped: a run that is cancelled midway can leave the site behind the branch it was building from.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  FORCE_COLOR: 2
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # A release moves the branch on while the run is going, so the branch is taken at its tip rather than at the commit the run started from, and the site shows the version that has just been released.
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: pnpm/action-setup@v6
+        with:
+          cache: true
+      - run: pnpm ci
+      - run: make docs-build
+      # The site is served by the organization's own repository, so the built site is pushed there over a deploy key of that repository, into the branch its Pages reads. The branch is left holding one commit, since nothing reads its history.
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          deploy_key: ${{ secrets.PAGES_DEPLOY_KEY }}
+          external_repository: stylelint-stylistic/stylelint-stylistic.github.io
+          publish_branch: gh-pages
+          publish_dir: docs/.vitepress/dist
+          force_orphan: true
