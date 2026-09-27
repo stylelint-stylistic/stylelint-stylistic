@@ -82,6 +82,8 @@ The plugin now refuses a configuration holding two settings that [contradict
 - The plugin now ships a type declaration for what it exports, so a TypeScript configuration or a script importing the package reads the plugin list as `Plugin[]` rather than as `any`. Nothing about configuring the plugin changes.
 - The plugin now says so when it is listed in `extends` instead of `plugins` (see [#14](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/14)). Such a configuration used to fail with every `@stylistic/` rule of it reported as unknown; the run now stops with a configuration error naming the field to move the package to.
 
+By the way, the documentation now lives at [stylelint-stylistic.github.io](https://stylelint-stylistic.github.io/).
+
 ### Fixed
 
 - The `block-opening-brace-space-before` rule no longer removes a comment standing between the selector and the opening brace when fixing (see [#63](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/63)).

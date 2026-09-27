@@ -50,7 +50,7 @@ Follow `lib/rules/color-hex-case/index.ts` as the canonical example. Every rul
 
 - declares ``let shortName = `<kebab-name>` ``;
 - names its messages in a `const MESSAGES = defineMessages({ … })`, before any rule name closes them;
-- exports `meta` with `url: getRuleDocUrl(shortName)` (points at the rule's own `README.md` on GitHub) and `fixable: true` when autofixable;
+- exports `meta` with `url: getRuleDocUrl(shortName)` (points at the rule's page on the documentation site, built from the rule's own `README.md`) and `fixable: true` when autofixable;
 - writes `function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary, secondaryOptions)`. The first parameter is what the namespace the rule is registered under hands it — the name a configuration refers to the rule by, the messages closed with that name, and the syntax the rule is built over — and the rule reads all three from there rather than from the module. Every question about the stylesheet's language goes through that `syntax`: `isStandard*`, `read`/`write`, the comment family, `selectorCopies`;
 - calls `validateOptions` first and bails on invalid options;
 - reports via `report({ message, messageArgs, node, index, endIndex, result, ruleName, fix() { … } })` of [lib/utils/report](lib/utils/report/index.ts), never Stylelint's own, which throws over a node another rule built with no source — `lib/syntaxes/index.test.ts` holds every module to it; autofix is the `fix` callback on `report`, not a separate `context.fix` branch;

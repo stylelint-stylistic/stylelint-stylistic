@@ -21,7 +21,7 @@ npm add -D stylelint @stylistic/stylelint-plugin
 > [!IMPORTANT]
 > Install a published version. A dependency named by a Git reference — `github:stylelint-stylistic/stylelint-stylistic` or a URL of a branch — does **not** work. The package publishes a built `dist/`, which the repository does not carry and nothing builds for you, so such an install either stops at your package manager's gate for build scripts or leaves a package that fails to load with `ERR_MODULE_NOT_FOUND`. If you need a fix that has not shipped yet, say so on the issue rather than reaching for the branch: a fix here is normally published as a patch version within the day.
 
-Create the `.stylelintrc` config file (or open the existing one), add `@stylistic/stylelint-plugin` to the plugins array and the rules you need to the rules list. [All rules from `@stylistic/stylelint-plugin`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/docs/user-guide/rules.md) need to be namespaced with `@stylistic/`. That prefix is the whole difference — an unprefixed name in the rules list is a rule of Stylelint's own, a prefixed one is a rule of this plugin:
+Create the `.stylelintrc` config file (or open the existing one), add `@stylistic/stylelint-plugin` to the plugins array and the rules you need to the rules list. [All rules from `@stylistic/stylelint-plugin`](https://stylelint-stylistic.github.io/user-guide/rules) need to be namespaced with `@stylistic/`. That prefix is the whole difference — an unprefixed name in the rules list is a rule of Stylelint's own, a prefixed one is a rule of this plugin:
 
 ```json
 {
@@ -76,7 +76,7 @@ The rules above read plain CSS. A stylesheet written in SCSS (`postcss-scss`)
 }
 ```
 
-What each namespace answers differently is written in its own README: [`scss`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/scss/README.md), [`less`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/less/README.md), [`styled`](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/lib/syntaxes/styled/README.md). A rule listed under two of these names over one stylesheet is read once, by the copy of the stylesheet's own family: the core's over plain CSS, the namespace's over its syntax, each block of an HTML page by its own; the other copies yield without a word. Where the family's copy is not configured, the first listed copy whose namespace accepts the stylesheet reads it.
+What each namespace answers differently is written on its own page: [`scss`](https://stylelint-stylistic.github.io/syntaxes/scss), [`less`](https://stylelint-stylistic.github.io/syntaxes/less), [`styled`](https://stylelint-stylistic.github.io/syntaxes/styled). A rule listed under two of these names over one stylesheet is read once, by the copy of the stylesheet's own family: the core's over plain CSS, the namespace's over its syntax, each block of an HTML page by its own; the other copies yield without a word. Where the family's copy is not configured, the first listed copy whose namespace accepts the stylesheet reads it.
 
 ## Typed configuration
 
@@ -117,15 +117,17 @@ ESLint deprecates stylistic rules, too. But you can continue to use them thank
 
 ## Important documents
 
-- [Rule list](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/docs/user-guide/rules.md)
-- [Typed configuration](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/docs/user-guide/typed-configuration.md)
-- [Contradicting settings](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/docs/user-guide/contradicting-settings.md)
-- [Contributing](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/CONTRIBUTING.md)
+- [Docs](https://stylelint-stylistic.github.io/)
+- [Rule list](https://stylelint-stylistic.github.io/user-guide/rules)
+- [Custom syntaxes](https://stylelint-stylistic.github.io/user-guide/custom-syntaxes)
+- [Typed configuration](https://stylelint-stylistic.github.io/user-guide/typed-configuration)
+- [Contradicting settings](https://stylelint-stylistic.github.io/user-guide/contradicting-settings)
+- [Contributing](https://stylelint-stylistic.github.io/contributing)
 
 [license-url]: https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/LICENSE.md
 [license-image]: https://img.shields.io/badge/License-MIT-limegreen.svg
 
-[changelog-url]: https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/CHANGELOG.md
+[changelog-url]: https://stylelint-stylistic.github.io/changelog
 [changelog-image]: https://img.shields.io/badge/Change-log-limegreen
 
 [test-url]: https://github.com/stylelint-stylistic/stylelint-stylistic/actions
