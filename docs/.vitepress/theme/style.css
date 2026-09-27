@@ -93,9 +93,9 @@
 	}
 }
 
-:focus-visible {
+:focus-visible:not(.search-input) {
 	outline: revert;
-	outline-offset: 5px;
+	outline-offset: 2px;
 }
 
 @media (prefers-color-scheme: dark) {
