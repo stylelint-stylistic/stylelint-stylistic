@@ -7,6 +7,7 @@ import { declarationValueIndex } from "../../utils/declarationValueIndex/index.t
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { openingRunRereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFront } from "../../utils/runInFront/index.ts"
 import { valueListCommaWhitespaceChecker } from "../../utils/valueListCommaWhitespaceChecker/index.ts"
@@ -68,11 +69,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (index === declarationValueIndex(declNode) && !writesSharedRun(syntax, declNode, result, ruleName)) return false
 
 				let run = runInFront(runString, index)
+				let edit = { start: index - run.length, end: index, text: primary.startsWith(`always`) ? ` ` : `` }
 
 				// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎,b` would come out as `a\,b`, one identifier, or `a\ ,b`, an escaped space, so the warning stands
-				if (!editKeepsEscapedCharacter(declString, { start: index - run.length, end: index, text: primary.startsWith(`always`) ? ` ` : `` })) return false
+				if (!editKeepsEscapedCharacter(declString, edit)) return false
 
-				return true
+				// Whitespace right behind the `(` of an address decides under PostCSS whether its parentheses are one token or code, so the write is refused where the parser then reads the file otherwise, as over a quotation mark inside
+				return !openingRunRereadsAnAddress(declString, edit, syntax.inlineComments(declNode, result), declNode)
 			},
 			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ ,b` is not cut
 			fix: (declNode, index, runString) => {

@@ -212,6 +212,15 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
+			// Under PostCSS's tokenizer a break right behind the `(` of an address keeps its parentheses code, so the quotation mark inside would open a string nothing closes
+			description: `a comma right behind the opening parenthesis of an address holding a quotation mark, where the break in front of it is refused and the warning stands`,
+			code: `@media url (,b"c) {}`,
+			fixed: `@media url (,b"c) {}`,
+			line: 1,
+			column: 13,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `parentheses holding a brace nothing closes, which the parser reads as a group inside an at-rule's params too, refused likewise`,
 			code: `@media a (a,{b) {}`,
 			fixed: `@media a (a,{b) {}`,

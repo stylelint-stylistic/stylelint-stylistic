@@ -207,6 +207,24 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
+			// A break inside the address's token makes no plain token of the parentheses once whitespace behind the `(` keeps them code, so the square bracket is read as a group nothing closes
+			description: `the same comma with a line break behind it, where the break in front of it is refused likewise`,
+			code: `a { b: url (,\nb[c) 2px; }`,
+			fixed: `a { b: url (,\nb[c) 2px; }`,
+			line: 1,
+			column: 13,
+			message: messages.expectedBefore(),
+		},
+		{
+			// Under PostCSS's tokenizer a break right behind the `(` of an address keeps its parentheses code, so the quotation mark inside would open a string nothing closes
+			description: `a comma right behind the opening parenthesis of an address holding a quotation mark, where the break in front of it is refused and the warning stands`,
+			code: `a { b: url (,b"c) 2px; }`,
+			fixed: `a { b: url (,b"c) 2px; }`,
+			line: 1,
+			column: 13,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `parentheses holding a brace nothing closes in a custom property's value, where the parser reads a brace as a group too, refused likewise`,
 			code: `a { --b: (a,{b); }`,
 			fixed: `a { --b: (a,{b); }`,
@@ -347,6 +365,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// Under PostCSS's tokenizer the whitespace right behind the `(` keeps the parentheses code, and taken out it hands them to the address's token, which closes at the parenthesis inside the string
+			description: `a comma behind whitespace right behind the opening parenthesis of an address holding a string with a closing parenthesis, where taking the whitespace out is refused and the warning stands`,
+			code: `a { b: 1 url (\n,"b)c") 2px; }`,
+			fixed: `a { b: 1 url (\n,"b)c") 2px; }`,
+			line: 2,
+			column: 1,
+			message: messages.rejectedBeforeMultiLine(),
+		},
 		{
 			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the word in front of a line break and the comma, which the write would turn into an escaped comma, so the warning stands`,

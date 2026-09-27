@@ -264,6 +264,23 @@ testRule({
 			column: 29,
 			message: messages.expectedBefore(),
 		},
+		{
+			// Under PostCSS's tokenizer a space right behind the `(` of an address keeps its parentheses code, so the quotation mark inside would open a string nothing closes
+			description: `a comma right behind the opening parenthesis of an address holding a quotation mark, where the space in front of it is refused and the warning stands`,
+			code: `a { b: 1 url (,b"c) 2px; }`,
+			fixed: `a { b: 1 url (,b"c) 2px; }`,
+			line: 1,
+			column: 15,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `the same comma in an address holding nothing code reads otherwise, where the space is written`,
+			code: `a { b: 1 url (,b) 2px; }`,
+			fixed: `a { b: 1 url ( ,b) 2px; }`,
+			line: 1,
+			column: 15,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 
@@ -296,6 +313,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// Under PostCSS's tokenizer the space right behind the `(` keeps the parentheses code, and taken out it hands them to the address's token, which closes at the parenthesis inside the string
+			description: `a comma behind whitespace right behind the opening parenthesis of an address holding a string with a closing parenthesis, where taking the whitespace out is refused and the warning stands`,
+			code: `a { b: 1 url ( ,"b)c") 2px; }`,
+			fixed: `a { b: 1 url ( ,"b)c") 2px; }`,
+			line: 1,
+			column: 16,
+			message: messages.rejectedBefore(),
+		},
 		{
 			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the word in front of a line break and the comma, which the write would turn into an escaped comma, so the warning stands`,

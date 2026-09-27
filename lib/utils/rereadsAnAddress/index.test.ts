@@ -1,7 +1,7 @@
 import { atRule, decl } from "postcss"
 import { describe, expect, it } from "vitest"
 
-import { addressHolding, editsRereadAnAddress, rereadsAnAddress } from "./index.ts"
+import { addressHolding, editsRereadAnAddress, openingRunRereadsAnAddress, rereadsAnAddress } from "./index.ts"
 
 let POSTCSS = { tokenizes: false }
 let SCSS = { tokenizes: true }
@@ -359,5 +359,30 @@ describe(`addressHolding`, () => {
 		expect(addressHolding(`a,url(b)`, 1, POSTCSS)).toBe(-1)
 		expect(addressHolding(`url(b) c,d`, 8, POSTCSS)).toBe(-1)
 		expect(addressHolding(`url x(b,c)`, 7, POSTCSS)).toBe(-1)
+	})
+})
+
+describe(`openingRunRereadsAnAddress`, () => {
+	it(`a space written right behind an address's opening parenthesis, which keeps the parentheses code under PostCSS's tokenizer, in front of a quotation mark nothing then closes`, () => {
+		expect(openingRunRereadsAnAddress(`1 url (,b"c) 2px`, { start: 7, end: 7, text: ` ` }, POSTCSS, DECLARATION)).toBe(true)
+		expect(openingRunRereadsAnAddress(`1 url (,b"c) 2px`, { start: 7, end: 7, text: ` ` }, SCSS, DECLARATION)).toBe(false)
+	})
+
+	it(`a break written there in front of a square bracket nothing closes`, () => {
+		expect(openingRunRereadsAnAddress(`1 url (,\nb[c) 2px`, { start: 7, end: 7, text: `\n` }, POSTCSS, DECLARATION)).toBe(true)
+	})
+
+	it(`the run taken out from behind the parenthesis, which hands the parentheses to the token and closes it inside a string`, () => {
+		expect(openingRunRereadsAnAddress(`1 url ( ,"b)c") 2px`, { start: 7, end: 8, text: `` }, POSTCSS, DECLARATION)).toBe(true)
+	})
+
+	it(`parentheses holding nothing code reads otherwise`, () => {
+		expect(openingRunRereadsAnAddress(`1 url (,b) 2px`, { start: 7, end: 7, text: ` ` }, POSTCSS, DECLARATION)).toBe(false)
+	})
+
+	it(`a break written behind another parenthesis or away from it, which switches which word a later parenthesis pops and is not asked about here`, () => {
+		expect(openingRunRereadsAnAddress(`1 url a (,z)(b"c)`, { start: 9, end: 9, text: `\n` }, POSTCSS, DECLARATION)).toBe(false)
+		expect(openingRunRereadsAnAddress(`1 url a (y,z)(b"c)`, { start: 10, end: 10, text: `\n` }, POSTCSS, DECLARATION)).toBe(false)
+		expect(editsRereadAnAddress(`1 url a (y,z)(b"c)`, [{ start: 10, end: 10, text: `\n` }], POSTCSS, DECLARATION)).toBe(true)
 	})
 })

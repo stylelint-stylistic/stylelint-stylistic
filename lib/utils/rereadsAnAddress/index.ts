@@ -650,3 +650,25 @@ export function editsRereadAnAddress (text: string, edits: Edit[], reading: Pick
 	// The runs inside a call's parentheses are whitespace `postcss-value-parser` leaves out of an address whatever they hold
 	return parsesPart(text, edited, edits, reading, placeOf(node), true)
 }
+
+/**
+ * Asks whether an edit of the run right behind a `(` that opens an address's token, before the edit or after it, makes the parser read the file otherwise ({@link editsRereadAnAddress}).
+ *
+ * Under PostCSS's tokenizer whitespace right behind the `(` at which `url` is popped keeps the parentheses code ({@link keepsParenthesesCode}), so a run written there, or taken out, switches them between an address's token and code. Behind any other `(` the edit is not asked about: a break written there is a question about the parentheses it opens, whose reading can switch which word a later `(` pops.
+ * @param text - The text the edit applies to.
+ * @param edit - The edit, indexed in that text.
+ * @param reading - Whether the parser reads by a tokenizer of its own.
+ * @param node - The node the text is read from, which says what the parser and the rules read in it.
+ * @returns True where the `(` in front of the edit opens an address's token in one of the two texts and the model of cuts and spans reads the output otherwise.
+ */
+export function openingRunRereadsAnAddress (text: string, edit: Edit, reading: Pick<CommentReading, `tokenizes`>, node: AtRule | Declaration | Rule): boolean {
+	let openIndex = edit.start - 1
+
+	if (text[openIndex] !== `(`) return false
+
+	let edited = applyEditsFromEnd(text, [edit])
+
+	if (addressHolding(text, edit.start, reading) !== openIndex && addressHolding(edited, edit.start, reading) !== openIndex) return false
+
+	return editsRereadAnAddress(text, [edit], reading, node)
+}

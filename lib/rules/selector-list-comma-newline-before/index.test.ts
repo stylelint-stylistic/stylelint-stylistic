@@ -253,6 +253,15 @@ testRule({
 			column: 7,
 			message: messages.expectedBefore(),
 		},
+		{
+			// Under PostCSS's tokenizer a break right behind the `(` of an address keeps its parentheses code, so the quotation mark inside would open a string nothing closes
+			description: `a comma right behind the opening parenthesis of an address holding a quotation mark, where the break in front of it is refused and the warning stands`,
+			code: `url (,b"c) d {}`,
+			fixed: `url (,b"c) d {}`,
+			line: 1,
+			column: 6,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 

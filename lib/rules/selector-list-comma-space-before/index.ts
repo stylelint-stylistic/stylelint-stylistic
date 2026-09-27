@@ -5,6 +5,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { openingRunRereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFront } from "../../utils/runInFront/index.ts"
 import { selectorListCommaWhitespaceChecker } from "../../utils/selectorListCommaWhitespaceChecker/index.ts"
@@ -72,11 +73,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (inlineComments.some((inlineComment) => runStart <= inlineComment.endIndex && inlineComment.endIndex < index)) return false
 
 				let run = runInFront(runString, index)
+				let edit = { start: index - run.length, end: index, text: primary.includes(`always`) ? ` ` : `` }
 
 				// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎,b` would come out as `a\,b`, one identifier, or `a\ ,b`, an escaped space, so the warning stands
-				if (!editKeepsEscapedCharacter(selector, { start: index - run.length, end: index, text: primary.includes(`always`) ? ` ` : `` })) return false
+				if (!editKeepsEscapedCharacter(selector, edit)) return false
 
-				return true
+				// Whitespace right behind the `(` of an address decides under PostCSS whether its parentheses are one token or code, so the write is refused where the parser then reads the file otherwise, as over a quotation mark inside
+				return !openingRunRereadsAnAddress(selector, edit, syntax.inlineComments(ruleNode, result), ruleNode)
 			},
 			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ ,b` is not cut
 			fix: (ruleNode, index, runString) => {

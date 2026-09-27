@@ -200,6 +200,24 @@ testRule({
 			column: 14,
 			message: messages.expectedBefore(),
 		},
+		{
+			// Under PostCSS's tokenizer a space right behind the `(` of an address keeps its parentheses code, so the quotation mark inside would open a string nothing closes
+			description: `a comma right behind the opening parenthesis of an address holding a quotation mark, where the space in front of it is refused and the warning stands`,
+			code: `@media url (,b"c) { a { b: c; } }`,
+			fixed: `@media url (,b"c) { a { b: c; } }`,
+			line: 1,
+			column: 13,
+			message: messages.expectedBefore(),
+		},
+		{
+			// A square bracket inside parentheses code reads is a group, and the params take the block into it
+			description: `the same comma in an address holding a line break and a square bracket nothing closes, refused likewise`,
+			code: `@media url (,\nb[c) { a { b: c; } }`,
+			fixed: `@media url (,\nb[c) { a { b: c; } }`,
+			line: 1,
+			column: 13,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 
@@ -256,6 +274,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// Under PostCSS's tokenizer the space right behind the `(` keeps the parentheses code, and taken out it hands them to the address's token, which closes at the parenthesis inside the string
+			description: `a comma behind whitespace right behind the opening parenthesis of an address holding a string with a closing parenthesis, where taking the whitespace out is refused and the warning stands`,
+			code: `@media url ( ,"b)c") { a { b: c; } }`,
+			fixed: `@media url ( ,"b)c") { a { b: c; } }`,
+			line: 1,
+			column: 14,
+			message: messages.rejectedBefore(),
+		},
 		// The run in front of a comma opening the parameters is read in the at-rule's raw behind its name, which the fix does not empty, since that would join the name to the parameters
 		{
 			description: `a space in front of a comma opening the parameters, behind the name`,
