@@ -1,5 +1,5 @@
 import valueParser, { type FunctionNode } from "postcss-value-parser"
-import stylelint, { type FixCallback } from "stylelint"
+import stylelint from "stylelint"
 
 import { css } from "../../syntaxes/css/index.ts"
 import type { InlineCommentReading, Syntax } from "../../syntaxes/index.ts"
@@ -15,9 +15,9 @@ import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import { quotesItsAddress } from "../../utils/quotesItsAddress/index.ts"
 import { report } from "../../utils/report/index.ts"
-import { editsRereadAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { splitSpaceNodesAtWords } from "../../utils/splitSpaceNodesAtWords/index.ts"
+import { type WriteCandidate, writesKeepingAddresses } from "../../utils/writesKeepingAddresses/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -158,9 +158,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		root.walkDecls((decl) => {
 			if (!decl.value.includes(`(`)) return
 
-			let fix: FixCallback | undefined
 			// Edited at positions: the value parser prints `/*/` as `/**/`
 			let edits: Edit[] = []
+			// Reported once the walk is done: a write into a call's parentheses can switch which word a later `(` pops, and so whether it opens an address's token, which is asked of every write the run gives together
+			let problems: (WriteCandidate & { message: string })[] = []
 			let declValue = syntax.read(decl)
 			// A `//` is a comment only where the syntax says: `myurl(//a)` is CSS
 			let reading = syntax.inlineComments(decl, result)
@@ -175,7 +176,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			parsedValue.walk((valueNode, at, siblings) => {
 				if (valueNode.type !== `function`) return
 
-				// The parentheses of a bare address are the address's: a space or a break written behind the `(` parts it from the parenthesis, which is what a tokenizer reads one token by, so the call is passed over and the walk goes no further in. A quoted address's parentheses are the call's own and are checked like any call's, the write behind the `(` asking below whether it switches how the tokenizer reads them, since `postcss-scss` reads a quoted address behind a space as a token counting parentheses, which a string holding an unpaired one leaves unclosed or closes early. The name is the file's spelling rather than the parser's, which is wider than what a parser takes a url token by.
+				// The parentheses of a bare address are the address's: a space or a break written behind the `(` parts it from the parenthesis, which is what a tokenizer reads one token by, so the call is passed over and the walk goes no further in. A quoted address's parentheses are the call's own and are checked like any call's, the write behind the `(` asked once the walk is done whether it switches how the tokenizer reads them, since `postcss-scss` reads a quoted address behind a space as a token counting parentheses, which a string holding an unpaired one leaves unclosed or closes early. The name is the file's spelling rather than the parser's, which is wider than what a parser takes a url token by.
 				if (opensAnAddress(valueNode, at, siblings) && !quotesItsAddress(valueNode)) return false
 
 				// A narrowing here is not carried into a nested function
@@ -198,70 +199,44 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let openingIndex = valueNode.sourceIndex + valueNode.value.length + 1
 
 				/**
-				 * Asks whether the fix may write the run behind the `(`. Under a parser whose tokenizer reads the parentheses behind `url(` as one token, a write opening a comment, as taking away the whitespace in front of a quotation mark there does, is refused; outside it the question is not asked, since a name glued to a sign, `1!url(`, is an address to the walk and a call to the parser, and a refusal there would take away a write the parser reads the same. A write switching how the tokenizer reads parentheses it takes for an address's is refused as well: this run holds the character that decides it, and the name the parser reads there is not the one the walk read. Whether the break the run holds closes a `//` comment is not asked: the `(` would stand in that comment's text, and the walk turns such a call away before the question is put.
+				 * Asks whether the fix may write the run behind the `(`. Under a parser whose tokenizer reads the parentheses behind `url(` as one token, a write opening a comment, as taking away the whitespace in front of a quotation mark there does, is refused; outside it the question is not asked, since a name glued to a sign, `1!url(`, is an address to the walk and a call to the parser, and a refusal there would take away a write the parser reads the same. Whether the write switches how the tokenizer reads parentheses it takes for an address's is asked once the walk is done, along with every other write the run gives: this run holds the character that decides it for this call, and a break taken out of it or written elsewhere in the run can decide it for a later one. Whether the break the run holds closes a `//` comment is not asked: the `(` would stand in that comment's text, and the walk turns such a call away before the question is put.
 				 * @param write - The whitespace the fix writes.
-				 * @returns True if no comment opens where that question is asked and the parentheses keep their reading.
+				 * @returns True if no comment opens where that question is asked.
 				 */
 				function isOpeningFixable (write: string): boolean {
-					return (!reading.tokenizes || editsOpenNoComment(declValue, [openingEdit(functionNode, write)], reading)) && !editsRereadAnAddress(declValue, openingIndex - 1, [openingEdit(functionNode, write)], reading, decl)
+					return !reading.tokenizes || editsOpenNoComment(declValue, [openingEdit(functionNode, write)], reading)
 				}
 
-				if (asked !== undefined && valueNode.before !== asked) {
-					fix = fixBehind(() => isOpeningFixable(asked), () => openingEdit(valueNode, asked))
-					complain(messages[openingMessage], openingIndex)
-				}
+				if (asked !== undefined && valueNode.before !== asked) complain(messages[openingMessage], openingIndex, isOpeningFixable(asked) ? openingEdit(valueNode, asked) : undefined)
 
 				// Check closing ...
 				// The character in front of the `)`
 				let closingIndex = closingParenthesisIndex(valueNode) - 1
 
-				/**
-				 * Asks whether the line break in front of the `)` closes a `//` comment, which no option can satisfy without commenting it out; the warning then stands unfixed.
-				 * @returns True if the `)` stays outside a comment.
-				 */
-				function isClosingFixable (): boolean {
-					return !movesClosingIntoComment(syntax, declValue, functionNode, reading)
-				}
-
-				if (asked !== undefined && valueNode.after !== asked) {
-					fix = fixBehind(isClosingFixable, () => closingEdit(valueNode, asked))
-					complain(messages[closingMessage], closingIndex)
-				}
+				// A line break in front of the `)` closing a `//` comment is one no option can satisfy without commenting it out, and the warning then stands unfixed; taking out the last break inside the parentheses can make them one plain token, which is asked with every write of the run once the walk is done
+				if (asked !== undefined && valueNode.after !== asked) complain(messages[closingMessage], closingIndex, movesClosingIntoComment(syntax, declValue, functionNode, reading) ? undefined : closingEdit(valueNode, asked))
 			})
+
+			// Every write the run gives together is asked whether it switches how the tokenizer reads parentheses it takes for an address's: a run written behind the `(` of one, or a last break taken out of parentheses, which makes them one plain token pushing none of the words inside, so that a later `(` pops `url` where it popped another word
+			let given = writesKeepingAddresses(declValue, problems, reading, decl, result, ruleName)
+
+			// No two writes name one span, an argumentless function being refused above
+			for (let [problemIndex, { message, index, edits: write }] of problems.entries()) {
+				let fix = write && given[problemIndex] ? (): void => { edits.push(...write) } : undefined
+
+				report({ ruleName, result, message, node: decl, index, endIndex: index, ...(fix && { fix }) })
+			}
 
 			if (edits.length > 0) syntax.write(decl, applyEditsFromEnd(declValue, edits))
 
 			/**
-			 * Returns the fix, or nothing where the guard refuses, which Stylelint reports as unfixable. No two writes name one span, an argumentless function being refused above.
-			 * @param isFixable - The guard, asked once.
-			 * @param write - The edit.
-			 * @returns The fix, or nothing.
-			 */
-			function fixBehind (isFixable: () => boolean, write: () => Edit): (() => void) | undefined {
-				if (!isFixable()) return
-
-				return () => {
-					edits.push(write())
-				}
-			}
-
-			/**
-			 * Reports a violation.
+			 * Files a violation with the fix the guards leave it, to be reported once the walk is done.
 			 * @param message - The warning text to report.
 			 * @param offset - The index in the value.
+			 * @param write - The edit, or nothing where a guard refuses it.
 			 */
-			function complain (message: string, offset: number): void {
-				let problemIndex = declarationValueIndex(decl) + offset
-
-				report({
-					ruleName,
-					result,
-					message,
-					node: decl,
-					index: problemIndex,
-					endIndex: problemIndex,
-					...(fix && { fix }),
-				})
+			function complain (message: string, offset: number, write: Edit | undefined): void {
+				problems.push({ message, index: declarationValueIndex(decl) + offset, edits: write && [write] })
 			}
 		})
 	}

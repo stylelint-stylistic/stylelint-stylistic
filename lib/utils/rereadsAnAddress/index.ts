@@ -158,14 +158,21 @@ function openingParenthesisBehind (text: string, nameEnd: number, reading: Pick<
 }
 
 /**
- * Asks whether the word the tokenizer pops at a `(` is `url` itself, which is what opens a token there. The comparison is the tokenizer's, which knows no escape and no other case: `\75 rl(` and `URL(` open none, however Sass and `lightningcss` read them.
- * @param text - The text holding the parentheses.
- * @param openIndex - The `(`.
+ * Finds every `(` at which the tokenizer opens an address's token: the word it pops there is `url` itself, and nothing right behind the `(` keeps the parentheses code ({@link keepsParenthesesCode}). The comparison is the tokenizer's, which knows no escape and no other case: `\75 rl(` and `URL(` open none, however Sass and `lightningcss` read them.
+ * @param text - The text read.
  * @param reading - Whether the parser reads by a tokenizer of its own.
- * @returns True where the parentheses are an address's to the parser.
+ * @returns Their indexes, in order, up to where the tokenizer stops.
  */
-function popsTheAddressName (text: string, openIndex: number, reading: Pick<CommentReading, `tokenizes`>): boolean {
-	return walkToParenthesis(text, reading, (index) => index === openIndex)?.popped === `url`
+function addressOpenings (text: string, reading: Pick<CommentReading, `tokenizes`>): number[] {
+	let openings: number[] = []
+
+	walkToParenthesis(text, reading, (openIndex, popped) => {
+		if (popped?.text === `url` && !keepsParenthesesCode(text, openIndex, reading)) openings.push(openIndex)
+
+		return false
+	})
+
+	return openings
 }
 
 /**
@@ -528,7 +535,8 @@ function indexMover (edits: Edit[], isBackward: boolean): (index: number) => num
  */
 function losesASpan (spans: Span[], other: ParseReading, move: (index: number) => number): boolean {
 	return spans.some(([start, end]) => {
-		let [movedStart, movedEnd] = [move(start), move(end)]
+		// The end is behind the span's last character, which is what moves: a write standing right behind the span moves the index behind it and leaves the span where it was
+		let [movedStart, movedEnd] = [move(start), move(end - 1) + 1]
 
 		return !other.spans.some(([otherStart, otherEnd]) => otherStart === movedStart && otherEnd === movedEnd) && !other.tokens.some(([tokenStart, tokenEnd]) => tokenStart < movedStart && movedEnd < tokenEnd)
 	})
@@ -652,25 +660,24 @@ export function rereadsAnAddress (text: string, { start, end, text: written }: E
 }
 
 /**
- * Asks whether the edits of a fix make the tokenizer read the parentheses of a call the other way, where the two readings part.
+ * Asks whether the edits of a fix make the tokenizer read the parentheses of an address the other way, where the two readings part.
  *
- * The parentheses a `(` pops `url` at are one token, and what stands right behind that `(` is what keeps them code instead ({@link keepsParenthesesCode}), so the run written there is the one that can switch the reading and the run in front of the `)` is not. The call is the parser's rather than the compilers': `\61 url(` and `x\9 url(` name one call, `aurl` and `xurl`, to Sass and to `lightningcss`, and the value-parser rules read them as one ({@link opensAnAddress}), while the tokenizer sees the three characters `url` right against the `(` and takes the parentheses for an address's.
+ * The parentheses a `(` pops `url` at are one token, and what stands right behind that `(` is what keeps them code instead ({@link keepsParenthesesCode}), so a run written there can switch the reading. So can a line break written into parentheses the tokenizer takes as one plain token anywhere in front: it reads them as code, pushes the words inside them, and a later `(` pops one of those where it popped `url`, or the other way round when a break is taken out. The call is the parser's rather than the compilers': `\61 url(` and `x\9 url(` name one call, `aurl` and `xurl`, to Sass and to `lightningcss`, and the value-parser rules read them as one ({@link opensAnAddress}), while the tokenizer sees the three characters `url` right against the `(` and takes the parentheses for an address's.
  *
- * Where the reading switches, both texts are walked whole ({@link parsesPart}), as {@link rereadsAnAddress} walks them, and the edits are refused where the model of cuts reads the output otherwise: a `)` closing the token in front of the one code closes the parentheses at lets a `;` or a brace out of the group code holds it in, or a colon or a comma the parser or the rules then read otherwise ({@link readsTheCutAlike}), a group or a token is left open or closed, or a string or a comment is lost. Otherwise the two readings part only in how far the call reaches, which changes no text the parser reads back.
+ * Both texts are walked whole ({@link addressOpenings}), and where an address's token opens at another `(` in one of them, they are compared as {@link rereadsAnAddress} compares them ({@link parsesPart}), and the edits are refused where the model of cuts reads the output otherwise: a `)` closing the token in front of the one code closes the parentheses at lets a `;` or a brace out of the group code holds it in, or a colon or a comma the parser or the rules then read otherwise ({@link readsTheCutAlike}), a group or a token is left open or closed, or a string or a comment is lost. Otherwise the two readings part only in which parentheses are one token, which changes no text the parser reads back.
  * @param text - The text the edits apply to.
- * @param openIndex - The call's `(`.
- * @param edits - The edits the fix writes inside those parentheses, indexed in that text.
+ * @param edits - The edits the fix writes inside a call's parentheses, indexed in that text.
  * @param reading - Whether the parser reads by a tokenizer of its own.
  * @param node - The node the text is read from, which says what the parser and the rules read in it.
- * @returns True where the edits switch the reading of the parentheses and the parser builds other nodes out of the output.
+ * @returns True where the edits switch the reading of an address's parentheses and the parser builds other nodes out of the output.
  */
-export function editsRereadAnAddress (text: string, openIndex: number, edits: Edit[], reading: Pick<CommentReading, `tokenizes`>, node: AtRule | Declaration | Rule): boolean {
-	if (!popsTheAddressName(text, openIndex, reading)) return false
-
+export function editsRereadAnAddress (text: string, edits: Edit[], reading: Pick<CommentReading, `tokenizes`>, node: AtRule | Declaration | Rule): boolean {
 	let edited = applyEditsFromEnd(text, edits)
+	let move = indexMover(edits, false)
+	let [standing, rewritten] = [addressOpenings(text, reading), addressOpenings(edited, reading)]
 
-	if (keepsParenthesesCode(text, openIndex, reading) === keepsParenthesesCode(edited, openIndex, reading)) return false
+	if (standing.length === rewritten.length && standing.every((openIndex, index) => move(openIndex) === rewritten[index])) return false
 
-	// The run behind the `(` of an address is whitespace `postcss-value-parser` leaves out of the address whatever it holds
+	// The runs inside a call's parentheses are whitespace `postcss-value-parser` leaves out of an address whatever they hold
 	return parsesPart(text, edited, edits, reading, placeOf(node), true)
 }

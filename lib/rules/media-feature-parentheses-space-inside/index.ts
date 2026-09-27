@@ -13,9 +13,9 @@ import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import { quotesItsAddress } from "../../utils/quotesItsAddress/index.ts"
 import { report } from "../../utils/report/index.ts"
-import { editsRereadAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { splitSpaceNodesAtWords } from "../../utils/splitSpaceNodesAtWords/index.ts"
+import { type WriteCandidate, writesKeepingAddresses } from "../../utils/writesKeepingAddresses/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -95,11 +95,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// The value parser would open a feature on a `(` in a `//` comment or behind `/*/`
 			let comments = syntax.commentSpans(params, atRule, result)
 
-			let problems: Array<{
-				message: string,
-				index: number,
-				fix?: () => void,
-			}> = []
+			// Reported once the walk is done: a write into a call's parentheses can switch which word a later `(` pops, and so whether it opens an address's token, which is asked of every write the run gives together
+			let problems: (WriteCandidate & { message: string })[] = []
 
 			// Edits at positions, since the value parser prints `/*/` as `/**/`; no two name one span, since a pair holding nothing has an empty `after` and an unclosed feature is passed over
 			let edits: Edit[] = []
@@ -114,7 +111,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A comment's `(` is its own; an unclosed comment holds the rest of the query, so the walk goes on inside
 				if (findCommentSpanHolding(node, comments)) return
 
-				// The whitespace behind a bare address's `(` is what parts the parenthesis from the address, which is what a tokenizer reads one token by: taking it away hands a string's `)` the end of the address and makes text of a comment. Passed over, and the walk goes no further in, as it does in both `function-parentheses-*-inside` rules. A quoted address's parentheses are the call's own and are checked like any call's, the write behind the `(` asking below whether it switches how the tokenizer reads them.
+				// The whitespace behind a bare address's `(` is what parts the parenthesis from the address, which is what a tokenizer reads one token by: taking it away hands a string's `)` the end of the address and makes text of a comment. Passed over, and the walk goes no further in, as it does in both `function-parentheses-*-inside` rules. A quoted address's parentheses are the call's own and are checked like any call's, the write behind the `(` asked once the walk is done whether it switches how the tokenizer reads them.
 				if (opensAnAddress(node, at, siblings) && !quotesItsAddress(node)) return false
 
 				if (node.type === `function`) {
@@ -127,64 +124,28 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					let closingIndex = closingParenthesisIndex(node) - 1
 					// A pair holding no node encloses one run of the tokenizer's whitespace, `splitSpaceNodesAtWords` having carried any other control character into a node, and the value parser hands that run back whole as `before` and never as `after`: the closing question is the opening one, and asking it again reported a half the opening fix had settled and wrote another space every run. Under `never` no guard is wanted, since an empty `after` is whitespace to nobody.
 					let enclosesOneRun = node.nodes.length === 0
-					// The walk reads every call of the params, and a name the compilers read as no address is one the tokenizer can still take a url token by: the run behind the `(` holds the character deciding that, so a write switching the reading is refused and the warning stands. The run in front of the `)` moves no such character.
-					let openParenthesisIndex = node.sourceIndex + node.value.length
-
+					// Under either option, the walk reads every call of the params, and a name the compilers read as no address is one the tokenizer can still take a url token by: the run behind the `(` holds the character deciding that, and a run holding a break, which `never` empties whole, can make parentheses one plain token that pushes none of the words inside, so every write is asked once the walk is done whether it switches the reading, and one that does is refused and its warning stands
 					if (primary === `never`) {
-						if (SPACE_OR_TAB.test(node.before)) {
-							let isFixable = !editsRereadAnAddress(params, openParenthesisIndex, [openingEdit(node, ``)], reading, atRule)
+						if (SPACE_OR_TAB.test(node.before)) problems.push({ message: messages.rejectedOpening, index: node.sourceIndex + 1 + indexBoost, edits: [openingEdit(node, ``)] })
 
-							problems.push({
-								message: messages.rejectedOpening,
-								index: node.sourceIndex + 1 + indexBoost,
-								...(isFixable && { fix: (): void => { edits.push(openingEdit(node, ``)) } }),
-							})
-						}
-
-						if (SPACE_OR_TAB.test(node.after)) {
-							// The fix would take the `)` into a `//` comment
-							let isFixable = !syntax.endsWithInlineComment(params.slice(0, node.sourceEndIndex - 1 - node.after.length), reading)
-
-							problems.push({
-								message: messages.rejectedClosing,
-								index: closingIndex + indexBoost,
-								...(isFixable && { fix: (): void => { edits.push(closingEdit(node, ``)) } }),
-							})
-						}
+						// The fix would take the `)` into a `//` comment
+						if (SPACE_OR_TAB.test(node.after)) problems.push({ message: messages.rejectedClosing, index: closingIndex + indexBoost, edits: syntax.endsWithInlineComment(params.slice(0, node.sourceEndIndex - 1 - node.after.length), reading) ? undefined : [closingEdit(node, ``)] })
 					}
 					else if (primary === `always`) {
-						if (node.before === ``) {
-							let isFixable = !editsRereadAnAddress(params, openParenthesisIndex, [openingEdit(node, ` `)], reading, atRule)
+						if (node.before === ``) problems.push({ message: messages.expectedOpening, index: node.sourceIndex + 1 + indexBoost, edits: [openingEdit(node, ` `)] })
 
-							problems.push({
-								message: messages.expectedOpening,
-								index: node.sourceIndex + 1 + indexBoost,
-								...(isFixable && { fix: (): void => { edits.push(openingEdit(node, ` `)) } }),
-							})
-						}
-
-						if (node.after === `` && !enclosesOneRun) {
-							problems.push({
-								message: messages.expectedClosing,
-								index: closingIndex + indexBoost,
-								fix () { edits.push(closingEdit(node, ` `)) },
-							})
-						}
+						if (node.after === `` && !enclosesOneRun) problems.push({ message: messages.expectedClosing, index: closingIndex + indexBoost, edits: [closingEdit(node, ` `)] })
 					}
 				}
 			})
 
 			if (problems.length > 0) {
-				for (let err of problems) {
-					report({
-						message: err.message,
-						node: atRule,
-						index: err.index,
-						endIndex: err.index,
-						result,
-						ruleName,
-						...(err.fix && { fix: err.fix }),
-					})
+				let given = writesKeepingAddresses(params, problems, reading, atRule, result, ruleName)
+
+				for (let [problemIndex, { message, index, edits: write }] of problems.entries()) {
+					let fix = write && given[problemIndex] ? (): void => { edits.push(...write) } : undefined
+
+					report({ message, node: atRule, index, endIndex: index, result, ruleName, ...(fix && { fix }) })
 				}
 
 				if (edits.length > 0) syntax.write(atRule, applyEditsFromEnd(params, edits))

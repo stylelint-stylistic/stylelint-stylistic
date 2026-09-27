@@ -1,3 +1,9 @@
+import stylelint from "stylelint"
+import { expect, it } from "vitest"
+
+import { pick } from "../../../vitest.helpers.ts"
+import plugins from "../../index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -764,6 +770,15 @@ testRule({
 			message: messages.rejectedOpening,
 		},
 		{
+			// Emptying the run takes out the break, which makes the call's parentheses one token again, so the next parenthesis pops the name and the address's token closes on the inner group's parenthesis, ending the params at the semicolon
+			description: `a call standing between the word url and parentheses holding a group and then a semicolon, with a space and a break in front of its closing parenthesis`,
+			code: `@media a url x(y \n)(a(b)c;d) {}`,
+			fixed: `@media a url x(y \n)(a(b)c;d) {}`,
+			line: 1,
+			column: 18,
+			message: messages.rejectedClosing,
+		},
+		{
 			// Pins the refusal where the token would let the colon out of the address's arguments into the feature, where the media feature colon rules read it
 			description: `an address in a feature holding a group and then a colon`,
 			code: `@media (a: \\61 url( a(b)c:d)) {}`,
@@ -807,4 +822,13 @@ testRule({
 			message: messages.rejectedOpening,
 		},
 	],
+})
+
+// Each write alone leaves an argument of the other call on the stack for the next parenthesis to pop, and the two together leave the word url there, which a reject case cannot say since the warning left moves
+it(`closes up only the first of two calls between the word url and parentheses holding a group and then a semicolon, each with a space and a break in front of its closing parenthesis, since closing up both would leave the next parenthesis popping the word url`, async () => {
+	let config = { plugins, rules: { [ruleName]: `never` } }
+	let fixed = await stylelint.lint({ code: `@media a url x(y \n) x(y \n)(a(b)c;d) {}`, config, fix: true })
+	let again = await stylelint.lint({ code: fixed.code ?? ``, config })
+
+	expect({ fixed: fixed.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column}`) }).toEqual({ fixed: `@media a url x(y) x(y \n)(a(b)c;d) {}`, left: [`1:23`] })
 })

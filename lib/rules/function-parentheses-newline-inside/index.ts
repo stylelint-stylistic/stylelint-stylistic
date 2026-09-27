@@ -1,6 +1,5 @@
-import type { Declaration } from "postcss"
 import valueParser, { type FunctionNode } from "postcss-value-parser"
-import stylelint, { type FixCallback } from "stylelint"
+import stylelint from "stylelint"
 
 import { LEADING_CSS_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
@@ -21,9 +20,9 @@ import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import { quotesItsAddress } from "../../utils/quotesItsAddress/index.ts"
 import { report } from "../../utils/report/index.ts"
-import { editsRereadAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { splitSpaceNodesAtWords } from "../../utils/splitSpaceNodesAtWords/index.ts"
+import { type WriteCandidate, writesKeepingAddresses } from "../../utils/writesKeepingAddresses/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -134,13 +133,12 @@ function findFirstCharacterIndex (declValue: string, firstIndex: number): number
 /**
  * Says which of the two `never` fixes of one function may be written.
  *
- * A fix is refused where it carries a character of the function into an inline comment: the opening one asks about the first significant thing, the closing one about the `)`. Under a parser whose tokenizer reads the parentheses behind `url(` as one token, the opening one is refused too where it opens a comment, as taking away the whitespace in front of a quotation mark there does, and under either tokenizer where emptying the run switches how it reads parentheses it takes for an address's. The two are not weighed together: two writes safe apart destroyed the value together only where a call was opened inside a `//` comment, and the walk turns such a call away before either is asked.
+ * A fix is refused where it carries a character of the function into an inline comment: the opening one asks about the first significant thing, the closing one about the `)`. Under a parser whose tokenizer reads the parentheses behind `url(` as one token, the opening one is refused too where it opens a comment, as taking away the whitespace in front of a quotation mark there does. The comment questions are asked of each write apart: two writes safe apart destroyed the value together only where a call was opened inside a `//` comment, and the walk turns such a call away before either is asked. Whether emptying a run switches how the tokenizer reads parentheses it takes for an address's is asked afterwards, of every write the run gives together ({@link writesKeepingAddresses}).
  * @param syntax - The syntax the rule is built over.
  * @param read - What the walk read of the function, and the value.
  * @returns Whether each fix may be written.
  */
 function getNeverFixability (syntax: Syntax, read: {
-	decl: Declaration,
 	declValue: string,
 	valueNode: FunctionNode,
 	checkBefore: string,
@@ -154,14 +152,14 @@ function getNeverFixability (syntax: Syntax, read: {
 	isOpeningFixable: boolean,
 	isClosingFixable: boolean,
 } {
-	let { decl, declValue, valueNode, checkBefore, checkAfter, firstIndex, measuredBefore, measuredAfter, comments, reading } = read
+	let { declValue, valueNode, checkBefore, checkAfter, firstIndex, measuredBefore, measuredAfter, comments, reading } = read
 
 	let firstCharacterIndex = findFirstCharacterIndex(declValue, firstIndex)
 	let { end: closingParenthesisIndex } = getAfterSpan(valueNode)
 	// Each `never` fix empties the stretches its walk measured, minus one opening on the break closing an inline comment; a fix not reaching every stretch is refused, since Stylelint would call the problem solved while the option stayed violated.
 	let emptiedBefore = checkBefore === `` ? [] : measuredBefore.filter((stretch) => !closesAnInlineComment(stretch, comments))
 	let emptiedAfter = checkAfter === `` ? [] : measuredAfter.filter((stretch) => !closesAnInlineComment(stretch, comments))
-	let isOpeningFixable = checkBefore !== `` && reachesEveryStretch(measuredBefore, emptiedBefore) && !movesIntoComment(syntax, declValue, firstCharacterIndex, emptiedBefore, reading) && (!reading.tokenizes || editsOpenNoComment(declValue, fixBeforeForNever(emptiedBefore), reading)) && !editsRereadAnAddress(declValue, valueNode.sourceIndex + valueNode.value.length, fixBeforeForNever(emptiedBefore), reading, decl)
+	let isOpeningFixable = checkBefore !== `` && reachesEveryStretch(measuredBefore, emptiedBefore) && !movesIntoComment(syntax, declValue, firstCharacterIndex, emptiedBefore, reading) && (!reading.tokenizes || editsOpenNoComment(declValue, fixBeforeForNever(emptiedBefore), reading))
 	let isClosingFixable = checkAfter !== `` && reachesEveryStretch(measuredAfter, emptiedAfter) && !movesIntoComment(syntax, declValue, closingParenthesisIndex, emptiedAfter, reading)
 
 	return { isOpeningFixable, isClosingFixable }
@@ -191,9 +189,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		root.walkDecls((decl) => {
 			if (!decl.value.includes(`(`)) return
 
-			let fix: FixCallback | undefined
 			// Edited by position, not printed from the parsed tree: `postcss-value-parser` prints a comment opening `/*/` as `/**/`
 			let edits: Edit[] = []
+			// Reported once the walk is done: a write into a call's parentheses can switch which word a later `(` pops, and so whether it opens an address's token, which is asked of every write the run gives together
+			let problems: (WriteCandidate & { message: string })[] = []
 			let declValue = syntax.read(decl)
 			// A `//` is a comment only where the syntax says so: in plain CSS `myurl(//a)` is code
 			let reading = syntax.inlineComments(decl, result)
@@ -211,7 +210,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A narrowing here is not carried into a nested function
 				let functionNode = valueNode
 
-				// The parentheses of a bare address are the address's: a space or a break written behind the `(` parts it from the parenthesis, which is what a tokenizer reads one token by, so the call is passed over and the walk goes no further in. A quoted address's parentheses are the call's own and are checked like any call's, the write behind the `(` asking below whether it switches how the tokenizer reads them, since `postcss-scss` reads a quoted address behind a space as a token counting parentheses, which a string holding an unpaired one leaves unclosed or closes early. The name is the file's spelling rather than the parser's, which is wider than what a parser takes a url token by.
+				// The parentheses of a bare address are the address's: a space or a break written behind the `(` parts it from the parenthesis, which is what a tokenizer reads one token by, so the call is passed over and the walk goes no further in. A quoted address's parentheses are the call's own and are checked like any call's, the write behind the `(` asked once the walk is done whether it switches how the tokenizer reads them, since `postcss-scss` reads a quoted address behind a space as a token counting parentheses, which a string holding an unpaired one leaves unclosed or closes early. The name is the file's spelling rather than the parser's, which is wider than what a parser takes a url token by.
 				if (opensAnAddress(valueNode, at, siblings) && !quotesItsAddress(valueNode)) return false
 
 				// A call in a comment's text is skipped, but its nested calls are walked: a call opened inside a comment reaches past its close
@@ -229,14 +228,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let closingIndex = getAfterSpan(valueNode).end - 1
 				let { after: checkAfter, measured: measuredAfter } = readClosingRuns(valueNode, declValue, comments)
 				let { isOpeningFixable, isClosingFixable } = isMultiLine && primary === `never-multi-line`
-					? getNeverFixability(syntax, { decl, declValue, valueNode, checkBefore, checkAfter, firstIndex, measuredBefore, measuredAfter, comments, reading })
+					? getNeverFixability(syntax, { declValue, valueNode, checkBefore, checkAfter, firstIndex, measuredBefore, measuredAfter, comments, reading })
 					: { isOpeningFixable: false, isClosingFixable: false }
 				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` inside, or a `{` in a custom property's value, is then a group nothing closes: the file stops parsing, so the `always` fixes are refused there and the warnings stand; a multi-line call holds a break inside its parentheses already, so `always-multi-line` never meets the token
 				let breaksAToken = breakRereadsParentheses(declValue, openingIndex - 1, isCustomProperty(decl.prop))
-				// The break the `always` options write behind the `(` stands where the tokenizer decides whether parentheses it takes for an address's are one token, and the name it reads there is not the one the walk read; the break in front of the `)` moves no such character, so only this one is asked about. Read under those two options alone: `fixBeforeForAlways` takes the last stretch the walk measured, and `never-multi-line` is the option that can meet a call with none.
-				let writesABreakBehind = primary === `always` || primary === `always-multi-line`
-				let openingWrite = writesABreakBehind ? fixBeforeForAlways(measuredBefore, declValue, getLineBreak(root, result)) : []
-				let alwaysRereadsAnAddress = writesABreakBehind && editsRereadAnAddress(declValue, openingIndex - 1, openingWrite, reading, decl)
+				// Read under the `always` options alone: `fixBeforeForAlways` takes the last stretch the walk measured, and `never-multi-line` is the option that can meet a call with none
+				let openingWrite = primary === `always` || primary === `always-multi-line` ? fixBeforeForAlways(measuredBefore, declValue, getLineBreak(root, result)) : []
 
 				checkOpening()
 
@@ -247,73 +244,44 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				/** Reports the whitespace behind the `(`, fixing it where no guard refuses the write. */
 				function checkOpening (): void {
-					if (primary === `always` && !LINE_BREAK.test(checkBefore)) {
-						fix = !breaksAToken && !alwaysRereadsAnAddress ? fixWith(() => openingWrite) : undefined
-						complain(messages.expectedOpening, openingIndex)
-					}
+					if (primary === `always` && !LINE_BREAK.test(checkBefore)) complain(messages.expectedOpening, openingIndex, breaksAToken ? undefined : openingWrite)
 
-					if (isMultiLine && primary === `always-multi-line` && !LINE_BREAK.test(checkBefore)) {
-						fix = alwaysRereadsAnAddress ? undefined : fixWith(() => openingWrite)
-						complain(messages.expectedOpeningMultiLine, openingIndex)
-					}
+					if (isMultiLine && primary === `always-multi-line` && !LINE_BREAK.test(checkBefore)) complain(messages.expectedOpeningMultiLine, openingIndex, openingWrite)
 
-					if (isMultiLine && primary === `never-multi-line` && checkBefore !== ``) {
-						fix = isOpeningFixable ? fixWith(() => fixBeforeForNever(measuredBefore)) : undefined
-						complain(messages.rejectedOpeningMultiLine, openingIndex)
-					}
+					if (isMultiLine && primary === `never-multi-line` && checkBefore !== ``) complain(messages.rejectedOpeningMultiLine, openingIndex, isOpeningFixable ? fixBeforeForNever(measuredBefore) : undefined)
 				}
 
 				/** Reports the whitespace in front of the `)`; every closing fix writes the `after` span. */
 				function checkClosing (): void {
-					if (primary === `always` && !LINE_BREAK.test(checkAfter)) {
-						fix = breaksAToken ? undefined : fixWith(() => fixAfterForAlways(functionNode, getLineBreak(root, result)))
-						complain(messages.expectedClosing, closingIndex)
-					}
+					if (primary === `always` && !LINE_BREAK.test(checkAfter)) complain(messages.expectedClosing, closingIndex, breaksAToken ? undefined : fixAfterForAlways(functionNode, getLineBreak(root, result)))
 
-					if (isMultiLine && primary === `always-multi-line` && !LINE_BREAK.test(checkAfter)) {
-						fix = fixWith(() => fixAfterForAlways(functionNode, getLineBreak(root, result)))
-						complain(messages.expectedClosingMultiLine, closingIndex)
-					}
+					if (isMultiLine && primary === `always-multi-line` && !LINE_BREAK.test(checkAfter)) complain(messages.expectedClosingMultiLine, closingIndex, fixAfterForAlways(functionNode, getLineBreak(root, result)))
 
-					if (isMultiLine && primary === `never-multi-line` && checkAfter !== ``) {
-						fix = isClosingFixable ? fixWith(() => fixAfterForNever(measuredAfter)) : undefined
-						complain(messages.rejectedClosingMultiLine, closingIndex)
-					}
+					if (isMultiLine && primary === `never-multi-line` && checkAfter !== ``) complain(messages.rejectedClosingMultiLine, closingIndex, isClosingFixable ? fixAfterForNever(measuredAfter) : undefined)
 				}
 			})
+
+			// Every write the run gives together is asked whether it switches how the tokenizer reads parentheses it takes for an address's: a break written behind the `(` of one, or into parentheses held as one plain token, which makes them code and pushes the words inside, or a last break taken out of them, which does the opposite, so that a later `(` pops another word than `url` or pops `url` where it popped another
+			let given = writesKeepingAddresses(declValue, problems, reading, decl, result, ruleName)
+
+			for (let [problemIndex, { message, index, edits: write }] of problems.entries()) {
+				let fix = write && given[problemIndex] ? (): void => { for (let edit of write) addEdit(edits, edit) } : undefined
+
+				report({ ruleName, result, message, node: decl, index, endIndex: index, ...(fix && { fix }) })
+			}
 
 			if (edits.length > 0) syntax.write(decl, applyEditsFromEnd(declValue, edits))
 
 			/**
-			 * Wraps a write as a fix for `report` that adds its spans to the edit list.
+			 * Files a violation with the fix the guards leave it, to be reported once the walk is done.
 			 *
 			 * Two writes can name one span, as the `never-multi-line` fixes do over the whitespace between two comments, which both walks measure; `addEdit` folds the second into the first.
-			 * @param write - The spans the write changes, and what goes in each.
-			 * @returns The fix.
-			 */
-			function fixWith (write: () => Edit[]): () => void {
-				return () => {
-					for (let edit of write()) addEdit(edits, edit)
-				}
-			}
-
-			/**
-			 * Reports a violation.
 			 * @param message - The warning text to report.
 			 * @param offset - The index in the value.
+			 * @param write - The spans the fix changes, and what goes in each, or nothing where a guard refuses it.
 			 */
-			function complain (message: string, offset: number): void {
-				let problemIndex = declarationValueIndex(decl) + offset
-
-				report({
-					ruleName,
-					result,
-					message,
-					node: decl,
-					index: problemIndex,
-					endIndex: problemIndex,
-					...(fix && { fix }),
-				})
+			function complain (message: string, offset: number, write: Edit[] | undefined): void {
+				problems.push({ message, index: declarationValueIndex(decl) + offset, edits: write })
 			}
 		})
 	}

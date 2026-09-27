@@ -1134,6 +1134,15 @@ testRule({
 				},
 			],
 		},
+		{
+			// Taking out the break makes the call's parentheses one token again, so the next parenthesis pops the name and the address's token closes on the inner group's parenthesis, ending the declaration at the semicolon
+			description: `a call standing between the word url and parentheses holding a group and then a semicolon, with a break in front of its closing parenthesis`,
+			code: `a { b: url x(y\n)(a(b)c;d); }`,
+			fixed: `a { b: url x(y\n)(a(b)c;d); }`,
+			line: 1,
+			column: 15,
+			message: messages.rejectedClosing,
+		},
 	],
 })
 
@@ -1363,4 +1372,22 @@ describe(`a call whose name the parser reads a url token by though no compiler d
 	it(`writes it where the parentheses close at one parenthesis under both readings`, async () => {
 		expect(await fix(String.raw`a { b: \61 url(a.png); }`, `css`, `always`)).toEqual({ fixed: String.raw`a { b: \61 url( a.png ); }`, left: [] })
 	})
+})
+
+// Closing up either call alone leaves the word url of the other on the stack for the next parenthesis to pop, and closing up both takes both words off it, which a reject case cannot say since the warning left moves
+it(`closes up all but the last break of two calls each holding the word url between breaks, in front of parentheses holding a quotation mark, since taking out every break would leave the next parenthesis popping no word`, async () => {
+	let config = { plugins, rules: { [ruleName]: `never` } }
+	let fixed = await stylelint.lint({ code: `a { b: x(\nurl\n) x(\nurl\n)(a"b); }`, config, fix: true })
+	let again = await stylelint.lint({ code: fixed.code ?? ``, config })
+
+	expect({ fixed: fixed.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column}`) }).toEqual({ fixed: `a { b: x(url) x(url\n)(a"b); }`, left: [`1:20`] })
+})
+
+// Stylelint drops the fix a disable comment covers, so the writes asked together are those it applies, and a write it drops keeps no other write from being given
+it(`writes every run behind the line a disable comment names, over calls holding the word url between breaks in front of parentheses holding a group and then a colon`, async () => {
+	let config = { plugins, rules: { [ruleName]: `always` } }
+	let fixed = await stylelint.lint({ code: `a {\n  /* stylelint-disable-next-line ${ruleName} */\n  b: url x(\ny\n) x(\nurl\n) x(\ny\n)(a(b)c:d);\n  c: "d";\n}`, config, fix: true })
+	let again = await stylelint.lint({ code: fixed.code ?? ``, config })
+
+	expect({ fixed: fixed.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column}`) }).toEqual({ fixed: `a {\n  /* stylelint-disable-next-line ${ruleName} */\n  b: url x(\ny ) x( url ) x( y )(a( b )c:d);\n  c: "d";\n}`, left: [] })
 })

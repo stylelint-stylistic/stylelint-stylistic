@@ -1,3 +1,9 @@
+import stylelint from "stylelint"
+import { expect, it } from "vitest"
+
+import { pick } from "../../../vitest.helpers.ts"
+import plugins from "../../index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -459,6 +465,62 @@ testRule({
 			],
 		},
 		{
+			// A break makes the plain token of the call's parentheses code, which leaves its argument on the stack for the next parenthesis to pop instead of the name, and the string then runs to the end of the file
+			description: `a call standing between the word url and parentheses holding a quotation mark, which pop that word while the call's parentheses are one token`,
+			code: `a { b: url x(y)(a"b); }`,
+			fixed: `a { b: url x(y)(a"b); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 14,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
+			// A break written into the first call alone would leave the word url on the stack for the parentheses behind the second, but the breaks written into the second leave its argument on top again, so every write is given in one run
+			description: `a call holding the word url in front of a call standing before parentheses holding a group and then a semicolon`,
+			code: `a { b: x(url) x(y)(a(b)c;d); }`,
+			fixed: `a { b: x(\nurl\n) x(\ny\n)(a(\nb\n)c;d); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 12,
+					message: messages.expectedClosing,
+				},
+				{
+					line: 1,
+					column: 17,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 17,
+					message: messages.expectedClosing,
+				},
+				{
+					line: 1,
+					column: 22,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 22,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
 			description: `the same call holding a square bracket closed inside it, which leaves the parentheses code the parser closes at their own parenthesis, so both breaks are written`,
 			code: `a { b: \\61 url(a[b]c.png); }`,
 			fixed: `a { b: \\61 url(\na[b]c.png\n); }`,
@@ -878,6 +940,15 @@ testRule({
 			message: messages.rejectedOpeningMultiLine,
 		},
 		{
+			// Taking out the last break makes the call's parentheses one token again, so the next parenthesis pops the name and the address's token closes on the inner group's parenthesis, ending the declaration at the semicolon
+			description: `a call standing between the word url and parentheses holding a group and then a semicolon, with a break in front of its closing parenthesis alone`,
+			code: `a { b: url x(y\n)(a(b)c;d); }`,
+			fixed: `a { b: url x(y\n)(a(b)c;d); }`,
+			line: 1,
+			column: 15,
+			message: messages.rejectedClosingMultiLine,
+		},
+		{
 			description: `a call standing beside a bare address, whose breaks are closed up while the address is left as the file spells it`,
 			code: `a { b: url(\na\n) f(\n1\n); }`,
 			fixed: `a { b: url(\na\n) f(1); }`,
@@ -1162,4 +1233,31 @@ testRule({
 			],
 		},
 	],
+})
+
+// The fix run reports the closing break on the second line and the output holds it on the first, which a reject case cannot say
+it(`closes up only the break behind the opening parenthesis of a call standing between the word url and parentheses holding a group and then a semicolon, since taking out both would make the call's parentheses one token again`, async () => {
+	let config = { plugins, rules: { [ruleName]: `never-multi-line` } }
+	let fixed = await stylelint.lint({ code: `a { b: url x(\ny\n)(a(b)c;d); }`, config, fix: true })
+	let again = await stylelint.lint({ code: fixed.code ?? ``, config })
+
+	expect({ fixed: fixed.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column}`) }).toEqual({ fixed: `a { b: url x(y\n)(a(b)c;d); }`, left: [`1:15`] })
+})
+
+// Closing up either call alone leaves the word url of the other on the stack for the next parenthesis to pop, and closing up both takes both words off it, which a reject case cannot say since the warning left moves
+it(`closes up all but the last break of two calls each holding the word url between breaks, in front of parentheses holding a quotation mark, since taking out every break would leave the next parenthesis popping no word`, async () => {
+	let config = { plugins, rules: { [ruleName]: `never-multi-line` } }
+	let fixed = await stylelint.lint({ code: `a { b: x(\nurl\n) x(\nurl\n)(a"b); }`, config, fix: true })
+	let again = await stylelint.lint({ code: fixed.code ?? ``, config })
+
+	expect({ fixed: fixed.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column}`) }).toEqual({ fixed: `a { b: x(url) x(url\n)(a"b); }`, left: [`1:20`] })
+})
+
+// Stylelint drops the fix a disable comment covers, so the writes asked together are those it applies
+it(`closes up no break that would hand the parentheses holding a quotation mark another word where a disable comment keeps the first call's opening break`, async () => {
+	let config = { plugins, rules: { [ruleName]: `never-multi-line` } }
+	let fixed = await stylelint.lint({ code: `a {\n  /* stylelint-disable-line ${ruleName} */ b: url x(\ny\n) x(\nurl\n)(a"b);\n  c: "d";\n}`, config, fix: true })
+	let again = await stylelint.lint({ code: fixed.code ?? ``, config })
+
+	expect({ fixed: fixed.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column}`) }).toEqual({ fixed: `a {\n  /* stylelint-disable-line ${ruleName} */ b: url x(\ny) x(url\n)(a"b);\n  c: "d";\n}`, left: [`3:9`] })
 })
