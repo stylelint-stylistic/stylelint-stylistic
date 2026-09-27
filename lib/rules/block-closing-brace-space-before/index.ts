@@ -5,7 +5,7 @@ import { INLINE_COMMENT_BREAK, TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
-import { blockTailTaken, getBlockTail, setBlockTail } from "../../utils/blockTail/index.ts"
+import { blockTailTaken, getBlockTailAsClosed, runStandsBehindTheSemicolon, setBlockTailAsClosed } from "../../utils/blockTail/index.ts"
 import { carriesABlock } from "../../utils/carriesABlock/index.ts"
 import { closingBraceRunWrites } from "../../utils/closingBraceRunWrites/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -102,7 +102,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let source = blockString(statement, result)
 			let text = statementString(statement, result)
-			let blockAfter = getBlockTail(syntax, statement) || ``
+			let blockAfter = getBlockTailAsClosed(syntax, statement, result) || ``
 
 			let index = text.length - 2
 
@@ -136,9 +136,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `c \⏎}` would come out as `c \}`, which the parser reads no block's end in, or `c \ }`, an escaped space
 			if (isFixable) isFixable = editKeepsEscapedCharacter(source, { start: source.length - 1 - run.length, end: source.length - 1, text: written })
 
+			// Where the run stands behind the semicolon a live `always` writes, that semicolon is what the run follows
+			let front = `${source.slice(0, source.length - 1 - run.length)}${runStandsBehindTheSemicolon(syntax, statement, result) ? `;` : ``}`
+
 			checker.before({
-				source: maskEscapes(`${source.slice(0, source.length - 1 - run.length)}${runLeft}}`, escapes, true),
-				index: source.length - 1 - run.length + runLeft.length,
+				source: maskEscapes(`${front}${runLeft}}`, escapes, true),
+				index: front.length + runLeft.length,
 				err: (msg) => {
 					report({
 						message: msg,
@@ -149,9 +152,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						ruleName,
 						...(isFixable && {
 							fix: (): void => {
-								if (typeof getBlockTail(syntax, statement) !== `string`) return
+								if (typeof getBlockTailAsClosed(syntax, statement, result) !== `string`) return
 
-								setBlockTail(syntax, statement, `${escapedHead}${written}`)
+								setBlockTailAsClosed(syntax, statement, result, `${escapedHead}${written}`)
 							},
 						}),
 					})

@@ -1,4 +1,5 @@
 import { parse, type Rule } from "postcss"
+import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
 import { css as syntax } from "../../syntaxes/css/index.ts"
@@ -90,7 +91,7 @@ describe(`removeEmptyLineBefore`, () => {
 function run (css: string, taken: number[] = []): string {
 	let root = parse(css)
 
-	removeEmptyLinesAfter(syntax, root.nodes[0] as Rule, new Set(taken))
+	removeEmptyLinesAfter(syntax, root.nodes[0] as Rule, { stylelint: { config: { rules: {} } } } as unknown as PostcssResult, new Set(taken))
 
 	return root.toString()
 }

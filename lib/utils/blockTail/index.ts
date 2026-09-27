@@ -1,12 +1,14 @@
 import type { Container } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { EVERY_SEMICOLON } from "../../regexps.ts"
+import { EVERY_SEMICOLON, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
+import { trailingSemicolonAsked } from "../closedBySemicolon/index.ts"
 import { getBlockAfter } from "../getBlockAfter/index.ts"
 import { lastNodeHoldsTheBlockAfter } from "../lastNodeHoldsTheBlockAfter/index.ts"
 import { setBlockAfter } from "../setBlockAfter/index.ts"
 import { straySemicolonsTaken, straySemicolonsTakenOwn } from "../straySemicolonsTaken/index.ts"
+import { isDeclaration } from "../typeGuards/index.ts"
 
 /**
  * Returns the raw in which PostCSS filed the stray semicolons behind the closing brace of a block's last node, with the run in front of them: that node's `raws.ownSemicolon`.
@@ -54,6 +56,44 @@ export function setBlockTail (syntax: Syntax, statement: Container, tail: string
 
 	last.raws.ownSemicolon = tail.slice(0, cut)
 	setBlockAfter(syntax, statement, tail.slice(cut))
+}
+
+/**
+ * Asks whether the run in front of the closing brace stands behind a semicolon once `declaration-block-trailing-semicolon` has run, although the parser now reads it as the value of the custom property closing the block: a live `always` writes the semicolon behind a value of whitespace or nothing, with no flag, which keeps its whitespace in front of that semicolon, so the run in front of the brace is the empty `raws.after` behind it.
+ * @param syntax - The syntax the rule is built over, which reads the value.
+ * @param statement - The block's statement.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns True where the run is the block's `raws.after` behind that semicolon.
+ */
+export function runStandsBehindTheSemicolon (syntax: Syntax, statement: Container, result: PostcssResult): boolean {
+	if (!lastNodeHoldsTheBlockAfter(statement)) return false
+
+	let { last } = statement
+
+	return isDeclaration(last) && !last.important && WHITESPACE_OR_NOTHING.test(syntax.read(last)) && trailingSemicolonAsked(last, result) === true
+}
+
+/**
+ * Returns the run {@link getBlockTail} returns as `declaration-block-trailing-semicolon` will leave it, so that a reader's answer is one whether that rule has run yet or not: behind a custom property whose value is whitespace or nothing, with no flag, that it writes a semicolon behind, the block's `raws.after` rather than the value.
+ * @param syntax - The syntax the rule is built over, which reads the raw.
+ * @param statement - The block's statement.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns The run, or undefined without a raw.
+ */
+export function getBlockTailAsClosed (syntax: Syntax, statement: Container, result: PostcssResult): string | undefined {
+	return runStandsBehindTheSemicolon(syntax, statement, result) ? statement.raws.after : getBlockTail(syntax, statement)
+}
+
+/**
+ * Writes the run {@link getBlockTailAsClosed} reads where it reads it.
+ * @param syntax - The syntax the rule is built over, which writes the raw.
+ * @param statement - The block's statement.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @param tail - The run to write.
+ */
+export function setBlockTailAsClosed (syntax: Syntax, statement: Container, result: PostcssResult, tail: string): void {
+	if (runStandsBehindTheSemicolon(syntax, statement, result)) statement.raws.after = tail
+	else setBlockTail(syntax, statement, tail)
 }
 
 /**

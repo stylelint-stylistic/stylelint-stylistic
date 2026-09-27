@@ -4,7 +4,7 @@ import stylelint from "stylelint"
 import { css } from "../../syntaxes/css/index.ts"
 import { addEmptyLineAfter } from "../../utils/addEmptyLineAfter/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
-import { blockTailTaken, getBlockTail } from "../../utils/blockTail/index.ts"
+import { blockTailTaken, getBlockTailAsClosed } from "../../utils/blockTail/index.ts"
 import { carriesABlock } from "../../utils/carriesABlock/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -87,7 +87,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// As the neighbors taking stray semicolons out leave it, those behind the last node's own brace included; a semicolon staying is a character of its line
 			let taken = blockTailTaken(statement, result)
-			let before = withoutTaken(getBlockTail(syntax, statement) || ``, taken)
+			let before = withoutTaken(getBlockTailAsClosed(syntax, statement, result) || ``, taken)
 
 			// Counted from the text through the brace: the printed copy ends on a stray `raws.ownSemicolon`, and the index landed inside that raw
 			let text = statementString(statement, result)
@@ -117,7 +117,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				endIndex: index,
 				fix () {
 					if (!expectEmptyLineBefore) {
-						removeEmptyLinesAfter(syntax, statement, taken)
+						removeEmptyLinesAfter(syntax, statement, result, taken)
 
 						return
 					}

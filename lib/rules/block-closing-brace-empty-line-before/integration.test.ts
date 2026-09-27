@@ -50,6 +50,17 @@ describe(`the empty line this rule writes beside a rule that writes the same run
 	})
 })
 
+describe(`a custom property whose value is nothing but whitespace holding an empty line, beside declaration-block-trailing-semicolon under always`, () => {
+	// The value keeps its breaks in front of the semicolon that rule writes, so the run in front of the brace is the empty one behind it, whichever rule is listed first
+	it(`leaves one file in both orders under never, the empty line kept as the value`, async () => {
+		await expectBothOrders(`a { --b:\n\n}\n`, { "@stylistic/declaration-block-trailing-semicolon": `always` }, `a { --b:\n\n;}\n`, `never`)
+	})
+
+	it(`leaves one file in both orders under never where the value is indented blank lines`, async () => {
+		await expectBothOrders(`a {\n\t--b: \n\n\n}\n`, { "@stylistic/declaration-block-trailing-semicolon": `always` }, `a {\n\t--b: \n\n\n;}\n`, `never`)
+	})
+})
+
 describe(`the empty line this rule writes where a stray semicolon stands behind the break, beside a rule taking the semicolon out`, () => {
 	it(`leaves one file in both orders of no-extra-semicolons, the semicolon gone and one empty line before the brace`, async () => {
 		await expectBothOrders(`a {/*c*/\n;}\n`, { "@stylistic/no-extra-semicolons": true }, `a {/*c*/\n\n}\n`)

@@ -33,6 +33,60 @@ testRule({
 	],
 })
 
+// Behind a custom property whose value is nothing but whitespace, the run in front of the brace is the block's empty one once `declaration-block-trailing-semicolon` has written the semicolon, since the value keeps its whitespace in front of it; the library lists that neighbor behind this rule.
+testRule({
+	ruleName,
+	config: [`never`],
+	extraRules: { "@stylistic/declaration-block-trailing-semicolon": `always` },
+
+	reject: [
+		{
+			// The space is the value's, which the rule leaves to stand in front of the semicolon, as the other order leaves it
+			description: `a custom property whose value is a single space, closing a single-line block with no semicolon`,
+			code: `a { --b: }`,
+			fixed: `a { --b: ;}`,
+			line: 1,
+			column: 8,
+			message: `Expected a trailing semicolon (@stylistic/declaration-block-trailing-semicolon)`,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-block-trailing-semicolon": `always` },
+
+	reject: [
+		{
+			// The break stays the value's and the space goes behind the semicolon, as the other order leaves it in one run
+			description: `a custom property whose value is a line break, closing a multi-line block with no semicolon`,
+			code: `
+				a {
+					--b:
+				}
+			`,
+			fixed: `
+				a {
+					--b:
+				; }
+			`,
+			warnings: [
+				{
+					line: 2,
+					column: 6,
+					message: messages.expectedBefore(),
+				},
+				{
+					line: 2,
+					column: 5,
+					message: `Expected a trailing semicolon (@stylistic/declaration-block-trailing-semicolon)`,
+				},
+			],
+		},
+	],
+})
+
 /**
  * Fixes one snippet under this rule and a rule taking stray semicolons out, in the order given, and reads the output back.
  * @param code - The snippet.
