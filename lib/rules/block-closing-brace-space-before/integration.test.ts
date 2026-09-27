@@ -87,6 +87,47 @@ testRule({
 	],
 })
 
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: {
+		"@stylistic/declaration-block-semicolon-space-before": `never`,
+		"@stylistic/declaration-block-trailing-semicolon": `always`,
+	},
+
+	reject: [
+		{
+			// This rule writes the space into the block behind the semicolon still to come, and the semicolon rule behind it still reads the tab as standing in front of that semicolon and brings it down to one space in the same run
+			description: `a custom property whose value is a tab, closing a single-line block with no semicolon`,
+			code: `a { --b:\t}`,
+			fixed: `a { --b: ; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					endLine: 1,
+					endColumn: 10,
+					message: messages.expectedBefore(),
+				},
+				{
+					line: 1,
+					column: 9,
+					endLine: 1,
+					endColumn: 10,
+					message: `Unexpected whitespace before ";" (@stylistic/declaration-block-semicolon-space-before)`,
+				},
+				{
+					line: 1,
+					column: 8,
+					endLine: 1,
+					endColumn: 9,
+					message: `Expected a trailing semicolon (@stylistic/declaration-block-trailing-semicolon)`,
+				},
+			],
+		},
+	],
+})
+
 /**
  * Fixes one snippet under this rule and a rule taking stray semicolons out, in the order given, and reads the output back.
  * @param code - The snippet.

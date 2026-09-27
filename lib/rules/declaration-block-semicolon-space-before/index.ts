@@ -15,8 +15,9 @@ import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicol
 import { maskEscapes } from "../../utils/maskEscapes/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { printsOnlyWhitespaceBehindTheColon } from "../../utils/runHeldForTheBlock/index.ts"
 import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
-import { keepsEscapedCharacter, writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
+import { keepsEscapedCharacter, whitespaceBeforeSemicolon, writeWhitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesSharedRun } from "../../utils/writesSharedRun/index.ts"
 
@@ -66,8 +67,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!isAtRule(parentRule) && !isRule(parentRule) && !isInlineStyleAttribute(parentRule)) return
 
-			// Not read where no semicolon closes the declaration, or where the rule about a trailing semicolon takes it out in the same run, whichever side of this one it is listed
-			if (isLastNodeWithoutSemicolon(decl) || trailingSemicolonAsked(decl, result) === false) return
+			let semicolonAsked = trailingSemicolonAsked(decl, result)
+
+			// Not read where no semicolon closes the declaration, or where the rule about a trailing semicolon takes it out in the same run, whichever side of this one it is listed. A custom property closing its block on whitespace or nothing is read as that rule will close it where no whitespace is asked for in front of the semicolon: its write then keeps the value in front of the semicolon it adds and leaves that run to this rule, while any whitespace asked for it writes finished
+			if (semicolonAsked === false) return
+			if (isLastNodeWithoutSemicolon(decl) && !(semicolonAsked && isCustomProperty(decl.prop) && printsOnlyWhitespaceBehindTheColon(syntax, decl, result) && whitespaceBeforeSemicolon(syntax, decl, result) === ``)) return
 
 			let value = syntax.read(decl)
 			let isCustomPropertyWithOnlySpaces = false

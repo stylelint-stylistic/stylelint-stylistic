@@ -286,6 +286,78 @@ testRule({
 	],
 })
 
+testRule({
+	ruleName,
+	config: [`never`],
+	extraRules: { "@stylistic/declaration-block-trailing-semicolon": `always` },
+
+	reject: [
+		{
+			// The semicolon's writer, listed last, keeps the value's whitespace in front of the semicolon it adds, so this rule brings that whitespace down to the one space it leaves on a custom property before the semicolon stands there.
+			description: `a custom property whose value is a break, closing its block with no semicolon`,
+			code: `
+				a {
+					--b:
+				}
+			`,
+			fixed: `
+				a {
+					--b: ;}
+			`,
+			warnings: [
+				{
+					line: 2,
+					column: 6,
+					endLine: 2,
+					endColumn: 7,
+					message: messages.rejectedBefore(),
+				},
+				{
+					line: 2,
+					column: 5,
+					endLine: 2,
+					endColumn: 6,
+					message: trailingSemicolonMessages.expected,
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never`],
+	extraRules: {
+		"@stylistic/block-closing-brace-space-before": `never`,
+		"@stylistic/declaration-block-trailing-semicolon": `always`,
+	},
+
+	reject: [
+		{
+			// This rule brings the tab in front of the semicolon still to come down to one space, and the brace rule behind it reads the run in front of the brace as the empty one behind that semicolon, so it no longer takes the space away.
+			description: `a custom property whose value is a tab, closing its block with no semicolon`,
+			code: `a { --b:\t}`,
+			fixed: `a { --b: ;}`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					endLine: 1,
+					endColumn: 10,
+					message: messages.rejectedBefore(),
+				},
+				{
+					line: 1,
+					column: 8,
+					endLine: 1,
+					endColumn: 9,
+					message: trailingSemicolonMessages.expected,
+				},
+			],
+		},
+	],
+})
+
 /**
  * Spells warnings as their line, column and rule.
  * @param warnings - The warnings.
