@@ -67,7 +67,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses
 				let edit = primary.startsWith(`never`) ? { start: index + 1, end: index + 1 + run.length, text: `` } : { start: index + 1, end: index + 1, text: getLineBreak(root, result) }
 
-				if (rereadsAnAddress(params, edit, syntax.inlineComments(atRule, result))) return false
+				if (rereadsAnAddress(params, edit, syntax.inlineComments(atRule, result), atRule)) return false
 
 				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` or a `{` nothing closes inside is then a group the parser finds open, so the at-rule gets no block and its params run to the end of the file, or the rule holding it is left unclosed: the break is refused there and the warning stands. In an at-rule's params a `{` opens a group whatever the at-rule, as it does in a custom property's value
 				if (primary.startsWith(`always`) && breakAtRereadsParentheses(params, index, true)) return false

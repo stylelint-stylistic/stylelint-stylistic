@@ -132,7 +132,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 					if (primary === `never`) {
 						if (SPACE_OR_TAB.test(node.before)) {
-							let isFixable = !editsRereadAnAddress(params, openParenthesisIndex, [openingEdit(node, ``)], reading)
+							let isFixable = !editsRereadAnAddress(params, openParenthesisIndex, [openingEdit(node, ``)], reading, atRule)
 
 							problems.push({
 								message: messages.rejectedOpening,
@@ -154,7 +154,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					}
 					else if (primary === `always`) {
 						if (node.before === ``) {
-							let isFixable = !editsRereadAnAddress(params, openParenthesisIndex, [openingEdit(node, ` `)], reading)
+							let isFixable = !editsRereadAnAddress(params, openParenthesisIndex, [openingEdit(node, ` `)], reading, atRule)
 
 							problems.push({
 								message: messages.expectedOpening,

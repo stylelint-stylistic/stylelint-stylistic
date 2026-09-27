@@ -60,7 +60,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.after,
 			checkedRuleName: ruleName,
 			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses
-			isFixable: (params, index, atRule) => !rereadsAnAddress(params, { start: index + 1, end: index + 1 + runBehind(params, index).length, text: primary.startsWith(`always`) ? ` ` : `` }, syntax.inlineComments(atRule, result)),
+			isFixable: (params, index, atRule) => !rereadsAnAddress(params, { start: index + 1, end: index + 1 + runBehind(params, index).length, text: primary.startsWith(`always`) ? ` ` : `` }, syntax.inlineComments(atRule, result), atRule),
 			fix: (atRule, index) => {
 				let paramCommaIndex = index - atRuleParamIndex(atRule)
 

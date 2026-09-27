@@ -285,6 +285,24 @@ testRule({
 			column: 11,
 			message: messages.expectedAfter(),
 		},
+		{
+			// The token lets the comma of the address out into the call around it, where no list rule reads it and the value parser, which reads the address the same, reads it as the call's
+			description: `the same address holding a comma behind the group`,
+			code: `a { b: f(1,url(a(b)c,d)); }`,
+			fixed: `a { b: f(1, url(a(b)c, d)); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 11,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 21,
+					message: messages.expectedAfter(),
+				},
+			],
+		},
 	],
 })
 

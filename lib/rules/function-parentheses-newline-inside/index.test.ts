@@ -869,6 +869,15 @@ testRule({
 			message: messages.rejectedOpeningMultiLine,
 		},
 		{
+			// The comma leaves the group inside the address for the call around it, where no list rule reads it and the call comma rules read it as before
+			description: `the same call holding a group and then a comma, standing inside a call`,
+			code: `a { b: f(\\61 url(\na(b)c,d)); }`,
+			fixed: `a { b: f(\\61 url(a(b)c,d)); }`,
+			line: 1,
+			column: 18,
+			message: messages.rejectedOpeningMultiLine,
+		},
+		{
 			description: `a call standing beside a bare address, whose breaks are closed up while the address is left as the file spells it`,
 			code: `a { b: url(\na\n) f(\n1\n); }`,
 			fixed: `a { b: url(\na\n) f(1); }`,

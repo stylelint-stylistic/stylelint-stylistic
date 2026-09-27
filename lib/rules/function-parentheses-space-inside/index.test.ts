@@ -800,6 +800,24 @@ testRule({
 			message: messages.rejectedOpening,
 		},
 		{
+			// The comma leaves the group inside the address for the call around it, where no list rule reads it and the call comma rules read it as before
+			description: `the same call holding a group and then a comma, standing inside a call`,
+			code: `a { b: f(1 \\61 url( a(b)c,d)); }`,
+			fixed: `a { b: f(1 \\61 url(a(b)c,d)); }`,
+			line: 1,
+			column: 20,
+			message: messages.rejectedOpening,
+		},
+		{
+			// A custom property's value is never read for a missed semicolon, so the colon the token lets out of the group changes nothing the parser builds
+			description: `the same call holding a group and then a colon in a custom property's value`,
+			code: `a { --b: \\61 url( a(b)c:d); }`,
+			fixed: `a { --b: \\61 url(a(b)c:d); }`,
+			line: 1,
+			column: 18,
+			message: messages.rejectedOpening,
+		},
+		{
 			// The value parser closes such an address on the string's parenthesis
 			description: `a call inside a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, beside one of the value`,
 			code: `a { b: url( a ") f( 1 )" ), f( 1 ); }`,

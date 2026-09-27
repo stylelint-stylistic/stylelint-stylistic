@@ -158,7 +158,7 @@ export function functionCommaSpaceChecker (opts: {
 
 				let commaEdits = fix?.(commaNode, nodeIndex, functionNode) ?? []
 
-				if (commaEdits.some((edit) => rereadsAnAddress(declValue, edit, reading))) return false
+				if (commaEdits.some((edit) => rereadsAnAddress(declValue, edit, reading, decl))) return false
 
 				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` nothing closes inside, or such a `{` in a custom property's value, is then a group the parser finds open and the file stops parsing: the break is refused there and the warning stands
 				return !(commaEdits.some((edit) => LINE_BREAK.test(edit.text)) && breakRereadsParentheses(declValue, functionNode.sourceIndex + functionNode.value.length, isCustomProperty(decl.prop)))

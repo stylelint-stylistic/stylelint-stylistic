@@ -221,6 +221,15 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
+			// Parentheses behind a lone hyphen open no call to the media rules, so the colon the address's token would let out of its arguments stands in the feature
+			description: `the same address holding a colon behind the group, inside parentheses behind a lone hyphen`,
+			code: `@media (a: -(1 >=url(a(b)c:d))) {}`,
+			fixed: `@media (a: -(1 >=url(a(b)c:d))) {}`,
+			line: 1,
+			column: 18,
+			message: messages.expectedAfter(),
+		},
+		{
 			description: `the same address behind the operator of a bare query, which is no feature to the parser and is left unfixed too`,
 			code: `@media a=url(a ")" b) { a { b: c; } }`,
 			fixed: `@media a=url(a ")" b) { a { b: c; } }`,

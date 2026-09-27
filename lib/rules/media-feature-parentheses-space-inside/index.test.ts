@@ -347,6 +347,24 @@ testRule({
 				},
 			],
 		},
+		{
+			// Parentheses behind a percent sign closing a number open no call to the media rules, so the colon the address's token holds would leave its arguments for the feature
+			description: `an address inside parentheses behind a percent sign closing a number, holding a group and then a colon`,
+			code: `@media ( a: 1%( \\61 url(a(b)c:d ) ) ) {}`,
+			fixed: `@media ( a: 1%( \\61 url(a(b )c:d ) ) ) {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 22,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 27,
+					message: messages.expectedClosing,
+				},
+			],
+		},
 	],
 })
 
@@ -726,6 +744,67 @@ testRule({
 					message: messages.rejectedClosing,
 				},
 			],
+		},
+		{
+			// The parameters take the rest of the file behind the square bracket nothing closes, and the colon of the nested block they take is read by no parser and by no rule inside a call's arguments either way
+			description: `an address behind a square bracket nothing closes, holding a group`,
+			code: `@media (c: [c\\]url( a(b)c.png)) { a { b: 1px; } }`,
+			fixed: `@media (c: [c\\]url(a(b)c.png)) { a { b: 1px; } }`,
+			line: 1,
+			column: 13,
+			message: messages.rejectedOpening,
+		},
+		{
+			// The parentheses in front of the group are those a word over the name pops, and the comma the token lets out of them stands in parentheses no name opens either way, where the list rules read it
+			description: `parentheses a word over the name of an address leaves to the address, holding a group and then a comma`,
+			code: `@media a url x(y)( a(b)c,d) {}`,
+			fixed: `@media a url x(y)(a(b)c,d) {}`,
+			line: 1,
+			column: 19,
+			message: messages.rejectedOpening,
+		},
+		{
+			// Pins the refusal where the token would let the colon out of the address's arguments into the feature, where the media feature colon rules read it
+			description: `an address in a feature holding a group and then a colon`,
+			code: `@media (a: \\61 url( a(b)c:d)) {}`,
+			fixed: `@media (a: \\61 url( a(b)c:d)) {}`,
+			line: 1,
+			column: 17,
+			message: messages.rejectedOpening,
+		},
+		{
+			// Parentheses behind a number, a lone hyphen or a percent sign a run closes on open no call to the media rules, so the colon the token lets out stands in the feature
+			description: `the same address inside parentheses behind a number, whose colon the token would let out into the feature`,
+			code: `@media (a: 1(\\61 url( a(b)c:d))) {}`,
+			fixed: `@media (a: 1(\\61 url( a(b)c:d))) {}`,
+			line: 1,
+			column: 19,
+			message: messages.rejectedOpening,
+		},
+		{
+			description: `the same address inside parentheses behind a lone hyphen`,
+			code: `@media (a: -(\\61 url( a(b)c:d))) {}`,
+			fixed: `@media (a: -(\\61 url( a(b)c:d))) {}`,
+			line: 1,
+			column: 19,
+			message: messages.rejectedOpening,
+		},
+		{
+			description: `the same address inside parentheses behind a percent sign closing a number`,
+			code: `@media (a: 1%(\\61 url( a(b)c:d))) {}`,
+			fixed: `@media (a: 1%(\\61 url( a(b)c:d))) {}`,
+			line: 1,
+			column: 20,
+			message: messages.rejectedOpening,
+		},
+		{
+			// A letter behind a digit opens a call to style-search but not to the media rules, which read the run as a number
+			description: `the same address inside parentheses behind a number with a letter`,
+			code: `@media (a: 1a(\\61 url( a(b)c:d))) {}`,
+			fixed: `@media (a: 1a(\\61 url( a(b)c:d))) {}`,
+			line: 1,
+			column: 20,
+			message: messages.rejectedOpening,
 		},
 	],
 })

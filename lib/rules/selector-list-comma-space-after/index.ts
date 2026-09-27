@@ -62,7 +62,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let run = runBehind(selector, index)
 
 				// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses
-				if (rereadsAnAddress(selector, { start: index + 1, end: index + 1 + run.length, text: primary.startsWith(`always`) ? ` ` : `` }, syntax.inlineComments(ruleNode, result))) return false
+				if (rereadsAnAddress(selector, { start: index + 1, end: index + 1 + run.length, text: primary.startsWith(`always`) ? ` ` : `` }, syntax.inlineComments(ruleNode, result), ruleNode)) return false
 
 				return true
 			},

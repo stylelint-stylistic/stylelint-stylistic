@@ -203,7 +203,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				 * @returns True if no comment opens where that question is asked and the parentheses keep their reading.
 				 */
 				function isOpeningFixable (write: string): boolean {
-					return (!reading.tokenizes || editsOpenNoComment(declValue, [openingEdit(functionNode, write)], reading)) && !editsRereadAnAddress(declValue, openingIndex - 1, [openingEdit(functionNode, write)], reading)
+					return (!reading.tokenizes || editsOpenNoComment(declValue, [openingEdit(functionNode, write)], reading)) && !editsRereadAnAddress(declValue, openingIndex - 1, [openingEdit(functionNode, write)], reading, decl)
 				}
 
 				if (asked !== undefined && valueNode.before !== asked) {

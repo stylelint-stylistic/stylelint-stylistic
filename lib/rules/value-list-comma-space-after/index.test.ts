@@ -282,6 +282,15 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
+			// A custom property's value is never read for a missed semicolon, so the colon the token lets out of the group changes nothing the parser builds
+			description: `the same address holding a colon behind the group in a custom property's value`,
+			code: `a { --b: 1,url(a(b)c:d) 2px; }`,
+			fixed: `a { --b: 1, url(a(b)c:d) 2px; }`,
+			line: 1,
+			column: 11,
+			message: messages.expectedAfter(),
+		},
+		{
 			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads its parentheses
 			description: `the same address with whitespace between the name and the opening parenthesis, which leaves the name the word the tokenizer reads last`,
 			code: `a { b: 1,url (a ")" b) 2px; }`,

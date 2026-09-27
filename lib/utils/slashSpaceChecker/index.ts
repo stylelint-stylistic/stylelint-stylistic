@@ -95,12 +95,13 @@ function spanAt (text: string, checkIndex: number, position: `before` | `after`,
  * @param span - The span the fix writes.
  * @param written - What the fix puts there.
  * @param position - The side of the solidus.
+ * @param node - The declaration or the at-rule the text is read from.
  * @returns True where the fix may be written.
  */
-function writesTheSpan (syntax: Syntax, reading: InlineCommentReading, text: string, span: { start: number, end: number }, written: string, position: `before` | `after`): boolean {
+function writesTheSpan (syntax: Syntax, reading: InlineCommentReading, text: string, span: { start: number, end: number }, written: string, position: `before` | `after`, node: AtRule | Declaration): boolean {
 	if (syntax.movesEndIntoInlineComment(text.slice(0, span.end + 1), text.slice(0, span.start) + written + text.charAt(span.end), reading)) return false
 
-	if (rereadsAnAddress(text, { ...span, text: written }, reading)) return false
+	if (rereadsAnAddress(text, { ...span, text: written }, reading, node)) return false
 
 	if (!editKeepsEscapedCharacter(text, { ...span, text: written })) return false
 
@@ -145,7 +146,7 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 			let opensTheText = position === `before` && slash.index === 0
 			// Refused before the report, since a fixer cannot decline
 			let edgeWritten: EdgeWrite = writes ? (whitespace === `newline` ? `newline` : `space`) : `none`
-			let isFixable = opensTheText ? (writes || !isAtRule(node)) && !edgeRunOutOfReach(node, syntax, result, edgeWritten) && !edgeRunOwned(node, result, edgeWritten) : writesTheSpan(syntax, reading, text, span, written, position)
+			let isFixable = opensTheText ? (writes || !isAtRule(node)) && !edgeRunOutOfReach(node, syntax, result, edgeWritten) && !edgeRunOwned(node, result, edgeWritten) : writesTheSpan(syntax, reading, text, span, written, position, node)
 
 			opts.locationChecker({
 				source: runText,

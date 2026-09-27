@@ -56,7 +56,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let endIndex = match.startIndex + match.target.length - 1
 				let problemIndex = endIndex + atRuleParamIndex(node) + 1
 				// A write parting the name of a bare address from the operator or joining it to the operator switches how PostCSS reads the parentheses, as behind a comma or a bang; the warning stands without a fix there
-				let isFixable = !rereadsAnAddress(params, { start: endIndex + 1, end: endIndex + 1 + runBehind(params, endIndex).length, text: primary === `always` ? ` ` : `` }, syntax.inlineComments(node, result))
+				let isFixable = !rereadsAnAddress(params, { start: endIndex + 1, end: endIndex + 1 + runBehind(params, endIndex).length, text: primary === `always` ? ` ` : `` }, syntax.inlineComments(node, result), node)
 
 				checker.after({
 					source: params,

@@ -199,6 +199,24 @@ testRule({
 			column: 9,
 			message: messages.expectedAfter(),
 		},
+		{
+			// Pins the refusal where the token would let a colon out of the address's arguments into the feature, where the media feature colon rules read it
+			description: `the same address in a feature, holding a colon behind the group`,
+			code: `@media (a,url(a(b)c:d)) {}`,
+			fixed: `@media (a,url(a(b)c:d)) {}`,
+			line: 1,
+			column: 10,
+			message: messages.expectedAfter(),
+		},
+		{
+			// A letter behind a digit opens a call to style-search but not to the media rules, which read the run as a number, so the colon the token lets out stands in the feature
+			description: `the same address inside parentheses behind a number with a letter`,
+			code: `@media (a: 1a(1,url(a(b)c:d))) {}`,
+			fixed: `@media (a: 1a(1,url(a(b)c:d))) {}`,
+			line: 1,
+			column: 16,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 

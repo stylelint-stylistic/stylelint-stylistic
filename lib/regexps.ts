@@ -142,6 +142,15 @@ export const HEX_ESCAPE_TERMINATOR = /^(?:\r\n|[ \t\n\r\f])$/u
 /** One UTF-16 unit of a CSS identifier, an escape aside; a surrogate half answers for itself, so every character above the basic plane counts. */
 export const IDENTIFIER_CODE_POINT = /[\w\-\u00B7\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u037D\u037F-\u1FFF\u200C-\u200D\u203F\u2040\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uD800-\uDFFF\uF900-\uFDCF\uFDF0-\uFFFD]/u
 
+/** The run of {@link IDENTIFIER_CODE_POINT} characters a text ends in, where a call's name stands in front of its `(`; built from that class, so the two never part. */
+export const TRAILING_IDENTIFIER_RUN = new RegExp(`${IDENTIFIER_CODE_POINT.source}+$`, `u`)
+
+/** An ASCII letter a text ends in, behind which `style-search` opens a call's arguments at a `(`. */
+export const ENDS_WITH_ASCII_LETTER = /[a-z]$/iu
+
+/** An escape a text ends in, behind an even run of backslashes: a backslash and one character that is no hexadecimal digit and no line break, or up to six hexadecimal digits with the one whitespace character closing them, a Windows pair counting as one. */
+export const ENDS_WITH_ESCAPE = /(?<!\\)(?:\\\\)*\\(?:[\da-f]{1,6}(?:\r\n|[\t\n\f\r ])?|[^\da-f\n\r\f])$/iu
+
 /** `import`, any case. */
 export const IMPORT_AT_RULE = /^import$/iu
 

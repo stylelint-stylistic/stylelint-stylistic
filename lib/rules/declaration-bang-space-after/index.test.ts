@@ -212,6 +212,24 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
+			// A custom property's value holds braces as brackets of its own, so the block the token lets out of the group changes nothing the parser builds
+			description: `the same address holding a block behind the group in a custom property's value`,
+			code: `a { --b: 1!url(a(b)c{d}) 2px; c: "d" }`,
+			fixed: `a { --b: 1! url(a(b)c{d}) 2px; c: "d" }`,
+			line: 1,
+			column: 11,
+			message: messages.expectedAfter(),
+		},
+		{
+			// Pins the refusal where the value parser reads the bang into the name of the call, which then holds the comma the address's token lets out into the call around it
+			description: `the same address inside a call, holding a comma behind the group`,
+			code: `a { b: f(1!url(a(b)c,d)) 2px; c: "d" }`,
+			fixed: `a { b: f(1!url(a(b)c,d)) 2px; c: "d" }`,
+			line: 1,
+			column: 11,
+			message: messages.expectedAfter(),
+		},
+		{
 			// Pins that an even run of backslashes escapes only its own backslashes, so the bang behind it is a flag
 			description: `an escaped backslash abutting the bang`,
 			code: `a { color: red\\\\!important; }`,

@@ -1,3 +1,4 @@
+import type { Declaration } from "postcss"
 import valueParser, { type FunctionNode } from "postcss-value-parser"
 import stylelint, { type FixCallback } from "stylelint"
 
@@ -139,6 +140,7 @@ function findFirstCharacterIndex (declValue: string, firstIndex: number): number
  * @returns Whether each fix may be written.
  */
 function getNeverFixability (syntax: Syntax, read: {
+	decl: Declaration,
 	declValue: string,
 	valueNode: FunctionNode,
 	checkBefore: string,
@@ -152,14 +154,14 @@ function getNeverFixability (syntax: Syntax, read: {
 	isOpeningFixable: boolean,
 	isClosingFixable: boolean,
 } {
-	let { declValue, valueNode, checkBefore, checkAfter, firstIndex, measuredBefore, measuredAfter, comments, reading } = read
+	let { decl, declValue, valueNode, checkBefore, checkAfter, firstIndex, measuredBefore, measuredAfter, comments, reading } = read
 
 	let firstCharacterIndex = findFirstCharacterIndex(declValue, firstIndex)
 	let { end: closingParenthesisIndex } = getAfterSpan(valueNode)
 	// Each `never` fix empties the stretches its walk measured, minus one opening on the break closing an inline comment; a fix not reaching every stretch is refused, since Stylelint would call the problem solved while the option stayed violated.
 	let emptiedBefore = checkBefore === `` ? [] : measuredBefore.filter((stretch) => !closesAnInlineComment(stretch, comments))
 	let emptiedAfter = checkAfter === `` ? [] : measuredAfter.filter((stretch) => !closesAnInlineComment(stretch, comments))
-	let isOpeningFixable = checkBefore !== `` && reachesEveryStretch(measuredBefore, emptiedBefore) && !movesIntoComment(syntax, declValue, firstCharacterIndex, emptiedBefore, reading) && (!reading.tokenizes || editsOpenNoComment(declValue, fixBeforeForNever(emptiedBefore), reading)) && !editsRereadAnAddress(declValue, valueNode.sourceIndex + valueNode.value.length, fixBeforeForNever(emptiedBefore), reading)
+	let isOpeningFixable = checkBefore !== `` && reachesEveryStretch(measuredBefore, emptiedBefore) && !movesIntoComment(syntax, declValue, firstCharacterIndex, emptiedBefore, reading) && (!reading.tokenizes || editsOpenNoComment(declValue, fixBeforeForNever(emptiedBefore), reading)) && !editsRereadAnAddress(declValue, valueNode.sourceIndex + valueNode.value.length, fixBeforeForNever(emptiedBefore), reading, decl)
 	let isClosingFixable = checkAfter !== `` && reachesEveryStretch(measuredAfter, emptiedAfter) && !movesIntoComment(syntax, declValue, closingParenthesisIndex, emptiedAfter, reading)
 
 	return { isOpeningFixable, isClosingFixable }
@@ -227,14 +229,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let closingIndex = getAfterSpan(valueNode).end - 1
 				let { after: checkAfter, measured: measuredAfter } = readClosingRuns(valueNode, declValue, comments)
 				let { isOpeningFixable, isClosingFixable } = isMultiLine && primary === `never-multi-line`
-					? getNeverFixability(syntax, { declValue, valueNode, checkBefore, checkAfter, firstIndex, measuredBefore, measuredAfter, comments, reading })
+					? getNeverFixability(syntax, { decl, declValue, valueNode, checkBefore, checkAfter, firstIndex, measuredBefore, measuredAfter, comments, reading })
 					: { isOpeningFixable: false, isClosingFixable: false }
 				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` inside, or a `{` in a custom property's value, is then a group nothing closes: the file stops parsing, so the `always` fixes are refused there and the warnings stand; a multi-line call holds a break inside its parentheses already, so `always-multi-line` never meets the token
 				let breaksAToken = breakRereadsParentheses(declValue, openingIndex - 1, isCustomProperty(decl.prop))
 				// The break the `always` options write behind the `(` stands where the tokenizer decides whether parentheses it takes for an address's are one token, and the name it reads there is not the one the walk read; the break in front of the `)` moves no such character, so only this one is asked about. Read under those two options alone: `fixBeforeForAlways` takes the last stretch the walk measured, and `never-multi-line` is the option that can meet a call with none.
 				let writesABreakBehind = primary === `always` || primary === `always-multi-line`
 				let openingWrite = writesABreakBehind ? fixBeforeForAlways(measuredBefore, declValue, getLineBreak(root, result)) : []
-				let alwaysRereadsAnAddress = writesABreakBehind && editsRereadAnAddress(declValue, openingIndex - 1, openingWrite, reading)
+				let alwaysRereadsAnAddress = writesABreakBehind && editsRereadAnAddress(declValue, openingIndex - 1, openingWrite, reading, decl)
 
 				checkOpening()
 
