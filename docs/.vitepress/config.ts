@@ -88,6 +88,13 @@ let contribute: DefaultTheme.SidebarItem[] = [
 export default defineConfig({
 	title: `Stylelint Stylistic`,
 	description: `Stylistic rules for Stylelint, in plugin form`,
+
+	// A browser takes the SVG icon where it reads one, the `.ico` where it does not, and iOS takes the PNG.
+	head: [
+		[`link`, { rel: `icon`, type: `image/svg+xml`, href: `/favicon.svg` }],
+		[`link`, { rel: `alternate icon`, href: `/favicon.ico`, sizes: `32x32` }],
+		[`link`, { rel: `manifest`, href: `/manifest.webmanifest` }],
+	],
 	base: `/`,
 	srcDir: `..`,
 	srcExclude: [
@@ -135,7 +142,10 @@ export default defineConfig({
 			}
 		},
 	},
+	// The public directory is resolved against `srcDir`, which here is the root of the repository, so the site's own one has to be named.
+	vite: { publicDir: `docs/public` },
 	themeConfig: {
+		logo: `/logo.svg`,
 		nav: [
 			{ text: `Guide`, items: [{ items: userGuide }, { items: contribute }] },
 			{ text: `Rules`, link: `/user-guide/rules` },
