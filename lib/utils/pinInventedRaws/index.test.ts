@@ -63,13 +63,33 @@ describe(`the raws PostCSS invents for a node another plugin's rule built`, () =
 		expect((await fixBuilt(code, fill, [`@stylistic/block-opening-brace-space-after`, `never`])).code).toBe(overText.code)
 	})
 
-	// PostCSS invents a raw out of the first node carrying one of its kind, so a raw pinned on the way would stand in for the file's own: a rule that reports nothing leaves the print another plugin's rule gives
+	// PostCSS invents a raw out of the first node carrying one of its kind, so a raw pinned on the way would stand in for the file's own: rules that report nothing leave the print another plugin's rule gives. Two of them, since the second drops the cache PostCSS filled while the first asked, and the print reads what is left unpinned afresh
 	it.each([
 		[`/* c */\n`, (root: Root): void => { root.prepend(new Comment({ text: `generated` })) }],
 		[`a {\n}\n`, (root: Root): void => { root.prepend(new AtRule({ name: `import`, params: `"y"` })); root.append(new Rule({ selector: `.b` }).append({ prop: `color`, value: `red` })) }],
+		[
+			`@layer x;\n@layer y {\n  a { top: 0 }\n}`,
+			(root: Root): void => {
+				root.prepend(new Rule({ selector: `.d` }).append({ prop: `top`, value: `0` }))
+				root.append(new Comment({ text: `q` }))
+
+				// A copy with its raws cleaned, whose own nodes keep the `source` of what it copies
+				let layer = root.nodes.find((node) => node.type === `atrule` && node.params === `y`)
+
+				if (!layer) throw new Error(`The fixture must hold the layer it copies`)
+
+				let copy = layer.clone()
+
+				copy.cleanRaws()
+				delete copy.source
+				layer.after(copy)
+			},
+		],
 	] as [string, (root: Root) => void][])(`leave the print of %j as it was`, async (code, build) => {
 		let alone = await stylelint.lint({ code, config: { plugins: [builder(build)], rules: { "test/builder": true } }, fix: true })
 
-		expect((await fixBuilt(code, build, [`@stylistic/color-hex-case`, `lower`])).code).toBe(alone.code)
+		let both = await stylelint.lint({ code, config: { plugins: [builder(build), ...plugins], rules: { "test/builder": true, "@stylistic/color-hex-case": `lower`, "@stylistic/number-leading-zero": `always` } }, fix: true })
+
+		expect(both.code).toBe(alone.code)
 	})
 })
