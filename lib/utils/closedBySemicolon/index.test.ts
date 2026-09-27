@@ -20,6 +20,7 @@ const CARRIAGE_RETURN_READER: Syntax = {
 }
 
 const TRAILING = `@stylistic/declaration-block-trailing-semicolon`
+const SEMICOLON_SPACE = `@stylistic/declaration-block-semicolon-space-before`
 const SCSS_TRAILING = `@stylistic/scss/declaration-block-trailing-semicolon`
 
 describe(`closesADeclarationBlock`, () => {
@@ -140,6 +141,15 @@ describe(`valueAsClosed`, () => {
 		expect(value(`a { b:  ; }`, { [TRAILING]: `never` })).toBe(``)
 		expect(value(`a { b: x ; }`, { [TRAILING]: `never` })).toBe(`x`)
 		expect(value(`a { --b: /*c*/ ; }`, { [TRAILING]: `never` })).toBe(` /*c*/`)
+	})
+
+	it(`a custom property whose value is a comment with no run for the block, closing it with no semicolon, over whose end a live always writes the whitespace the semicolon rules ask for, while a wordless value keeps its run`, () => {
+		let rules = { [TRAILING]: `always`, [SEMICOLON_SPACE]: `always` }
+
+		expect(value(`a { --b:/*c*/}`, rules)).toBe(`/*c*/ `)
+		expect(value(`a { --b:/*c*/}`, { [TRAILING]: `always`, [SEMICOLON_SPACE]: `never` })).toBe(`/*c*/`)
+		expect(value(`a { --b:/*c*/}`, { [SEMICOLON_SPACE]: `always` })).toBe(`/*c*/`)
+		expect(value(`a { --b:}`, rules)).toBe(``)
 	})
 
 	it(`a flag behind the value, whose raw is what never trims and the value stays as it is`, () => {

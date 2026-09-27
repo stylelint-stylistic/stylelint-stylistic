@@ -1,5 +1,7 @@
 import { messages as braceNewlineBeforeMessages } from "../block-closing-brace-newline-before/index.ts"
+import { messages as braceSpaceBeforeMessages } from "../block-closing-brace-space-before/index.ts"
 import { messages as semicolonNewlineBeforeMessages } from "../declaration-block-semicolon-newline-before/index.ts"
+import { messages as semicolonSpaceBeforeMessages } from "../declaration-block-semicolon-space-before/index.ts"
 import { messages as trailingSemicolonMessages } from "../declaration-block-trailing-semicolon/index.ts"
 
 import { messages, ruleName } from "./index.ts"
@@ -24,9 +26,10 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
+			// The run behind the comment is the neighbor's, and a break in front of the comment answers both rules.
 			description: `a comment on the colon's line, behind which the run this rule reads is the run in front of the semicolon as well`,
 			code: `a { color: /*c*/ ; }`,
-			fixed: `a { color: /*c*/ ; }`,
+			fixed: `a { color:\n/*c*/ ; }`,
 			line: 1,
 			column: 16,
 			endLine: 1,
@@ -51,6 +54,122 @@ testRule({
 			endLine: 1,
 			endColumn: 11,
 			message: messages.expectedAfter(),
+		},
+		{
+			// The neighbor takes the space behind the comment, and a break in front of the comment answers both rules.
+			description: `a custom property whose value is a comment on the colon's line with a space behind it in front of the semicolon`,
+			code: `a { --b: /*c*/ ; }`,
+			fixed: `a { --b:\n/*c*/; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 15,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 15,
+					endLine: 1,
+					endColumn: 16,
+					message: semicolonSpaceBeforeMessages.rejectedBefore(),
+				},
+			],
+		},
+		{
+			// The neighbor takes the break behind the comment, so this rule reads the run as the neighbor leaves it.
+			description: `the same comment with a break behind it in front of the semicolon`,
+			code: `a { --b: /*c*/\n; }`,
+			fixed: `a { --b:\n/*c*/; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 15,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 15,
+					endLine: 1,
+					endColumn: 16,
+					message: semicolonSpaceBeforeMessages.rejectedBefore(),
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: {
+		"@stylistic/declaration-block-semicolon-space-before": `never`,
+		"@stylistic/indentation": `tab`,
+	},
+
+	reject: [
+		{
+			// The break takes the place of the space in front of the comment, so the line `indentation` indents holds no space the next parse would take off.
+			description: `a comment on the colon's line with a space in front of it and a space behind it in front of the semicolon, in a block the neighbor indents`,
+			code: `a { b: /*c*/ ; c: d }`,
+			fixed: `a { b:\n\t\t/*c*/; c:\n\t\td }`,
+			warnings: [
+				{
+					line: 1,
+					column: 12,
+					endLine: 1,
+					endColumn: 13,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 17,
+					endLine: 1,
+					endColumn: 18,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 13,
+					endLine: 1,
+					endColumn: 14,
+					message: semicolonSpaceBeforeMessages.rejectedBefore(),
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/block-closing-brace-space-before": `never` },
+
+	reject: [
+		{
+			// The run behind the comment is the one in front of the brace, which the neighbor takes, and a break in front of the comment answers both rules.
+			description: `a custom property whose value is a comment on the colon's line closing its block with a space in front of the brace`,
+			code: `a { --b: /*c*/ }`,
+			fixed: `a { --b:\n/*c*/}`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 15,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 15,
+					endLine: 1,
+					endColumn: 16,
+					message: braceSpaceBeforeMessages.rejectedBefore(),
+				},
+			],
 		},
 	],
 })

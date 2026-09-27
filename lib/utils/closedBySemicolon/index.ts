@@ -1,7 +1,7 @@
 import type { AtRule, ChildNode, Declaration, Node } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { EVERY_LINE_BREAK, SEMICOLONS_OR_WHITESPACE, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
+import { EVERY_LINE_BREAK, SEMICOLONS_OR_WHITESPACE, TRAILING_CSS_WHITESPACE, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { fixDisabledOnLine } from "../fixDisabledOnLine/index.ts"
 import { hasBlock } from "../hasBlock/index.ts"
@@ -210,7 +210,7 @@ export function closedBySemicolon (decl: Declaration, result: PostcssResult): bo
 /**
  * Reads a declaration's printed value as `declaration-block-trailing-semicolon` will leave it.
  *
- * Its `never` takes the whitespace in front of the semicolon too where no flag or inline comment closes the declaration. A `never` copy finding a semicolon takes the run; an `always` copy writing one hands the run a custom property keeps for the closing brace to the block and writes the whitespace the semicolon rules ask for in its place.
+ * Its `never` takes the whitespace in front of the semicolon too where no flag or inline comment closes the declaration. A `never` copy finding a semicolon takes the run; an `always` copy writing one hands the run a custom property keeps for the closing brace to the block and writes the whitespace the semicolon rules ask for in its place, and over the trailing run of any other value holding more than whitespace.
  * @param syntax - The asking rule's syntax, which reads the value.
  * @param decl - The declaration.
  * @param result - The Stylelint result, which holds the configuration.
@@ -228,7 +228,12 @@ export function valueAsClosed (syntax: Syntax, decl: Declaration, result: Postcs
 	let handed = runHandedToTheBlock(decl, result)
 
 	// The write leaves in front of the semicolon the whitespace the semicolon rules ask for
-	return handed ? value.slice(0, value.length - handed.length) + whitespaceBeforeSemicolon(syntax, decl, result) : value
+	if (handed) return value.slice(0, value.length - handed.length) + whitespaceBeforeSemicolon(syntax, decl, result)
+
+	// A value with a word or a comment and no run for the block gets that whitespace over its trailing run too; a wordless one shares its run with the colon, and the write passes it over where it holds the whitespace already
+	let whitespace = copy && writtenBy(copy, decl, result) === true && !WHITESPACE_OR_NOTHING.test(value) ? whitespaceBeforeSemicolon(syntax, decl, result) : ``
+
+	return whitespace ? value.replace(TRAILING_CSS_WHITESPACE, ``) + whitespace : value
 }
 
 /**

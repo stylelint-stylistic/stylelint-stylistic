@@ -315,9 +315,9 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a {\n\tx: \n;\n}`, { [SEMICOLON_NEWLINE]: `always`, [COLON_SPACE]: `always-single-line` }, COLON_SPACE)).toBe(false)
 	})
 
-	it(`the tail behind a comment on the colon's line of a custom property closing the block, which the newline rule of the colon shares with the brace rules and the space rule does not`, () => {
+	it(`the tail behind a comment on the colon's line of a custom property closing the block, which the newline rule of the colon shares with the brace rules and the space rule does not; the newline rule, refused it, writes in front of the comment, so it holds no brace rule back`, () => {
 		expect(ask(`a {\n\t--x: /*c*/\n}`, { [COLON_NEWLINE]: `always`, [BRACE_SPACE]: `always` }, COLON_NEWLINE)).toBe(false)
-		expect(ask(`a {\n\t--x: /*c*/\n}`, { [COLON_NEWLINE]: `always`, [BRACE_SPACE]: `always` }, BRACE_SPACE)).toBe(false)
+		expect(ask(`a {\n\t--x: /*c*/\n}`, { [COLON_NEWLINE]: `always`, [BRACE_SPACE]: `always` }, BRACE_SPACE)).toBe(true)
 		expect(ask(`a {\n\t--x: /*c*/\n}`, { [COLON_SPACE]: `never`, [BRACE_SPACE]: `always` }, COLON_SPACE)).toBe(true)
 	})
 
@@ -385,11 +385,11 @@ describe(`writesSharedRun over a comma opening the value`, () => {
 	})
 
 	// The run behind a block comment on the colon's line, which the newline rule of the colon reads past the comment and the comma rules read as the comma's
-	it(`a comma opening the value behind a comment on the colon's line, whose run the colon newline rule shares with the comma rules: a pair asking for different things is held as over the head run, and a rule ahead that has warned frees the write`, () => {
+	it(`a comma opening the value behind a comment on the colon's line, whose run the colon newline rule shares with the comma rules: the colon rule is refused a run a comma rule asks otherwise, and a rule ahead that has warned frees its write, while the colon rule holds no comma rule back, since, refused, it writes in front of the comment`, () => {
 		expect(ask(`a { b: /*c*/ ,d }`, { [COLON_NEWLINE]: `always`, [COMMA_SPACE]: `always` }, COLON_NEWLINE)).toBe(false)
 		expect(ask(`a { b: /*c*/ ,d }`, { [COLON_NEWLINE]: `always`, [COMMA_SPACE]: `never` }, COLON_NEWLINE)).toBe(false)
 		expect(ask(`a { b: /*c*/ ,d }`, { [COLON_NEWLINE]: `always`, [COMMA_SPACE]: `never` }, COMMA_SPACE)).toBe(true)
-		expect(ask(`a { b: /*c*/ ,d }`, { [COMMA_SPACE]: `never`, [COLON_NEWLINE]: `always` }, COMMA_SPACE)).toBe(false)
+		expect(ask(`a { b: /*c*/ ,d }`, { [COMMA_SPACE]: `never`, [COLON_NEWLINE]: `always` }, COMMA_SPACE)).toBe(true)
 		expect(ask(`a { b: /*c*/ ,d }`, { [COMMA_SPACE]: `never`, [COLON_NEWLINE]: `always` }, COLON_NEWLINE)).toBe(true)
 		expect(ask(`a { b:/*c*/,d }`, { [COLON_NEWLINE]: `always`, [COMMA_NEWLINE]: `never-multi-line` }, COLON_NEWLINE)).toBe(false)
 	})

@@ -554,9 +554,10 @@ testRule({
 
 	reject: [
 		{
-			description: `a space between a comment on the colon's line and a comma opening the value, where the comma rule behind this one asks for that space and not for the break this one asks for, so the warning stands and nothing is written`,
+			// The comma rule behind keeps the run behind the comment, and a break in front of the comment answers both rules.
+			description: `a space between a comment on the colon's line and a comma opening the value, where the comma rule behind this one asks for that space and not for the break this one asks for`,
 			code: `a { b: /*c*/ ,d }`,
-			fixed: `a { b: /*c*/ ,d }`,
+			fixed: `a { b:\n/*c*/ ,d }`,
 			line: 1,
 			column: 12,
 			message: messages.expectedAfter(),

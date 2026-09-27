@@ -1,3 +1,4 @@
+import { messages as colonNewlineAfterMessages } from "../declaration-colon-newline-after/index.ts"
 import { messages as colonSpaceAfterMessages } from "../declaration-colon-space-after/index.ts"
 
 import { messages, ruleName } from "./index.ts"
@@ -438,12 +439,24 @@ testRule({
 
 	reject: [
 		{
-			description: `a break between a comment on the colon's line and a comma opening a multi-line list, where the colon rule behind this one asks for that break, so the warning stands and nothing is written`,
+			// The colon rule behind reads the run as this one leaves it and writes its break in front of the comment.
+			description: `a break between a comment on the colon's line and a comma opening a multi-line list, where the colon rule behind this one asks for that break`,
 			code: `a { b: /*c*/\n,d }`,
-			fixed: `a { b: /*c*/\n,d }`,
-			line: 2,
-			column: 1,
-			message: messages.rejectedBeforeMultiLine(),
+			fixed: `a { b:\n/*c*/,d }`,
+			warnings: [
+				{
+					line: 1,
+					column: 12,
+					endLine: 1,
+					endColumn: 13,
+					message: colonNewlineAfterMessages.expectedAfter(),
+				},
+				{
+					line: 2,
+					column: 1,
+					message: messages.rejectedBeforeMultiLine(),
+				},
+			],
 		},
 	],
 })

@@ -667,9 +667,10 @@ testRule({
 
 	reject: [
 		{
-			description: `a break with indentation between a comment on the colon's line and a comma opening the value, where the colon rule behind this one asks for that break, so the warning stands and nothing is written`,
+			// The colon rule behind, the run behind the comment not its to keep, writes its break in front of the comment.
+			description: `a break with indentation between a comment on the colon's line and a comma opening the value, where the colon rule behind this one asks for that break`,
 			code: `a { b: /*c*/\n ,d }`,
-			fixed: `a { b: /*c*/\n ,d }`,
+			fixed: `a { b:\n/*c*/,d }`,
 			line: 2,
 			column: 2,
 			message: messages.rejectedBefore(),

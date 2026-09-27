@@ -1,6 +1,6 @@
 import stylelint from "stylelint"
 
-import { LEADING_WHITESPACE_WITHOUT_BREAK, LINE_BREAK, OPENS_WITH_BLOCK_COMMENT, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE, TRAILING_WHITESPACE_WITHOUT_BREAK } from "../../regexps.ts"
+import { LEADING_CSS_WHITESPACE, LEADING_WHITESPACE_WITHOUT_BREAK, LINE_BREAK, OPENS_WITH_BLOCK_COMMENT, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE, TRAILING_WHITESPACE_WITHOUT_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { runHandedToTheBlock } from "../../utils/closedBySemicolon/index.ts"
 import { colonIndexInBetween } from "../../utils/colonIndexInBetween/index.ts"
@@ -92,15 +92,18 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				if (syntax.read(decl) === `` && decl.raws.between) decl.raws.between = decl.raws.between.replace(TRAILING_WHITESPACE_WITHOUT_BREAK, ``)
 			}
 
-			// The search for the comment's end starts behind its opening, since `/*/` would otherwise close on its own star; an unclosed comment, which every syntax refuses, falls back to the colon
-			let commentEnd = source.indexOf(`*/`, source.indexOf(`/*`, colonIndex) + 2)
-			let indexToCheck = OPENS_WITH_BLOCK_COMMENT.test(source.slice(colonIndex + 1)) && commentEnd !== -1 ? commentEnd + 1 : colonIndex
+			// An unclosed comment, which every syntax refuses, falls back to the colon
+			let commentEnd = closingSlashOfTheComment(source, colonIndex)
+			let indexToCheck = OPENS_WITH_BLOCK_COMMENT.test(source.slice(colonIndex + 1)) && commentEnd !== -1 ? commentEnd : colonIndex
+			// Where the run behind a comment on the colon's line is another rule's to write, that rule leaves no break there, so the text is read without the run and the break goes in front of the comment, which answers both
+			let writesInFrontOfTheComment = !isFixable && indexToCheck !== colonIndex
+			// Lineness is read from the value as spelled, since `decl.value` drops comments and the breaks in them
+			let value = declarationValueAsSpelled(syntax, decl, result)
 
 			checker.afterOneOnly({
-				source,
+				source: writesInFrontOfTheComment ? withoutTheRunBehind(source, indexToCheck) : source,
 				index: indexToCheck,
-				// Lineness is read from the value as spelled, since `decl.value` drops comments and the breaks in them
-				lineCheckStr: declarationValueAsSpelled(syntax, decl, result),
+				lineCheckStr: writesInFrontOfTheComment ? withoutTheRunBehind(value, closingSlashOfTheComment(value, 0)) : value,
 				err: (m) => {
 					report({
 						message: m,
@@ -109,8 +112,21 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						endIndex: indexToCheck,
 						result,
 						ruleName,
-						...(isFixable && {
+						...((isFixable || writesInFrontOfTheComment) && {
 							fix (): void {
+								if (writesInFrontOfTheComment) {
+									assertString(decl.raws.between)
+
+									// The break takes the place of the run in front of the comment, wherever the parser filed it, or `indentation` would indent the comment's line and keep the run until the next parse
+									let behindColon = decl.raws.between.slice(indexInBetween + 1).replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``)
+
+									decl.raws.between = decl.raws.between.slice(0, indexInBetween + 1) + getLineBreak(root, result) + behindColon
+
+									if (behindColon === ``) syntax.write(decl, syntax.read(decl).replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``))
+
+									return
+								}
+
 								// Behind an empty value the run is in the next node's raw; a break written into `between` instead would be added every run
 								let runPast = runPastDeclaration(syntax, decl, result)
 
@@ -159,6 +175,28 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			})
 		})
 	}
+}
+
+/**
+ * Finds the closing slash of the first block comment at or behind an index, the search for its end starting behind its opening, since `/*\/` would otherwise close on its own star.
+ * @param text - The text holding the comment.
+ * @param from - Where the search starts.
+ * @returns The index of the closing slash, or -1 where the comment is not closed.
+ */
+function closingSlashOfTheComment (text: string, from: number): number {
+	let end = text.indexOf(`*/`, text.indexOf(`/*`, from) + 2)
+
+	return end === -1 ? -1 : end + 1
+}
+
+/**
+ * Drops the whitespace behind a comment's closing slash.
+ * @param text - The text holding the comment.
+ * @param index - The index of the comment's closing slash.
+ * @returns The text without the run.
+ */
+function withoutTheRunBehind (text: string, index: number): string {
+	return text.slice(0, index + 1) + text.slice(index + 1).replace(LEADING_CSS_WHITESPACE, ``)
 }
 
 export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })

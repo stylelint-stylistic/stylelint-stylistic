@@ -82,7 +82,7 @@ const FROM_THE_STATEMENT: Set<Participant> = new Set([...FROM_THE_SEMICOLON, ...
 /** The comma rules read the head run where a comma opens the value; their lineness is the whole declaration's. */
 const FROM_THE_COMMA: Set<Participant> = new Set([`commaSpace`, `commaNewline`])
 
-/** The four runs and their readers; under two names a set settles nothing. `runIsTheText`: the semicolon's or the brace's run is the whole text behind the colon. `tail`: the run behind a block comment on the colon's line, in front of a comma opening the value. */
+/** The four runs and their readers; under two names a set settles nothing. `runIsTheText`: the semicolon's or the brace's run is the whole text behind the colon. `tail`: the run behind a block comment on the colon's line, in front of a comma opening the value. `behindComment`: the runs other than the head's stand behind a block comment on the colon's line. */
 type SharedRuns = {
 	head: Set<Participant>,
 	tail: Set<Participant>,
@@ -93,6 +93,7 @@ type SharedRuns = {
 	braceRun: string,
 	commentBehindHead: boolean,
 	runIsTheText: boolean,
+	behindComment: boolean,
 }
 
 /**
@@ -140,7 +141,7 @@ function tailBehindComment (text: string): string | undefined {
  * @returns The runs and their readers.
  */
 function sharedRunsOf (syntax: Syntax, decl: Declaration, result: PostcssResult): SharedRuns {
-	let runs: SharedRuns = { head: new Set(), tail: new Set(), tailRun: ``, semicolon: new Set(), semicolonRun: ``, brace: new Set(), braceRun: ``, commentBehindHead: false, runIsTheText: false }
+	let runs: SharedRuns = { head: new Set(), tail: new Set(), tailRun: ``, semicolon: new Set(), semicolonRun: ``, brace: new Set(), braceRun: ``, commentBehindHead: false, runIsTheText: false, behindComment: false }
 
 	if (!syntax.isStandardDeclaration(decl)) return runs
 
@@ -199,6 +200,8 @@ function sharedRunsOf (syntax: Syntax, decl: Declaration, result: PostcssResult)
  * @returns The runs.
  */
 function readersBehindComment (syntax: Syntax, decl: Declaration, result: PostcssResult, runs: SharedRuns, tail: string, readBySemicolonRules: boolean, readByBraceRules: boolean): SharedRuns {
+	runs.behindComment = true
+
 	if (WHITESPACE_OR_NOTHING.test(tail) && readBySemicolonRules) {
 		runs.semicolonRun = tail
 		for (let participant of [`colonNewline`, ...FROM_THE_SEMICOLON] as Participant[]) runs.semicolon.add(participant)
@@ -343,6 +346,8 @@ function spellingOf (run: string): Run {
  * A `-single-line` or `-multi-line` option speaks as its rule judges over the text as it sees it: a colon rule's break stays in `raws.between` within the pass and reaches the value on the reparsed run after; a comma rule reads the whole declaration, `raws.between` included, so a break written into the head run is its line at once.
  *
  * The readers asked are those of the run as the write leaves it, since a write can move a block comment onto the colon's line.
+ *
+ * Behind a block comment on the colon's line the newline rule of the colon holds no other rule back: where the run there is not its to write, it writes its break in front of the comment instead, which leaves the run to the others.
  * @param syntax - The syntax the asking rule is built over.
  * @param decl - The declaration.
  * @param result - The Stylelint result, which holds the configuration.
@@ -354,7 +359,7 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 
 	if (!asking) return true
 
-	let { head, tail, tailRun, semicolon, semicolonRun, brace, braceRun, commentBehindHead, runIsTheText } = sharedRunsOf(syntax, decl, result)
+	let { head, tail, tailRun, semicolon, semicolonRun, brace, braceRun, commentBehindHead, runIsTheText, behindComment } = sharedRunsOf(syntax, decl, result)
 	// The semicolon's and the brace's groups hold a colon rule only where the head run reaches it, so either is the head's readers too; the tail's group stands where the head's is empty
 	let groups: [Set<Participant>, string][] = [[semicolon, semicolonRun], [brace, braceRun], [tail, tailRun], [head, semicolonRun]]
 	let [readers, run] = groups.find(([group]) => group.has(asking)) ?? [head, semicolonRun]
@@ -440,6 +445,8 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 	let asksFromTheSemicolon = FROM_THE_SEMICOLON.includes(participant)
 	// A space or nothing written over a head run with a block comment behind puts the comment on the colon's line, moving the newline rule behind it
 	let readersAfterTheWrite = readers === head && writes !== `newline` && commentBehindHead ? new Set([...head].filter((reader) => reader !== `colonNewline`)) : readers
+
+	if (behindComment && participant !== `colonNewline`) readersAfterTheWrite = new Set([...readersAfterTheWrite].filter((reader) => reader !== `colonNewline`))
 
 	let restsBehind = settings.slice(position + 1).every(([behind, behindOption, behindFixTurnedOff]) => {
 		// A turned-off fix rewrites nothing, so it gates nothing; deferring to it left the run unwritten with two warnings

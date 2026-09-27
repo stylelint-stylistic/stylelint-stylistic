@@ -197,10 +197,10 @@ testRule({
 
 	reject: [
 		{
-			// The semicolon's writer hands the space in front of the brace to the block and writes the space this rule asks for in front of the semicolon, so the colon rule behind reads a space behind the comment and leaves this rule's run alone.
+			// The semicolon's writer hands the space in front of the brace to the block and writes the space this rule asks for in front of the semicolon, so the colon rule behind reads a space behind the comment, leaves this rule's run alone and writes its break in front of the comment.
 			description: `a custom property whose value is a comment alone, closing its block with no semicolon and a space in front of the brace`,
 			code: `a { --b: /*c*/ }`,
-			fixed: `a { --b: /*c*/ ; }`,
+			fixed: `a { --b:\n/*c*/ ; }`,
 			warnings: [
 				{
 					line: 1,
@@ -214,6 +214,71 @@ testRule({
 					column: 14,
 					endLine: 1,
 					endColumn: 15,
+					message: trailingSemicolonMessages.expected,
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never`],
+	extraRules: { "@stylistic/declaration-colon-newline-after": `always` },
+
+	reject: [
+		{
+			// This rule takes the space behind the comment, and the colon rule behind writes its break in front of the comment rather than into this rule's run.
+			description: `a custom property whose value is a comment on the colon's line with a space behind it in front of the semicolon`,
+			code: `a { --b: /*c*/ ; }`,
+			fixed: `a { --b:\n/*c*/; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 15,
+					endLine: 1,
+					endColumn: 16,
+					message: messages.rejectedBefore(),
+				},
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 15,
+					message: colonNewlineAfterMessages.expectedAfter(),
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: {
+		"@stylistic/declaration-colon-newline-after": `always`,
+		"@stylistic/declaration-block-trailing-semicolon": `always`,
+	},
+
+	reject: [
+		{
+			// The semicolon's writer, listed last, writes the space this rule asks for behind the comment, so the colon rule reads that space as this rule's and writes its break in front of the comment in the same run.
+			description: `a custom property whose value is a comment right against the colon and the brace`,
+			code: `a { --b:/*c*/}`,
+			fixed: `a { --b:\n/*c*/ ;}`,
+			warnings: [
+				{
+					line: 1,
+					column: 13,
+					endLine: 1,
+					endColumn: 14,
+					message: colonNewlineAfterMessages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 13,
+					endLine: 1,
+					endColumn: 14,
 					message: trailingSemicolonMessages.expected,
 				},
 			],
