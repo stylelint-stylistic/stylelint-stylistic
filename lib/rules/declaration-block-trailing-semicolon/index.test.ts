@@ -159,6 +159,39 @@ testRule({
 			column: 14,
 			message: messages.expected,
 		},
+		{
+			// A custom property keeps the run in front of the closing brace in its value, and the semicolon is written in front of that run, as behind any other declaration
+			description: `a custom property closing the block with no semicolon, its value followed by a line break`,
+			code: `
+				a {
+					--b: red
+				}
+			`,
+			fixed: `
+				a {
+					--b: red;
+				}
+			`,
+			line: 2,
+			column: 9,
+			message: messages.expected,
+		},
+		{
+			description: `the same custom property carrying a flag, whose raw holds the run`,
+			code: `a { --b: red !important }`,
+			fixed: `a { --b: red !important; }`,
+			line: 1,
+			column: 23,
+			message: messages.expected,
+		},
+		{
+			description: `the same custom property with a comment ending its value, which the value's raw holds with the run`,
+			code: `a { --b: red /*c*/ }`,
+			fixed: `a { --b: red /*c*/; }`,
+			line: 1,
+			column: 18,
+			message: messages.expected,
+		},
 	],
 })
 

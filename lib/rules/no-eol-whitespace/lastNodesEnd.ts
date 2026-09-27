@@ -6,6 +6,7 @@ import type { Syntax } from "../../syntaxes/index.ts"
 import { trailingSemicolonAsked } from "../../utils/closedBySemicolon/index.ts"
 import { declarationEndsTheStylesheet } from "../../utils/declarationEndsTheStylesheet/index.ts"
 import type { NeighborRule } from "../../utils/neighborSettings/index.ts"
+import { runHeldForTheBlock } from "../../utils/runHeldForTheBlock/index.ts"
 import { isDeclaration } from "../../utils/typeGuards/index.ts"
 import { type Whitespace, whitespaceAsked } from "../../utils/whitespaceAsked/index.ts"
 
@@ -36,7 +37,7 @@ function trimTheEnd (text: string, readsEscapes: boolean): string {
 }
 
 /**
- * Trims the spaces and tabs a root's text ends on where they stand in its last node rather than in its tail: a custom property keeps the whitespace behind its value in the value, and behind its `!important` in the flag's raw. With no semicolon behind the node they end its line where the tail is empty, as the check reads them at the text's end, or opens with a break, which a neighbor such as `no-missing-end-of-source-newline` may have written there in the same run. Where `declaration-block-trailing-semicolon` will write a semicolon behind the node, as it does in an inline `style` attribute, they stand in front of it and are left, whichever of the two rules runs first.
+ * Trims the spaces and tabs a root's text ends on where they stand in its last node rather than in its tail: a custom property keeps the whitespace behind its value in the value, and behind its `!important` in the flag's raw. With no semicolon behind the node they end its line where the tail is empty, as the check reads them at the text's end, or opens with a break, which a neighbor such as `no-missing-end-of-source-newline` may have written there in the same run. Where `declaration-block-trailing-semicolon` will write a semicolon behind the node, as it does in an inline `style` attribute, they are read where it leaves them, whichever of the two rules runs first: in front of the semicolon where the value keeps them, and left; handed to the tail behind it otherwise ({@link runHeldForTheBlock}), and trimmed.
  * @param syntax - The syntax the rule is built over, which reads and writes the value.
  * @param root - The root.
  * @param result - The Stylelint result, which holds the configuration.
@@ -44,7 +45,7 @@ function trimTheEnd (text: string, readsEscapes: boolean): string {
 export function trimTheLastNodesEnd (syntax: Syntax, root: Root, result: PostcssResult): void {
 	let { last } = root
 
-	if (!last || !isDeclaration(last) || root.raws.semicolon || (root.raws.after && !OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(root.raws.after)) || trailingSemicolonAsked(last, result)) return
+	if (!last || !isDeclaration(last) || root.raws.semicolon || (root.raws.after && !OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(root.raws.after)) || (trailingSemicolonAsked(last, result) && runHeldForTheBlock(syntax, last, result) === ``)) return
 
 	let readsEscapes = syntax.readsBackslashesAsWritten(root)
 

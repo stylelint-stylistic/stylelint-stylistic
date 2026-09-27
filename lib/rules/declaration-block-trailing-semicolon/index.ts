@@ -18,6 +18,7 @@ import { lastSemicolonLeft, noExtraSemicolonsTaken } from "../../utils/noExtraSe
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+import { runHeldForTheBlock } from "../../utils/runHeldForTheBlock/index.ts"
 import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { type TrailingCommentRun, trailingCommentRun } from "../../utils/trailingCommentRun/index.ts"
 import { isAtRule, isComment, isDeclaration, isRoot } from "../../utils/typeGuards/index.ts"
@@ -352,12 +353,12 @@ function textBehindTheWrite (node: ChildNode, result: PostcssResult, raws: HeldR
 /**
  * Returns the run an `always` write leaves in front of the semicolon.
  *
- * Where no whitespace is asked for, the node keeps its own run, as a custom property's value does, unless the at-rule's run moves to the block.
+ * Where no whitespace is asked for, the node keeps its own run, unless the run moves to the block: an at-rule's, or the one a custom property keeps for the block ({@link runHeldForTheBlock}).
  * @param syntax - The syntax reading the value.
  * @param node - The node closing the block.
  * @param result - The Stylelint result.
  * @param whitespace - The whitespace asked for.
- * @param runMoves - Whether the fix moves the at-rule's trailing run to the block.
+ * @param runMoves - Whether the fix moves the node's trailing run to the block.
  * @returns The run.
  */
 function runLeftInFront (syntax: Syntax, node: AtRule | Declaration, result: PostcssResult, whitespace: string, runMoves: boolean): string {
@@ -520,6 +521,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// Behind a bodiless at-rule the semicolon lands on the whitespace handed to the block, which the guard reads when told nothing; behind any other node only `whitespace` stands between, and a line break in it closes an inline comment
 				let spelledBetween = bodilessAtRule ? undefined : whitespace
 				let trailingRun = movableRun(syntax, node, primary, spelledBetween, result)
+				// Asked before the fix sets the flag, and read by the `always` fix alone
+				let blockRun = runHeldForTheBlock(syntax, node, result)
 				report({
 					message,
 					node,
@@ -527,7 +530,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					endIndex: problemIndex,
 					result,
 					ruleName,
-					...(isFixable(syntax, node, primary, spelledBetween, result, flagIsCommentText, runLeftInFront(syntax, node, result, whitespace, atRuleHoldsTheBlockAfter), raws, trailingRun) && {
+					...(isFixable(syntax, node, primary, spelledBetween, result, flagIsCommentText, runLeftInFront(syntax, node, result, whitespace, atRuleHoldsTheBlockAfter || blockRun !== ``), raws, trailingRun) && {
 						fix: (): void => {
 							if (primary === `always` && !hasSemicolon) {
 								parent.raws.semicolon = true
@@ -540,6 +543,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 								// An inline comment ending the node moves behind the semicolon with the run holding it, the run read before the block took its whitespace, since the move writes the whole of it behind the semicolon
 								trailingRun?.move()
+
+								if (blockRun) {
+									writeWhitespaceBeforeSemicolon(syntax, node, result, ``)
+									parent.raws.after = blockRun
+								}
 
 								if (bodilessAtRule) {
 									if (whitespace) writeWhitespaceBeforeSemicolon(syntax, bodilessAtRule, result, whitespace)

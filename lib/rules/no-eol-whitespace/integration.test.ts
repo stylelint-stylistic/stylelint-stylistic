@@ -168,7 +168,7 @@ describe(`the whitespace ending a stylesheet's text behind its last node`, () =>
 		}
 	})
 
-	it(`is left in front of the semicolon the rule asking for a trailing semicolon writes, in either order`, async () => {
+	it(`is taken where the rule asking for a trailing semicolon hands it to the tail behind the semicolon, in either order`, async () => {
 		let neighbor: [string, unknown] = [`@stylistic/declaration-block-trailing-semicolon`, `always`]
 		let code = `<a style="--x: 1 "></a>\n`
 
@@ -178,7 +178,7 @@ describe(`the whitespace ending a stylesheet's text behind its last node`, () =>
 			// eslint-disable-next-line no-await-in-loop -- the orders are read one after another
 			let fixed = await stylelint.lint({ code, config, fix: true, customSyntax: `postcss-html` })
 
-			expect(fixed.code).toBe(`<a style="--x: 1 ;"></a>\n`)
+			expect(fixed.code).toBe(`<a style="--x: 1;"></a>\n`)
 		}
 	})
 

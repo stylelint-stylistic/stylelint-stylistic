@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 
 import plugins from "../../index.ts"
 import { ruleName as atRuleSpaceBeforeRuleName } from "../at-rule-semicolon-space-before/index.ts"
+import { messages as braceNewlineBeforeMessages, ruleName as braceNewlineBeforeRuleName } from "../block-closing-brace-newline-before/index.ts"
 import { messages as newlineBeforeMessages, ruleName as newlineBeforeRuleName } from "../declaration-block-semicolon-newline-before/index.ts"
 import { messages as spaceBeforeMessages, ruleName as spaceBeforeRuleName } from "../declaration-block-semicolon-space-before/index.ts"
 
@@ -424,6 +425,60 @@ testRuleListedFirst({
 			endLine: 1,
 			endColumn: 9,
 			message: messages.expected,
+		},
+	],
+})
+
+testRuleListedFirst({
+	ruleName: braceNewlineBeforeRuleName,
+	config: [`always`],
+	extraRules: { [ruleName]: `always` },
+
+	reject: [
+		{
+			// The brace rule writes the run a custom property keeps in its value, and this rule hands that run to the block in front of the semicolon, so the file is the one the other order leaves
+			description: `a custom property closing a single-line block with no semicolon, the brace rule listed first`,
+			code: `a { --b: red }`,
+			fixed: `a { --b: red;\n }`,
+			warnings: [
+				{
+					line: 1,
+					column: 13,
+					message: braceNewlineBeforeMessages.expectedBefore,
+				},
+				{
+					line: 1,
+					column: 12,
+					message: messages.expected,
+				},
+			],
+		},
+	],
+})
+
+testRuleListedFirst({
+	ruleName,
+	config: [`always`],
+	extraRules: { [braceNewlineBeforeRuleName]: `always` },
+
+	reject: [
+		{
+			// This rule hands the run to the block in front of which the brace rule writes its break, so the file does not depend on the order
+			description: `the same block with this rule listed first`,
+			code: `a { --b: red }`,
+			fixed: `a { --b: red;\n }`,
+			warnings: [
+				{
+					line: 1,
+					column: 12,
+					message: messages.expected,
+				},
+				{
+					line: 1,
+					column: 13,
+					message: braceNewlineBeforeMessages.expectedBefore,
+				},
+			],
 		},
 	],
 })
