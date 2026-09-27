@@ -267,6 +267,24 @@ testRule({
 			column: 11,
 			message: messages.expectedAfter(),
 		},
+		{
+			// Pins the write in front of a bare address whose parentheses hold a group: the parenthesis closing the token early leaves the parser the same nodes
+			description: `a comma glued to the name of a bare address holding a parenthesised group inside a call`,
+			code: `a { b: f(1,url(a(b)c.png)); }`,
+			fixed: `a { b: f(1, url(a(b)c.png)); }`,
+			line: 1,
+			column: 11,
+			message: messages.expectedAfter(),
+		},
+		{
+			// Pins the refusal where the parenthesis closing the token early would leave a semicolon of the call outside every group, which ends the declaration there
+			description: `the same address in front of a semicolon inside the call`,
+			code: `a { b: f(1,url(a(b)c);d); }`,
+			fixed: `a { b: f(1,url(a(b)c);d); }`,
+			line: 1,
+			column: 11,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 

@@ -411,3 +411,15 @@ export const TRAILING_SPACES_TABS_CARRIAGE_RETURNS_AND_TAKEN_MARKS = /[ \t\r\0]+
 
 /** A character a semicolon behind it closes nothing of: whitespace, a brace or another semicolon. */
 export const CLOSES_NOTHING_IN_FRONT = /[\s{};]/u
+
+/** A parenthesis or a square bracket, tested against one character: what opens or closes a group the parser holds, or parentheses the tokenizer takes as one token. */
+export const PARENTHESIS_OR_SQUARE_BRACKET = /^[()[\]]$/u
+
+/** A semicolon or a brace, tested against one character: outside every group one cuts the text into nodes. */
+export const SEMICOLON_OR_BRACE = /^[;{}]$/u
+
+/** A quotation mark or a solidus, tested against one character: what opens a string or a comment where the tokenizer reads a token there. */
+export const QUOTE_OR_SOLIDUS = /^["'/]$/u
+
+/** Every comma. */
+export const EVERY_COMMA = /,/gu

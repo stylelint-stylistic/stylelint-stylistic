@@ -14,10 +14,30 @@ describe(`rereadsAnAddress`, () => {
 		expect(rereadsAnAddress(`1, url(a"b)`, { start: 2, end: 3, text: `` }, POSTCSS)).toBe(true)
 	})
 
-	it(`a break parting the name from a solidus, in front of an opening parenthesis or square bracket`, () => {
+	it(`a break parting the name from a solidus, in front of a group nothing closes`, () => {
 		expect(rereadsAnAddress(`1/url(a(b)`, { start: 2, end: 2, text: `\n` }, POSTCSS)).toBe(true)
-		expect(rereadsAnAddress(`1/url(a[b)`, { start: 2, end: 2, text: `\n` }, POSTCSS)).toBe(true)
 		expect(rereadsAnAddress(`@media (a,url(a(b))`, { start: 10, end: 10, text: ` ` }, POSTCSS)).toBe(true)
+	})
+
+	it(`a group code reads inside the parentheses, which the token's parenthesis closes early and the parser passes over, and a square bracket inside parentheses both readings take as one token`, () => {
+		expect(rereadsAnAddress(`1/url(a[b)`, { start: 2, end: 2, text: `\n` }, POSTCSS)).toBe(false)
+		expect(rereadsAnAddress(`1!url(a(b)c) 2px`, { start: 2, end: 2, text: ` ` }, POSTCSS)).toBe(false)
+		expect(rereadsAnAddress(`1,url(a(b)c.png)`, { start: 2, end: 2, text: ` ` }, POSTCSS)).toBe(false)
+		expect(rereadsAnAddress(`f(1,url(a(b)c))`, { start: 4, end: 4, text: ` ` }, POSTCSS)).toBe(false)
+		expect(rereadsAnAddress(`1,url(a(b) /* c */ d)`, { start: 2, end: 2, text: ` ` }, POSTCSS)).toBe(false)
+	})
+
+	it(`a semicolon, a brace or a colon the token's early parenthesis leaves outside the group code reads it inside`, () => {
+		expect(rereadsAnAddress(`f(1,url(a(b)c);d)`, { start: 4, end: 4, text: ` ` }, POSTCSS)).toBe(true)
+		expect(rereadsAnAddress(`f(1,url(a(b)c){d})`, { start: 4, end: 4, text: ` ` }, POSTCSS)).toBe(true)
+		expect(rereadsAnAddress(`1,url(x(y)z:w)`, { start: 2, end: 2, text: ` ` }, POSTCSS)).toBe(true)
+	})
+
+	it(`a comma the token's early parenthesis moves out of the group code holds it in, which the comma rules then read as an item of the list around the address`, () => {
+		expect(rereadsAnAddress(`1,url(a(b)c,d) 2px`, { start: 2, end: 2, text: ` ` }, POSTCSS)).toBe(true)
+		expect(rereadsAnAddress(`a,url(a(b)c,d)`, { start: 2, end: 2, text: `\n` }, POSTCSS)).toBe(true)
+		expect(rereadsAnAddress(`(a,url(a(b)c,d))`, { start: 3, end: 3, text: ` ` }, POSTCSS)).toBe(true)
+		expect(rereadsAnAddress(`f(1,url(a(b)c,d))`, { start: 4, end: 4, text: ` ` }, POSTCSS)).toBe(true)
 	})
 
 	it(`parentheses no parenthesis closes, and a comment nothing closes or one covering the parenthesis that closes the token`, () => {
@@ -120,19 +140,22 @@ describe(`rereadsAnAddress`, () => {
 		expect(rereadsAnAddress(`1,/* c */url(a ")" b)`, { start: 9, end: 9, text: ` ` }, POSTCSS)).toBe(false)
 	})
 
-	it(`the url token of a parser whose own tokenizer reads one, which opens behind whitespace and closes by the count of parentheses through strings, comments, interpolations and escapes, against the code reading with its square-bracket groups`, () => {
+	it(`the url token of a parser whose own tokenizer reads one, which opens behind whitespace and closes by the count of parentheses through strings, comments, interpolations and escapes, against the code reading with its square-bracket groups, where a parenthesis closing the token early lets a semicolon or a brace out of the group`, () => {
 		expect(rereadsAnAddress(`1/url ( a ")" b)`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
 		expect(rereadsAnAddress(`1/url( "a)" )`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
 		expect(rereadsAnAddress(`1/url( a // )\n b)`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
 		expect(rereadsAnAddress(`1/url( a /* ) */ b)`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
 		expect(rereadsAnAddress(`1/url( #{")"} )`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
-		expect(rereadsAnAddress(`1/url( "(" a))`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
 		expect(rereadsAnAddress(`1/url( a(b )`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
-		expect(rereadsAnAddress(`1/url( a(b"c)d"e) )`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
-		expect(rereadsAnAddress(`1/url( a\\)b)`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
+		expect(rereadsAnAddress(`1/url( a(b"c)d"e) ; )`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
+		expect(rereadsAnAddress(`1/url( a\\)b ; )`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
+		expect(rereadsAnAddress(`1! url( a\\// c )`, { start: 2, end: 3, text: `` }, SCSS)).toBe(true)
 		expect(rereadsAnAddress(`1/url(a[b"c") } d ])`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
 		expect(rereadsAnAddress(`1/url( "#{"); "}" )`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(true)
 		expect(rereadsAnAddress(`1/url( a(b)c )`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(false)
+		expect(rereadsAnAddress(`1/url( "(" a))`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(false)
+		expect(rereadsAnAddress(`1/url( a(b"c)d"e) )`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(false)
+		expect(rereadsAnAddress(`1/url( a\\)b)`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(false)
 		expect(rereadsAnAddress(`1/url(a[b)`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(false)
 		expect(rereadsAnAddress(`1/url("a)")`, { start: 2, end: 2, text: ` ` }, SCSS)).toBe(false)
 	})

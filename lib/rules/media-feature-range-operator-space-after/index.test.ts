@@ -212,6 +212,15 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
+			// Pins the write in front of a bare address whose parentheses hold a group: the parenthesis closing the token early leaves the parser the same nodes
+			description: `a bare address glued to the operator whose parentheses hold a parenthesised group`,
+			code: `@media (width>=url(a(b)c)) { a { b: c; } }`,
+			fixed: `@media (width>= url(a(b)c)) { a { b: c; } }`,
+			line: 1,
+			column: 16,
+			message: messages.expectedAfter(),
+		},
+		{
 			description: `the same address behind the operator of a bare query, which is no feature to the parser and is left unfixed too`,
 			code: `@media a=url(a ")" b) { a { b: c; } }`,
 			fixed: `@media a=url(a ")" b) { a { b: c; } }`,

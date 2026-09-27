@@ -203,6 +203,15 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
+			// Pins the write in front of a bare address whose parentheses hold a group: the parenthesis closing the token early leaves the parser the same nodes
+			description: `a bang glued to the name of a bare address holding a parenthesised group`,
+			code: `a { b: 1!url(a(b)c) 2px; c: "d" }`,
+			fixed: `a { b: 1! url(a(b)c) 2px; c: "d" }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
+		{
 			// Pins that an even run of backslashes escapes only its own backslashes, so the bang behind it is a flag
 			description: `an escaped backslash abutting the bang`,
 			code: `a { color: red\\\\!important; }`,

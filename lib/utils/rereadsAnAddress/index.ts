@@ -1,4 +1,4 @@
-import { INLINE_COMMENT_BREAK_OR_FORM_FEED, LEADING_WORDLESS_TOKEN, OPENS_WITH_QUOTE_OR_CSS_WHITESPACE, PARENTHESES_READ_AS_CODE, POSTCSS_WORD_END, SCSS_WORD_END } from "../../regexps.ts"
+import { EVERY_COMMA, INLINE_COMMENT_BREAK_OR_FORM_FEED, LEADING_WORDLESS_TOKEN, OPENS_WITH_QUOTE_OR_CSS_WHITESPACE, PARENTHESES_READ_AS_CODE, PARENTHESIS_OR_SQUARE_BRACKET, POSTCSS_WORD_END, QUOTE_OR_SOLIDUS, SCSS_WORD_END, SEMICOLON_OR_BRACE } from "../../regexps.ts"
 import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import type { CommentReading } from "../findCommentSpans/index.ts"
 import { joinsTheName } from "../joinsTheName/index.ts"
@@ -183,45 +183,6 @@ function closingParenthesisIndex (text: string, openIndex: number): number {
 }
 
 /**
- * Asks whether the parentheses of a `url(` read as code come apart from the same parentheses read as one token closed at a `)`: a string or a comment covering that `)` or never closed, or an opening parenthesis or square bracket in front of that `)`, which code reads as a group of its own the token does not.
- * @param text - The text holding the address.
- * @param openIndex - Behind the `(`.
- * @param closeIndex - The `)` closing the token.
- * @returns True where the two readings part.
- */
-function codePartsFromToken (text: string, openIndex: number, closeIndex: number): boolean {
-	let index = openIndex
-
-	while (index < closeIndex) {
-		let character = text.charAt(index)
-
-		if (character === `\\`) {
-			index += 2
-		}
-		else if (character === `"` || character === `'`) {
-			index = skipString(text, index)
-
-			if (index > closeIndex) return true
-		}
-		else if (character === `/` && text[index + 1] === `*`) {
-			let commentEnd = text.indexOf(`*/`, index + 2)
-
-			if (commentEnd === -1 || commentEnd + 2 > closeIndex) return true
-
-			index = commentEnd + 2
-		}
-		else if (character === `(` || character === `[`) {
-			return true
-		}
-		else {
-			index += 1
-		}
-	}
-
-	return false
-}
-
-/**
  * Finds the `)` closing the parentheses `postcss-scss`'s tokenizer takes as one token behind `url`: it counts parentheses alone, through strings, comments, interpolations and escapes.
  * @param text - The text holding the address.
  * @param openIndex - Behind the `(`.
@@ -358,92 +319,219 @@ function scssReadingsPart (text: string, contentIndex: number): boolean {
 	return tokenCloseIndex === -1 || tokenCloseIndex !== scssCodeClosingIndex(text, contentIndex)
 }
 
-/**
- * Asks whether the parentheses of a `url(` come apart read as one token and read as code.
- *
- * Under PostCSS's tokenizer the token closes at the first `)` no backslash escapes, and the readings part where code reads a string, a comment or a group past that `)`, or reads a group in front of it.
- * @param text - The text holding the address.
- * @param contentIndex - Behind the `(`.
- * @param reading - Whether the parser reads by a tokenizer of its own.
- * @returns True where the two readings part.
- */
-function addressReadingsPart (text: string, contentIndex: number, reading: Pick<CommentReading, `tokenizes`>): boolean {
-	if (reading.tokenizes) return scssReadingsPart(text, contentIndex)
+/** A span of the text by where it opens and where it closes. */
+type Span = [start: number, end: number]
 
-	let closeIndex = closingParenthesisIndex(text, contentIndex)
+/** What the tokenizer and the parser make of a text, as far as the nodes built out of it go. */
+type ParseReading = {
 
-	return closeIndex === -1 || codePartsFromToken(text, contentIndex, closeIndex)
+	/** The semicolons and braces outside every group, which end a declaration, open a block or close one, every comma with the count of groups around it, which tells the plugin's comma rules whose list it is an item of, and the colons where the count of `(` and `)` tokens stands at zero, which a declaration's value refuses as a missed semicolon; each by its index. */
+	cuts: [character: string, index: number][],
+
+	/** Something the parser is left holding at the end: a `group`, which an at-rule's params take the rest of the file into, or a `token` nothing closes — a string, a comment or an address. PostCSS's tokenizer refuses the file over such a token; `postcss-scss`'s reads a `//` comment or an address to the end of the text without complaint and refuses an interpolation nothing closes, which the walk reads to the end as closed, so under it a `token` is only a text the walk does not model. */
+	open: `group` | `token` | undefined,
+
+	/** The strings and comments. */
+	spans: Span[],
+
+	/** The parentheses the tokenizer takes as one token, an address's or a plain one, whose text the parser reads nothing of. */
+	tokens: Span[],
+}
+
+/** Where a walk over the text stands: the tokenizer's stack of words and how far its run of parentheses read as code reaches, the groups the parser holds open and the count of `(` and `)` tokens, and what has been read. */
+type ParseWalk = {
+
+	/** The closer of every group the parser holds open, the innermost last. */
+	closers: string[],
+
+	/** How far PostCSS's run of parentheses read as code reaches ({@link readPoppedParentheses}). */
+	codeEnd: number,
+
+	/** The count of `(` and `)` tokens the parser keeps for its colon, which a stray `)` takes down too. */
+	parentheses: number,
+
+	/** What has been read. */
+	read: ParseReading,
+
+	/** The tokenizer's stack of words, each with where it ends. */
+	stack: { end: number, text: string }[],
 }
 
 /**
- * Walks a text as the tokenizer does and asks whether the parser is left holding something open at its end — a group, a string or a comment — which is the text it refuses.
+ * Reads a parenthesis or a square bracket: the parentheses the tokenizer hands over as code are a group the parser closes at their own `)`, and a `[` opens one it closes at a `]`; the parentheses it hands over as one token, an address's or a plain one, are opaque, and what they hold opens nothing. The parser counts every `(` and `)` token for its colon, a stray `)` too.
+ * @param text - The text read.
+ * @param index - The character.
+ * @param walk - Where the walk stands, which the reading moves on.
+ * @param reading - Whether the parser reads by a tokenizer of its own.
+ * @returns Behind what was read, or -1 where no `)` closes a token the tokenizer opened.
+ */
+function readBracket (text: string, index: number, walk: ParseWalk, reading: Pick<CommentReading, `tokenizes`>): number {
+	let character = text.charAt(index)
+
+	if (character === `(`) {
+		let pair = readPoppedParentheses(text, index, walk.stack.pop()?.text, reading, walk.codeEnd)
+
+		if (!pair) return -1
+
+		// The walk steps inside only where the tokenizer read the parentheses as code, which is where the parser takes them for a group
+		if (pair.index === index + 1) {
+			walk.closers.push(`)`)
+			walk.parentheses += 1
+		}
+		else walk.read.tokens.push([index, pair.index])
+
+		walk.codeEnd = pair.codeEnd
+
+		return pair.index
+	}
+
+	if (character === `[`) walk.closers.push(`]`)
+	else if (walk.closers.at(-1) === character) walk.closers.pop()
+
+	if (character === `)`) walk.parentheses -= 1
+
+	return index + 1
+}
+
+/**
+ * Walks a text as the tokenizer does and reads what the parser builds its nodes by ({@link ParseReading}).
  *
- * The parentheses the tokenizer hands over as code are a group the parser closes at their own `)`, and a `[` opens one it closes at a `]`; the parentheses it hands over as one token, an address's or a plain one, are opaque, and what they hold opens nothing. A brace is not counted: only a custom property's value and an at-rule's params open a group on one, and {@link breakRereadsParentheses} is where that question is asked.
+ * A brace is not counted as a group: only a custom property's value and an at-rule's params open one on it, and {@link breakRereadsParentheses} is where that question is asked.
  * @param text - The text read.
  * @param reading - Whether the parser reads by a tokenizer of its own.
- * @returns True where the parser is left holding something open.
+ * @returns What the walk read up to where it stopped.
  */
-function leavesTheTextOpen (text: string, reading: Pick<CommentReading, `tokenizes`>): boolean {
-	let stack: { end: number, text: string }[] = []
-	let closers: string[] = []
-	let codeEnd = -1
+function readTheParse (text: string, reading: Pick<CommentReading, `tokenizes`>): ParseReading {
+	let walk: ParseWalk = { closers: [], codeEnd: -1, parentheses: 0, read: { cuts: [], open: undefined, spans: [], tokens: [] }, stack: [] }
+	let { read } = walk
 	let index = 0
 
 	while (index < text.length) {
-		let character = text[index]
+		let character = text.charAt(index)
 
-		if (character === `(`) {
-			let popped = stack.pop()
-			let read = readPoppedParentheses(text, index, popped?.text, reading, codeEnd)
+		if (PARENTHESIS_OR_SQUARE_BRACKET.test(character)) {
+			index = readBracket(text, index, walk, reading)
 
-			// A token no `)` closes, which the tokenizer refuses the file over
-			if (!read) return true
-
-			// The walk steps inside only where the tokenizer read the parentheses as code, which is where the parser takes them for a group
-			if (read.index === index + 1) closers.push(`)`)
-
-			codeEnd = read.codeEnd
-			index = read.index
+			if (index === -1) return { ...read, open: `token` }
 
 			continue
 		}
 
-		if (character === `[`) {
-			closers.push(`]`)
-			index += 1
+		if ((SEMICOLON_OR_BRACE.test(character) && walk.closers.length === 0) || (character === `:` && walk.parentheses === 0)) read.cuts.push([character, index])
 
-			continue
-		}
-
-		if (character === `)` || character === `]`) {
-			if (closers.at(-1) === character) closers.pop()
-
-			index += 1
-
-			continue
-		}
+		// A comma `postcss-scss`'s tokenizer reads as a token of its own
+		if (character === `,`) read.cuts.push([`,${walk.closers.length}`, index])
 
 		let step = wordlessTokenEnd(text, index, reading)
 
-		// A comment nothing closes
-		if (step === -1) return true
+		// A comment nothing closes, or a string nothing closes, which `skipString` walks one past the end of
+		if (step === -1 || (step !== undefined && step > text.length)) return { ...read, open: `token` }
 
 		if (step === undefined) {
 			let end = wordEnd(text, index, reading)
+			let word = text.slice(index, end)
 
-			stack.push({ end, text: text.slice(index, end) })
+			// PostCSS's tokenizer reads a comma into the word around it
+			for (let comma of word.matchAll(EVERY_COMMA)) read.cuts.push([`,${walk.closers.length}`, index + comma.index])
+
+			walk.stack.push({ end, text: word })
 			index = end
 
 			continue
 		}
 
-		// A string nothing closes, which `skipString` walks one past the end of
-		if (step > text.length) return true
+		if (QUOTE_OR_SOLIDUS.test(character)) read.spans.push([index, step])
 
 		index = step
 	}
 
-	return closers.length > 0
+	return { ...read, open: walk.closers.length > 0 ? `group` : undefined }
+}
+
+/**
+ * Walks a text as the tokenizer does and asks whether the parser is left holding something open at its end — a group, a string or a comment — which is the text it refuses.
+ * @param text - The text read.
+ * @param reading - Whether the parser reads by a tokenizer of its own.
+ * @returns True where the parser is left holding something open.
+ */
+function leavesTheTextOpen (text: string, reading: Pick<CommentReading, `tokenizes`>): boolean {
+	return readTheParse(text, reading).open !== undefined
+}
+
+/**
+ * Moves an index of one text to where it stands in the text an edit leaves, or the other way round.
+ * @param index - The index.
+ * @param boundary - Behind the span the edit replaced, in the text the index is of.
+ * @param shift - How far everything behind that span moves.
+ * @returns The index in the other text.
+ */
+function movedIndex (index: number, boundary: number, shift: number): number {
+	return index < boundary ? index : index + shift
+}
+
+/**
+ * Asks whether a string or a comment one reading holds is lost to the other: it stands there neither at the same place nor inside parentheses the other takes as one token in front of the `)` closing them, where the token swallows it whole. One holding that `)` is lost, since the token then closes inside it, and a comment the parser read is taken into an address.
+ * @param spans - The strings and comments of the one reading.
+ * @param other - The other reading.
+ * @param boundary - Behind the span the edit replaced, in the one reading's text.
+ * @param shift - How far everything behind that span moves in the other's.
+ * @returns True where one of them is lost.
+ */
+function losesASpan (spans: Span[], other: ParseReading, boundary: number, shift: number): boolean {
+	return spans.some(([start, end]) => {
+		let [movedStart, movedEnd] = [movedIndex(start, boundary, shift), movedIndex(end, boundary, shift)]
+
+		return !other.spans.some(([otherStart, otherEnd]) => otherStart === movedStart && otherEnd === movedEnd) && !other.tokens.some(([tokenStart, tokenEnd]) => tokenStart < movedStart && movedEnd < tokenEnd)
+	})
+}
+
+/**
+ * Leaves out of a reading's cuts every comma the other reading takes into a token, which no comma rule reads as an item of a list there, while the one reading holds it inside a group the rules read as a call's.
+ * @param read - The one reading.
+ * @param other - The other reading.
+ * @param boundary - Behind the span the edit replaced, in the one reading's text.
+ * @param shift - How far everything behind that span moves in the other's.
+ * @returns The cuts left.
+ */
+function cutsOutsideTokens (read: ParseReading, other: ParseReading, boundary: number, shift: number): ParseReading[`cuts`] {
+	return read.cuts.filter(([character, index]) => {
+		let moved = movedIndex(index, boundary, shift)
+
+		return !character.startsWith(`,`) || !other.tokens.some(([tokenStart, tokenEnd]) => tokenStart < moved && moved < tokenEnd)
+	})
+}
+
+/**
+ * Asks whether the parser builds other nodes out of the text an edit leaves than out of the text it applies to ({@link readTheParse}): where the written text leaves the tokenizer refusing the file, the parser holding a group open where it held none or the other way round, a cut at another place, or a string or a comment lost ({@link losesASpan}).
+ *
+ * A string or a comment one reading takes whole into a token in front of its `)` costs nothing: the raw reads back the same, and so does every cut, while `decl.value` may drop a comment the one reading holds as code.
+ *
+ * A comma the write moves out of the group code holds it in is a cut too: the parser builds the same nodes, but the plugin's comma rules then read it as an item of the list around the address, and a second `--fix` writes behind it; a comma one reading takes into a token is read by no rule there and is left out ({@link cutsOutsideTokens}). The cut is counted for every writer, since what reads the comma otherwise is the next run of the comma rules, whichever rule wrote the run in front of the name.
+ * @param text - The text the edit applies to.
+ * @param edited - The text it leaves.
+ * @param edit - The edit, indexed in the first text.
+ * @param edit.start - Where the span it replaces opens.
+ * @param edit.end - Where that span closes.
+ * @param edit.text - What it writes there.
+ * @param reading - Whether the parser reads by a tokenizer of its own.
+ * @returns True where the two parses part.
+ */
+function parsesPart (text: string, edited: string, { start, end, text: written }: Edit, reading: Pick<CommentReading, `tokenizes`>): boolean {
+	let standing = readTheParse(text, reading)
+	let rewritten = readTheParse(edited, reading)
+	let shift = written.length - (end - start)
+
+	// A text PostCSS's tokenizer refuses either way is refused whatever is written; under `postcss-scss`'s such a text is one the walk does not model, and the write is refused
+	if (standing.open === `token` && rewritten.open === `token`) return reading.tokenizes
+
+	if (standing.open !== rewritten.open) return true
+
+	let standingCuts = cutsOutsideTokens(standing, rewritten, end, shift)
+	let rewrittenCuts = cutsOutsideTokens(rewritten, standing, start + written.length, -shift)
+
+	if (standingCuts.length !== rewrittenCuts.length || standingCuts.some(([character, index], cutIndex) => rewrittenCuts[cutIndex]?.[0] !== character || rewrittenCuts[cutIndex]?.[1] !== movedIndex(index, end, shift))) return true
+
+	return losesASpan(standing.spans, rewritten, end, shift) || losesASpan(rewritten.spans, standing, start + written.length, -shift)
 }
 
 /**
@@ -487,18 +575,20 @@ function codeCoversTheTokenClose (text: string, contentIndex: number, tokenClose
 }
 
 /**
- * Asks whether an edit makes the tokenizer read the parentheses of a `url(` right behind it the other way, where the two readings part.
+ * Asks whether an edit makes the tokenizer read the parentheses of a `url(` right behind it the other way, where the parser then builds other nodes.
  *
- * PostCSS's tokenizer, which `postcss-less` reads by too, takes the parentheses as one token where the word it pops at the `(` is `url` itself ({@link openingParenthesisBehind}), and as code where that word is longer; `1,url(` and `1/url(` are one word to it, so filling or emptying the run in front of the name switches the reading. A quotation mark or whitespace right behind the `(` makes the parentheses code under both words. Where the two readings part ({@link addressReadingsPart}) the output stops parsing or swallows what follows.
+ * PostCSS's tokenizer, which `postcss-less` reads by too, takes the parentheses as one token where the word it pops at the `(` is `url` itself ({@link openingParenthesisBehind}), and as code where that word is longer; `1,url(` and `1/url(` are one word to it, so filling or emptying the run in front of the name switches the reading. A quotation mark or whitespace right behind the `(` makes the parentheses code under both words.
  *
- * `postcss-scss`'s tokenizer ends a word on a comma outside an at-word, so such a comma's run switches nothing under it, and a comma, an interpolation or a `//` comment between the name and the `(` pushes no word under it either. Its token opens behind whitespace too, a quotation mark right behind the `(` alone keeping the parentheses code. A `)` its token closes at in front of code's, such as an escaped one, is refused with the rest, since a `;` or a brace between the two ends the declaration once the token has closed.
+ * `postcss-scss`'s tokenizer ends a word on a comma outside an at-word, so such a comma's run switches nothing under it, and a comma, an interpolation or a `//` comment between the name and the `(` pushes no word under it either. Its token opens behind whitespace too, a quotation mark right behind the `(` alone keeping the parentheses code, and closes by the count of parentheses.
+ *
+ * Where the reading switches, both texts are walked whole ({@link parsesPart}), and the edit is refused only where the output reads otherwise: it stops parsing, a group is left open or closed, a `)` closing the token in front of the one code closes the parentheses at lets a `;`, a brace, a colon or a comma out of the group code holds it in, or a string or a comment is lost ({@link losesASpan}). A group code reads inside the parentheses costs nothing by itself, since the parser passes over the `)` the token leaves unpaired.
  * @param text - The text the edit applies to.
  * @param edit - The edit, indexed in that text.
  * @param edit.start - Where the span it replaces opens.
  * @param edit.end - Where that span closes.
  * @param edit.text - What it writes there.
  * @param reading - Whether the parser reads by a tokenizer of its own.
- * @returns True where the edit switches the reading of parentheses whose two readings part.
+ * @returns True where the edit switches the reading of parentheses and the parser builds other nodes out of the output.
  */
 export function rereadsAnAddress (text: string, { start, end, text: written }: Edit, reading: Pick<CommentReading, `tokenizes`>): boolean {
 	if (!text.startsWith(`url`, end)) return false
@@ -521,13 +611,10 @@ export function rereadsAnAddress (text: string, { start, end, text: written }: E
 
 		// The parentheses the tokenizer reads as one plain token under either word, since nothing inside them opens a string, a comment, an escape or a group
 		if (!PARENTHESES_READ_AS_CODE.test(text.slice(openIndex, text.indexOf(`)`, openIndex) + 1))) return false
-
-		return addressReadingsPart(text, openIndex, reading)
 	}
+	else if (OPENS_WITH_QUOTE_OR_CSS_WHITESPACE.test(text.slice(openIndex))) return false
 
-	if (OPENS_WITH_QUOTE_OR_CSS_WHITESPACE.test(text.slice(openIndex))) return false
-
-	return addressReadingsPart(text, openIndex, reading)
+	return parsesPart(text, edited, { end, start, text: written }, reading)
 }
 
 /**

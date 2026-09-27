@@ -48,6 +48,15 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
+			// Pins the write where the url token closes at an escaped parenthesis in front of the one code closes the address at, with no semicolon or brace between the two
+			description: `a bang glued to the name of a bare address holding an escaped closing parenthesis`,
+			code: `a { b: 1!url(a\\)b) 2px; c: "d" }`,
+			fixed: `a { b: 1! url(a\\)b) 2px; c: "d" }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
+		{
 			// Pins the reading of an interpolation between the name and its parenthesis as a token pushing no word under this tokenizer
 			description: `a bang glued to the name of a bare address, an interpolation between the name and its parenthesis, holding a string with a closing parenthesis, which a written space would make the tokenizer close inside the string`,
 			code: `a { b: 1!url#{a}(a ")" b) 2px; c: "d" }`,
@@ -70,6 +79,15 @@ testRule({
 			description: `a space between a bang and the name of a bare address a space parts from its parenthesis, opening on whitespace and holding a quotation mark nothing closes, which taking the space away would make the tokenizer read as a string`,
 			code: `a { b: 1! url ( a"b) 2px; c: "d" }`,
 			fixed: `a { b: 1! url ( a"b) 2px; c: "d" }`,
+			line: 1,
+			column: 9,
+			message: messages.rejectedAfter(),
+		},
+		{
+			// Pins the reading of a backslash in front of a solidus as an escape of its own, which leaves the two solidi behind it a comment to the end of the line once the parentheses are code
+			description: `a space between a bang and the name of a bare address opening on whitespace and holding a backslash in front of two solidi, which taking the space away would make the tokenizer read as a comment running past the parenthesis`,
+			code: `a { b: 1! url( a\\// c ) 1px; c: 2px }`,
+			fixed: `a { b: 1! url( a\\// c ) 1px; c: 2px }`,
 			line: 1,
 			column: 9,
 			message: messages.rejectedAfter(),

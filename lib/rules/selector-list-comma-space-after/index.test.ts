@@ -216,6 +216,15 @@ testRule({
 			column: 3,
 			message: messages.expectedAfter(),
 		},
+		{
+			// Pins the write in front of a bare address whose parentheses hold a group: the parenthesis closing the token early leaves the parser the same nodes
+			description: `a comma glued to the name of a bare address holding a parenthesised group`,
+			code: `[a,url(a(b)c)] {}`,
+			fixed: `[a, url(a(b)c)] {}`,
+			line: 1,
+			column: 3,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 

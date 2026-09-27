@@ -264,6 +264,24 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
+			// Pins the write in front of a bare address whose parentheses hold a group: the parenthesis closing the token early leaves the parser the same nodes
+			description: `a comma glued to the name of a bare address holding a parenthesised group`,
+			code: `a { b: 1,url(a(b)c.png) 2px; }`,
+			fixed: `a { b: 1, url(a(b)c.png) 2px; }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
+		{
+			// Pins the refusal where the parenthesis closing the token early would leave a comma of the address outside every group, which the next run would read as an item of the list
+			description: `the same address holding a comma behind the group`,
+			code: `a { b: 1,url(a(b)c,d) 2px; }`,
+			fixed: `a { b: 1,url(a(b)c,d) 2px; }`,
+			line: 1,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
+		{
 			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads its parentheses
 			description: `the same address with whitespace between the name and the opening parenthesis, which leaves the name the word the tokenizer reads last`,
 			code: `a { b: 1,url (a ")" b) 2px; }`,
