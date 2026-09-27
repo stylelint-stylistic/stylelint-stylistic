@@ -258,4 +258,15 @@ describe(`editsRereadAnAddress`, () => {
 	it(`parentheses the token swallows, which the parser reads nothing of`, () => {
 		expect(editsRereadAnAddress(String.raw`\61 url(a(b"c)`, 9, [{ start: 10, end: 10, text: ` ` }], POSTCSS)).toBe(false)
 	})
+
+	it(`a semicolon, a brace or a colon behind a group code reads inside the parentheses, which the token's early parenthesis lets out of the group`, () => {
+		expect(editsRereadAnAddress(String.raw`\61 url( a(b)c;d) 2px`, 7, [{ start: 8, end: 9, text: `` }], POSTCSS)).toBe(true)
+		expect(editsRereadAnAddress(String.raw`\61 url( a(b)c{d}) 2px`, 7, [{ start: 8, end: 9, text: `` }], POSTCSS)).toBe(true)
+		expect(editsRereadAnAddress(String.raw`\61 url( x(y)z:w) 2px`, 7, [{ start: 8, end: 9, text: `` }], POSTCSS)).toBe(true)
+		expect(editsRereadAnAddress(String.raw`\61 url( a(b)c;d) 2px`, 7, [{ start: 8, end: 9, text: `` }], SCSS)).toBe(false)
+	})
+
+	it(`two runs taken away around a comment, the cuts behind both moved by the two`, () => {
+		expect(editsRereadAnAddress(String.raw`\61 url( /* c */ a.png); d`, 7, [{ start: 8, end: 9, text: `` }, { start: 16, end: 17, text: `` }], POSTCSS)).toBe(false)
+	})
 })

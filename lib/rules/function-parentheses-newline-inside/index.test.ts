@@ -860,6 +860,15 @@ testRule({
 			],
 		},
 		{
+			// The address's token closes on the inner group's parenthesis, which lets the semicolon out of the group and ends the declaration there
+			description: `the same call holding a group and then a semicolon, which the parenthesis the token closes at would leave outside every group`,
+			code: `a { b: \\61 url(\n a(b)c;d); }`,
+			fixed: `a { b: \\61 url(\n a(b)c;d); }`,
+			line: 1,
+			column: 16,
+			message: messages.rejectedOpeningMultiLine,
+		},
+		{
 			description: `a call standing beside a bare address, whose breaks are closed up while the address is left as the file spells it`,
 			code: `a { b: url(\na\n) f(\n1\n); }`,
 			fixed: `a { b: url(\na\n) f(1); }`,

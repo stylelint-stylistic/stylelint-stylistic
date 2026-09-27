@@ -775,6 +775,31 @@ testRule({
 			],
 		},
 		{
+			// The address's token closes on the inner group's parenthesis, which lets the semicolon out of the group and ends the declaration there
+			description: `the same call holding a group and then a semicolon, which the parenthesis the token closes at would leave outside every group`,
+			code: `a { b: \\61 url( a(b)c;d); }`,
+			fixed: `a { b: \\61 url( a(b)c;d); }`,
+			line: 1,
+			column: 16,
+			message: messages.rejectedOpening,
+		},
+		{
+			description: `the same call holding a group and then a colon, which the parser would read outside the group as a missed semicolon`,
+			code: `a { b: \\61 url( x(y)z:w); }`,
+			fixed: `a { b: \\61 url( x(y)z:w); }`,
+			line: 1,
+			column: 16,
+			message: messages.rejectedOpening,
+		},
+		{
+			description: `the same call holding a group and then a block, whose brace would stand outside every group`,
+			code: `a { b: \\61 url( a(b)c{d}); }`,
+			fixed: `a { b: \\61 url( a(b)c{d}); }`,
+			line: 1,
+			column: 16,
+			message: messages.rejectedOpening,
+		},
+		{
 			// The value parser closes such an address on the string's parenthesis
 			description: `a call inside a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, beside one of the value`,
 			code: `a { b: url( a ") f( 1 )" ), f( 1 ); }`,
