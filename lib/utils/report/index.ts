@@ -17,7 +17,7 @@ function holdsAPlace (node: Node): boolean {
  * @param node - The node reported on.
  * @returns That node, or nothing where none holds a place.
  */
-function placedNode (node: Node): Node | undefined {
+export function placedNode (node: Node): Node | undefined {
 	for (let held: Node | undefined = node; held; held = held.parent) {
 		if (holdsAPlace(held)) return held
 

@@ -14,7 +14,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import type { NeighborRule } from "../../utils/neighborSettings/index.ts"
-import { report } from "../../utils/report/index.ts"
+import { placedNode, report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuards/index.ts"
@@ -200,7 +200,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let closing = whitespaceAsked(statement, result, CLOSING_BRACE_BEFORE, isSingleLineAfterTheFix, lineBreak)
 			let isFixable = LINE_BREAK.test(closing) || runs.some(({ whitespace }) => LINE_BREAK.test(whitespace))
 
-			if (fixesOnly && !(isFixable && fixApplies(result, ruleName, statement.rangeBy({ index, endIndex: index + block.length }).start.line))) return
+			// The line `report` reads the warning on: the block's own where it holds a place in the file, and otherwise the start of the node the warning is placed on, since a block another rule built carries no position; where no node holds a place the warning is dropped and nothing is fixed
+			let placed = placedNode(statement)
+			let line = placed === statement ? statement.rangeBy({ index, endIndex: index + block.length }).start.line : placed?.source?.start?.line
+
+			if (fixesOnly && !(isFixable && line !== undefined && fixApplies(result, ruleName, line))) return
 
 			report({
 				message: messages.expected,
