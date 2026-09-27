@@ -1,12 +1,13 @@
 /* The site's own tokens, imported from `theme/index.ts` and so read after the default theme.
    The scheme follows the system alone: `appearance: false` keeps VitePress from ever writing the `dark` class, so every rule the default theme hangs on that class is dead, and what the dark scheme needs is written here under `prefers-color-scheme`. */
 
-@import url("https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap");
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
 
 :root {
 	color-scheme: light dark;
-	--vp-font-family-base: Geist, ui-sans-serif, system-ui, sans-serif;
-	--vp-font-family-mono: Geist Mono, ui-monospace, monospace, monospace;
+	--vp-font-family-base: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+	--vp-font-family-mono: "Geist Mono Variable", ui-monospace, monospace, monospace;
 
 	/* `brand-1` colours a link in running text, so it holds 4.5:1 on the page's ground; `brand-2` and `brand-3` sit on plates and in hover, where the threshold is lower. */
 	--vp-c-brand-1:

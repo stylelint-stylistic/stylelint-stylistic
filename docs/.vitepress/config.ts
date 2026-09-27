@@ -29,6 +29,12 @@ const REWRITES: [RegExp, string][] = [
 /** A link to a Markdown file of the repository, written relative to the file it stands in: no scheme, no leading slash, no bare anchor; the path and the anchor apart. */
 const RELATIVE_MARKDOWN_LINK = /^(?![a-z]+:|\/|#)([^#]+\.md)(#.*)?$/u
 
+/** The Latin upright faces of Geist and Geist Mono as the build names them, the files of the site's fonts every page needs. */
+const GEIST_LATIN = /geist(?:-mono)?-latin-wght-normal\.[\w-]+\.woff2$/u
+
+/** A font's preload as `transformHead` writes it, on a line of its own. */
+const FONT_PRELOAD = /\n {4}<link rel="preload" [^>]*as="font"[^>]*>/gu
+
 let { version } = JSON.parse(readFileSync(`${ROOT}package.json`, `utf8`)) as { version: string }
 
 /**
@@ -102,6 +108,8 @@ export default defineConfig({
 		[`meta`, { property: `og:image`, content: `${SITE}og.png` }],
 		[`meta`, { name: `twitter:card`, content: `summary_large_image` }],
 	],
+	// VitePress preloads a font only for the default theme's Inter, which `theme/index.ts` leaves out, so the Latin faces of Geist and Geist Mono are preloaded here: the ones every page opens with. VitePress writes the head after its stylesheets and scripts, so `transformHtml` lifts these above them.
+	transformHead: ({ assets }) => assets.filter((file) => GEIST_LATIN.test(file)).map((font) => [`link`, { rel: `preload`, href: font, as: `font`, type: `font/woff2`, crossorigin: `` }]),
 	transformHtml: (html) => {
 		let first = [
 			`<meta name="viewport" content="width=device-width">`,
@@ -109,6 +117,9 @@ export default defineConfig({
 		]
 		let content = html
 		for (let tag of first) content = content.replace(`\n    ${tag}`, ``)
+		let fonts = content.match(FONT_PRELOAD)?.join(``) ?? ``
+		content = content.replace(FONT_PRELOAD, ``)
+		content = content.replace(/\n {4}<link rel="preload stylesheet"/u, `${fonts}$&`)
 		return content.replace(`<meta charset="utf-8">`, `$&\n    ${first.join(`\n    `)}`)
 	},
 

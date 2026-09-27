@@ -194,6 +194,12 @@ importers:
       '@firefoxic/oxlint-config':
         specifier: ^0.5
         version: 0.5.0(eslint@10.11.0(supports-color@10.2.2))(oxlint@1.85.0)
+      '@fontsource-variable/geist':
+        specifier: ^5
+        version: 5.3.0
+      '@fontsource-variable/geist-mono':
+        specifier: ^5
+        version: 5.3.0
       '@morev/stylelint-testing-library':
         specifier: ^1
         version: 1.1.1(stylelint@https://codeload.github.com/stylelint/stylelint/tar.gz/12c034f5db042b474126b36231bd4ffe0ccc6e8d(supports-color@10.2.2))
@@ -226,16 +232,16 @@ importers:
         version: https://codeload.github.com/stylelint/stylelint/tar.gz/12c034f5db042b474126b36231bd4ffe0ccc6e8d(supports-color@10.2.2)
       typescript:
         specifier: next
-        version: 7.1.0-dev.20260924.1
+        version: 7.1.0-dev.20260925.1
       vitepress:
         specifier: next
-        version: 2.0.0-alpha.20(@types/node@26.6.2)(postcss@8.5.28)(typescript@7.1.0-dev.20260924.1)
+        version: 2.0.0-alpha.20(@types/node@26.6.2)(postcss@8.5.28)(typescript@7.1.0-dev.20260925.1)
       vitest:
         specifier: ^4
         version: 4.1.11(@types/node@26.6.2)(@vitest/coverage-v8@4.1.11)(vite@8.3.1(@types/node@26.6.2))
       vue:
         specifier: ^3
-        version: 3.5.43(typescript@7.1.0-dev.20260924.1)
+        version: 3.5.43(typescript@7.1.0-dev.20260925.1)
 
 packages:
 
@@ -359,6 +365,12 @@ packages:
     engines: {node: '>=22.18'}
     peerDependencies:
       oxlint: ^1.83
+
+  '@fontsource-variable/geist-mono@5.3.0':
+    resolution: {integrity: sha512-vBbuwDEo9AkrqADMXOrlAR3DFcJi4/JxeuU43FoiQERnNwsfXNnvxvReZG02cQKmyk4DZkZdBZX3oTDvy2zBAw==}
+
+  '@fontsource-variable/geist@5.3.0':
+    resolution: {integrity: sha512-j0m+vLQuG5XAYoHtGCVu0spvlGreR3EzpECUVzkFmI1mTVnAO38l/NEPDCFgZ177JxzYJCLSmTQibIiYPilGrA==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -727,44 +739,44 @@ packages:
     resolution: {integrity: sha512-Dm1ypdhhrGCTyyehxElhgJ6kgk8MVCv5qXdoOVqPr1uqk42jX8KjrZqhROvdShczA8qrDoYiOWn1ykWlx2k81Q==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@typescript/typescript-darwin-arm64@7.1.0-dev.20260924.1':
-    resolution: {integrity: sha512-XV2Ta2aNvS2lB0qYoeCMp5y9XhZeTxA8Wwk0jy5/fJKaWfJRxOvzDrxelNx4Q8AgF9p3RlwEfCGRMKWtLDrFMA==}
+  '@typescript/typescript-darwin-arm64@7.1.0-dev.20260925.1':
+    resolution: {integrity: sha512-OxqPIPz0gOgShw+YM7ul/wawiaqYvJggKVq2Q2h+9uE5GlQcd+Rln5cZo5t7X5+LsgtCCe+Ttqv+sgGIvB2NjQ==}
     engines: {node: '>=16.20.0'}
     cpu: [arm64]
     os: [darwin]
 
-  '@typescript/typescript-darwin-x64@7.1.0-dev.20260924.1':
-    resolution: {integrity: sha512-mm7jgEtGjA8Bu7u7rL3eCtqrbKl9vyv+XhC1OlU8ggdRFtovgKcADcm7T62SwcG4es8oqCHnB6Jl394JJVrEHw==}
+  '@typescript/typescript-darwin-x64@7.1.0-dev.20260925.1':
+    resolution: {integrity: sha512-RLNowL7cmMPknshzq7heds8Qtr45cnmi3pqMmWff5mOIHMZ0hkSNAckT8BJN2lbPBeX2XrhMlpu1uHHJQzUdUQ==}
     engines: {node: '>=16.20.0'}
     cpu: [x64]
     os: [darwin]
 
-  '@typescript/typescript-linux-arm64@7.1.0-dev.20260924.1':
-    resolution: {integrity: sha512-4jBDfd1W4a/7iOmKMa8Vd1vaf1sbO2XdRoTnJ2GVkxLOqnpD1x3/bIX1AzFfvdwQKSRhBCpJUTM785IN8XAJzg==}
+  '@typescript/typescript-linux-arm64@7.1.0-dev.20260925.1':
+    resolution: {integrity: sha512-R//jX/I6LZ1aKTuHrc+Ndcf/4Wu0NhCME9vd0qDer4I3jWfI0Ksba594odrtrTPY3ar+ziCcEKVsxbATEmayzQ==}
     engines: {node: '>=16.20.0'}
     cpu: [arm64]
     os: [linux]
 
-  '@typescript/typescript-linux-arm@7.1.0-dev.20260924.1':
-    resolution: {integrity: sha512-Us7tQ5HHtnSnNYqsjLQyWGgigXir7PShvnfjoz+Jbcqq/H8fqsUJD/3Jl+hhp3tqbK1zDB4y/ak4HT4Cwo5W0w==}
+  '@typescript/typescript-linux-arm@7.1.0-dev.20260925.1':
+    resolution: {integrity: sha512-parsBA90l+WTh29k0jiQyeXaub9FqK2pJHbsWZjEqUyr/5bltouvBporeBXuNn8FB9uG5ILTSdt8cvqr3nZJYw==}
     engines: {node: '>=16.20.0'}
     cpu: [arm]
     os: [linux]
 
-  '@typescript/typescript-linux-x64@7.1.0-dev.20260924.1':
-    resolution: {integrity: sha512-2raBJKaNUZjJEff7Qs2yUKrKHdrKikgRAGi3SDpF+ydlEP20LbvTk6ojb1K8G9eQEk47jQq1jcWF8zD2fUyxGg==}
+  '@typescript/typescript-linux-x64@7.1.0-dev.20260925.1':
+    resolution: {integrity: sha512-fPScoxl41aO6w3jjwnRAExBtUgIWYJHJfcITFDaNYo4Z62GO/aYomFanFEl0DB38tfqXRlJT/fP3adD9ubp/ig==}
     engines: {node: '>=16.20.0'}
     cpu: [x64]
     os: [linux]
 
-  '@typescript/typescript-win32-arm64@7.1.0-dev.20260924.1':
-    resolution: {integrity: sha512-yY9Emsd1cmwvynIl8+GhkuaUAsz30jcIEd1VOP8Jg5PscAmOQvTSW5itaN6y8SCUIbRDUADfxuWpdsSsjGE/ZQ==}
+  '@typescript/typescript-win32-arm64@7.1.0-dev.20260925.1':
+    resolution: {integrity: sha512-iAq25qJbeUO4V5jrO9pnOIxf/GdIEWTL29+OTx1trK5q9bR/VW1psoBc5i2ux31D2vmuj4eWLeSoF6ZBrRu9Pg==}
     engines: {node: '>=16.20.0'}
     cpu: [arm64]
     os: [win32]
 
-  '@typescript/typescript-win32-x64@7.1.0-dev.20260924.1':
-    resolution: {integrity: sha512-SUUOS7dwpAdv5roxtqJE5KdVEO+r89D7B/tURF98hzr+JaEErawJjXs92j0K+Jm9Hu7iBO74rM9tvWFlv0qyrw==}
+  '@typescript/typescript-win32-x64@7.1.0-dev.20260925.1':
+    resolution: {integrity: sha512-d18kUsQPrl8U/oXrcpLgR+dEkA3RImrJdCf+7+MFQm5o/WbF9aUcwV/jtnrFd/Gqrq7fJ+RibeJveBF2L0pIBw==}
     engines: {node: '>=16.20.0'}
     cpu: [x64]
     os: [win32]
@@ -1759,8 +1771,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  typescript@7.1.0-dev.20260924.1:
-    resolution: {integrity: sha512-6GwYJorhCZhMzZRBtiVpRQaWEOUPhTgFKtttUZ+ijEdrz7/ewkWtsq0KkPR2t36e5YqzFnbT2ae0zc1BQ3H1TA==}
+  typescript@7.1.0-dev.20260925.1:
+    resolution: {integrity: sha512-YZ3MZ2YcPmXJ5vACHOM+yb/CGjivYa212UE1va7BQoo1VdpZruITB6QvGDTTOhP3+b/NFfEgeM3TcOwgI8NuaQ==}
     engines: {node: '>=16.20.0'}
     hasBin: true
 
@@ -2030,6 +2042,10 @@ snapshots:
     transitivePeerDependencies:
       - eslint
 
+  '@fontsource-variable/geist-mono@5.3.0': {}
+
+  '@fontsource-variable/geist@5.3.0': {}
+
   '@humanfs/core@0.19.2':
     dependencies:
       '@humanfs/types': 0.15.0
@@ -2284,34 +2300,34 @@ snapshots:
 
   '@typescript-eslint/types@8.70.1': {}
 
-  '@typescript/typescript-darwin-arm64@7.1.0-dev.20260924.1':
+  '@typescript/typescript-darwin-arm64@7.1.0-dev.20260925.1':
     optional: true
 
-  '@typescript/typescript-darwin-x64@7.1.0-dev.20260924.1':
+  '@typescript/typescript-darwin-x64@7.1.0-dev.20260925.1':
     optional: true
 
-  '@typescript/typescript-linux-arm64@7.1.0-dev.20260924.1':
+  '@typescript/typescript-linux-arm64@7.1.0-dev.20260925.1':
     optional: true
 
-  '@typescript/typescript-linux-arm@7.1.0-dev.20260924.1':
+  '@typescript/typescript-linux-arm@7.1.0-dev.20260925.1':
     optional: true
 
-  '@typescript/typescript-linux-x64@7.1.0-dev.20260924.1':
+  '@typescript/typescript-linux-x64@7.1.0-dev.20260925.1':
     optional: true
 
-  '@typescript/typescript-win32-arm64@7.1.0-dev.20260924.1':
+  '@typescript/typescript-win32-arm64@7.1.0-dev.20260925.1':
     optional: true
 
-  '@typescript/typescript-win32-x64@7.1.0-dev.20260924.1':
+  '@typescript/typescript-win32-x64@7.1.0-dev.20260925.1':
     optional: true
 
   '@ungap/structured-clone@1.4.0': {}
 
-  '@vitejs/plugin-vue@6.0.9(vite@8.3.1(@types/node@26.6.2))(vue@3.5.43(typescript@7.1.0-dev.20260924.1))':
+  '@vitejs/plugin-vue@6.0.9(vite@8.3.1(@types/node@26.6.2))(vue@3.5.43(typescript@7.1.0-dev.20260925.1))':
     dependencies:
       '@rolldown/pluginutils': 1.0.1
       vite: 8.3.1(@types/node@26.6.2)
-      vue: 3.5.43(typescript@7.1.0-dev.20260924.1)
+      vue: 3.5.43(typescript@7.1.0-dev.20260925.1)
 
   '@vitest/coverage-v8@4.1.11(vitest@4.1.11)':
     dependencies:
@@ -2435,26 +2451,26 @@ snapshots:
 
   '@vue/shared@3.5.43': {}
 
-  '@vueuse/core@14.4.0(vue@3.5.43(typescript@7.1.0-dev.20260924.1))':
+  '@vueuse/core@14.4.0(vue@3.5.43(typescript@7.1.0-dev.20260925.1))':
     dependencies:
       '@types/web-bluetooth': 0.0.21
       '@vueuse/metadata': 14.4.0
-      '@vueuse/shared': 14.4.0(vue@3.5.43(typescript@7.1.0-dev.20260924.1))
-      vue: 3.5.43(typescript@7.1.0-dev.20260924.1)
+      '@vueuse/shared': 14.4.0(vue@3.5.43(typescript@7.1.0-dev.20260925.1))
+      vue: 3.5.43(typescript@7.1.0-dev.20260925.1)
 
-  '@vueuse/integrations@14.4.0(focus-trap@8.2.2)(vue@3.5.43(typescript@7.1.0-dev.20260924.1))':
+  '@vueuse/integrations@14.4.0(focus-trap@8.2.2)(vue@3.5.43(typescript@7.1.0-dev.20260925.1))':
     dependencies:
-      '@vueuse/core': 14.4.0(vue@3.5.43(typescript@7.1.0-dev.20260924.1))
-      '@vueuse/shared': 14.4.0(vue@3.5.43(typescript@7.1.0-dev.20260924.1))
-      vue: 3.5.43(typescript@7.1.0-dev.20260924.1)
+      '@vueuse/core': 14.4.0(vue@3.5.43(typescript@7.1.0-dev.20260925.1))
+      '@vueuse/shared': 14.4.0(vue@3.5.43(typescript@7.1.0-dev.20260925.1))
+      vue: 3.5.43(typescript@7.1.0-dev.20260925.1)
     optionalDependencies:
       focus-trap: 8.2.2
 
   '@vueuse/metadata@14.4.0': {}
 
-  '@vueuse/shared@14.4.0(vue@3.5.43(typescript@7.1.0-dev.20260924.1))':
+  '@vueuse/shared@14.4.0(vue@3.5.43(typescript@7.1.0-dev.20260925.1))':
     dependencies:
-      vue: 3.5.43(typescript@7.1.0-dev.20260924.1)
+      vue: 3.5.43(typescript@7.1.0-dev.20260925.1)
 
   acorn-jsx@5.3.2(acorn@8.18.0):
     dependencies:
@@ -3165,15 +3181,15 @@ snapshots:
 
   typescript@6.0.3: {}
 
-  typescript@7.1.0-dev.20260924.1:
+  typescript@7.1.0-dev.20260925.1:
     optionalDependencies:
-      '@typescript/typescript-darwin-arm64': 7.1.0-dev.20260924.1
-      '@typescript/typescript-darwin-x64': 7.1.0-dev.20260924.1
-      '@typescript/typescript-linux-arm': 7.1.0-dev.20260924.1
-      '@typescript/typescript-linux-arm64': 7.1.0-dev.20260924.1
-      '@typescript/typescript-linux-x64': 7.1.0-dev.20260924.1
-      '@typescript/typescript-win32-arm64': 7.1.0-dev.20260924.1
-      '@typescript/typescript-win32-x64': 7.1.0-dev.20260924.1
+      '@typescript/typescript-darwin-arm64': 7.1.0-dev.20260925.1
+      '@typescript/typescript-darwin-x64': 7.1.0-dev.20260925.1
+      '@typescript/typescript-linux-arm': 7.1.0-dev.20260925.1
+      '@typescript/typescript-linux-arm64': 7.1.0-dev.20260925.1
+      '@typescript/typescript-linux-x64': 7.1.0-dev.20260925.1
+      '@typescript/typescript-win32-arm64': 7.1.0-dev.20260925.1
+      '@typescript/typescript-win32-x64': 7.1.0-dev.20260925.1
 
   undici-types@8.9.0: {}
 
@@ -3227,7 +3243,7 @@ snapshots:
       '@types/node': 26.6.2
       fsevents: 2.3.3
 
-  vitepress@2.0.0-alpha.20(@types/node@26.6.2)(postcss@8.5.28)(typescript@7.1.0-dev.20260924.1):
+  vitepress@2.0.0-alpha.20(@types/node@26.6.2)(postcss@8.5.28)(typescript@7.1.0-dev.20260925.1):
     dependencies:
       '@docsearch/css': 4.7.0
       '@docsearch/js': 4.7.0
@@ -3235,17 +3251,17 @@ snapshots:
       '@iconify-json/simple-icons': 1.2.97
       '@shikijs/transformers': 4.4.3
       '@types/markdown-it': 14.2.0
-      '@vitejs/plugin-vue': 6.0.9(vite@8.3.1(@types/node@26.6.2))(vue@3.5.43(typescript@7.1.0-dev.20260924.1))
+      '@vitejs/plugin-vue': 6.0.9(vite@8.3.1(@types/node@26.6.2))(vue@3.5.43(typescript@7.1.0-dev.20260925.1))
       '@vue/devtools-api': 8.2.1
       '@vue/shared': 3.5.43
-      '@vueuse/core': 14.4.0(vue@3.5.43(typescript@7.1.0-dev.20260924.1))
-      '@vueuse/integrations': 14.4.0(focus-trap@8.2.2)(vue@3.5.43(typescript@7.1.0-dev.20260924.1))
+      '@vueuse/core': 14.4.0(vue@3.5.43(typescript@7.1.0-dev.20260925.1))
+      '@vueuse/integrations': 14.4.0(focus-trap@8.2.2)(vue@3.5.43(typescript@7.1.0-dev.20260925.1))
       focus-trap: 8.2.2
       mark.js: 8.11.1
       minisearch: 7.2.0
       shiki: 4.4.3
       vite: 8.3.1(@types/node@26.6.2)
-      vue: 3.5.43(typescript@7.1.0-dev.20260924.1)
+      vue: 3.5.43(typescript@7.1.0-dev.20260925.1)
     optionalDependencies:
       postcss: 8.5.28
     transitivePeerDependencies:
@@ -3302,7 +3318,7 @@ snapshots:
     transitivePeerDependencies:
       - msw
 
-  vue@3.5.43(typescript@7.1.0-dev.20260924.1):
+  vue@3.5.43(typescript@7.1.0-dev.20260925.1):
     dependencies:
       '@vue/compiler-dom': 3.5.43
       '@vue/compiler-sfc': 3.5.43
@@ -3310,7 +3326,7 @@ snapshots:
       '@vue/server-renderer': 3.5.43
       '@vue/shared': 3.5.43
     optionalDependencies:
-      typescript: 7.1.0-dev.20260924.1
+      typescript: 7.1.0-dev.20260925.1
 
   which@1.3.1:
     dependencies:
