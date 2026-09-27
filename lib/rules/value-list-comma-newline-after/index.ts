@@ -68,8 +68,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (index < declarationValueIndex(declNode) || rereadsAnAddress(declString, edit, syntax.inlineComments(declNode, result), declNode)) return false
 
-				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` nothing closes inside, or such a `{` in a custom property's value, is then a group the parser finds open and the file stops parsing: the break is refused there and the warning stands
-				if (primary.startsWith(`always`) && breakAtRereadsParentheses(declString, index, isCustomProperty(declNode.prop))) return false
+				// A break written into parentheses PostCSS holds as one token other than an address's makes them code, and a `[` nothing closes inside, or such a `{` in a custom property's value, is then a group the parser finds open and the file stops parsing: the break is refused there and the warning stands
+				if (primary.startsWith(`always`) && breakAtRereadsParentheses(declString, index, isCustomProperty(declNode.prop), syntax.inlineComments(declNode, result))) return false
 
 				return true
 			},

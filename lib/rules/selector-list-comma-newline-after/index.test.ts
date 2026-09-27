@@ -273,6 +273,23 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
+			// The `(` pops the word `url`, so PostCSS holds the parentheses as an address's token to the first `)`, and a break inside leaves them that token
+			description: `an address's parentheses parted from the name by a space and holding a square bracket nothing closes, where the break is written`,
+			code: `a,\nurl (b[c,d)(b"c") d {}`,
+			fixed: `a,\nurl (b[c,\nd)(b"c") d {}`,
+			line: 2,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `the same parentheses behind the name in upper case, which the tokenizer pops as no address, so they are one plain token the break would make code, and the break is refused`,
+			code: `a,\nURL (b[c,d)(b"c") d {}`,
+			fixed: `a,\nURL (b[c,d)(b"c") d {}`,
+			line: 2,
+			column: 9,
+			message: messages.expectedAfter(),
+		},
+		{
 			description: `the same parentheses with the square bracket closed inside them, which code reads as a group of its own, so the break is written`,
 			code: `[a,\n(b[c],d)] {}`,
 			fixed: `[a,\n(b[c],\nd)] {}`,

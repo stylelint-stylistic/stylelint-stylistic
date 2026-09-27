@@ -1,3 +1,8 @@
+import stylelint from "stylelint"
+import { expect, it } from "vitest"
+
+import plugins from "../../index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -184,6 +189,23 @@ testRule({
 			fixed: `a { b: 1 (a,[b) 2px; }`,
 			line: 1,
 			column: 12,
+			message: messages.expectedAfter(),
+		},
+		{
+			// The `(` pops the word `url`, so PostCSS holds the parentheses as an address's token to the first `)`, and a break inside leaves them that token
+			description: `an address's parentheses parted from the name by a space and holding a square bracket nothing closes, where the break is written`,
+			code: `a { b: url (b[c,d) 2px; }`,
+			fixed: `a { b: url (b[c,\nd) 2px; }`,
+			line: 1,
+			column: 16,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `the same parentheses behind the name in upper case, which the tokenizer pops as no address, so they are one plain token the break would make code, and the break is refused`,
+			code: `a { b: URL (b[c,d) 2px; }`,
+			fixed: `a { b: URL (b[c,d) 2px; }`,
+			line: 1,
+			column: 16,
 			message: messages.expectedAfter(),
 		},
 		{
@@ -433,4 +455,16 @@ testRule({
 			],
 		},
 	],
+})
+
+// A space the comma rule in front writes right behind an address's opening parenthesis keeps the parentheses code, and a break behind the comma then leaves the square bracket open, whichever rule runs first
+it(`refuses the break behind a comma right behind an address's opening parenthesis whose square bracket nothing closes, beside a rule asking for a space in front of the comma, in either order`, async () => {
+	let orders: [string, string][] = [[ruleName, `@stylistic/value-list-comma-space-before`], [`@stylistic/value-list-comma-space-before`, ruleName]]
+	let outputs = await Promise.all(orders.map(async ([first, second]) => {
+		let result = await stylelint.lint({ code: `a { b: 1 url (,b[c) 2px; }`, config: { plugins, rules: { [first]: `always`, [second]: `always` } }, fix: true })
+
+		return result.code
+	}))
+
+	expect(outputs).toEqual([`a { b: 1 url ( ,b[c) 2px; }`, `a { b: 1 url ( ,b[c) 2px; }`])
 })

@@ -189,6 +189,24 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
+			// The `(` pops the word `url`, so PostCSS holds the parentheses as an address's token to the first `)`, and a break inside leaves them that token
+			description: `an address's parentheses parted from the name by a space and holding a square bracket nothing closes, where the break is written`,
+			code: `a { b: url (b[c ,d) 2px; }`,
+			fixed: `a { b: url (b[c\n ,d) 2px; }`,
+			line: 1,
+			column: 17,
+			message: messages.expectedBefore(),
+		},
+		{
+			// Under PostCSS's tokenizer whitespace right behind the `(` keeps the parentheses code, so the break written there takes them out of the address's token
+			description: `a comma right behind the opening parenthesis of an address holding a square bracket nothing closes, where the break in front of it is refused and the warning stands`,
+			code: `a { b: url (,b[c) 2px; }`,
+			fixed: `a { b: url (,b[c) 2px; }`,
+			line: 1,
+			column: 13,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `parentheses holding a brace nothing closes in a custom property's value, where the parser reads a brace as a group too, refused likewise`,
 			code: `a { --b: (a,{b); }`,
 			fixed: `a { --b: (a,{b); }`,

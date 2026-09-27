@@ -1,7 +1,7 @@
 import { atRule, decl } from "postcss"
 import { describe, expect, it } from "vitest"
 
-import { editsRereadAnAddress, rereadsAnAddress } from "./index.ts"
+import { addressHolding, editsRereadAnAddress, rereadsAnAddress } from "./index.ts"
 
 let POSTCSS = { tokenizes: false }
 let SCSS = { tokenizes: true }
@@ -345,5 +345,19 @@ describe(`editsRereadAnAddress`, () => {
 
 	it(`two runs taken away around a comment, the cuts behind both moved by the two`, () => {
 		expect(editsRereadAnAddress(String.raw`\61 url( /* c */ a.png); d`, [{ start: 8, end: 9, text: `` }, { start: 16, end: 17, text: `` }], POSTCSS, DECLARATION)).toBe(false)
+	})
+})
+
+describe(`addressHolding`, () => {
+	it(`an index inside an address's token, which PostCSS's tokenizer closes at the first parenthesis and postcss-scss's by the count of parentheses`, () => {
+		expect(addressHolding(`url (a(b,c)`, 8, POSTCSS)).toBe(4)
+		expect(addressHolding(`url (a(b)c,d)`, 10, POSTCSS)).toBe(-1)
+		expect(addressHolding(`url (a(b)c,d)`, 10, SCSS)).toBe(4)
+	})
+
+	it(`an index in front of the address or behind it, and parentheses that pop another word`, () => {
+		expect(addressHolding(`a,url(b)`, 1, POSTCSS)).toBe(-1)
+		expect(addressHolding(`url(b) c,d`, 8, POSTCSS)).toBe(-1)
+		expect(addressHolding(`url x(b,c)`, 7, POSTCSS)).toBe(-1)
 	})
 })

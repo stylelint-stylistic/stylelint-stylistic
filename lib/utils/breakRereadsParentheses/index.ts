@@ -1,4 +1,6 @@
 import { PARENTHESES_READ_AS_CODE } from "../../regexps.ts"
+import type { CommentReading } from "../findCommentSpans/index.ts"
+import { addressHolding } from "../rereadsAnAddress/index.ts"
 
 /**
  * Asks whether the content of parentheses, read as code, opens a group nothing closes before the `)`: a `[`, or a `{` in a custom property's value, each closed by its own bracket alone. The parser pushes either on its stack and refuses the file over what is left on it at the end of the declaration, or of the file for a selector.
@@ -41,13 +43,22 @@ export function breakRereadsParentheses (text: string, openIndex: number, inCust
 
 /**
  * Asks the same of the parentheses the tokenizer would hold an index in: the last `(` in front of it, where its first `)` stands behind the index, and no parentheses at all where it does not. No earlier `(` can be the token, since it holds this one, which makes it code.
+ *
+ * An address's token holding the index is no such parentheses: it closes at the same `)` with a break inside, so nothing switches. Under PostCSS's tokenizer an index standing right behind the address's `(` is the exception, since whitespace written in front of it, by this rule or by a neighbor writing in front of a comma, keeps the parentheses code, and the break inside then reads them as code too.
  * @param text - The text the index is in.
  * @param index - The index the break is written beside.
  * @param inCustomProperty - Whether the text is a custom property's value or an at-rule's params, where a `{` opens a group too.
+ * @param reading - Whether the parser reads by a tokenizer of its own.
  * @returns True where the break switches the reading of the parentheses holding the index and their two readings part.
  */
-export function breakAtRereadsParentheses (text: string, index: number, inCustomProperty: boolean): boolean {
+export function breakAtRereadsParentheses (text: string, index: number, inCustomProperty: boolean, reading: Pick<CommentReading, `tokenizes`>): boolean {
 	let openIndex = text.lastIndexOf(`(`, index)
 
-	return openIndex !== -1 && text.indexOf(`)`, openIndex + 1) > index && breakRereadsParentheses(text, openIndex, inCustomProperty)
+	if (openIndex === -1 || text.indexOf(`)`, openIndex + 1) <= index) return false
+
+	let addressIndex = addressHolding(text, index, reading)
+
+	if (addressIndex !== -1 && (reading.tokenizes || index !== addressIndex + 1)) return false
+
+	return breakRereadsParentheses(text, openIndex, inCustomProperty)
 }

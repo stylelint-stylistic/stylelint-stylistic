@@ -27,6 +27,15 @@ testRule({
 			column: 20,
 			message: messages.expectedBefore(),
 		},
+		{
+			// This parser's tokenizer keeps the parentheses of an address code behind a quotation mark alone, so a break right behind the `(` leaves them its token to the `)` closing it
+			description: `a comma right behind the opening parenthesis of an address parted from the name by a space and holding a square bracket nothing closes, where the break is written`,
+			code: `a { prop: url (,b[c) 2px; }`,
+			fixed: `a { prop: url (\n,b[c) 2px; }`,
+			line: 1,
+			column: 16,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 testRule({

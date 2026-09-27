@@ -6,6 +6,7 @@ import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import type { CommentReading } from "../findCommentSpans/index.ts"
 import { isCustomProperty } from "../isCustomProperty/index.ts"
 import { joinsTheName } from "../joinsTheName/index.ts"
+import { skipScssInterpolation, skipScssString } from "../skipScssString/index.ts"
 import { skipString } from "../skipString/index.ts"
 
 /**
@@ -176,6 +177,27 @@ function addressOpenings (text: string, reading: Pick<CommentReading, `tokenizes
 }
 
 /**
+ * Finds the `(` of the address's token holding an index, as the tokenizer walks the text from its opening ({@link walkToParenthesis}); an address nothing closes holds every index behind its `(`.
+ * @param text - The text read.
+ * @param index - The index.
+ * @param reading - Whether the parser reads by a tokenizer of its own.
+ * @returns The `(`, or -1 where no address's token holds the index.
+ */
+export function addressHolding (text: string, index: number, reading: Pick<CommentReading, `tokenizes`>): number {
+	let read = walkToParenthesis(text, reading, (openIndex, popped) => {
+		if (openIndex >= index) return true
+
+		if (popped?.text !== `url` || keepsParenthesesCode(text, openIndex, reading)) return false
+
+		let tokenEnd = reading.tokenizes ? scssTokenClosingIndex(text, openIndex + 1) : closingParenthesisIndex(text, openIndex + 1)
+
+		return tokenEnd === -1 || index < tokenEnd
+	})
+
+	return read && read.openIndex < index ? read.openIndex : -1
+}
+
+/**
  * Finds the first `)` no backslash escapes, where PostCSS's tokenizer closes a bare address.
  * @param text - The text holding the address.
  * @param openIndex - Behind the `(`.
@@ -210,59 +232,6 @@ function scssTokenClosingIndex (text: string, openIndex: number): number {
 	}
 
 	return -1
-}
-
-/**
- * Skips a Sass interpolation as `postcss-scss`'s tokenizer reads one: a string inside it, with its escapes, and a nested interpolation are its text.
- * @param text - The text holding the interpolation.
- * @param openIndex - The `#`.
- * @returns Behind its closing brace, or the text's length where nothing closes it.
- */
-function skipScssInterpolation (text: string, openIndex: number): number {
-	let depth = 1
-	let index = openIndex + 2
-
-	while (index < text.length) {
-		let character = text[index]
-
-		if (character === `"` || character === `'`) {
-			index = skipString(text, index)
-
-			continue
-		}
-
-		if (character === `}`) {
-			depth -= 1
-
-			if (depth === 0) return index + 1
-		}
-		else if (character === `#` && text[index + 1] === `{`) {
-			depth += 1
-		}
-
-		index += 1
-	}
-
-	return text.length
-}
-
-/**
- * Skips a string as `postcss-scss`'s tokenizer reads one: an escaped quotation mark closes nothing, and an interpolation inside it is its text, strings of its own included.
- * @param text - The text holding the string.
- * @param openIndex - The opening quote.
- * @returns Behind the closing quote, or one past the text's end where no quote closes it.
- */
-function skipScssString (text: string, openIndex: number): number {
-	let quote = text[openIndex]
-	let index = openIndex + 1
-
-	while (index < text.length && text[index] !== quote) {
-		if (text[index] === `\\`) index += 2
-		else if (text[index] === `#` && text[index + 1] === `{`) index = skipScssInterpolation(text, index)
-		else index += 1
-	}
-
-	return index + 1
 }
 
 /** A span of the text by where it opens and where it closes. */

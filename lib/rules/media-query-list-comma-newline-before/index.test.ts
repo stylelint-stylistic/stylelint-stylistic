@@ -203,6 +203,15 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
+			// The `(` pops the word `url`, so PostCSS holds the parentheses as an address's token to the first `)`, and a break inside leaves them that token
+			description: `an address's parentheses parted from the name by a space and holding a square bracket nothing closes, where the break is written`,
+			code: `@media url (b[c ,d) {}`,
+			fixed: `@media url (b[c\n ,d) {}`,
+			line: 1,
+			column: 17,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `parentheses holding a brace nothing closes, which the parser reads as a group inside an at-rule's params too, refused likewise`,
 			code: `@media a (a,{b) {}`,
 			fixed: `@media a (a,{b) {}`,

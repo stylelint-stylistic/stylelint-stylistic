@@ -74,8 +74,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (primary === `never-multi-line` && closesInlineComment) return false
 
-				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` nothing closes inside is then a group the parser finds open and the file stops parsing: the break is refused there and the warning stands
-				if (primary.startsWith(`always`) && breakAtRereadsParentheses(selector, index, false)) return false
+				// A break written into parentheses PostCSS holds as one token other than an address's makes them code, and a `[` nothing closes inside is then a group the parser finds open and the file stops parsing: the break is refused there and the warning stands
+				if (primary.startsWith(`always`) && breakAtRereadsParentheses(selector, index, false, syntax.inlineComments(ruleNode, result))) return false
 
 				let run = runInFront(runString, index)
 
