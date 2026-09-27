@@ -3,8 +3,11 @@ layout: home
 
 hero:
   name: Stylelint Stylistic
-  text: Stylistic rules for Stylelint
-  tagline: An updatable collection of the stylistic rules Stylelint removed, and of rules it never had — in plugin form.
+  text: Stylistic Formatting for Stylelint
+  tagline: Formatting and Linting in one go, with fully customizable rules
+  image:
+    src: /logo.svg
+    alt: Stylelint Stylistic
   actions:
     - theme: brand
       text: Get started

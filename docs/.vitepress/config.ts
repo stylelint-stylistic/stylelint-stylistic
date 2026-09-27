@@ -95,6 +95,9 @@ export default defineConfig({
 		[`link`, { rel: `alternate icon`, href: `/favicon.ico`, sizes: `32x32` }],
 		[`link`, { rel: `manifest`, href: `/manifest.webmanifest` }],
 	],
+
+	// No switch: the scheme follows the system alone, which is `theme/style.css`'s to answer, and VitePress writes neither the `dark` class nor the script that restores a choice.
+	appearance: false,
 	base: `/`,
 	srcDir: `..`,
 	srcExclude: [
@@ -114,6 +117,11 @@ export default defineConfig({
 	cleanUrls: true,
 	lastUpdated: true,
 	ignoreDeadLinks: false,
+
+	// A rule's page is titled by the rule's name, which is code; the class is what `theme/style.css` sets that title in the mono face by.
+	transformPageData (pageData) {
+		if (pageData.filePath.startsWith(`lib/rules/`)) pageData.frontmatter.pageClass = `rule-page`
+	},
 	markdown: {
 		config (md) {
 			let renderLink = md.renderer.rules.link_open ?? ((tokens, idx, options, _env, self): string => self.renderToken(tokens, idx, options))
