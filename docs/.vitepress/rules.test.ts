@@ -32,24 +32,33 @@ describe(`readRules`, () => {
 
 describe(`filterRules`, () => {
 	it(`admits every rule where nothing is typed`, () => {
-		expect(filterRules(rules, ``, false)).toHaveLength(rules.length)
+		expect(filterRules(rules, { query: ``, group: ``, fixableOnly: false })).toHaveLength(rules.length)
 	})
 
 	it(`admits a rule by its name, by its description and by its group, in whatever case`, () => {
-		expect(filterRules(rules, `HEX-CASE`, false).map(({ name }) => name)).toEqual([`color-hex-case`])
-		expect(filterRules(rules, `unicode bom`, false).map(({ name }) => name)).toEqual([`unicode-bom`])
-		expect(filterRules(rules, `Selector list`, false).every(({ group }) => group === `Selector list`)).toBe(true)
+		expect(filterRules(rules, { query: `HEX-CASE`, group: ``, fixableOnly: false }).map(({ name }) => name)).toEqual([`color-hex-case`])
+		expect(filterRules(rules, { query: `unicode bom`, group: ``, fixableOnly: false }).map(({ name }) => name)).toEqual([`unicode-bom`])
+		expect(filterRules(rules, { query: `Selector list`, group: ``, fixableOnly: false }).every(({ group }) => group === `Selector list`)).toBe(true)
 	})
 
 	it(`matches the bound prose of a description at a plain space`, () => {
 		let hexCase = rules.find(({ name }) => name === `color-hex-case`)
 
 		expect(hexCase?.description).toContain(`\u00A0`)
-		expect(filterRules(rules, `lowercase or uppercase`, false).map(({ name }) => name)).toContain(`color-hex-case`)
+		expect(filterRules(rules, { query: `lowercase or uppercase`, group: ``, fixableOnly: false }).map(({ name }) => name)).toContain(`color-hex-case`)
 	})
 
 	it(`leaves out a rule that fixes nothing where the mark is asked for`, () => {
-		expect(filterRules(rules, ``, true).every(({ fixable }) => fixable)).toBe(true)
-		expect(filterRules(rules, `max-line-length`, true)).toEqual([])
+		expect(filterRules(rules, { query: ``, group: ``, fixableOnly: true }).every(({ fixable }) => fixable)).toBe(true)
+		expect(filterRules(rules, { query: `max-line-length`, group: ``, fixableOnly: true })).toEqual([])
+	})
+
+	it(`admits a rule from the group asked for alone, and every other filter still applies`, () => {
+		let selectorList = rules.filter(({ group }) => group === `Selector list`)
+
+		expect(selectorList).not.toHaveLength(0)
+		expect(filterRules(rules, { query: ``, group: `Selector list`, fixableOnly: false })).toEqual(selectorList)
+		expect(filterRules(rules, { query: `comma-newline-after`, group: `Selector list`, fixableOnly: false }).map(({ name }) => name)).toEqual([`selector-list-comma-newline-after`])
+		expect(filterRules(rules, { query: `hex-case`, group: `Selector list`, fixableOnly: false })).toEqual([])
 	})
 })

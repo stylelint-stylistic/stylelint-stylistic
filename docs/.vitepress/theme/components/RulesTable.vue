@@ -6,8 +6,12 @@ import { filterRules } from "../../rules.ts"
 
 let query = ref(``)
 let fixableOnly = ref(false)
+let group = ref(``)
 
-let shown = computed(() => filterRules(rules, query.value, fixableOnly.value))
+/** The groups in the order the list gives them. */
+let groups = [...new Set(rules.map((rule) => rule.group))]
+
+let shown = computed(() => filterRules(rules, { query: query.value, fixableOnly: fixableOnly.value, group: group.value }))
 </script>
 
 <template>
@@ -20,6 +24,14 @@ let shown = computed(() => filterRules(rules, query.value, fixableOnly.value))
 				placeholder="Filter rules…"
 				aria-label="Filter rules"
 			>
+			<select
+				v-model="group"
+				class="rules__group"
+				aria-label="Filter by thing"
+			>
+				<option value="">All things</option>
+				<option v-for="name of groups" :key="name" :value="name">{{ name }}</option>
+			</select>
 			<button
 				type="button"
 				class="rules__chip"
@@ -87,11 +99,24 @@ let shown = computed(() => filterRules(rules, query.value, fixableOnly.value))
 	flex: 1 1 220px;
 	min-width: 0;
 	border: 1px solid var(--vp-c-border);
-	border-radius: 9px;
-	padding: 9px 13px;
-	font-size: 14px;
+	border-radius: 0.5em;
+	padding-inline: 1em;
+	padding-block: 0.5em;
+	font-size: 0.875em;
 	color: var(--vp-c-text-1);
 	background: var(--vp-c-bg);
+}
+
+.rules__group {
+	appearance: none;
+	flex: 0 0 auto;
+	min-inline-size: 0;
+	border: 1px solid var(--vp-c-border);
+	border-radius: 0.5em;
+	padding-inline: 1em 2em;
+	padding-block: 0.5em;
+	font-size: 0.875em;
+	background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path d='m1 2 3 5 3-5' fill='%23888'/></svg>") no-repeat right 1cap center / 1cap;
 }
 
 .rules__chip {
@@ -132,7 +157,7 @@ let shown = computed(() => filterRules(rules, query.value, fixableOnly.value))
 	margin: 0;
 	table-layout: fixed;
 	border-collapse: collapse;
-	font-size: 14px;
+	font-size: 0.875em;
 }
 
 .rules__column--name {
