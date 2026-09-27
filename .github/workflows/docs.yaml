@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # A release moves the branch on while the run is going, so the branch is taken at its tip rather than at the commit the run started from, and the site shows the version that has just been released.
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.ref_name }}
       - uses: pnpm/action-setup@v6
