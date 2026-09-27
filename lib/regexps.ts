@@ -280,13 +280,10 @@ export const OPENS_WITH_QUOTE = /^\s*["']/u
 /** A quotation mark or tokenizer whitespace opening the text; behind either the tokenizer of PostCSS and `postcss-less` reads no `url(`'s parentheses as one token, while `postcss-scss`'s passes over the whitespace. */
 export const OPENS_WITH_QUOTE_OR_CSS_WHITESPACE = /^[\t\n\f\r "']/u
 
-/** A character behind the first of a text at which the tokenizer of PostCSS and `postcss-scss` stops reading parentheses that hold no `url` as one plain token: a line break, a quotation mark, an opening parenthesis, a solidus or a backslash, where `postcss-scss` reads the same parentheses behind `url` as one token closed by the count of parentheses, so that the two readings meet at the same `)` where no such character stands. */
-export const SCSS_PLAIN_BRACKETS_BREAKER = /.[\r\n"'(/\\]/u
-
 /** A leading tag, whitespace aside. */
 export const OPENS_WITH_TAG = /^\s*</u
 
-/** Parentheses PostCSS's tokenizer reads as code rather than as one `brackets` token, its `RE_BAD_BRACKET`: a line break, a quotation mark, a `(`, a solidus or a backslash behind the `(`, tested over the text from the `(` to the first `)`. */
+/** Parentheses behind no `url` that the tokenizer of PostCSS, which `postcss-less` reads with, and its copy in `postcss-scss` read as code rather than as one `brackets` token, the `RE_BAD_BRACKET` both carry: a line break, a quotation mark, a `(`, a solidus or a backslash behind the `(`, tested over the text from the `(` to the first `)`. Where none stands, the one token `postcss-scss` reads behind `url`, closed by the count of parentheses, meets the one `brackets` token those parentheses make at the same `)`. */
 export const PARENTHESES_READ_AS_CODE = /.[\r\n"'(/\\]/u
 
 /** postcss-simple-vars' `$(…)`, a plugin's spelling over plain CSS, read by the core beside the preprocessors' two. */

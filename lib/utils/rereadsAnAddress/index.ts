@@ -1,4 +1,4 @@
-import { INLINE_COMMENT_BREAK_OR_FORM_FEED, LEADING_WORDLESS_TOKEN, OPENS_WITH_QUOTE_OR_CSS_WHITESPACE, POSTCSS_WORD_END, SCSS_PLAIN_BRACKETS_BREAKER, SCSS_WORD_END } from "../../regexps.ts"
+import { INLINE_COMMENT_BREAK_OR_FORM_FEED, LEADING_WORDLESS_TOKEN, OPENS_WITH_QUOTE_OR_CSS_WHITESPACE, PARENTHESES_READ_AS_CODE, POSTCSS_WORD_END, SCSS_WORD_END } from "../../regexps.ts"
 import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import type { CommentReading } from "../findCommentSpans/index.ts"
 import { joinsTheName } from "../joinsTheName/index.ts"
@@ -83,7 +83,7 @@ function readPoppedParentheses (text: string, openIndex: number, popped: string 
 	}
 
 	let closeIndex = text.indexOf(`)`, openIndex + 1)
-	let readsAsCode = openIndex <= codeEnd || closeIndex === -1 || SCSS_PLAIN_BRACKETS_BREAKER.test(text.slice(openIndex, closeIndex + 1))
+	let readsAsCode = openIndex <= codeEnd || closeIndex === -1 || PARENTHESES_READ_AS_CODE.test(text.slice(openIndex, closeIndex + 1))
 
 	if (!readsAsCode) return { codeEnd, index: closeIndex + 1 }
 
@@ -520,7 +520,7 @@ export function rereadsAnAddress (text: string, { start, end, text: written }: E
 		if (text[openIndex] === `"` || text[openIndex] === `'`) return false
 
 		// The parentheses the tokenizer reads as one plain token under either word, since nothing inside them opens a string, a comment, an escape or a group
-		if (!SCSS_PLAIN_BRACKETS_BREAKER.test(text.slice(openIndex, text.indexOf(`)`, openIndex) + 1))) return false
+		if (!PARENTHESES_READ_AS_CODE.test(text.slice(openIndex, text.indexOf(`)`, openIndex) + 1))) return false
 
 		return addressReadingsPart(text, openIndex, reading)
 	}
