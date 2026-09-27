@@ -1,3 +1,9 @@
+import stylelint from "stylelint"
+import { expect, it } from "vitest"
+
+import { pick } from "../../../vitest.helpers.ts"
+import plugins from "../../index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -257,6 +263,23 @@ testRule({
 			column: 3,
 			message: messages.expectedAfter(),
 		},
+		{
+			// PostCSS holds `(b[c,d)` as one token, opaque to the parser; a break inside makes it code, whose `[` opens a group nothing closes, and the file stops parsing
+			description: `parentheses without a name inside an attribute selector holding a square bracket nothing closes, where the break is refused and the warning stands`,
+			code: `[a,\n(b[c,d)] {}`,
+			fixed: `[a,\n(b[c,d)] {}`,
+			line: 2,
+			column: 5,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `the same parentheses with the square bracket closed inside them, which code reads as a group of its own, so the break is written`,
+			code: `[a,\n(b[c],d)] {}`,
+			fixed: `[a,\n(b[c],\nd)] {}`,
+			line: 2,
+			column: 6,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
@@ -341,6 +364,15 @@ testRule({
 			fixed: `a,\r\nb,\r\n c {\r\n}`,
 			line: 2,
 			column: 2,
+			message: messages.expectedAfterMultiLine(),
+		},
+		{
+			// The list is multi-line by a break outside the parentheses, which PostCSS still holds as one token; a break written inside makes them code, whose `[` nothing closes
+			description: `a multi-line list holding parentheses without a name whose square bracket nothing closes, where the break is refused and the warning stands`,
+			code: `[a,\n(b[c,d)] {}`,
+			fixed: `[a,\n(b[c,d)] {}`,
+			line: 2,
+			column: 5,
 			message: messages.expectedAfterMultiLine(),
 		},
 	],
@@ -531,4 +563,13 @@ testRule({
 			],
 		},
 	],
+})
+
+// The break behind the comma in front of the parentheses stands outside them and is written while the one inside is refused, which a reject case cannot say since the warning left moves
+it(`writes the break behind a comma right in front of parentheses PostCSS holds as one token and refuses the one inside them, whose square bracket nothing closes`, async () => {
+	let config = { plugins, rules: { [ruleName]: `always` } }
+	let fixed = await stylelint.lint({ code: `[a,(b[c,d)] {}`, config, fix: true })
+	let again = await stylelint.lint({ code: fixed.code ?? ``, config })
+
+	expect({ fixed: fixed.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column}`) }).toEqual({ fixed: `[a,\n(b[c,d)] {}`, left: [`2:5`] })
 })

@@ -219,6 +219,23 @@ testRule({
 			column: 8,
 			message: messages.expectedBefore(),
 		},
+		{
+			// PostCSS holds `(b[c,d)` as one token, opaque to the parser; a break inside makes it code, whose `[` opens a group nothing closes, and the file stops parsing
+			description: `parentheses without a name inside an attribute selector holding a square bracket nothing closes, where the break is refused and the warning stands`,
+			code: `[a\n,(b[c,d)] {}`,
+			fixed: `[a\n,(b[c,d)] {}`,
+			line: 2,
+			column: 6,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `the same parentheses with the square bracket closed inside them, which code reads as a group of its own, so the break is written`,
+			code: `[a\n,(b[c],d)] {}`,
+			fixed: `[a\n,(b[c]\n,d)] {}`,
+			line: 2,
+			column: 7,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 
@@ -286,6 +303,15 @@ testRule({
 			fixed: `a\n,b\n, c {\n}`,
 			line: 2,
 			column: 3,
+			message: messages.expectedBeforeMultiLine(),
+		},
+		{
+			// The list is multi-line by a break outside the parentheses, which PostCSS still holds as one token; a break written inside makes them code, whose `[` nothing closes
+			description: `a multi-line list holding parentheses without a name whose square bracket nothing closes, where the break is refused and the warning stands`,
+			code: `[a\n,(b[c,d)] {}`,
+			fixed: `[a\n,(b[c,d)] {}`,
+			line: 2,
+			column: 6,
 			message: messages.expectedBeforeMultiLine(),
 		},
 	],

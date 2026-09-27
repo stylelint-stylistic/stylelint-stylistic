@@ -3,6 +3,7 @@ import stylelint from "stylelint"
 
 import { LEADING_CSS_WHITESPACE, LEADING_WHITESPACE_WITHOUT_BREAK, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE, WHITESPACE_THEN_BLOCK_COMMENT, WHITESPACE_THEN_INLINE_COMMENT } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import { breakAtRereadsParentheses } from "../../utils/breakRereadsParentheses/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -95,8 +96,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						let closesInlineComment = primary.startsWith(`never`) && copies.comments.some((inlineComment) => fixIndex <= inlineComment.endIndex && inlineComment.endIndex < runEnd)
 						// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses
 						let rereads = rereadsAnAddress(selector, primary.startsWith(`always`) ? { start: fixIndex, end: fixIndex, text: getLineBreak(root, result) } : { start: fixIndex, end: fixIndex + runBehind(selector, checkIndex).length, text: `` }, syntax.inlineComments(ruleNode, result), ruleNode)
+						// A break written into parentheses PostCSS holds as one token makes them code, and a `[` nothing closes inside is then a group the parser finds open and the file stops parsing
+						let opensAGroup = primary.startsWith(`always`) && breakAtRereadsParentheses(selector, commaIndex, false)
 						let sourceIndex = copies.toSourceIndex(commaIndex)
-						let isFixable = !closesInlineComment && !rereads
+						let isFixable = !closesInlineComment && !rereads && !opensAGroup
 
 						report({
 							message: m,

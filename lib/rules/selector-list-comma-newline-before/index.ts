@@ -3,6 +3,7 @@ import stylelint from "stylelint"
 
 import { TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import { breakAtRereadsParentheses } from "../../utils/breakRereadsParentheses/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
@@ -72,6 +73,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let closesInlineComment = inlineComments.some((inlineComment) => runStart <= inlineComment.endIndex && inlineComment.endIndex < index)
 
 				if (primary === `never-multi-line` && closesInlineComment) return false
+
+				// A break written into parentheses PostCSS holds as one token makes them code, and a `[` nothing closes inside is then a group the parser finds open and the file stops parsing: the break is refused there and the warning stands
+				if (primary.startsWith(`always`) && breakAtRereadsParentheses(selector, index, false)) return false
 
 				let run = runInFront(runString, index)
 
