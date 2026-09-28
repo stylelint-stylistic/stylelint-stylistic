@@ -115,6 +115,37 @@ testRule({
 			`,
 		},
 		{
+			description: `a comment on a line of its own behind the semicolon, with a stray semicolon behind the comment, which is no part of the run behind the declaration`,
+			code: `
+				a {
+				  color: pink;
+				  /* 1 */; top: 0
+				}
+			`,
+		},
+		{
+			description: `the same comment and stray semicolon spelled with carriage returns`,
+			code: `a {\r\n  color: pink;\r\n  /* 1 */; top: 0\r\n}`,
+		},
+		{
+			description: `a comment on a line of its own behind the semicolon, with a declaration behind it on the same line`,
+			code: `
+				a {
+				  color: pink;
+				  /* 1 */ top: 0
+				}
+			`,
+		},
+		{
+			description: `an end-of-line comment, then a comment on a line of its own with a declaration behind it on the same line`,
+			code: `
+				a {
+				  color: pink; /* 1 */
+				  /* 2 */ top: 0
+				}
+			`,
+		},
+		{
 			description: `a selector broken across lines, whose block is broken too`,
 			code: `
 				a,
@@ -318,6 +349,15 @@ testRule({
 		{
 			description: `a comment inside a single-line block, likewise passed over`,
 			code: `a { color: pink; /* 1 */ top: 0; }`,
+		},
+		{
+			description: `a comment on a line of its own behind the semicolon, with a declaration behind it on the same line`,
+			code: `
+				a {
+				  color: pink;
+				  /* 1 */ top: 0
+				}
+			`,
 		},
 		{
 			description: `a selector broken across lines, whose block is single-line all the same`,
@@ -555,6 +595,14 @@ testRule({
 			description: `a comment behind the semicolon and a break behind the comment`,
 			code: `a {\n  color: pink; /* 1 */ \n top: 0\n}`,
 			fixed: `a {\n  color: pink; /* 1 */top: 0\n}`,
+			line: 2,
+			column: 15,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		{
+			description: `a comment on a line of its own behind the semicolon, with a declaration behind it on the same line, which this option reads past as it reads past an end-of-line one`,
+			code: `a {\n  color: pink;\n  /* 1 */ top: 0\n}`,
+			fixed: `a {\n  color: pink;\n  /* 1 */top: 0\n}`,
 			line: 2,
 			column: 15,
 			message: messages.rejectedAfterMultiLine(),

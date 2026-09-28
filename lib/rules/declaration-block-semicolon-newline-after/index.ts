@@ -72,10 +72,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!nextNode) return
 
-			// Allow end-of-line comment
-			let nodeToCheck = nextNonCommentNode(nextNode)
+			// Allow an end-of-line comment; under the `always` options a comment opening a line of its own stands behind the break already, whatever follows it, while `never-multi-line` reads past it, since returning would hide the break in front of the node behind the comment, which that option reports
+			let opensALine = false
+			let nodeToCheck = nextNonCommentNode(nextNode, (comment) => {
+				opensALine ||= LINE_BREAK.test(runInFrontOf(comment))
+			})
 
-			if (!nodeToCheck) return
+			if (!nodeToCheck || (opensALine && primary.startsWith(`always`))) return
 
 			let problemIndex = nodeString(decl, result).length + 1
 			let previousNode = nodeToCheck.prev() as ChildNode
