@@ -92,6 +92,7 @@ By the way, the documentation now lives at [stylelint-stylistic.github.io](h
 - The `indentation` rule no longer raises the whole of a selector list by a level when one selector of it is a pseudo-class broken over several lines (see [#74](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/74)).
 - The `no-eol-whitespace` rule now trims every line of a comment when fixing, and not only the lines up to the first quotation mark in it (see [#67](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/67)).
 - The `string-quotes` rule no longer loses its bearings in a declaration's value or an at-rule's parameters holding a comment (see [#61](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/61), [#33](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/33)).
+- The `at-rule-semicolon-newline-after` rule no longer reports an at-rule whose semicolon is followed by a comment on a line of its own, and no longer breaks that comment's line when fixing ([#748](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/748)) ([@christianvuerings](https://github.com/christianvuerings)).
 
 And also a huge number of bugs found by tools and agents.
 
