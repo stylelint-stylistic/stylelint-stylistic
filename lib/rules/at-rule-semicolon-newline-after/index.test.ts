@@ -85,6 +85,11 @@ testRule({
 			code: `@import 'x.css';\n/* comment */;\na {}`,
 		},
 		{
+			autoStripIndent: false,
+			description: `the same comment and stray semicolon written with carriage-return line breaks`,
+			code: `@import 'x.css';\r\n/* comment */;\r\na {}`,
+		},
+		{
 			description: `a comment on a line of its own behind the semicolon, with a rule behind it on the same line`,
 			code: `@import 'x.css';\n/* comment */ a {}`,
 		},
