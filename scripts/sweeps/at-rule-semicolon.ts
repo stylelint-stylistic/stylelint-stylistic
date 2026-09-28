@@ -37,6 +37,7 @@ const TAILS: Record<string, string> = {
 	nothing: ``,
 	commentBelow: `⏎/* c */`,
 	commentBeside: ` /* c */`,
+	commentBelowBeside: `⏎/* c */ color: pink`,
 	inlineComment: `⏎// c`,
 	declaration: `⏎color: pink`,
 	declarationBeside: ` color: pink`,
