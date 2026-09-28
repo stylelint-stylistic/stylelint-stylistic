@@ -81,6 +81,23 @@ testRule({
 			code: `@import 'x.css'; /* comment */\r\n`,
 		},
 		{
+			description: `a comment on a line of its own behind the semicolon, with a stray semicolon behind the comment, which is no part of the run behind the at-rule`,
+			code: `@import 'x.css';\n/* comment */;\na {}`,
+		},
+		{
+			autoStripIndent: false,
+			description: `the same comment and stray semicolon written with carriage-return line breaks`,
+			code: `@import 'x.css';\r\n/* comment */;\r\na {}`,
+		},
+		{
+			description: `a comment on a line of its own behind the semicolon, with a rule behind it on the same line`,
+			code: `@import 'x.css';\n/* comment */ a {}`,
+		},
+		{
+			description: `an end-of-line comment, then a comment on a line of its own with a rule behind it on the same line`,
+			code: `@import 'x.css'; /* one */\n/* two */ a {}`,
+		},
+		{
 			description: `a semicolon closing the file, with no line for the break to open`,
 			code: `@import 'x.css';`,
 		},
@@ -138,6 +155,14 @@ testRule({
 			fixed: `@MIXIN foo;\n a {}`,
 			line: 1,
 			column: 12,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `an end-of-line comment with a rule behind it on the same line`,
+			code: `@import 'x.css'; /* comment */ a {}`,
+			fixed: `@import 'x.css'; /* comment */\n a {}`,
+			line: 1,
+			column: 17,
 			message: messages.expectedAfter(),
 		},
 		{
