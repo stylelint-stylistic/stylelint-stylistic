@@ -17,6 +17,13 @@ This rule allows an end-of-line comment followed by a newline. For example:
 a {}
 ```
 
+A comment on a line of its own stands behind that newline already, so whatever follows the comment on its line is none of this rule's business:
+
+```css
+@import url("x.css");
+/* comment */ a {}
+```
+
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
 ## Options
