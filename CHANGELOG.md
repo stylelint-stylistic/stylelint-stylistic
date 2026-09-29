@@ -9,10 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ### Fixed
 
-- A fix no longer carries off what stands next to the character it changes:
-	- The `block-opening-brace-space-before` rule no longer removes a comment standing between the selector and the opening brace when fixing (see [#63](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/63)):
-		- a block comment is kept, and only the whitespace next to the brace changes, so such a stylesheet can now be autofixed without losing anything;
-		- an inline comment leaves the brace nowhere to go, since the comment ends only with a line break, so the problem is now reported rather than silently rewritten.
+- The `block-opening-brace-space-before` rule no longer removes a comment standing between the selector and the opening brace when fixing (see [#63](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/63)).
+- The `indentation` rule no longer damages a declaration whose multi-line value holds comments when fixing (see [#62](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/62)).
+- The `selector-combinator-space-before` rule no longer reports a combinator that opens a selector when a comment stands in front of it (see [#66](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/66)).
+- The `indentation` rule no longer raises the whole of a selector list by a level when one selector of it is a pseudo-class broken over several lines (see [#74](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/74)).
+- The `no-eol-whitespace` rule now trims every line of a comment when fixing, and not only the lines up to the first quotation mark in it (see [#67](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/67)).
+- The `string-quotes` rule no longer loses its bearings in a declaration's value or an at-rule's parameters holding a comment (see [#61](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/61), [#33](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/33)).
+- The `at-rule-semicolon-newline-after` rule no longer reports an at-rule whose semicolon is followed by a comment on a line of its own, and no longer breaks that comment's line when fixing ([#748](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/748)) ([@christianvuerings](https://github.com/christianvuerings)).
 
 ## [5.3.0] — 2026–08–09
 
