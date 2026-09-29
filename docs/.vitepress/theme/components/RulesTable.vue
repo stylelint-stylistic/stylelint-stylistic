@@ -12,6 +12,7 @@ let group = ref(``)
 let groups = [...new Set(rules.map((rule) => rule.group))]
 
 let shown = computed(() => filterRules(rules, { query: query.value, fixableOnly: fixableOnly.value, group: group.value }))
+let shownCount = computed(() => `${shown.value.length}`.padStart(`${rules.length}`.length))
 </script>
 
 <template>
@@ -41,7 +42,7 @@ let shown = computed(() => filterRules(rules, { query: query.value, fixableOnly:
 			>
 				fixable
 			</button>
-			<span class="rules__count">{{ shown.length }} / {{ rules.length }}</span>
+			<pre class="rules__count">{{ shownCount }} / {{ rules.length }}</pre>
 		</div>
 
 		<table class="rules__table">
