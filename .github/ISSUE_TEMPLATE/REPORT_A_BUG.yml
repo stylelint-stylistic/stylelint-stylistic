@@ -19,7 +19,6 @@ body:
       description: 'Provide the smallest possible reproducible example or steps.'
       placeholder: |
         ```css
-        @import 'test.css';
         a { color:red; }
         ```
 
@@ -36,15 +35,12 @@ body:
       label: 'What minimal configuration is needed to reproduce the bug?'
       description: 'Provide the smallest possible reproducible configuration.'
       placeholder: |
-        ```json
-        {
-          "fix": true,
-          "plugins": [
-            "@stylistic/stylelint-plugin"
-          ],
-          "rules": {
-            "@stylistic/string-quotes": "double"
-          }
+        ```js
+        export default {
+          plugins: ["@stylistic/stylelint-plugin"],
+          rules: {
+            "@stylistic/declaration-colon-space-after": "always",
+          },
         }
         ```
     validations:
@@ -60,7 +56,7 @@ body:
         Or
 
         ```shell
-        stylelint "**/*.css" --config myconfig.json
+        stylelint "**/*.css" --fix
         ```
     validations:
       required: true
@@ -72,9 +68,8 @@ body:
       placeholder: |
         ```json
         {
-          "@stylistic/stylelint-plugin": "2.0.0",
-          "stylelint": "16.0.2",
-          "stylelint-config-standard": "34.0.0"
+          "@stylistic/stylelint-plugin": "^6.0.0",
+          "stylelint": "^18.0.0"
         }
         ```
     validations:
@@ -84,7 +79,11 @@ body:
     attributes:
       label: 'What did you expect to happen?'
       placeholder: |
-        No problems to be reported.
+        The space behind the colon to be written by `--fix`:
+
+        ```css
+        a { color: red; }
+        ```
     validations:
       required: true
   - type: textarea
@@ -95,7 +94,6 @@ body:
         The space behind the colon is not written by `--fix`, and no warning is reported:
 
         ```css
-        @import 'test.css';
         a { color:red; }
         ```
     validations:
