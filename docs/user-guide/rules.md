@@ -6,7 +6,7 @@ pageClass: rules-page
 
 # Rules
 
-Here are `stylelint-stylistic` rules, grouped by the _thing_ they apply to (just like in [Stylelint](https://stylelint.io/user-guide/about-rules)).
+Here are `stylelint-stylistic` rules, grouped by the _thing_ they apply to.
 
 <!-- The list below is the file's: the registry test reads it, the sidebar of the site is built out of it, and GitHub shows it. The site shows the table instead, which `RulesTable` builds out of the same list; the component renders no slot, so what stands inside it never reaches the page. -->
 <RulesTable>
