@@ -225,8 +225,8 @@ importers:
         specifier: ^4
         version: 4.0.9(postcss@8.5.28)
       postcss-styled-syntax:
-        specifier: ^0.7
-        version: 0.7.2(postcss@8.5.28)
+        specifier: ^0.7.3
+        version: 0.7.3(postcss@8.5.28)
       stylelint:
         specifier: github:stylelint/stylelint#v18
         version: https://codeload.github.com/stylelint/stylelint/tar.gz/12c034f5db042b474126b36231bd4ffe0ccc6e8d(supports-color@10.2.2)
@@ -1634,8 +1634,8 @@ packages:
     resolution: {integrity: sha512-7qASPzhKF2l2KLboRZux8CCTRMdGiV08vWmyKzPz22qZ7ZjQBOeY7rNzNoCLSUiftJ7HUq0GERHmxw/t0dCdMw==}
     engines: {node: '>=4'}
 
-  postcss-styled-syntax@0.7.2:
-    resolution: {integrity: sha512-PrxG8BC6yh6pmrHx7NrseYt5TiSN57LbGYZxmreg7co7g+zXe6BwUfsZ6r/gghxbtabde3Z0hinelXj4jlJF4Q==}
+  postcss-styled-syntax@0.7.3:
+    resolution: {integrity: sha512-F6PSmNJKnOk1E5BWNqp6lEg3qlVYexKPf9C5eoBflPxNyS29goTATFVU7vUi0WWMmpAK+Pf2yHuUdjKXL2bOTg==}
     engines: {node: '>=14.17'}
     peerDependencies:
       postcss: ^8.5.1
@@ -3025,7 +3025,7 @@ snapshots:
       cssesc: 3.0.0
       util-deprecate: 1.0.2
 
-  postcss-styled-syntax@0.7.2(postcss@8.5.28):
+  postcss-styled-syntax@0.7.3(postcss@8.5.28):
     dependencies:
       postcss: 8.5.28
       typescript: 6.0.3

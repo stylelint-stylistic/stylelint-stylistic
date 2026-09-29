@@ -886,6 +886,15 @@ testRule({
 			message: messages.expected(`1 tab`),
 		},
 		{
+			// A template opening with U+FEFF, which `postcss-styled-syntax` counts its interpolations past from 0.7.3 (hudochenkov/postcss-styled-syntax#41); the earlier releases threw over such a template
+			description: `a node indented with spaces behind an interpolation holding a break, in a template opening with the character a byte order mark is spelled with`,
+			code: `let x = css\`\uFEFF\${\`\n\`}\n  color: red;\`;`,
+			fixed: `let x = css\`\uFEFF\${\`\n\`}\n\tcolor: red;\`;`,
+			line: 3,
+			column: 3,
+			message: messages.expected(`1 tab`),
+		},
+		{
 			description: `spaces in front of an interpolation holding a break on the line of the backtick, the first node behind it on the same line`,
 			code: `function f () {\n\tconst a = styled.div\`  \${\`\n\`} color: red;\n\t\`;\n}`,
 			fixed: `function f () {\n\tconst a = styled.div\`\${\`\n\`} color: red;\n\t\`;\n}`,
