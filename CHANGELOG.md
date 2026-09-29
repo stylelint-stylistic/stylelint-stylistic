@@ -25,18 +25,6 @@ A rule listed under two of these names over one stylesheet is now read once
 
 - The [`named-grid-areas-alignment`](https://stylelint-stylistic.github.io/rules/named-grid-areas-alignment) rule now applies to the `grid-template` and `grid` properties too, and not only to `grid-template-areas` (see [#45](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/45)). Where your code spells those shorthands, the rule may start asking for corrections or writing them under `--fix`. For finer control use its new option (see below).
 
-#### The following false negatives have been fixed
-
-The rules below used to pass some code over in silence. They now warn on it, so code that used to be clean may need corrections.
-
-- The `declaration-block-semicolon-newline-after`, `declaration-block-semicolon-newline-before`, `declaration-block-semicolon-space-after` and `declaration-block-semicolon-space-before` rules now check the declarations of an inline `style` attribute (see [#49](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/49)).
-- The `declaration-colon-space-after` rule now looks for the whitespace after the colon where a custom property whose value holds a comment actually keeps it (see [#109](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/109)) ([@VChet](https://github.com/VChet)).
-- The `indentation` rule now reports every mis-indented line of an at-rule's parameters holding comments, at the line and column the file spells (see [#65](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/65)).
-- The `indentation` rule now corrects every mis-indented line of an at-rule, and not only one of them (see [#64](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/64)).
-- The `max-empty-lines` rule now counts the empty lines inside a Sass nested property written with a value, and puts every warning behind such a property, an end-of-line comment or a Less mixin call's `!important` on the line and column the file spells (see [#583](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/583)).
-
-And also a huge number of false negatives found by tools and agents, which may likewise require you to fix the code.
-
 #### Independence from the order of the rules
 
 Many rules now read the settings of other rules and lean on them, so what `--fix` leaves no longer depends on where the configuration lists a rule (see [#352](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/352), [#354](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/354), [#355](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/355), [#477](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/477), [#502](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/502)). A rule writing a line break, for one, asks the `linebreaks` rule which break to write, wherever that rule is listed. Expect some new autocorrections in your code.
@@ -86,6 +74,20 @@ By the way, the documentation now lives at [stylelint-stylistic.github.io](h
 
 ### Fixed
 
+The rules below used to pass some code over in silence. They now warn on it, so code that used to be clean may need corrections.
+
+- The `declaration-block-semicolon-newline-after`, `declaration-block-semicolon-newline-before`, `declaration-block-semicolon-space-after` and `declaration-block-semicolon-space-before` rules now check the declarations of an inline `style` attribute (see [#49](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/49)).
+- The `declaration-colon-space-after` rule now looks for the whitespace after the colon where a custom property whose value holds a comment actually keeps it (see [#109](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/109)) ([@VChet](https://github.com/VChet)).
+- The `indentation` rule now reports every mis-indented line of an at-rule's parameters holding comments, at the line and column the file spells (see [#65](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/65)).
+- The `indentation` rule now corrects every mis-indented line of an at-rule, and not only one of them (see [#64](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/64)).
+- The `max-empty-lines` rule now counts the empty lines inside a Sass nested property written with a value, and puts every warning behind such a property, an end-of-line comment or a Less mixin call's `!important` on the line and column the file spells (see [#583](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/583)).
+
+And also a huge number of false negatives and other bugs found by tools and agents, which may likewise require you to fix the code.
+
+## [5.3.1] — 2026–09–29
+
+### Fixed
+
 - The `block-opening-brace-space-before` rule no longer removes a comment standing between the selector and the opening brace when fixing (see [#63](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/63)).
 - The `indentation` rule no longer damages a declaration whose multi-line value holds comments when fixing (see [#62](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/62)).
 - The `selector-combinator-space-before` rule no longer reports a combinator that opens a selector when a comment stands in front of it (see [#66](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/66)).
@@ -93,8 +95,6 @@ By the way, the documentation now lives at [stylelint-stylistic.github.io](h
 - The `no-eol-whitespace` rule now trims every line of a comment when fixing, and not only the lines up to the first quotation mark in it (see [#67](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/67)).
 - The `string-quotes` rule no longer loses its bearings in a declaration's value or an at-rule's parameters holding a comment (see [#61](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/61), [#33](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/33)).
 - The `at-rule-semicolon-newline-after` rule no longer reports an at-rule whose semicolon is followed by a comment on a line of its own, and no longer breaks that comment's line when fixing ([#748](https://github.com/stylelint-stylistic/stylelint-stylistic/pull/748)) ([@christianvuerings](https://github.com/christianvuerings)).
-
-And also a huge number of bugs found by tools and agents.
 
 ## [5.3.0] — 2026–08–09
 
@@ -434,7 +434,8 @@ No meaningful changes.
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.3.0...HEAD
+[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.3.1...HEAD
+[5.3.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.3.0...v5.3.1
 [5.3.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.2.1...v5.3.0
 [5.2.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.2.0...v5.2.1
 [5.2.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.1.0...v5.2.0
