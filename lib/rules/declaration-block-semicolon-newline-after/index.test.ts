@@ -1,3 +1,7 @@
+import { describe, expect, it } from "vitest"
+
+import { race } from "../../../vitest.helpers.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -146,6 +150,17 @@ testRule({
 			`,
 		},
 		{
+			description: `a stray semicolon on a line of its own in front of a comment on the next line, both behind the break`,
+			code: `
+				a {
+				  color: pink;
+				  ;
+				  /* 1 */
+				  top: 0
+				}
+			`,
+		},
+		{
 			description: `a selector broken across lines, whose block is broken too`,
 			code: `
 				a,
@@ -267,6 +282,100 @@ testRule({
 			column: 17,
 			message: messages.expectedAfter(),
 		},
+		{
+			description: `a stray semicolon kept between the semicolon and its break, with a comment on the next line, which stands where a node would`,
+			code: `
+				a {
+				  color: pink;;
+				  /* 1 */
+				  top: 0
+				}
+			`,
+			fixed: `
+				a {
+				  color: pink;
+				;
+				  /* 1 */
+				  top: 0
+				}
+			`,
+			line: 2,
+			column: 15,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `the same stray semicolon and comment spelled with carriage returns`,
+			code: `a {\r\n  color: pink;;\r\n  /* 1 */\r\n  top: 0\r\n}`,
+			fixed: `a {\r\n  color: pink;\r\n;\r\n  /* 1 */\r\n  top: 0\r\n}`,
+			line: 2,
+			column: 15,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `the same stray semicolon with a declaration behind the comment on its line, which is the comment's business`,
+			code: `
+				a {
+				  color: pink;;
+				  /* 1 */ top: 0
+				}
+			`,
+			fixed: `
+				a {
+				  color: pink;
+				;
+				  /* 1 */ top: 0
+				}
+			`,
+			line: 2,
+			column: 15,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a space in front of the break, with a comment on the next line, which goes as in front of any node`,
+			code: `a {\n  color: pink; \n  /* 1 */\n  top: 0\n}`,
+			fixed: `a {\n  color: pink;\n  /* 1 */\n  top: 0\n}`,
+			line: 2,
+			column: 15,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a stray semicolon abutting the semicolon, with an end-of-line comment behind it`,
+			code: `
+				a {
+				  color: pink;;/* 1 */
+				  top: 0
+				}
+			`,
+			fixed: `
+				a {
+				  color: pink;
+				;/* 1 */
+				  top: 0
+				}
+			`,
+			line: 2,
+			column: 15,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a stray semicolon in front of a comment closing the block`,
+			code: `
+				a {
+				  color: pink;;
+				  /* 1 */
+				}
+			`,
+			fixed: `
+				a {
+				  color: pink;
+				;
+				  /* 1 */
+				}
+			`,
+			line: 2,
+			column: 15,
+			message: messages.expectedAfter(),
+		},
 	],
 })
 
@@ -370,6 +479,27 @@ testRule({
 	],
 
 	reject: [
+		{
+			description: `a stray semicolon kept between the semicolon and its break in a multi-line block, with a comment on the next line`,
+			code: `
+				a {
+				  color: pink;;
+				  /* 1 */
+				  top: 0
+				}
+			`,
+			fixed: `
+				a {
+				  color: pink;
+				;
+				  /* 1 */
+				  top: 0
+				}
+			`,
+			line: 2,
+			column: 15,
+			message: messages.expectedAfterMultiLine(),
+		},
 		{
 			description: `a declaration abutting the semicolon in a multi-line block`,
 			code: `
@@ -666,4 +796,21 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 	],
+})
+
+describe(`${ruleName} beside the rules that write the run in front of a comment`, () => {
+	let noExtraSemicolons = `@stylistic/no-extra-semicolons`
+	let noEolWhitespace = `@stylistic/no-eol-whitespace`
+
+	it(`reads the run in front of a comment as the rule about extra semicolons leaves it, one file in both orders`, async () => {
+		expect(await race(ruleName, `a {\n  color: pink;;\n  /* 1 */\n  top: 0\n}`, `always`, noExtraSemicolons, true)).toEqual({ ours: `a {\n  color: pink;\n  /* 1 */\n  top: 0\n}`, theirs: `a {\n  color: pink;\n  /* 1 */\n  top: 0\n}`, left: [] })
+	})
+
+	it(`trims the space that rule leaves in front of the break where it takes the semicolon behind the space`, async () => {
+		expect(await race(ruleName, `a {\n  color: pink; ;\n  /* 1 */\n  top: 0\n}`, `always`, noExtraSemicolons, true)).toEqual({ ours: `a {\n  color: pink;\n  /* 1 */\n  top: 0\n}`, theirs: `a {\n  color: pink;\n  /* 1 */\n  top: 0\n}`, left: [] })
+	})
+
+	it(`trims the space in front of the break once beside the rule about whitespace at the end of a line, one file in both orders`, async () => {
+		expect(await race(ruleName, `a {\n  color: pink; \n  /* 1 */\n  top: 0\n}`, `always`, noEolWhitespace, true)).toEqual({ ours: `a {\n  color: pink;\n  /* 1 */\n  top: 0\n}`, theirs: `a {\n  color: pink;\n  /* 1 */\n  top: 0\n}`, left: [] })
+	})
 })

@@ -1,7 +1,7 @@
 import stylelint from "stylelint"
 import { describe, expect, it } from "vitest"
 
-import { pick } from "../../../vitest.helpers.ts"
+import { pick, race } from "../../../vitest.helpers.ts"
 import plugins from "../../index.ts"
 
 import { messages, ruleName } from "./index.ts"
@@ -1081,55 +1081,35 @@ describe(`${ruleName} on the whitespace it carries past a comment`, () => {
 	})
 })
 
-/**
- * Fixes a stylesheet under two rules, once in each order the configuration can list them, and reports what is left.
- * @param code - The stylesheet.
- * @param option - This rule's primary option.
- * @param neighbor - The other rule's configured name.
- * @param setting - The other rule's configured value.
- * @returns What each order wrote, and the warnings the first order left over its own output.
- */
-async function race (code: string, option: string, neighbor: string, setting: unknown): Promise<{
-	ours: string | undefined,
-	theirs: string | undefined,
-	left: string[],
-}> {
-	let ours = await stylelint.lint({ code, config: { plugins, rules: { [ruleName]: option, [neighbor]: setting } }, fix: true })
-	let theirs = await stylelint.lint({ code, config: { plugins, rules: { [neighbor]: setting, [ruleName]: option } }, fix: true })
-	let again = await stylelint.lint({ code: ours.code ?? code, config: { plugins, rules: { [ruleName]: option, [neighbor]: setting } } })
-
-	return { ours: ours.code, theirs: theirs.code, left: pick(again.results).warnings.map((warning) => warning.text) }
-}
-
 describe(`${ruleName} beside the rules that write the same run`, () => {
 	let closingNewline = `@stylistic/block-closing-brace-newline-before`
 	let closingSpace = `@stylistic/block-closing-brace-space-before`
 	let closingEmptyLine = `@stylistic/block-closing-brace-empty-line-before`
 
 	it(`writes the run where the rule about the closing brace asks for the same break`, async () => {
-		expect(await race(`a {/*c*/}`, `always`, closingNewline, `always`)).toEqual({ ours: `a {/*c*/\n}`, theirs: `a {/*c*/\n}`, left: [] })
+		expect(await race(ruleName, `a {/*c*/}`, `always`, closingNewline, `always`)).toEqual({ ours: `a {/*c*/\n}`, theirs: `a {/*c*/\n}`, left: [] })
 	})
 
 	it(`leaves it where that rule's never-multi-line would take the break straight back out`, async () => {
-		expect(await race(`a {/*c*/}`, `always`, closingNewline, `never-multi-line`)).toEqual({ ours: `a {/*c*/}`, theirs: `a {/*c*/}`, left: [messages.expectedAfter()] })
+		expect(await race(ruleName, `a {/*c*/}`, `always`, closingNewline, `never-multi-line`)).toEqual({ ours: `a {/*c*/}`, theirs: `a {/*c*/}`, left: [messages.expectedAfter()] })
 	})
 
 	it(`leaves it where the rule about a space in front of that brace asks for one`, async () => {
-		expect(await race(`a {/*c*/}`, `always`, closingSpace, `always`)).toEqual({ ours: `a {/*c*/ }`, theirs: `a {/*c*/ }`, left: [messages.expectedAfter()] })
+		expect(await race(ruleName, `a {/*c*/}`, `always`, closingSpace, `always`)).toEqual({ ours: `a {/*c*/ }`, theirs: `a {/*c*/ }`, left: [messages.expectedAfter()] })
 	})
 
 	it(`writes it where that rule says nothing of the block the write leaves, which is multi-line`, async () => {
-		expect(await race(`a {/*c*/}`, `always`, closingSpace, `always-single-line`)).toEqual({ ours: `a {/*c*/\n}`, theirs: `a {/*c*/\n}`, left: [] })
+		expect(await race(ruleName, `a {/*c*/}`, `always`, closingSpace, `always-single-line`)).toEqual({ ours: `a {/*c*/\n}`, theirs: `a {/*c*/\n}`, left: [] })
 	})
 
 	it(`writes it where the rule about an empty line in front of that brace doubles the break behind it`, async () => {
-		expect(await race(`a {/*c*/}`, `always`, closingEmptyLine, `always-multi-line`)).toEqual({ ours: `a {/*c*/\n\n}`, theirs: `a {/*c*/\n\n}`, left: [] })
+		expect(await race(ruleName, `a {/*c*/}`, `always`, closingEmptyLine, `always-multi-line`)).toEqual({ ours: `a {/*c*/\n\n}`, theirs: `a {/*c*/\n\n}`, left: [] })
 	})
 
 	it(`leaves it where that rule wants the empty line the never-multi-line write takes out`, async () => {
 		let code = `a {/*a\nb*/\n}`
 
-		expect(await race(code, `never-multi-line`, closingEmptyLine, [`never`, { except: [`after-closing-brace`] }])).toEqual({
+		expect(await race(ruleName, code, `never-multi-line`, closingEmptyLine, [`never`, { except: [`after-closing-brace`] }])).toEqual({
 			ours: `a {/*a\nb*/\n\n}`,
 			theirs: `a {/*a\nb*/\n\n}`,
 			left: [messages.rejectedAfterMultiLine()],
@@ -1137,13 +1117,13 @@ describe(`${ruleName} beside the rules that write the same run`, () => {
 	})
 
 	it(`writes it under never-multi-line where the emptied run leaves the block on one line, which takes that rule's always-multi-line out of the conversation`, async () => {
-		expect(await race(`a {\n/*c*/\n}`, `never-multi-line`, closingEmptyLine, `always-multi-line`)).toEqual({ ours: `a {/*c*/}`, theirs: `a {/*c*/}`, left: [] })
+		expect(await race(ruleName, `a {\n/*c*/\n}`, `never-multi-line`, closingEmptyLine, `always-multi-line`)).toEqual({ ours: `a {/*c*/}`, theirs: `a {/*c*/}`, left: [] })
 	})
 
 	it(`leaves it under never-multi-line where a comment of its own keeps the block multi-line and that rule still wants its empty line`, async () => {
 		let code = `a {/*a\nb*/\n}`
 
-		expect(await race(code, `never-multi-line`, closingEmptyLine, `always-multi-line`)).toEqual({
+		expect(await race(ruleName, code, `never-multi-line`, closingEmptyLine, `always-multi-line`)).toEqual({
 			ours: `a {/*a\nb*/\n\n}`,
 			theirs: `a {/*a\nb*/\n\n}`,
 			left: [messages.rejectedAfterMultiLine()],
@@ -1153,7 +1133,7 @@ describe(`${ruleName} beside the rules that write the same run`, () => {
 	it(`leaves it where one comment of a run keeps the block multi-line while the rest of them are single-line`, async () => {
 		let code = `a {/*1*/\n/*a\nb*/\n}`
 
-		expect(await race(code, `never-multi-line`, closingEmptyLine, `always-multi-line`)).toEqual({
+		expect(await race(ruleName, code, `never-multi-line`, closingEmptyLine, `always-multi-line`)).toEqual({
 			ours: `a {/*1*/\n/*a\nb*/\n\n}`,
 			theirs: `a {/*1*/\n/*a\nb*/\n\n}`,
 			left: [messages.rejectedAfterMultiLine()],
@@ -1162,15 +1142,15 @@ describe(`${ruleName} beside the rules that write the same run`, () => {
 
 	// The never-multi-line write keeps what stands behind the whitespace the run opens with, so the block it leaves is judged with that break in it
 	it(`writes it under never-multi-line where a break behind a stray semicolon keeps the block multi-line, which takes the always-single-line of the rule about a space out of the conversation`, async () => {
-		expect(await race(`a {\n/*c*/ ;\n}`, `never-multi-line`, closingSpace, `always-single-line`)).toEqual({ ours: `a {/*c*/;\n}`, theirs: `a {/*c*/;\n}`, left: [] })
+		expect(await race(ruleName, `a {\n/*c*/ ;\n}`, `never-multi-line`, closingSpace, `always-single-line`)).toEqual({ ours: `a {/*c*/;\n}`, theirs: `a {/*c*/;\n}`, left: [] })
 	})
 
 	it(`leaves it where that rule's never-multi-line is listed under the namespace of another syntax, which reads the same plain CSS file`, async () => {
-		expect(await race(`a { /* c */ }`, `always`, `@stylistic/scss/block-closing-brace-newline-before`, `never-multi-line`)).toEqual({ ours: `a { /* c */ }`, theirs: `a { /* c */ }`, left: [messages.expectedAfter()] })
+		expect(await race(ruleName, `a { /* c */ }`, `always`, `@stylistic/scss/block-closing-brace-newline-before`, `never-multi-line`)).toEqual({ ours: `a { /* c */ }`, theirs: `a { /* c */ }`, left: [messages.expectedAfter()] })
 	})
 
 	it(`writes it where that rule's fix is turned off, since a fix that rewrites nothing gates nothing`, async () => {
-		expect(await race(`a {/*c*/}`, `always`, closingNewline, [`never-multi-line`, { disableFix: true }])).toEqual({
+		expect(await race(ruleName, `a {/*c*/}`, `always`, closingNewline, [`never-multi-line`, { disableFix: true }])).toEqual({
 			ours: `a {/*c*/\n}`,
 			theirs: `a {/*c*/\n}`,
 			left: [`Unexpected whitespace before "}" of a multi-line block (${closingNewline})`],
@@ -1179,61 +1159,61 @@ describe(`${ruleName} beside the rules that write the same run`, () => {
 
 	// A stray semicolon parts the run in two, the whitespace in front of it this rule's and the whitespace behind it the other rule's
 	it(`writes it where a stray semicolon with a break behind it parts the run from the one the rule about a break in front of the brace writes`, async () => {
-		expect(await race(`a {\n/* c */;\n}`, `never-multi-line`, closingNewline, `always`)).toEqual({ ours: `a {/* c */;\n}`, theirs: `a {/* c */;\n}`, left: [] })
+		expect(await race(ruleName, `a {\n/* c */;\n}`, `never-multi-line`, closingNewline, `always`)).toEqual({ ours: `a {/* c */;\n}`, theirs: `a {/* c */;\n}`, left: [] })
 	})
 
 	it(`writes it beside the rule about a space in front of the brace, which writes behind a stray semicolon alone`, async () => {
-		expect(await race(`a {/* c */ ; }`, `always`, closingSpace, `always`)).toEqual({ ours: `a {/* c */\n ; }`, theirs: `a {/* c */\n ; }`, left: [] })
+		expect(await race(ruleName, `a {/* c */ ; }`, `always`, closingSpace, `always`)).toEqual({ ours: `a {/* c */\n ; }`, theirs: `a {/* c */\n ; }`, left: [] })
 	})
 
 	it(`leaves it where no break stands behind the semicolon and the rule about a break in front of the brace puts its own in front of the run`, async () => {
-		expect(await race(`a {/* c */ ; }`, `never-multi-line`, closingNewline, `always`)).toEqual({ ours: `a {/* c */\n ; }`, theirs: `a {/* c */\n ; }`, left: [messages.rejectedAfterMultiLine()] })
+		expect(await race(ruleName, `a {/* c */ ; }`, `never-multi-line`, closingNewline, `always`)).toEqual({ ours: `a {/* c */\n ; }`, theirs: `a {/* c */\n ; }`, left: [messages.rejectedAfterMultiLine()] })
 	})
 
 	// The run is read and written as `no-extra-semicolons` leaves it, and the semicolon it takes stays in the write for it to take
 	it(`reads the run behind a comment of the head as the rule about extra semicolons leaves it, one file in both orders`, async () => {
-		expect(await race(`a {\n/* c */ ;\n}`, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: `a {\n/* c */\n}`, theirs: `a {\n/* c */\n}`, left: [] })
+		expect(await race(ruleName, `a {\n/* c */ ;\n}`, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: `a {\n/* c */\n}`, theirs: `a {\n/* c */\n}`, left: [] })
 	})
 
 	it(`does the same in front of a declaration`, async () => {
-		expect(await race(`a {\n/* c */ ;\nb: c; }`, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: `a {\n/* c */\nb: c; }`, theirs: `a {\n/* c */\nb: c; }`, left: [] })
+		expect(await race(ruleName, `a {\n/* c */ ;\nb: c; }`, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: `a {\n/* c */\nb: c; }`, theirs: `a {\n/* c */\nb: c; }`, left: [] })
 	})
 
 	// A break written in front of a semicolon a disable comment keeps from that rule moves it off the line the comment covers, and the rule would take it after all
 	it(`leaves the run where a break in front of it would move a semicolon a disable comment keeps from the rule about extra semicolons off its line`, async () => {
 		let code = `a {/* stylelint-disable-line @stylistic/no-extra-semicolons */ ;\n}`
 
-		expect(await race(code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
+		expect(await race(ruleName, code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
 	})
 
 	it(`does the same where the comment covers the next line`, async () => {
 		let code = `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\na {/* c */ ;\n}`
 
-		expect(await race(code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
+		expect(await race(ruleName, code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
 	})
 
 	it(`writes it under never-multi-line where the disable comment keeping the semicolon moves up with it`, async () => {
 		let code = `a {\n/* stylelint-disable-line @stylistic/no-extra-semicolons */ ;\n}`
 		let fixed = `a {/* stylelint-disable-line @stylistic/no-extra-semicolons */;\n}`
 
-		expect(await race(code, `never-multi-line`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: fixed, theirs: fixed, left: [] })
+		expect(await race(ruleName, code, `never-multi-line`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: fixed, theirs: fixed, left: [] })
 	})
 
 	it(`leaves it under never-multi-line where a semicolon a disable comment keeps stands in front of another comment and would move off the line the disable comment covers`, async () => {
 		let code = `a {\n/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\n;/* d */ b: c;\n}`
 
-		expect(await race(code, `never-multi-line`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.rejectedAfterMultiLine()] })
+		expect(await race(ruleName, code, `never-multi-line`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.rejectedAfterMultiLine()] })
 	})
 
 	it(`leaves the semicolon a disable comment for another rule's range closes on its line out of the reckoning`, async () => {
 		let code = `/* stylelint-disable color-named */\na {/* stylelint-disable-line @stylistic/no-extra-semicolons */ ; b: c; /* stylelint-enable color-named */ }`
 
-		expect(await race(code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
+		expect(await race(ruleName, code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
 	})
 
 	it(`counts the break it writes against the run without the semicolon the rule about extra semicolons takes, one run in both orders`, async () => {
 		let code = `a {/* stylelint-disable-next-line @stylistic/no-extra-semicolons */ ;\n ; b: c; }`
-		let first = await race(code, `always`, `@stylistic/no-extra-semicolons`, true)
+		let first = await race(ruleName, code, `always`, `@stylistic/no-extra-semicolons`, true)
 
 		expect(first.ours).toBe(first.theirs)
 		expect(first.left).toEqual([])
@@ -1243,32 +1223,32 @@ describe(`${ruleName} beside the rules that write the same run`, () => {
 	it(`leaves the run where the break it writes would move a semicolon further along the covered line off it`, async () => {
 		let code = `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\na {/* c */ b: c;; }`
 
-		expect(await race(code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
+		expect(await race(ruleName, code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
 	})
 
 	it(`still writes the head of a block standing behind such a semicolon`, async () => {
 		let code = `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\na { b: c; }; d { e: f; }`
 		let fixed = `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\na { b: c; }; d {\n e: f; }`
 
-		expect(await race(code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: fixed, theirs: fixed, left: [messages.expectedAfter()] })
+		expect(await race(ruleName, code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: fixed, theirs: fixed, left: [messages.expectedAfter()] })
 	})
 
 	it(`does the same for a semicolon on the line behind a rule's brace, which PostCSS files behind the rule`, async () => {
 		let code = `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */ a {b: c;}\n;`
 
-		expect(await race(code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
+		expect(await race(ruleName, code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
 	})
 
 	it(`does the same for a semicolon opening the run the break goes in front of`, async () => {
 		let code = `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\na {; b: c; }`
 
-		expect(await race(code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
+		expect(await race(ruleName, code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
 	})
 
 	// The tail of a block a stray semicolon behind its brace follows ends in front of that semicolon's run, and a kept semicolon there stands on the brace's line
 	it(`leaves the run where the break it writes would move a kept semicolon in front of the brace of a block a stray semicolon follows`, async () => {
 		let code = `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\na { b: c; ;\n}\n  ;`
 
-		expect(await race(code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\na { b: c; ;\n}\n  `, theirs: `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\na { b: c; ;\n}\n  `, left: [messages.expectedAfter()] })
+		expect(await race(ruleName, code, `always`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\na { b: c; ;\n}\n  `, theirs: `/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\na { b: c; ;\n}\n  `, left: [messages.expectedAfter()] })
 	})
 })

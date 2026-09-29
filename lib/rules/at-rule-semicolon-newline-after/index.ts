@@ -1,12 +1,12 @@
 import stylelint from "stylelint"
 
-import { CHARSET_AT_RULE_NAME, LEADING_WHITESPACE_WITHOUT_BREAK, LINE_BREAK, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE } from "../../regexps.ts"
+import { CHARSET_AT_RULE_NAME, LEADING_WHITESPACE_WITHOUT_BREAK, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
-import { nextNonCommentNode } from "../../utils/nextNonCommentNode/index.ts"
+import { nodeBehindEndOfLineComments } from "../../utils/nodeBehindEndOfLineComments/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -60,13 +60,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// A `@charset` is no at-rule to a reader of its own text, but the semicolon behind it is the file's, and the break behind that is read as behind any node
 			if (!syntax.isStandardAtRule(atRule) && !CHARSET_AT_RULE_NAME.test(atRule.name)) return
 
-			// Allow an end-of-line comment; a comment opening a line of its own stands behind the break already, whatever follows it
-			let opensALine = false
-			let nodeToCheck = nextNonCommentNode(nextNode, (comment) => {
-				opensALine ||= LINE_BREAK.test(runInFrontOf(comment))
-			})
+			// Allow an end-of-line comment; the run in front of any other comment is the run behind the semicolon, judged and written as a node's, whatever follows the comment
+			let nodeToCheck = nodeBehindEndOfLineComments(nextNode, result)
 
-			if (!nodeToCheck || opensALine) return
+			if (!nodeToCheck) return
 
 			let problemIndex = nodeString(atRule, result).length + 1
 			// A free semicolon of the checked node's run `no-extra-semicolons` takes out in the same run is read as gone, so that the run is judged as it will stand whichever side of that rule this one is listed

@@ -1,3 +1,6 @@
+import { describe, expect, it } from "vitest"
+
+import { race } from "../../../vitest.helpers.ts"
 import { CHARSET_RULE_MESSAGE } from "../../utils/asksForTheCharsetRule/index.ts"
 
 import { messages, ruleName } from "./index.ts"
@@ -98,6 +101,10 @@ testRule({
 			code: `@import 'x.css'; /* one */\n/* two */ a {}`,
 		},
 		{
+			description: `a stray semicolon on a line of its own in front of a comment on the next line, both behind the break`,
+			code: `@import 'x.css';\n;\n/* comment */\na {}`,
+		},
+		{
 			description: `a semicolon closing the file, with no line for the break to open`,
 			code: `@import 'x.css';`,
 		},
@@ -166,6 +173,63 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
+			description: `a stray semicolon kept between the semicolon and its break, with a comment on the next line, which stands where a node would`,
+			code: `@import 'x.css';;\n/* comment */\na {}`,
+			fixed: `@import 'x.css';\n;\n/* comment */\na {}`,
+			line: 1,
+			column: 17,
+			message: messages.expectedAfter(),
+		},
+		{
+			autoStripIndent: false,
+			description: `the same stray semicolon and comment written with carriage-return line breaks`,
+			code: `@import 'x.css';;\r\n/* comment */\r\na {}`,
+			fixed: `@import 'x.css';\r\n;\r\n/* comment */\r\na {}`,
+			line: 1,
+			column: 17,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `the same stray semicolon with a rule behind the comment on its line, which is the comment's business`,
+			code: `@import 'x.css';;\n/* comment */ a {}`,
+			fixed: `@import 'x.css';\n;\n/* comment */ a {}`,
+			line: 1,
+			column: 17,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a space in front of the break, with a comment on the next line, which goes as in front of any node`,
+			code: `@import 'x.css'; \n/* comment */\na {}`,
+			fixed: `@import 'x.css';\n/* comment */\na {}`,
+			line: 1,
+			column: 17,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a stray semicolon abutting the semicolon, with an end-of-line comment behind it`,
+			code: `@import 'x.css';;/* comment */\na {}`,
+			fixed: `@import 'x.css';\n;/* comment */\na {}`,
+			line: 1,
+			column: 17,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `an end-of-line comment, then a stray semicolon and a comment on a line of its own with a rule behind it on the same line`,
+			code: `@import 'x.css'; /* one */;\n/* two */ a {}`,
+			fixed: `@import 'x.css'; /* one */\n;\n/* two */ a {}`,
+			line: 1,
+			column: 17,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a stray semicolon in front of a comment closing the file`,
+			code: `@import 'x.css';;\n/* comment */`,
+			fixed: `@import 'x.css';\n;\n/* comment */`,
+			line: 1,
+			column: 17,
+			message: messages.expectedAfter(),
+		},
+		{
 			description: `a space between two at-rules of the file's first line`,
 			code: `@import url("x.css"); @layer base;`,
 			fixed: `@import url("x.css");\n @layer base;`,
@@ -224,4 +288,21 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 	],
+})
+
+describe(`${ruleName} beside the rules that write the run in front of a comment`, () => {
+	let noExtraSemicolons = `@stylistic/no-extra-semicolons`
+	let noEolWhitespace = `@stylistic/no-eol-whitespace`
+
+	it(`reads the run in front of a comment as the rule about extra semicolons leaves it, one file in both orders`, async () => {
+		expect(await race(ruleName, `@import 'x.css';;\n/* comment */\na {}`, `always`, noExtraSemicolons, true)).toEqual({ ours: `@import 'x.css';\n/* comment */\na {}`, theirs: `@import 'x.css';\n/* comment */\na {}`, left: [] })
+	})
+
+	it(`trims the space that rule leaves in front of the break where it takes the semicolon behind the space`, async () => {
+		expect(await race(ruleName, `@import 'x.css'; ;\n/* comment */\na {}`, `always`, noExtraSemicolons, true)).toEqual({ ours: `@import 'x.css';\n/* comment */\na {}`, theirs: `@import 'x.css';\n/* comment */\na {}`, left: [] })
+	})
+
+	it(`trims the space in front of the break once beside the rule about whitespace at the end of a line, one file in both orders`, async () => {
+		expect(await race(ruleName, `@import 'x.css'; \n/* comment */\na {}`, `always`, noEolWhitespace, true)).toEqual({ ours: `@import 'x.css';\n/* comment */\na {}`, theirs: `@import 'x.css';\n/* comment */\na {}`, left: [] })
+	})
 })

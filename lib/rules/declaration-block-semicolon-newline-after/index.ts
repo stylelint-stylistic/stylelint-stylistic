@@ -10,6 +10,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isInlineStyleAttribute } from "../../utils/isInlineStyleAttribute/index.ts"
 import { isLastNodeWithoutSemicolon } from "../../utils/isLastNodeWithoutSemicolon/index.ts"
 import { nextNonCommentNode } from "../../utils/nextNonCommentNode/index.ts"
+import { nodeBehindEndOfLineComments } from "../../utils/nodeBehindEndOfLineComments/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -72,13 +73,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!nextNode) return
 
-			// Allow an end-of-line comment; under the `always` options a comment opening a line of its own stands behind the break already, whatever follows it, while `never-multi-line` reads past it, since returning would hide the break in front of the node behind the comment, which that option reports
-			let opensALine = false
-			let nodeToCheck = nextNonCommentNode(nextNode, (comment) => {
-				opensALine ||= LINE_BREAK.test(runInFrontOf(comment))
-			})
+			// Allow an end-of-line comment; under the `always` options the run in front of any other comment is the run behind the semicolon, judged and written as a node's, whatever follows the comment, while `never-multi-line` reads past every comment, since the whitespace in front of the node behind them is what that option reports
+			let nodeToCheck = primary.startsWith(`always`) ? nodeBehindEndOfLineComments(nextNode, result) : nextNonCommentNode(nextNode)
 
-			if (!nodeToCheck || (opensALine && primary.startsWith(`always`))) return
+			if (!nodeToCheck) return
 
 			let problemIndex = nodeString(decl, result).length + 1
 			let previousNode = nodeToCheck.prev() as ChildNode

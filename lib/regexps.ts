@@ -400,6 +400,9 @@ export const WHITESPACE_THEN_INLINE_COMMENT = /^\s+\/\//u
 /** The leading whitespace short of a break, where content or the end follows directly; nothing where the first break precedes the content. Tokenizer whitespace, as {@link EVERY_LINE_BREAK_AND_INDENT} is. */
 export const WHITESPACE_WITHOUT_BREAK_BEFORE_CONTENT = /^(?:[ \t\f]|\r(?!\n))*(?=\S|$)/u
 
+/** A whole run of whitespace holding no break, or nothing: what stands in front of an end-of-line comment. The whole-run twin of {@link LEADING_WHITESPACE_WITHOUT_BREAK}. */
+export const WHITESPACE_WITHOUT_BREAK_ONLY = /^(?:[ \t\f]|\r(?!\n))*$/u
+
 /** A comment closing a disabled range, its rule list captured; Stylelint trims a comment's text, and a description stands behind a `--` a space parts from the list. */
 export const ENABLE_COMMAND = /^stylelint-enable(?:\s+(?!--)(.*?))?(?:\s+--(?:\s.*)?)?$/su
 
