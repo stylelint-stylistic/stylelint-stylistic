@@ -16,4 +16,4 @@ Install the dependencies with `pnpm ci`, and run `make verify` before pushin
 
 - A pull request carries one change. A tidy-up riding along makes the review about two things at once, so it goes into a pull request of its own.
 - A change a user of the plugin meets gets an entry in the `Unreleased` section of [`CHANGELOG.md`](CHANGELOG.md), saying what is now true for them.
-- A commit subject is one imperative sentence with no conventional-commits prefix: `Fix the build target`, never `fix: build target`.
+- A commit subject is one imperative sentence with no conventional-commits prefix: `Fix the build target`, never `fix: build target`. The body, if any, says briefly why the change is needed; what changed is the diff.
