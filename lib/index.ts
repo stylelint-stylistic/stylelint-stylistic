@@ -15,7 +15,7 @@ let rulesPlugins = [css, ...namespaces].flatMap((syntax) => Object.entries(rules
 /** Stylelint reads `extends` only on a config, so this getter runs only where the package was listed in the wrong field, which otherwise makes every `@stylistic/` rule unknown. */
 Object.defineProperty(rulesPlugins, `extends`, {
 	get () {
-		let error = new Error(`"@stylistic/stylelint-plugin" is a plugin, not a shareable config, so it cannot be used in "extends". List it in "plugins" instead, and put the rules you need, each namespaced with "@stylistic/", in "rules".`) as ConfigurationError
+		let error = new Error(`"@stylistic/stylelint-plugin" is a plugin, not a shareable config, so it cannot be used in "extends". Use "@stylistic/stylelint-plugin/recommended" in "extends" for the recommended preset, or list the package in "plugins" and put the rules you need, each namespaced with "@stylistic/", in "rules".`) as ConfigurationError
 
 		error.name = `ConfigurationError`
 		error.code = EXIT_CODE_INVALID_CONFIG
@@ -26,4 +26,5 @@ Object.defineProperty(rulesPlugins, `extends`, {
 
 export default rulesPlugins
 
+export { configs } from "./configs/index.ts"
 export { type CommonSecondary, defineStylistic, defineStylisticOverride, type GlobalOptions, type Namespace, type RuleName, type RulesInput, type StylisticOverride, type StylisticRules, type SyntaxName } from "./defineStylistic/index.ts"

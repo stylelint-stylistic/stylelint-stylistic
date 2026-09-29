@@ -19,7 +19,17 @@ npm add -D stylelint @stylistic/stylelint-plugin
 > [!IMPORTANT]
 > Install a published version. The repository carries no built `dist/`, so a dependency named by a Git reference does **not** work.
 
-Create `stylelint.config.mjs` (or open your existing configuration), add `@stylistic/stylelint-plugin` to the plugins array and the rules you need to the rules list. [All rules from `@stylistic/stylelint-plugin`](https://stylelint-stylistic.github.io/user-guide/rules) need to be namespaced with `@stylistic/`. That prefix is the whole difference — an unprefixed name in the rules list is a rule of Stylelint's own, a prefixed one is a rule of this plugin:
+The quickest way in is the recommended preset, which sets every rule of the plugin that has an answer the same for every project. Create `stylelint.config.mjs` (or open your existing configuration) and extend it by the package's `recommended` subpath, beside whatever else you extend:
+
+```js
+export default {
+	extends: ["@stylistic/stylelint-plugin/recommended"],
+}
+```
+
+A setting of your own in `rules` wins over the preset's. What the preset sets, how it reads SCSS and Less, and which rules it leaves to you is in [Configs](https://stylelint-stylistic.github.io/user-guide/configs).
+
+To choose every setting yourself instead, add `@stylistic/stylelint-plugin` to the plugins array and the rules you need to the rules list. [All rules from `@stylistic/stylelint-plugin`](https://stylelint-stylistic.github.io/user-guide/rules) need to be namespaced with `@stylistic/`. That prefix is the whole difference — an unprefixed name in the rules list is a rule of Stylelint's own, a prefixed one is a rule of this plugin:
 
 ```js
 export default {
@@ -41,6 +51,7 @@ A stylesheet written in SCSS or Less, or embedded in JavaScript as a styl
 
 - [Why?](https://stylelint-stylistic.github.io/user-guide/why)
 - [Getting started](https://stylelint-stylistic.github.io/user-guide/getting-started)
+- [Configs](https://stylelint-stylistic.github.io/user-guide/configs)
 - [Rule list](https://stylelint-stylistic.github.io/user-guide/rules)
 - [Custom syntaxes](https://stylelint-stylistic.github.io/user-guide/custom-syntaxes)
 - [Typed configuration](https://stylelint-stylistic.github.io/user-guide/typed-configuration)

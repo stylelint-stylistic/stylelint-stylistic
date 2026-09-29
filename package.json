@@ -21,6 +21,10 @@
 			"types": "./dist/index.d.ts",
 			"default": "./dist/index.js"
 		},
+		"./recommended": {
+			"types": "./dist/configs/recommended.d.ts",
+			"default": "./dist/configs/recommended.js"
+		},
 		"./package.json": "./package.json"
 	},
 	"files": [
