@@ -12,7 +12,7 @@ The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatical
 
 The solidus this rule reads is the separator CSS spells between the numbers of a ratio (`aspect-ratio: 16 / 9`), the sizes of a font shorthand (`font: 12px / 1.5 serif`), the lines of a grid area (`grid-area: 1 / 3`) and the color and the alpha of a color function (`rgb(0 0 0 / 50%)`). A solidus inside the arguments of a math function is the division operator and is not read, and neither is one inside a `url()` address, a string or a comment. The solidus of a media feature is read by [`media-feature-slash-space-before`](../media-feature-slash-space-before/README.md).
 
-Where the whitespace in front of the solidus is the line break that closes a `//` comment of a preprocessor, the problem is reported and the value left as it stands: a space written there would take the solidus into the comment, and so would taking the break away.
+Where the fix would move code into a `//` comment, it leaves the whitespace alone and the warning stands.
 
 ## Options
 

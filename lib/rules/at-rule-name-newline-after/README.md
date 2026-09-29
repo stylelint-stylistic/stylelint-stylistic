@@ -11,7 +11,7 @@ Require a newline after at-rule names.
 
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule. Under Less it writes no break behind an `@import` or `@plugin` with no whitespace behind the name, since Less takes the two as directives only with whitespace there. The warning stands.
 
-The rule passes over a `@charset` in any spelling: the encoding declaration is a byte sequence the browser reads before parsing rather than an at-rule, and Stylelint's [`at-charset-rule-no-invalid`](https://stylelint.io/user-guide/rules/at-charset-rule-no-invalid) rule judges its spelling. A CSS file holding one gets a single warning asking for that rule where the configuration leaves it off.
+The rule passes over `@charset`, whose spelling Stylelint's [`at-charset-rule-no-invalid`](https://stylelint.io/user-guide/rules/at-charset-rule-no-invalid) rule judges; a CSS file holding one gets a warning asking for that rule where the configuration leaves it off.
 
 ## Options
 

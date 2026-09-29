@@ -16,7 +16,7 @@ The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatical
 
 The [`message` secondary option](https://stylelint.io/user-guide/configure/#message) can accept the arguments of this rule.
 
-The property is read in whatever case it is written, as CSS reads it. The rows of the `grid-template` and `grid` shorthands are read as the longhand's are: every string at the top level of the value is a row, and its cells are aligned with the cells of the other rows. A shorthand puts a row's size and its line names beside each string and the columns behind a solidus, and the rule reads none of that — everything that is no row goes back as the file spells it — so a size standing behind a row moves with the row's closing quote, which `alignQuotes` lines up, while a line name in front of a row, the solidus and the columns behind it keep the place and the whitespace the author gave them:
+The property is read in any case. The rows of the `grid-template` and `grid` shorthands are read as the longhand's: every string at the top level of the value is a row. Row sizes, line names, the solidus and the columns are left as written, except that a size behind a row moves with the row's closing quote, which `alignQuotes` lines up:
 
 ```css
 div {
@@ -28,13 +28,13 @@ div {
 }
 ```
 
-Whether the solidus opens a line of its own or closes the last row's is not this rule's to decide, and neither is the column the rows open on. The `alignColumns` option below lays the sizes and the line names out as columns of their own.
+The `alignColumns` option below lays the sizes and the line names out as columns of their own.
 
-A declaration spans lines when a line break stands in its value outside every row. Everything of the value that is no row is handed back character for character, wherever it stands and whatever it is — the whitespace in front of the first row, between two of them or behind the last, a comment, a call, a word carrying an escaped break — so a break written in any of them is one the fix leaves. A break standing inside a row is not one of those: the fix collapses the whitespace of a row, that break with it, so the row comes back on one line.
+A declaration spans lines when a line break stands in its value outside every row. The fix keeps everything outside the rows as written, line breaks included, and puts each row on one line.
 
-A row holding no cell token at all is aligned to nothing: the whitespace inside it is taken away and the row is written back with nothing between its quotation marks, keeping the place the author gave it. Under `alignQuotes` in a declaration spanning lines it is padded to the width of the others instead, so that its closing quote lines up with theirs.
+A row holding no cell token is written back empty, or, under `alignQuotes` in a declaration spanning lines, padded to the width of the others.
 
-A cell is measured in the characters it is written with rather than in the code units JavaScript stores them in, so a character outside the Basic Multilingual Plane counts once, as the one column it stands on. What is counted is code points and not what an editor draws: a grapheme cluster spelled with several of them counts as several, and a character drawn two columns wide counts as one.
+A cell's width is counted in code points: a character outside the Basic Multilingual Plane counts once, and a grapheme cluster of several code points counts as several.
 
 ## Options
 

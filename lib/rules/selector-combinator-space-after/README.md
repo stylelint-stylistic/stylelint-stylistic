@@ -8,8 +8,6 @@ Require a single space or disallow whitespace after the combinators of sele
  * These are combinators */
 ```
 
-Combinators are used to combine several different selectors into new and more specific ones. There are several types of combinators, including: child (`>`), adjacent sibling (`+`), general sibling (`~`), and descendant (which is represented by a blank space between two selectors).
-
 The descendant combinator is _not_ checked by this rule.
 
 Also, `+` and `-` signs within `:nth-*()` arguments are not checked (e.g. `a:nth-child(2n+1)`).

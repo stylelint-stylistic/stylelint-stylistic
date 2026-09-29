@@ -11,9 +11,9 @@ a {} /* ↑ */
  * These lines */
 ```
 
-Where the option allows an empty line at all, the one a file ends on is counted like any other, and a run of spaces or tabs written behind the last line break does not hide it: such a run is a line of its own, and emptying it is what `no-eol-whitespace` is for. So a file closed by two line breaks is measured the same whether or not spaces follow them. The `0` option counts no line at the end of the file to begin with, and a file closed by a single break is no problem to it. A file holding nothing but whitespace is counted from its beginning alone: every line break of the run it opens with is an empty line, and the end of the file adds none, so a file of one line break is one empty line, which the `0` option takes away and every other option lets stand.
+Where the option allows an empty line at all, the one a file ends on is counted like any other, spaces or tabs behind the last line break included. The `0` option does not count the end of the file, so a file closed by a single break is no problem to it. A file holding nothing but whitespace counts each of its line breaks as an empty line.
 
-Inside an embedded stylesheet the run a block opens with is counted from the line it stands on. A `<style>` element's block begins on a line of its own, so that run counts an empty line per break, as a file's does; the block of an inline `style` attribute or of a CSS-in-JS template opens on the line the page or the host code stands on, and the run's first break closes that line rather than an empty one.
+Inside an embedded stylesheet, the line breaks a `<style>` element's block opens with count as a file's do, while the first break of an inline `style` attribute or a CSS-in-JS template closes the host's line rather than an empty one.
 
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 

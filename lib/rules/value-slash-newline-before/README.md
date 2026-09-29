@@ -11,9 +11,9 @@ a { grid-template: "a a" 1fr
 
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule.
 
-The solidus this rule reads is the one [`value-slash-space-before`](../value-slash-space-before/README.md) reads: the separator CSS spells between the numbers of a ratio, the sizes of a font shorthand, the lines of a grid area and the color and the alpha of a color function, and never the division operator of a math function, a character of a `url()` address, a string or a comment. The two rules divide a declaration between them the way the `value-list-comma-*` rules do: this one under `always-multi-line` or `never-multi-line` speaks of a declaration spanning lines, and the space rule under `always-single-line` or `never-single-line` of one on a single line.
+This rule reads the solidus [`value-slash-space-before`](../value-slash-space-before/README.md) reads. The two rules divide a declaration between them the way the `value-list-comma-*` rules do: this one under `always-multi-line` or `never-multi-line` speaks of a declaration spanning lines, and the space rule under `always-single-line` or `never-single-line` of one on a single line.
 
-The newline the fix writes goes over the whitespace in front of the solidus, which is the end of a line; the indentation of the line the solidus then opens is the [`indentation`](../indentation/README.md) rule's to write. Where that whitespace is the line break that closes a `//` comment of a preprocessor, `"never-multi-line"` reports the problem and leaves the value as it stands, since taking the break away would take the solidus into the comment.
+The fix writes the newline over the whitespace in front of the solidus; the indentation of the new line is the [`indentation`](../indentation/README.md) rule's to write. Where the fix would move code into a `//` comment, it leaves the whitespace alone and the warning stands.
 
 ## Options
 

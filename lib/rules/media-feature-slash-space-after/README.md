@@ -12,7 +12,7 @@ The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatical
 
 The solidus this rule reads is the one between the two numbers of a `<ratio>`, in the colon form of a feature (`(aspect-ratio: 16 / 9)`) and in the range form (`(16 / 9 <= aspect-ratio)`) alike. A solidus inside the arguments of a math function is the division operator and is not read, and neither is one inside a `url()` address, a string or a comment. The solidus of a declaration's value is read by [`value-slash-space-after`](../value-slash-space-after/README.md).
 
-Where a comment stands right behind the whitespace under a preprocessor, `"never"` reports the problem and leaves the query as it stands: closing the solidus up against the `/` that opens the comment would spell a `//` comment running to the end of the line, and the solidus would be its first character.
+Where the fix would move code into a `//` comment, it leaves the whitespace alone and the warning stands.
 
 ## Options
 

@@ -11,9 +11,9 @@ Disallow missing end-of-source newlines.
 
 Completely empty files are not considered problems.
 
-A line feed ends a line, alone or behind the carriage return of a Windows pair, so a file ending in either already has its end-of-source newline; a bare carriage return and a form feed are whitespace, as they are to PostCSS. Where no line feed ends the file, the fix writes the break the `linebreaks` rule asks for, wherever the configuration lists that rule, and otherwise the break the file spells its lines with. A file that spells none — one written on a single line — is closed with a line feed.
+A line feed ends a line, alone or behind a carriage return; a bare carriage return and a form feed are whitespace, as they are to PostCSS. The fix writes the break the `linebreaks` rule asks for, or else the one the file spells its lines with, and a line feed in a file written on a single line.
 
-The break is written behind whatever the file ends on rather than in place of it, so a free semicolon standing behind the last block, the whitespace around it, and an empty line the file ends on are all left where the author put them. Whether such a semicolon belongs in a stylesheet is what `no-extra-semicolons` says, how many empty lines a file may end on is what `max-empty-lines` says, and whitespace at the end of a line is what `no-eol-whitespace` says. One thing does come off: a run of spaces and tabs standing on its own behind the file's last line break. Such a file has ended its last line already, and a break written behind that run would leave it an empty line it never had. It comes off only where the raw the fix writes into and the file the warning was made about agree that it is what the file ends on, and a break is written wherever the two part — the raw because it is the only place a fix can write, the file because a rule listed ahead of this one may have written into that raw already.
+The break is written behind whatever the file ends on, so a free semicolon, whitespace and empty lines at the end stay where the author put them. The one thing that comes off is a run of spaces and tabs standing alone behind the last line break, which would otherwise become an empty line.
 
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 

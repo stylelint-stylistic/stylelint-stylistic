@@ -10,7 +10,7 @@ Require a single space or disallow whitespace before the semicolons of at-r
 
 Nothing is asked of an at-rule the file spells no semicolon behind — one running to the brace that closes its container, or to the end of the file. There is no semicolon there for whitespace to stand in front of, and the whitespace that does stand there is the closing brace's or the file's own.
 
-The rule passes over a `@charset` in any spelling: the encoding declaration is a byte sequence the browser reads before parsing rather than an at-rule, and Stylelint's [`at-charset-rule-no-invalid`](https://stylelint.io/user-guide/rules/at-charset-rule-no-invalid) rule judges its spelling. A CSS file holding one gets a single warning asking for that rule where the configuration leaves it off.
+The rule passes over `@charset`, whose spelling Stylelint's [`at-charset-rule-no-invalid`](https://stylelint.io/user-guide/rules/at-charset-rule-no-invalid) rule judges; a CSS file holding one gets a warning asking for that rule where the configuration leaves it off.
 
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule. It writes nothing where a `//` comment runs to the end of the at-rule, since the semicolon would land inside the comment. The warning stands.
 
