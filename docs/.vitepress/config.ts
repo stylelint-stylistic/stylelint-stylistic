@@ -83,6 +83,7 @@ let syntaxItems: DefaultTheme.SidebarItem[] = namespaces.flatMap((syntax) => (sy
 let userGuide: DefaultTheme.SidebarItem[] = [
 	{ text: `Why?`, link: `/user-guide/why` },
 	{ text: `Getting started`, link: `/user-guide/getting-started` },
+	{ text: `Configs`, link: `/user-guide/configs` },
 	{ text: `Rules`, link: `/user-guide/rules`, collapsed: true, items: readRuleGroups() },
 	{ text: `Custom syntaxes`, link: `/user-guide/custom-syntaxes`, collapsed: true, items: syntaxItems },
 	{ text: `Typed configuration`, link: `/user-guide/typed-configuration` },

@@ -66,9 +66,10 @@ The plugin now refuses a configuration holding two settings that [conflict w
 
 #### New features
 
+- The plugin now ships a [recommended preset](https://stylelint-stylistic.github.io/user-guide/configs) (see [#745](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/745)): `"extends": ["@stylistic/stylelint-plugin/recommended"]` sets every rule of the plugin that has an answer the same for every project, for plain CSS and, over `.scss` and `.less` files, for SCSS and Less; a setting of your own in `rules` wins over it. The table it is built out of is exported as `configs.recommendedRules` beside the preset, for a configuration that projects it under the `styled` namespace or changes one setting under every name at once.
 - The package now exports the [`defineStylistic` and `defineStylisticOverride`](https://stylelint-stylistic.github.io/user-guide/typed-configuration) functions for a JavaScript configuration (see [#624](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/624)). You name the rules by their short names and the syntax once for the whole block: an editor completes the names and the options, and the compiler refuses a rule, an option, a key or a syntax the plugin does not take.
 - The plugin now ships a type declaration for what it exports, so a TypeScript configuration or a script importing the package reads the plugin list as `Plugin[]` rather than as `any`. Nothing about configuring the plugin changes.
-- The plugin now says so when it is listed in `extends` instead of `plugins` (see [#14](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/14)). Such a configuration used to fail with every `@stylistic/` rule of it reported as unknown; the run now stops with a configuration error naming the field to move the package to.
+- The plugin now says so when it is listed in `extends` instead of `plugins` (see [#14](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/14)). Such a configuration used to fail with every `@stylistic/` rule of it reported as unknown; the run now stops with a configuration error naming the preset to extend instead, or the field to move the package to.
 
 By the way, the documentation now lives at [stylelint-stylistic.github.io](https://stylelint-stylistic.github.io/).
 
