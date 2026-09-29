@@ -72,8 +72,8 @@ breaks-check: ## ↩️  Check that every line spelling a line break in lib/ is 
 	./scripts/check-break-readings.ts
 .PHONY: breaks-check
 
-types-check: ## 🧩 Check that the type refusing a contradicting pair in the editor agrees with the run's table over every pair
-	./scripts/check-contradiction-types.ts
+types-check: ## 🧩 Check that the type refusing a conflicting pair in the editor agrees with the run's table over every pair
+	./scripts/check-conflict-types.ts
 .PHONY: types-check
 
 packages-check: build ## 📦 Check that the built plugin needs none of the syntax packages a project may not have

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Holds the type refusing a contradicting pair in the editor in step with the table refusing it at the run.
+ * Holds the type refusing a conflicting pair in the editor in step with the table refusing it at the run.
  *
  * Every pair of a rule and a partner under every option each takes is written out as a call of `defineStylistic`, one per line, and `tsc` is asked which lines it refuses; the run's table is asked the same, and a line either alone refuses is printed. The compiler is driven as a process because TypeScript 7 ships no API to ask it a type question of; once one is back, the pairs can be checked in a program held in memory, without a file or a process, and this script can move into the module's own test file.
  */
@@ -12,11 +12,11 @@ import { tmpdir } from "node:os"
 import path from "node:path"
 import { cwd, exit, stdout } from "node:process"
 
-import { contradictionsAmong } from "../lib/utils/contradictingSettings/index.ts"
+import { conflictsAmong } from "../lib/utils/conflictingSettings/index.ts"
 
 import { RULE_OPTIONS } from "./oracles/options.ts"
 
-/** The rules a setting may contradict outside its own twin: the empty line in front of a closing brace, the rules leaving it no room, and whitespace behind a call. */
+/** The rules a setting may conflict with outside its own twin: the empty line in front of a closing brace, the rules leaving it no room, and whitespace behind a call. */
 const PARTNERS_OF_EVERY_RULE = [`block-closing-brace-empty-line-before`, `block-closing-brace-newline-before`, `block-closing-brace-space-before`, `max-empty-lines`, `function-whitespace-after`]
 
 /** The rules whose partners are every other rule, so that the two tables are compared over every setting they could name. */
@@ -56,7 +56,7 @@ function pairsOf (): [string, unknown, string, unknown][] {
 
 let pairs = pairsOf()
 let lines = pairs.map(([rule, one, partner, other]) => `defineStylistic({ rules: { "${rule}": ${JSON.stringify(one)}, "${partner}": ${JSON.stringify(other)} } })`)
-let directory = mkdtempSync(path.join(tmpdir(), `contradiction-types-`))
+let directory = mkdtempSync(path.join(tmpdir(), `conflict-types-`))
 let file = path.join(directory, `probe.ts`)
 // The import line's own objections, about a `.ts` import by an absolute path, are not a pair's and are left out of the count
 let head = [`import { defineStylistic } from "${path.join(cwd(), `lib`, `defineStylistic`, `index.ts`)}"`, ``]
@@ -74,7 +74,7 @@ finally {
 	rmSync(directory, { recursive: true, force: true })
 }
 
-let refusedAtRun = new Set(pairs.flatMap(([rule, one, partner, other], at) => (contradictionsAmong([{ name: rule, shortName: rule, primary: one }, { name: partner, shortName: partner, primary: other }]).length > 0 ? [at] : [])))
+let refusedAtRun = new Set(pairs.flatMap(([rule, one, partner, other], at) => (conflictsAmong([{ name: rule, shortName: rule, primary: one }, { name: partner, shortName: partner, primary: other }]).length > 0 ? [at] : [])))
 let onlyTypes = [...refusedByTypes].filter((at) => !refusedAtRun.has(at))
 let onlyRun = [...refusedAtRun].filter((at) => !refusedByTypes.has(at))
 

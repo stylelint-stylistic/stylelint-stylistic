@@ -11,7 +11,7 @@
  * - `hard` — one order leaves a file the pair still warns on.
  * - `soft` — both orders rest on a clean file, and the two differ.
  *
- * A pair the plugin refuses as contradicting stops the run and is dropped as unusable. One it does not refuse, whose orders both rest on a file carrying warnings, is dropped too, but only where the fixer rests: such a pair may take turns instead.
+ * A pair the plugin refuses as conflicting stops the run and is dropped as unusable. One it does not refuse, whose orders both rest on a file carrying warnings, is dropped too, but only where the fixer rests: such a pair may take turns instead.
  */
 
 import { stdout } from "node:process"
@@ -183,7 +183,7 @@ async function probe (name: string, source: string, a: {
 
 	if (!aRun || !bRun) return null
 
-	// A cycle is reported whatever the warnings say: taking turns is a defect of the plugin even under a contradicting configuration
+	// A cycle is reported whatever the warnings say: taking turns is a defect of the plugin even under a conflicting configuration
 	if (aRun.cycle.length !== 1 || bRun.cycle.length !== 1) {
 		return {
 			kind: `cycle`,

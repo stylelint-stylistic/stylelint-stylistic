@@ -4,7 +4,7 @@ import rules from "../rules/index.ts"
 import { namespaces } from "../syntaxes/index.ts"
 import { addNamespace } from "../utils/addNamespace/index.ts"
 import { configurationError } from "../utils/configurationError/index.ts"
-import { configuredSetting, type ContradictionOf, contradictionsAmong, contradictionsError } from "../utils/contradictingSettings/index.ts"
+import { configuredSetting, type ConflictOf, conflictsAmong, conflictsError } from "../utils/conflictingSettings/index.ts"
 import type { RuleFactory } from "../utils/defineRule/index.ts"
 
 /** The registry, whose type carries every rule's name and options. */
@@ -50,8 +50,8 @@ type ExactSetting<K extends RuleName, Given> = Given extends readonly [infer P, 
 	? readonly [P, S & Record<Exclude<keyof S, keyof SecondaryOfRule<K>>, never>]
 	: Given
 
-/** The rules as given, each checked against the rule it names, and a setting contradicting another of the call typed with the message naming that other, so that the editor refuses it. */
-type Exact<R> = { [K in keyof R]: K extends RuleName ? (K extends string & keyof R ? ([ContradictionOf<K, R>] extends [never] ? ExactSetting<K, R[K]> : R[K] & ContradictionOf<K, R>) : never) : never }
+/** The rules as given, each checked against the rule it names, and a setting conflicting with another of the call typed with the message naming that other, so that the editor refuses it. */
+type Exact<R> = { [K in keyof R]: K extends RuleName ? (K extends string & keyof R ? ([ConflictOf<K, R>] extends [never] ? ExactSetting<K, R[K]> : R[K] & ConflictOf<K, R>) : never) : never }
 
 /** The name an entry comes back under. */
 type Prefixed<S extends SyntaxName | undefined, K extends string> = S extends Namespace ? `@stylistic/${S}/${K}` : `@stylistic/${K}`
@@ -164,7 +164,7 @@ function namespaceOf (syntax: SyntaxName | undefined): string | undefined {
 }
 
 /**
- * Names the rules for a JavaScript configuration: `{ "@stylistic/scss/color-hex-case": "lower" }` for `{ syntax: "scss", rules: { "color-hex-case": "lower" } }`, typed off the rules themselves. A name or a syntax the plugin does not know stops the run with a configuration error, and so do two settings of the call that contradict each other, which the types refuse in the editor already; what an option holds is the rule's to check at its turn.
+ * Names the rules for a JavaScript configuration: `{ "@stylistic/scss/color-hex-case": "lower" }` for `{ syntax: "scss", rules: { "color-hex-case": "lower" } }`, typed off the rules themselves. A name or a syntax the plugin does not know stops the run with a configuration error, and so do two settings of the call that conflict with each other, which the types refuse in the editor already; what an option holds is the rule's to check at its turn.
  * @param options - The syntax and the rules.
  * @param options.syntax - `scss`, `less` or `styled`; `css`, or nothing, for the core.
  * @param options.rules - The settings by short name, as `rules` takes them.
@@ -181,9 +181,9 @@ export function defineStylistic<const S extends SyntaxName | undefined = undefin
 	})
 
 	// One call names the rules of one namespace, which all read the same stylesheets; a pair put together by several calls, `extends` or `overrides` is the run's to refuse
-	let contradictions = contradictionsAmong(entries.map(([name, setting]) => configuredSetting(name, setting)).filter(({ primary }) => primary !== null && primary !== undefined))
+	let conflicts = conflictsAmong(entries.map(([name, setting]) => configuredSetting(name, setting)).filter(({ primary }) => primary !== null && primary !== undefined))
 
-	if (contradictions.length > 0) throw contradictionsError(contradictions)
+	if (conflicts.length > 0) throw conflictsError(conflicts)
 
 	return Object.fromEntries(entries) as StylisticRules<S, R, G>
 }

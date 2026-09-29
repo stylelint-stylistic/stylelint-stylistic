@@ -8,9 +8,9 @@ import { describe, expect, it } from "vitest"
 
 import plugins from "../../index.ts"
 
-import { type ConfiguredSetting, contradictionsAmong, contradictionsError } from "./index.ts"
+import { type ConfiguredSetting, conflictsAmong, conflictsError } from "./index.ts"
 
-/** The break options each family's space options contradict, written out by hand from measurements rather than derived from the module's own reading of the suffixes. */
+/** The break options each family's space options conflict with, written out by hand from measurements rather than derived from the module's own reading of the suffixes. */
 const BEHIND_A_DELIMITER = {
 	"always": [`always`, `never`],
 	"always-multi-line": [`always`, `never`],
@@ -34,7 +34,7 @@ const OUTSIDE_A_BLOCK = {
 const LINE_OPTIONS = [`always`, `never`, `always-single-line`, `never-single-line`]
 const BLOCK_OPTIONS = [...LINE_OPTIONS, `always-multi-line`, `never-multi-line`]
 
-/** Every family of twins: the break rule, every option the space twin takes, and the space options each break option contradicts. */
+/** Every family of twins: the break rule, every option the space twin takes, and the space options each break option conflicts with. */
 const FAMILIES: [string, string[], Record<string, string[]>][] = [
 	[`at-rule-name-newline-after`, [`always`, `always-single-line`], { "always": [`always`], "always-multi-line": [`always`] }],
 	[`block-closing-brace-newline-after`, BLOCK_OPTIONS, OUTSIDE_A_BLOCK],
@@ -86,45 +86,45 @@ async function refusal (options: stylelint.LinterOptions): Promise<(Error & { co
 	return undefined
 }
 
-describe(`contradictionsAmong`, () => {
-	it.each(FAMILIES)(`names the options of %s and its space twin that no run satisfies together, and no other`, (newlineRule, spaceOptions, contradicting) => {
+describe(`conflictsAmong`, () => {
+	it.each(FAMILIES)(`names the options of %s and its space twin that no run satisfies together, and no other`, (newlineRule, spaceOptions, conflicting) => {
 		let spaceRule = newlineRule.replace(`-newline-`, `-space-`)
 		let found: Record<string, string[]> = {}
 
-		for (let newlineOption of Object.keys(contradicting)) {
-			found[newlineOption] = spaceOptions.filter((spaceOption) => contradictionsAmong([setting(newlineRule, newlineOption), setting(spaceRule, spaceOption)]).length === 1)
+		for (let newlineOption of Object.keys(conflicting)) {
+			found[newlineOption] = spaceOptions.filter((spaceOption) => conflictsAmong([setting(newlineRule, newlineOption), setting(spaceRule, spaceOption)]).length === 1)
 		}
 
-		expect(found).toEqual(contradicting)
+		expect(found).toEqual(conflicting)
 	})
 
 	it(`finds a pair whichever of the two the configuration lists first, and names them in that order`, () => {
 		let newline = setting(`selector-list-comma-newline-after`, `always`)
 		let space = setting(`selector-list-comma-space-after`, `always`)
 
-		expect(contradictionsAmong([space, newline])).toEqual([{ first: space, second: newline, advice: `Set the first to "always-single-line" and the second to "always-multi-line", or turn one of them off.` }])
+		expect(conflictsAmong([space, newline])).toEqual([{ first: space, second: newline, advice: `Set the first to "always-single-line" and the second to "always-multi-line", or turn one of them off.` }])
 	})
 
 	it(`advises the one option that has to change where the other speaks of its lines already`, () => {
-		expect(contradictionsAmong([setting(`value-list-comma-newline-after`, `always-multi-line`), setting(`value-list-comma-space-after`, `always`)])[0]?.advice).toBe(`Set the second to "always-single-line", or turn one of them off.`)
-		expect(contradictionsAmong([setting(`block-opening-brace-newline-before`, `always-single-line`), setting(`block-opening-brace-space-before`, `never`)])[0]?.advice).toBe(`Set the second to "never-multi-line", or turn one of them off.`)
+		expect(conflictsAmong([setting(`value-list-comma-newline-after`, `always-multi-line`), setting(`value-list-comma-space-after`, `always`)])[0]?.advice).toBe(`Set the second to "always-single-line", or turn one of them off.`)
+		expect(conflictsAmong([setting(`block-opening-brace-newline-before`, `always-single-line`), setting(`block-opening-brace-space-before`, `never`)])[0]?.advice).toBe(`Set the second to "never-multi-line", or turn one of them off.`)
 	})
 
 	it(`advises the other lines for an option that speaks of the wrong ones, and of the two ways round the one changing fewer settings`, () => {
-		expect(contradictionsAmong([setting(`block-opening-brace-newline-after`, `always`), setting(`block-opening-brace-space-after`, `never-multi-line`)])[0]?.advice).toBe(`Set the first to "always-multi-line" and the second to "never-single-line", or turn one of them off.`)
-		expect(contradictionsAmong([setting(`block-opening-brace-newline-before`, `never-single-line`), setting(`block-opening-brace-space-before`, `always`)])[0]?.advice).toBe(`Set the second to "always-multi-line", or turn one of them off.`)
+		expect(conflictsAmong([setting(`block-opening-brace-newline-after`, `always`), setting(`block-opening-brace-space-after`, `never-multi-line`)])[0]?.advice).toBe(`Set the first to "always-multi-line" and the second to "never-single-line", or turn one of them off.`)
+		expect(conflictsAmong([setting(`block-opening-brace-newline-before`, `never-single-line`), setting(`block-opening-brace-space-before`, `always`)])[0]?.advice).toBe(`Set the second to "always-multi-line", or turn one of them off.`)
 	})
 
 	it(`names no option where the two rules have none that agree, which is the colon's space rule under never`, () => {
-		for (let newlineOption of [`always`, `always-multi-line`]) expect(contradictionsAmong([setting(`declaration-colon-newline-after`, newlineOption), setting(`declaration-colon-space-after`, `never`)])[0]?.advice).toBe(`Change one of them, or turn one of them off.`)
+		for (let newlineOption of [`always`, `always-multi-line`]) expect(conflictsAmong([setting(`declaration-colon-newline-after`, newlineOption), setting(`declaration-colon-space-after`, `never`)])[0]?.advice).toBe(`Change one of them, or turn one of them off.`)
 	})
 
-	it.each(FAMILIES)(`advises for %s and its space twin only options the two rules take and agree under`, (newlineRule, _spaceOptions, contradicting) => {
+	it.each(FAMILIES)(`advises for %s and its space twin only options the two rules take and agree under`, (newlineRule, _spaceOptions, conflicting) => {
 		let spaceRule = newlineRule.replace(`-newline-`, `-space-`)
 
-		for (let [newlineOption, spaceOptions] of Object.entries(contradicting)) {
+		for (let [newlineOption, spaceOptions] of Object.entries(conflicting)) {
 			for (let spaceOption of spaceOptions) {
-				let advice = contradictionsAmong([setting(newlineRule, newlineOption), setting(spaceRule, spaceOption)])[0]?.advice ?? ``
+				let advice = conflictsAmong([setting(newlineRule, newlineOption), setting(spaceRule, spaceOption)])[0]?.advice ?? ``
 
 				// The advised options stand in quotation marks, the first setting's in front of the second's
 				let advised = advice.split(`"`).filter((_part, at) => at % 2 === 1)
@@ -132,7 +132,7 @@ describe(`contradictionsAmong`, () => {
 				let second = advice.includes(`the second to`) ? advised.shift() : spaceOption
 
 				if (first === newlineOption && second === spaceOption) expect(`${spaceRule}: ${spaceOption}`).toBe(`declaration-colon-space-after: never`)
-				else expect(contradictionsAmong([setting(newlineRule, first), setting(spaceRule, second)])).toEqual([])
+				else expect(conflictsAmong([setting(newlineRule, first), setting(spaceRule, second)])).toEqual([])
 			}
 		}
 	})
@@ -141,36 +141,36 @@ describe(`contradictionsAmong`, () => {
 		[`block-closing-brace-newline-before`, [`never-multi-line`]],
 		[`block-closing-brace-space-before`, [`always`, `never`, `always-multi-line`, `never-multi-line`]],
 		[`max-empty-lines`, [0]],
-	])(`finds the empty line in front of a closing brace contradicted by %s`, (rule, options) => {
+	])(`finds the empty line in front of a closing brace conflicting with %s`, (rule, options) => {
 		let emptyLine = setting(`block-closing-brace-empty-line-before`, `always-multi-line`)
 
-		for (let option of options) expect(contradictionsAmong([emptyLine, setting(rule, option)])).toHaveLength(1)
+		for (let option of options) expect(conflictsAmong([emptyLine, setting(rule, option)])).toHaveLength(1)
 
-		expect(contradictionsAmong([setting(`block-closing-brace-empty-line-before`, `never`), setting(rule, options[0])])).toEqual([])
+		expect(conflictsAmong([setting(`block-closing-brace-empty-line-before`, `never`), setting(rule, options[0])])).toEqual([])
 	})
 
 	it(`leaves the empty line beside the options that have room for it`, () => {
 		let emptyLine = setting(`block-closing-brace-empty-line-before`, `always-multi-line`)
 
-		expect(contradictionsAmong([emptyLine, setting(`block-closing-brace-newline-before`, `always`), setting(`block-closing-brace-space-before`, `always-single-line`), setting(`max-empty-lines`, 1)])).toEqual([])
+		expect(conflictsAmong([emptyLine, setting(`block-closing-brace-newline-before`, `always`), setting(`block-closing-brace-space-before`, `always-single-line`), setting(`max-empty-lines`, 1)])).toEqual([])
 	})
 
-	it.each([`declaration-block-semicolon-newline-before`, `declaration-block-semicolon-space-before`, `function-comma-newline-before`, `function-comma-space-before`, `function-parentheses-newline-inside`, `function-parentheses-space-inside`, `value-list-comma-newline-before`, `value-list-comma-space-before`, `value-slash-newline-before`, `value-slash-space-before`])(`finds whitespace forbidden behind a call contradicted by every always of %s`, (rule) => {
+	it.each([`declaration-block-semicolon-newline-before`, `declaration-block-semicolon-space-before`, `function-comma-newline-before`, `function-comma-space-before`, `function-parentheses-newline-inside`, `function-parentheses-space-inside`, `value-list-comma-newline-before`, `value-list-comma-space-before`, `value-slash-newline-before`, `value-slash-space-before`])(`finds whitespace forbidden behind a call conflicting with every always of %s`, (rule) => {
 		let never = setting(`function-whitespace-after`, `never`)
 		let lines = rule.includes(`-newline-`) ? `multi` : `single`
 
-		expect(contradictionsAmong([never, setting(rule, `always`)])).toHaveLength(1)
-		expect(contradictionsAmong([setting(rule, `always-${lines}-line`), never])).toHaveLength(1)
-		expect(contradictionsAmong([never, setting(rule, `never`)])).toEqual([])
-		expect(contradictionsAmong([setting(`function-whitespace-after`, `always`), setting(rule, `always`)])).toEqual([])
+		expect(conflictsAmong([never, setting(rule, `always`)])).toHaveLength(1)
+		expect(conflictsAmong([setting(rule, `always-${lines}-line`), never])).toHaveLength(1)
+		expect(conflictsAmong([never, setting(rule, `never`)])).toEqual([])
+		expect(conflictsAmong([setting(`function-whitespace-after`, `always`), setting(rule, `always`)])).toEqual([])
 	})
 
 	it(`reads a break rule under one namespace and its space twin under another as the pair they are`, () => {
-		expect(contradictionsAmong([setting(`at-rule-name-newline-after`, `always`), setting(`less/at-rule-name-space-after`, `always`)])).toHaveLength(1)
+		expect(conflictsAmong([setting(`at-rule-name-newline-after`, `always`), setting(`less/at-rule-name-space-after`, `always`)])).toHaveLength(1)
 	})
 
 	it(`passes the pairs that meet over a delimiter at the edge of its container alone`, () => {
-		expect(contradictionsAmong([
+		expect(conflictsAmong([
 			setting(`declaration-colon-space-after`, `always`),
 			setting(`value-list-comma-space-before`, `never`),
 			setting(`value-slash-space-before`, `never`),
@@ -182,19 +182,19 @@ describe(`contradictionsAmong`, () => {
 	})
 
 	it(`passes an option the rule itself refuses`, () => {
-		expect(contradictionsAmong([setting(`selector-list-comma-newline-after`, `sometimes`), setting(`selector-list-comma-space-after`, `always`)])).toEqual([])
+		expect(conflictsAmong([setting(`selector-list-comma-newline-after`, `sometimes`), setting(`selector-list-comma-space-after`, `always`)])).toEqual([])
 	})
 
 	it(`spells every pair as the configuration does, a blank line between two of them`, () => {
-		let found = contradictionsAmong([setting(`scss/value-list-comma-newline-after`, `always-multi-line`), setting(`scss/value-list-comma-space-after`, `always`), setting(`block-closing-brace-empty-line-before`, `always-multi-line`), setting(`max-empty-lines`, 0)])
+		let found = conflictsAmong([setting(`scss/value-list-comma-newline-after`, `always-multi-line`), setting(`scss/value-list-comma-space-after`, `always`), setting(`block-closing-brace-empty-line-before`, `always-multi-line`), setting(`max-empty-lines`, 0)])
 
-		expect(contradictionsError(found).message).toBe([
-			`Contradicting settings:`,
+		expect(conflictsError(found).message).toBe([
+			`Conflicting settings:`,
 			`  "@stylistic/scss/value-list-comma-newline-after": "always-multi-line"`,
 			`  "@stylistic/scss/value-list-comma-space-after": "always"`,
 			`Set the second to "always-single-line", or turn one of them off.`,
 			``,
-			`Contradicting settings:`,
+			`Conflicting settings:`,
 			`  "@stylistic/block-closing-brace-empty-line-before": "always-multi-line"`,
 			`  "@stylistic/max-empty-lines": 0`,
 			`Change one of them, or turn one of them off.`,
@@ -202,7 +202,7 @@ describe(`contradictionsAmong`, () => {
 	})
 })
 
-describe(`a configuration holding contradicting settings`, () => {
+describe(`a configuration holding conflicting settings`, () => {
 	it.each([
 		[`in a run that only checks`, false],
 		[`in a run that may write`, true],
@@ -210,7 +210,7 @@ describe(`a configuration holding contradicting settings`, () => {
 		let error = await refusal({ code: `a, b {}`, config: { plugins, rules: TWINS }, fix })
 
 		expect(error?.code).toBe(78)
-		expect(error?.message).toBe(`Contradicting settings:\n  "@stylistic/selector-list-comma-newline-after": "always"\n  "@stylistic/selector-list-comma-space-after": "always"\nSet the first to "always-multi-line" and the second to "always-single-line", or turn one of them off.`)
+		expect(error?.message).toBe(`Conflicting settings:\n  "@stylistic/selector-list-comma-newline-after": "always"\n  "@stylistic/selector-list-comma-space-after": "always"\nSet the first to "always-multi-line" and the second to "always-single-line", or turn one of them off.`)
 	})
 
 	it(`stops it over a stylesheet neither rule has anything to say about`, async () => {
@@ -241,7 +241,7 @@ describe(`a configuration holding contradicting settings`, () => {
 	})
 
 	it(`reads what the configuration extends`, async () => {
-		let directory = mkdtempSync(path.join(tmpdir(), `contradicting-`))
+		let directory = mkdtempSync(path.join(tmpdir(), `conflicting-`))
 		let base = path.join(directory, `base.config.mjs`)
 
 		writeFileSync(base, `export default { rules: { "@stylistic/selector-list-comma-newline-after": "always" } }\n`)

@@ -4,7 +4,7 @@ import stylelint, { type PostcssResult, type Rule, type RuleMessages, type RuleM
 import { namespaces, type Syntax } from "../../syntaxes/index.ts"
 import { addNamespace } from "../addNamespace/index.ts"
 import { asksForTheCharsetRule, CHARSET_RULE_MESSAGE } from "../asksForTheCharsetRule/index.ts"
-import { refuseContradictingSettings } from "../contradictingSettings/index.ts"
+import { refuseConflictingSettings } from "../conflictingSettings/index.ts"
 import { copyReadingTheRoot } from "../copyReadingTheRoot/index.ts"
 import { deferCheck, deferFinalCheck, deferHeadCheck, defersToRunEnd, flushDeferredChecks, lastConfiguredPluginRule, linenessRank, registerPluginRule } from "../defersToRunEnd/index.ts"
 import { pinInventedRaws, unpinEmptyBlocks } from "../pinInventedRaws/index.ts"
@@ -112,7 +112,7 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 			}
 
 			return (root, result) => {
-				refuseContradictingSettings(root, result)
+				refuseConflictingSettings(root, result)
 
 				let last = lastConfiguredPluginRule(result)
 

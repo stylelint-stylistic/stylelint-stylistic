@@ -121,7 +121,7 @@ ESLint deprecates stylistic rules, too. But you can continue to use them thank
 - [Rule list](https://stylelint-stylistic.github.io/user-guide/rules)
 - [Custom syntaxes](https://stylelint-stylistic.github.io/user-guide/custom-syntaxes)
 - [Typed configuration](https://stylelint-stylistic.github.io/user-guide/typed-configuration)
-- [Contradicting settings](https://stylelint-stylistic.github.io/user-guide/contradicting-settings)
+- [Conflicting settings](https://stylelint-stylistic.github.io/user-guide/conflicting-settings)
 - [Contributing](https://stylelint-stylistic.github.io/contributing)
 
 [license-url]: https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/LICENSE.md

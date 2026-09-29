@@ -3,7 +3,7 @@ import type { PostcssResult } from "stylelint"
 
 import { CHARSET_AT_RULE_NAME } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
-import { configuredSetting } from "../contradictingSettings/index.ts"
+import { configuredSetting } from "../conflictingSettings/index.ts"
 import type { EmbeddedSource } from "../typeGuards/index.ts"
 
 /** The core rule that judges the spelling of a `@charset`, which no rule of the plugin reads. */

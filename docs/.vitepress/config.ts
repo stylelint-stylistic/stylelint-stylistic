@@ -85,7 +85,7 @@ let userGuide: DefaultTheme.SidebarItem[] = [
 	{ text: `Rules`, link: `/user-guide/rules` },
 	{ text: `Custom syntaxes`, link: `/user-guide/custom-syntaxes`, items: syntaxItems },
 	{ text: `Typed configuration`, link: `/user-guide/typed-configuration` },
-	{ text: `Contradicting settings`, link: `/user-guide/contradicting-settings` },
+	{ text: `Conflicting settings`, link: `/user-guide/conflicting-settings` },
 ]
 
 let contribute: DefaultTheme.SidebarItem[] = [{ text: `Contributing`, link: `/contributing` }]

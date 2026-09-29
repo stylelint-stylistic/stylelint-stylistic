@@ -29,7 +29,7 @@ const SKIPPED = /(?:^|\/)regexps\.ts$|\.test\.ts$/u
 /** Lines that write a break or spell one in a stylesheet written as data. */
 const ALLOWED: Record<string, string[]> = {
 	"lib/rules/linebreaks/index.ts": [`if (data) return data.replaceAll(EVERY_LINE_BREAK, shouldHaveCR ? \`\\r\\n\` : \`\\n\`)`],
-	"lib/utils/contradictingSettings/index.ts": [`const MESSAGE_LINE_BREAK = \`\\n\``],
+	"lib/utils/conflictingSettings/index.ts": [`const MESSAGE_LINE_BREAK = \`\\n\``],
 	"lib/utils/textEdge/index.ts": [`const LINE_FEED = \`\\n\``],
 	"lib/utils/rawInFrontOfText/index.ts": [`if (asked.every((spelling) => spelling === \`newline\`)) return \`\\n\${text}\``],
 	"lib/utils/getLineBreak/index.ts": [

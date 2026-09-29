@@ -103,7 +103,7 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { b:\n/*c*/\nx; }`, { [COLON_NEWLINE]: `always`, [COLON_SPACE]: `always` }, COLON_NEWLINE)).toBe(false)
 	})
 
-	it(`a value over several lines with no comment behind the head run, which the two colon rules contradict each other over`, () => {
+	it(`a value over several lines with no comment behind the head run, which the two colon rules conflict with each other over`, () => {
 		expect(ask(`a { b:\nx\ny; }`, { [COLON_SPACE]: `always`, [COLON_NEWLINE]: `always-multi-line` }, COLON_SPACE)).toBe(false)
 	})
 
@@ -148,7 +148,7 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a {\n\t--b: ;\n}`, { [SEMICOLON_SPACE]: `never`, [SEMICOLON_NEWLINE]: `always-multi-line` }, SEMICOLON_NEWLINE)).toBe(false)
 	})
 
-	it(`the same tail where the newline rule of the colon is listed ahead with its always option and asks about the semicolon rule behind, which the two contradict each other over`, () => {
+	it(`the same tail where the newline rule of the colon is listed ahead with its always option and asks about the semicolon rule behind, which the two conflict with each other over`, () => {
 		expect(ask(`a { --b: /*c\n*/ ; }`, { [COLON_NEWLINE]: `always`, [SEMICOLON_SPACE]: `never` }, COLON_NEWLINE)).toBe(false)
 		expect(ask(`a { --b: /*c\n*/ ; }`, { [COLON_NEWLINE]: `always`, [SEMICOLON_SPACE]: `never` }, SEMICOLON_SPACE)).toBe(true)
 	})
@@ -180,7 +180,7 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a {\n\tb:\n;\n}`, { [COLON_NEWLINE]: `always`, [SEMICOLON_NEWLINE]: `never-multi-line` }, SEMICOLON_NEWLINE)).toBe(false)
 	})
 
-	it(`three rules, where a rule ahead of two contradicting ones writes only what both accept, and a rule behind one content with the run writes nothing either`, () => {
+	it(`three rules, where a rule ahead of two conflicting ones writes only what both accept, and a rule behind one content with the run writes nothing either`, () => {
 		let rules = { [COLON_SPACE]: `always`, [SEMICOLON_SPACE]: `never`, [SEMICOLON_NEWLINE]: `never-multi-line` }
 
 		expect(ask(`a {\n\tb: ;\n}`, rules, COLON_SPACE)).toBe(false)
@@ -272,7 +272,7 @@ describe(`writesSharedRun`, () => {
 		expect(ask(`a { b:; }`, { [COLON_SPACE]: `always`, [scssColonSpace]: `always` }, COLON_SPACE)).toBe(true)
 	})
 
-	it(`a wordless declaration the brace alone closes, whose run behind the colon is the run in front of the brace, which the earlier-listed rule of a contradicting pair never writes`, () => {
+	it(`a wordless declaration the brace alone closes, whose run behind the colon is the run in front of the brace, which the earlier-listed rule of a conflicting pair never writes`, () => {
 		for (let code of [`a {\n\tx:\n}`, `a {\n\t--x:\n}`, `a { x: }`, `a { --x:}`]) {
 			expect(ask(code, { [COLON_SPACE]: `always`, [BRACE_NEWLINE]: `always` }, COLON_SPACE)).toBe(false)
 			expect(ask(code, { [BRACE_NEWLINE]: `always`, [COLON_SPACE]: `always` }, BRACE_NEWLINE)).toBe(false)

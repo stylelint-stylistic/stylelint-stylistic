@@ -80,7 +80,7 @@ export type ConfiguredSetting = {
 }
 
 /** Two settings no spelling of an ordinary construct satisfies together, in configuration order, with what to change. */
-export type Contradiction = {
+export type Conflict = {
 	first: ConfiguredSetting,
 	second: ConfiguredSetting,
 	advice: string,
@@ -117,13 +117,13 @@ function forbids (option: string): boolean {
 }
 
 /**
- * Asks whether a break rule and its space twin contradict each other: they speak of the same lines and ask for different characters. A break asked for on every line and a space asked for in single-line constructs meet only where the break leaves the construct single-line.
+ * Asks whether a break rule and its space twin conflict with each other: they speak of the same lines and ask for different characters. A break asked for on every line and a space asked for in single-line constructs meet only where the break leaves the construct single-line.
  * @param newlineRule - The break rule's short name.
  * @param newlineOption - Its option.
  * @param spaceOption - The space twin's option.
  * @returns True where no run satisfies both.
  */
-function twinsContradict (newlineRule: string, newlineOption: string, spaceOption: string): boolean {
+function twinsConflict (newlineRule: string, newlineOption: string, spaceOption: string): boolean {
 	if (forbids(newlineOption) && forbids(spaceOption)) return false
 
 	let newlineLines = linesOf(newlineOption)
@@ -154,7 +154,7 @@ function boundTo (setting: ConfiguredSetting, lines: Exclude<Lines, `any`>): str
 }
 
 /**
- * Names the options that would make two contradicting twins agree, one speaking of single-line constructs and the other of multi-line ones, where their rules take such options; of the two ways round, the one changing fewer settings.
+ * Names the options that would make two conflicting twins agree, one speaking of single-line constructs and the other of multi-line ones, where their rules take such options; of the two ways round, the one changing fewer settings.
  * @param first - The setting the configuration lists first.
  * @param second - The other.
  * @returns The sentence closing the message.
@@ -167,7 +167,7 @@ function adviceForTwins (first: ConfiguredSetting, second: ConfiguredSetting): s
 		let newlineOption = boundTo(newline, newlineLines)
 		let spaceOption = boundTo(space, spaceLines)
 
-		if (newlineOption === undefined || spaceOption === undefined || twinsContradict(newline.shortName, newlineOption, spaceOption)) continue
+		if (newlineOption === undefined || spaceOption === undefined || twinsConflict(newline.shortName, newlineOption, spaceOption)) continue
 
 		let changes = [[first, first === newline ? newlineOption : spaceOption, `first`], [second, second === newline ? newlineOption : spaceOption, `second`]] as const
 
@@ -180,12 +180,12 @@ function adviceForTwins (first: ConfiguredSetting, second: ConfiguredSetting): s
 }
 
 /**
- * Asks whether one setting is a break rule and the other its space twin, contradicting each other.
+ * Asks whether one setting is a break rule and the other its space twin, conflicting with each other.
  * @param newline - The setting that may be the break rule's.
  * @param space - The setting that may be its twin's.
  * @returns True where they are and do.
  */
-function areContradictingTwins (newline: ConfiguredSetting, space: ConfiguredSetting): boolean {
+function areConflictingTwins (newline: ConfiguredSetting, space: ConfiguredSetting): boolean {
 	if (!newline.shortName.includes(NEWLINE_SEGMENT) || newline.shortName.replace(NEWLINE_SEGMENT, SPACE_SEGMENT) !== space.shortName) return false
 
 	let newlineOption = newline.primary
@@ -195,7 +195,7 @@ function areContradictingTwins (newline: ConfiguredSetting, space: ConfiguredSet
 	if (typeof newlineOption !== `string` || typeof spaceOption !== `string`) return false
 	if (!TWIN_OPTIONS[newline.shortName]?.includes(newlineOption) || !TWIN_OPTIONS[space.shortName]?.includes(spaceOption)) return false
 
-	return twinsContradict(newline.shortName, newlineOption, spaceOption)
+	return twinsConflict(newline.shortName, newlineOption, spaceOption)
 }
 
 /**
@@ -213,13 +213,13 @@ function leaveNoRoom (asker: ConfiguredSetting, refuser: ConfiguredSetting): boo
 }
 
 /**
- * Asks whether two settings contradict each other, whichever way round they are given.
+ * Asks whether two settings conflict with each other, whichever way round they are given.
  * @param one - The setting the configuration lists first.
  * @param other - The other.
  * @returns The advice where they do, nothing where they do not.
  */
 function adviceFor (one: ConfiguredSetting, other: ConfiguredSetting): string | undefined {
-	if (areContradictingTwins(one, other) || areContradictingTwins(other, one)) return adviceForTwins(one, other)
+	if (areConflictingTwins(one, other) || areConflictingTwins(other, one)) return adviceForTwins(one, other)
 	if (leaveNoRoom(one, other) || leaveNoRoom(other, one)) return ADVICE_WITHOUT_AN_OPTION
 
 	return undefined
@@ -230,8 +230,8 @@ function adviceFor (one: ConfiguredSetting, other: ConfiguredSetting): string | 
  * @param settings - The settings that read one stylesheet, in configuration order.
  * @returns The pairs, in configuration order.
  */
-export function contradictionsAmong (settings: ConfiguredSetting[]): Contradiction[] {
-	let found: Contradiction[] = []
+export function conflictsAmong (settings: ConfiguredSetting[]): Conflict[] {
+	let found: Conflict[] = []
 
 	for (let [at, first] of settings.entries()) {
 		for (let second of settings.slice(at + 1)) {
@@ -245,12 +245,12 @@ export function contradictionsAmong (settings: ConfiguredSetting[]): Contradicti
 }
 
 /**
- * Builds the configuration error naming every contradicting pair as the configuration spells it, with what to change.
- * @param contradictions - The pairs.
+ * Builds the configuration error naming every conflicting pair as the configuration spells it, with what to change.
+ * @param conflicts - The pairs.
  * @returns The error Stylelint exits on.
  */
-export function contradictionsError (contradictions: Contradiction[]): ConfigurationError {
-	let blocks = contradictions.map(({ first, second, advice }) => [`Contradicting settings:`, ...[first, second].map(({ name, primary }) => `  "${name}": ${JSON.stringify(primary)}`), advice].join(MESSAGE_LINE_BREAK))
+export function conflictsError (conflicts: Conflict[]): ConfigurationError {
+	let blocks = conflicts.map(({ first, second, advice }) => [`Conflicting settings:`, ...[first, second].map(({ name, primary }) => `  "${name}": ${JSON.stringify(primary)}`), advice].join(MESSAGE_LINE_BREAK))
 
 	return configurationError(blocks.join(MESSAGE_LINE_BREAK.repeat(2)))
 }
@@ -269,12 +269,12 @@ export function configuredSetting (name: string, value: unknown): ConfiguredSett
 let readConfigurations: WeakMap<object, Set<string>> = new WeakMap()
 
 /**
- * Stops the run where the configuration Stylelint merged for this stylesheet holds contradicting settings. Only the copy of each rule that reads the root is asked, since no other runs over it; the answer is one per configuration and set of namespaces, so every later rule and file passes at once.
+ * Stops the run where the configuration Stylelint merged for this stylesheet holds conflicting settings. Only the copy of each rule that reads the root is asked, since no other runs over it; the answer is one per configuration and set of namespaces, so every later rule and file passes at once.
  * @param root - The stylesheet.
  * @param result - The PostCSS result carrying the configuration.
  * @throws {Error} A configuration error naming the pairs.
  */
-export function refuseContradictingSettings (root: Root, result: PostcssResult): void {
+export function refuseConflictingSettings (root: Root, result: PostcssResult): void {
 	let config = result.stylelint?.config
 	let rules: Record<string, unknown> | undefined = config?.rules
 
@@ -297,9 +297,9 @@ export function refuseContradictingSettings (root: Root, result: PostcssResult):
 		if (copyReadingTheRoot(setting.shortName, root, result) === name) settings.push(setting)
 	}
 
-	let contradictions = contradictionsAmong(settings)
+	let conflicts = conflictsAmong(settings)
 
-	if (contradictions.length > 0) throw contradictionsError(contradictions)
+	if (conflicts.length > 0) throw conflictsError(conflicts)
 
 	if (!read) {
 		read = new Set()
@@ -315,8 +315,8 @@ type LinesOfOption<O extends string> = O extends `${string}-single-line` ? `sing
 /** Whether a whitespace option takes whitespace away, as {@link forbids} reads it. */
 type ForbidsOption<O extends string> = O extends `never${string}` ? true : false
 
-/** Whether a break rule under one option and its space twin under another contradict each other, as {@link twinsContradict} answers. */
-type TwinsContradict<NewlineRule extends string, N extends string, S extends string> = [ForbidsOption<N>, ForbidsOption<S>] extends [true, true] ? false
+/** Whether a break rule under one option and its space twin under another conflict with each other, as {@link twinsConflict} answers. */
+type TwinsConflict<NewlineRule extends string, N extends string, S extends string> = [ForbidsOption<N>, ForbidsOption<S>] extends [true, true] ? false
 	: LinesOfOption<N> extends `any` ? (LinesOfOption<S> extends `single` ? (NewlineRule extends typeof NEWLINE_RULES_OUTSIDE_THE_COUNTED_TEXT[number] ? true : false) : true)
 		: LinesOfOption<S> extends `any` ? true
 			: LinesOfOption<N> extends LinesOfOption<S> ? true : false
@@ -324,37 +324,37 @@ type TwinsContradict<NewlineRule extends string, N extends string, S extends str
 /** The primary option a configured value holds: a keyword, or the first item of the array a configuration lists a rule's options in. */
 type PrimaryOfValue<V> = V extends readonly [infer P, ...unknown[]] ? P : V
 
-/** The message a contradicting setting is typed with, so that the editor names the other setting. */
-type ContradictionMessage<Other extends string, Option> = { contradicts: `"${Other}": ${Option extends string ? `"${Option}"` : Option extends number ? `${Option}` : `…`}` }
+/** The message a conflicting setting is typed with, so that the editor names the other setting. */
+type ConflictMessage<Other extends string, Option> = { conflictsWith: `"${Other}": ${Option extends string ? `"${Option}"` : Option extends number ? `${Option}` : `…`}` }
 
-/** The setting of the space twin that contradicts a break rule's, or `never`. */
-type ContradictingTwin<K extends string & keyof R, R> = K extends `${infer Head}-newline-${infer Tail}`
+/** The setting of the space twin that conflicts with a break rule's, or `never`. */
+type ConflictingTwin<K extends string & keyof R, R> = K extends `${infer Head}-newline-${infer Tail}`
 	? `${Head}-space-${Tail}` extends infer Twin extends string & keyof R
-		? PrimaryOfValue<R[K]> extends infer N extends string ? PrimaryOfValue<R[Twin]> extends infer S extends string ? TwinsContradict<K, N, S> extends true ? ContradictionMessage<Twin, S> : never : never : never
+		? PrimaryOfValue<R[K]> extends infer N extends string ? PrimaryOfValue<R[Twin]> extends infer S extends string ? TwinsConflict<K, N, S> extends true ? ConflictMessage<Twin, S> : never : never : never
 		: never
 	: K extends `${infer Head}-space-${infer Tail}`
 		? `${Head}-newline-${Tail}` extends infer Twin extends string & keyof R
-			? PrimaryOfValue<R[K]> extends infer S extends string ? PrimaryOfValue<R[Twin]> extends infer N extends string ? TwinsContradict<Twin, N, S> extends true ? ContradictionMessage<Twin, N> : never : never : never
+			? PrimaryOfValue<R[K]> extends infer S extends string ? PrimaryOfValue<R[Twin]> extends infer N extends string ? TwinsConflict<Twin, N, S> extends true ? ConflictMessage<Twin, N> : never : never : never
 			: never
 		: never
 
 /** The setting leaving no room for the empty line in front of a closing brace that another asks for, or the reverse, or `never`. */
-type ContradictingEmptyLine<K extends string & keyof R, R> = K extends typeof EMPTY_LINE_RULE
+type ConflictingEmptyLine<K extends string & keyof R, R> = K extends typeof EMPTY_LINE_RULE
 	? PrimaryOfValue<R[K]> extends typeof EMPTY_LINE_OPTION
-		? { [Refuser in keyof typeof EMPTY_LINE_REFUSERS & keyof R]: PrimaryOfValue<R[Refuser]> extends typeof EMPTY_LINE_REFUSERS[Refuser][number] ? ContradictionMessage<Refuser, PrimaryOfValue<R[Refuser]>> : never }[keyof typeof EMPTY_LINE_REFUSERS & keyof R]
+		? { [Refuser in keyof typeof EMPTY_LINE_REFUSERS & keyof R]: PrimaryOfValue<R[Refuser]> extends typeof EMPTY_LINE_REFUSERS[Refuser][number] ? ConflictMessage<Refuser, PrimaryOfValue<R[Refuser]>> : never }[keyof typeof EMPTY_LINE_REFUSERS & keyof R]
 		: never
 	: K extends keyof typeof EMPTY_LINE_REFUSERS
-		? typeof EMPTY_LINE_RULE extends keyof R ? PrimaryOfValue<R[typeof EMPTY_LINE_RULE]> extends typeof EMPTY_LINE_OPTION ? PrimaryOfValue<R[K]> extends typeof EMPTY_LINE_REFUSERS[K][number] ? ContradictionMessage<typeof EMPTY_LINE_RULE, typeof EMPTY_LINE_OPTION> : never : never : never
+		? typeof EMPTY_LINE_RULE extends keyof R ? PrimaryOfValue<R[typeof EMPTY_LINE_RULE]> extends typeof EMPTY_LINE_OPTION ? PrimaryOfValue<R[K]> extends typeof EMPTY_LINE_REFUSERS[K][number] ? ConflictMessage<typeof EMPTY_LINE_RULE, typeof EMPTY_LINE_OPTION> : never : never : never
 		: never
 
 /** The setting asking for whitespace behind a call that another forbids, or the reverse, or `never`. */
-type ContradictingFunctionWhitespace<K extends string & keyof R, R> = K extends typeof FUNCTION_WHITESPACE_RULE
+type ConflictingFunctionWhitespace<K extends string & keyof R, R> = K extends typeof FUNCTION_WHITESPACE_RULE
 	? PrimaryOfValue<R[K]> extends typeof FUNCTION_WHITESPACE_OPTION
-		? { [Asker in typeof RULES_BEHIND_A_FUNCTION[number] & keyof R]: PrimaryOfValue<R[Asker]> extends `always${string}` ? ContradictionMessage<Asker, PrimaryOfValue<R[Asker]>> : never }[typeof RULES_BEHIND_A_FUNCTION[number] & keyof R]
+		? { [Asker in typeof RULES_BEHIND_A_FUNCTION[number] & keyof R]: PrimaryOfValue<R[Asker]> extends `always${string}` ? ConflictMessage<Asker, PrimaryOfValue<R[Asker]>> : never }[typeof RULES_BEHIND_A_FUNCTION[number] & keyof R]
 		: never
 	: K extends typeof RULES_BEHIND_A_FUNCTION[number]
-		? typeof FUNCTION_WHITESPACE_RULE extends keyof R ? PrimaryOfValue<R[typeof FUNCTION_WHITESPACE_RULE]> extends typeof FUNCTION_WHITESPACE_OPTION ? PrimaryOfValue<R[K]> extends `always${string}` ? ContradictionMessage<typeof FUNCTION_WHITESPACE_RULE, typeof FUNCTION_WHITESPACE_OPTION> : never : never : never
+		? typeof FUNCTION_WHITESPACE_RULE extends keyof R ? PrimaryOfValue<R[typeof FUNCTION_WHITESPACE_RULE]> extends typeof FUNCTION_WHITESPACE_OPTION ? PrimaryOfValue<R[K]> extends `always${string}` ? ConflictMessage<typeof FUNCTION_WHITESPACE_RULE, typeof FUNCTION_WHITESPACE_OPTION> : never : never : never
 		: never
 
-/** What the setting of rule `K` in a configuration `R` by short names contradicts, as {@link contradictionsAmong} finds it at the run: the message naming the other setting, or `never` where nothing does. */
-export type ContradictionOf<K extends string & keyof R, R> = ContradictingTwin<K, R> | ContradictingEmptyLine<K, R> | ContradictingFunctionWhitespace<K, R>
+/** What the setting of rule `K` in a configuration `R` by short names conflicts with, as {@link conflictsAmong} finds it at the run: the message naming the other setting, or `never` where nothing does. */
+export type ConflictOf<K extends string & keyof R, R> = ConflictingTwin<K, R> | ConflictingEmptyLine<K, R> | ConflictingFunctionWhitespace<K, R>
