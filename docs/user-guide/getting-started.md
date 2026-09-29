@@ -24,6 +24,16 @@ export default {
 
 The rules above read plain CSS. A stylesheet written in SCSS or Less, or embedded in JavaScript as a styled template, is read by the same rules under a namespace of its own — see [Custom syntaxes](./custom-syntaxes.md).
 
----
+## Run
 
-Please refer to [Stylelint docs](https://stylelint.io/user-guide/get-started) for detailed info on using this linter.
+```shell
+npx stylelint "**/*.css"
+```
+
+Stylelint reports what the rules find, and `--fix` rewrites the files to match them:
+
+```shell
+npx stylelint "**/*.css" --fix
+```
+
+Everything else the command takes is in [Stylelint's CLI reference](https://stylelint.io/user-guide/cli).
