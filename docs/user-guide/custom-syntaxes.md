@@ -2,32 +2,32 @@
 
 The rules under `@stylistic/<rule>` read plain CSS. A stylesheet written in SCSS (`postcss-scss`) is read by the same rules under the `@stylistic/scss/` namespace, one written in Less (`postcss-less`) under `@stylistic/less/`, and one embedded in JavaScript as a styled template (`postcss-styled-syntax`) under `@stylistic/styled/`; on any such file the core names report one warning pointing at the right namespace. Configure a namespace in the `overrides` block that names the syntax:
 
-```json
-{
-	"plugins": ["@stylistic/stylelint-plugin"],
-	"overrides": [
+```js
+export default {
+	plugins: ["@stylistic/stylelint-plugin"],
+	overrides: [
 		{
-			"files": ["**/*.scss"],
-			"customSyntax": "postcss-scss",
-			"rules": {
-				"@stylistic/scss/color-hex-case": "lower"
-			}
+			files: ["**/*.scss"],
+			customSyntax: "postcss-scss",
+			rules: {
+				"@stylistic/scss/color-hex-case": "lower",
+			},
 		},
 		{
-			"files": ["**/*.less"],
-			"customSyntax": "postcss-less",
-			"rules": {
-				"@stylistic/less/color-hex-case": "lower"
-			}
+			files: ["**/*.less"],
+			customSyntax: "postcss-less",
+			rules: {
+				"@stylistic/less/color-hex-case": "lower",
+			},
 		},
 		{
-			"files": ["**/*.{js,jsx,ts,tsx}"],
-			"customSyntax": "postcss-styled-syntax",
-			"rules": {
-				"@stylistic/styled/indentation": ["tab"]
-			}
-		}
-	]
+			files: ["**/*.{js,jsx,ts,tsx}"],
+			customSyntax: "postcss-styled-syntax",
+			rules: {
+				"@stylistic/styled/indentation": ["tab"],
+			},
+		},
+	],
 }
 ```
 

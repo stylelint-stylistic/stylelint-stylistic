@@ -2,18 +2,18 @@
 
 The rules of the core under `@stylistic/styled/<rule>`, for stylesheets embedded in JavaScript as styled templates and parsed with [`postcss-styled-syntax`](https://github.com/hudochenkov/postcss-styled-syntax). The core's rules do not read such a file — on one they report a single warning naming this namespace — so a project using styled templates lists these names for the files that carry them:
 
-```json
-{
-	"plugins": ["@stylistic/stylelint-plugin"],
-	"overrides": [
+```js
+export default {
+	plugins: ["@stylistic/stylelint-plugin"],
+	overrides: [
 		{
-			"files": ["**/*.{js,jsx,ts,tsx}"],
-			"customSyntax": "postcss-styled-syntax",
-			"rules": {
-				"@stylistic/styled/indentation": ["tab"]
-			}
-		}
-	]
+			files: ["**/*.{js,jsx,ts,tsx}"],
+			customSyntax: "postcss-styled-syntax",
+			rules: {
+				"@stylistic/styled/indentation": ["tab"],
+			},
+		},
+	],
 }
 ```
 

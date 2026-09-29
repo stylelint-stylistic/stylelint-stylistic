@@ -2,10 +2,13 @@
 
 Two settings conflict with each other when no spelling of an ordinary stylesheet satisfies both. The plugin refuses such a configuration: the run stops with a configuration error at the first rule of the plugin to run, the process exits with code `78`, and under `--fix` a file the pair applies to is not written.
 
-```json
-{
-	"@stylistic/value-list-comma-newline-after": "always-multi-line",
-	"@stylistic/value-list-comma-space-after": "always"
+```js
+export default {
+	plugins: ["@stylistic/stylelint-plugin"],
+	rules: {
+		"@stylistic/value-list-comma-newline-after": "always-multi-line",
+		"@stylistic/value-list-comma-space-after": "always",
+	},
 }
 ```
 

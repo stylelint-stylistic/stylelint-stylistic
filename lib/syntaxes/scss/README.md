@@ -2,18 +2,18 @@
 
 The rules of the core under `@stylistic/scss/<rule>`, for stylesheets written in [SCSS](https://sass-lang.com) and parsed with [`postcss-scss`](https://github.com/postcss/postcss-scss). The core's rules do not read such a file — on one they report a single warning naming this namespace — so a project holding SCSS lists these names for the files that carry it:
 
-```json
-{
-	"plugins": ["@stylistic/stylelint-plugin"],
-	"overrides": [
+```js
+export default {
+	plugins: ["@stylistic/stylelint-plugin"],
+	overrides: [
 		{
-			"files": ["**/*.scss"],
-			"customSyntax": "postcss-scss",
-			"rules": {
-				"@stylistic/scss/color-hex-case": "lower"
-			}
-		}
-	]
+			files: ["**/*.scss"],
+			customSyntax: "postcss-scss",
+			rules: {
+				"@stylistic/scss/color-hex-case": "lower",
+			},
+		},
+	],
 }
 ```
 

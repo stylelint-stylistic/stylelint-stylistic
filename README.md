@@ -21,21 +21,19 @@ npm add -D stylelint @stylistic/stylelint-plugin
 > [!IMPORTANT]
 > Install a published version. A dependency named by a Git reference — `github:stylelint-stylistic/stylelint-stylistic` or a URL of a branch — does **not** work. The package publishes a built `dist/`, which the repository does not carry and nothing builds for you, so such an install either stops at your package manager's gate for build scripts or leaves a package that fails to load with `ERR_MODULE_NOT_FOUND`. If you need a fix that has not shipped yet, say so on the issue rather than reaching for the branch: a fix here is normally published as a patch version within the day.
 
-Create the `.stylelintrc` config file (or open the existing one), add `@stylistic/stylelint-plugin` to the plugins array and the rules you need to the rules list. [All rules from `@stylistic/stylelint-plugin`](https://stylelint-stylistic.github.io/user-guide/rules) need to be namespaced with `@stylistic/`. That prefix is the whole difference — an unprefixed name in the rules list is a rule of Stylelint's own, a prefixed one is a rule of this plugin:
+Create `stylelint.config.mjs` (or open your existing configuration), add `@stylistic/stylelint-plugin` to the plugins array and the rules you need to the rules list. [All rules from `@stylistic/stylelint-plugin`](https://stylelint-stylistic.github.io/user-guide/rules) need to be namespaced with `@stylistic/`. That prefix is the whole difference — an unprefixed name in the rules list is a rule of Stylelint's own, a prefixed one is a rule of this plugin:
 
-```json
-{
-	"plugins": [
-		"@stylistic/stylelint-plugin"
-	],
-	"rules": {
+```js
+export default {
+	plugins: ["@stylistic/stylelint-plugin"],
+	rules: {
 		"color-function-notation": "modern",
 		"selector-max-compound-selectors": 2,
 
 		"@stylistic/color-hex-case": "lower",
 		"@stylistic/number-leading-zero": "always",
-		"@stylistic/unit-case": "lower"
-	}
+		"@stylistic/unit-case": "lower",
+	},
 }
 ```
 
@@ -47,32 +45,32 @@ Please refer to [Stylelint docs](https://stylelint.io/user-guide/get-started) f
 
 The rules above read plain CSS. A stylesheet written in SCSS (`postcss-scss`) is read by the same rules under the `@stylistic/scss/` namespace, one written in Less (`postcss-less`) under `@stylistic/less/`, and one embedded in JavaScript as a styled template (`postcss-styled-syntax`) under `@stylistic/styled/`; on any such file the core names report one warning pointing at the right namespace. Configure a namespace in the `overrides` block that names the syntax:
 
-```json
-{
-	"plugins": ["@stylistic/stylelint-plugin"],
-	"overrides": [
+```js
+export default {
+	plugins: ["@stylistic/stylelint-plugin"],
+	overrides: [
 		{
-			"files": ["**/*.scss"],
-			"customSyntax": "postcss-scss",
-			"rules": {
-				"@stylistic/scss/color-hex-case": "lower"
-			}
+			files: ["**/*.scss"],
+			customSyntax: "postcss-scss",
+			rules: {
+				"@stylistic/scss/color-hex-case": "lower",
+			},
 		},
 		{
-			"files": ["**/*.less"],
-			"customSyntax": "postcss-less",
-			"rules": {
-				"@stylistic/less/color-hex-case": "lower"
-			}
+			files: ["**/*.less"],
+			customSyntax: "postcss-less",
+			rules: {
+				"@stylistic/less/color-hex-case": "lower",
+			},
 		},
 		{
-			"files": ["**/*.{js,jsx,ts,tsx}"],
-			"customSyntax": "postcss-styled-syntax",
-			"rules": {
-				"@stylistic/styled/indentation": ["tab"]
-			}
-		}
-	]
+			files: ["**/*.{js,jsx,ts,tsx}"],
+			customSyntax: "postcss-styled-syntax",
+			rules: {
+				"@stylistic/styled/indentation": ["tab"],
+			},
+		},
+	],
 }
 ```
 

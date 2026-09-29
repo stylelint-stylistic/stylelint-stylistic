@@ -2,18 +2,18 @@
 
 The rules of the core under `@stylistic/less/<rule>`, for stylesheets written in [Less](https://lesscss.org) and parsed with [`postcss-less`](https://github.com/shellscape/postcss-less). The core's rules do not read such a file — on one they report a single warning naming this namespace — so a project holding Less lists these names for the files that carry it:
 
-```json
-{
-	"plugins": ["@stylistic/stylelint-plugin"],
-	"overrides": [
+```js
+export default {
+	plugins: ["@stylistic/stylelint-plugin"],
+	overrides: [
 		{
-			"files": ["**/*.less"],
-			"customSyntax": "postcss-less",
-			"rules": {
-				"@stylistic/less/color-hex-case": "lower"
-			}
-		}
-	]
+			files: ["**/*.less"],
+			customSyntax: "postcss-less",
+			rules: {
+				"@stylistic/less/color-hex-case": "lower",
+			},
+		},
+	],
 }
 ```
 

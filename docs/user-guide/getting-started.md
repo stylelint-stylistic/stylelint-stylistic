@@ -6,21 +6,19 @@ Add `@stylistic/stylelint-plugin` and `stylelint` itself to your project:
 npm add -D stylelint @stylistic/stylelint-plugin
 ```
 
-Create the `.stylelintrc` config file (or open the existing one), add `@stylistic/stylelint-plugin` to the plugins array and the rules you need to the rules list. [All rules from `@stylistic/stylelint-plugin`](./rules.md) need to be namespaced with `@stylistic/`. That prefix is the whole difference — an unprefixed name in the rules list is a rule of Stylelint's own, a prefixed one is a rule of this plugin:
+Create `stylelint.config.mjs` (or open your existing configuration), add `@stylistic/stylelint-plugin` to the plugins array and the rules you need to the rules list. [All rules from `@stylistic/stylelint-plugin`](./rules.md) need to be namespaced with `@stylistic/`. That prefix is the whole difference — an unprefixed name in the rules list is a rule of Stylelint's own, a prefixed one is a rule of this plugin:
 
-```json
-{
-	"plugins": [
-		"@stylistic/stylelint-plugin"
-	],
-	"rules": {
+```js
+export default {
+	plugins: ["@stylistic/stylelint-plugin"],
+	rules: {
 		"color-function-notation": "modern",
 		"selector-max-compound-selectors": 2,
 
 		"@stylistic/color-hex-case": "lower",
 		"@stylistic/number-leading-zero": "always",
-		"@stylistic/unit-case": "lower"
-	}
+		"@stylistic/unit-case": "lower",
+	},
 }
 ```
 
