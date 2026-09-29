@@ -57,7 +57,7 @@ function rewritePath (page: string): string {
 }
 
 /**
- * Reads the groups of the hand-written rule list, so that the sidebar of the rule pages follows the file the registry test guards.
+ * Reads the groups of the hand-written rule list, so that the rules in the sidebar follow the file the registry test guards.
  * @returns One sidebar group per heading of the list, holding one item per rule named under it.
  */
 function readRuleGroups (): DefaultTheme.SidebarItem[] {
@@ -83,8 +83,8 @@ let syntaxItems: DefaultTheme.SidebarItem[] = namespaces.flatMap((syntax) => (sy
 let userGuide: DefaultTheme.SidebarItem[] = [
 	{ text: `Why?`, link: `/user-guide/why` },
 	{ text: `Getting started`, link: `/user-guide/getting-started` },
-	{ text: `Rules`, link: `/user-guide/rules` },
-	{ text: `Custom syntaxes`, link: `/user-guide/custom-syntaxes`, items: syntaxItems },
+	{ text: `Rules`, link: `/user-guide/rules`, collapsed: true, items: readRuleGroups() },
+	{ text: `Custom syntaxes`, link: `/user-guide/custom-syntaxes`, collapsed: true, items: syntaxItems },
 	{ text: `Typed configuration`, link: `/user-guide/typed-configuration` },
 	{ text: `Conflicting settings`, link: `/user-guide/conflicting-settings` },
 ]
@@ -211,11 +211,8 @@ export default defineConfig({
 			{ text: `Changelog`, link: `/changelog` },
 			{ text: `v${version}`, link: `${REPOSITORY}/releases` },
 		],
-		sidebar: {
-			"/rules/": readRuleGroups(),
-			"/syntaxes/": [{ text: `Custom syntaxes`, link: `/user-guide/custom-syntaxes`, items: syntaxItems }],
-			"/": guides,
-		},
+		// One sidebar on every page, so that each part of the site is a click away; a rule's group and the rule open under `Rules` as their page is visited
+		sidebar: guides,
 		outline: `deep`,
 		editLink: {
 			pattern: `${REPOSITORY}/edit/main/:path`,
