@@ -16,14 +16,10 @@ hero:
       text: Rules
       link: /user-guide/rules
     - theme: alt
-      text: GitHub
-      link: https://github.com/stylelint-stylistic/stylelint-stylistic
+      text: Why?
+      link: /user-guide/why
 
 features:
-  - title: The rules Stylelint removed
-    details: Stylelint 16 dropped dozens of rules that enforce stylistic conventions. They are all here, under the @stylistic/ prefix, and they keep up with Stylelint.
-    link: https://stylelint.io/migration-guide/to-16#removed-deprecated-stylistic-rules
-    linkText: What was removed
   - title: Autofixable
     details: Nearly every rule fixes what it reports, so one run of stylelint --fix brings a stylesheet to the convention.
     link: /user-guide/rules
@@ -32,4 +28,8 @@ features:
     details: The core reads plain CSS. A stylesheet in SCSS or Less, or a styled template, is read by the same rules under a namespace of its own.
     link: /user-guide/custom-syntaxes
     linkText: Custom syntaxes
+  - title: Typed configuration
+    details: A JavaScript configuration names the rules by their short names, and the editor completes and checks every name and option.
+    link: /user-guide/typed-configuration
+    linkText: Typed configuration
 ---

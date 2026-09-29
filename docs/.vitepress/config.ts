@@ -81,6 +81,7 @@ function readRuleGroups (): DefaultTheme.SidebarItem[] {
 let syntaxItems: DefaultTheme.SidebarItem[] = namespaces.flatMap((syntax) => (syntax.namespace === undefined ? [] : [{ text: syntax.namespace, link: `/syntaxes/${syntax.namespace}` }]))
 
 let userGuide: DefaultTheme.SidebarItem[] = [
+	{ text: `Why?`, link: `/user-guide/why` },
 	{ text: `Getting started`, link: `/user-guide/getting-started` },
 	{ text: `Rules`, link: `/user-guide/rules` },
 	{ text: `Custom syntaxes`, link: `/user-guide/custom-syntaxes`, items: syntaxItems },

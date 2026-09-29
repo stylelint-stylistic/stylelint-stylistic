@@ -39,6 +39,7 @@ A stylesheet written in SCSS or Less, or embedded in JavaScript as a styl
 
 ## Documentation
 
+- [Why?](https://stylelint-stylistic.github.io/user-guide/why)
 - [Getting started](https://stylelint-stylistic.github.io/user-guide/getting-started)
 - [Rule list](https://stylelint-stylistic.github.io/user-guide/rules)
 - [Custom syntaxes](https://stylelint-stylistic.github.io/user-guide/custom-syntaxes)
