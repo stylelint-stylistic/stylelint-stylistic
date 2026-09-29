@@ -1,10 +1,6 @@
 # Typed configuration
 
-A JavaScript configuration can name this plugin's rules through two exported functions instead of writing the prefixed names by hand. They give you three things a hand-written configuration cannot have:
-
-- **The names are completed and checked.** An editor offers the rule names and their options, and the compiler refuses a rule the plugin has no rule for, a primary option the rule does not take, a secondary key it does not spell, and a syntax it has no namespace for. Without them a typo in a name is an "Unknown rule" on every line, a typo in an option is a validation error at the run, and an unknown secondary key is passed over in silence.
-- **The namespace is named once.** You write the short names, `color-hex-case` rather than `@stylistic/scss/color-hex-case`, and the syntax once for the whole block.
-- **What several rules take alike is set once.** A list of functions to ignore, a severity for this plugin's rules alone, or a ban on autofixing goes into every rule that takes it.
+A JavaScript configuration can name this plugin's rules through two exported functions instead of writing the prefixed names by hand. You write the short names, `color-hex-case` rather than `@stylistic/scss/color-hex-case`, and the syntax once for the whole block. An editor completes the names and the options, and the compiler refuses a rule, a primary option, a secondary key or a syntax the plugin does not have, where a hand-written configuration meets a typo in a name as an "Unknown rule" on every line, in an option as a validation error at the run, and in a secondary key not at all. What several rules take alike is set once, in the [shared options](#shared-options).
 
 Both functions return plain objects, so Stylelint knows nothing of them. Both refuse two settings of one call that [conflict with each other](conflicting-settings.md), as the plugin does at the run for a configuration put together any other way, and their types refuse such a pair in the editor: each of the two settings is typed with a message naming the other. A JSON or YAML configuration goes on naming the rules itself.
 
@@ -38,7 +34,7 @@ defineStylistic({ syntax: "scss", rules: { "color-hex-case": "lower" } })
 // → { "@stylistic/scss/color-hex-case": ["lower", {}] }
 ```
 
-A name or a syntax the plugin does not know stops the run with one configuration error naming it. What an option holds is the rule's own to check at its turn, as it is today.
+A name or a syntax the plugin does not know stops the run with one configuration error naming it. What an option holds is checked by the rule when it runs.
 
 ## Shared options
 

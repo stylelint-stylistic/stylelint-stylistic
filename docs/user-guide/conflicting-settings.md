@@ -19,9 +19,7 @@ Conflicting settings:
 Set the second to "always-single-line", or turn one of them off.
 ```
 
-The message names both settings as the configuration spells them, in the order it lists them, and every pair it holds at once. There is no way to keep such a pair on purpose: one of the two settings has to change.
-
-The configuration is read as Stylelint merged it for the file being linted, so a pair put together by `extends` and `overrides` is refused too, and only over the files it applies to. A rule turned off with `null` takes no part. [`defineStylistic` and `defineStylisticOverride`](typed-configuration.md) refuse a pair written in one call the same way, as soon as the configuration is loaded, and their types refuse it in the editor already: each of the two settings is typed with a message naming the other.
+The message names both settings as the configuration spells them, and every pair it holds at once; one of the two has to change, since there is no way to keep such a pair on purpose. The configuration is read as Stylelint merged it for the file being linted, so a pair put together by `extends` and `overrides` is refused too, over the files it applies to, and a rule turned off with `null` takes no part. [`defineStylistic` and `defineStylisticOverride`](typed-configuration.md) refuse a pair written in one call as soon as the configuration is loaded, and their types refuse it in the editor already.
 
 ## What is refused
 
