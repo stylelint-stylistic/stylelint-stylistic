@@ -21,7 +21,7 @@ hero:
 
 features:
   - title: The rules Stylelint removed
-    details: Stylelint 16 dropped the 76 rules that enforce stylistic conventions. They are all here, under the @stylistic/ prefix, and they keep up with Stylelint.
+    details: Stylelint 16 dropped dozens of rules that enforce stylistic conventions. They are all here, under the @stylistic/ prefix, and they keep up with Stylelint.
     link: https://stylelint.io/migration-guide/to-16#removed-deprecated-stylistic-rules
     linkText: What was removed
   - title: Autofixable
