@@ -28,8 +28,13 @@ describe(`a rule listed under two names over one root`, () => {
 		expect(await reporters(`a { b: 1Px }`, { [SCSS]: `upper`, [LESS]: `upper`, [CORE]: `lower` })).toEqual([CORE])
 	})
 
-	it(`is read by the namespace's copy over that namespace's syntax, the root refused once with a warning by the copies that do not read it, as before`, async () => {
-		expect(await reporters(`a { b: 1Px; // c\n}`, { [CORE]: `lower`, [SCSS]: `lower`, [LESS]: `lower` }, `postcss-scss`)).toEqual([CORE, SCSS].toSorted())
+	it(`is read by the namespace's copy over that namespace's syntax, the copies that do not read it yielding without a word, since the file is checked`, async () => {
+		expect(await reporters(`a { b: 1Px; // c\n}`, { [CORE]: `lower`, [SCSS]: `lower`, [LESS]: `lower` }, `postcss-scss`)).toEqual([SCSS])
+	})
+
+	it(`is refused once with a warning over a syntax no configured copy reads, as a rule listed under the core's name alone is`, async () => {
+		expect(await reporters(`a { b: 1Px; // c\n}`, { [CORE]: `lower`, [LESS]: `lower` }, `postcss-scss`)).toEqual([CORE])
+		expect(await reporters(`a { b: 1Px; // c\n}`, { [CORE]: `lower`, [SCSS]: null }, `postcss-scss`)).toEqual([CORE])
 	})
 
 	it(`is read by the first listed copy over plain CSS where the core's is not configured, or is turned off`, async () => {
@@ -39,10 +44,10 @@ describe(`a rule listed under two names over one root`, () => {
 		expect(await reporters(`a { b: 1Px }`, { [CORE]: [null], [LESS]: `lower`, [SCSS]: `lower` })).toEqual([LESS])
 	})
 
-	it(`is read per root of a page, each block by its own family, a block of another syntax refused once by the first listed copy that does not read it`, async () => {
+	it(`is read per root of a page, each block by its own family, the copies that do not read a block saying nothing of it`, async () => {
 		let page = `<style>a { b: 1Px }</style><style lang="scss">c { d: 2Px }</style><style lang="less">e { f: 3Px }</style>`
 
-		expect(await reporters(page, { [SCSS]: `lower`, [CORE]: `lower`, [LESS]: `lower` }, `postcss-html`)).toEqual([CORE, SCSS, CORE, LESS, SCSS].toSorted())
+		expect(await reporters(page, { [SCSS]: `lower`, [CORE]: `lower`, [LESS]: `lower` }, `postcss-html`)).toEqual([CORE, SCSS, LESS].toSorted())
 	})
 
 	it(`yields at the flush too, where its option waits for the run's end`, async () => {

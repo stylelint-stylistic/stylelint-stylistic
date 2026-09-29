@@ -49,7 +49,7 @@ let refused: WeakSet<Root> = new WeakSet()
 let askedForTheCharsetRule: WeakSet<Root> = new WeakSet()
 
 /**
- * Turns a rule definition into a factory over a syntax, which names the rule under the syntax's namespace, closes the messages with that name, and refuses a root the syntax does not accept in front of the rule.
+ * Turns a rule definition into a factory over a syntax, which names the rule under the syntax's namespace, closes the messages with that name, and refuses a root the syntax does not accept in front of the rule: with one warning naming the namespaces that would read it, or without a word where a configured copy of the rule under one of them does.
  * @param definition - The rule's definition.
  * @returns The factory, whose result `createPlugin` takes.
  */
@@ -101,7 +101,8 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 					return
 				}
 
-				if (refused.has(root)) return
+				// A configured copy of another namespace reads the root and says whatever there is to say; the warning is for a root no configured copy reads
+				if (copyReadingTheRoot(shortName, root, result) !== undefined || refused.has(root)) return
 
 				refused.add(root)
 
