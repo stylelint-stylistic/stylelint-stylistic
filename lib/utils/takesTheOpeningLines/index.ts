@@ -2,6 +2,7 @@ import type { Root } from "postcss"
 import type { PostcssResult } from "stylelint"
 
 import { EVERY_LINE_BREAK, EVERY_SEMICOLON, LEADING_CSS_WHITESPACE_AND_SEMICOLONS, OPENS_WITH_LINE_BREAK } from "../../regexps.ts"
+import type { Syntax } from "../../syntaxes/index.ts"
 import { neighborCopies, type NeighborRuleSetting } from "../neighborSettings/index.ts"
 import { semicolonsTakenAlready } from "../semicolonsTakenAlready/index.ts"
 import { straySemicolonsTaken, straySemicolonsTakenBefore, withoutTaken } from "../straySemicolonsTaken/index.ts"
@@ -54,14 +55,15 @@ function headSemicolonsGone (root: Root, text: string, result: PostcssResult): S
 }
 
 /**
- * Counts the line breaks of the empty lines a file opens with, as `no-empty-first-line` reads them: on the text handed to the parser, its head read without the semicolons the neighbors take out, so that a line holding nothing but such a semicolon is empty whichever side of that neighbor alone the reader is listed. A semicolon one of them keeps is a character of its line, where the file spells it.
+ * Counts the line breaks of the empty lines a file opens with, as `no-empty-first-line` reads them: on the text handed to the parser, its head read without the semicolons the neighbors take out, so that a line holding nothing but such a semicolon is empty whichever side of that neighbor alone the reader is listed. A semicolon one of them keeps is a character of its line, where the file spells it. Where the text opens on a line of the host code, a styled template's, the first break of the run ends that line and is no empty line.
  *
  * The guards are that rule's own: an inline `style` attribute's root and a CSS-in-JS object literal are passed over, and a file of whitespace alone opens with no empty line.
  * @param root - The stylesheet.
  * @param result - The PostCSS result carrying the configuration.
+ * @param syntax - The syntax of the rule asking, which is the root's, since one family reads a root.
  * @returns The count, none where the file opens with no empty line.
  */
-export function openingLineBreaks (root: Root, result: PostcssResult): number {
+export function openingLineBreaks (root: Root, result: PostcssResult, syntax: Syntax): number {
 	let source: EmbeddedSource | undefined = root.source
 
 	if (source?.inline || source?.lang === `object-literal`) return 0
@@ -71,7 +73,9 @@ export function openingLineBreaks (root: Root, result: PostcssResult): number {
 
 	if (!read.trim()) return 0
 
-	return [...(OPENS_WITH_LINE_BREAK.exec(read)?.[0] ?? ``).matchAll(EVERY_LINE_BREAK)].length
+	let breaks = [...(OPENS_WITH_LINE_BREAK.exec(read)?.[0] ?? ``).matchAll(EVERY_LINE_BREAK)].length
+
+	return syntax.hostLineEdges(root).opens ? Math.max(0, breaks - 1) : breaks
 }
 
 /**
@@ -79,13 +83,14 @@ export function openingLineBreaks (root: Root, result: PostcssResult): number {
  *
  * The run is one both rules read and both take breaks out of. Where the file leaves the root no node the raw is the whole file, so the two of them took one break each where one stood, and which of the two got there first was the configuration's to decide.
  *
- * The question is put to the text {@link openingLineBreaks} reads, which is the text `no-empty-first-line` reads, so both rules answer it alike wherever either stands in the configuration and however far the tree has been written by then. A copy whose fix is off writes nothing. A styled template's root is passed over by neither guard, since no copy of the rule under a namespace reading such a root is listed here.
+ * The question is put to the text {@link openingLineBreaks} reads, which is the text `no-empty-first-line` reads, so both rules answer it alike wherever either stands in the configuration and however far the tree has been written by then. A copy whose fix is off writes nothing.
  * @param root - The stylesheet.
  * @param result - The PostCSS result carrying the configuration.
+ * @param syntax - The syntax of the rule asking, which is the root's, since one family reads a root.
  * @returns True where a live copy of the rule takes the run off.
  */
-export function takesTheOpeningLines (root: Root, result: PostcssResult): boolean {
-	if (openingLineBreaks(root, result) === 0) return false
+export function takesTheOpeningLines (root: Root, result: PostcssResult, syntax: Syntax): boolean {
+	if (openingLineBreaks(root, result, syntax) === 0) return false
 
 	return neighborCopies(root, result, NO_EMPTY_FIRST_LINE).some(({ fixDisabled }) => !fixDisabled)
 }

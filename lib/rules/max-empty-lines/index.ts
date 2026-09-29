@@ -98,7 +98,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			return replaceEmptyLines(primary, text, isSpecialCase, runs)
 		}
 
-		let openingLinesAreTaken = takesTheOpeningLines(root, result)
+		let openingLinesAreTaken = takesTheOpeningLines(root, result, syntax)
 		let headOpensALine = opensALine(root)
 		let writeHead = writeHeadRun.bind(null, getChars, headOpensALine, blankLinesTaken ? LEADING_LINE_BREAK_RUN_PAST_BLANK_LINES : LEADING_LINE_BREAK_RUN)
 		let isFixed = false

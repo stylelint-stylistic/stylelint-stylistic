@@ -30,10 +30,11 @@ export type PrimaryOption = true
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
  * @param scope.messages - The messages, closing with that name.
+ * @param scope.syntax - The syntax, which says whether the text closes on a line of the host code.
  * @param primary - The primary option.
  * @returns The check.
  */
-function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: PrimaryOption): RuleCheck {
 	return (root, result) => {
 		let validOptions = validateOptions(result, ruleName, { actual: primary })
 
@@ -47,7 +48,8 @@ function rule ({ ruleName, messages }: RuleScope<typeof MESSAGES>, primary: Prim
 
 		let rootString = root.source.input.css
 
-		if (!rootString.trim() || TRAILING_LINE_BREAK.test(rootString)) return
+		// A text closing on a line of the host code, a styled template's, ends the stylesheet on that line: no break is missing in front of the host's closing
+		if (!rootString.trim() || TRAILING_LINE_BREAK.test(rootString) || syntax.hostLineEdges(root).closes) return
 
 		let problemIndex = rootString.length - 1
 

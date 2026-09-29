@@ -23,8 +23,19 @@ export let styled: Syntax = {
 		// The template hangs from its host line's indentation, and a multi-line one holds its content a level deeper
 		return {
 			indent: lineAt(parent.parent.source.input.css, parent.source.start.line).match(LEADING_SPACES_AND_TABS)?.[0] ?? ``,
-			multiline: parent.source.input.css.split(EVERY_JS_LINE_TERMINATOR).length > 1,
+			multiline: hostLines(parent.source.input.css).length > 1,
 		}
+	},
+	hostLineEdges (root: Root): { opens: boolean, closes: boolean } {
+		if (root.raws.styledSyntaxRangeStart === undefined) return { opens: false, closes: false }
+
+		if (!root.source) throw new Error(`A styled template must have a source`)
+
+		let lines = hostLines(root.source.input.css)
+		let last = lines.at(-1) ?? ``
+
+		// The template opens behind the backtick on the host's line; it closes on the host's line where it is not broken over lines, or where its last line is the closing backtick's, holding nothing but that backtick's indentation
+		return { opens: true, closes: lines.length === 1 || last.match(LEADING_SPACES_AND_TABS)?.[0] === last }
 	},
 	valueEmbedsHostCode: (decl: Declaration) => isStyledSyntaxDeclaration(decl) && decl.value.includes(`\${`),
 	hostCodeSpans,
@@ -59,13 +70,22 @@ function isStyledSyntaxDeclaration (declaration: Declaration): boolean {
 }
 
 /**
+ * Splits a text into lines as the host language counts them.
+ * @param text - The template, or the host file.
+ * @returns The lines.
+ */
+function hostLines (text: string): string[] {
+	return text.split(EVERY_JS_LINE_TERMINATOR)
+}
+
+/**
  * Reads one line of the host file, counted from one.
  * @param text - The host file.
  * @param line - The line number.
  * @returns The line.
  */
 function lineAt (text: string, line: number): string {
-	let found = text.split(EVERY_JS_LINE_TERMINATOR)[line - 1]
+	let found = hostLines(text)[line - 1]
 
 	if (found === undefined) throw new Error(`A styled expression starts on a line its file does not hold`)
 

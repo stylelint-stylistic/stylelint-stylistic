@@ -44,6 +44,8 @@ export let css: Syntax = {
 		// PostCSS merges no runs a rule would have to part
 	},
 	embedding: () => ({ indent: ``, multiline: false }),
+	// A file stands on no host line, and `postcss-html` keeps the break behind a `<style>` tag out of the root's text
+	hostLineEdges: () => ({ opens: false, closes: false }),
 	valueEmbedsHostCode: () => false,
 	hostCodeSpans: () => [],
 	isStandardAtRule: isStandardSyntaxAtRule,

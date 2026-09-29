@@ -42,6 +42,13 @@ export type Syntax = {
 	embedding (node: Node): { indent: string, multiline: boolean },
 
 	/**
+	 * Asks which edges of a root's text stand on a line of the host code, which a rule reading the file's first or last line reads as no line of the stylesheet. A styled template opens behind the backtick on the host's line, so the break its text opens with ends that line and is no empty first line; it closes on a line of the host's where it is not broken over lines, or where its last line holds nothing but the indentation of the closing backtick, so no break is missing there.
+	 * @param root - The root.
+	 * @returns Whether the text opens on a line of the host's, and whether it closes on one; both false for a stylesheet on its own.
+	 */
+	hostLineEdges (root: Root): { opens: boolean, closes: boolean },
+
+	/**
 	 * Asks whether a declaration's value embeds host code.
 	 * @param decl - The declaration.
 	 * @returns True where it does.
