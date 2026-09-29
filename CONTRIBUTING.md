@@ -2,23 +2,18 @@
 
 ## How you can help
 
-Work on the plugin is not yet finalized, so if you want, you can help with any of its parts (the plugin follows Stylelint guidelines, so most of this is based on its docs):
-
-- Create, enhance, and debug rules (see Stylelint's guide to [Working on rules](https://github.com/stylelint/stylelint/blob/main/docs/contributor-guide/rules.md)).
-- Improve documentation.
+- Report a bug or ask for a feature through the [issue templates](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/new/choose). A minimal stylesheet and the configuration it runs under help most.
+- Fix a bug, or add a rule or an option: the [developer guide](docs/developer-guide/rules.md) has the steps.
+- Improve the documentation. The site is built from the Markdown files of the repository, and each rule's page from the `README.md` beside the rule.
 - Chime in on any open issue or pull request.
-- Open new issues about your ideas on new rules, or for how to improve the existing ones, and pull requests to show us how your idea works.
-- Add new tests to absolutely anything.
-- Work on improving performance of rules.
-- Contribute to [stylelint](https://github.com/stylelint/stylelint) and [stylelint-stylistic](https://github.com/stylelint-stylistic/stylelint-stylistic)
 - Spread the word.
 
 We communicate via [issues](https://github.com/stylelint-stylistic/stylelint-stylistic/issues) and [pull requests](https://github.com/stylelint-stylistic/stylelint-stylistic/pulls).
 
-## Links
+## Pull requests
 
-stylelint-stylistic is a plugin for stylelint, so it adopts and uses as much of Stylelint's guidelines as it can.
+Install the dependencies with `pnpm ci`, and run `make verify` before pushing: it is what CI runs, and the `pre-push` hook runs it too.
 
-- [Contributing guidelines](https://github.com/stylelint/stylelint/blob/main/CONTRIBUTING.md) - is a general guidelines of how to communicate with the other developers here.
-- [Working on rules](https://github.com/stylelint/stylelint/blob/main/docs/contributor-guide/rules.md). stylelint-stylistic' rules are written just as Stylelint's rules, except that all rules need to be namespaced using the `namespace` utility function.
-- [Writing tests](https://github.com/stylelint/stylelint/blob/main/docs/contributor-guide/rules.md#write-tests). Always provide as many tests as you can.
+- A pull request carries one change. A tidy-up riding along makes the review about two things at once, so it goes into a pull request of its own.
+- A change a user of the plugin meets gets an entry in the `Unreleased` section of [`CHANGELOG.md`](CHANGELOG.md), saying what is now true for them.
+- A commit subject is one imperative sentence with no conventional-commits prefix: `Fix the build target`, never `fix: build target`.

@@ -11,7 +11,7 @@ body:
 
         You can help us fix the bug more quickly by:
         1. Figuring out what needs doing and proposing a fix.
-        2. After the bug is confirmed, [contributing](https://github.com/stylelint-stylelint/stylelint-stylistic/blob/main/CONTRIBUTING.md) a pull request.
+        2. After the bug is confirmed, [contributing](https://stylelint-stylistic.github.io/contributing) a pull request.
   - type: textarea
     id: reproduce-bug
     attributes:
