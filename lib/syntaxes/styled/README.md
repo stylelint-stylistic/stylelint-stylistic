@@ -1,21 +1,6 @@
 # The `styled` namespace
 
-The rules of the core under `@stylistic/styled/<rule>`, for stylesheets embedded in JavaScript as styled templates and parsed with [`postcss-styled-syntax`](https://github.com/hudochenkov/postcss-styled-syntax). The core's rules do not read such a file — on one they report a single warning naming this namespace — so a project using styled templates lists these names for the files that carry them:
-
-```js
-export default {
-	plugins: ["@stylistic/stylelint-plugin"],
-	overrides: [
-		{
-			files: ["**/*.{js,jsx,ts,tsx}"],
-			customSyntax: "postcss-styled-syntax",
-			rules: {
-				"@stylistic/styled/indentation": ["tab"],
-			},
-		},
-	],
-}
-```
+The rules of the core under `@stylistic/styled/<rule>`, for stylesheets embedded in JavaScript as styled templates and parsed with [`postcss-styled-syntax`](https://github.com/hudochenkov/postcss-styled-syntax). They are configured in the `overrides` block naming that syntax, as [Custom syntaxes](../../../docs/user-guide/custom-syntaxes.md) shows.
 
 Every rule of the core is here, with the same options and the same documentation, and plain CSS is read exactly as the core reads it. One rule answers a styled template differently:
 
