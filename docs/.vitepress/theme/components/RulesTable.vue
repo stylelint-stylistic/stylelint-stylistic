@@ -108,15 +108,36 @@ let shown = computed(() => filterRules(rules, { query: query.value, fixableOnly:
 }
 
 .rules__group {
-	appearance: none;
-	flex: 0 0 auto;
+	appearance: base-select;
+	flex: 0 1 auto;
 	min-inline-size: 0;
 	border: 1px solid var(--vp-c-border);
 	border-radius: 0.5em;
-	padding-inline: 1em 2em;
 	padding-block: 0.5em;
+	padding-inline: 1em 2em;
 	font-size: 0.875em;
-	background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path d='m1 2 3 5 3-5' fill='%23888'/></svg>") no-repeat right 1cap center / 1cap;
+	background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path d='m1 1 3 5 3-5' fill='%23888'/></svg>") no-repeat right 1cap center / 1cap;
+
+	@supports not (appearance: base-select) {
+		appearance: none;
+	}
+
+	&::picker(select) {
+		appearance: base-select;
+		padding: 0.5em;
+		border-radius: 0.5em;
+		border: 1px solid var(--vp-c-border);
+		color: var(--vp-c-text-1);
+		background-color: var(--vp-c-bg-elv);
+	}
+
+	&::picker-icon {
+		display: none;
+	}
+
+	option {
+		border-radius: 0.375em;
+	}
 }
 
 .rules__chip {
