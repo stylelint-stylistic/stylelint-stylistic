@@ -6,8 +6,6 @@
 
 An updatable collection of stylistic rules for [Stylelint](https://github.com/stylelint/stylelint) (in plugin form).
 
-## About and purpose
-
 [Stylelint has removed dozens of rules](https://stylelint.io/migration-guide/to-16#removed-deprecated-stylistic-rules) that enforce stylistic conventions. This project brought them back to keep styles consistent with your codeguide, and it has not stopped there: the list grows with rules of its own, so it is a collection rather than a fixed set.
 
 ## Installation and usage
@@ -19,7 +17,7 @@ npm add -D stylelint @stylistic/stylelint-plugin
 ```
 
 > [!IMPORTANT]
-> Install a published version. A dependency named by a Git reference — `github:stylelint-stylistic/stylelint-stylistic` or a URL of a branch — does **not** work. The package publishes a built `dist/`, which the repository does not carry and nothing builds for you, so such an install either stops at your package manager's gate for build scripts or leaves a package that fails to load with `ERR_MODULE_NOT_FOUND`. If you need a fix that has not shipped yet, say so on the issue rather than reaching for the branch: a fix here is normally published as a patch version within the day.
+> Install a published version. The repository carries no built `dist/`, so a dependency named by a Git reference does **not** work.
 
 Create `stylelint.config.mjs` (or open your existing configuration), add `@stylistic/stylelint-plugin` to the plugins array and the rules you need to the rules list. [All rules from `@stylistic/stylelint-plugin`](https://stylelint-stylistic.github.io/user-guide/rules) need to be namespaced with `@stylistic/`. That prefix is the whole difference — an unprefixed name in the rules list is a rule of Stylelint's own, a prefixed one is a rule of this plugin:
 
@@ -37,90 +35,20 @@ export default {
 }
 ```
 
----
+A stylesheet written in SCSS or Less, or embedded in JavaScript as a styled template, is read by the same rules under a namespace of its own: see [Custom syntaxes](https://stylelint-stylistic.github.io/user-guide/custom-syntaxes). The rules can also be named by their short names, with the editor completing and checking them: see [Typed configuration](https://stylelint-stylistic.github.io/user-guide/typed-configuration).
 
-Please refer to [Stylelint docs](https://stylelint.io/user-guide/get-started) for detailed info on using this linter.
+## Documentation
 
-## Custom syntaxes
-
-The rules above read plain CSS. A stylesheet written in SCSS (`postcss-scss`) is read by the same rules under the `@stylistic/scss/` namespace, one written in Less (`postcss-less`) under `@stylistic/less/`, and one embedded in JavaScript as a styled template (`postcss-styled-syntax`) under `@stylistic/styled/`; on any such file the core names report one warning pointing at the right namespace. Configure a namespace in the `overrides` block that names the syntax:
-
-```js
-export default {
-	plugins: ["@stylistic/stylelint-plugin"],
-	overrides: [
-		{
-			files: ["**/*.scss"],
-			customSyntax: "postcss-scss",
-			rules: {
-				"@stylistic/scss/color-hex-case": "lower",
-			},
-		},
-		{
-			files: ["**/*.less"],
-			customSyntax: "postcss-less",
-			rules: {
-				"@stylistic/less/color-hex-case": "lower",
-			},
-		},
-		{
-			files: ["**/*.{js,jsx,ts,tsx}"],
-			customSyntax: "postcss-styled-syntax",
-			rules: {
-				"@stylistic/styled/indentation": ["tab"],
-			},
-		},
-	],
-}
-```
-
-What each namespace answers differently is written on its own page: [`scss`](https://stylelint-stylistic.github.io/syntaxes/scss), [`less`](https://stylelint-stylistic.github.io/syntaxes/less), [`styled`](https://stylelint-stylistic.github.io/syntaxes/styled). A rule listed under two of these names over one stylesheet is read once, by the copy of the stylesheet's own family: the core's over plain CSS, the namespace's over its syntax, each block of an HTML page by its own; the other copies yield without a word. Where the family's copy is not configured, the first listed copy whose namespace accepts the stylesheet reads it.
-
-## Typed configuration
-
-A JavaScript configuration can name the rules through `defineStylistic`, by their short names and the syntax they are read under:
-
-```js
-import { defineStylistic, defineStylisticOverride } from "@stylistic/stylelint-plugin"
-
-export default {
-	plugins: ["@stylistic/stylelint-plugin"],
-	rules: {
-		"color-function-notation": "modern",
-		...defineStylistic({
-			rules: {
-				"color-hex-case": "lower",
-				"function-comma-space-after": "always",
-				"indentation": ["tab", { baseIndentLevel: 1 }],
-			},
-		}, { severity: "warning", ignoreFunctions: ["url"] }),
-	},
-	overrides: [
-		defineStylisticOverride({ syntax: "scss", files: ["**/*.scss"], rules: { "color-hex-case": "lower" } }),
-	],
-}
-```
-
-It returns the settings under the prefixed names, each as a pair of the primary and the secondary options, `{ "@stylistic/scss/color-hex-case": ["lower", {}] }`. The types are the rules' own: an editor completes the names and the options, and the compiler refuses a name the plugin has no rule for, an option the rule does not take, a key its secondary options do not spell, and a syntax the plugin has no namespace for. Without types, an unknown name or syntax stops the run with a configuration error. A JSON or YAML configuration goes on naming the rules itself.
-
-A second argument holds what several rules take alike, and is written into every rule that takes the key, the rule's own option winning: `ignoreFunctions` for the `function-comma-*` and `value-slash-*` rules, `ignoreProperties` for the `value-slash-*` rules, `severity` and `disableFix` for every rule. A `severity: "warning"` there makes this plugin's rules warnings while Stylelint's own stay errors, which `defaultSeverity` cannot.
-
-`defineStylisticOverride` takes `files` besides and returns the whole `overrides` entry: the files, the `customSyntax` the syntax is parsed with, `postcss-scss`, `postcss-less` or `postcss-styled-syntax`, which stay dependencies of your project, and the rules.
-
-Both functions, the shared options and the syntax names in full: [Typed configuration](https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/docs/user-guide/typed-configuration.md).
-
-## Need more?
-
-ESLint deprecates stylistic rules, too. But you can continue to use them thanks to [ESLint Stylistic](https://eslint.style).
-
-## Important documents
-
-- [Docs](https://stylelint-stylistic.github.io/)
+- [Getting started](https://stylelint-stylistic.github.io/user-guide/getting-started)
 - [Rule list](https://stylelint-stylistic.github.io/user-guide/rules)
 - [Custom syntaxes](https://stylelint-stylistic.github.io/user-guide/custom-syntaxes)
 - [Typed configuration](https://stylelint-stylistic.github.io/user-guide/typed-configuration)
 - [Conflicting settings](https://stylelint-stylistic.github.io/user-guide/conflicting-settings)
 - [Contributing](https://stylelint-stylistic.github.io/contributing)
+
+## Need more?
+
+ESLint deprecates stylistic rules, too. But you can continue to use them thanks to [ESLint Stylistic](https://eslint.style).
 
 [license-url]: https://github.com/stylelint-stylistic/stylelint-stylistic/blob/main/LICENSE.md
 [license-image]: https://img.shields.io/badge/License-MIT-limegreen.svg
