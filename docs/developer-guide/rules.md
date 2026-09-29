@@ -2,9 +2,25 @@
 
 Please help us create, enhance, and debug our rules!
 
-## Add a rule
+## Set up
 
-You should get yourself ready to [contribute code](../../CONTRIBUTING.md).
+Clone the repository and install its dependencies with pnpm:
+
+```shell
+pnpm ci
+```
+
+Every task goes through the `Makefile`; `make help` lists the targets with their flags. The ones a rule needs:
+
+```shell
+make test FILE=lib/rules/color-hex-case/index.test.ts  # one rule's tests
+make lint LINT_FLAGS=--fix                             # lint and format the code
+make verify                                            # everything CI runs
+```
+
+`make verify` is what CI runs, and the `pre-push` hook runs it too.
+
+## Add a rule
 
 ### Define the rule
 
@@ -20,19 +36,155 @@ And have a:
 
 Its name is split into two parts:
 
-- the [_thing_](http://apps.workflower.fi/vocabs/css/en) the rule applies to, e.g. `at-rule`
-- what the rule is checking, e.g. `disallowed-list`
+- the _thing_ the rule applies to, e.g. `at-rule`
+- what the rule is checking, e.g. `name-case`
 
 Unless it applies to the whole source, then there is no first part.
 
+A rule is written once for plain CSS and serves every namespace: `@stylistic/scss/`, `@stylistic/less/` and `@stylistic/styled/` are built out of the same module. What a preprocessor spells is answered under `lib/syntaxes/`, and a rule reaches it only through the `syntax` it is handed.
+
+### Write the rule
+
+A rule lives in `lib/rules/<rule-name>/`: `index.ts`, `index.test.ts` and `README.md`. Follow `lib/rules/color-hex-case/index.ts`; abridged, a rule module looks like this:
+
+```ts
+import stylelint from "stylelint"
+
+import { css } from "../../syntaxes/css/index.ts"
+import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
+import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { report } from "../../utils/report/index.ts"
+import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
+
+let { utils: { validateOptions } } = stylelint
+
+let shortName = `color-hex-case`
+
+const MESSAGES = defineMessages({
+	expected: (actual, expected) => `Expected "${actual}" to be "${expected}"`,
+})
+
+export let meta = {
+	url: getRuleDocUrl(shortName),
+	fixable: true,
+}
+
+function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, primary: `lower` | `upper`): RuleCheck {
+	return (root, result) => {
+		let validOptions = validateOptions(result, ruleName, {
+			actual: primary,
+			possible: [`lower`, `upper`],
+		})
+
+		if (!validOptions) return
+
+		root.walkDecls((decl) => {
+			let value = syntax.read(decl)
+
+			/* … */
+
+			report({
+				message: messages.expected,
+				messageArgs: [actual, expected],
+				node: decl,
+				index,
+				endIndex,
+				result,
+				ruleName,
+				fix () { /* … */ },
+			})
+		})
+	}
+}
+
+export let createRule = defineRule({ shortName, meta, messages: MESSAGES, rule })
+
+export let { ruleName, messages } = createRule(css)
+```
+
+- `defineRule` builds the rule once per namespace, so the rule takes its `ruleName`, `messages` and `syntax` from its first parameter rather than from the module.
+- Every question about the stylesheet's language goes through `syntax`: reading and writing text, comments, `syntax.isStandardAtRule` and its siblings. Nothing specific to SCSS or Less goes into the rule.
+- Report through `report` of `lib/utils/report`, never through Stylelint's own. The autofix is the `fix` callback, and `fixable: true` in `meta` marks the rule as fixable.
+- Make the rule strict by default, and add secondary `ignore` options to make it more permissive.
+
+Use the [PostCSS API](https://postcss.org/api/) to walk the tree, preferring the `walk` iterators (e.g. `walkDecls`) to `forEach`, and check a node's `type` before reading its other properties. For values and selectors, use [postcss-value-parser](https://github.com/TrySound/postcss-value-parser) and [postcss-selector-parser](https://github.com/postcss/postcss-selector-parser) rather than regular expressions. A regular expression that is needed all the same goes into `lib/regexps.ts` under a name saying what it matches.
+
+Look through `lib/utils/` before writing new traversal logic: most whitespace rules are thin wrappers over `whitespaceChecker` and the `*SpaceChecker` families.
+
+### Add options
+
+Each rule can accept a primary and an optional secondary option.
+
+Only add an option to a rule if it addresses a _requested_ use case to avoid polluting the tool with unused features.
+
+#### Primary
+
+Every rule _must have_ a primary option. For example, in:
+
+- `"color-hex-case": "lower"`, the primary option is `"lower"`
+- `"max-empty-lines": [2, { "ignore": ["comments"] }]`, the primary option is `2`
+
+Rules are named to encourage explicit primary options. For example, `color-hex-case: "lower"|"upper"` rather than `color-hex-uppercase: "always"|"never"`, since `"never"` only _implies_ lower case, whereas `"lower"` makes it _explicit_.
+
+#### Secondary
+
+Some rules require extra flexibility to address edge cases. These can use an optional secondary options object. The most typical secondary options are `"ignore": []` and `"except": []`:
+
+- `"ignore"` skips over a particular pattern
+- `"except"` inverts the primary option for a particular pattern
+
+Both accept an array of predefined keywords, e.g. `["comments"]`. Some rules accept a _user-defined_ list of things to ignore instead, in the form of `"ignore<Things>": []`, e.g. `"ignoreFunctions": []`, which lets users ignore non-standard syntax at the configuration level rather than the rule carrying code for it.
+
+No rule of this plugin takes an array as its primary option, so `defineRule` has no field telling Stylelint so yet; the first rule that needs one adds it there.
+
+### Add problem messages
+
+Add problem messages in form of:
+
+- "Expected \[installsomething\] \[in some context\]"
+- "Unexpected \[something\] \[in some context\]"
+
+If the rule has autofix use:
+
+- 'Expected "\[unfixed\]" to be "\[fixed\]"' for short strings
+- 'Expected "\[primary\]" ... notation' for long strings
+
 ### Write tests
 
-You should add test cases for all patterns that are:
+Tests run on Vitest with [`@morev/stylelint-testing-library`](https://github.com/MorevM/stylelint-testing-library). A test file imports `messages` and `ruleName` from its rule and calls `testRule` with `accept` and `reject` cases; a `reject` case asserts what `--fix` writes (`fixed`), the `message`, the `line` and the `column`:
 
-- considered problems
-- _not_ considered problems
+```ts
+import { messages, ruleName } from "./index.ts"
 
-You should use:
+let testRule = createTestRule({ ruleName })
+
+testRule({
+	ruleName,
+	config: [`lower`],
+
+	accept: [
+		{
+			description: `a keyword, which carries no hash at all`,
+			code: `a { color: pink; }`,
+		},
+	],
+
+	reject: [
+		{
+			description: `an upper-case color`,
+			code: `a { color: #ABC; }`,
+			fixed: `a { color: #abc; }`,
+			line: 1,
+			column: 12,
+			message: messages.expected(`#ABC`, `#abc`),
+		},
+	],
+})
+```
+
+A `description` names what the fixture _is_, continuing the sentence the block starts: “accepts a keyword…”, “rejects an upper-case color”. Cases for a custom syntax of its own go into `lib/syntaxes/<name>/rules/<rule-name>/index.test.ts`.
+
+You should add test cases for all patterns that are considered problems and all that are _not_. You should use:
 
 - realistic CSS, avoiding the use of ellipses
 - the minimum amount of code possible, e.g. use an empty rule if targetting selectors
@@ -48,7 +200,6 @@ You should:
 
 - vary column and line positions across your tests
 - include at least one test that has 2 warnings
-- test non-standard syntax in the `isStandardSyntax*` utilities, not in the rule itself
 
 #### Commonly overlooked edge-cases
 
@@ -64,143 +215,7 @@ You should ask yourself how does your rule handle:
 - a pseudo-class _combined_ with a pseudo-element (e.g. `a:hover::before`)?
 - nesting (e.g. do you resolve `& a {}`, or check it as is?)?
 - whitespace and punctuation (e.g. comparing `rgb(0,0,0)` with `rgb(0, 0, 0)`)?
-
-### Write the rule
-
-When writing the rule, you should:
-
-- make the rule strict by default
-- add secondary `ignore` options to make the rule more permissive
-- keep code specific to a language extension out of the rule: what SCSS or Less spells is answered by the namespaces under `lib/syntaxes/` and the machinery they share in `lib/preprocessor/`, and a rule reaches it only through the `Syntax` contract
-
-You should make use of the:
-
-- PostCSS API
-- construct-specific parsers
-- utility functions
-
-#### PostCSS API
-
-Use the [PostCSS API](https://api.postcss.org/) to navigate and analyze the CSS syntax tree. We recommend using the `walk` iterators (e.g. `walkDecls`), rather than using `forEach` to loop through the nodes.
-
-When using array methods on nodes, e.g. `find`, `some`, `filter` etc, you should explicitly check the `type` property of the node before attempting to access other properties. For example:
-
-```js
-let hasProperty = nodes.find(
-  ({ type, prop }) => type === "decl" && prop === propertyName
-);
-```
-
-Use `node.raws` instead of `node.raw()` when accessing raw strings from the [PostCSS AST](https://astexplorer.net/#/gist/ef718daf3e03f1d200b03dc5a550ec60/c8cbe9c6809a85894cebf3fb66de46215c377f1a).
-
-#### Construct-specific parsers
-
-Depending on the rule, we also recommend using:
-
-- [postcss-value-parser](https://github.com/TrySound/postcss-value-parser)
-- [postcss-selector-parser](https://github.com/postcss/postcss-selector-parser)
-
-There are significant benefits to using these parsers instead of regular expressions or `indexOf` searches (even if they aren't always the most performant method).
-
-#### Utility functions
-
-Stylelint has [utility functions](https://github.com/stylelint/stylelint/tree/main/lib/utils) that are used in existing rules and might prove useful to you, as well. Please look through those so that you know what's available. (And if you have a new function that you think might prove generally helpful, let's add it to the list!).
-
-Use the:
-
-- `validateOptions()` utility to warn users about invalid options
-- `isStandardSyntax*` utilities to ignore non-standard syntax
-
-### Add options
-
-Each rule can accept a primary and an optional secondary option.
-
-Only add an option to a rule if it addresses a _requested_ use case to avoid polluting the tool with unused features.
-
-#### Primary
-
-Every rule _must have_ a primary option. For example, in:
-
-- `"font-weight-notation": "numeric"`, the primary option is `"numeric"`
-- `"selector-max-type": [2, { "ignoreTypes": ["custom"] }]`, the primary option is `2`
-
-Rules are named to encourage explicit primary options. For example, `font-weight-notation: "numeric"|"named-where-possible"` rather than `font-weight-numeric: "always"|"never"`. As `font-weight-named: "never"` _implies_ always numeric, whereas `font-weight-notation: "numeric"` makes it _explicit_.
-
-#### Secondary
-
-Some rules require extra flexibility to address edge cases. These can use an optional secondary options object. For example, in:
-
-- `"font-weight-notation": "numeric"` there is no secondary options object
-- `"selector-max-type": [2, { "ignore": ["descendant] }]`, the secondary options object is `{ "ignore": ["descendant] }`
-
-The most typical secondary options are `"ignore": []` and `"except": []`.
-
-##### Keyword `"ignore"` and `"except"`
-
-The `"ignore"` and `"except"` options accept an array of predefined keyword options, e.g. `["relative", "first-nested", "descendant"]`:
-
-- `"ignore"` skips-over a particular pattern
-- `"except"` inverts the primary option for a particular pattern
-
-##### User-defined `"ignore*"`
-
-Some rules accept a _user-defined_ list of things to ignore. This takes the form of `"ignore<Things>": []`, e.g. `"ignoreAtRules": []`.
-
-The `ignore*` options let users ignore non-standard syntax at the _configuration level_. For example, the:
-
-- `:global` and `:local` pseudo-classes introduced in CSS Modules
-- `@debug` and `@extend` at-rules introduced in SCSS
-
-Methodologies and language extensions come and go quickly, and this approach ensures our codebase does not become littered with code for obsolete things.
-
-If your rule can accept an array as its primary option, Stylelint has to be told so through the property `primaryOptionArray = true` on the rule. No rule of this plugin takes one, so `defineRule` — which builds the rule Stylelint is handed — has no field for it yet; the first rule to need it adds one there rather than setting the property by hand.
-
-There is one caveat here: If your rule accepts a primary option array, it cannot also accept a primary option object. Whenever possible, if you want your rule to accept a primary option array, you should make an array the only possibility, instead of allowing for various data structures.
-
-### Add problem messages
-
-Add problem messages in form of:
-
-- "Expected \[something\] \[in some context\]"
-- "Unexpected \[something\] \[in some context\]"
-
-If the rule has autofix use:
-
-- 'Expected "\[unfixed\]" to be "\[fixed\]"' for short strings
-- 'Expected "\[primary\]" ... notation' for long strings
-
-### Add autofix
-
-Depending on the rule, it might be possible to automatically fix the rule's problems by mutating the PostCSS AST (Abstract Syntax Tree) using the [PostCSS API](https://postcss.org/api/).
-
-Set `meta.fixable = true` to the rule:
-
-```diff js
-let meta = {
-	url: /* .. */,
-+	fixable: true,
-};
-```
-
-Pass `fix` callback to the [`report` utility](https://stylelint.io/developer-guide/plugins#stylelintutilsreport):
-
-```diff js
-function rule({ ruleName, messages }, primary, secondary) {
-	return (root, result) => {
-		/* .. */
-
-+		let fix = () => { /* put your mutations here */ };
-
-		report({
-			result,
-			ruleName,
-			message: messages.expected,
-			node,
-+			fix
-		});
-	};
-}
-```
+- the rules writing the same whitespace (e.g. `value-list-comma-newline-after` beside `value-list-comma-space-after`)?
 
 ### Write the README
 
@@ -221,6 +236,8 @@ The single-line description is in the form of:
 - "Limit ..." for `max` rules
 - "Require ..." for rules that accept `"always"` and `"never"` options
 - "Specify ..." for everything else
+
+The expanded description says what the rule does, not how it gets there. A fixable rule carries the line naming the [`fix` option](https://stylelint.io/user-guide/options#fix), and a rule reporting with message arguments the line naming the [`message` secondary option](https://stylelint.io/user-guide/configure/#message); the tests of `lib/rules/index.test.ts` check both.
 
 You should:
 
@@ -243,78 +260,37 @@ Look at the READMEs of other rules to glean more conventional patterns.
 
 ### Wire up the rule
 
-The final step is to add references to the new rule in the following places:
+A new rule is active only once it is added to these places:
 
-- [The rules `index.ts` file](../../lib/rules/index.ts)
-- [The list of rules](../user-guide/rules.md)
+- [`lib/rules/index.ts`](../../lib/rules/index.ts), the registry;
+- [the list of rules](../user-guide/rules.md), under its group, with `(Autofixable).` closing the line of a fixable rule;
+- the `Unreleased` section of [`CHANGELOG.md`](../../CHANGELOG.md);
+- `scripts/oracles/options.ts`, with every primary option the rule takes;
+- for a rule taking a `-single-line` or `-multi-line` option, the `LINENESS_RULES` table of `lib/utils/defersToRunEnd/index.ts`;
+- for a rule speaking of whitespace another rule speaks of already, where no spelling satisfies both: the table of `lib/utils/conflictingSettings/index.ts`, its test, the type beside it, which `make types-check` holds in step with the table, and [Conflicting settings](../user-guide/conflicting-settings.md).
 
 ## Add an option to a rule
 
 You should:
 
-1. Get ready to [contribute code](../../CONTRIBUTING.md).
-2. Add new unit tests to test the option.
-3. Change the rule's validation to allow for the new option.
-4. Add (as little as possible) logic to the rule to make the tests pass.
-5. Add documentation about the new option.
+1. Add new unit tests to test the option.
+2. Change the rule's validation to allow for the new option.
+3. Add (as little as possible) logic to the rule to make the tests pass.
+4. Add documentation about the new option.
+5. Add an entry to the `Unreleased` section of `CHANGELOG.md`.
 
 ## Fix a bug in a rule
 
 You should:
 
-1. Get ready to [contribute code](../../CONTRIBUTING.md).
-2. Write failing unit tests that exemplify the bug.
-3. Fiddle with the rule until those new tests pass.
+1. Write failing unit tests that exemplify the bug.
+2. Fiddle with the rule until those new tests pass.
+3. Run `make verify`.
 
 ## Deprecate a rule
 
 Deprecating rules doesn't happen very often. When you do, you must:
 
-1. Point the `stylelintReference` link to the specific version of the rule README on the GitHub website, so that it is always accessible.
-2. Add the appropriate metadata to mark the rule as deprecated like `rule.meta = { deprecated: true }`.
-
-## Improve the performance of a rule
-
-You can run a benchmarks on any given rule with any valid config using:
-
-```shell
-npm run benchmark-rule -- ruleName ruleOptions [ruleContext]
-```
-
-If the `ruleOptions` argument is anything other than a string or a boolean, it must be valid JSON wrapped in quotation marks.
-
-```shell
-npm run benchmark-rule -- selector-combinator-space-after never
-```
-
-```shell
-npm run benchmark-rule -- selector-combinator-space-after always
-```
-
-```shell
-npm run benchmark-rule -- block-opening-brace-space-before "[\"always\", {\"ignoreAtRules\": [\"else\"]}]"
-```
-
-If the `ruleContext` argument is specified, the sames procedure would apply:
-
-```shell
-npm run benchmark-rule -- block-opening-brace-space-before "[\"always\", {\"ignoreAtRules\": [\"else\"]}]" "{\"fix\": \"true\"}"
-```
-
-The script loads Bootstrap's CSS (from its CDN) and runs it through the configured rule.
-
-It will end up printing some simple stats like this:
-
-```shell
-Warnings: 1441
-Mean: 74.17598357142856 ms
-Deviation: 16.63969674310928 ms
-```
-
-When writing new rules or refactoring existing rules, use these measurements to determine the efficiency of your code.
-
-A Stylelint rule can repeat its core logic many, many times (e.g. checking every value node of every declaration in a vast CSS codebase). So it's worth paying attention to performance and doing what we can to improve it!
-
-**Improving the performance of a rule is a great way to contribute if you want a quick little project.** Try picking a rule and seeing if there's anything you can do to speed it up.
-
-Make sure you include benchmark measurements in your pull request!
+1. Add `deprecated: true` to the rule's `meta`.
+2. Open its README with a `> **Warning**` block saying what to use instead; a test checks that the block is there.
+3. Add an entry to the `Unreleased` section of `CHANGELOG.md`.
