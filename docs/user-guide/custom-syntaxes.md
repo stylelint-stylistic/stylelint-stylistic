@@ -31,4 +31,4 @@ export default {
 }
 ```
 
-What each namespace answers differently is written on its own page: [`scss`](../../lib/syntaxes/scss/README.md), [`less`](../../lib/syntaxes/less/README.md), [`styled`](../../lib/syntaxes/styled/README.md). Configure one family of names per file: a namespace reads plain CSS too, so listing the core and a namespace over the same files would run every rule twice.
+What each namespace answers differently is written on its own page: [`scss`](../../lib/syntaxes/scss/README.md), [`less`](../../lib/syntaxes/less/README.md), [`styled`](../../lib/syntaxes/styled/README.md). A rule configured under two of these names is still read once per stylesheet: by the copy of the stylesheet's own family — the core's over plain CSS, the namespace's over its syntax, each block of an HTML page by its own — or, where that copy is not configured, by the first listed copy whose namespace accepts the stylesheet. A namespace accepts plain CSS too. The other copies yield without a word and check nothing there, their options included.

@@ -80,4 +80,4 @@ export default {
 
 It takes the same second argument as `defineStylistic`, and the same syntax names; a `css` entry, or one naming no syntax, comes back without `customSyntax`.
 
-A rule listed under two of these names over one stylesheet is read once, by the copy of the stylesheet's own family: the core's over plain CSS, the namespace's over its syntax, each block of an HTML page by its own; the other copies yield without a word. Where the family's copy is not configured, the first listed copy whose namespace accepts the stylesheet reads it. Configuring one family per file, as `defineStylisticOverride` does, leaves nothing to yield.
+Configuring one family per file, as `defineStylisticOverride` does, lists no rule twice over a file; where a rule is listed twice, it is still read once (see [Custom syntaxes](custom-syntaxes.md)).
