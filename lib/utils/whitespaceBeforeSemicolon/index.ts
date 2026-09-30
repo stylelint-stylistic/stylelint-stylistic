@@ -8,10 +8,12 @@ import { blockString } from "../blockString/index.ts"
 import { declarationString } from "../declarationString/index.ts"
 import { type CommentReading, findEscapeSpans } from "../findCommentSpans/index.ts"
 import { fixDisabledOnLine } from "../fixDisabledOnLine/index.ts"
+import { functionCommaSpaceChecker } from "../functionCommaSpaceChecker/index.ts"
 import { isSingleLineString } from "../isSingleLineString/index.ts"
 import { maskEscapes } from "../maskEscapes/index.ts"
-import { neighborCopies, type NeighborRule } from "../neighborSettings/index.ts"
+import { neighborCopies, type NeighborCopy, type NeighborRule } from "../neighborSettings/index.ts"
 import { isAtRule, isDeclaration, isRoot } from "../typeGuards/index.ts"
+import { isRegExp, isString } from "../validateTypes/index.ts"
 import { type Whitespace, whitespaceAsked } from "../whitespaceAsked/index.ts"
 
 /** The rules about the whitespace in front of a semicolon, by node type and whitespace. */
@@ -53,14 +55,47 @@ function holdsAListComma (syntax: Syntax, decl: Declaration, result: PostcssResu
 	return found
 }
 
-/** The rules whose live `always` breaks a single-line declaration block in the same pass, each with the question of whether it has anything of the block to break: the brace rules any block with braces, which a root standing in for one, an inline `style` attribute's, has not, the colon rule a block holding a standard declaration, the semicolon newline rule a block holding two declarations, so that a semicolon stands between them, the value-list comma rules a block holding a declaration with a comma of its list. `declaration-block-semicolon-newline-before` is not listed, since its live `always` is the ask itself and outranks the twin in `whitespaceAsked` without any lineness asked; the families writing breaks inside a call or a selector are not listed either. */
-const BLOCK_BREAKERS: { rule: NeighborRule, breaks: (syntax: Syntax, block: Container, result: PostcssResult) => boolean }[] = [
+/**
+ * Asks whether a block holds a comma of a call that a function comma rule reads, as that rule's checker reads them: its own walk over the block, every comma it would check counted and none reported, under the copy's `ignoreFunctions`. A copy whose `ignoreFunctions` the rule refuses writes nothing, so it breaks nothing.
+ * @param block - The declaration block.
+ * @param result - The Stylelint result.
+ * @param copy - The copy of the comma rule, whose secondary options the checker reads.
+ * @param fixPosition - Which side of the comma the copy's rule writes, which decides the edge comma it passes over.
+ * @returns True where the copy has a comma of the block to check at.
+ */
+function holdsACallComma (block: Container, result: PostcssResult, copy: NeighborCopy, fixPosition: `after` | `before`): boolean {
+	let { ignoreFunctions } = copy.secondary
+	let names = Array.isArray(ignoreFunctions) ? ignoreFunctions : [ignoreFunctions]
+
+	if (ignoreFunctions !== undefined && !names.every((name) => isString(name) || isRegExp(name))) return false
+
+	let found = false
+
+	functionCommaSpaceChecker({
+		root: block,
+		result,
+		syntax: copy.syntax,
+		locationChecker: () => {
+			found = true
+		},
+		checkedRuleName: copy.name,
+		fixPosition,
+		ignoreFunctions: names.filter((name) => isString(name) || isRegExp(name)),
+	})
+
+	return found
+}
+
+/** The rules whose live `always` breaks a single-line declaration block in the same pass, each with the question of whether it has anything of the block to break: the brace rules any block with braces, which a root standing in for one, an inline `style` attribute's, has not, the colon rule a block holding a standard declaration, the semicolon newline rule a block holding two declarations, so that a semicolon stands between them, the value-list comma rules a block holding a declaration with a comma of its list, the function comma rules a block holding a call with a comma they read. `declaration-block-semicolon-newline-before` is not listed, since its live `always` is the ask itself and outranks the twin in `whitespaceAsked` without any lineness asked; the families writing breaks into a selector or an at-rule's parameters are not listed, since the block's own stand outside its text. */
+const BLOCK_BREAKERS: { rule: NeighborRule, breaks: (syntax: Syntax, block: Container, result: PostcssResult, copy: NeighborCopy) => boolean }[] = [
 	{ rule: { name: `block-opening-brace-newline-after`, options: [`always`] }, breaks: (syntax, block) => !isRoot(block) },
 	{ rule: { name: `block-closing-brace-newline-before`, options: [`always`] }, breaks: (syntax, block) => !isRoot(block) },
 	{ rule: { name: `declaration-colon-newline-after`, options: [`always`] }, breaks: (syntax, block) => (block.nodes ?? []).some((node) => isDeclaration(node) && syntax.isStandardDeclaration(node)) },
 	{ rule: { name: `declaration-block-semicolon-newline-after`, options: [`always`] }, breaks: (syntax, block) => (block.nodes ?? []).filter((node) => isDeclaration(node)).length > 1 },
 	{ rule: { name: `value-list-comma-newline-after`, options: [`always`] }, breaks: (syntax, block, result) => (block.nodes ?? []).some((node) => isDeclaration(node) && holdsAListComma(syntax, node, result)) },
 	{ rule: { name: `value-list-comma-newline-before`, options: [`always`] }, breaks: (syntax, block, result) => (block.nodes ?? []).some((node) => isDeclaration(node) && holdsAListComma(syntax, node, result)) },
+	{ rule: { name: `function-comma-newline-after`, options: [`always`] }, breaks: (syntax, block, result, copy) => holdsACallComma(block, result, copy, `after`) },
+	{ rule: { name: `function-comma-newline-before`, options: [`always`] }, breaks: (syntax, block, result, copy) => holdsACallComma(block, result, copy, `before`) },
 ]
 
 /**
@@ -73,7 +108,7 @@ const BLOCK_BREAKERS: { rule: NeighborRule, breaks: (syntax: Syntax, block: Cont
 function breaksInThisPass (syntax: Syntax, block: Container, result: PostcssResult): boolean {
 	let line = block.source?.start?.line
 
-	return BLOCK_BREAKERS.some(({ rule, breaks }) => breaks(syntax, block, result) && neighborCopies(block, result, rule).some(({ option, fixDisabled, name }) => option === `always` && !fixDisabled && !(line !== undefined && fixDisabledOnLine(result, name, line))))
+	return BLOCK_BREAKERS.some(({ rule, breaks }) => neighborCopies(block, result, rule).some((copy) => copy.option === `always` && !copy.fixDisabled && !(line !== undefined && fixDisabledOnLine(result, copy.name, line)) && breaks(syntax, block, result, copy)))
 }
 
 /**

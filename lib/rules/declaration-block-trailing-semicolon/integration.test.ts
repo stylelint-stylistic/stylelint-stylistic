@@ -7,6 +7,7 @@ import { messages as braceNewlineBeforeMessages, ruleName as braceNewlineBeforeR
 import { messages as newlineBeforeMessages, ruleName as newlineBeforeRuleName } from "../declaration-block-semicolon-newline-before/index.ts"
 import { messages as spaceBeforeMessages, ruleName as spaceBeforeRuleName } from "../declaration-block-semicolon-space-before/index.ts"
 import { messages as colonNewlineAfterMessages } from "../declaration-colon-newline-after/index.ts"
+import { messages as functionCommaNewlineAfterMessages } from "../function-comma-newline-after/index.ts"
 import { messages as valueListCommaNewlineAfterMessages } from "../value-list-comma-newline-after/index.ts"
 
 import { messages, ruleName } from "./index.ts"
@@ -539,6 +540,42 @@ testRuleListedFirst({
 					endLine: 1,
 					endColumn: 10,
 					message: valueListCommaNewlineAfterMessages.expectedAfter(),
+				},
+			],
+		},
+	],
+})
+
+testRuleListedFirst({
+	ruleName,
+	config: [`always`],
+	extraRules: {
+		"@stylistic/function-comma-newline-after": `always`,
+		"@stylistic/declaration-block-semicolon-space-before": `always-single-line`,
+	},
+
+	reject: [
+		{
+			description: `a block on one line whose call a live comma rule will break inside its parentheses, so the semicolon gets no space either`,
+			code: `a { b: f(c, d) }`,
+			fixed: `
+				a { b: f(c,
+				d); }
+			`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 15,
+					message: messages.expected,
+				},
+				{
+					line: 1,
+					column: 11,
+					endLine: 1,
+					endColumn: 12,
+					message: functionCommaNewlineAfterMessages.expectedAfter(),
 				},
 			],
 		},

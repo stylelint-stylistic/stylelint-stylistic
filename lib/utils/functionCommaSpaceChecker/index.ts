@@ -1,4 +1,4 @@
-import type { Root } from "postcss"
+import type { Container } from "postcss"
 import valueParser, { type DivNode as ValueParserDivNode, type FunctionNode as ValueParserFunctionNode } from "postcss-value-parser"
 import type { PostcssResult } from "stylelint"
 
@@ -95,7 +95,7 @@ function commasOf (functionNode: ValueParserFunctionNode, reading: CommentReadin
  * @param opts - The options.
  */
 export function functionCommaSpaceChecker (opts: {
-	root: Root,
+	root: Container,
 	locationChecker: LocationChecker,
 	fix?: ((node: ValueParserDivNode, index: number, functionNode: ValueParserFunctionNode) => Edit[]),
 	result: PostcssResult,
