@@ -99,6 +99,31 @@ testRule({
 				},
 			],
 		},
+		{
+			// Behind the flag the run in front of the semicolon is the flag's, which the neighbor trims whatever this rule has written behind the colon by then
+			description: `a custom property whose value is a comment on the colon's line and a flag, with a space between the flag and the semicolon`,
+			code: `a { --b: /*c*/ !important ; }`,
+			fixed: `
+				a { --b: /*c*/
+				 !important; }
+			`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 15,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 26,
+					endLine: 1,
+					endColumn: 27,
+					message: semicolonSpaceBeforeMessages.rejectedBefore(),
+				},
+			],
+		},
 	],
 })
 

@@ -341,6 +341,31 @@ testRule({
 			message: messages.rejectedBefore(),
 		},
 		{
+			// The whitespace value is the run behind the colon alone, since the flag stands between it and the semicolon; the run in front of the semicolon is the flag's, read and written as behind any other value
+			description: `a custom property whose value is a space, with a space between its flag and the semicolon`,
+			code: `a { --b: !important ; }`,
+			fixed: `a { --b: !important; }`,
+			line: 1,
+			column: 20,
+			message: messages.rejectedBefore(),
+		},
+		{
+			description: `the same custom property with two spaces behind the colon, which stay`,
+			code: `a { --b:  !important ; }`,
+			fixed: `a { --b:  !important; }`,
+			line: 1,
+			column: 21,
+			message: messages.rejectedBefore(),
+		},
+		{
+			description: `the same custom property with a break behind the colon, which stays`,
+			code: `a { --b:\n!important ; }`,
+			fixed: `a { --b:\n!important; }`,
+			line: 2,
+			column: 11,
+			message: messages.rejectedBefore(),
+		},
+		{
 			description: `a custom property whose whitespace value is trimmed to the single space the safe option leaves`,
 			code: `a { --foo:      ; }`,
 			fixed: `a { --foo: ; }`,

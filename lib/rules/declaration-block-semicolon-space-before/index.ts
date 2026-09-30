@@ -76,7 +76,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let value = syntax.read(decl)
 			let isCustomPropertyWithOnlySpaces = false
 
-			if (isCustomProperty(decl.prop)) {
+			// Behind a flag the run in front of the semicolon is the flag's, and the value's whitespace is the head run behind the colon alone: the rule reads and writes the flag's run there, as behind any other value
+			if (isCustomProperty(decl.prop) && !decl.important) {
 				// Stored for future safe replacement
 				isCustomPropertyWithOnlySpaces = WHITESPACE_ONLY.test(value)
 
