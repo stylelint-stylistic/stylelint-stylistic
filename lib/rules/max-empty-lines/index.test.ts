@@ -477,6 +477,49 @@ testRule({
 			message: messages.expected(1),
 		},
 		{
+			// The walk reads the run as one inside a line; the file's end is written over it as over the root's own raw
+			description: `two blank lines closing the stylesheet behind the value of a custom property with no semicolon, which the parser keeps in that value`,
+			code: `--x: a\n\n\n`,
+			fixed: `--x: a\n`,
+			warnings: [
+				{
+					line: 3,
+					column: 1,
+					message: messages.expected(1),
+				},
+				{
+					line: 4,
+					column: 1,
+					message: messages.expected(1),
+				},
+			],
+		},
+		{
+			description: `one blank line closing the stylesheet behind such a value, which the walk lets stand and the file's end does not`,
+			code: `--x: a\n\n`,
+			fixed: `--x: a\n`,
+			line: 3,
+			column: 1,
+			message: messages.expected(1),
+		},
+		{
+			description: `two blank lines closing the stylesheet behind the flag of such a custom property, which the parser keeps behind the flag`,
+			code: `--x: a !important\n\n\n`,
+			fixed: `--x: a !important\n`,
+			warnings: [
+				{
+					line: 3,
+					column: 1,
+					message: messages.expected(1),
+				},
+				{
+					line: 4,
+					column: 1,
+					message: messages.expected(1),
+				},
+			],
+		},
+		{
 			description: `two blank lines between a flag and the semicolon closing the declaration, which the parser keeps behind the flag`,
 			code: `a {\n\tb: c !important\n\n\n;\n}\n`,
 			fixed: `a {\n\tb: c !important\n\n;\n}\n`,

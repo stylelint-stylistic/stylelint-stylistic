@@ -27,6 +27,7 @@ import { keepingLines, readBlankLines } from "./keptBlankLines.ts"
 import { type NodePlaces, placeOfWarnings } from "./placeInText.ts"
 import { printEscapes, takenInPrint } from "./printEscapes.ts"
 import { printWithTaken } from "./printWithTaken.ts"
+import { writeTheTailAPropertyKeeps } from "./rootTail.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -127,7 +128,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 					// The run in front of a free semicolon behind a closing brace stands in the rule's own raw, together with the semicolon; behind a node it runs on into that node's raw, and behind the last node of a block into the block's tail, both written with it above. Behind the root's last node it runs on into the root's tail, written with it apart below where the neighbors take the semicolon
 				})
-				writeTheRootsEnds(root, result, primary, openingLinesAreTaken, getChars, writeHead, runs)
+				writeTheRootsEnds(syntax, root, result, primary, openingLinesAreTaken, getChars, writeHead, runs)
 			})
 		}
 
@@ -213,6 +214,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 /**
  * Writes the root's head and tail apart from the walk, which reads every run as one standing inside a line.
+ * @param syntax - The syntax the rule is built over, which reads and writes a value.
  * @param root - The root.
  * @param result - The Stylelint result, which holds the configuration.
  * @param primary - The most empty lines allowed.
@@ -221,7 +223,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
  * @param writeHead - What it makes of the run the text opens with.
  * @param runs - What a run is, as `replaceEmptyLines` takes it.
  */
-function writeTheRootsEnds (root: Root, result: PostcssResult, primary: number, openingLinesAreTaken: boolean, getChars: (text: string, isSpecialCase?: boolean) => string, writeHead: (text: string) => string, runs: RegExp): void {
+function writeTheRootsEnds (syntax: Syntax, root: Root, result: PostcssResult, primary: number, openingLinesAreTaken: boolean, getChars: (text: string, isSpecialCase?: boolean) => string, writeHead: (text: string) => string, runs: RegExp): void {
 	let { first, last } = root
 	let { document } = root as { document?: Document }
 	let firstNodeRawsBefore = first && first.raws.before
@@ -262,6 +264,8 @@ function writeTheRootsEnds (root: Root, result: PostcssResult, primary: number, 
 			return
 		}
 	}
+
+	if (last && writeTheTailAPropertyKeeps(syntax, root, last, result, writeTail)) return
 
 	if (!rootRawsAfter) return
 

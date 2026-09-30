@@ -245,3 +245,32 @@ describe(`a line of spaces a disable comment keeps from the rule about the white
 		}
 	})
 })
+
+/**
+ * Fixes one snippet under this rule and `no-missing-end-of-source-newline`, in the order given, and reads the output back.
+ * @param code - The snippet.
+ * @param maximum - The most empty lines this rule allows.
+ * @param thisRuleFirst - Whether this rule is listed first.
+ * @returns The file the pass left and the count of the warnings the pair has about it.
+ */
+async function fixBesideNoMissingNewline (code: string, maximum: number, thisRuleFirst: boolean): Promise<{ code: string, left: number }> {
+	let pair: [string, unknown][] = [[ruleName, maximum], [`@stylistic/no-missing-end-of-source-newline`, true]]
+	let config = { plugins, rules: Object.fromEntries(thisRuleFirst ? pair : pair.toReversed()) }
+	let fixed = await stylelint.lint({ code, config, fix: true })
+	let read = await stylelint.lint({ code: fixed.code ?? code, config })
+
+	return { code: fixed.code ?? code, left: read.results[0]?.warnings.length ?? 0 }
+}
+
+describe(`the end of a stylesheet a custom property closes without a semicolon`, () => {
+	// The parser keeps the run in the property's value or behind its flag, and the neighbor listed first writes its break into the root's raw: the two are written as one run, the file's end, whichever is listed first
+	it.each([
+		[`--x: a\n\n\n  `, 1, `--x: a\n  \n`],
+		[`--x: a\n\n\n`, 1, `--x: a\n`],
+		[`--x: a`, 1, `--x: a\n`],
+		[`--x: a !important\n\n\n  `, 1, `--x: a !important\n  \n`],
+	])(`is written as one run in %j at most %i beside the rule about the file's last break in either order`, async (code, maximum, output) => {
+		expect(await fixBesideNoMissingNewline(code, maximum, true)).toEqual({ code: output, left: 0 })
+		expect(await fixBesideNoMissingNewline(code, maximum, false)).toEqual({ code: output, left: 0 })
+	})
+})
