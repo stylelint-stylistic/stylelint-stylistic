@@ -1,7 +1,7 @@
 import valueParser, { type Node, type StringNode } from "postcss-value-parser"
 import stylelint from "stylelint"
 
-import { EVERY_CSS_WHITESPACE_RUN, EVERY_LINE_BREAK, GRID_AREAS_PROPERTY, LAST_LINE, LEADING_CSS_WHITESPACE, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
+import { EVERY_CSS_WHITESPACE_RUN, GRID_AREAS_PROPERTY, LEADING_CSS_WHITESPACE, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
@@ -164,7 +164,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let declarationValue = syntax.read(declaration)
 			let comments = syntax.commentSpans(declarationValue, declaration, result)
 			// Blanked, not stripped, so every parse index is an index of the value.
-			let parsedValue = valueParser(hideParenthesesInUrlStrings(blankComments(declarationValue, comments), comments))
+			let blankedValue = blankComments(declarationValue, comments)
+			let parsedValue = valueParser(hideParenthesesInUrlStrings(blankedValue, comments))
 			// A break inside a row is written over, so it is not counted.
 			let isMultilineDeclaration = spansLinesOutsideRows(declarationValue, parsedValue.nodes)
 
@@ -220,30 +221,17 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (formattedValue === declarationValue) return
 
-			let { between } = declaration.raws
-			let { source } = declaration
-
-			if (between === undefined || !source?.start || !source.end) throw new Error(`The declaration must carry its raws and a source`)
-
-			// Lines as PostCSS counts them: a Windows pair is one break, and a bare carriage return is a character of its line
-			let extraStartLines = (between.match(EVERY_LINE_BREAK) ?? []).length
-
-			let extraStartColumns = extraStartLines === 0
-				? declarationValueIndex(declaration) + source.start.column
-				: (between.match(LAST_LINE)?.[0].length ?? -1) + 1
+			// The value's own characters, which the node counts lines and columns over from its start: `!important` and the semicolon stand outside them, and the whitespace and comments a parser keeps at either end of the value are cut off the range.
+			let valueIndex = declarationValueIndex(declaration)
+			let valueHead = (blankedValue.match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0].length
+			let valueLength = blankedValue.replace(TRAILING_CSS_WHITESPACE, ``).length
 
 			report({
 				message: messages.expected,
 				messageArgs: [declaration.prop],
 				node: declaration,
-				start: {
-					line: extraStartLines + source.start.line,
-					column: extraStartColumns,
-				},
-				end: {
-					line: source.end.line,
-					column: source.end.column,
-				},
+				index: valueIndex + valueHead,
+				endIndex: valueIndex + valueLength,
 				result,
 				ruleName,
 				fix () {

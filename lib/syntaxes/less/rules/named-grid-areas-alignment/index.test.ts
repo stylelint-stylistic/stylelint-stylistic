@@ -66,8 +66,8 @@ testRule({
 						'b b';
 				}
 			`,
-			line: 2,
-			column: 23,
+			line: 3,
+			column: 3,
 			endLine: 5,
 			endColumn: 8,
 			message: messages.expected(`grid-template-areas`),
@@ -88,9 +88,33 @@ testRule({
 						"c c";
 				}
 			`,
-			line: 2,
-			column: 23,
+			line: 3,
+			column: 3,
 			endLine: 4,
+			endColumn: 10,
+			message: messages.expected(`grid-template-areas`),
+		},
+		{
+			description: `an end-of-line comment on its own line in front of the rows, which the parser keeps in the value and the warning opens behind`,
+			code: `
+				a {
+					grid-template-areas:
+						// "a  a"
+						"b b"
+						"c   c";
+				}
+			`,
+			fixed: `
+				a {
+					grid-template-areas:
+						// "a  a"
+						"b b"
+						"c c";
+				}
+			`,
+			line: 4,
+			column: 3,
+			endLine: 5,
 			endColumn: 10,
 			message: messages.expected(`grid-template-areas`),
 		},
@@ -159,13 +183,13 @@ testRule({
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
-			description: `a row the parser filed inside such a call, which is a row of no grid and a row the next run would move again, in a value neither compiler reads`,
+			description: `a row the parser filed inside such a call, which is a row of no grid and a row the next run would move again, in a value neither compiler reads; the warning closes behind the call's opening parenthesis, since the rest of the value is the comment`,
 			code: `a { grid-template-areas: "a  a" f( // z ) "b   b"; }`,
 			fixed: `a { grid-template-areas: "a a" f( // z ) "b   b"; }`,
 			line: 1,
 			column: 26,
 			endLine: 1,
-			endColumn: 50,
+			endColumn: 35,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{

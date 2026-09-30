@@ -157,6 +157,46 @@ testRule({
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
+			description: `rows opening their lines with nothing in front of them`,
+			code: `a {\ngrid-template-areas:\n"a  b"\n"c d";\n}`,
+			fixed: `a {\ngrid-template-areas:\n"a b"\n"c d";\n}`,
+			line: 3,
+			column: 1,
+			endLine: 4,
+			endColumn: 6,
+			message: messages.expected(`grid-template-areas`),
+		},
+		{
+			description: `rows closing a block with no semicolon, whose last character the range closes behind`,
+			code: `a {\n\tgrid-template-areas:\n\t\t"a  b"\n\t\t"c d"\n}`,
+			fixed: `a {\n\tgrid-template-areas:\n\t\t"a b"\n\t\t"c d"\n}`,
+			line: 3,
+			column: 3,
+			endLine: 4,
+			endColumn: 8,
+			message: messages.expected(`grid-template-areas`),
+		},
+		{
+			description: `rows marked important, a mark the range leaves out`,
+			code: `a {\n\tgrid-template-areas:\n\t\t"a  b"\n\t\t"c d" !important\n}`,
+			fixed: `a {\n\tgrid-template-areas:\n\t\t"a b"\n\t\t"c d" !important\n}`,
+			line: 3,
+			column: 3,
+			endLine: 4,
+			endColumn: 8,
+			message: messages.expected(`grid-template-areas`),
+		},
+		{
+			description: `a space and a comment in front of the semicolon, which the range leaves out`,
+			code: `a { grid-template-areas: "a  b" "c d" /* c */ ; }`,
+			fixed: `a { grid-template-areas: "a b" "c d" /* c */ ; }`,
+			line: 1,
+			column: 26,
+			endLine: 1,
+			endColumn: 38,
+			message: messages.expected(`grid-template-areas`),
+		},
+		{
 			description: `the same rows parted by bare carriage returns, which PostCSS counts no line by`,
 			code: `a {\n\tgrid-template-areas:\r\t\t"a  b"\r\t\t"c d";\n}`,
 			fixed: `a {\n\tgrid-template-areas:\r\t\t"a b"\r\t\t"c d";\n}`,
@@ -195,7 +235,7 @@ testRule({
 			line: 3,
 			column: 3,
 			endLine: 4,
-			endColumn: 12,
+			endColumn: 13,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -223,7 +263,7 @@ testRule({
 			line: 3,
 			column: 3,
 			endLine: 7,
-			endColumn: 15,
+			endColumn: 16,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -283,7 +323,7 @@ testRule({
 			line: 3,
 			column: 3,
 			endLine: 5,
-			endColumn: 12,
+			endColumn: 13,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -309,7 +349,7 @@ testRule({
 			line: 3,
 			column: 3,
 			endLine: 5,
-			endColumn: 13,
+			endColumn: 14,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -771,13 +811,13 @@ testRule({
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
-			description: `the same with the other break behind the last row`,
+			description: `the same with the other break behind the last row, which the range leaves out`,
 			code: `a { grid-template-areas: "a\na" "bb bb"\n; }`,
 			fixed: `a { grid-template-areas: "a  a" "bb bb"\n; }`,
 			line: 1,
 			column: 26,
-			endLine: 3,
-			endColumn: 1,
+			endLine: 2,
+			endColumn: 11,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -849,7 +889,7 @@ testRule({
 			line: 1,
 			column: 26,
 			endLine: 1,
-			endColumn: 34,
+			endColumn: 35,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -859,7 +899,7 @@ testRule({
 			line: 1,
 			column: 26,
 			endLine: 1,
-			endColumn: 34,
+			endColumn: 35,
 			message: messages.expected(`GRID-TEMPLATE-AREAS`),
 		},
 		{
@@ -869,7 +909,7 @@ testRule({
 			line: 1,
 			column: 26,
 			endLine: 1,
-			endColumn: 34,
+			endColumn: 35,
 			message: messages.expected(`GrId-TeMpLaTe-ArEaS`),
 		},
 		{
@@ -886,7 +926,7 @@ testRule({
 			line: 6,
 			column: 9,
 			endLine: 6,
-			endColumn: 17,
+			endColumn: 18,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -901,7 +941,7 @@ testRule({
 			line: 2,
 			column: 23,
 			endLine: 4,
-			endColumn: 37,
+			endColumn: 38,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -916,7 +956,7 @@ testRule({
 			line: 2,
 			column: 23,
 			endLine: 4,
-			endColumn: 24,
+			endColumn: 25,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -932,7 +972,7 @@ testRule({
 			line: 3,
 			column: 3,
 			endLine: 5,
-			endColumn: 17,
+			endColumn: 18,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -950,7 +990,7 @@ testRule({
 			line: 4,
 			column: 5,
 			endLine: 7,
-			endColumn: 22,
+			endColumn: 23,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -968,7 +1008,7 @@ testRule({
 			line: 4,
 			column: 4,
 			endLine: 6,
-			endColumn: 18,
+			endColumn: 19,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -988,7 +1028,7 @@ testRule({
 			line: 5,
 			column: 7,
 			endLine: 7,
-			endColumn: 21,
+			endColumn: 22,
 			message: messages.expected(`grid-template-areas`),
 		},
 	],
@@ -1049,7 +1089,7 @@ testRule({
 			line: 1,
 			column: 26,
 			endLine: 1,
-			endColumn: 32,
+			endColumn: 33,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -1059,7 +1099,7 @@ testRule({
 			line: 1,
 			column: 26,
 			endLine: 1,
-			endColumn: 45,
+			endColumn: 46,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -1081,7 +1121,7 @@ testRule({
 			line: 3,
 			column: 3,
 			endLine: 4,
-			endColumn: 12,
+			endColumn: 13,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -1105,7 +1145,7 @@ testRule({
 			line: 3,
 			column: 3,
 			endLine: 6,
-			endColumn: 15,
+			endColumn: 16,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -1129,7 +1169,7 @@ testRule({
 			line: 3,
 			column: 2,
 			endLine: 5,
-			endColumn: 11,
+			endColumn: 12,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -1246,7 +1286,7 @@ testRule({
 			line: 3,
 			column: 3,
 			endLine: 4,
-			endColumn: 15,
+			endColumn: 16,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -1272,7 +1312,7 @@ testRule({
 			line: 3,
 			column: 3,
 			endLine: 6,
-			endColumn: 16,
+			endColumn: 17,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -1296,7 +1336,7 @@ testRule({
 			line: 3,
 			column: 3,
 			endLine: 5,
-			endColumn: 12,
+			endColumn: 13,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -1489,7 +1529,7 @@ testRule({
 			line: 3,
 			column: 3,
 			endLine: 4,
-			endColumn: 12,
+			endColumn: 13,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -1557,7 +1597,7 @@ testRule({
 			line: 2,
 			column: 23,
 			endLine: 2,
-			endColumn: 52,
+			endColumn: 53,
 			message: messages.expected(`grid-template-areas`),
 		},
 		{
@@ -1575,7 +1615,7 @@ testRule({
 			line: 2,
 			column: 23,
 			endLine: 2,
-			endColumn: 51,
+			endColumn: 52,
 			message: messages.expected(`grid-template-areas`),
 		},
 	],
