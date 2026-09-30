@@ -55,7 +55,7 @@ function opensItsLine (text: string, start: number): boolean {
 }
 
 /**
- * Asks whether nothing but whitespace follows a rule on its line, reading the raw behind it — the next node's `raws.before`, else its container's `raws.after` — as it stands and as the neighbors leave it, so that the last line of its `raws.ownSemicolon` ends there as far as whitespace at its end goes. The end of the root ends a line too, which for a root a document holds is the end of its block.
+ * Asks whether nothing but whitespace follows a rule on its line, reading the raw behind it — the next node's `raws.before`, else its container's `raws.after` — as it stands and as the neighbors leave it, so that the last line of its `raws.ownSemicolon` ends there as far as whitespace at its end goes. The end of the root ends a line too, which for a root a document holds is the end of its block, unless the text closes on a line of the host code.
  * @param scope - The run.
  * @param node - The rule.
  * @returns True where it does.
@@ -74,7 +74,7 @@ function breakFollows (scope: EolScope, node: Node): boolean {
 
 	let read = maskTaken(behind, taken).replaceAll(TAKEN_MARK, ``)
 
-	return OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(read) || (!next && container === scope.root && WHITESPACE_OR_NOTHING.test(read))
+	return OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(read) || (!next && container === scope.root && !scope.closesOnHostLine && WHITESPACE_OR_NOTHING.test(read))
 }
 
 /** A text of a node the fix trims: the text, how it is written back and read, and how its lines are read where the check's runs do not tell them. */
@@ -272,7 +272,7 @@ function tailRuns (root: Root, result: PostcssResult): Span {
 }
 
 /**
- * Trims the ends of the lines of the root's tail, and the end of its last line, which a disable comment may keep.
+ * Trims the ends of the lines of the root's tail, and the end of its last line, which a disable comment may keep. Where the text closes on a line of the host code, a styled template's, its last line is the host's and its end stays: the run in front of the closing backtick is that backtick's indentation, or stands in the middle of the host's line.
  * @param scope - The run.
  * @param isRootFirst - Whether the tail opens the root.
  */
@@ -292,7 +292,7 @@ function fixRootsEnd (scope: EolScope, isRootFirst: boolean): void {
 		},
 	], tailRuns(root, scope.result))
 
-	if (scope.kept?.(lastLine)) return
+	if (scope.closesOnHostLine || scope.kept?.(lastLine)) return
 
 	trimTheLastLine(scope, lead)
 	trimTheLastNodesEnd(scope.syntax, scope.root, scope.result)
@@ -392,12 +392,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		let rootString = maskTaken(text, new Set([...straySemicolonOffsetsTaken(root, result), ...semicolonsTakenAlready(root, text, result)]))
 		// Stylelint drops the fix of a warning on a line a disable comment covers, and the fix of any other trims every line at once, so it asks of each line itself
 		let kept = fixDisabledRanges(result, ruleName).length > 0 ? (line: number): boolean => fixDisabledOnLine(result, ruleName, line) : undefined
-		let scope: EolScope = { syntax, root, result, ignoreEmptyLines, sourceEndsWithoutBreak: !TRAILING_LINE_BREAK.test(text), kept }
+		// The end of the text ends a line, as the end of a file does, unless the text closes on a line of the host code, where it is followed by the host's own characters and `no-missing-end-of-source-newline` asks for no break either
+		let closesOnHostLine = syntax.hostLineEdges(root).closes
+		let scope: EolScope = { syntax, root, result, ignoreEmptyLines, sourceEndsWithoutBreak: !closesOnHostLine && !TRAILING_LINE_BREAK.test(text), closesOnHostLine, kept }
 		let found: EolRun[] = []
 
 		eachEolWhitespace(scope, rootString, (run) => {
 			found.push(run)
-		}, { isRootFirst: true, endsALine: true })
+		}, { isRootFirst: true, endsALine: !closesOnHostLine })
 
 		// The fix reads its runs against the ones the check finds, where a disable comment keeps some line
 		if (kept) {

@@ -100,13 +100,14 @@ function findErrorStartIndex (lastEOLIndex: number, string: string, options: {
 	return { index: eolWhitespaceIndex, start }
 }
 
-/** What a run of the rule reads everywhere: the syntax, the root, the result, whether empty lines are passed over, and whether the file handed to the parser ends without a break; where a disable comment keeps the fix off some line, whether it keeps a given one, and the runs the check found in the root's text, which the fix reads its own against. */
+/** What a run of the rule reads everywhere: the syntax, the root, the result, whether empty lines are passed over, whether the file handed to the parser ends without a break, and whether the text closes on a line of the host code, where its end ends no line; where a disable comment keeps the fix off some line, whether it keeps a given one, and the runs the check found in the root's text, which the fix reads its own against. */
 export type EolScope = {
 	syntax: Syntax,
 	root: Root,
 	result: PostcssResult,
 	ignoreEmptyLines: boolean,
 	sourceEndsWithoutBreak: boolean,
+	closesOnHostLine: boolean,
 	kept?: ((line: number) => boolean) | undefined,
 	found?: FoundRuns | undefined,
 }
