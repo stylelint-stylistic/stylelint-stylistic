@@ -6,7 +6,6 @@ import { css } from "../../syntaxes/css/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { rereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runBehind } from "../../utils/runBehind/index.ts"
 import { valueListCommaWhitespaceChecker } from "../../utils/valueListCommaWhitespaceChecker/index.ts"
@@ -59,15 +58,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.after,
 			checkedRuleName: ruleName,
-			// Declined here, since Stylelint counts a fixer as applied whatever it does: a comma in the property name is out of reach, one opening the value is not.
-			isFixable: (declNode, index, declString) => {
-				let run = runBehind(declString, index)
-
-				// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses
-				if (rereadsAnAddress(declString, { start: index + 1, end: index + 1 + run.length, text: primary.startsWith(`always`) ? ` ` : `` }, syntax.inlineComments(declNode, result), declNode)) return false
-
-				return index >= declarationValueIndex(declNode)
-			},
+			// Declined here, since Stylelint counts a fixer as applied whatever it does: a comma in the property name is out of reach, one opening the value is not
+			isFixable: (declNode, index) => index >= declarationValueIndex(declNode),
+			// The space written behind the comma or the run taken out from there can part the name of a bare address from the comma or join it to the comma, and a break taken out of parentheses PostCSS reads as code makes them one plain token again, which pushes nothing, so that a later `(` pops `url` where it popped a word of theirs; the writes of the list are asked together whether PostCSS then reads the parentheses of an address the other way
+			edits: (declNode, index, declString) => [{ start: index + 1, end: index + 1 + runBehind(declString, index).length, text: primary.startsWith(`always`) ? ` ` : `` }],
 			fix: (declNode, index) => {
 				fixData = fixData || (new Map())
 

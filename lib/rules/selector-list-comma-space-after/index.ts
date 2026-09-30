@@ -5,7 +5,6 @@ import { LEADING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { rereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runBehind } from "../../utils/runBehind/index.ts"
 import { selectorListCommaWhitespaceChecker } from "../../utils/selectorListCommaWhitespaceChecker/index.ts"
@@ -58,14 +57,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.after,
 			checkedRuleName: ruleName,
-			isFixable: (selector, index, _inlineComments, ruleNode) => {
-				let run = runBehind(selector, index)
-
-				// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses
-				if (rereadsAnAddress(selector, { start: index + 1, end: index + 1 + run.length, text: primary.startsWith(`always`) ? ` ` : `` }, syntax.inlineComments(ruleNode, result), ruleNode)) return false
-
-				return true
-			},
+			// The space written behind the comma or the run taken out from there can part the name of a bare address from the comma or join it to the comma, and a break taken out of parentheses PostCSS reads as code makes them one plain token again, which pushes nothing, so that a later `(` pops `url` where it popped a word of theirs; the writes of the list are asked together whether PostCSS then reads the parentheses of an address the other way
+			edits: (selector, index) => [{ start: index + 1, end: index + 1 + runBehind(selector, index).length, text: primary.startsWith(`always`) ? ` ` : `` }],
 			fix: (ruleNode, index) => {
 				fixData = fixData || (new Map())
 

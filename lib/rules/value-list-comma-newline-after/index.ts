@@ -9,7 +9,6 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
-import { rereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runBehind } from "../../utils/runBehind/index.ts"
 import { valueListCommaWhitespaceChecker } from "../../utils/valueListCommaWhitespaceChecker/index.ts"
@@ -61,18 +60,17 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.afterOneOnly,
 			checkedRuleName: ruleName,
-			// Declined here, since Stylelint counts a fixer as applied whatever it does: a comma in the property name is out of reach, one opening the value is not.
+			// Declined here, since Stylelint counts a fixer as applied whatever it does: a comma in the property name is out of reach, one opening the value is not
 			isFixable: (declNode, index, declString) => {
-				// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses
-				let edit = primary.startsWith(`always`) ? { start: index + 1, end: index + 1, text: getLineBreak(root, result) } : { start: index + 1, end: index + 1 + runBehind(declString, index).length, text: `` }
-
-				if (index < declarationValueIndex(declNode) || rereadsAnAddress(declString, edit, syntax.inlineComments(declNode, result), declNode)) return false
+				if (index < declarationValueIndex(declNode)) return false
 
 				// A break written into parentheses PostCSS holds as one token other than an address's makes them code, and a `[` nothing closes inside, or such a `{` in a custom property's value, is then a group the parser finds open and the file stops parsing: the break is refused there and the warning stands
 				if (primary.startsWith(`always`) && breakAtRereadsParentheses(declString, index, isCustomProperty(declNode.prop), syntax.inlineComments(declNode, result))) return false
 
 				return true
 			},
+			// The break written behind the comma or the run taken out from there can part the name of a bare address from the comma or join it to the comma, and a break written into parentheses PostCSS holds as one plain token makes them code, so that a later `(` pops another word than `url` or pops `url` where it popped another; the writes of the declaration are asked together whether PostCSS then reads the parentheses of an address the other way
+			edits: (declNode, index, declString) => [primary.startsWith(`always`) ? { start: index + 1, end: index + 1, text: getLineBreak(root, result) } : { start: index + 1, end: index + 1 + runBehind(declString, index).length, text: `` }],
 			fix: (declNode, index) => {
 				fixData = fixData || (new Map())
 

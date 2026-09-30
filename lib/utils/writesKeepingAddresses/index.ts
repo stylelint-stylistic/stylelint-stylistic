@@ -1,4 +1,4 @@
-import type { AtRule, Declaration } from "postcss"
+import type { AtRule, Declaration, Rule } from "postcss"
 import type { PostcssResult } from "stylelint"
 
 import { addEdit, type Edit } from "../applyEditsFromEnd/index.ts"
@@ -25,7 +25,7 @@ export type WriteCandidate = {
  * @param ruleName - The registered name.
  * @returns True where the fix is applied once given.
  */
-function fixApplies (node: AtRule | Declaration, index: number, result: PostcssResult, ruleName: string): boolean {
+function fixApplies (node: AtRule | Declaration | Rule, index: number, result: PostcssResult, ruleName: string): boolean {
 	let placed = placedNode(node)
 	let line = placed === node ? node.rangeBy({ index, endIndex: index }).start.line : placed?.source?.start?.line
 
@@ -35,7 +35,7 @@ function fixApplies (node: AtRule | Declaration, index: number, result: PostcssR
 /**
  * Says which of the fixes a rule would give over one text may be given, so that no address's parentheses are read another way ({@link editsRereadAnAddress}).
  *
- * A write into a call's parentheses can switch which word a later `(` pops, and so whether it opens an address's token, and two writes can do together what neither does alone, so each is asked along with the writes given already. A write refused against those may be safe once a later one is given, since that one can put the word back, so the fixes are asked again until none more is given: whatever is refused is then refused against the very writes the run applies, and a second `--fix` finds nothing more to give. A fix Stylelint drops is never counted among them.
+ * A write into a call's parentheses, or into parentheses the tokenizer takes as one plain token, can switch which word a later `(` pops, and so whether it opens an address's token, and a run written or taken out right in front of `url(` or right behind its `(` switches the reading of those parentheses themselves; two writes can do together what neither does alone, so each is asked along with the writes given already. A write refused against those may be safe once a later one is given, since that one can put the word back, so the fixes are asked again until none more is given: whatever is refused is then refused against the very writes the run applies, and a second `--fix` finds nothing more to give. A fix Stylelint drops is never counted among them.
  * @param text - The text the edits index in.
  * @param candidates - The fixes, in the order the rule reports them; where two writes conflict, the one reported first is given.
  * @param reading - Whether the parser reads by a tokenizer of its own.
@@ -44,7 +44,7 @@ function fixApplies (node: AtRule | Declaration, index: number, result: PostcssR
  * @param ruleName - The registered name.
  * @returns For each fix, whether it may be given.
  */
-export function writesKeepingAddresses (text: string, candidates: WriteCandidate[], reading: Pick<CommentReading, `tokenizes`>, node: AtRule | Declaration, result: PostcssResult, ruleName: string): boolean[] {
+export function writesKeepingAddresses (text: string, candidates: WriteCandidate[], reading: Pick<CommentReading, `tokenizes`>, node: AtRule | Declaration | Rule, result: PostcssResult, ruleName: string): boolean[] {
 	let applied = candidates.map(({ edits, index }) => edits !== undefined && fixApplies(node, index, result, ruleName))
 	let given = candidates.map(() => false)
 	let written: Edit[] = []

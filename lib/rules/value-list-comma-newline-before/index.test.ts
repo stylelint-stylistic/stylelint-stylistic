@@ -225,6 +225,15 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
+			// A break written into parentheses the tokenizer takes as one plain token makes them code and pushes the words inside them, and the next parenthesis then pops one of those instead of the word url, so the quotation mark inside its parentheses opens a string nothing closes: the break is refused and the warning stands
+			description: `a comma in parentheses a word over the name of a bare address pops, in front of parentheses holding a quotation mark`,
+			code: `a { b: url a (y,z)(b"c); }`,
+			fixed: `a { b: url a (y,z)(b"c); }`,
+			line: 1,
+			column: 16,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `parentheses holding a brace nothing closes in a custom property's value, where the parser reads a brace as a group too, refused likewise`,
 			code: `a { --b: (a,{b); }`,
 			fixed: `a { --b: (a,{b); }`,
@@ -365,6 +374,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// Taking the break in front of the comma out of parentheses the tokenizer read as code makes them one plain token again, which pushes nothing, so the next parenthesis pops the word url and the string inside is read as characters of the address up to its first closing parenthesis, and the quotation mark behind opens a string nothing closes: the run is left and the warning stands
+			description: `a comma in parentheses a word over the name of a bare address pops, with a break in front of it, in front of parentheses holding a string and a quotation mark`,
+			code: `a { b: url a (y\n,z)(b"c)d") 1; }`,
+			fixed: `a { b: url a (y\n,z)(b"c)d") 1; }`,
+			line: 2,
+			column: 1,
+			message: messages.rejectedBeforeMultiLine(),
+		},
 		{
 			// Under PostCSS's tokenizer the whitespace right behind the `(` keeps the parentheses code, and taken out it hands them to the address's token, which closes at the parenthesis inside the string
 			description: `a comma behind whitespace right behind the opening parenthesis of an address holding a string with a closing parenthesis, where taking the whitespace out is refused and the warning stands`,

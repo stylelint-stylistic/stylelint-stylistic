@@ -3,12 +3,12 @@ import stylelint from "stylelint"
 
 import { TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import type { Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { breakAtRereadsParentheses } from "../../utils/breakRereadsParentheses/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { openingRunRereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFront } from "../../utils/runInFront/index.ts"
 import { selectorListCommaWhitespaceChecker } from "../../utils/selectorListCommaWhitespaceChecker/index.ts"
@@ -55,6 +55,19 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		let fixData: Map<Rule, [number, string][]> | undefined
 
+		/**
+		 * Builds the write in front of a comma: a break in front of the indentation the run there ends with under `always`, else the run taken out, as the check measured it over the copy.
+		 * @param runString - The copy the runs are read over.
+		 * @param index - The comma's index.
+		 * @returns The edit.
+		 */
+		function editAt (runString: string, index: number): Edit {
+			let run = runInFront(runString, index)
+			let indentation = run.match(TRAILING_SPACES_AND_TABS)?.[0] ?? ``
+
+			return primary.startsWith(`always`) ? { start: index - indentation.length, end: index - indentation.length, text: getLineBreak(root, result) } : { start: index - run.length, end: index, text: `` }
+		}
+
 		selectorListCommaWhitespaceChecker({
 			root,
 			result,
@@ -78,16 +91,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A break written into parentheses PostCSS holds as one token other than an address's makes them code, and a `[` nothing closes inside is then a group the parser finds open and the file stops parsing: the break is refused there and the warning stands
 				if (primary.startsWith(`always`) && breakAtRereadsParentheses(selector, index, false, syntax.inlineComments(ruleNode, result))) return false
 
-				let run = runInFront(runString, index)
-				let indentation = run.match(TRAILING_SPACES_AND_TABS)?.[0] ?? ``
-				let edit = primary.startsWith(`always`) ? { start: index - indentation.length, end: index - indentation.length, text: getLineBreak(root, result) } : { start: index - run.length, end: index, text: `` }
-
-				// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎,b` would come out as `a\,b`, one identifier, so the warning stands; `always` leaves the break the backslash stands in front of
-				if (primary === `never-multi-line` && !editKeepsEscapedCharacter(selector, edit)) return false
-
-				// Whitespace right behind the `(` of an address decides under PostCSS whether its parentheses are one token or code, so the write is refused where the parser then reads the file otherwise, as over a quotation mark inside
-				return !openingRunRereadsAnAddress(selector, edit, syntax.inlineComments(ruleNode, result), ruleNode)
+				// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎,b` would come out as `a\,b`, one identifier, so the warning stands; `always` leaves the break the backslash stands in front of where it is
+				return primary !== `never-multi-line` || editKeepsEscapedCharacter(selector, editAt(runString, index))
 			},
+			// Whitespace right behind the `(` of an address decides under PostCSS whether its parentheses are one token or code, and a break written into parentheses held as one plain token makes them code, or one taken out makes them a token again, so that a later `(` pops another word; the writes of the rule are asked together whether the parser then reads the file otherwise
+			edits: (_selector, index, _ruleNode, runString) => [editAt(runString, index)],
 			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ ,b` is not cut and no break parts it from its backslash
 			fix: (ruleNode, index, runString) => {
 				fixData = fixData || (new Map())

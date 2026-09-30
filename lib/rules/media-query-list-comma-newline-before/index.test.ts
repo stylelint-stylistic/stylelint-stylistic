@@ -221,6 +221,15 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
+			// A break written into parentheses the tokenizer takes as one plain token makes them code and pushes the words inside them, and the next parenthesis then pops one of those instead of the word url, so the quotation mark inside its parentheses opens a string nothing closes: the break is refused and the warning stands
+			description: `a comma in parentheses a word over the name of a bare address pops, in front of parentheses holding a quotation mark`,
+			code: `@media url a (y,z)(b"c) {}`,
+			fixed: `@media url a (y,z)(b"c) {}`,
+			line: 1,
+			column: 16,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `parentheses holding a brace nothing closes, which the parser reads as a group inside an at-rule's params too, refused likewise`,
 			code: `@media a (a,{b) {}`,
 			fixed: `@media a (a,{b) {}`,

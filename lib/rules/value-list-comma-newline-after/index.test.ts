@@ -157,6 +157,15 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
+			// A break written into parentheses the tokenizer takes as one plain token makes them code and pushes the words inside them, and the next parenthesis then pops one of those instead of the word url, so the quotation mark inside its parentheses opens a string nothing closes: the break is refused and the warning stands
+			description: `a comma in parentheses a word over the name of a bare address pops, in front of parentheses holding a quotation mark`,
+			code: `a { b: url a (y,z)(b"c); }`,
+			fixed: `a { b: url a (y,z)(b"c); }`,
+			line: 1,
+			column: 16,
+			message: messages.expectedAfter(),
+		},
+		{
 			// Pins the reading of a string inside parentheses the tokenizer reads as code behind a sign glued to the name, whose comma is no comma of the list
 			description: `no newline after the comma behind a bare address whose name a solidus is glued to, holding a string with a closing parenthesis and a comma, which are text of the string`,
 			code: `a { b: 1px,\n1/url(a "),b" ),2px; }`,
@@ -375,6 +384,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			// Taking the last break out of parentheses the tokenizer read as code makes them one plain token again, which pushes nothing, so the next parenthesis pops the word url and the string inside is read as characters of the address up to its first closing parenthesis, and the quotation mark behind opens a string nothing closes: the run is left and the warning stands
+			description: `a comma in parentheses a word over the name of a bare address pops, with a break behind it, in front of parentheses holding a string and a quotation mark`,
+			code: `a { b: url a (y,\nz)(b"c)d") 1; }`,
+			fixed: `a { b: url a (y,\nz)(b"c)d") 1; }`,
+			line: 1,
+			column: 16,
+			message: messages.rejectedAfterMultiLine(),
+		},
 		{
 			description: `a comma opening the value, whose whitespace belongs to the value like any other`,
 			code: `a { prop: ,\n0; }`,

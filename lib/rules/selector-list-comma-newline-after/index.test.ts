@@ -590,3 +590,12 @@ it(`writes the break behind a comma right in front of parentheses PostCSS holds 
 
 	expect({ fixed: fixed.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column}`) }).toEqual({ fixed: `[a,\n(b[c,d)] {}`, left: [`2:5`] })
 })
+
+// A break written into parentheses the tokenizer takes as one plain token makes them code and pushes the words inside them, and the next parenthesis then pops one of those instead of the word url, so the quotation mark inside its parentheses opens a string nothing closes; the warning left moves with the break written in front, which a reject case cannot say
+it(`writes the break behind a comma of the list and refuses the one behind a comma in parentheses a word over the name of a bare address pops, in front of parentheses holding a quotation mark`, async () => {
+	let config = { plugins, rules: { [ruleName]: `always` } }
+	let fixed = await stylelint.lint({ code: `[a, url a (b,c)(b"c)] {}`, config, fix: true })
+	let again = await stylelint.lint({ code: fixed.code ?? ``, config })
+
+	expect({ fixed: fixed.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column}`) }).toEqual({ fixed: `[a,\n url a (b,c)(b"c)] {}`, left: [`2:10`] })
+})

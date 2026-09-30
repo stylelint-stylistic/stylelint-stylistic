@@ -7,7 +7,6 @@ import { atRuleParamIndex } from "../../utils/atRuleParamIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { mediaQueryListCommaWhitespaceChecker } from "../../utils/mediaQueryListCommaWhitespaceChecker/index.ts"
-import { rereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runBehind } from "../../utils/runBehind/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
@@ -59,8 +58,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.after,
 			checkedRuleName: ruleName,
-			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses
-			isFixable: (params, index, atRule) => !rereadsAnAddress(params, { start: index + 1, end: index + 1 + runBehind(params, index).length, text: primary.startsWith(`always`) ? ` ` : `` }, syntax.inlineComments(atRule, result), atRule),
+			// The space written behind the comma or the run taken out from there can part the name of a bare address from the comma or join it to the comma, and a break taken out of parentheses PostCSS reads as code makes them one plain token again, which pushes nothing, so that a later `(` pops `url` where it popped a word of theirs; the writes of the list are asked together whether PostCSS then reads the parentheses of an address the other way
+			edits: (params, index) => [{ start: index + 1, end: index + 1 + runBehind(params, index).length, text: primary.startsWith(`always`) ? ` ` : `` }],
 			fix: (atRule, index) => {
 				let paramCommaIndex = index - atRuleParamIndex(atRule)
 

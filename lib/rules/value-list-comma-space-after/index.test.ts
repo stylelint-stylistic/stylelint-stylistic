@@ -362,6 +362,15 @@ testRule({
 
 	reject: [
 		{
+			// Taking the last break out of parentheses the tokenizer read as code makes them one plain token again, which pushes nothing, so the next parenthesis pops the word url and the string inside is read as characters of the address up to its first closing parenthesis, and the quotation mark behind opens a string nothing closes: the run is left and the warning stands
+			description: `a comma in parentheses a word over the name of a bare address pops, with a break behind it, in front of parentheses holding a string and a quotation mark`,
+			code: `a { b: url a (y,\nz)(b"c)d") 1; }`,
+			fixed: `a { b: url a (y,\nz)(b"c)d") 1; }`,
+			line: 1,
+			column: 16,
+			message: messages.rejectedAfter(),
+		},
+		{
 			description: `a space after the comma`,
 			code: `a { background-size: 0, 0; }`,
 			fixed: `a { background-size: 0,0; }`,

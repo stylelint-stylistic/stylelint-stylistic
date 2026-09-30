@@ -3,17 +3,18 @@ import stylelint from "stylelint"
 
 import { LEADING_CSS_WHITESPACE, LEADING_WHITESPACE_WITHOUT_BREAK, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE, WHITESPACE_THEN_BLOCK_COMMENT, WHITESPACE_THEN_INLINE_COMMENT } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import type { Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { breakAtRereadsParentheses } from "../../utils/breakRereadsParentheses/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { listLines } from "../../utils/rawInFrontOfText/index.ts"
 import { report } from "../../utils/report/index.ts"
-import { rereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runBehind } from "../../utils/runBehind/index.ts"
 import { selectorSearchCopy } from "../../utils/selectorSearchCopy/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
+import { writesKeepingAddresses } from "../../utils/writesKeepingAddresses/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -84,6 +85,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// A comma opening the selector opens the list with an empty item, and the run in front of it is among the list's lines, as for the other rules of the list
 			let lineCheckStr = listLines(ruleNode, selector, checks[0]?.commaIndex === 0, result)
 
+			let problems: { message: string, sourceIndex: number, fixIndex: number, edits: Edit[] | undefined }[] = []
+
 			for (let { commaIndex, checkIndex } of checks) {
 				checker.afterOneOnly({
 					source: selector,
@@ -94,27 +97,32 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						let fixIndex = checkIndex + 1
 						let runEnd = fixIndex + (selector.slice(fixIndex).length - selector.slice(fixIndex).trimStart().length)
 						let closesInlineComment = primary.startsWith(`never`) && copies.comments.some((inlineComment) => fixIndex <= inlineComment.endIndex && inlineComment.endIndex < runEnd)
-						// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses
-						let rereads = rereadsAnAddress(selector, primary.startsWith(`always`) ? { start: fixIndex, end: fixIndex, text: getLineBreak(root, result) } : { start: fixIndex, end: fixIndex + runBehind(selector, checkIndex).length, text: `` }, syntax.inlineComments(ruleNode, result), ruleNode)
 						// A break written into parentheses PostCSS holds as one token other than an address's makes them code, and a `[` nothing closes inside is then a group the parser finds open and the file stops parsing
 						let opensAGroup = primary.startsWith(`always`) && breakAtRereadsParentheses(selector, commaIndex, false, syntax.inlineComments(ruleNode, result))
-						let sourceIndex = copies.toSourceIndex(commaIndex)
-						let isFixable = !closesInlineComment && !rereads && !opensAGroup
+						// The break written behind the comma or the run taken out from there can part the name of a bare address from the comma or join it to the comma, and a break written into parentheses PostCSS holds as one plain token makes them code, so that a later `(` pops another word than `url` or pops `url` where it popped another; the writes of the rule are asked together whether PostCSS then reads the parentheses of an address the other way
+						let edit = primary.startsWith(`always`) ? { start: fixIndex, end: fixIndex, text: getLineBreak(root, result) } : { start: fixIndex, end: fixIndex + runBehind(selector, checkIndex).length, text: `` }
 
-						report({
-							message: m,
-							node: ruleNode,
-							index: sourceIndex,
-							endIndex: sourceIndex,
-							result,
-							ruleName,
-							...(isFixable && {
-								fix: (): void => {
-									fixIndices.push(fixIndex)
-								},
-							}),
-						})
+						problems.push({ message: m, sourceIndex: copies.toSourceIndex(commaIndex), fixIndex, edits: closesInlineComment || opensAGroup ? undefined : [edit] })
 					},
+				})
+			}
+
+			// Stylelint counts a fixer as applied whatever it does, so which fixes are given is settled before the reports, and together
+			let given = writesKeepingAddresses(selector, problems.map(({ edits, sourceIndex }) => ({ edits, index: sourceIndex })), syntax.inlineComments(ruleNode, result), ruleNode, result, ruleName)
+
+			for (let [problemIndex, { message, sourceIndex, fixIndex }] of problems.entries()) {
+				report({
+					message,
+					node: ruleNode,
+					index: sourceIndex,
+					endIndex: sourceIndex,
+					result,
+					ruleName,
+					...(given[problemIndex] && {
+						fix: (): void => {
+							fixIndices.push(fixIndex)
+						},
+					}),
 				})
 			}
 

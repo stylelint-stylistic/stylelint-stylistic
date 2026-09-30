@@ -3,11 +3,11 @@ import stylelint from "stylelint"
 
 import { TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import type { Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
-import { openingRunRereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFront } from "../../utils/runInFront/index.ts"
 import { valueListCommaWhitespaceChecker } from "../../utils/valueListCommaWhitespaceChecker/index.ts"
@@ -55,6 +55,18 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 		let fixData: Map<Declaration, [number, string][]> | undefined
 
+		/**
+		 * Builds the write in front of a comma: the run there, as the check measured it over the copy, replaced by a space or by nothing.
+		 * @param runString - The copy the runs are read over.
+		 * @param index - The comma's index.
+		 * @returns The edit.
+		 */
+		function editAt (runString: string, index: number): Edit {
+			let run = runInFront(runString, index)
+
+			return { start: index - run.length, end: index, text: primary.startsWith(`always`) ? ` ` : `` }
+		}
+
 		valueListCommaWhitespaceChecker({
 			root,
 			result,
@@ -68,15 +80,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// The run in front of a comma opening the value is the head run behind the colon, which the colon rules read too, and the rules asked settle who writes it
 				if (index === declarationValueIndex(declNode) && !writesSharedRun(syntax, declNode, result, ruleName)) return false
 
-				let run = runInFront(runString, index)
-				let edit = { start: index - run.length, end: index, text: primary.startsWith(`always`) ? ` ` : `` }
-
 				// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎,b` would come out as `a\,b`, one identifier, or `a\ ,b`, an escaped space, so the warning stands
-				if (!editKeepsEscapedCharacter(declString, edit)) return false
-
-				// Whitespace right behind the `(` of an address decides under PostCSS whether its parentheses are one token or code, so the write is refused where the parser then reads the file otherwise, as over a quotation mark inside
-				return !openingRunRereadsAnAddress(declString, edit, syntax.inlineComments(declNode, result), declNode)
+				return editKeepsEscapedCharacter(declString, editAt(runString, index))
 			},
+			// Whitespace right behind the `(` of an address decides under PostCSS whether its parentheses are one token or code, and a run taken out of parentheses held as one plain token can leave them code or make them a token again, so that a later `(` pops another word; the writes of the declaration are asked together whether the parser then reads the file otherwise
+			edits: (_declNode, index, _declString, runString) => [editAt(runString, index)],
 			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ ,b` is not cut
 			fix: (declNode, index, runString) => {
 				fixData = fixData || (new Map())

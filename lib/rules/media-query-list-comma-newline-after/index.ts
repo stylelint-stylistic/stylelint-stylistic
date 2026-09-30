@@ -9,7 +9,6 @@ import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRu
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { mediaQueryListCommaWhitespaceChecker } from "../../utils/mediaQueryListCommaWhitespaceChecker/index.ts"
-import { rereadsAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runBehind } from "../../utils/runBehind/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
@@ -62,18 +61,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.afterOneOnly,
 			checkedRuleName: ruleName,
 			allowTrailingComments: primary.startsWith(`always`),
-			isFixable: (params, index, atRule) => {
-				let run = runBehind(params, index)
-				// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads the parentheses
-				let edit = primary.startsWith(`never`) ? { start: index + 1, end: index + 1 + run.length, text: `` } : { start: index + 1, end: index + 1, text: getLineBreak(root, result) }
-
-				if (rereadsAnAddress(params, edit, syntax.inlineComments(atRule, result), atRule)) return false
-
-				// A break written into parentheses PostCSS holds as one token other than an address's makes them code, and a `[` or a `{` nothing closes inside is then a group the parser finds open, so the at-rule gets no block and its params run to the end of the file, or the rule holding it is left unclosed: the break is refused there and the warning stands. In an at-rule's params a `{` opens a group whatever the at-rule, as it does in a custom property's value
-				if (primary.startsWith(`always`) && breakAtRereadsParentheses(params, index, true, syntax.inlineComments(atRule, result))) return false
-
-				return true
-			},
+			// A break written into parentheses PostCSS holds as one token other than an address's makes them code, and a `[` or a `{` nothing closes inside is then a group the parser finds open, so the at-rule gets no block and its params run to the end of the file, or the rule holding it is left unclosed: the break is refused there and the warning stands. In an at-rule's params a `{` opens a group whatever the at-rule, as it does in a custom property's value
+			isFixable: (params, index, atRule) => !primary.startsWith(`always`) || !breakAtRereadsParentheses(params, index, true, syntax.inlineComments(atRule, result)),
+			// The break written behind the comma or the run taken out from there can part the name of a bare address from the comma or join it to the comma, and a break written into parentheses PostCSS holds as one plain token makes them code, so that a later `(` pops another word than `url` or pops `url` where it popped another; the writes of the at-rule are asked together whether PostCSS then reads the parentheses of an address the other way
+			edits: (params, index) => [primary.startsWith(`never`) ? { start: index + 1, end: index + 1 + runBehind(params, index).length, text: `` } : { start: index + 1, end: index + 1, text: getLineBreak(root, result) }],
 			fix: (atRule, index) => {
 				let paramCommaIndex = index - atRuleParamIndex(atRule)
 
