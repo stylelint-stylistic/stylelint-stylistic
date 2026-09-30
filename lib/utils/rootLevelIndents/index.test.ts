@@ -52,6 +52,16 @@ describe(`rootLevelIndents`, () => {
 		expect(run(`a {\n\tcolor: pink;\n\t}\nb {}`, undefined, true)).toEqual({ own: [``, ``], tagLine: [] })
 	})
 
+	it(`reads the line a comment the parser filed in the root's after raw opens on, as it reads a comment node's, behind a bodiless at-rule with params closed by no semicolon`, () => {
+		expect(run(`<style>\n\t@import 'x'\n/* c */\n</style>`, html)).toEqual({ own: [`\t`, ``], tagLine: [] })
+		expect(run(`<style>\n\t@import 'x';\n/* c */\n</style>`, html)).toEqual({ own: [`\t`, ``], tagLine: [] })
+		expect(run(`<style>\n\t@import 'x'\n\t/* c */\n\t\t/* d */\n</style>`, html)).toEqual({ own: [`\t`, `\t`, `\t\t`], tagLine: [] })
+	})
+
+	it(`leaves out the lines a comment in the after raw runs on to, a line of whitespace alone and the at-rule's own line`, () => {
+		expect(run(`<style>\n\t@import 'x' /* c */\n/* d\n\te */\n\n</style>`, html)).toEqual({ own: [`\t`, ``], tagLine: [] })
+	})
+
 	it(`reads nothing off a root without a child`, () => {
 		expect(run(``)).toEqual({ own: [], tagLine: [] })
 	})

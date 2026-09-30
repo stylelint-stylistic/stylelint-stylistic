@@ -781,6 +781,18 @@ testRule({
 	customSyntax: `postcss-html`,
 	autoStripIndent: false,
 
+	accept: [
+		{
+			// The comment's line inside a style attribute is the root's too, and gives the level with or without a semicolon behind the at-rule
+			description: `a comment behind the last at-rule of a style attribute, which has neither a block nor a semicolon, a level deeper than the at-rule`,
+			code: `<a style="@import 'x'\n\t/* c */"></a>`,
+		},
+		{
+			description: `the same with a semicolon behind the at-rule`,
+			code: `<a style="@import 'x';\n\t/* c */"></a>`,
+		},
+	],
+
 	reject: [
 		{
 			description: `a semicolon alone on its line inside a style element, asked for the declaration's level`,
@@ -807,9 +819,18 @@ testRule({
 			message: messages.expected(`1 tab`),
 		},
 		{
-			description: `the same comment inside a style attribute, whose statements stand at the first column`,
-			code: `<a style="@import 'x'\n\t/* c */"></a>`,
-			fixed: `<a style="@import 'x'\n/* c */"></a>`,
+			// The comment's line is the root's, wherever the parser filed it: behind the at-rule closed by no semicolon it stands in the root's `raws.after`, behind one closed by a semicolon it is a node, and the level is read off it the same way
+			description: `a comment behind the last at-rule of a style element, which has neither a block nor a semicolon, standing at the first column while the at-rule stands a level deeper`,
+			code: `<style>\n\t@import 'x'\n/* c */\n</style>`,
+			fixed: `<style>\n@import 'x'\n/* c */\n</style>`,
+			line: 2,
+			column: 2,
+			message: messages.expected(`0 tabs`),
+		},
+		{
+			description: `the same with a semicolon behind the at-rule, whose comment is a node`,
+			code: `<style>\n\t@import 'x';\n/* c */\n</style>`,
+			fixed: `<style>\n@import 'x';\n/* c */\n</style>`,
 			line: 2,
 			column: 2,
 			message: messages.expected(`0 tabs`),
