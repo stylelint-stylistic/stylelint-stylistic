@@ -1,8 +1,8 @@
 import stylelint from "stylelint"
 
-import { LEADING_CSS_WHITESPACE, LEADING_WHITESPACE_WITHOUT_BREAK, LINE_BREAK, OPENS_WITH_BLOCK_COMMENT, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE, TRAILING_WHITESPACE_WITHOUT_BREAK } from "../../regexps.ts"
+import { LEADING_CSS_WHITESPACE, LEADING_WHITESPACE_WITHOUT_BREAK, LINE_BREAK, OPENS_WITH_BLOCK_COMMENT, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE, TRAILING_CSS_WHITESPACE, TRAILING_WHITESPACE_WITHOUT_BREAK, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
-import { runHandedToTheBlock } from "../../utils/closedBySemicolon/index.ts"
+import { closedBySemicolon, runHandedToTheBlock, semicolonTakenAway } from "../../utils/closedBySemicolon/index.ts"
 import { closingBraceRunWrites } from "../../utils/closingBraceRunWrites/index.ts"
 import { colonIndexInBetween } from "../../utils/colonIndexInBetween/index.ts"
 import { declarationColonSource } from "../../utils/declarationColonSource/index.ts"
@@ -11,10 +11,12 @@ import { declarationValueIndex } from "../../utils/declarationValueIndex/index.t
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
+import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
 import { moveDeclarationValueHeadIntoBetween } from "../../utils/moveDeclarationValueHeadIntoBetween/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runPastDeclaration, runPastDeclarationEndsTheStylesheet, writeRunPastDeclaration } from "../../utils/runPastDeclaration/index.ts"
+import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
 import { assertString } from "../../utils/validateTypes/index.ts"
 import { whitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
@@ -98,8 +100,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// An unclosed comment, which every syntax refuses, falls back to the colon
 			let commentEnd = closingSlashOfTheComment(source, colonIndex)
 			let indexToCheck = OPENS_WITH_BLOCK_COMMENT.test(source.slice(colonIndex + 1)) && commentEnd !== -1 ? commentEnd : colonIndex
+			// The run `declaration-block-trailing-semicolon: never` takes away with the semicolon is none of the declaration's, and a break standing in it is none of the colon's. A comment closing the value of a wordless plain property with no flag stays in the value only for the semicolon: with none, taken away in this pass or already, the next parse makes it a sibling, so the run behind it is not this declaration's to write either
+			let semicolonTaken = semicolonTakenAway(decl, result)
+			let closed = closedBySemicolon(decl, result)
+			let commentLeavesTheDeclaration = !closed && !decl.important && !isCustomProperty(decl.prop) && WHITESPACE_OR_NOTHING.test(decl.value)
 			// Where the run behind a comment on the colon's line is another rule's to write, that rule leaves no break there, so the text is read without the run and the break goes in front of the comment, which answers both
-			let writesInFrontOfTheComment = !isFixable && indexToCheck !== colonIndex
+			let writesInFrontOfTheComment = (!isFixable || commentLeavesTheDeclaration) && indexToCheck !== colonIndex
 			// Lineness is read from the value as spelled, since `decl.value` drops comments and the breaks in them
 			let value = declarationValueAsSpelled(syntax, decl, result)
 
@@ -164,11 +170,17 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								// Only the text in front of the break moves; the run behind it stays in the value for the semicolon rules
 								moveDeclarationValueHeadIntoBetween(syntax, decl, headLength)
 
-								// A break opening the run `declaration-block-trailing-semicolon` hands to the block is none behind the colon
+								// A break opening the run `declaration-block-trailing-semicolon` hands to the block, or takes away with the semicolon, is none behind the colon
 								let valueAfter = syntax.read(decl)
+								let kept = semicolonTaken ? valueAfter.replace(TRAILING_CSS_WHITESPACE, ``) : valueAfter.slice(0, valueAfter.length - runHandedToTheBlock(decl, result).length)
+								let { parent } = decl
 
-								if (OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(valueAfter.slice(0, valueAfter.length - runHandedToTheBlock(decl, result).length))) syntax.write(decl, valueAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``))
-								else if (writesTheBracesRun) syntax.write(decl, closingBraceRunWrites(() => getLineBreak(root, result)).newline(`always`, valueAfter))
+								if (OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(kept)) syntax.write(decl, valueAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``))
+								// Where nothing is left behind the comment once the semicolon is gone, the run goes on in the block's final raw, which the brace rules read: a break opening it is the colon's, and one written goes there, spelled as `block-closing-brace-newline-before` spells it. Not behind a flag, which prints in front of that raw
+								else if (kept === `` && !decl.important && parent && (isRule(parent) || isAtRule(parent)) && typeof parent.raws.after === `string` && !closed) {
+									if (!OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(parent.raws.after)) parent.raws.after = closingBraceRunWrites(() => getLineBreak(root, result)).newline(`always`, parent.raws.after)
+								}
+								else if (writesTheBracesRun && !semicolonTaken) syntax.write(decl, closingBraceRunWrites(() => getLineBreak(root, result)).newline(`always`, valueAfter))
 								else decl.raws.between += getLineBreak(root, result)
 
 								finishTheRun()

@@ -221,10 +221,9 @@ export function valueAsClosed (syntax: Syntax, decl: Declaration, result: Postcs
 
 	if (decl.important) return value
 
+	if (semicolonTakenAway(decl, result)) return value.replace(TRAILING_CSS_WHITESPACE, ``)
+
 	let [copy] = neighborCopies(decl, result, TRAILING_SEMICOLON_RULE)
-
-	if (copy && decl.parent?.raws.semicolon && writtenBy(copy, decl, result) === false && !copy.syntax.writesIntoInlineComment(decl, result)) return value.replace(TRAILING_CSS_WHITESPACE, ``)
-
 	let handed = runHandedToTheBlock(decl, result)
 
 	// The write leaves in front of the semicolon the whitespace the semicolon rules ask for
@@ -234,6 +233,20 @@ export function valueAsClosed (syntax: Syntax, decl: Declaration, result: Postcs
 	let whitespace = copy && writtenBy(copy, decl, result) === true && !WHITESPACE_OR_NOTHING.test(value) ? whitespaceBeforeSemicolon(syntax, decl, result) : ``
 
 	return whitespace ? value.replace(TRAILING_CSS_WHITESPACE, ``) + whitespace : value
+}
+
+/**
+ * Asks whether a `never` copy of `declaration-block-trailing-semicolon` takes the semicolon closing the declaration away, with the whitespace in front of it: a live copy finding one, where no flag or inline comment closes the declaration.
+ * @param decl - The declaration.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns True where it does.
+ */
+export function semicolonTakenAway (decl: Declaration, result: PostcssResult): boolean {
+	if (decl.important || !decl.parent?.raws.semicolon) return false
+
+	let [copy] = neighborCopies(decl, result, TRAILING_SEMICOLON_RULE)
+
+	return copy !== undefined && writtenBy(copy, decl, result) === false && !copy.syntax.writesIntoInlineComment(decl, result)
 }
 
 /**

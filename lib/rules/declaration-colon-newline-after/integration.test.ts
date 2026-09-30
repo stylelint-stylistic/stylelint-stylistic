@@ -557,6 +557,101 @@ testRule({
 	],
 })
 
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-block-trailing-semicolon": `never` },
+
+	reject: [
+		{
+			// The neighbor takes the run in front of the semicolon with it, so the break standing there is none of the colon's; the break goes into the block's final raw, where it stays once the neighbor has taken the run
+			description: `a custom property whose value is a comment on the colon's line and a break in front of the semicolon the neighbor takes away`,
+			code: `
+				a { --b: /*c*/
+				; }
+			`,
+			fixed: `
+				a { --b: /*c*/
+				 }
+			`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 15,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 2,
+					column: 1,
+					endLine: 2,
+					endColumn: 2,
+					message: trailingSemicolonMessages.rejected,
+				},
+			],
+		},
+		{
+			description: `the same custom property in a block whose final raw opens with a break already, which is the colon's once the semicolon is gone`,
+			code: `
+				a {
+					--b: /*c*/
+					;
+				}
+			`,
+			fixed: `
+				a {
+					--b: /*c*/
+				}
+			`,
+			warnings: [
+				{
+					line: 2,
+					column: 11,
+					endLine: 2,
+					endColumn: 12,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 3,
+					column: 2,
+					endLine: 3,
+					endColumn: 3,
+					message: trailingSemicolonMessages.rejected,
+				},
+			],
+		},
+		{
+			// A comment closing a plain property's wordless value stays in the value only for the semicolon, and is a sibling on the next parse, so the run behind it is not the declaration's to write and the break goes in front of the comment
+			description: `a plain property whose value is a comment on the colon's line and a break in front of the semicolon the neighbor takes away`,
+			code: `
+				a { b: /*c*/
+				; }
+			`,
+			fixed: `
+				a { b:
+				/*c*/ }
+			`,
+			warnings: [
+				{
+					line: 1,
+					column: 12,
+					endLine: 1,
+					endColumn: 13,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 2,
+					column: 1,
+					endLine: 2,
+					endColumn: 2,
+					message: trailingSemicolonMessages.rejected,
+				},
+			],
+		},
+	],
+})
+
 // A third rule listed between this rule and `declaration-block-trailing-semicolon: always` reads the run a custom property keeps for the closing brace as the semicolon's writer hands it to the block, behind the break this rule writes past a comment.
 testRule({
 	ruleName,
