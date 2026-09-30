@@ -99,6 +99,15 @@ testRule({
 
 	reject: [
 		{
+			// The tab closing the hexadecimal escape is a character of the escape and no run, and the break written behind it closes the escape as well, so the break takes its place rather than leaving the tab trailing its line
+			description: `a hexadecimal escape ending the value, closed by a tab in front of the brace`,
+			code: `a { b: \\31\t}`,
+			fixed: `a { b: \\31\n}`,
+			line: 1,
+			column: 11,
+			message: messages.expectedBefore,
+		},
+		{
 			description: `a nested block closed on its declaration's line with a stray semicolon on the line behind its brace, marked in front of the brace rather than inside the raw the semicolon stands in`,
 			code: `a {\n\tb {\n\t\tc: d }\n\t;\n}`,
 			fixed: `a {\n\tb {\n\t\tc: d\n }\n\t;\n}`,
@@ -446,6 +455,10 @@ testRule({
 	config: [`never-multi-line`],
 
 	accept: [
+		{
+			description: `a hexadecimal escape ending the value of a multi-line block, closed by a tab in front of the brace`,
+			code: `a {\n\tb: \\31\t}`,
+		},
 		{
 			// Pins the run in front of the brace read over the copy with the escapes masked
 			description: `a backslash ending the value of a multi-line block in front of a space, which spells a character of the value and no run`,

@@ -15,6 +15,11 @@ testRule({
 			code: `a\\  { b: c }`,
 		},
 		{
+			// The whitespace closing a hexadecimal escape is a character of the escape and no run, as the grammar reads it, and a space written right behind the digits closes the escape, so the run is written behind it
+			description: `a hexadecimal escape ending the selector, closed by a space, and the run of one space behind it`,
+			code: `a\\31  { b: c }`,
+		},
+		{
 			description: `a blockless at-rule, which has no opening brace to space in front of`,
 			code: `@import url(x.css)`,
 		},
@@ -44,6 +49,14 @@ testRule({
 			fixed: `a\\  { b: c }`,
 			line: 1,
 			column: 3,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `a hexadecimal escape ending the selector right in front of the brace, which the written space would close`,
+			code: `a\\31{ b: c }`,
+			fixed: `a\\31  { b: c }`,
+			line: 1,
+			column: 4,
 			message: messages.expectedBefore(),
 		},
 		{
@@ -228,6 +241,10 @@ testRule({
 
 	accept: [
 		{
+			description: `a hexadecimal escape ending the selector, closed by the one space in front of the brace`,
+			code: `a\\31 { b: c }`,
+		},
+		{
 			// Pins the run in front of the brace read over the copy with the escapes masked
 			description: `a backslash ending the selector in front of a space, which spells a character of the selector and no run`,
 			code: `a\\ { b: c }`,
@@ -243,6 +260,14 @@ testRule({
 	],
 
 	reject: [
+		{
+			description: `a hexadecimal escape ending the selector, closed by a space, and the run of one space behind it`,
+			code: `a\\31  { b: c }`,
+			fixed: `a\\31 { b: c }`,
+			line: 1,
+			column: 6,
+			message: messages.rejectedBefore(),
+		},
 		{
 			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the selector in front of a line break and the brace, which the write would turn into an escaped brace the file no longer parses, so the warning stands`,

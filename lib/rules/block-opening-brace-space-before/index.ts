@@ -1,7 +1,7 @@
 import type { AtRule, Rule } from "postcss"
 import stylelint from "stylelint"
 
-import { TRAILING_WHITESPACE } from "../../regexps.ts"
+import { OPENS_WITH_SPACE_OR_TAB, TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { beforeBlockString } from "../../utils/beforeBlockString/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
@@ -11,7 +11,7 @@ import { findEscapeSpans } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
-import { escapeHeadLength, maskEscapes } from "../../utils/maskEscapes/index.ts"
+import { escapeClosesOnWrittenSpace, escapeHeadLength, maskEscapes } from "../../utils/maskEscapes/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -118,10 +118,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let between = statement.raws.between ?? ``
 			let escapes = findEscapeSpans(source, syntax.inlineComments(statement, result))
-			// An escaped space is a character of the head and no run at all, so the run is read over the copy with the escapes masked; PostCSS ends the head at the backslash and files the whitespace an escape covering one spells in `raws.between`, which the write keeps in front of the run it rewrites
+			// An escaped space is a character of the head and no run at all, and so is the whitespace closing a hexadecimal escape, so the run is read over the copy with the escapes masked; PostCSS ends the head at the backslash and files the whitespace an escape covering one spells in `raws.between`, and files the space closing a hexadecimal escape in the head and a tab closing one in the raw, which the write keeps in front of the run it rewrites
 			let escapedHead = between.slice(0, escapeHeadLength(source, escapes, source.length - between.length))
 			let run = between.slice(escapedHead.length)
-			let maskedSource = maskEscapes(source, escapes, true)
+			let maskedSource = maskEscapes(source, escapes)
 
 			checker.before({
 				source: maskedSource,
@@ -131,6 +131,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					// Comments in the run survive
 					let beforeWhitespace = run.replace(TRAILING_WHITESPACE, ``)
 					let written = primary.startsWith(`always`) ? `${beforeWhitespace} ` : beforeWhitespace
+
+					// A space written right behind the digits of a hexadecimal escape closes the escape and is no run, so the run is written behind such a space
+					if (OPENS_WITH_SPACE_OR_TAB.test(written) && escapeClosesOnWrittenSpace(source, escapes, source.length - run.length)) written = ` ${written}`
 					// Behind an inline comment the brace cannot join its line, so neither option is satisfiable; the warning stands unfixed. The parser may keep the comment in the selector or params, so they are asked too
 					let isFixable = !syntax.endsWithInlineComment(`${syntax.read(statement)}${between}`, syntax.inlineComments(statement, result))
 						// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎{` would come out as `a\{`, which the parser no longer reads as a block, or `a\ {`, an escaped space

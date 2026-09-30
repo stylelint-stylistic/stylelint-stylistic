@@ -292,6 +292,9 @@ export const OPENS_WITH_QUOTE = /^\s*["']/u
 /** A quotation mark or tokenizer whitespace opening the text; behind either the tokenizer of PostCSS and `postcss-less` reads no `url(`'s parentheses as one token, while `postcss-scss`'s passes over the whitespace. */
 export const OPENS_WITH_QUOTE_OR_CSS_WHITESPACE = /^[\t\n\f\r "']/u
 
+/** A leading space or tab. */
+export const OPENS_WITH_SPACE_OR_TAB = /^[ \t]/u
+
 /** A leading tag, whitespace aside. */
 export const OPENS_WITH_TAG = /^\s*</u
 

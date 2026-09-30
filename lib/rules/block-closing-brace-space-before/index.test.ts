@@ -1,3 +1,8 @@
+import stylelint from "stylelint"
+import { expect, it } from "vitest"
+
+import { pick } from "../../../vitest.helpers.ts"
+import plugins from "../../index.ts"
 import { messages as openingNewlineBeforeMessages } from "../block-opening-brace-newline-before/index.ts"
 
 import { messages, ruleName } from "./index.ts"
@@ -12,6 +17,11 @@ testRule({
 		{
 			description: `a space in front of the closing brace`,
 			code: `a { color: pink; }`,
+		},
+		{
+			// The whitespace closing a hexadecimal escape is a character of the escape and no run, as the grammar reads it, and a space written right behind the digits closes the escape, so the run is written behind it
+			description: `a hexadecimal escape ending the value, closed by a space, and the run of one space behind it`,
+			code: `a { b: \\31  }`,
 		},
 		{
 			description: `two blocks, each with the space in front of its brace`,
@@ -41,6 +51,22 @@ testRule({
 			description: `a backslash ending the value in front of a space, which spells a character of the value, leaving no run for the option`,
 			code: `a { b: c\\ }`,
 			fixed: `a { b: c\\  }`,
+			line: 1,
+			column: 10,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `a hexadecimal escape ending the value, closed by the one space in front of the brace, which leaves no run for the option`,
+			code: `a { b: \\31 }`,
+			fixed: `a { b: \\31  }`,
+			line: 1,
+			column: 11,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `a hexadecimal escape ending the value right in front of the brace, which the written space would close`,
+			code: `a { b: \\31}`,
+			fixed: `a { b: \\31  }`,
 			line: 1,
 			column: 10,
 			message: messages.expectedBefore(),
@@ -220,6 +246,18 @@ testRule({
 			code: `a { b: c\\ }`,
 		},
 		{
+			description: `a hexadecimal escape ending the value, closed by the one space in front of the brace`,
+			code: `a { b: \\31 }`,
+		},
+		{
+			description: `the same escape closed by a tab, which PostCSS files in the raw`,
+			code: `a { b: \\31\t}`,
+		},
+		{
+			description: `the same escape ending a custom property's value, whose closing space the write reaches`,
+			code: `a { --b: \\31 }`,
+		},
+		{
 			description: `a brace abutting the declaration`,
 			code: `a { color: pink;}`,
 		},
@@ -242,6 +280,14 @@ testRule({
 	],
 
 	reject: [
+		{
+			description: `a hexadecimal escape ending the value, closed by a space, and the run of one space behind it`,
+			code: `a { b: \\31  }`,
+			fixed: `a { b: \\31 }`,
+			line: 1,
+			column: 12,
+			message: messages.rejectedBefore(),
+		},
 		{
 			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the value in front of a line break and the brace, which the write would turn into an escaped brace the file no longer parses, so the warning stands`,
@@ -957,4 +1003,31 @@ testRule({
 			],
 		},
 	],
+})
+
+/**
+ * Fixes a stylesheet under two rules listed in the given order and re-lints the output.
+ * @param code - The stylesheet.
+ * @param rules - The rules, in configuration order.
+ * @returns The fixed stylesheet and the number of warnings left.
+ */
+async function fixUnder (code: string, rules: Record<string, string>): Promise<{ fixed: string | undefined, left: number }> {
+	let fixed = await stylelint.lint({ code, config: { plugins, rules }, fix: true })
+	let again = await stylelint.lint({ code: fixed.code ?? ``, config: { plugins, rules } })
+
+	return { fixed: fixed.code, left: pick(again.results).warnings.length }
+}
+
+// The semicolon `declaration-block-trailing-semicolon` writes behind the value closes the escape, so the rule asks whether the written space closes it over the text as the neighbor leaves it, and the two orders settle on one file in one pass
+it(`writes the space behind the semicolon a live \`declaration-block-trailing-semicolon: always\` writes behind a hexadecimal escape, in either order`, async () => {
+	let outputs = await Promise.all([fixUnder(`a { b: \\31}`, { [ruleName]: `always`, "@stylistic/declaration-block-trailing-semicolon": `always` }), fixUnder(`a { b: \\31}`, { "@stylistic/declaration-block-trailing-semicolon": `always`, [ruleName]: `always` })])
+
+	expect(outputs).toEqual([{ fixed: `a { b: \\31; }`, left: 0 }, { fixed: `a { b: \\31; }`, left: 0 }])
+})
+
+// A live `never` copy of that rule takes the semicolon with the whitespace in front of it, so the space behind the semicolon closes the escape once it is gone and is no run to take away, in either order
+it(`leaves the space a live \`declaration-block-trailing-semicolon: never\` makes the escape's closing space, in either order`, async () => {
+	let outputs = await Promise.all([fixUnder(`a { b: \\31; }`, { [ruleName]: `never`, "@stylistic/declaration-block-trailing-semicolon": `never` }), fixUnder(`a { b: \\31; }`, { "@stylistic/declaration-block-trailing-semicolon": `never`, [ruleName]: `never` })])
+
+	expect(outputs).toEqual([{ fixed: `a { b: \\31 }`, left: 0 }, { fixed: `a { b: \\31 }`, left: 0 }])
 })

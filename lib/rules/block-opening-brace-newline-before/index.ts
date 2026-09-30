@@ -1,7 +1,7 @@
 import type { AtRule, Rule } from "postcss"
 import stylelint from "stylelint"
 
-import { TRAILING_SPACES_AND_TABS, TRAILING_WHITESPACE } from "../../regexps.ts"
+import { LEADING_LINE_BREAK, TRAILING_SPACES_AND_TABS, TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { beforeBlockString } from "../../utils/beforeBlockString/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
@@ -12,7 +12,7 @@ import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
-import { escapeHeadLength, maskEscapes } from "../../utils/maskEscapes/index.ts"
+import { escapeHeadLength, hexadecimalTerminatorAtHead, maskEscapes } from "../../utils/maskEscapes/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
@@ -98,10 +98,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			let between = typeof statement.raws.between === `string` ? statement.raws.between : ``
 			let escapes = findEscapeSpans(source, syntax.inlineComments(statement, result))
-			// An escaped space is a character of the head and no run at all, so the run is read over the copy with the escapes masked; PostCSS ends the head at the backslash and files the whitespace an escape covering one spells in `raws.between`, which the write keeps in front of the run it rewrites
+			// An escaped space is a character of the head and no run at all, and so is the whitespace closing a hexadecimal escape but for a break, so the run is read over the copy with the escapes masked; PostCSS ends the head at the backslash and files the whitespace an escape covering one spells in `raws.between`, and files the space closing a hexadecimal escape in the head and a tab closing one in the raw, which the write keeps in front of the run it rewrites
 			let escapedHead = between.slice(0, escapeHeadLength(source, escapes, source.length - between.length))
 			let run = between.slice(escapedHead.length)
-			let maskedSource = maskEscapes(source, escapes, true)
+			let maskedSource = maskEscapes(source, escapes)
 			// The parser may keep the comment in the selector or params, so they are asked too
 			let headEndsWithInlineComment = syntax.endsWithInlineComment(`${syntax.read(statement)}${between}`, syntax.inlineComments(statement, result))
 
@@ -127,7 +127,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 							fix: (): void => {
 								if (typeof statement.raws.between !== `string`) return
 
-								statement.raws.between = `${escapedHead}${written}`
+								// A break written behind the head closes a hexadecimal escape as the whitespace at the head does, which would then trail its line, so the break takes its place
+								statement.raws.between = `${LEADING_LINE_BREAK.test(written) ? escapedHead.slice(hexadecimalTerminatorAtHead(source, escapes, source.length - between.length)) : escapedHead}${written}`
 							},
 						}),
 					})

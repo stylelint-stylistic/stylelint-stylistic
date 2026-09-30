@@ -1,11 +1,11 @@
 import type { ChildNode, Container } from "postcss"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { INLINE_COMMENT_BREAK, TRAILING_WHITESPACE } from "../../regexps.ts"
+import { INLINE_COMMENT_BREAK, OPENS_WITH_SPACE_OR_TAB, TRAILING_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
-import { blockTailTaken, getBlockTailAsClosed, runStandsBehindTheSemicolon, setBlockTailAsClosed } from "../../utils/blockTail/index.ts"
+import { blockTailTaken, blockTextAsClosed, getBlockTailAsClosed, runStandsBehindTheSemicolon, setBlockTailAsClosed } from "../../utils/blockTail/index.ts"
 import { carriesABlock } from "../../utils/carriesABlock/index.ts"
 import { closingBraceRunWrites } from "../../utils/closingBraceRunWrites/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -16,7 +16,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
 import { lastNodeHoldsTheBlockAfter } from "../../utils/lastNodeHoldsTheBlockAfter/index.ts"
-import { escapeHeadLength, maskEscapes } from "../../utils/maskEscapes/index.ts"
+import { escapeClosesOnWrittenSpace, escapeHeadLength, maskEscapes } from "../../utils/maskEscapes/index.ts"
 import { indexInFrontOfTheBrace } from "../../utils/rawSpans/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -108,11 +108,13 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// The text is read through the brace, since the printed copy ends on a stray `raws.ownSemicolon`
 			let index = indexInFrontOfTheBrace(statement, text)
 
-			let escapes = findEscapeSpans(source, syntax.inlineComments(statement, result))
-			// An escaped space is the last character of the block's final node and no run at all, so the run is read over the copy with the escapes masked; PostCSS ends the node at the backslash and files the whitespace an escape covering one spells in the raw behind it, which the write keeps in front of the run it rewrites
+			// Asked over the text as the semicolon rule leaves it, since the semicolon it writes or takes between the value and the run decides whether the run's first whitespace character closes an escape ending the value
+			let closed = blockTextAsClosed(syntax, statement, result, source, blockAfter)
+			let escapes = findEscapeSpans(closed.text, syntax.inlineComments(statement, result))
+			// An escaped space is the last character of the block's final node and no run at all, and so is the whitespace closing a hexadecimal escape, so the run is read over the copy with the escapes masked; PostCSS ends the node at the backslash and files the whitespace an escape covering one spells in the raw behind it, and files the space closing a hexadecimal escape in the node and a tab closing one in the raw, which the write keeps in front of the run it rewrites
 			// Under `postcss-less` the raw may open with more of a `//` comment a semicolon of its text closed the last node in, and the run opens at the break closing it, which the write has to keep
 			let commentHead = syntax.commentTextHead(statement, `after`, result)
-			let escapedHead = commentHead ?? blockAfter.slice(0, escapeHeadLength(source, escapes, source.length - 1 - blockAfter.length))
+			let escapedHead = commentHead ?? blockAfter.slice(0, escapeHeadLength(closed.text, escapes, closed.index))
 			let run = blockAfter.slice(escapedHead.length)
 			// As the neighbors taking stray semicolons out leave it, whichever side of them this rule is listed; a semicolon staying is a character in front of the run
 			let taken = new Set([...blockTailTaken(statement, result)].map((at) => at - escapedHead.length).filter((at) => at >= 0))
@@ -131,16 +133,20 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// The semicolons the neighbors take stay for them to take, the run written as they leave it
 			let written = writtenAsLeft((standing) => writes.space(primary, standing), run, taken)
 
+			// A space written right behind the digits of a hexadecimal escape closes the escape and is no run, so the run is written behind such a space
+			if (OPENS_WITH_SPACE_OR_TAB.test(written) && escapeClosesOnWrittenSpace(closed.text, escapes, closed.index + escapedHead.length)) written = ` ${written}`
+
 			if (isFixable && commentHead !== null) isFixable = INLINE_COMMENT_BREAK.test(written)
 
 			// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `c \⏎}` would come out as `c \}`, which the parser reads no block's end in, or `c \ }`, an escaped space
 			if (isFixable) isFixable = editKeepsEscapedCharacter(source, { start: source.length - 1 - run.length, end: source.length - 1, text: written })
 
 			// Where the run stands behind the semicolon a live `always` writes, that semicolon is what the run follows
-			let front = `${source.slice(0, source.length - 1 - run.length)}${runStandsBehindTheSemicolon(syntax, statement, result) ? `;` : ``}`
+			// The text as closed holds the semicolon already where it was read; the standing text gets it here
+			let front = `${closed.text.slice(0, closed.index + escapedHead.length)}${closed.text === source && runStandsBehindTheSemicolon(syntax, statement, result) ? `;` : ``}`
 
 			checker.before({
-				source: maskEscapes(`${front}${runLeft}}`, escapes, true),
+				source: maskEscapes(`${front}${runLeft}}`, escapes),
 				index: front.length + runLeft.length,
 				err: (msg) => {
 					report({

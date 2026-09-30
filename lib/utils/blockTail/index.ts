@@ -3,7 +3,7 @@ import type { PostcssResult } from "stylelint"
 
 import { EVERY_SEMICOLON } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
-import { trailingSemicolonAsked } from "../closedBySemicolon/index.ts"
+import { closedBySemicolon, trailingSemicolonAsked, valueAsClosed } from "../closedBySemicolon/index.ts"
 import { getBlockAfter } from "../getBlockAfter/index.ts"
 import { lastNodeHoldsTheBlockAfter } from "../lastNodeHoldsTheBlockAfter/index.ts"
 import { printsOnlyWhitespaceBehindTheColon } from "../runHeldForTheBlock/index.ts"
@@ -112,4 +112,35 @@ export function blockTailTaken (statement: Container, result: PostcssResult): Se
 	let shift = own.length
 
 	return new Set([...straySemicolonsTakenOwn(statement.last, result), ...[...after].map((index) => index + shift)])
+}
+
+/**
+ * Reads the text a brace rule asks its escape questions over as `declaration-block-trailing-semicolon` will leave it, where the block's last node is a declaration and the text ends with its value, its semicolon and the tail, or with the value holding the tail: a live `never` copy takes the semicolon with the whitespace in front of it, so the first whitespace character of the tail closes a hexadecimal escape ending the value, and a live `always` copy writes the semicolon behind the value, which closes the escape and leaves the tail a run whole. Any other text stands as it is, the tail where it is.
+ * @param syntax - The syntax the rule is built over, which reads the value.
+ * @param statement - The block's statement.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @param text - The text the rule reads, ending with the tail and the closing brace.
+ * @param tail - The run in front of the brace, as {@link getBlockTailAsClosed} reads it.
+ * @returns The text as left, and where the tail opens in it.
+ */
+export function blockTextAsClosed (syntax: Syntax, statement: Container, result: PostcssResult, text: string, tail: string): { text: string, index: number } {
+	let { last } = statement
+	let standing = { text, index: text.length - 1 - tail.length }
+
+	if (!last || !isDeclaration(last) || last.important) return standing
+
+	// A custom property closing the block without a semicolon holds the tail in its value
+	let held = lastNodeHoldsTheBlockAfter(statement)
+	let value = syntax.read(last)
+	let suffix = held ? `${value}}` : `${value}${statement.raws.semicolon ? `;` : ``}${tail}}`
+
+	if (!text.endsWith(suffix)) return standing
+
+	let closedValue = valueAsClosed(syntax, last, result)
+
+	if (held && closedValue.endsWith(tail)) closedValue = closedValue.slice(0, closedValue.length - tail.length)
+
+	let head = `${text.slice(0, text.length - suffix.length)}${closedValue}${closedBySemicolon(last, result) ? `;` : ``}`
+
+	return { text: `${head}${tail}}`, index: head.length }
 }

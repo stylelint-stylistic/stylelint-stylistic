@@ -354,6 +354,11 @@ testRule({
 
 	accept: [
 		{
+			// The whitespace closing a hexadecimal escape is a character of the escape and no run, as the grammar reads it
+			description: `a hexadecimal escape ending the selector, closed by the one space in front of the brace`,
+			code: `a\\31 { b: c }`,
+		},
+		{
 			// Pins the run in front of the brace read over the copy with the escapes masked
 			description: `a backslash ending the selector in front of a space, which spells a character of the selector and no run`,
 			code: `a\\ { b: c }`,
