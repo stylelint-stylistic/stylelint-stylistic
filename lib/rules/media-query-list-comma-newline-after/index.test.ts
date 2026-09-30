@@ -288,6 +288,24 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
+			// The name is one word with the comma in front of it, so the parentheses are one plain token whose `[` a break inside would leave open; the break behind that comma, written by the same run, parts the name off, the next `(` pops it and the parentheses are an address's token, where the break inside is free: both are written in one run
+			description: `a comma glued to the name of a bare address parted from its parentheses by a space, which hold a square bracket nothing closes and a comma`,
+			code: `@media a,url (b[c,d) g {}`,
+			fixed: `@media a,\nurl (b[c,\nd) g {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 18,
+					message: messages.expectedAfter(),
+				},
+			],
+		},
+		{
 			description: `parentheses holding a brace nothing closes, which the parser reads as a group inside an at-rule's params too, refused likewise`,
 			code: `@media a (a,{b) {}`,
 			fixed: `@media a (a,{b) {}`,

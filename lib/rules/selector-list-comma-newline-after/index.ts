@@ -85,7 +85,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// A comma opening the selector opens the list with an empty item, and the run in front of it is among the list's lines, as for the other rules of the list
 			let lineCheckStr = listLines(ruleNode, selector, checks[0]?.commaIndex === 0, result)
 
-			let problems: { message: string, sourceIndex: number, fixIndex: number, edits: Edit[] | undefined }[] = []
+			let problems: { message: string, sourceIndex: number, fixIndex: number, edits: Edit[] | undefined, holds: (edited: string, move: (index: number) => number) => boolean }[] = []
 
 			for (let { commaIndex, checkIndex } of checks) {
 				checker.afterOneOnly({
@@ -97,18 +97,27 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						let fixIndex = checkIndex + 1
 						let runEnd = fixIndex + (selector.slice(fixIndex).length - selector.slice(fixIndex).trimStart().length)
 						let closesInlineComment = primary.startsWith(`never`) && copies.comments.some((inlineComment) => fixIndex <= inlineComment.endIndex && inlineComment.endIndex < runEnd)
-						// A break written into parentheses PostCSS holds as one token other than an address's makes them code, and a `[` nothing closes inside is then a group the parser finds open and the file stops parsing
-						let opensAGroup = primary.startsWith(`always`) && breakAtRereadsParentheses(selector, commaIndex, false, syntax.inlineComments(ruleNode, result))
+
+						/**
+						 * Asks whether the break may be given over the text the rule's other writes leave. A break written into parentheses PostCSS holds as one token other than an address's makes them code, and a `[` nothing closes inside is then a group the parser finds open and the file stops parsing: the break is refused there and the warning stands. Asked over that text rather than the standing one, since a break behind the comma in front of `url` parts the name from the comma and makes the parentheses an address's token, where the break inside is free.
+						 * @param edited - That text.
+						 * @param move - Moves an index of the selector into it.
+						 * @returns True where the break may be given.
+						 */
+						function holds (edited: string, move: (index: number) => number): boolean {
+							return !primary.startsWith(`always`) || !breakAtRereadsParentheses(edited, move(commaIndex), false, syntax.inlineComments(ruleNode, result))
+						}
+
 						// The break written behind the comma or the run taken out from there can part the name of a bare address from the comma or join it to the comma, and a break written into parentheses PostCSS holds as one plain token makes them code, so that a later `(` pops another word than `url` or pops `url` where it popped another; the writes of the rule are asked together whether PostCSS then reads the parentheses of an address the other way
 						let edit = primary.startsWith(`always`) ? { start: fixIndex, end: fixIndex, text: getLineBreak(root, result) } : { start: fixIndex, end: fixIndex + runBehind(selector, checkIndex).length, text: `` }
 
-						problems.push({ message: m, sourceIndex: copies.toSourceIndex(commaIndex), fixIndex, edits: closesInlineComment || opensAGroup ? undefined : [edit] })
+						problems.push({ message: m, sourceIndex: copies.toSourceIndex(commaIndex), fixIndex, edits: closesInlineComment ? undefined : [edit], holds })
 					},
 				})
 			}
 
 			// Stylelint counts a fixer as applied whatever it does, so which fixes are given is settled before the reports, and together
-			let given = writesKeepingAddresses(selector, problems.map(({ edits, sourceIndex }) => ({ edits, index: sourceIndex })), syntax.inlineComments(ruleNode, result), ruleNode, result, ruleName)
+			let given = writesKeepingAddresses(selector, problems.map(({ edits, holds, sourceIndex }) => ({ edits, holds, index: sourceIndex })), syntax.inlineComments(ruleNode, result), ruleNode, result, ruleName)
 
 			for (let [problemIndex, { message, sourceIndex, fixIndex }] of problems.entries()) {
 				report({

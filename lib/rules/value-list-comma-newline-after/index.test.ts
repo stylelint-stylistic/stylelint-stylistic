@@ -210,6 +210,41 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
+			// The name is one word with the comma in front of it, so the parentheses are one plain token whose `[` a break inside would leave open; the break behind that comma, written by the same run, parts the name off, the next `(` pops it and the parentheses are an address's token, where the break inside is free: both are written in one run
+			description: `a comma glued to the name of a bare address parted from its parentheses by a space, which hold a square bracket nothing closes and a comma`,
+			code: `a { b: 1,url (b[c,d) g; }`,
+			fixed: `a { b: 1,\nurl (b[c,\nd) g; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 18,
+					message: messages.expectedAfter(),
+				},
+			],
+		},
+		{
+			description: `the same in a custom property's value, whose parentheses hold a brace nothing closes`,
+			code: `a { --b: 1,url (b{c,d) g; }`,
+			fixed: `a { --b: 1,\nurl (b{c,\nd) g; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 11,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 20,
+					message: messages.expectedAfter(),
+				},
+			],
+		},
+		{
 			description: `the same parentheses behind the name in upper case, which the tokenizer pops as no address, so they are one plain token the break would make code, and the break is refused`,
 			code: `a { b: URL (b[c,d) 2px; }`,
 			fixed: `a { b: URL (b[c,d) 2px; }`,

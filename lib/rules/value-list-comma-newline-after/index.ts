@@ -61,14 +61,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.afterOneOnly,
 			checkedRuleName: ruleName,
 			// Declined here, since Stylelint counts a fixer as applied whatever it does: a comma in the property name is out of reach, one opening the value is not
-			isFixable: (declNode, index, declString) => {
-				if (index < declarationValueIndex(declNode)) return false
-
-				// A break written into parentheses PostCSS holds as one token other than an address's makes them code, and a `[` nothing closes inside, or such a `{` in a custom property's value, is then a group the parser finds open and the file stops parsing: the break is refused there and the warning stands
-				if (primary.startsWith(`always`) && breakAtRereadsParentheses(declString, index, isCustomProperty(declNode.prop), syntax.inlineComments(declNode, result))) return false
-
-				return true
-			},
+			isFixable: (declNode, index) => index >= declarationValueIndex(declNode),
+			// A break written into parentheses PostCSS holds as one token other than an address's makes them code, and a `[` nothing closes inside, or such a `{` in a custom property's value, is then a group the parser finds open and the file stops parsing: the break is refused there and the warning stands. Asked over the text the declaration's other writes leave, since a break behind the comma in front of `url` parts the name from the comma and makes the parentheses an address's token, where the break inside is free
+			holds: (declNode, index) => (edited, move): boolean => !primary.startsWith(`always`) || !breakAtRereadsParentheses(edited, move(index), isCustomProperty(declNode.prop), syntax.inlineComments(declNode, result)),
 			// The break written behind the comma or the run taken out from there can part the name of a bare address from the comma or join it to the comma, and a break written into parentheses PostCSS holds as one plain token makes them code, so that a later `(` pops another word than `url` or pops `url` where it popped another; the writes of the declaration are asked together whether PostCSS then reads the parentheses of an address the other way
 			edits: (declNode, index, declString) => [primary.startsWith(`always`) ? { start: index + 1, end: index + 1, text: getLineBreak(root, result) } : { start: index + 1, end: index + 1 + runBehind(declString, index).length, text: `` }],
 			fix: (declNode, index) => {
