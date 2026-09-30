@@ -144,6 +144,24 @@ testRule({
 
 	reject: [
 		{
+			// The warning is placed where the character is, counted from where the attribute's print opens rather than from the index the parser gives it, which stands behind the whitespace the print opens on
+			description: `an attribute inside the parentheses of a negation behind a space, whose print the parser opens on that space`,
+			code: `a:not( [t='y'] ) {}`,
+			fixed: `a:not( [ t='y' ] ) {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 13,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
 			// The search took an escaped opening bracket in the name for a bracket, and the fix wrote a space into the name
 			description: `an escaped opening bracket in the name, which is a character of the name and no bracket`,
 			code: `[a\\[b=c] {}`,
@@ -188,12 +206,12 @@ testRule({
 			warnings: [
 				{
 					line: 1,
-					column: 14,
+					column: 13,
 					message: messages.expectedOpening,
 				},
 				{
 					line: 1,
-					column: 16,
+					column: 15,
 					message: messages.expectedClosing,
 				},
 			],
@@ -850,6 +868,31 @@ testRule({
 	],
 
 	reject: [
+		{
+			description: `an attribute inside the parentheses of a negation behind a break and a tab, whose print the parser opens on them`,
+			code: `
+				a:not(
+					[ t='y' ]
+				) {}
+			`,
+			fixed: `
+				a:not(
+					[t='y']
+				) {}
+			`,
+			warnings: [
+				{
+					line: 2,
+					column: 3,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 2,
+					column: 9,
+					message: messages.rejectedClosing,
+				},
+			],
+		},
 		{
 			// The search took an escaped opening bracket in the value for a bracket, and the fix took the closing bracket away with the run in front of it
 			description: `an escaped opening bracket in the value, which is a character of the value and no bracket`,

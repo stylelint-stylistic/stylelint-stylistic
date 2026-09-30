@@ -18,12 +18,12 @@ testRule({
 			warnings: [
 				{
 					line: 2,
-					column: 9,
+					column: 8,
 					message: messages.rejectedOpening,
 				},
 				{
 					line: 2,
-					column: 15,
+					column: 14,
 					message: messages.rejectedClosing,
 				},
 			],

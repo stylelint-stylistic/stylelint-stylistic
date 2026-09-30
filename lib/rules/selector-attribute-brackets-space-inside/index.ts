@@ -68,7 +68,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			selectorTree.walkAttributes((attributeNode) => {
 				let attributeSelectorString = attributeNode.toString()
-				// The print opens on the whitespace the node carries, which stands in front of the index the parser gives it
+				// The print opens on the whitespace the node carries, which stands in front of the index the parser gives it; the warnings are counted from where the print opens, as the edits are
 				let attributeStart = attributeNode.sourceIndex - attributeSelectorString.indexOf(`[`)
 
 				// The parser reads a backslash in front of a tab as no escape and files what follows into parts it prints back in another order, so `[a=\⇥\⇥b]` comes back as `[a=\⇥b⇥]`: an attribute whose parts do not spell the source is passed over, since every edit here is measured in them
@@ -79,21 +79,20 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				styleSearch({ source: searchString, target: `[` }, (match) => {
 					let nextCharIsSpace = attributeSelectorString[match.startIndex + 1] === ` `
-					let index = attributeNode.sourceIndex + match.startIndex + 1
 					let openIndex = attributeStart + match.startIndex + 1
 					// No escape reaches over the bracket, so the run behind it opens on the backslash of one and never covers a character of the attribute
 					let run = runBehind(runString, match.startIndex)
 					let edit = { start: openIndex, end: openIndex + run.length, text: written }
 
-					if (nextCharIsSpace && primary === `never`) complain(messages.rejectedOpening, index, edit)
+					if (nextCharIsSpace && primary === `never`) complain(messages.rejectedOpening, openIndex, edit)
 
-					if (!nextCharIsSpace && primary === `always`) complain(messages.expectedOpening, index, edit)
+					if (!nextCharIsSpace && primary === `always`) complain(messages.expectedOpening, openIndex, edit)
 				})
 
 				styleSearch({ source: searchString, target: `]` }, (match) => {
 					let prevCharIsSpace = runString[match.startIndex - 1] === ` `
-					let index = attributeNode.sourceIndex + match.startIndex - 1
 					let closeIndex = attributeStart + match.startIndex
+					let index = closeIndex - 1
 					let run = runInFront(runString, match.startIndex)
 					let edit = { start: closeIndex - run.length, end: closeIndex, text: written }
 					// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `[a=b\⏎]` would come out as `[a=b\ ]`, an escaped space, so the warning stands with no fix
