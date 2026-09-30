@@ -767,6 +767,11 @@ testRule({
 
 	accept: [
 		{
+			autoStripIndent: false,
+			description: `a tab alone on the last line, which a custom property's value holds`,
+			code: `--x: a\n\t`,
+		},
+		{
 			description: `spaces alone on an empty line, which the option lets stand`,
 			code: `a {}\n     \nb {}`,
 		},
@@ -786,6 +791,34 @@ testRule({
 	],
 
 	reject: [
+		{
+			// The value keeps the whitespace behind it, the last line included, and the trim of the value's end passes that line over as the check does
+			autoStripIndent: false,
+			description: `spaces at the end of a custom property's value in front of a last line of nothing but a tab, which the value holds`,
+			code: `--x: a  \n\t`,
+			fixed: `--x: a\n\t`,
+			line: 1,
+			column: 8,
+			message: messages.rejected,
+		},
+		{
+			autoStripIndent: false,
+			description: `the same behind the value's flag, whose raw holds the line`,
+			code: `--x: a !important  \n\t`,
+			fixed: `--x: a !important\n\t`,
+			line: 1,
+			column: 19,
+			message: messages.rejected,
+		},
+		{
+			autoStripIndent: false,
+			description: `a value of whitespace alone whose last line is a tab, which stays where the run behind the colon is trimmed`,
+			code: `--x:  \n\t`,
+			fixed: `--x:\n\t`,
+			line: 1,
+			column: 6,
+			message: messages.rejected,
+		},
 		{
 			// The fix the other warning hands over passes over a last line of nothing but whitespace, as the check does
 			autoStripIndent: false,

@@ -1,7 +1,7 @@
 import type { Root } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { LINE_BREAK, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
+import { LINE_BREAK, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE, TRAILING_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { trailingSemicolonAsked } from "../../utils/closedBySemicolon/index.ts"
 import { declarationEndsTheStylesheet } from "../../utils/declarationEndsTheStylesheet/index.ts"
@@ -25,13 +25,16 @@ const RULES_BEHIND_THE_COLON: Record<Whitespace, NeighborRule> = {
 }
 
 /**
- * Trims the spaces and tabs a text ends on, but for one a backslash escapes, which is a character of the word in front of it.
+ * Trims the spaces and tabs a text ends on, but for one a backslash escapes, which is a character of the word in front of it, and under `ignore: empty-lines` for a last line of nothing but them, which the check passes over.
  * @param text - The text.
  * @param readsEscapes - Whether the text holds its backslashes as the stylesheet reads them.
+ * @param keepsAnEmptyLastLine - Whether a last line of whitespace alone is left as it stands.
  * @returns The trimmed text.
  */
-function trimTheEnd (text: string, readsEscapes: boolean): string {
+function trimTheEnd (text: string, readsEscapes: boolean, keepsAnEmptyLastLine: boolean): string {
 	let trimmed = text.replace(TRAILING_SPACES_AND_TABS, ``)
+
+	if (keepsAnEmptyLastLine && trimmed.length < text.length && TRAILING_LINE_BREAK.test(trimmed)) return text
 
 	return readsEscapes && trimmed.length < text.length && isEscaped(text, trimmed.length, 0) ? text.slice(0, trimmed.length + 1) : trimmed
 }
@@ -41,8 +44,9 @@ function trimTheEnd (text: string, readsEscapes: boolean): string {
  * @param syntax - The syntax the rule is built over, which reads and writes the value.
  * @param root - The root.
  * @param result - The Stylelint result, which holds the configuration.
+ * @param ignoreEmptyLines - Whether a line of whitespace alone is passed over, as the check passes it under `ignore: empty-lines`.
  */
-export function trimTheLastNodesEnd (syntax: Syntax, root: Root, result: PostcssResult): void {
+export function trimTheLastNodesEnd (syntax: Syntax, root: Root, result: PostcssResult, ignoreEmptyLines: boolean): void {
 	let { last } = root
 
 	if (!last || !isDeclaration(last) || root.raws.semicolon || (root.raws.after && !OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(root.raws.after)) || (trailingSemicolonAsked(last, result) && runHeldForTheBlock(syntax, last, result) === ``)) return
@@ -50,13 +54,13 @@ export function trimTheLastNodesEnd (syntax: Syntax, root: Root, result: Postcss
 	let readsEscapes = syntax.readsBackslashesAsWritten(root)
 
 	if (typeof last.raws.important === `string`) {
-		last.raws.important = trimTheEnd(last.raws.important, readsEscapes)
+		last.raws.important = trimTheEnd(last.raws.important, readsEscapes, ignoreEmptyLines)
 
 		return
 	}
 
 	let value = syntax.read(last)
-	let trimmed = trimTheEnd(value, readsEscapes)
+	let trimmed = trimTheEnd(value, readsEscapes, ignoreEmptyLines)
 
 	// A value of nothing but that whitespace is the run behind the colon, which the colon's rules write where they read it; written here as they ask, so the order of the rules does not decide the file. Where no break stands behind the colon yet, `declaration-colon-newline-after` breaks it; `declaration-colon-space-after` passes over a run ending a file, though not one ending an inline `style` attribute
 	if (trimmed === `` && value !== `` && !LINE_BREAK.test(last.raws.between ?? ``)) trimmed = whitespaceAsked(last, result, declarationEndsTheStylesheet(last) ? { newline: RULES_BEHIND_THE_COLON.newline } : RULES_BEHIND_THE_COLON, () => true)

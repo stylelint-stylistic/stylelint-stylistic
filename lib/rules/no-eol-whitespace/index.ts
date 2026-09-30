@@ -295,7 +295,7 @@ function fixRootsEnd (scope: EolScope, isRootFirst: boolean): void {
 	if (scope.closesOnHostLine || scope.kept?.(lastLine)) return
 
 	trimTheLastLine(scope, lead)
-	trimTheLastNodesEnd(scope.syntax, scope.root, scope.result)
+	trimTheLastNodesEnd(scope.syntax, scope.root, scope.result, scope.ignoreEmptyLines)
 }
 
 /**
