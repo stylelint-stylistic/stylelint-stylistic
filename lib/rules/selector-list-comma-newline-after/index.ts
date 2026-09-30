@@ -77,7 +77,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					// A newline alone closes an inline comment, so the one asked for is there
 					if (WHITESPACE_THEN_INLINE_COMMENT.test(nextChars)) return
 
-					// Behind spaces and a block comment, look after the comment
+					// Behind a block comment, with whitespace in front of it or pressed to the comma, look after the comment: the rule asks the break there, so a break written behind the comma would only move the reading past the comment
 					checks.push({ commaIndex: match.startIndex, checkIndex: WHITESPACE_THEN_BLOCK_COMMENT.test(nextChars) ? selector.indexOf(`*/`, match.endIndex) + 1 : match.startIndex })
 				},
 			)

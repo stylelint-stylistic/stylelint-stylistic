@@ -125,6 +125,11 @@ testRule({
 			description: `the same behind tabs and spaces`,
 			code: `a, \t \t /* comment\n       commentline2 */\nb {}`,
 		},
+		// A comment pressed to the comma is looked past as one standing behind whitespace is, so the break behind it is the one asked for
+		{
+			description: `a comment pressed to the comma, with the newline behind it`,
+			code: `a,/* comment */\nb {}`,
+		},
 		{
 			description: `commas inside the argument of a pseudo-class, which are no commas of the list`,
 			code: `a:matches(:hover, :focus) {}`,
@@ -232,6 +237,23 @@ testRule({
 			column: 2,
 			message: messages.expectedAfter(),
 		},
+		// The break is asked behind a comment pressed to the comma, as behind one standing after whitespace, so that no break written in front of the comment moves the next reading past it to a run still without one
+		{
+			description: `a comment pressed to the comma, with no newline behind it`,
+			code: `a,/* comment */b {}`,
+			fixed: `a,/* comment */\nb {}`,
+			line: 1,
+			column: 2,
+			message: messages.expectedAfter(),
+		},
+		{
+			description: `a comment pressed to the comma, with a tab in front of the newline behind it`,
+			code: `a,/* comment */\t\nb {}`,
+			fixed: `a,/* comment */\nb {}`,
+			line: 1,
+			column: 2,
+			message: messages.expectedAfter(),
+		},
 		{
 			description: `no newline after any of the commas of a list of twenty-six`,
 			code: `a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z {\n}`,
@@ -335,6 +357,11 @@ testRule({
 			description: `a single-line list, which this option does not measure`,
 			code: `a, b {}`,
 		},
+		// A comment pressed to the comma of a multi-line list is looked past as one standing behind whitespace is, so the break behind it is the one asked for
+		{
+			description: `a comment pressed to the first comma of a multi-line list, with the newline behind it`,
+			code: `a,/* comment */\nb,\nc {}`,
+		},
 		{
 			description: `a single-line list in front of a multi-line block, which does not make the list multi-line`,
 			code: `a, b {\n}`,
@@ -367,6 +394,15 @@ testRule({
 					message: messages.expectedAfterMultiLine(),
 				},
 			],
+		},
+		// The break is asked behind a comment pressed to the comma of a multi-line list, where a break written in front of the comment would leave the run behind it without one for the next reading
+		{
+			description: `a comment pressed to the first comma of a multi-line list, with no newline behind it`,
+			code: `a,/* comment */ b,\nc {}`,
+			fixed: `a,/* comment */\n b,\nc {}`,
+			line: 1,
+			column: 2,
+			message: messages.expectedAfterMultiLine(),
 		},
 		{
 			description: `no newline after the second comma of a multi-line list`,
@@ -441,6 +477,24 @@ testRule({
 	],
 
 	reject: [
+		// A comment pressed to the comma is looked past as one standing behind whitespace is, so the run behind the comment is the one refused
+		{
+			description: `a comment pressed to the first comma of a multi-line list, with a space behind it`,
+			code: `a,/* comment */ b,\nc {}`,
+			fixed: `a,/* comment */b,c {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 2,
+					message: messages.rejectedAfterMultiLine(),
+				},
+				{
+					line: 1,
+					column: 18,
+					message: messages.rejectedAfterMultiLine(),
+				},
+			],
+		},
 		{
 			description: `a newline after the first comma of a multi-line list`,
 			code: `a,\nb ,c {}`,
@@ -616,4 +670,12 @@ it(`writes the break behind a comma of the list and refuses the one behind a com
 	let again = await stylelint.lint({ code: fixed.code ?? ``, config })
 
 	expect({ fixed: fixed.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column}`) }).toEqual({ fixed: `[a,\n url a (b,c)(b"c)] {}`, left: [`2:10`] })
+})
+
+// `postcss-scss` spells a `//` comment of a selector as a block comment in the raw the rule reads, so one pressed to the comma is looked past as one standing behind a space is, and the break closing it is the one asked for
+it(`accepts a \`//\` comment pressed to the comma under postcss-scss, where the break closing the comment is the one asked for`, async () => {
+	let config = { plugins, rules: { [`@stylistic/scss/selector-list-comma-newline-after`]: `always` } }
+	let fixed = await stylelint.lint({ code: `a,// c\nb {}\n`, config, fix: true, customSyntax: `postcss-scss` })
+
+	expect({ fixed: fixed.code, warnings: pick(fixed.results).warnings.length }).toEqual({ fixed: `a,// c\nb {}\n`, warnings: 0 })
 })

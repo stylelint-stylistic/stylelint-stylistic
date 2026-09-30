@@ -394,8 +394,8 @@ export const WHITESPACE_ONLY = /^[ \t\n\r\f]+$/u
 /** Tokenizer whitespace or nothing; a vertical tab or no-break space is a word. */
 export const WHITESPACE_OR_NOTHING = /^[ \t\n\r\f]*$/u
 
-/** A block comment behind some leading whitespace. */
-export const WHITESPACE_THEN_BLOCK_COMMENT = /^\s+\/\*/u
+/** A leading block comment, whitespace in front of it or none. */
+export const WHITESPACE_THEN_BLOCK_COMMENT = /^\s*\/\*/u
 
 /** A `//` comment behind some leading whitespace. */
 export const WHITESPACE_THEN_INLINE_COMMENT = /^\s+\/\//u
