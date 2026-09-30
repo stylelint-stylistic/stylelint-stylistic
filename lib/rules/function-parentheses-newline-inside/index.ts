@@ -199,7 +199,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Both kinds: the value parser reads a `//` comment as nodes, and closes `/*/` on its own star
 			let comments = syntax.commentSpans(declValue, decl, result)
 			// Quotation marks a comment leaves open are masked so the parser pairs them as the file does
-			let parsedValue = valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(declValue, comments), comments))
+			let parsedValue = valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(declValue, comments), comments, reading))
 
 			// The value parser calls a vertical tab whitespace where the tokenizer calls it a word
 			splitSpaceNodesAtWords(parsedValue.nodes)

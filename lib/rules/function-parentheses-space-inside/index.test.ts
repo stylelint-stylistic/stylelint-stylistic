@@ -64,6 +64,14 @@ testRule({
 
 	reject: [
 		{
+			description: `a bare address holding a pair of parentheses, which the tokenizer and the grammar close on the first, a bad url token ending there, so that the second is the call's, whatever follows`,
+			code: `a { b: fn( url(a(b)) x ); }`,
+			fixed: `a { b: fn( url(a(b) ) x ); }`,
+			line: 1,
+			column: 19,
+			message: messages.expectedClosing,
+		},
+		{
 			// The value parser closes the address on the comment's parenthesis, and the whitespace behind the opening one makes the comment a comment to the tokenizer
 			description: `a call holding an address with a comment with a closing parenthesis, whose closing parenthesis stands against the address's`,
 			code: `a { b: f(url( $a /* ) */)); }`,

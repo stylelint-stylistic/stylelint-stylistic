@@ -1,8 +1,9 @@
 import valueParser from "postcss-value-parser"
 
 import { TOKENIZER_WORD_END } from "../../regexps.ts"
-import { type CommentSpan, findCommentSpanAt, findCommentSpans } from "../findCommentSpans/index.ts"
+import { type CommentReading, type CommentSpan, findCommentSpanAt, findCommentSpans } from "../findCommentSpans/index.ts"
 import type { InlineCommentSpan } from "../findInlineCommentSpans/index.ts"
+import { findUrlTokenEnd } from "../findUrlTokenEnd/index.ts"
 import { isWhitespace } from "../isWhitespace/index.ts"
 import { namesAnAddress } from "../namesAnAddress/index.ts"
 import { readCallName } from "../readCallName/index.ts"
@@ -13,6 +14,9 @@ const MASK = `?`
 
 /** The weld written over the first letter of a `url` a hexadecimal escape stands in front of: a character of a name, so the call keeps a name of the file's length and shape. */
 const WELD = `_`
+
+/** The reading of a tokenizer closing a bare address on the first `)`, which is the parser's own. */
+const FIRST_PARENTHESIS_READING: CommentReading = { spells: false, tokenizes: false, endsOnFormFeed: false }
 
 /** A character to write over, and the one written. */
 type Mask = {
@@ -110,6 +114,33 @@ function findHeldParentheses (text: string, spans: (CommentSpan | InlineCommentS
 	})
 
 	return held
+}
+
+/**
+ * Finds every `)` the parser closes a bare address on short of the one balancing its parentheses, where the tokenizer counts them: `postcss-scss` takes `url(a(b))` as one token to the balancing `)` ({@link findUrlTokenEnd}), and Sass reads the address so, while the parser closes it on the first `)` and hands what follows to the call around as its code and its closing `)`. Nothing comes back under a tokenizer closing the address on the first `)`, which is the parser's own reading and the grammar's, a bad url token ending there. The step in front of the name is the comment holding the character before it, or that character.
+ * @param masked - The value parsed, with the masks written so far.
+ * @param text - The value as spelled, which the tokenizer counts the parentheses of, a masked one among them.
+ * @param spans - The comment spans found in the value, both kinds.
+ * @param reading - Whether the parser reads by a tokenizer of its own.
+ * @returns The indices.
+ */
+function findNestedParenthesesInAddresses (masked: string, text: string, spans: (CommentSpan | InlineCommentSpan)[], reading: CommentReading): number[] {
+	if (!reading.tokenizes) return []
+
+	let nested: number[] = []
+
+	valueParser(masked).walk((node) => {
+		if (node.type !== `function` || node.value !== `url` || node.unclosed || node.nodes[0]?.type === `string`) return
+
+		let before = node.sourceIndex - 1
+		let tokenEnd = findUrlTokenEnd(text, node.sourceIndex, findCommentSpanAt(before, spans)?.start ?? before, reading)
+
+		for (let index = node.sourceEndIndex - 1; index < tokenEnd - 1; index += 1) {
+			if (masked[index] === `)`) nested.push(index)
+		}
+	})
+
+	return nested
 }
 
 /**
@@ -225,12 +256,15 @@ function maskAt (text: string, masks: Mask[]): string {
  *
  * A divider is a backslash in front of a line break, which spells nothing and leaves the name behind the break a name of its own; the mask, or a space behind a character of a word, stands in for the backslash alone, the break staying the whitespace it is to PostCSS, so the parser reads the name behind the break as it reads one standing alone.
  *
+ * Under a tokenizer counting the parentheses of a bare address, `postcss-scss`'s, every `)` the parser closes the address on short of the balancing one is masked too ({@link findNestedParenthesesInAddresses}), so that the parser closes it where the tokenizer and Sass do rather than reading the rest of the address as code of the call around.
+ *
  * The parse is remade after each pass of the masks and the weld, since the parser reads on to the next `)`, which another string may hold, and a string's parenthesis once masked may bring a divider to light, as a divider may an address holding such a string. The mask keeps the width, so parse indexes count in the file's text.
  * @param text - The value or params to mask.
  * @param spans - Its comment spans, from either scan.
+ * @param reading - Whether the parser reads by a tokenizer of its own; the parser's own reading where nothing is handed in.
  * @returns The masked text.
  */
-export function hideParenthesesInUrlStrings (text: string, spans: (CommentSpan | InlineCommentSpan)[] = findCommentSpans(text)): string {
+export function hideParenthesesInUrlStrings (text: string, spans: (CommentSpan | InlineCommentSpan)[] = findCommentSpans(text), reading: CommentReading = FIRST_PARENTHESIS_READING): string {
 	let masked = text
 
 	// Either mask may bring to light what the other reads: a string's parenthesis may hide a divider, and a divider an address holding one
@@ -243,7 +277,7 @@ export function hideParenthesesInUrlStrings (text: string, spans: (CommentSpan |
 
 		masked = maskAt(masked, welds)
 
-		let held = findHeldParentheses(masked, spans)
+		let held = [...findHeldParentheses(masked, spans), ...findNestedParenthesesInAddresses(masked, text, spans, reading)]
 
 		masked = maskAt(masked, held.map((index) => ({ index, text: MASK })))
 		found = dividers.length > 0 || welds.length > 0 || held.length > 0

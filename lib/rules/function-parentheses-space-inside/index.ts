@@ -168,7 +168,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Both kinds: a `//` comment's text comes back as words and calls, a `/*/` comment closes on its own star
 			let comments = syntax.commentSpans(declValue, decl, result)
 			// Masks quotation marks a comment leaves open, so the parser pairs them right
-			let parsedValue = valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(declValue, comments), comments))
+			let parsedValue = valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(declValue, comments), comments, reading))
 
 			// The value parser calls a control character such as a vertical tab whitespace where the tokenizer calls it a word, and both fixes rewrite a whole side
 			splitSpaceNodesAtWords(parsedValue.nodes)

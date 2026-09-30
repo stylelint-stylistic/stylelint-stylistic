@@ -4,9 +4,42 @@ import { findCommentSpans } from "../findCommentSpans/index.ts"
 
 import { hideParenthesesInUrlStrings } from "./index.ts"
 
+/** A reading whose tokenizer counts the parentheses of a bare address, as `postcss-scss`'s does; the util reads `tokenizes` alone. */
+const COUNTING_READING = { spells: true, tokenizes: true, endsOnFormFeed: false }
+
 describe(`hideParenthesesInUrlStrings`, () => {
 	it(`a string holding a closing parenthesis behind the whitespace of an address`, () => {
 		expect(hideParenthesesInUrlStrings(`url( a ")" b ) 1px`)).toBe(`url( a "?" b ) 1px`)
+	})
+
+	it(`a bare address holding a pair of parentheses, which the parser closes on the inner one and a tokenizer counting parentheses on the outer`, () => {
+		expect(hideParenthesesInUrlStrings(`fn(url(a(b)) x)`, [], COUNTING_READING)).toBe(`fn(url(a(b?) x)`)
+	})
+
+	it(`the same address under the parser's own reading, which closes it on the first parenthesis`, () => {
+		expect(hideParenthesesInUrlStrings(`fn(url(a(b)) x)`, [])).toBe(`fn(url(a(b)) x)`)
+	})
+
+	it(`two pairs nested in the address, both masked in one pass up to the balancing parenthesis`, () => {
+		expect(hideParenthesesInUrlStrings(`fn(url(a((b))) x)`, [], COUNTING_READING)).toBe(`fn(url(a((b??) x)`)
+	})
+
+	it(`a pair in a quoted address, which the parser reads as code and closes on the outer parenthesis itself`, () => {
+		expect(hideParenthesesInUrlStrings(`fn(url("a(b)") x)`, [], COUNTING_READING)).toBe(`fn(url("a(b)") x)`)
+	})
+
+	it(`a pair in a bare address behind whitespace, which the parser closes on the inner parenthesis all the same`, () => {
+		expect(hideParenthesesInUrlStrings(`fn(url( a(b) ) x)`, [], COUNTING_READING)).toBe(`fn(url( a(b? ) x)`)
+	})
+
+	it(`a pair in a bare address whose name a word joins, which the parser names by the whole word and reads as a call of that name, so no address is asked about`, () => {
+		expect(hideParenthesesInUrlStrings(`fn(1url(a(b)) x)`, [], COUNTING_READING)).toBe(`fn(1url(a(b)) x)`)
+	})
+
+	it(`a pair in a bare address behind a comment, which ends the word in front of the name`, () => {
+		let text = `fn(/* c */url(a(b)) x)`
+
+		expect(hideParenthesesInUrlStrings(text, findCommentSpans(text), COUNTING_READING)).toBe(`fn(/* c */url(a(b?) x)`)
 	})
 
 	it(`a string of either kind holding two, behind a form feed`, () => {

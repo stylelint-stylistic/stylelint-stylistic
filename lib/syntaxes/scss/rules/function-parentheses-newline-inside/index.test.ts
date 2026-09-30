@@ -26,6 +26,23 @@ testRule({
 
 	reject: [
 		{
+			description: `a bare address holding a pair of parentheses, whose balancing parenthesis is the address's and the next the call's`,
+			code: `
+				a { b: fn(
+				url(a(b))
+				x
+				); }
+			`,
+			fixed: `
+				a { b: fn(url(a(b))
+				x); }
+			`,
+			warnings: [
+				{ line: 1, column: 11, message: messages.rejectedOpeningMultiLine },
+				{ line: 3, column: 2, message: messages.rejectedClosingMultiLine },
+			],
+		},
+		{
 			description: `inline comment before the closing parenthesis: the parenthesis cannot join the comment's line, so the value is left alone and the warning stands`,
 			code: `
 				a {
@@ -130,6 +147,15 @@ testRule({
 
 	accept: [
 		{
+			description: `a bare address holding a pair of parentheses, which the tokenizer and Sass close on the balancing one, so that the breaks inside the call's own parentheses are the ones asked for`,
+			code: `
+				a { b: fn(
+				url(a(b))
+				x
+				); }
+			`,
+		},
+		{
 			description: `a function the value parser marks unclosed, its closing parenthesis swallowed by a comment the file never closes, which is left alone warning and all`,
 			code: `
 				a {
@@ -165,6 +191,19 @@ testRule({
 	],
 
 	reject: [
+		{
+			description: `a bare address holding a pair of parentheses, whose balancing parenthesis is the address's and the next the call's`,
+			code: `a { b: fn(url(a(b)) x); }`,
+			fixed: `
+				a { b: fn(
+				url(a(b)) x
+				); }
+			`,
+			warnings: [
+				{ line: 1, column: 11, message: messages.expectedOpening },
+				{ line: 1, column: 21, message: messages.expectedClosing },
+			],
+		},
 		{
 			description: `a closed call standing inside such a function, which is read and fixed where it stands`,
 			code: `

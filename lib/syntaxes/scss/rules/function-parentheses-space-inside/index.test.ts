@@ -12,6 +12,10 @@ testRule({
 
 	accept: [
 		{
+			description: `a bare address holding a pair of parentheses, which the tokenizer and Sass close on the balancing one, so that nothing stands in front of the call's own`,
+			code: `a { b: fn(url(a(b)) x); }`,
+		},
+		{
 			description: `a call standing in the text of an inline comment, whose arguments the parser reads out of the code a line below`,
 			code: `
 				a {
@@ -30,6 +34,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			description: `a bare address holding a pair of parentheses, whose balancing parenthesis is the address's and the next the call's`,
+			code: `a { b: fn( url(a(b)) x ); }`,
+			fixed: `a { b: fn(url(a(b)) x); }`,
+			warnings: [
+				{ line: 1, column: 11, message: messages.rejectedOpening },
+				{ line: 1, column: 23, message: messages.rejectedClosing },
+			],
+		},
 		{
 			description: `a call opened in the text of an inline comment and closed a line below it, whose arguments the parser reads across the break: the call in front of the comment is spaced up as ever, and the call opened inside that text is left alone on both its lines`,
 			code: `
@@ -98,6 +111,10 @@ testRule({
 
 	accept: [
 		{
+			description: `a bare address holding a pair of parentheses, which the tokenizer and Sass close on the balancing one, so that the space in front of the call's own parenthesis is the one asked for`,
+			code: `a { b: fn( url(a(b)) x ); }`,
+		},
+		{
 			description: `a function the value parser marks unclosed, its closing parenthesis swallowed by a comment the file never closes, which is left alone warning and all`,
 			code: `
 				a {
@@ -122,6 +139,15 @@ testRule({
 	],
 
 	reject: [
+		{
+			description: `a bare address holding a pair of parentheses, whose balancing parenthesis is the address's and the next the call's`,
+			code: `a { b: fn(url(a(b)) x); }`,
+			fixed: `a { b: fn( url(a(b)) x ); }`,
+			warnings: [
+				{ line: 1, column: 11, message: messages.expectedOpening },
+				{ line: 1, column: 21, message: messages.expectedClosing },
+			],
+		},
 		{
 			// The token postcss-scss reads behind the written space closes at the parenthesis code closes at
 			description: `a quoted address with no space inside its parentheses`,
