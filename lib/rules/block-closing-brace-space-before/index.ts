@@ -17,6 +17,7 @@ import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
 import { lastNodeHoldsTheBlockAfter } from "../../utils/lastNodeHoldsTheBlockAfter/index.ts"
 import { escapeHeadLength, maskEscapes } from "../../utils/maskEscapes/index.ts"
+import { indexInFrontOfTheBrace } from "../../utils/rawSpans/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { statementString } from "../../utils/statementString/index.ts"
@@ -104,9 +105,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let text = statementString(statement, result)
 			let blockAfter = getBlockTailAsClosed(syntax, statement, result) || ``
 
-			let index = text.length - 2
-
-			if (text[index - 1] === `\r`) index -= 1
+			// The text is read through the brace, since the printed copy ends on a stray `raws.ownSemicolon`
+			let index = indexInFrontOfTheBrace(statement, text)
 
 			let escapes = findEscapeSpans(source, syntax.inlineComments(statement, result))
 			// An escaped space is the last character of the block's final node and no run at all, so the run is read over the copy with the escapes masked; PostCSS ends the node at the backslash and files the whitespace an escape covering one spells in the raw behind it, which the write keeps in front of the run it rewrites

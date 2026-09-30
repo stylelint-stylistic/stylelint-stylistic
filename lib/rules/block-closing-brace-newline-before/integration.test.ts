@@ -96,14 +96,15 @@ testRule({
 })
 
 /**
- * Fixes one snippet under this rule and `no-extra-semicolons`, in the order given, and reads the output back.
+ * Fixes one snippet under this rule and a neighbor, in the order given, and reads the output back.
  * @param code - The snippet.
  * @param options - The setting of this rule.
+ * @param neighbor - The neighbor, as a name and a setting.
  * @param thisRuleFirst - Whether this rule is listed first.
  * @returns The file the pass left and the count of the warnings the pair has about it.
  */
-async function fixBesideNoExtra (code: string, options: unknown, thisRuleFirst: boolean): Promise<{ code: string, left: number }> {
-	let pair: [string, unknown][] = [[ruleName, options], [`@stylistic/no-extra-semicolons`, true]]
+async function fixBesideATaker (code: string, options: unknown, neighbor: [string, unknown], thisRuleFirst: boolean): Promise<{ code: string, left: number }> {
+	let pair: [string, unknown][] = [[ruleName, options], neighbor]
 	let config = { plugins, rules: Object.fromEntries(thisRuleFirst ? pair : pair.toReversed()) }
 	let fixed = await stylelint.lint({ code, config, fix: true })
 	let read = await stylelint.lint({ code: fixed.code ?? code, config })
@@ -111,13 +112,31 @@ async function fixBesideNoExtra (code: string, options: unknown, thisRuleFirst: 
 	return { code: fixed.code ?? code, left: read.results[0]?.warnings.length ?? 0 }
 }
 
+let noExtra: [string, unknown] = [`@stylistic/no-extra-semicolons`, true]
+
 describe(`the run in front of the closing brace where a stray semicolon stands behind the brace of the last nested rule, beside \`no-extra-semicolons\``, () => {
 	// PostCSS files the semicolon with the run in front of it in the nested rule's raws, so the run in front of this brace is read across both
 	it.each([
 		[`a { b { c: d; } ; }`, `always`, `a { b { c: d;\n }\n  }`],
 		[`a {\n\tb {}\n;\n}`, `never-multi-line`, `a {\n\tb {}}`],
 	])(`is written in %j under %j in one run in either order`, async (code, options, output) => {
-		expect(await fixBesideNoExtra(code, options, true)).toEqual({ code: output, left: 0 })
-		expect(await fixBesideNoExtra(code, options, false)).toEqual({ code: output, left: 0 })
+		expect(await fixBesideATaker(code, options, noExtra, true)).toEqual({ code: output, left: 0 })
+		expect(await fixBesideATaker(code, options, noExtra, false)).toEqual({ code: output, left: 0 })
+	})
+})
+
+describe(`the place of the warning where a neighbor has taken characters out in front of the brace`, () => {
+	let noEol: [string, unknown] = [`@stylistic/no-eol-whitespace`, true]
+
+	// Stylelint counts the warning's index over the file from the statement's start, so an index counted over the rewritten print landed on a line above the brace, under the comment disabling this rule there, and the warning was dropped with its fix
+	it.each([
+		[`\n`],
+		[`\r\n`],
+	])(`stands on the brace's line past a comment disabling this rule on a line above, in both orders of \`no-eol-whitespace\` under always-multi-line, the lines broken by %j`, async (linebreak) => {
+		let code = `a {${linebreak}  b: c; /* stylelint-disable-line @stylistic/block-closing-brace-newline-before */${` `.repeat(40)}${linebreak}  d: e; }${linebreak}`
+		let output = `a {${linebreak}  b: c; /* stylelint-disable-line @stylistic/block-closing-brace-newline-before */${linebreak}  d: e;${linebreak} }${linebreak}`
+
+		expect(await fixBesideATaker(code, `always-multi-line`, noEol, true)).toEqual({ code: output, left: 0 })
+		expect(await fixBesideATaker(code, `always-multi-line`, noEol, false)).toEqual({ code: output, left: 0 })
 	})
 })

@@ -108,3 +108,19 @@ describe(`a stray semicolon behind the closing brace of the last nested rule, be
 		await expectBothOrders(`a {\n\tb {}\n;\n}`, { "@stylistic/no-extra-semicolons": true }, `a {\n\tb {}\n\n}`, `always-multi-line`)
 	})
 })
+
+describe(`the place of the warning where a neighbor has taken characters out in front of the brace`, () => {
+	// Stylelint counts the warning's index over the file from the statement's start, so an index counted over the rewritten print landed on a line above the brace, under the comment disabling this rule there, and the warning was dropped with its fix
+	it(`stands on the brace's line past a comment disabling this rule on a line above, in both orders of no-eol-whitespace under always-multi-line`, async () => {
+		let code = `a {\n  b: c; /* stylelint-disable-line @stylistic/block-closing-brace-empty-line-before */${` `.repeat(40)}\n  d: e;\n}\n`
+
+		await expectBothOrders(code, { "@stylistic/no-eol-whitespace": true }, `a {\n  b: c; /* stylelint-disable-line @stylistic/block-closing-brace-empty-line-before */\n  d: e;\n\n}\n`, `always-multi-line`)
+	})
+
+	it(`stands on the brace's line past a comment disabling every rule on a line above, in both orders of the three neighbors taking the spaces, the semicolon and the empty line out under never`, async () => {
+		let neighbors = { "@stylistic/no-extra-semicolons": true, "@stylistic/no-eol-whitespace": true, "@stylistic/max-empty-lines": 1 }
+
+		await expectBothOrders(`a {\n  b: c;  \n  d: e;\n/* stylelint-disable-line */\n ;\n \n}\n`, neighbors, `a {\n  b: c;\n  d: e;\n/* stylelint-disable-line */\n}\n`, `never`)
+		await expectBothOrders(`a {\r\n  b: c;  \r\n  d: e;\r\n/* stylelint-disable-line */\r\n ;\r\n \r\n}\r\n`, neighbors, `a {\r\n  b: c;\r\n  d: e;\r\n/* stylelint-disable-line */\r\n}\r\n`, `never`)
+	})
+})

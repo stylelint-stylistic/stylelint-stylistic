@@ -189,3 +189,19 @@ describe(`the run in front of the closing brace holding a stray semicolon a neig
 		expect(await fixBesideATaker(code, `always`, noExtra, false, syntax)).toEqual({ code: output, left: 1 })
 	})
 })
+
+describe(`the place of the warning where a neighbor has taken characters out in front of the brace`, () => {
+	let noEol: [string, unknown] = [`@stylistic/no-eol-whitespace`, true]
+
+	// Stylelint counts the warning's index over the file from the statement's start, so an index counted over the rewritten print landed on a line above the brace, under the comment disabling this rule there, and the warning was dropped with its fix
+	it.each([
+		[`\n`],
+		[`\r\n`],
+	])(`stands on the brace's line past a comment disabling this rule on a line above, in both orders of \`no-eol-whitespace\`, the lines broken by %j`, async (linebreak) => {
+		let code = `a {${linebreak}  b: c; /* stylelint-disable-line @stylistic/block-closing-brace-space-before */${` `.repeat(40)}${linebreak}  d: e; }${linebreak}`
+		let output = `a {${linebreak}  b: c; /* stylelint-disable-line @stylistic/block-closing-brace-space-before */${linebreak}  d: e;}${linebreak}`
+
+		expect(await fixBesideATaker(code, `never`, noEol, true)).toEqual({ code: output, left: 0 })
+		expect(await fixBesideATaker(code, `never`, noEol, false)).toEqual({ code: output, left: 0 })
+	})
+})

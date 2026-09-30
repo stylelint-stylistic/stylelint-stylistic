@@ -1,7 +1,7 @@
 import type { Container, Node, Root } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { LEADING_CSS_WHITESPACE_AND_SEMICOLONS } from "../../regexps.ts"
+import { CRLF, LEADING_CSS_WHITESPACE_AND_SEMICOLONS } from "../../regexps.ts"
 import { endIn } from "../semicolonsTakenAlready/index.ts"
 import { isComment } from "../typeGuards/index.ts"
 
@@ -48,6 +48,42 @@ export function braceOffset (node: Node): number | undefined {
 	let brace = text.lastIndexOf(`}`, end - rootStart - 1)
 
 	return brace >= 0 && text.slice(brace + 1, end - rootStart).replace(LEADING_CSS_WHITESPACE_AND_SEMICOLONS, ``) === `` ? brace : undefined
+}
+
+/**
+ * Finds where a container's closing brace stands: its offset in the root's text and its index counted from the container's start.
+ * @param node - The container.
+ * @returns The offset and the index, or nothing where the file does not tell the brace.
+ */
+function bracePlace (node: Node): { brace: number, index: number } | undefined {
+	let brace = braceOffset(node)
+	let start = node.source?.start?.offset
+
+	return brace === undefined || start === undefined ? undefined : { brace, index: brace - (start - rootText(node).rootStart) }
+}
+
+/**
+ * Finds where a container's closing brace stands counted from the container's start, where a warning about the brace is placed. Stylelint counts a problem's index over the file from the node's start, and the container's print, which a rule listed earlier may have rewritten, tells nothing of it: characters taken out in front of the brace put an index counted over the print on a line above it, under a disable comment covering that line. So the brace is found off the file, and the print, read through the brace with a stray `raws.ownSemicolon` cut off, is counted only where the file does not tell the brace.
+ * @param node - The container.
+ * @param print - The container's print, read through the brace.
+ * @returns The index of the brace.
+ */
+export function braceIndex (node: Node, print: string): number {
+	return bracePlace(node)?.index ?? print.length - 1
+}
+
+/**
+ * Finds where the character in front of a container's closing brace stands counted from the container's start, where a warning about the run in front of the brace is placed, as `braceIndex` finds the brace: the `\r` of a `\r\n` break there rather than its `\n`, read off the text the index counts in.
+ * @param node - The container.
+ * @param print - The container's print, read through the brace.
+ * @returns The index.
+ */
+export function indexInFrontOfTheBrace (node: Node, print: string): number {
+	let place = bracePlace(node)
+	let { text, brace } = place ? { text: rootText(node).text, brace: place.brace } : { text: print, brace: print.length - 1 }
+	let index = (place?.index ?? print.length - 1) - 1
+
+	return CRLF.test(text.slice(brace - 2, brace)) ? index - 1 : index
 }
 
 /**

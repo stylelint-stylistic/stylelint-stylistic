@@ -13,6 +13,7 @@ import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
 import { hasEmptyLine } from "../../utils/hasEmptyLine/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
+import { braceIndex } from "../../utils/rawSpans/index.ts"
 import { removeEmptyLinesAfter } from "../../utils/removeEmptyLinesAfter/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
@@ -89,9 +90,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let taken = blockTailTaken(statement, result)
 			let before = withoutTaken(getBlockTailAsClosed(syntax, statement, result) || ``, taken)
 
-			// Counted from the text through the brace: the printed copy ends on a stray `raws.ownSemicolon`, and the index landed inside that raw
-			let text = statementString(statement, result)
-			let index = text.length - 1
+			// The print handed over is read through the brace, since the printed copy ends on a stray `raws.ownSemicolon`
+			let index = braceIndex(statement, statementString(statement, result))
 
 			let expectEmptyLineBefore = ((): boolean => {
 				let childNodeTypes = statement.nodes.map((item) => item.type)
