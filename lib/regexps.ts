@@ -85,6 +85,9 @@ export const EVERY_PARENTHESIS = /[()]/gu
 /** Every character but a line feed, the one character PostCSS counts a line by: a carriage return, bare or opening a Windows pair, matches with the rest. */
 export const EVERY_CHARACTER_BUT_A_LINE_FEED = /[^\n]/gu
 
+/** A line feed, the one character PostCSS counts a line by. */
+export const LINE_FEED = /\n/u
+
 /** Every run of breaks as PostCSS reads them, a Windows pair and a line feed alike, nothing between them: what `max-empty-lines` collapses, whichever way each break is spelled. */
 export const EVERY_RUN_OF_LINE_BREAKS = /(?:\r?\n)+/gu
 

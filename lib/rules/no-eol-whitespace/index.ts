@@ -17,7 +17,7 @@ import { isAtRule, isComment, isDeclaration, isRule } from "../../utils/typeGuar
 
 import { backslashesBehindHead, backslashesBehindStatement, isEscaped } from "./escapes.ts"
 import { trimTheLastNodesEnd } from "./lastNodesEnd.ts"
-import { byRank, lineInFile, type LineOf, linesBackFrom, linesFound, linesOnFrom, rootsLastLine } from "./lines.ts"
+import { byRank, lineInFile, type LineOf, linesBackFrom, linesFound, linesOnFrom, positionsInside, rootsLastLine } from "./lines.ts"
 import { eachEolWhitespace, type EolRun, type EolScope, fixString, fixText, keptAt, lastLineBreakIndex, LINE_BREAK_CHARACTERS, runsOf, spelledRun, type TextOptions, WHITESPACES_TO_REJECT } from "./runs.ts"
 import { maskTaken, TAKEN_MARK, trimKeepingTaken } from "./taken.ts"
 
@@ -411,29 +411,18 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 		}
 		let isFixed = false
 
-		/**
-		 * Reports trailing whitespace at an index.
-		 * @param index - The offset in the root's source where the whitespace starts.
-		 */
-		function reportFromIndex (index: number): void {
-			report({
-				message: messages.rejected,
-				node: root,
-				index,
-				endIndex: index,
-				result,
-				ruleName,
-				fix: () => {
-					// Every warning hands the fix over, and it trims every line at once; a second pass would read the lines the first wrote
-					if (isFixed) return
+		/** Every warning hands the fix over, and it trims every line at once; a second pass would read the lines the first wrote. */
+		function fix (): void {
+			if (isFixed) return
 
-					isFixed = true
-					fixRoot(scope)
-				},
-			})
+			isFixed = true
+			fixRoot(scope)
 		}
 
-		for (let { index } of found) reportFromIndex(index)
+		// Placed in one walk over the text for all the runs, where a warning placed by its index costs PostCSS a walk from the root's start each
+		let positions = positionsInside(root, found.map(({ index }) => index))
+
+		for (let position of positions) report({ message: messages.rejected, node: root, start: position, end: position, result, ruleName, fix })
 	}
 }
 

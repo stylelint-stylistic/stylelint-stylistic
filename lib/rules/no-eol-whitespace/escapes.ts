@@ -1,9 +1,22 @@
 import type { AtRule, ChildNode, Declaration, Rule } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { TRAILING_BACKSLASHES } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { isAtRule, isComment, isDeclaration } from "../../utils/typeGuards/index.ts"
+
+/**
+ * Counts the backslashes standing in front of an index of a text, stepping back from it.
+ * @param text - The text.
+ * @param index - The index.
+ * @returns The count.
+ */
+function backslashesInFrontOf (text: string, index: number): number {
+	let count = 0
+
+	while (count < index && text[index - count - 1] === `\\`) count += 1
+
+	return count
+}
 
 /**
  * Counts the backslashes a text ends on.
@@ -11,7 +24,7 @@ import { isAtRule, isComment, isDeclaration } from "../../utils/typeGuards/index
  * @returns The count.
  */
 function trailingBackslashes (text: string): number {
-	return text.length - text.replace(TRAILING_BACKSLASHES, ``).length
+	return backslashesInFrontOf(text, text.length)
 }
 
 /**
@@ -22,7 +35,7 @@ function trailingBackslashes (text: string): number {
  * @returns True where it is.
  */
 export function isEscaped (text: string, index: number, lead: number): boolean {
-	let backslashes = trailingBackslashes(text.slice(0, index))
+	let backslashes = backslashesInFrontOf(text, index)
 
 	return (backslashes === index ? backslashes + lead : backslashes) % 2 === 1
 }

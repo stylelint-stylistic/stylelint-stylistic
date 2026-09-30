@@ -1,6 +1,6 @@
-import type { Root } from "postcss"
+import type { Position, Root } from "postcss"
 
-import { EVERY_LINE_BREAK } from "../../regexps.ts"
+import { EVERY_LINE_BREAK, LINE_FEED } from "../../regexps.ts"
 
 /** Reads the line of the file a run of a text stands on: by its place, or by its rank among the runs the text holds and what it spells. */
 export type LineOf = (index: number, rank: number, runs: number, spelled: string) => number | undefined
@@ -136,6 +136,67 @@ export function lineInFile (root: Root, offset: number): number {
 	if (line === undefined) throw new Error(`A run of the root's text must stand on a line of its input`)
 
 	return line + (root.source?.start?.line ?? 1) - 1
+}
+
+/**
+ * Places offsets of a root's text in the file as PostCSS places one, walking the document from the root's start and counting a line at every line feed, in one pass over the text for all of them rather than one from the start for each, which is what a warning placed by its index costs PostCSS. No offset asks nothing of the root.
+ * @param root - The root.
+ * @param offsets - The offsets, in any order.
+ * @returns The positions, in the offsets' order.
+ */
+export function positionsInside (root: Root, offsets: number[]): Position[] {
+	if (offsets.length === 0) return []
+
+	let start = root.source?.start
+	let input = root.source?.input
+
+	if (!start || !input) throw new Error(`A root reported on must hold a place in its input`)
+
+	let text = input.document
+	let base = start.offset ?? offsetOf(text, start)
+	let ranks = offsets.map((_, rank) => rank).toSorted((one, other) => pick(offsets, one) - pick(offsets, other))
+	let positions: Position[] = []
+	let { line, column } = start
+	let walked = base
+
+	for (let rank of ranks) {
+		let end = base + pick(offsets, rank)
+
+		for (; walked < end; walked += 1) {
+			if (LINE_FEED.test(text.charAt(walked))) {
+				column = 1
+				line += 1
+			}
+			else column += 1
+		}
+
+		positions[rank] = { column, line, offset: end }
+	}
+
+	return positions
+}
+
+/**
+ * Finds the offset of a position in a text, as PostCSS does for a syntax that sets none.
+ * @param text - The text.
+ * @param position - The line and column.
+ * @returns The offset.
+ */
+function offsetOf (text: string, position: { line: number, column: number }): number {
+	let column = 1
+	let line = 1
+
+	for (let index = 0; index < text.length; index += 1) {
+		if (line === position.line && column === position.column) return index
+
+		if (LINE_FEED.test(text.charAt(index))) {
+			column = 1
+			line += 1
+		}
+		else column += 1
+	}
+
+	return 0
 }
 
 /**
