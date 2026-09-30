@@ -2,6 +2,7 @@ import type { Declaration } from "postcss"
 import valueParser from "postcss-value-parser"
 import stylelint from "stylelint"
 
+import { ENDS_WITH_ESCAPE, EVERY_BARE_ADDRESS_OPENING, TRAILING_BACKSLASHES } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { collapseBreakRuns, holdsLongerBreakRun } from "../../utils/collapseBreakRuns/index.ts"
@@ -39,6 +40,30 @@ function placeIndexOnValueStart (decl: Declaration): number {
 export type PrimaryOption = number
 
 /**
+ * Finds the parentheses of every bare address of a value, as the compilers read one ({@link EVERY_BARE_ADDRESS_OPENING}), up to the first `)` no backslash escapes, or to the end of the text. An escape closing right in front of the name, as `\61 url(` spells `aurl(`, is a character of a longer name, which the whitespace it ends with hides from the opener.
+ * @param text - The value, its comments blanked.
+ * @returns The spans, each from the `(` to behind the `)`.
+ */
+function bareAddressSpans (text: string): { start: number, end: number }[] {
+	let spans: { start: number, end: number }[] = []
+
+	for (let match of text.matchAll(EVERY_BARE_ADDRESS_OPENING)) {
+		if (ENDS_WITH_ESCAPE.test(text.slice(0, match.index))) continue
+
+		let start = match.index + match[0].length - 1
+		let end = start
+
+		// A `)` behind an odd run of backslashes is escaped, a character of the address
+		do end = text.indexOf(`)`, end + 1)
+		while (end !== -1 && (text.slice(start, end).match(TRAILING_BACKSLASHES)?.[0].length ?? 0) % 2 === 1)
+
+		spans.push({ start, end: end === -1 ? text.length : end + 1 })
+	}
+
+	return spans
+}
+
+/**
  * Limits the number of adjacent empty lines within functions.
  * @param scope - What the namespace hands the rule.
  * @param scope.ruleName - The configured name.
@@ -65,9 +90,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// Both kinds: a `//` comment's text comes back as words and calls, a `/*/` comment closes on its own star
 			let comments = syntax.commentSpans(stringValue, decl, result)
-
 			// Walked in a copy of the same length with every comment blanked, so a comment's empty lines are counted against no call and collapsed by no fix, and the parser pairs only parentheses written as code
 			let blankedValue = blankComments(stringValue, comments)
+
+			// What stands between the parentheses of a bare address is the address's text, a comment there included, which Less hands on as it is and no compiler reads a call in; PostCSS's tokenizer takes the parentheses as one token only where the word in front of them is `url` alone, and reads `!url` or `1,url` as that word, and a run a neighbor writes in front of the name in the same pass switches that, so the address is read as the compilers read it, whatever stands in front of the name, over the copy the comments are already blanked in
+			blankedValue = blankComments(blankedValue, bareAddressSpans(blankedValue))
 
 			let splittedValue: Array<[string, string]> = []
 			let sourceIndexStart = 0

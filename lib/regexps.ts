@@ -142,6 +142,9 @@ export const HEX_ESCAPE_TERMINATOR = /^(?:\r\n|[ \t\n\r\f])$/u
 /** One UTF-16 unit of a CSS identifier, an escape aside; a surrogate half answers for itself, so every character above the basic plane counts. */
 export const IDENTIFIER_CODE_POINT = /[\w\-\u00B7\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u037D\u037F-\u1FFF\u200C-\u200D\u203F\u2040\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uD800-\uDFFF\uF900-\uFDCF\uFDF0-\uFFFD]/u
 
+/** Every `(` of a bare address as the compilers read one: `url`, in either case, that no identifier character, astral character, `#`, `@` or backslash joins to a longer name — lightningcss reads `#url(a b)`, `@url(a b)` and `𝒳url(a b)` as calls, and Sass and Less refuse them or read them so — where no quotation mark follows the whitespace the `(` opens with. The identifier class is {@link IDENTIFIER_CODE_POINT}, so the two never part, with the astral range spelled beside it since under the `u` flag a lookbehind steps back by code point and the class's surrogate halves answer for none. The name is read as spelled: `u\rl(` and `\75 rl(`, which `namesAnAddress` reads as the name, are not opened here, and an escape closing right in front of the name is the caller's to refuse. What the tokenizer makes of the word in front of `url` is not asked: the compilers read the parentheses as an address behind a comma or a solidus glued to the name as behind a space, and refuse the declaration behind a glued `!` in either spelling. */
+export const EVERY_BARE_ADDRESS_OPENING = new RegExp(`(?<!${IDENTIFIER_CODE_POINT.source}|[\\u{10000}-\\u{10FFFF}#@\\\\])url\\((?![\\t\\n\\f\\r ]*["'])`, `giu`)
+
 /** The run of {@link IDENTIFIER_CODE_POINT} characters a text ends in, where a call's name stands in front of its `(`; built from that class, so the two never part. */
 export const TRAILING_IDENTIFIER_RUN = new RegExp(`${IDENTIFIER_CODE_POINT.source}+$`, `u`)
 

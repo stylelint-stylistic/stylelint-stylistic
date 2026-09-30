@@ -1,3 +1,8 @@
+import stylelint from "stylelint"
+import { expect, it } from "vitest"
+
+import plugins from "../../index.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -10,6 +15,25 @@ testRule({
 		{
 			description: `a call written on one line, with no empty line to count`,
 			code: `a { transform: translate(1, 1); }`,
+		},
+		{
+			// What stands between the parentheses of a bare address is the address's text, a comment there included: Less hands it on as it is, and no compiler reads a call there
+			description: `a bare address holding a comment with empty lines`,
+			code: `a { b: url(a /* c\n\n\n d */ ) 1px; }`,
+		},
+		{
+			// Glued to the sign the name is the word `!url`, the parentheses are code and the comment is a comment; parted, they are the address's token: either way the empty lines stand in text this rule reads no call in
+			description: `the same behind a sign glued to the name, and parted from it`,
+			code: `a { b: 1!url(a /* c\n\n\n d */ ) 1px; c: 1! url(a /* c\n\n\n d */ ) 1px; }`,
+		},
+		{
+			description: `a bare address holding empty lines in its own text`,
+			code: `a { b: url(a\n\n\nb) 1px; }`,
+		},
+		{
+			// PostCSS reads the parentheses as code behind a name in upper case or behind whitespace; lightningcss and Sass read `url(⏎⏎⏎a)` as `url(a)` and the other as a bad address or `URL(a b)`, Less hands the first on and refuses the second, and none keeps the breaks
+			description: `the same with the name in upper case, and with the empty lines opening the address`,
+			code: `a { b: URL(a\n\n\nb) url(\n\n\na) 1px; }`,
 		},
 		{
 			description: `a call broken across lines with no empty line in it`,
@@ -87,6 +111,47 @@ testRule({
 	],
 
 	reject: [
+		{
+			// A hash, an at sign or an astral letter joins the name to a longer one, which lightningcss reads as a call, `#url(a b)`, and Sass and Less refuse or read so
+			description: `calls whose names a hash, an at sign and an astral letter join to the word url, holding empty lines`,
+			code: `a { b: #url(a\n\n\nb) @url(c\n\n\nd) 𝒳url(e\n\n\nf); }`,
+			fixed: `a { b: #url(a\nb) @url(c\nd) 𝒳url(e\nf); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 7,
+					message: messages.expected(0),
+				},
+				{
+					line: 4,
+					column: 3,
+					message: messages.expected(0),
+				},
+				{
+					line: 7,
+					column: 3,
+					message: messages.expected(0),
+				},
+			],
+		},
+		{
+			// The escape spells a letter joined to the name, `aurl`, which the compilers read as a call
+			description: `a call whose name a hexadecimal escape welds to the word url, holding empty lines`,
+			code: `a { b: \\61 url(a\n\n\nb) 1px; }`,
+			fixed: `a { b: \\61 url(a\nb) 1px; }`,
+			line: 1,
+			column: 11,
+			message: messages.expected(0),
+		},
+		{
+			// A quotation mark behind the whitespace the `(` opens with makes the parentheses a call holding a string to the compilers and to the tokenizer alike, so the empty lines behind the string are the call's
+			description: `a quoted address with empty lines behind the string`,
+			code: `a { b: url( "a"\n\n\n) 1px; }`,
+			fixed: `a { b: url( "a"\n) 1px; }`,
+			line: 1,
+			column: 7,
+			message: messages.expected(0),
+		},
 		{
 			description: `an empty line whose two breaks are spelled a line feed and then a Windows pair, which is one empty line to PostCSS and none to a search for either spelling alone`,
 			code: `a { transform: translate(\n\r\n1, 1); }`,
@@ -755,4 +820,18 @@ testRule({
 			message: messages.expected(2),
 		},
 	],
+})
+
+// The space parting the name from the sign makes the parentheses an address's token to the tokenizer, and this rule reads the comment inside them by the same reading whichever rule wrote first
+it(`leaves the comment inside an address alone beside a rule parting the name from a sign, in either order`, async () => {
+	let code = `a { b: 1!url(a /* c\n\n\n d */ ) 1px; }`
+	let options: Record<string, unknown> = { [ruleName]: 0, "@stylistic/declaration-bang-space-after": `always` }
+	let orders: [string, string][] = [[ruleName, `@stylistic/declaration-bang-space-after`], [`@stylistic/declaration-bang-space-after`, ruleName]]
+	let outputs = await Promise.all(orders.map(async ([first, second]) => {
+		let result = await stylelint.lint({ code, config: { plugins, rules: { [first]: options[first], [second]: options[second] } }, fix: true })
+
+		return result.code
+	}))
+
+	expect(outputs).toEqual([`a { b: 1! url(a /* c\n\n\n d */ ) 1px; }`, `a { b: 1! url(a /* c\n\n\n d */ ) 1px; }`])
 })
