@@ -114,6 +114,15 @@ testRule({
 
 	reject: [
 		{
+			// The run in front of the combinator is the break closing the comment with the indentation behind it, and taking it out would put the combinator into the comment's text
+			description: `an inline comment standing in front of the combinator, with the break closing it and a space between them, left as it is`,
+			code: `a // c\n >b { }`,
+			fixed: `a // c\n >b { }`,
+			line: 2,
+			column: 2,
+			message: messages.rejectedBefore(`>`),
+		},
+		{
 			description: `a nested selector list whose last selector carries a spaced combinator of its own`,
 			code: `a { > /*comment*/ a, > /*comment*/ .b >.c {}}`,
 			fixed: `a { > /*comment*/ a, > /*comment*/ .b>.c {}}`,

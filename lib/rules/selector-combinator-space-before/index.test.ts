@@ -190,11 +190,20 @@ testRule({
 			message: messages.expectedBefore(`>`),
 		},
 		{
-			description: `a comment the parser folds into the raws of the combinator, which the fix cannot write past`,
+			// The parser folds the comment into the combinator's raws, and the fix cuts the run between the comment and the combinator out of the selector's text all the same
+			description: `a comment in front of the combinator, with two spaces between them`,
 			code: `.foo  /* c */  >  .bar { }`,
-			fixed: `.foo  /* c */  >  .bar { }`,
+			fixed: `.foo  /* c */ >  .bar { }`,
 			line: 1,
 			column: 16,
+			message: messages.expectedBefore(`>`),
+		},
+		{
+			description: `a comment in front of the combinator, with a line break between them`,
+			code: `a /* c */\n>b { }`,
+			fixed: `a /* c */ >b { }`,
+			line: 2,
+			column: 1,
 			message: messages.expectedBefore(`>`),
 		},
 		{
@@ -389,6 +398,14 @@ testRule({
 	],
 
 	reject: [
+		{
+			description: `a comment in front of the combinator, with a space between them`,
+			code: `a /* c */ >b { }`,
+			fixed: `a /* c */>b { }`,
+			line: 1,
+			column: 11,
+			message: messages.rejectedBefore(`>`),
+		},
 		{
 			// Pins the refusal of a write behind a backslash the character it escapes would change behind
 			description: `a backslash ending the name in front of a line break and the combinator, which the write would turn into an escaped combinator, so the warning stands`,

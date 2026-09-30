@@ -71,8 +71,8 @@ export function selectorCombinatorSpaceChecker (opts: {
 		 */
 		function check (selectorText: string, source: string, combinator: Combinator, index: number, node: Node, reportIndex: number): void {
 			let combinatorEdits = fix ? fix(index, source) : []
-			// A comment beside a combinator folds into that side's raws, and whether the fix may write the run the check read between it and the combinator is unsettled, so the warning stands there. A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `b\⏎>c` would come out as `b\>c`, one word, or `b\ >c`, an escaped space, so the warning stands for that too
-			let isFixable = fix && combinator.raws?.spaces?.[opts.locationType] === undefined && combinatorEdits.every((edit) => editKeepsEscapedCharacter(selectorText, edit))
+			// The fix cuts the run between a comment and the combinator out of the selector's text, which the parser reads back the same way; only the break closing a `//` comment is no run to write over, since what stands behind it would then be the comment's text, so the warning stands there. A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `b\⏎>c` would come out as `b\>c`, one word, or `b\ >c`, an escaped space, so the warning stands for that too
+			let isFixable = fix && combinatorEdits.every((edit) => !copies.comments.some((inlineComment) => edit.start <= inlineComment.endIndex && inlineComment.endIndex < edit.end) && editKeepsEscapedCharacter(selectorText, edit))
 
 			opts.locationChecker({
 				source,
