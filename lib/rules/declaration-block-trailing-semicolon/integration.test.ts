@@ -6,6 +6,8 @@ import { ruleName as atRuleSpaceBeforeRuleName } from "../at-rule-semicolon-spac
 import { messages as braceNewlineBeforeMessages, ruleName as braceNewlineBeforeRuleName } from "../block-closing-brace-newline-before/index.ts"
 import { messages as newlineBeforeMessages, ruleName as newlineBeforeRuleName } from "../declaration-block-semicolon-newline-before/index.ts"
 import { messages as spaceBeforeMessages, ruleName as spaceBeforeRuleName } from "../declaration-block-semicolon-space-before/index.ts"
+import { messages as colonNewlineAfterMessages } from "../declaration-colon-newline-after/index.ts"
+import { messages as valueListCommaNewlineAfterMessages } from "../value-list-comma-newline-after/index.ts"
 
 import { messages, ruleName } from "./index.ts"
 
@@ -406,6 +408,139 @@ testRuleListedFirst({
 			endLine: 1,
 			endColumn: 21,
 			message: messages.rejected,
+		},
+	],
+})
+
+testRuleListedFirst({
+	ruleName,
+	config: [`always`],
+	extraRules: {
+		"@stylistic/declaration-colon-newline-after": `always`,
+		"@stylistic/declaration-block-semicolon-space-before": `always-single-line`,
+	},
+
+	reject: [
+		{
+			// The block is on one line at this rule's turn, but the colon rule listed behind breaks it in the same pass, and the space twin, judging at the run's end, asks nothing of a block broken over lines: the semicolon goes in bare, as it does with the colon rule listed first
+			description: `a block on one line whose declaration a live colon rule will break, so the semicolon gets no space`,
+			code: `a { b: c }`,
+			fixed: `
+				a { b:
+				 c; }
+			`,
+			warnings: [
+				{
+					line: 1,
+					column: 8,
+					endLine: 1,
+					endColumn: 9,
+					message: messages.expected,
+				},
+				{
+					line: 1,
+					column: 6,
+					endLine: 1,
+					endColumn: 7,
+					message: colonNewlineAfterMessages.expectedAfter(),
+				},
+			],
+		},
+		{
+			description: `a block on one line whose custom property holds a comment, which the live colon rule breaks behind`,
+			code: `a { --b: /*c*/ }`,
+			fixed: `
+				a { --b: /*c*/
+				; }
+			`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 15,
+					message: messages.expected,
+				},
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 15,
+					message: colonNewlineAfterMessages.expectedAfter(),
+				},
+			],
+		},
+	],
+})
+
+testRuleListedFirst({
+	ruleName,
+	config: [`always`],
+	extraRules: {
+		"@stylistic/block-closing-brace-newline-before": `always`,
+		"@stylistic/declaration-block-semicolon-space-before": `always-single-line`,
+	},
+
+	reject: [
+		{
+			description: `a block on one line whose closing brace a live brace rule will put behind a break, so the semicolon gets no space either`,
+			code: `a { b: c }`,
+			fixed: `
+				a { b: c;
+				 }
+			`,
+			warnings: [
+				{
+					line: 1,
+					column: 8,
+					endLine: 1,
+					endColumn: 9,
+					message: messages.expected,
+				},
+				{
+					line: 1,
+					column: 9,
+					endLine: 1,
+					endColumn: 10,
+					message: braceNewlineBeforeMessages.expectedBefore,
+				},
+			],
+		},
+	],
+})
+
+testRuleListedFirst({
+	ruleName,
+	config: [`always`],
+	extraRules: {
+		"@stylistic/value-list-comma-newline-after": `always`,
+		"@stylistic/declaration-block-semicolon-space-before": `always-single-line`,
+	},
+
+	reject: [
+		{
+			description: `a block on one line whose value list a live comma rule will break, so the semicolon gets no space either`,
+			code: `a { b: c, d }`,
+			fixed: `
+				a { b: c,
+				 d; }
+			`,
+			warnings: [
+				{
+					line: 1,
+					column: 11,
+					endLine: 1,
+					endColumn: 12,
+					message: messages.expected,
+				},
+				{
+					line: 1,
+					column: 9,
+					endLine: 1,
+					endColumn: 10,
+					message: valueListCommaNewlineAfterMessages.expectedAfter(),
+				},
+			],
 		},
 	],
 })

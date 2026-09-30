@@ -1,14 +1,17 @@
-import type { AtRule, Declaration } from "postcss"
+import type { AtRule, Container, Declaration } from "postcss"
+import styleSearch from "style-search"
 import type { PostcssResult } from "stylelint"
 
 import { CSS_LINE_BREAK, TRAILING_BACKSLASHES, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blockString } from "../blockString/index.ts"
+import { declarationString } from "../declarationString/index.ts"
 import { type CommentReading, findEscapeSpans } from "../findCommentSpans/index.ts"
+import { fixDisabledOnLine } from "../fixDisabledOnLine/index.ts"
 import { isSingleLineString } from "../isSingleLineString/index.ts"
 import { maskEscapes } from "../maskEscapes/index.ts"
-import type { NeighborRule } from "../neighborSettings/index.ts"
-import { isAtRule } from "../typeGuards/index.ts"
+import { neighborCopies, type NeighborRule } from "../neighborSettings/index.ts"
+import { isAtRule, isDeclaration, isRoot } from "../typeGuards/index.ts"
 import { type Whitespace, whitespaceAsked } from "../whitespaceAsked/index.ts"
 
 /** The rules about the whitespace in front of a semicolon, by node type and whitespace. */
@@ -32,9 +35,51 @@ const RULES_OF_WHITESPACE: Record<`decl` | `atrule`, Partial<Record<Whitespace, 
 }
 
 /**
+ * Asks whether a declaration holds a comma of a value list, read as `valueListCommaWhitespaceChecker` reads them: over the search copy, a function's arguments skipped, and on the properties the comma rules read at all.
+ * @param syntax - The asking rule's syntax.
+ * @param decl - The declaration.
+ * @param result - The Stylelint result.
+ * @returns True where the comma rules have a comma of it to break behind or in front of.
+ */
+function holdsAListComma (syntax: Syntax, decl: Declaration, result: PostcssResult): boolean {
+	if (!syntax.isStandardDeclaration(decl) || !syntax.isStandardProperty(decl.prop)) return false
+
+	let found = false
+
+	styleSearch({ source: syntax.searchCopy(declarationString(syntax, decl), decl, result).searchString, target: `,`, functionArguments: `skip` }, () => {
+		found = true
+	})
+
+	return found
+}
+
+/** The rules whose live `always` breaks a single-line declaration block in the same pass, each with the question of whether it has anything of the block to break: the brace rules any block with braces, which a root standing in for one, an inline `style` attribute's, has not, the colon rule a block holding a standard declaration, the semicolon newline rule a block holding two declarations, so that a semicolon stands between them, the value-list comma rules a block holding a declaration with a comma of its list. `declaration-block-semicolon-newline-before` is not listed, since its live `always` is the ask itself and outranks the twin in `whitespaceAsked` without any lineness asked; the families writing breaks inside a call or a selector are not listed either. */
+const BLOCK_BREAKERS: { rule: NeighborRule, breaks: (syntax: Syntax, block: Container, result: PostcssResult) => boolean }[] = [
+	{ rule: { name: `block-opening-brace-newline-after`, options: [`always`] }, breaks: (syntax, block) => !isRoot(block) },
+	{ rule: { name: `block-closing-brace-newline-before`, options: [`always`] }, breaks: (syntax, block) => !isRoot(block) },
+	{ rule: { name: `declaration-colon-newline-after`, options: [`always`] }, breaks: (syntax, block) => (block.nodes ?? []).some((node) => isDeclaration(node) && syntax.isStandardDeclaration(node)) },
+	{ rule: { name: `declaration-block-semicolon-newline-after`, options: [`always`] }, breaks: (syntax, block) => (block.nodes ?? []).filter((node) => isDeclaration(node)).length > 1 },
+	{ rule: { name: `value-list-comma-newline-after`, options: [`always`] }, breaks: (syntax, block, result) => (block.nodes ?? []).some((node) => isDeclaration(node) && holdsAListComma(syntax, node, result)) },
+	{ rule: { name: `value-list-comma-newline-before`, options: [`always`] }, breaks: (syntax, block, result) => (block.nodes ?? []).some((node) => isDeclaration(node) && holdsAListComma(syntax, node, result)) },
+]
+
+/**
+ * Asks whether a live rule breaks the block in this pass: a `-single-line` option of the semicolon rules is asked at the run's end, when every undeferred rule has written, so the block it judges is the one those rules leave, not the one a semicolon's writer sees at its own turn. The block is on one line when asked, so a disable comment keeping a breaker's fix off that line keeps it off the block.
+ * @param syntax - The asking rule's syntax.
+ * @param block - The declaration block.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns True where a live `always` of a rule writing breaks into the block is configured with its fix on, not kept off the block's line, and has something of the block to break.
+ */
+function breaksInThisPass (syntax: Syntax, block: Container, result: PostcssResult): boolean {
+	let line = block.source?.start?.line
+
+	return BLOCK_BREAKERS.some(({ rule, breaks }) => breaks(syntax, block, result) && neighborCopies(block, result, rule).some(({ option, fixDisabled, name }) => option === `always` && !fixDisabled && !(line !== undefined && fixDisabledOnLine(result, name, line))))
+}
+
+/**
  * The whitespace the rules about it ask for in front of a semicolon a fix adds behind a declaration or bodiless at-rule.
  *
- * Stylelint runs each rule once, so a bare semicolon written behind `declaration-block-semicolon-newline-before` or `-space-before` waits for the next `--fix`, as does one written behind `at-rule-semicolon-space-before`. `whitespaceAsked` picks the rule, a break asked for winning over a `-single-line` twin's space; lineness is asked of the block at the write.
+ * Stylelint runs each rule once, so a bare semicolon written behind `declaration-block-semicolon-newline-before` or `-space-before` waits for the next `--fix`, as does one written behind `at-rule-semicolon-space-before`. `whitespaceAsked` picks the rule, a break asked for winning over a `-single-line` twin's space; lineness is asked of the block as the rules writing breaks into it leave it, since a `-single-line` twin judges the block at the run's end, behind their writes.
  * @param syntax - The asking rule's syntax.
  * @param node - The declaration or bodiless at-rule.
  * @param result - The Stylelint result.
@@ -57,7 +102,7 @@ export function whitespaceBeforeSemicolon (syntax: Syntax, node: AtRule | Declar
 	 * @returns True when it is.
 	 */
 	function isSingleLine (): boolean {
-		singleLine ??= isSingleLineString(blockString(block, result))
+		singleLine ??= isSingleLineString(blockString(block, result)) && !breaksInThisPass(syntax, block, result)
 
 		return singleLine
 	}
