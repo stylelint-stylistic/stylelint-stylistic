@@ -2,6 +2,7 @@ import { messages as openingNewlineAfterMessages } from "../block-opening-brace-
 import { messages as semicolonNewlineAfterMessages } from "../declaration-block-semicolon-newline-after/index.ts"
 import { messages as semicolonNewlineBeforeMessages } from "../declaration-block-semicolon-newline-before/index.ts"
 import { messages as trailingSemicolonMessages } from "../declaration-block-trailing-semicolon/index.ts"
+import { messages as colonNewlineAfterMessages } from "../declaration-colon-newline-after/index.ts"
 
 import { messages, ruleName } from "./index.ts"
 
@@ -203,6 +204,43 @@ testRule({
 					endLine: 2,
 					endColumn: 13,
 					message: semicolonNewlineBeforeMessages.expectedBefore(),
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`tab`],
+	extraRules: { "@stylistic/declaration-colon-newline-after": `always` },
+
+	reject: [
+		{
+			description: `a wordless custom property whose semicolon the neighbor carries onto a line of its own behind the colon: that line gets its indent in the same run`,
+			code: `a {\n\t--x: ;\n}\n`,
+			fixed: `a {\n\t--x:\n\t;\n}\n`,
+			warnings: [
+				{
+					line: 2,
+					column: 5,
+					endLine: 2,
+					endColumn: 6,
+					message: colonNewlineAfterMessages.expectedAfter(),
+				},
+			],
+		},
+		{
+			description: `the same with a wordless standard property, whose whitespace the parser files in the value's raw`,
+			code: `a {\n\tb: ;\n}\n`,
+			fixed: `a {\n\tb:\n\t;\n}\n`,
+			warnings: [
+				{
+					line: 2,
+					column: 3,
+					endLine: 2,
+					endColumn: 4,
+					message: colonNewlineAfterMessages.expectedAfter(),
 				},
 			],
 		},

@@ -1,8 +1,9 @@
 import type { ChildNode, Container, Node, Root } from "postcss"
 import type { PostcssResult, RuleMessage } from "stylelint"
 
-import { EVERY_LINE_BREAK, EVERY_SEMICOLON, LEADING_CSS_WHITESPACE, LEADING_WHITESPACE_WITHOUT_BREAK } from "../../regexps.ts"
+import { EVERY_LINE_BREAK, EVERY_SEMICOLON, LEADING_CSS_WHITESPACE, LEADING_WHITESPACE_WITHOUT_BREAK, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
+import { betweenTailAfterColon } from "../betweenTailAfterColon/index.ts"
 import { carriesABlock } from "../carriesABlock/index.ts"
 import { declarationString } from "../declarationString/index.ts"
 import { getBlockAfter } from "../getBlockAfter/index.ts"
@@ -16,12 +17,13 @@ import { setBlockAfter } from "../setBlockAfter/index.ts"
 import { statementString } from "../statementString/index.ts"
 import { straySemicolonsTakenOwn, withoutTaken, writtenAsLeft } from "../straySemicolonsTaken/index.ts"
 import { isAtRule, isDeclaration, isRoot, isRule } from "../typeGuards/index.ts"
+import { assertString } from "../validateTypes/index.ts"
 import { readWhitespaceBeforeSemicolon, writeWhitespaceBeforeSemicolon } from "../whitespaceBeforeSemicolon/index.ts"
 
 /**
  * Checks the line a statement's semicolon opens, for `indentation`.
  *
- * The run in front of the semicolon is read where `writeWhitespaceBeforeSemicolon` writes it. Nobody else reads its last line: `checkMultilineBit` passes over a line without content, and `checkAtRuleParams` trims the run off the params. The line closes the statement, so it is asked for the statement's own level, as a closing brace stands at its block's; `except` and `ignore` speak of the lines of a value or of params, and this line holds neither. A whitespace-only line in front of it is `no-eol-whitespace`'s, and the fix writes the last line alone, since `fixIndentation` takes a break's indentation only in front of content or the end. Behind a Less mixin call's `!important` the run is read from the flag's raw, where the `less` namespace hands it wherever it finds the flag in the file.
+ * The run in front of the semicolon is read where `writeWhitespaceBeforeSemicolon` writes it, and from behind the colon through the value for a wordless declaration, whose last line is written where it opens. Nobody else reads its last line: `checkMultilineBit` passes over a line without content, and `checkAtRuleParams` trims the run off the params. The line closes the statement, so it is asked for the statement's own level, as a closing brace stands at its block's; `except` and `ignore` speak of the lines of a value or of params, and this line holds neither. A whitespace-only line in front of it is `no-eol-whitespace`'s, and the fix writes the last line alone, since `fixIndentation` takes a break's indentation only in front of content or the end. Behind a Less mixin call's `!important` the run is read from the flag's raw, where the `less` namespace hands it wherever it finds the flag in the file.
  * @param options - The node, the syntax, the result, the rule's name and message, the indentation asked for and how the message words it.
  * @param options.node - The node walked; only a declaration or a bodiless at-rule a semicolon closes has such a line.
  * @param options.syntax - The syntax that reads and writes the run.
@@ -43,7 +45,9 @@ export function semicolonLineChecker ({ node, syntax, result, checkedRuleName, m
 	if (!isDeclaration(node) && !isAtRule(node)) return
 	if (hasBlock(node) || isLastNodeWithoutSemicolon(node)) return
 
-	let run = readWhitespaceBeforeSemicolon(syntax, node, result)
+	// A wordless value shares its run with the colon: `declaration-colon-newline-after` writes its break behind the colon in `raws.between`, which the next parse carries into the value, so the run is read from behind the colon and the line is indented in the pass the neighbor opened it, whichever side of it this rule is listed
+	let tail = isDeclaration(node) && !node.important && WHITESPACE_OR_NOTHING.test(syntax.read(node)) ? betweenTailAfterColon(syntax, node, result) : ``
+	let run = `${tail}${readWhitespaceBeforeSemicolon(syntax, node, result)}`
 	let lines = run.split(EVERY_LINE_BREAK)
 
 	if (lines.length < 2 || lastLineIndentation(run) === expectedIndentation) return
@@ -60,7 +64,22 @@ export function semicolonLineChecker ({ node, syntax, result, checkedRuleName, m
 		result,
 		ruleName: checkedRuleName,
 		fix () {
-			writeWhitespaceBeforeSemicolon(syntax, node, result, fixIndentation(run, expectedIndentation))
+			let lineStart = lastLineStart(run)
+
+			// The last line opens where the value's run does, behind the break the tail ends on, or inside the value's run
+			if (lineStart >= tail.length || !isDeclaration(node)) {
+				writeWhitespaceBeforeSemicolon(syntax, node, result, lineStart === tail.length ? expectedIndentation : fixIndentation(run.slice(tail.length), expectedIndentation))
+
+				return
+			}
+
+			// A tail ending on whitespace behind its last break, which no writer of the colon's run is known to leave: the tail takes the indentation and the value's run is emptied
+			let { between } = node.raws
+
+			assertString(between)
+
+			node.raws.between = `${between.slice(0, between.length - tail.length)}${tail.slice(0, lineStart)}${expectedIndentation}`
+			writeWhitespaceBeforeSemicolon(syntax, node, result, ``)
 		},
 	})
 }
