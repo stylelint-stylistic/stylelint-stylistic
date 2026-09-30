@@ -61,13 +61,41 @@ testRule({
 
 	reject: [
 		{
+			// A feature's parentheses are a call with an empty name to the value parser, so a count landing behind the feature's parenthesis landed inside a call's name
+			description: `a call in a feature's value with no space behind its parenthesis, reported behind the parenthesis`,
+			code: `@media (a: foo(b)) { d { e: f } }`,
+			fixed: `@media ( a: foo( b ) ) { d { e: f } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 17,
+					message: messages.expectedClosing,
+				},
+				{
+					line: 1,
+					column: 16,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 16,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
 			description: `a call in a feature's value whose name a hexadecimal escape welds to the word in front of it, holding a bare address with a quotation mark, where the space behind its parenthesis would hand the parentheses to code and leave a string nothing closes`,
 			code: `@media ( a: \\61 url(b"c.png) ) { d { e: f } }`,
 			fixed: `@media ( a: \\61 url(b"c.png ) ) { d { e: f } }`,
 			warnings: [
 				{
 					line: 1,
-					column: 18,
+					column: 21,
 					message: messages.expectedOpening,
 				},
 				{
@@ -84,7 +112,7 @@ testRule({
 			warnings: [
 				{
 					line: 1,
-					column: 18,
+					column: 21,
 					message: messages.expectedOpening,
 				},
 				{
@@ -296,7 +324,7 @@ testRule({
 				},
 				{
 					line: 1,
-					column: 21,
+					column: 25,
 					message: messages.expectedOpening,
 				},
 			],
@@ -361,7 +389,7 @@ testRule({
 			warnings: [
 				{
 					line: 1,
-					column: 22,
+					column: 25,
 					message: messages.expectedOpening,
 				},
 				{
@@ -424,13 +452,30 @@ testRule({
 
 	reject: [
 		{
+			description: `a call in a feature's value with a space behind its parenthesis, reported on that space`,
+			code: `@media (a: f( b )) { d { e: f } }`,
+			fixed: `@media (a: f(b)) { d { e: f } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					message: messages.rejectedOpening,
+				},
+				{
+					line: 1,
+					column: 16,
+					message: messages.rejectedClosing,
+				},
+			],
+		},
+		{
 			description: `the same call holding a string with a closing parenthesis, where emptying the run behind its parenthesis would close the address's token inside that string and leave its quotation mark unpaired`,
 			code: `@media (a: \\61 url( b ")" c )) { d { e: f } }`,
 			fixed: `@media (a: \\61 url( b ")" c)) { d { e: f } }`,
 			warnings: [
 				{
 					line: 1,
-					column: 17,
+					column: 20,
 					message: messages.rejectedOpening,
 				},
 				{
@@ -448,7 +493,7 @@ testRule({
 			warnings: [
 				{
 					line: 1,
-					column: 13,
+					column: 16,
 					message: messages.rejectedOpening,
 				},
 				{
@@ -458,7 +503,7 @@ testRule({
 				},
 				{
 					line: 1,
-					column: 23,
+					column: 24,
 					message: messages.rejectedOpening,
 				},
 				{
@@ -757,7 +802,7 @@ testRule({
 			code: `@media (c: [c\\]url( a(b)c.png)) { a { b: 1px; } }`,
 			fixed: `@media (c: [c\\]url(a(b)c.png)) { a { b: 1px; } }`,
 			line: 1,
-			column: 13,
+			column: 20,
 			message: messages.rejectedOpening,
 		},
 		{
@@ -784,7 +829,7 @@ testRule({
 			code: `@media (a: \\61 url( a(b)c:d)) {}`,
 			fixed: `@media (a: \\61 url( a(b)c:d)) {}`,
 			line: 1,
-			column: 17,
+			column: 20,
 			message: messages.rejectedOpening,
 		},
 		{
@@ -793,7 +838,7 @@ testRule({
 			code: `@media (a: 1(\\61 url( a(b)c:d))) {}`,
 			fixed: `@media (a: 1(\\61 url( a(b)c:d))) {}`,
 			line: 1,
-			column: 19,
+			column: 22,
 			message: messages.rejectedOpening,
 		},
 		{
@@ -801,7 +846,7 @@ testRule({
 			code: `@media (a: -(\\61 url( a(b)c:d))) {}`,
 			fixed: `@media (a: -(\\61 url( a(b)c:d))) {}`,
 			line: 1,
-			column: 19,
+			column: 22,
 			message: messages.rejectedOpening,
 		},
 		{
@@ -809,7 +854,7 @@ testRule({
 			code: `@media (a: 1%(\\61 url( a(b)c:d))) {}`,
 			fixed: `@media (a: 1%(\\61 url( a(b)c:d))) {}`,
 			line: 1,
-			column: 20,
+			column: 23,
 			message: messages.rejectedOpening,
 		},
 		{
@@ -818,7 +863,7 @@ testRule({
 			code: `@media (a: 1a(\\61 url( a(b)c:d))) {}`,
 			fixed: `@media (a: 1a(\\61 url( a(b)c:d))) {}`,
 			line: 1,
-			column: 20,
+			column: 23,
 			message: messages.rejectedOpening,
 		},
 	],

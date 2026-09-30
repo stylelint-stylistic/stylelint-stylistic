@@ -34,8 +34,8 @@ export let meta = {
 }
 
 /**
- * The edit writing the whitespace behind a media feature's `(`, counted in the params.
- * @param node - The media feature.
+ * The edit writing the whitespace behind the `(` of a media feature or of a call in its value, counted in the params.
+ * @param node - The media feature or the call.
  * @param text - The whitespace.
  * @returns The edit.
  */
@@ -121,18 +121,20 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					// The `)` the parser closed the feature on may be one the file writes inside a comment: it knows nothing of a `//` comment and closes a `/*\/` one on its own star, so either kind can hand it a parenthesis of a comment's text and the fixes then write inside that text. The whole feature goes, the parenthesis the file does spell being one the parser never returned.
 					if (findCommentSpanAt(node.sourceEndIndex - 1, comments)) return
 
+					// The feature is a call with an empty name to the value parser, so a count past the name lands behind the parenthesis of either
+					let openingIndex = node.sourceIndex + node.value.length + 1
 					let closingIndex = closingParenthesisIndex(node) - 1
 					// A pair holding no node encloses one run of the tokenizer's whitespace, `splitSpaceNodesAtWords` having carried any other control character into a node, and the value parser hands that run back whole as `before` and never as `after`: the closing question is the opening one, and asking it again reported a half the opening fix had settled and wrote another space every run. Under `never` no guard is wanted, since an empty `after` is whitespace to nobody.
 					let enclosesOneRun = node.nodes.length === 0
 					// Under either option, the walk reads every call of the params, and a name the compilers read as no address is one the tokenizer can still take a url token by: the run behind the `(` holds the character deciding that, and a run holding a break, which `never` empties whole, can make parentheses one plain token that pushes none of the words inside, so every write is asked once the walk is done whether it switches the reading, and one that does is refused and its warning stands
 					if (primary === `never`) {
-						if (SPACE_OR_TAB.test(node.before)) problems.push({ message: messages.rejectedOpening, index: node.sourceIndex + 1 + indexBoost, edits: [openingEdit(node, ``)] })
+						if (SPACE_OR_TAB.test(node.before)) problems.push({ message: messages.rejectedOpening, index: openingIndex + indexBoost, edits: [openingEdit(node, ``)] })
 
 						// The fix would take the `)` into a `//` comment
 						if (SPACE_OR_TAB.test(node.after)) problems.push({ message: messages.rejectedClosing, index: closingIndex + indexBoost, edits: syntax.endsWithInlineComment(params.slice(0, node.sourceEndIndex - 1 - node.after.length), reading) ? undefined : [closingEdit(node, ``)] })
 					}
 					else if (primary === `always`) {
-						if (node.before === ``) problems.push({ message: messages.expectedOpening, index: node.sourceIndex + 1 + indexBoost, edits: [openingEdit(node, ` `)] })
+						if (node.before === ``) problems.push({ message: messages.expectedOpening, index: openingIndex + indexBoost, edits: [openingEdit(node, ` `)] })
 
 						if (node.after === `` && !enclosesOneRun) problems.push({ message: messages.expectedClosing, index: closingIndex + indexBoost, edits: [closingEdit(node, ` `)] })
 					}
