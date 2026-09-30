@@ -3,6 +3,7 @@ import stylelint from "stylelint"
 import { LEADING_CSS_WHITESPACE, LEADING_WHITESPACE_WITHOUT_BREAK, LINE_BREAK, OPENS_WITH_BLOCK_COMMENT, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE, TRAILING_WHITESPACE_WITHOUT_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { runHandedToTheBlock } from "../../utils/closedBySemicolon/index.ts"
+import { closingBraceRunWrites } from "../../utils/closingBraceRunWrites/index.ts"
 import { colonIndexInBetween } from "../../utils/colonIndexInBetween/index.ts"
 import { declarationColonSource } from "../../utils/declarationColonSource/index.ts"
 import { declarationValueAsSpelled } from "../../utils/declarationValueAsSpelled/index.ts"
@@ -17,7 +18,7 @@ import { runPastDeclaration, runPastDeclarationEndsTheStylesheet, writeRunPastDe
 import { assertString } from "../../utils/validateTypes/index.ts"
 import { whitespaceBeforeSemicolon } from "../../utils/whitespaceBeforeSemicolon/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
-import { sharesRunWithSemicolon, writesSharedRun } from "../../utils/writesSharedRun/index.ts"
+import { sharesRunWithBrace, sharesRunWithSemicolon, writesSharedRun } from "../../utils/writesSharedRun/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -78,6 +79,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let isFixable = writesSharedRun(syntax, decl, result, ruleName)
 			// Where `declaration-block-semicolon-newline-before` asks the shared run for a break, the fix writes the bare break the neighbor would, so either order ends on one file
 			let finishesTheRun = isFixable && sharesRunWithSemicolon(syntax, decl, result, ruleName) && LINE_BREAK.test(whitespaceBeforeSemicolon(syntax, decl, result))
+			// A custom property closing the block without a semicolon keeps the run in front of the closing brace in its value, where the brace rules read and write it: the break goes there, spelled as `block-closing-brace-newline-before` spells it, rather than into `raws.between`, which that rule does not read, so the pair rests on one file in either order. A plain property's run left the declaration for the block's raw, which the branch above writes
+			let writesTheBracesRun = isFixable && sharesRunWithBrace(syntax, decl, result, ruleName)
 
 			/** Trims the shared run to the bare break the neighbor asks for; a bare carriage return and a form feed go too, since the neighbor replaces the whole run. */
 			function finishTheRun (): void {
@@ -165,6 +168,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 								let valueAfter = syntax.read(decl)
 
 								if (OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(valueAfter.slice(0, valueAfter.length - runHandedToTheBlock(decl, result).length))) syntax.write(decl, valueAfter.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``))
+								else if (writesTheBracesRun) syntax.write(decl, closingBraceRunWrites(() => getLineBreak(root, result)).newline(`always`, valueAfter))
 								else decl.raws.between += getLineBreak(root, result)
 
 								finishTheRun()

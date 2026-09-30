@@ -297,6 +297,20 @@ export function sharesRunWithSemicolon (syntax: Syntax, decl: Declaration, resul
 }
 
 /**
+ * Asks whether the run a rule reads of this declaration is the one in front of the closing brace of its block, kept in a custom property's value and left to the block's raw behind a plain property; the head run alone does not count.
+ * @param syntax - The syntax the asking rule is built over.
+ * @param decl - The declaration.
+ * @param result - The Stylelint result.
+ * @param ruleName - The asking rule's registered name.
+ * @returns True where the asking rule reads the brace's run.
+ */
+export function sharesRunWithBrace (syntax: Syntax, decl: Declaration, result: PostcssResult, ruleName: string): boolean {
+	let asking = (Object.keys(PARTICIPANTS) as Participant[]).find((participant) => addNamespace(PARTICIPANTS[participant].name, syntax.namespace) === ruleName)
+
+	return asking !== undefined && sharedRunsOf(syntax, decl, result).brace.has(asking)
+}
+
+/**
  * Asks whether an option accepts the run as it stands. The classes of `accepts` answer for every run but one holding a break, which a rule reads at its own end: the semicolon and comma newline rules take indentation behind the break, the colon and brace newline rules want the break in front of everything else, so ` \n` is a break to the ones and none to the others.
  * @param participant - The rule.
  * @param option - The rule's primary option, `always` or `never` with any line suffix.

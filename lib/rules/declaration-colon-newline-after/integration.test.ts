@@ -177,6 +177,64 @@ testRule({
 testRule({
 	ruleName,
 	config: [`always`],
+	extraRules: { "@stylistic/block-closing-brace-newline-before": `always` },
+
+	reject: [
+		{
+			// The run behind the comment is the one in front of the brace, which the neighbor reads in the value; the break goes there, as the neighbor would write it, and the neighbor finds it in place
+			description: `a custom property whose value is a comment on the colon's line, closing its block with a space in front of the brace, beside a rule asking for a break in front of the brace`,
+			code: `a { --b: /*c*/ }`,
+			fixed: `
+				a { --b: /*c*/
+				 }
+			`,
+			warnings: [
+				{
+					line: 1,
+					column: 14,
+					endLine: 1,
+					endColumn: 15,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 15,
+					endLine: 1,
+					endColumn: 16,
+					message: braceNewlineBeforeMessages.expectedBefore,
+				},
+			],
+		},
+		{
+			description: `a custom property whose value is two spaces, which are the run in front of the brace as well`,
+			code: `a { --b:  }`,
+			fixed: `
+				a { --b:
+				  }
+			`,
+			warnings: [
+				{
+					line: 1,
+					column: 8,
+					endLine: 1,
+					endColumn: 9,
+					message: messages.expectedAfter(),
+				},
+				{
+					line: 1,
+					column: 10,
+					endLine: 1,
+					endColumn: 11,
+					message: braceNewlineBeforeMessages.expectedBefore,
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always`],
 	extraRules: { "@stylistic/declaration-block-semicolon-newline-before": `never-multi-line` },
 
 	reject: [
