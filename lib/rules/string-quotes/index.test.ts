@@ -97,6 +97,24 @@ testRule({
 			message: messages.expected(`single`),
 		},
 		{
+			// The rule walks a copy with the comment blanked to spaces, where the string is the first node of the call; to the CSS tokenizer the comment is no whitespace, so lightningcss reads a bad url token in either spelling of the name and Less refuses the file
+			description: `a comment between the parenthesis and the quotation mark of an address whose name is written in capitals, beside a double-quoted value`,
+			code: `a { b: URL(/*c*/"a"); c: "d" }`,
+			fixed: `a { b: URL(/*c*/"a"); c: 'd' }`,
+			line: 1,
+			column: 26,
+			message: messages.expected(`single`),
+		},
+		{
+			// The value parser passes a control character over in front of the string as whitespace, the tokenizer takes the parentheses behind it as one token, and the compilers refuse the file
+			description: `a vertical tab between the parenthesis and the quotation mark of an address, beside a double-quoted value`,
+			code: `a { b: url(\v"a"); c: "d" }`,
+			fixed: `a { b: url(\v"a"); c: 'd' }`,
+			line: 1,
+			column: 22,
+			message: messages.expected(`single`),
+		},
+		{
 			description: `the same address with a letter of its name escaped`,
 			code: `a { b: u\\rl(a"b"c); c: "d" }`,
 			fixed: `a { b: u\\rl(a"b"c); c: 'd' }`,

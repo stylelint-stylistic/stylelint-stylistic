@@ -13,6 +13,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hideParenthesesInUrlStrings } from "../../utils/hideParenthesesInUrlStrings/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import { parseSelector } from "../../utils/parseSelector/index.ts"
+import { quotesItsAddress } from "../../utils/quotesItsAddress/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { assertString, isBoolean } from "../../utils/validateTypes/index.ts"
@@ -248,7 +249,8 @@ function checkDeclOrAtRule<T extends AtRule | Declaration> (scope: QuotesScope, 
 
 	valueParser(maskMisreadMarks(hideParenthesesInUrlStrings(blankComments(value, commentSpans), commentSpans), addressTokens)).walk((valueNode, index, siblings) => {
 		// A bare address is passed over whole where the syntax reads a quotation mark inside one as a character of it, since the parser opens an address behind the name spelled `url` alone and hands the strings behind `URL(`, `u\rl(` and `\75 rl(` back as strings. A quoted address is the string, and is walked.
-		if (valueNode.type === `function` && !syntax.readsQuoteInsideAddressAsString() && opensAnAddress(valueNode, index, siblings) && valueNode.nodes[0]?.type !== `string`) return false
+		// The walked copy holds spaces where the file holds a comment, so whether a string opens the parentheses is asked of the run the file spells between the `(` and the string: a comment there is no whitespace to the CSS tokenizer, so lightningcss reads a bad url token to the `)` whatever the name's spelling and Less refuses the file, while PostCSS's tokenizer reads code behind a name spelled other than `url`
+		if (valueNode.type === `function` && !syntax.readsQuoteInsideAddressAsString() && opensAnAddress(valueNode, index, siblings) && !quotesItsAddress(valueNode, value.slice(valueNode.sourceIndex + valueNode.value.length + 1, valueNode.nodes[0]?.sourceIndex))) return false
 
 		// A string the value never closes has no mark to replace, and a mark written where the parser read none leaves a text it refuses
 		if (valueNode.type === `string` && valueNode.unclosed) return
