@@ -69,6 +69,26 @@ testRule({
 
 	reject: [
 		{
+			// The run in front of the comma is read with the comments standing, so the space between a comment on the argument's own line and the comma is the run, not the break in front of the comment
+			description: `a comment on its own line in front of the comma, with a single space between them`,
+			code: `
+				a {
+					b: f(1
+						/* comment */ ,2);
+				}
+			`,
+			fixed: `
+				a {
+					b: f(1
+						/* comment */
+				,2);
+				}
+			`,
+			line: 3,
+			column: 17,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `the comma behind a quoted address, which parts the arguments of a call as any comma does`,
 			code: `a { b: url("x", f(1)); }`,
 			fixed: `a { b: url("x"\n, f(1)); }`,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { commentsRemovedBefore, withoutComments } from "./index.ts"
+import { withoutComments } from "./index.ts"
 
 describe(`withoutComments`, () => {
 	it(`no comment`, () => {
@@ -45,23 +45,5 @@ describe(`withoutComments`, () => {
 
 	it(`a line break in front of a comment stays where it is`, () => {
 		expect(withoutComments(`1px\n/*c*/ , 2px`)).toBe(`1px\n , 2px`)
-	})
-})
-
-describe(`commentsRemovedBefore`, () => {
-	it(`nothing removed`, () => {
-		expect(commentsRemovedBefore(`1px, 2px`, 4)).toBe(0)
-	})
-
-	it(`a comment standing in front of the index`, () => {
-		expect(commentsRemovedBefore(`1px /*c*/ , 2px`, 10)).toBe(6)
-	})
-
-	it(`a comment standing behind the index`, () => {
-		expect(commentsRemovedBefore(`1px , /*c*/ 2px`, 4)).toBe(0)
-	})
-
-	it(`a comment code follows straight away, which is removed from nothing`, () => {
-		expect(commentsRemovedBefore(`1 /*c*/, 1`, 7)).toBe(0)
 	})
 })

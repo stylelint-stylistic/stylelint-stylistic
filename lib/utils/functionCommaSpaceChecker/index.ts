@@ -19,7 +19,7 @@ import { quotesItsAddress } from "../quotesItsAddress/index.ts"
 import { report } from "../report/index.ts"
 import { rereadsAnAddress } from "../rereadsAnAddress/index.ts"
 import { isValueFunction } from "../typeGuards/index.ts"
-import { commentsRemovedBefore, withoutComments } from "../withoutComments/index.ts"
+import { withoutComments } from "../withoutComments/index.ts"
 
 /** Checks the whitespace at one index of a source, counting the lines of another text. */
 export type LocationChecker = (args: {
@@ -32,13 +32,12 @@ export type LocationChecker = (args: {
 /** A comma of a call as the check reads it. */
 type FunctionComma = {
 	commaNode: ValueParserDivNode,
-	checkIndex: number,
 	commentedIndex: number,
 	nodeIndex: number,
 }
 
 /**
- * Reads the two copies of a call's arguments a check runs over — the one with the comments taken out, which the lines are counted of, and the one with them left standing, which the run behind a comma is read over — and where each comma stands in either.
+ * Reads the two copies of a call's arguments a check runs over — the one with the comments taken out, which the lines are counted of, and the one with them left standing, which the runs beside a comma are read over — and where each comma stands in the latter.
  * @param functionNode - The call.
  * @param reading - Whether `//` opens a comment.
  * @param valueCommentSpans - The comment spans of the whole value.
@@ -76,10 +75,10 @@ function commasOf (functionNode: ValueParserFunctionNode, reading: CommentReadin
 
 		let commaIndex = openingOffset + node.before.length
 
-		commaDataList.push({ commaNode: node, checkIndex: commaIndex - commentsRemovedBefore(hiddenArguments, commaIndex, commentSpans), commentedIndex: commaIndex, nodeIndex })
+		commaDataList.push({ commaNode: node, commentedIndex: commaIndex, nodeIndex })
 	}
 
-	// A comment followed by whitespace alone takes the whitespace in front of it out too
+	// A comment followed by whitespace alone takes the spaces in front of it out too; the copy counts the lines and reads no run, since a comment taken out that way joins what stands in front of those spaces to the run behind it, and a break and indentation in front of a comment would then read as the comma's run
 	let functionArguments = withoutComments(hiddenArguments, commentSpans)
 
 	// The value parser reads an escaped space as a character of its word, so the fix cuts none, and the check reads the run over a copy where it is none either
@@ -105,7 +104,6 @@ export function functionCommaSpaceChecker (opts: {
 	ignoreFunctions?: string | RegExp | Array<string | RegExp> | undefined,
 }): void {
 	let { fix } = opts
-	// A `before` rule reads the run in front of the comma, which a comment there leaves where it stands until the fix writes there; only the run behind one is read past a comment by the copy with the comments taken out
 	let readsBehind = opts.fixPosition !== `before`
 
 	opts.root.walkDecls((decl) => {
@@ -135,17 +133,6 @@ export function functionCommaSpaceChecker (opts: {
 			if (optionsMatches(opts, `ignoreFunctions`, valueNode.value)) return false
 
 			let { runArguments, commentedArguments, commaDataList } = commasOf(valueNode, reading, valueCommentSpans)
-			// A comment behind a comma takes the whitespace in front of itself out of the copy with the comments removed, so the run read there is the one past the comment while the fix writes the one in front of it; the list families read this side with the comments standing
-			let readText = readsBehind ? commentedArguments : runArguments
-
-			/**
-			 * Reads a comma's index in the copy the runs are read over.
-			 * @param comma - The comma.
-			 * @returns The index.
-			 */
-			function readIndexOf (comma: FunctionComma): number {
-				return readsBehind ? comma.commentedIndex : comma.checkIndex
-			}
 
 			/**
 			 * Asks whether a fix can write at the comma. A `before` rule writes over the whitespace in front of it, and where that is an inline comment's closing break either option would take the comma into the comment; an `after` rule writes behind the comma, where no comment is open.
@@ -194,11 +181,10 @@ export function functionCommaSpaceChecker (opts: {
 				// The run between the opening parenthesis and a comma opening the arguments, and the one between a comma closing them and the closing parenthesis, is the parentheses rules' to judge and to write, as the run in front of a closing brace is the brace rules' and not the semicolon rules'
 				if (readsBehind ? comma.nodeIndex === functionNode.nodes.length - 1 : comma.nodeIndex === 0) continue
 
-				let readIndex = readIndexOf(comma)
-
+				// The runs are read with the comments standing, as the value list's comma rules read theirs: a comment beside the comma is no whitespace, and the fix writes the run between the comment and the comma
 				opts.locationChecker({
-					source: readText,
-					index: readIndex,
+					source: commentedArguments,
+					index: comma.commentedIndex,
 					// The lines are counted of the copy with the comments taken out, which is what a comma of a call has always been judged single- or multi-line over
 					lineCheckStr: runArguments,
 					err: createErrHandler(comma.commaNode, comma.nodeIndex),

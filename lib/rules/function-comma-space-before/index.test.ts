@@ -44,6 +44,16 @@ testRule({
 			code: `a { b: translate(1px/*k*/ , /*c*/ 2px); }`,
 		},
 		{
+			// The run in front of the comma is read with the comments standing, so a comment on the argument's own line leaves the space between it and the comma as the run, whatever stands in front of the comment
+			description: `a comment on its own line in front of the comma, with a single space between them`,
+			code: `
+				a {
+					b: f(1
+						/* comment */ ,2);
+				}
+			`,
+		},
+		{
 			description: `a comma inside the text of a comment the value parser closes early, which is no comma of the value`,
 			code: `a { b: f(x/*/*q,w*/y); }`,
 		},
@@ -140,6 +150,25 @@ testRule({
 				  );
 				}
 			`,
+			message: messages.expectedBefore(),
+		},
+		{
+			// The space is written between the comment and the comma, where the next reading, with the comments standing, finds it; read over a copy with the comment taken out, the break and indentation in front of the comment joined the written space into the comma's run and the warning stood
+			description: `a comment on its own line pressed to the comma`,
+			code: `
+				a {
+					b: f(1
+						/* comment */,2);
+				}
+			`,
+			fixed: `
+				a {
+					b: f(1
+						/* comment */ ,2);
+				}
+			`,
+			line: 3,
+			column: 16,
 			message: messages.expectedBefore(),
 		},
 		{

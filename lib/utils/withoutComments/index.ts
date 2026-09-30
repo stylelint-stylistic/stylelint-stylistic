@@ -49,22 +49,3 @@ export function withoutComments (text: string, spans: CommentSpan[] = findCommen
 
 	return `${kept}${text.slice(index)}`
 }
-
-/**
- * Counts the characters the comments take out in front of an index.
- * @param text - The text the comments stand in.
- * @param index - The index in it.
- * @param spans - Its comment spans, where known.
- * @returns The count.
- */
-export function commentsRemovedBefore (text: string, index: number, spans: CommentSpan[] = findCommentSpans(text)): number {
-	let removed = 0
-
-	for (let { start, end } of commentRemovalRuns(text, spans)) {
-		if (start >= index) break
-
-		removed += Math.min(end, index) - start
-	}
-
-	return removed
-}
