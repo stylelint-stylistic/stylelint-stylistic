@@ -885,3 +885,140 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [
+		4,
+		{
+			baseIndentLevel: 1,
+		},
+	],
+	customSyntax: `postcss-html`,
+	autoStripIndent: false,
+
+	accept: [
+		{
+			// The level of the tag's line is counted in the option's width and the option's level added, whatever the option; written as a string of two spaces per level and read back in the width of four, it came out halved
+			description: `a stylesheet on a page indented four spaces, a level deeper than a style element eight spaces deep`,
+			code: `<html>
+    <body>
+        <style>
+            a {
+                b: c;
+            }
+        </style>
+    </body>
+</html>`,
+		},
+	],
+
+	reject: [
+		{
+			description: `the same stylesheet standing in the style element's own column`,
+			code: `<html>
+    <body>
+        <style>
+        a {
+            b: c;
+        }
+        </style>
+    </body>
+</html>`,
+			fixed: `<html>
+    <body>
+        <style>
+            a {
+                b: c;
+            }
+        </style>
+    </body>
+</html>`,
+			warnings: [
+				{
+					line: 4,
+					column: 9,
+					message: messages.expected(`12 spaces`),
+				},
+				{
+					line: 6,
+					column: 9,
+					message: messages.expected(`12 spaces`),
+				},
+				{
+					line: 5,
+					column: 13,
+					message: messages.expected(`16 spaces`),
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [
+		4,
+		{
+			baseIndentLevel: 0,
+		},
+	],
+	customSyntax: `postcss-html`,
+	autoStripIndent: false,
+
+	accept: [
+		{
+			description: `a stylesheet on a page indented four spaces, in the column of a style element eight spaces deep`,
+			code: `<html>
+    <body>
+        <style>
+        a {
+            b: c;
+        }
+        </style>
+    </body>
+</html>`,
+		},
+	],
+
+	reject: [
+		{
+			description: `the same stylesheet a level deeper than the style element`,
+			code: `<html>
+    <body>
+        <style>
+            a {
+                b: c;
+            }
+        </style>
+    </body>
+</html>`,
+			fixed: `<html>
+    <body>
+        <style>
+        a {
+            b: c;
+        }
+        </style>
+    </body>
+</html>`,
+			warnings: [
+				{
+					line: 4,
+					column: 13,
+					message: messages.expected(`8 spaces`),
+				},
+				{
+					line: 6,
+					column: 13,
+					message: messages.expected(`8 spaces`),
+				},
+				{
+					line: 5,
+					column: 17,
+					message: messages.expected(`12 spaces`),
+				},
+			],
+		},
+	],
+})

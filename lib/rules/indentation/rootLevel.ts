@@ -151,7 +151,8 @@ function inferRootIndentLevel (syntax: Syntax, root: Root, baseIndentLevel: numb
 	}
 	else newBaseIndentLevel = baseIndentLevel
 
-	let indents = []
+	// The levels of the tag's line in front of the block and of the line closing it, counted in the width a level is counted in, since a level written as a string of two spaces per level and read back in that width came to the level times two over the width, rounded, which is the level itself under a width of two alone
+	let levels: number[] = []
 	let foundIndents = root.raws.codeBefore?.match(EVERY_LINE_INDENT_WITH_CONTENT)
 
 	// The indent of the first non-empty line in front of the block
@@ -164,9 +165,7 @@ function inferRootIndentLevel (syntax: Syntax, root: Root, baseIndentLevel: numb
 			assertString(foundIndent)
 
 			if (OPENS_WITH_TAG.test(foundIndent)) {
-				let current = getIndentLevel(foundIndent)
-
-				indents.push(Array.from({ length: current }).fill(`  `).join(``))
+				levels.push(getIndentLevel(foundIndent))
 				break
 			}
 			i -= 1
@@ -199,10 +198,10 @@ function inferRootIndentLevel (syntax: Syntax, root: Root, baseIndentLevel: numb
 		}
 		else afterEnd = after
 
-		if (afterEnd) indents.push(afterEnd.match(LEADING_SPACES_AND_TABS)[0])
+		if (afterEnd) levels.push(getIndentLevel(afterEnd.match(LEADING_SPACES_AND_TABS)[0]))
 	}
 
-	if (indents.length > 0) return Math.max(...indents.map((indent) => getIndentLevel(indent))) + newBaseIndentLevel
+	if (levels.length > 0) return Math.max(...levels) + newBaseIndentLevel
 
 	return newBaseIndentLevel
 }
