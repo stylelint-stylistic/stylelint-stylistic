@@ -13,6 +13,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFront } from "../../utils/runInFront/index.ts"
+import { editsAskedWithTheTwins } from "../../utils/twinWritesAtTheComma/index.ts"
 import { valueListCommaWhitespaceChecker } from "../../utils/valueListCommaWhitespaceChecker/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { writesSharedRun } from "../../utils/writesSharedRun/index.ts"
@@ -106,8 +107,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎,b` would come out as `a\,b`, one identifier, so the warning stands; `always` leaves the break the backslash stands in front of where it is
 				return primary !== `never-multi-line` || editKeepsEscapedCharacter(declString, editAt(runString, index))
 			},
-			// Whitespace right behind the `(` of an address decides under PostCSS whether its parentheses are one token or code, and a break written into parentheses held as one plain token makes them code, or one taken out makes them a token again, so that a later `(` pops another word; the writes of the declaration are asked together whether the parser then reads the file otherwise
-			edits: (_declNode, index, _declString, runString) => [editAt(runString, index)],
+			// Whitespace right behind the `(` of an address decides under PostCSS whether its parentheses are one token or code, and a run written into or taken out of parentheses held as one plain token can make them code or a token again, so that a later `(` pops another word; the writes of the node are asked together whether the parser then reads the file otherwise, along with what the list's other comma rules write around the same comma behind this one in the pass, since the run behind the comma, which a twin writes in the same pass, decides what the parentheses then hold
+			edits: (declNode, index, declString, runString) => editsAskedWithTheTwins(declString, runString, index, index, editAt(runString, index), syntax.inlineComments(declNode, result), declNode, result, ruleName),
 			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ ,b` is not cut and no break parts it from its backslash
 			fix: (declNode, index, runString) => {
 				fixData = fixData || (new Map())

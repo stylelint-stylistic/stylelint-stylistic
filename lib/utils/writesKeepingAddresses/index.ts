@@ -37,7 +37,7 @@ function moverOver (edits: Edit[]): (index: number) => number {
  * @param ruleName - The registered name.
  * @returns True where the fix is applied once given.
  */
-function fixApplies (node: AtRule | Declaration | Rule, index: number, result: PostcssResult, ruleName: string): boolean {
+export function fixApplies (node: AtRule | Declaration | Rule, index: number, result: PostcssResult, ruleName: string): boolean {
 	let placed = placedNode(node)
 	let line = placed === node ? node.rangeBy({ index, endIndex: index }).start.line : placed?.source?.start?.line
 

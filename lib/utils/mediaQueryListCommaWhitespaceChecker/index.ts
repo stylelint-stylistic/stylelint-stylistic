@@ -34,8 +34,8 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 	fix?: ((atRule: AtRule, index: number, runString: string) => void),
 	isFixable?: ((params: string, index: number, atRule: AtRule, runString: string) => boolean),
 
-	/** The spans a fix would write, indexed in the params. Every fix of an at-rule is asked along with the others whether the writes switch how the tokenizer reads an address's parentheses ({@link writesKeepingAddresses}), and one they refuse is reported without a fix. */
-	edits: ((params: string, index: number, atRule: AtRule, runString: string) => Edit[]),
+	/** The spans a fix would write, indexed in the params; the index the problem is reported at in the at-rule's string comes last. Every fix of an at-rule is asked along with the others whether the writes switch how the tokenizer reads an address's parentheses ({@link writesKeepingAddresses}), and one they refuse is reported without a fix. */
+	edits: ((params: string, index: number, atRule: AtRule, runString: string, problemIndex: number) => Edit[]),
 
 	/** A guard of the fix reading the text around the write, asked over the text the at-rule's other writes leave ({@link writesKeepingAddresses}), with the indices moved into it. */
 	holds?: ((params: string, index: number, atRule: AtRule, runString: string) => (edited: string, move: (index: number) => number) => boolean),
@@ -127,7 +127,7 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 				// Asked here, not in front of the check, so parameters in order are not read once per comma
 				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, node, runString))
 
-				problems.push({ message, index: index + atRuleParamIndex(node), edits: isFixable ? opts.edits(source, index, node, runString) : undefined, holds: isFixable ? opts.holds?.(source, index, node, runString) : undefined })
+				problems.push({ message, index: index + atRuleParamIndex(node), edits: isFixable ? opts.edits(source, index, node, runString, index + atRuleParamIndex(node)) : undefined, holds: isFixable ? opts.holds?.(source, index, node, runString) : undefined })
 			},
 		})
 

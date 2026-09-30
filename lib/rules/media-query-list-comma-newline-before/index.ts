@@ -15,6 +15,7 @@ import { mediaQueryListCommaWhitespaceChecker } from "../../utils/mediaQueryList
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFront } from "../../utils/runInFront/index.ts"
 import { edgeRunOutOfReach, edgeRunOwned, type EdgeWrite, writeEdgeRun } from "../../utils/textEdge/index.ts"
+import { editsAskedWithTheTwins } from "../../utils/twinWritesAtTheComma/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
 let { utils: { validateOptions } } = stylelint
@@ -97,8 +98,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎,b` would come out as `a\,b`, one identifier, so the warning stands; `always` leaves the break the backslash stands in front of where it is
 				return primary !== `never-multi-line` || editKeepsEscapedCharacter(params, editAt(runString, index))
 			},
-			// Whitespace right behind the `(` of an address decides under PostCSS whether its parentheses are one token or code, and a break written into parentheses held as one plain token makes them code, or one taken out makes them a token again, so that a later `(` pops another word; the writes of the at-rule are asked together whether the parser then reads the file otherwise
-			edits: (_params, index, _atRule, runString) => [editAt(runString, index)],
+			// Whitespace right behind the `(` of an address decides under PostCSS whether its parentheses are one token or code, and a run written into or taken out of parentheses held as one plain token can make them code or a token again, so that a later `(` pops another word; the writes of the node are asked together whether the parser then reads the file otherwise, along with what the list's other comma rules write around the same comma behind this one in the pass, since the run behind the comma, which a twin writes in the same pass, decides what the parentheses then hold
+			edits: (params, index, atRule, runString, problemIndex) => editsAskedWithTheTwins(params, runString, index, problemIndex, editAt(runString, index), syntax.inlineComments(atRule, result), atRule, result, ruleName),
 			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ ,b` is not cut and no break parts it from its backslash
 			fix: (atRule, index, runString) => {
 				let paramCommaIndex = index - atRuleParamIndex(atRule)

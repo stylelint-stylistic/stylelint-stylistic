@@ -35,7 +35,7 @@ export interface ValueListCommaWhitespaceCheckerOptions {
 	/** Whether a problem can be fixed; the printed declaration, the index of every comma checked in it and the copy the runs are read over come along. */
 	isFixable?: ((node: Declaration, index: number, declString: string, runString: string) => boolean),
 
-	/** The spans a fix would write, indexed in the printed declaration. Every fix of a declaration is asked along with the others whether the writes switch how the tokenizer reads an address's parentheses ({@link writesKeepingAddresses}), and one they refuse is reported without a fix. */
+	/** The spans a fix would write, indexed in the printed declaration, which is where the problem is reported too. Every fix of a declaration is asked along with the others whether the writes switch how the tokenizer reads an address's parentheses ({@link writesKeepingAddresses}), and one they refuse is reported without a fix. */
 	edits: ((node: Declaration, index: number, declString: string, runString: string) => Edit[]),
 
 	/** A guard of the fix reading the text around the write, asked over the text the declaration's other writes leave ({@link writesKeepingAddresses}), with the indices moved into it. */

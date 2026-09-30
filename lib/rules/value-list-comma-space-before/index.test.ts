@@ -703,3 +703,39 @@ testRule({
 		},
 	],
 })
+
+// The run right behind the `(` of an address decides whether its parentheses are one token or code, and the run behind the comma, which the twin behind this rule writes in the same pass, decides what the parentheses then hold: asked together, the space is given where alone it was refused
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/value-list-comma-space-after": `never` },
+
+	reject: [
+		{
+			description: `a comma right behind the parenthesis of an address, with a break behind it that the twin behind this rule takes out, in front of a square bracket nothing closes`,
+			code: `a { b: 1 url (,\nb[c) 2px; }`,
+			fixed: `a { b: 1 url ( ,b[c) 2px; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 15,
+					message: messages.expectedBefore(),
+				},
+				{
+					line: 1,
+					column: 15,
+					message: `Unexpected whitespace after "," (@stylistic/value-list-comma-space-after)`,
+				},
+			],
+		},
+		{
+			// Stylelint drops the twin's fix on the line the comment covers, so its write is not counted, and the space alone would leave the square bracket open
+			description: `the same under a comment disabling the twin on the comma's line`,
+			code: `a {\n  /* stylelint-disable-next-line @stylistic/value-list-comma-space-after */\n  b: 1 url (,\nb[c) 2px;\n}`,
+			fixed: `a {\n  /* stylelint-disable-next-line @stylistic/value-list-comma-space-after */\n  b: 1 url (,\nb[c) 2px;\n}`,
+			line: 3,
+			column: 13,
+			message: messages.expectedBefore(),
+		},
+	],
+})

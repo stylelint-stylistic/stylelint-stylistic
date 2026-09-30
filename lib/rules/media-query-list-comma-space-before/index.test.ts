@@ -610,3 +610,30 @@ testRule({
 		},
 	],
 })
+
+// The run right behind the `(` of an address decides whether its parentheses are one token or code, and the run behind the comma, which the twin behind this rule writes in the same pass, decides what the parentheses then hold: asked together, the space is given where alone it was refused
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/media-query-list-comma-space-after": `never` },
+
+	reject: [
+		{
+			description: `a comma right behind the parenthesis of an address, with a break behind it that the twin behind this rule takes out, in front of a square bracket nothing closes`,
+			code: `@media a url (,\nb[c) {}`,
+			fixed: `@media a url ( ,b[c) {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 15,
+					message: messages.expectedBefore(),
+				},
+				{
+					line: 1,
+					column: 15,
+					message: `Unexpected whitespace after "," (@stylistic/media-query-list-comma-space-after)`,
+				},
+			],
+		},
+	],
+})

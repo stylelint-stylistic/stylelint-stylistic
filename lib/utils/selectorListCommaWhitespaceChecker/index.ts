@@ -35,8 +35,8 @@ export interface SelectorListCommaWhitespaceCheckerOptions {
 	/** Whether a problem can be fixed, since Stylelint counts a fixer as applied whatever it does; the rule, the comma's index in its source, every comma of the list and the copy the runs are read over come along. */
 	isFixable?: ((selector: string, index: number, inlineComments: InlineComment[], rule: Rule, runString: string) => boolean),
 
-	/** The spans a fix would write, indexed in the selector the commas are found in. Every fix of a rule is asked along with the others whether the writes switch how the tokenizer reads an address's parentheses ({@link writesKeepingAddresses}), and one they refuse is reported without a fix. */
-	edits: ((selector: string, index: number, rule: Rule, runString: string) => Edit[]),
+	/** The spans a fix would write, indexed in the selector the commas are found in; the index the problem is reported at in the rule's source comes last. Every fix of a rule is asked along with the others whether the writes switch how the tokenizer reads an address's parentheses ({@link writesKeepingAddresses}), and one they refuse is reported without a fix. */
+	edits: ((selector: string, index: number, rule: Rule, runString: string, sourceIndex: number) => Edit[]),
 }
 
 /**
@@ -111,7 +111,7 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 				// Asked here, not in front of the check, so a clean selector is not read once per comma
 				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, copies.comments, node, runString))
 
-				problems.push({ message, index, sourceIndex: copies.toSourceIndex(index), edits: isFixable ? opts.edits(source, index, node, runString) : undefined })
+				problems.push({ message, index, sourceIndex: copies.toSourceIndex(index), edits: isFixable ? opts.edits(source, index, node, runString, copies.toSourceIndex(index)) : undefined })
 			},
 		})
 

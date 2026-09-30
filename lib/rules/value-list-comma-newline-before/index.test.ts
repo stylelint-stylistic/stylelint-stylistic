@@ -523,3 +523,21 @@ testRule({
 		},
 	],
 })
+
+// Taking the break out hands the parentheses to an address's token closing inside the string; the twin behind this rule would keep them code with its space, but asks its own question over the text the break is taken out of and refuses there, so nothing is written and the warning stands
+testRule({
+	ruleName,
+	config: [`never-multi-line`],
+	extraRules: { "@stylistic/value-list-comma-space-before": `always-single-line` },
+
+	reject: [
+		{
+			description: `a comma right behind the parenthesis of an address, with a break in front of it, in front of a string holding a closing parenthesis`,
+			code: `a { b: 1 url (\n,"b)c") 2px; }`,
+			fixed: `a { b: 1 url (\n,"b)c") 2px; }`,
+			line: 2,
+			column: 1,
+			message: messages.rejectedBeforeMultiLine(),
+		},
+	],
+})
