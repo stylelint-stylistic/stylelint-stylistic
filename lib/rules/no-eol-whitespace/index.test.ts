@@ -8,6 +8,11 @@ testRule({
 
 	accept: [
 		{
+			// A run ending a line inside the parentheses of a bare address is the address's text, which Less hands on as it is, Sass reads collapsed and lightningcss refuses as a bad url token
+			description: `spaces ending a line inside a bare address, which the rule leaves`,
+			code: `a { b: url(c   \nd) 1px; }`,
+		},
+		{
 			description: `an empty stylesheet`,
 			code: ``,
 		},
@@ -138,6 +143,14 @@ testRule({
 	],
 
 	reject: [
+		{
+			description: `spaces ending a line inside a call whose name a character joins, which is no address to the compilers`,
+			code: `a { b: 1url(c   \nd) 1px; }`,
+			fixed: `a { b: 1url(c\nd) 1px; }`,
+			line: 1,
+			column: 16,
+			message: messages.rejected,
+		},
 		{
 			// A bare carriage return is a whitespace character of the line, and the trim takes it with the spaces around it, which left against the break it would make a Windows pair of
 			autoStripIndent: false,

@@ -846,12 +846,11 @@ testRule({
 			message: messages.expected(1),
 		},
 		{
-			description: `two blank lines inside the parentheses of a bare address, which whitespace has made a bad-url token already`,
+			// A run inside the parentheses of a bare address is the address's text, which Less hands on as it is, Sass reads collapsed and lightningcss refuses as a bad url token: the rule leaves it
+			description: `two blank lines inside the parentheses of a bare address, which the rule leaves`,
 			code: `a {\n\tb: url(c\n\n\nd);\n}\n`,
-			fixed: `a {\n\tb: url(c\n\nd);\n}\n`,
-			line: 4,
-			column: 1,
-			message: messages.expected(1),
+			fixed: `a {\n\tb: url(c\n\n\nd);\n}\n`,
+			warnings: [],
 		},
 		{
 			description: `two blank lines inside the text of a comment`,

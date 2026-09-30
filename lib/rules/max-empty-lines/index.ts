@@ -5,6 +5,7 @@ import stylelint, { type PostcssResult } from "stylelint"
 import { CRLF, EVERY_LINE_BREAK, EVERY_RUN_OF_LINE_BREAKS, EVERY_RUN_OF_LINE_BREAKS_PAST_BLANK_LINES, EVERY_SEMICOLON, LEADING_LINE_BREAK_RUN, LEADING_LINE_BREAK_RUN_PAST_BLANK_LINES, OPENS_WITH_LINE_BREAK, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
+import { bareAddressSpans } from "../../utils/bareAddressSpans/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { blockTailTaken, getBlockTail, setBlockTail } from "../../utils/blockTail/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -352,7 +353,7 @@ function writeRuns (getChars: (text: string) => string, text: string, blanked: s
 }
 
 /**
- * Blanks what a run written into would not be the stylesheet's: the host code of a styled template's interpolation, whose breaks end lines of the host file and none of the stylesheet, and every string, which a write would rewrite. A comment is blanked too where `ignore: comments` is set, the option's whole question; a quotation mark standing inside one opens no string, so the strings are read with every comment gone either way.
+ * Blanks what a run written into would not be the stylesheet's: the host code of a styled template's interpolation, whose breaks end lines of the host file and none of the stylesheet, every string, which a write would rewrite, and the parentheses of every bare address, whose text Less hands on as it is. A comment is blanked too where `ignore: comments` is set, the option's whole question; a quotation mark standing inside one opens no string, so the strings and the addresses are read with every comment gone either way.
  * @param syntax - The syntax the rule is built over, which says where a comment and an interpolation run.
  * @param node - The node the text is from.
  * @param result - The Stylelint result, which names the syntax the file was parsed with.
@@ -364,7 +365,7 @@ function countedCopy (syntax: Syntax, node: ChildNode, result: PostcssResult, ig
 	let outsideHostCode = blankComments(text, syntax.hostCodeSpans(text, node))
 	let outsideComments = blankComments(outsideHostCode, syntax.commentSpans(outsideHostCode, node, result))
 
-	return blankComments(ignoreComments ? outsideComments : outsideHostCode, findStringSpans(outsideComments, PLAIN_CSS))
+	return blankComments(ignoreComments ? outsideComments : outsideHostCode, [...findStringSpans(outsideComments, PLAIN_CSS), ...bareAddressSpans(outsideComments)])
 }
 
 /**
@@ -468,14 +469,14 @@ function breakStart (text: string, lineFeedIndex: number): number {
 }
 
 /**
- * Builds what `style-search` is handed. The search reads comments and strings by rules of its own, so it is told to read neither. A comment the option ignores is blanked with its breaks and every other `//` masked in the text handed in, since the search skipping comments of its own swallows the break behind an address's `//`. A string is blanked, the breaks inside it included, since the search opens one at a quotation mark inside a bare address, closes none behind an escaped backslash, and opens none inside what it took for a comment.
+ * Builds what `style-search` is handed. The search reads comments and strings by rules of its own, so it is told to read neither. A comment the option ignores is blanked with its breaks and every other `//` masked in the text handed in, since the search skipping comments of its own swallows the break behind an address's `//`. A string is blanked, the breaks inside it included, since the search opens one at a quotation mark inside a bare address, closes none behind an escaped backslash, and opens none inside what it took for a comment; so are the parentheses of a bare address, whose breaks are the address's text.
  * @param text - The text the breaks are counted in, or its copy with the ignored comments blanked.
  * @param comments - The comment spans the syntax finds in the text.
  * @returns The search's options.
  */
 function searchOptions (text: string, comments: CommentSpan[]): Parameters<typeof styleSearch>[0] {
 	return {
-		source: blankComments(text, findStringSpans(blankComments(text, comments), PLAIN_CSS)),
+		source: blankComments(text, [...findStringSpans(blankComments(text, comments), PLAIN_CSS), ...bareAddressSpans(blankComments(text, comments))]),
 		// A line feed is a break whatever stands in front of it, so a run spelling its breaks both ways is one run, as PostCSS counts it
 		target: `\n`,
 		comments: `check`,

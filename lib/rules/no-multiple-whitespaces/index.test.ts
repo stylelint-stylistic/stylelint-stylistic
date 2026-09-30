@@ -216,30 +216,30 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			// Pins the escaped tab kept where the run stands inside a bare address, whose escapes the walk used to hand over none of
-			description: `two spaces behind an escaped tab inside a bare address`,
+			// A run inside the parentheses of a bare address is the address's text, which Less hands on as it is, Sass reads collapsed and lightningcss refuses as a bad url token: the rule leaves it, the escaped tab there included
+			description: `two spaces behind an escaped tab inside a bare address, which the rule leaves`,
 			code: `a { b: url(c\\\t  d) }`,
-			fixed: `a { b: url(c\\\t d) }`,
-			line: 1,
-			column: 15,
-			message: messages.rejected,
+			fixed: `a { b: url(c\\\t  d) }`,
+			warnings: [],
 		},
 		{
-			// The parentheses hold a line break, so they are no address span, and the escape is recorded all the same
-			description: `the same run inside parentheses a line break keeps from being an address`,
+			description: `the same run inside a bare address a line break stands in, which is the address's text to the compilers whatever the tokenizer makes of the parentheses`,
 			code: `a { b: url(c\\\t  \n d) }`,
-			fixed: `a { b: url(c\\\t \n d) }`,
-			line: 1,
-			column: 15,
-			message: messages.rejected,
+			fixed: `a { b: url(c\\\t  \n d) }`,
+			warnings: [],
 		},
 		{
-			// Pins the write a bare address keeps: nothing covers this run, and the mask leaves it where it was
-			description: `two spaces between the words of a bare address`,
+			description: `two spaces between the words of a bare address, which the rule leaves`,
 			code: `a { b: url(c  d) }`,
-			fixed: `a { b: url(c d) }`,
+			fixed: `a { b: url(c  d) }`,
+			warnings: [],
+		},
+		{
+			description: `two spaces between the words of a call whose name a character joins, which is no address to the compilers`,
+			code: `a { b: 1url(c  d) }`,
+			fixed: `a { b: 1url(c d) }`,
 			line: 1,
-			column: 13,
+			column: 14,
 			message: messages.rejected,
 		},
 		{
@@ -295,30 +295,22 @@ testRule({
 			message: messages.rejected,
 		},
 		{
-			description: `the same run behind an address holding a single quotation mark, and a run inside a second address holding one`,
+			description: `the same run behind an address holding a single quotation mark, and a run inside a second address holding one, which the rule leaves`,
 			code: `a { b: url(c'd)  e, url(f'g  h); i: j }`,
-			fixed: `a { b: url(c'd) e, url(f'g h); i: j }`,
+			fixed: `a { b: url(c'd) e, url(f'g  h); i: j }`,
 			warnings: [
 				{
 					line: 1,
 					column: 16,
 					message: messages.rejected,
 				},
-				{
-					line: 1,
-					column: 28,
-					message: messages.rejected,
-				},
 			],
 		},
 		{
-			// The carriage return closing the escape is a character of it rather than a break of the value, so the run behind it is one the rule used to read as indentation
-			description: `two spaces behind a hexadecimal escape a carriage return closes inside a bare address`,
+			description: `two spaces behind a hexadecimal escape a carriage return closes inside a bare address, which the rule leaves`,
 			code: `a { b: url(c\\2c\r  d) }`,
-			fixed: `a { b: url(c\\2c\r d) }`,
-			line: 1,
-			column: 17,
-			message: messages.rejected,
+			fixed: `a { b: url(c\\2c\r  d) }`,
+			warnings: [],
 		},
 		{
 			description: `two spaces between the parts of a value`,
@@ -560,8 +552,8 @@ describe(`a run inside a double-slash comment of a value`, () => {
 		expect(await fixUnder(`@stylistic/scss/no-multiple-whitespaces`, address, scss)).toBe(address)
 	})
 
-	it(`collapses the same run under Less, whose parentheses hold the address whole`, async () => {
-		expect(await fixUnder(`@stylistic/less/no-multiple-whitespaces`, `a { b: url(http://x/y  z.png) }`, less)).toBe(`a { b: url(http://x/y z.png) }`)
+	it(`leaves the same run under Less, which hands the address on as it is`, async () => {
+		expect(await fixUnder(`@stylistic/less/no-multiple-whitespaces`, `a { b: url(http://x/y  z.png) }`, less)).toBe(`a { b: url(http://x/y  z.png) }`)
 	})
 })
 
@@ -573,8 +565,8 @@ describe(`a run inside a string a compiler reads in the parentheses of a url()`,
 		expect(await fixUnder(`@stylistic/scss/no-multiple-whitespaces`, code, scss)).toBe(`a { b: url(c"d  e") f }`)
 	})
 
-	it(`collapses both runs under plain CSS, which reads no string there`, async () => {
-		expect(await fixUnder(ruleName, code)).toBe(`a { b: url(c"d e") f }`)
+	it(`collapses the run behind the address under plain CSS, which reads no string there, and leaves the one inside it, which is the address's text`, async () => {
+		expect(await fixUnder(ruleName, code)).toBe(`a { b: url(c"d  e") f }`)
 	})
 
 	it(`leaves a string inside an interpolation under the SCSS parser`, async () => {

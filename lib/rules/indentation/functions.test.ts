@@ -8,6 +8,11 @@ testRule({
 
 	accept: [
 		{
+			// A line inside the parentheses of a bare address is the address's text, which Less hands on as it is, Sass reads collapsed and lightningcss refuses as a bad url token
+			description: `a bare address broken over lines, whose lines the rule leaves`,
+			code: `a {\n  b: url(c\nd) 1px;\n}`,
+		},
+		{
 			// A parenthesis inside a bare address opened a call to the scan, which held the lines behind the address inside it
 			description: `a value broken behind a bare address holding an opening parenthesis, its line a level deeper`,
 			code: `a {\n  b: url(x(y),c,\n    d;\n}`,
@@ -95,6 +100,14 @@ testRule({
 	],
 
 	reject: [
+		{
+			description: `a call whose name a character joins broken over lines, which is no address to the compilers`,
+			code: `a {\n  b: 1url(c\nd) 1px;\n}`,
+			fixed: `a {\n  b: 1url(c\n  d) 1px;\n}`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`2 spaces`),
+		},
 		{
 			description: `the second argument left at the left margin`,
 			code: `

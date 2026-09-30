@@ -3,11 +3,12 @@ import stylelint from "stylelint"
 
 import { CRLF, CSS_LINE_BREAK, GRID_AREAS_PROPERTY, LEADING_LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import { bareAddressSpans } from "../../utils/bareAddressSpans/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationValueIndex } from "../../utils/declarationValueIndex/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
-import { type AddressSpan, type CommentSpan, findAddressSpans, findEscapeSpans, findStringSpans, type StringSpan } from "../../utils/findCommentSpans/index.ts"
+import { type AddressSpan, findAddressSpans, findEscapeSpans, findStringSpans, type StringSpan } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { gridTableLines, type Span } from "../../utils/gridTableLines/index.ts"
 import { isWhitespace } from "../../utils/isWhitespace/index.ts"
@@ -57,14 +58,14 @@ function isInlineWhitespaceAt (text: string, index: number): boolean {
 const COMMENT_MASK = `x`
 
 /**
- * Writes every character of a comment as a letter, so the walk finds no run, no quotation mark and no delimiter in a comment's text; a newline is none of those and is left standing.
+ * Writes every character of a comment, or of a bare address's parentheses, as a letter, so the walk finds no run, no quotation mark and no delimiter in a comment's text or an address's; a newline is none of those and is left standing.
  *
  * A letter stands in rather than a space, as {@link blankComments} writes: blanking a comment would join the run in front of it to the one behind and have the fix write the joined run — the comment — over with one space. The copy is as long as the text, so every position of a run holds in the value the fix writes into, and the newlines left standing carry the value's lines into the copy as {@link maskEscapes} carries them; nothing here turns on that, the walk asking about a break only for the character right behind one, which is never the character behind a comment's end.
  * @param text - The value the walk runs over.
- * @param spans - The comment spans the syntax found in it.
+ * @param spans - The comment spans the syntax found in it, or the address spans.
  * @returns The copy.
  */
-function maskComments (text: string, spans: CommentSpan[]): string {
+function maskComments (text: string, spans: { start: number, end: number }[]): string {
 	if (spans.length === 0) return text
 
 	let pieces = []
@@ -293,7 +294,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let marked = value.includes(`"`) || value.includes(`'`)
 			let strings = marked ? findStringSpans(value, reading) : []
 			let addresses = marked ? findAddressSpans(value, reading) : []
-			let walked = maskMarksOutsideStrings(maskComments(maskEscapes(value, findEscapeSpans(value, reading)), comments), strings, addresses)
+			let commented = maskComments(maskEscapes(value, findEscapeSpans(value, reading)), comments)
+			// What stands between the parentheses of a bare address is the address's text, which Less hands on as it is: no run there is the value's, and the walk reads the address as the compilers do, over the copy the comments are already masked in
+			let walked = maskMarksOutsideStrings(maskComments(commented, bareAddressSpans(commented)), strings, addresses)
 			// The character closing a `//` comment ends the line to the compiler reading it, a bare carriage return and a form feed included, and a run opening on it would take that character away and carry the comment on over the code behind
 			let commentBreaks = new Set(comments.filter(({ isInline }) => isInline).map(({ end }) => end))
 			let errors = findRuns(walked, owned, commentBreaks)

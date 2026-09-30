@@ -4,6 +4,8 @@ import type { PostcssResult } from "stylelint"
 
 import { EVERY_LINE_BREAK, LINE_BREAK, SPACE_OR_TAB, SPACE_TAB_OR_CARRIAGE_RETURN, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
+import { bareAddressSpans } from "../../utils/bareAddressSpans/index.ts"
+import { blankComments } from "../../utils/blankComments/index.ts"
 import { isOnlyWhitespace } from "../../utils/isOnlyWhitespace/index.ts"
 import { maskStrings } from "../../utils/maskStrings/index.ts"
 
@@ -177,6 +179,8 @@ export function eachEolWhitespace (scope: EolScope, string: string, callback: (r
 	let commentSpans = isPlainText ? [] : syntax.commentSpans(string, root, result)
 	// Prose reads a backslash as a character like any other, and a text whose backslashes a host language cooks tells nothing of the stylesheet's
 	let escapes = isPlainText || !syntax.readsBackslashesAsWritten(root) ? undefined : { lead, inComment: (index: number): boolean => commentSpans.some(({ start, end }) => start <= index && index < end) }
+	// What stands between the parentheses of a bare address is the address's text, which Less hands on as it is: a run ending a line there is no run of the stylesheet, and the check and the fix pass it over alike, reading the address as the compilers do, over the text with its comments blanked
+	let addresses = isPlainText ? [] : bareAddressSpans(blankComments(string, commentSpans))
 
 	/**
 	 * Reports the whitespace at a line ending.
@@ -190,7 +194,7 @@ export function eachEolWhitespace (scope: EolScope, string: string, callback: (r
 			lastBreakWritten: options.lastBreakWritten ?? false,
 		})
 
-		if (run) callback(run)
+		if (run && !addresses.some(({ start, end }) => run.index > start && run.index < end - 1)) callback(run)
 	}
 
 	// A CSS scan of prose takes an apostrophe for an unclosed string

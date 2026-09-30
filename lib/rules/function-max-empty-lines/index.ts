@@ -2,8 +2,8 @@ import type { Declaration } from "postcss"
 import valueParser from "postcss-value-parser"
 import stylelint from "stylelint"
 
-import { ENDS_WITH_ESCAPE, EVERY_BARE_ADDRESS_OPENING, TRAILING_BACKSLASHES } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import { bareAddressSpans } from "../../utils/bareAddressSpans/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { collapseBreakRuns, holdsLongerBreakRun } from "../../utils/collapseBreakRuns/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -39,30 +39,6 @@ function placeIndexOnValueStart (decl: Declaration): number {
 
 /** The most empty lines allowed in a row inside a function. */
 export type PrimaryOption = number
-
-/**
- * Finds the parentheses of every bare address of a value, as the compilers read one ({@link EVERY_BARE_ADDRESS_OPENING}), up to the first `)` no backslash escapes, or to the end of the text. An escape closing right in front of the name, as `\61 url(` spells `aurl(`, is a character of a longer name, which the whitespace it ends with hides from the opener.
- * @param text - The value, its comments blanked.
- * @returns The spans, each from the `(` to behind the `)`.
- */
-function bareAddressSpans (text: string): { start: number, end: number }[] {
-	let spans: { start: number, end: number }[] = []
-
-	for (let match of text.matchAll(EVERY_BARE_ADDRESS_OPENING)) {
-		if (ENDS_WITH_ESCAPE.test(text.slice(0, match.index))) continue
-
-		let start = match.index + match[0].length - 1
-		let end = start
-
-		// A `)` behind an odd run of backslashes is escaped, a character of the address
-		do end = text.indexOf(`)`, end + 1)
-		while (end !== -1 && (text.slice(start, end).match(TRAILING_BACKSLASHES)?.[0].length ?? 0) % 2 === 1)
-
-		spans.push({ start, end: end === -1 ? text.length : end + 1 })
-	}
-
-	return spans
-}
 
 /**
  * Limits the number of adjacent empty lines within functions.

@@ -4,6 +4,8 @@ import styleSearch from "style-search"
 import { CRLF, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_INDENT_AND_CONTENT, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { atRuleHead } from "../../utils/atRuleHead/index.ts"
+import { bareAddressSpans } from "../../utils/bareAddressSpans/index.ts"
+import { blankComments } from "../../utils/blankComments/index.ts"
 import { declarationString } from "../../utils/declarationString/index.ts"
 import { replaceIndentation } from "../../utils/lineIndentation/index.ts"
 import { optionsMatches } from "../../utils/optionsMatches/index.ts"
@@ -195,8 +197,9 @@ function checkMultilineBit (scope: IndentationScope, source: string, newlineInde
 
 	let { syntax, result, ruleName, messages, secondaryOptions, indentChar, legibleExpectation } = scope
 
-	// The search runs over a copy with every comment blanked: `style-search` reads the break closing an inline comment as part of it. The copy's positions are the file's. Below, the two tests for a bracket closing its line read the copy; every other read is of the text
-	let { searchString } = syntax.searchCopy(source, node, result)
+	// The search runs over a copy with every comment blanked: `style-search` reads the break closing an inline comment as part of it. The parentheses of a bare address are blanked with it, breaks and all, since what stands between them is the address's text, which Less hands on as it is, and no line of it is a line of the value. The copy's positions are the file's. Below, the two tests for a bracket closing its line read the copy; every other read is of the text
+	let copy = syntax.searchCopy(source, node, result)
+	let searchString = blankComments(copy.searchString, bareAddressSpans(blankComments(source, copy.commentSpans)))
 
 	let fixPositions: FixPosition[] = []
 
