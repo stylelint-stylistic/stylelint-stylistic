@@ -149,12 +149,12 @@ function levelsInsideParens (scope: IndentationScope, opened: OpenBrackets, { so
 	// A Windows pair's line ends in front of the carriage return
 	let lineEndIndex = startIndex > 0 && CRLF.test(source.slice(startIndex - 1, startIndex + 1)) ? startIndex - 1 : startIndex
 
-	// A trailing comment must not hide the `(`; the copy blanks the inline kind
+	// A trailing comment must not hide the `(` or the `{`: both are read over the copy, which blanks every comment
 	let followsOpeningParenthesis = OPENING_PARENTHESIS_AT_END.test(searchString.slice(0, lineEndIndex))
 
 	if (followsOpeningParenthesis) opened.parentheses += 1
 
-	let followsOpeningBrace = OPENING_BRACE_AT_END.test(source.slice(0, lineEndIndex))
+	let followsOpeningBrace = OPENING_BRACE_AT_END.test(searchString.slice(0, lineEndIndex))
 
 	if (followsOpeningBrace) opened.braces += 1
 
@@ -195,7 +195,7 @@ function checkMultilineBit (scope: IndentationScope, source: string, newlineInde
 
 	let { syntax, result, ruleName, messages, secondaryOptions, indentChar, legibleExpectation } = scope
 
-	// The search runs over a copy with every comment blanked: `style-search` reads the break closing an inline comment as part of it. The copy's positions are the file's. Below, only the one test whose pattern spells a block comment out reads the copy
+	// The search runs over a copy with every comment blanked: `style-search` reads the break closing an inline comment as part of it. The copy's positions are the file's. Below, the two tests for a bracket closing its line read the copy; every other read is of the text
 	let { searchString } = syntax.searchCopy(source, node, result)
 
 	let fixPositions: FixPosition[] = []

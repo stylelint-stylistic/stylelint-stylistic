@@ -10,6 +10,14 @@ testRule({
 	config: [`tab`],
 	customSyntax: `postcss-scss`,
 
+	accept: [
+		{
+			// The copy blanks a `//` comment behind the brace as it blanks a block one
+			description: `a line behind a brace closing its line with an inline comment behind it, a level deeper`,
+			code: `a {\n\tb: fn({// c\n\t\tc: d\n\t});\n}`,
+		},
+	],
+
 	reject: [
 		{
 			description: `the closing brace of a Sass nested property written with a value, which this syntax parses as a declaration with a block, at three tabs where one is asked`,
@@ -84,17 +92,6 @@ testRule({
 			`,
 		},
 		{
-			description: `a block comment behind the brace that opens an interpolation, which the brace must not be read past`,
-			code: `
-				@a {
-				  b: map(
-				    c: #{ /* x */
-				    d}
-				  );
-				}
-			`,
-		},
-		{
 			description: `a block comment in front of the brace that closes an interpolation, which the brace must not be read past`,
 			code: `
 				@a {
@@ -109,6 +106,38 @@ testRule({
 	],
 
 	reject: [
+		{
+			// The brace opening an interpolation at its line's end opens a level as a bare one does, whether or not a comment stands behind it, since the brace is read over the copy with the comments blanked; the brace closing the interpolation inside the line lowers no later line of the value, which asks the closing parenthesis a level past where it belongs
+			description: `a block comment behind the brace that opens an interpolation, whose next line stands a level short of what a bare brace asks`,
+			code: `
+				@a {
+				  b: map(
+				    c: #{ /* x */
+				    d}
+				  );
+				}
+			`,
+			fixed: `
+				@a {
+				  b: map(
+				    c: #{ /* x */
+				      d}
+				    );
+				}
+			`,
+			warnings: [
+				{
+					line: 4,
+					column: 5,
+					message: messages.expected(`6 spaces`),
+				},
+				{
+					line: 5,
+					column: 3,
+					message: messages.expected(`4 spaces`),
+				},
+			],
+		},
 		{
 			description: `a value continued on the line behind an inline comment`,
 			code: `

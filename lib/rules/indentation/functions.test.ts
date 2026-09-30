@@ -13,6 +13,20 @@ testRule({
 			code: `a {\n  b: url(x(y),c,\n    d;\n}`,
 		},
 		{
+			// The brace closing its line is read over the search copy, where a comment behind it is blanked, as the parenthesis is
+			description: `a line behind a brace closing its line with a block comment behind it, a level deeper`,
+			code: `a {\n  b: fn({ /* c */\n    c: d\n  });\n}`,
+		},
+		{
+			description: `the same with the comment pressed to the brace and holding a break`,
+			code: `a {\n  b: fn({/* c\n  d */\n    c: d\n  });\n}`,
+		},
+		{
+			// A string is masked in the copy, so a brace inside it opens no level
+			description: `a line behind a brace inside a string closing its line, at its own level`,
+			code: `a {\n  b: fn("{"\n  c);\n}`,
+		},
+		{
 			description: `a function whose arguments stand on one line`,
 			code: `
 				.foo {

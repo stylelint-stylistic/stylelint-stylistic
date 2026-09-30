@@ -113,6 +113,11 @@ testRule({
 
 	accept: [
 		{
+			// The copy blanks a `//` comment behind the brace as it blanks a block one
+			description: `a line behind a brace closing its line with an inline comment behind it, a level deeper`,
+			code: `a {\n  b: fn({// c\n    c: d\n  });\n}`,
+		},
+		{
 			description: `a Less mixin call whose arguments each stand a level deeper`,
 			code:
 				`.foo {\n  .mixin(\n    @foo,\n    @bar,\n    @baz\n  );\n}`,
