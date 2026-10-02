@@ -8,7 +8,7 @@ import type { Syntax } from "../../syntaxes/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { blockTailTaken, getBlockTail, setBlockTail } from "../../utils/blockTail/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
-import { type CommentSpan, findStringSpans } from "../../utils/findCommentSpans/index.ts"
+import { type CommentSpan, findStringSpans, PLAIN_CSS } from "../../utils/findCommentSpans/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { nodeString } from "../../utils/nodeString/index.ts"
@@ -32,9 +32,6 @@ import { writeTheTailAPropertyKeeps } from "./rootTail.ts"
 let { utils: { validateOptions } } = stylelint
 
 let shortName = `max-empty-lines`
-
-/** What the strings of a text are found by: the comments are blanked in front of the scan, so whichever reading a `//` gets changes nothing there. */
-const STRING_READING = { spells: false, tokenizes: false, endsOnFormFeed: false }
 
 const MESSAGES = defineMessages({
 	expected: (max) => `Expected no more than ${max} empty ${max === 1 ? `line` : `lines`}`,
@@ -367,7 +364,7 @@ function countedCopy (syntax: Syntax, node: ChildNode, result: PostcssResult, ig
 	let outsideHostCode = blankComments(text, syntax.hostCodeSpans(text, node))
 	let outsideComments = blankComments(outsideHostCode, syntax.commentSpans(outsideHostCode, node, result))
 
-	return blankComments(ignoreComments ? outsideComments : outsideHostCode, findStringSpans(outsideComments, STRING_READING))
+	return blankComments(ignoreComments ? outsideComments : outsideHostCode, findStringSpans(outsideComments, PLAIN_CSS))
 }
 
 /**
@@ -478,7 +475,7 @@ function breakStart (text: string, lineFeedIndex: number): number {
  */
 function searchOptions (text: string, comments: CommentSpan[]): Parameters<typeof styleSearch>[0] {
 	return {
-		source: blankComments(text, findStringSpans(blankComments(text, comments), STRING_READING)),
+		source: blankComments(text, findStringSpans(blankComments(text, comments), PLAIN_CSS)),
 		// A line feed is a break whatever stands in front of it, so a run spelling its breaks both ways is one run, as PostCSS counts it
 		target: `\n`,
 		comments: `check`,

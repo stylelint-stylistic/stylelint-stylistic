@@ -223,6 +223,9 @@ export type CommentReading = {
 /** A syntax that spells a `//` comment and says nothing more. */
 const SPELLS_INLINE_COMMENTS: CommentReading = { spells: true, tokenizes: false, endsOnFormFeed: false }
 
+/** A syntax that reads plain CSS, which is what the strings of a text are found under: the comments are blanked in front of the scan, so whichever reading a `//` gets changes nothing there. */
+export const PLAIN_CSS: CommentReading = { spells: false, tokenizes: false, endsOnFormFeed: false }
+
 /** The span a `url()` address occupies. */
 export type AddressSpan = {
 	start: number,

@@ -36,6 +36,24 @@ testRule({
 			code: `a { b: URL(a\n\n\nb) url(\n\n\na) 1px; }`,
 		},
 		{
+			// What stands between the quotation marks is the string's text, a break in it a character of it: Less hands the text on as it is and lightningcss drops the declaration either way, while dart-sass refuses a raw break in a quoted string, and no run of breaks in it is a run of empty lines
+			description: `a call holding a string with empty lines in it`,
+			code: `a { b: f("a\n\n\nb") 1px; }`,
+		},
+		{
+			// The quotation mark behind the space the `(` opens with makes the parentheses a call holding a string to the compilers and to the tokenizer alike, and what stands between that mark and its twin is the string's text as well
+			description: `the same string in a quoted address, whose parentheses open a call and not an address`,
+			code: `a { b: url("a\n\n\nb") 1px; }`,
+		},
+		{
+			description: `the same string spelled with single quotation marks`,
+			code: `a { b: f('a\n\n\nb') 1px; }`,
+		},
+		{
+			description: `the same string in a custom property, whose value the parser hands on whole`,
+			code: `a { --b: f("a\n\n\nb"); }`,
+		},
+		{
 			description: `a call broken across lines with no empty line in it`,
 			code: `a { transform: translate(\n1\n,\n1\n); }`,
 		},
@@ -524,6 +542,11 @@ testRule({
 	config: [1],
 
 	accept: [
+		{
+			// As under `0`, one more empty line than the option allows, which stands in the string's text under either reading
+			description: `a call holding a string with two empty lines in it, one more than the option allows`,
+			code: `a { b: f("a\n\n\nb") 1px; }`,
+		},
 		{
 			description: `one empty line spelled a line feed and then a Windows pair, which is the most the option allows`,
 			code: `a { transform: translate(\n\r\n1, 1); }`,
