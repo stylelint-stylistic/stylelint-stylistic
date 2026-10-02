@@ -5,7 +5,7 @@ Limit the number of adjacent empty lines within selectors.
 ```css
 a,
               /* ← */
-b {        /* ↑ */
+b {           /* ↑ */
   color: red; /* ↑ */
 }             /* ↑ */
 /**              ↑

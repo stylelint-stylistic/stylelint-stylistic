@@ -4,7 +4,7 @@ Require a single space or disallow whitespace before the solidus that separ
 
 ```css
 a { grid-area: 1 /2; }
-/**             ↑
+/**              ↑
  * The space before this solidus */
 ```
 

@@ -4,7 +4,7 @@ Require a single space or disallow whitespace before the solidus of a rati
 
 ```css
 @media (aspect-ratio: 16 /9) {}
-/**                     ↑
+/**                      ↑
  * The space before this solidus */
 ```
 
