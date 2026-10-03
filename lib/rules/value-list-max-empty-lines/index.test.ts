@@ -80,6 +80,32 @@ testRule({
 			description: `the same comment written with carriage-return line breaks`,
 			code: `a { padding: 10px /*\r\n\r\n\r\n\r\n\r\n\r\n*/ 10px 10px 10px }`,
 		},
+		// A run of breaks inside a string is text of the string, and collapsing it would change the value the compilers read
+		{
+			description: `blank lines inside the text of a string, which are no blank lines of the value`,
+			code: `a { b: "x\n\n\ny", z; }`,
+		},
+		{
+			description: `the same string in a call, whose quotation marks stand apart from its parentheses`,
+			code: `a { b: f("x\n\n\ny"), z; }`,
+		},
+		{
+			description: `the same string spelled with single quotation marks`,
+			code: `a { b: 'x\n\n\ny', z; }`,
+		},
+		{
+			description: `the same string in a quoted address, whose parentheses open a call and not an address`,
+			code: `a { b: url("x\n\n\ny"), z; }`,
+		},
+		{
+			description: `the same string in a custom property, whose value the parser hands on whole`,
+			code: `a { --b: "x\n\n\ny"; }`,
+		},
+		// The compilers hand the text of a bare address on as it is as well, so a run of breaks there is the address's own
+		{
+			description: `blank lines inside the text of a bare address, which are no blank lines of the value`,
+			code: `a { b: url(x\n\n\ny), z; }`,
+		},
 		{
 			// A custom property closing the block without a semicolon keeps the run in front of the brace in its value, where an ordinary property hands it to the block, and the run is the block's either way
 			description: `blank lines in front of the closing brace behind a custom property's value`,
@@ -116,6 +142,15 @@ testRule({
 			description: `a blank line of the value behind a comment whose text holds blank lines of its own`,
 			code: `a { padding: 10px /*\n\n\n*/\n\n10px 10px 10px }`,
 			fixed: `a { padding: 10px /*\n\n\n*/\n10px 10px 10px }`,
+			line: 1,
+			column: 5,
+			message: messages.expected(0),
+		},
+		// The run inside the string stands where it was while the one behind it is collapsed
+		{
+			description: `a blank line of the value behind a string whose text holds blank lines of its own`,
+			code: `a { b: 1px, "x\n\n\ny", \n\n\n2px; }`,
+			fixed: `a { b: 1px, "x\n\n\ny", \n2px; }`,
 			line: 1,
 			column: 5,
 			message: messages.expected(0),
@@ -281,6 +316,11 @@ testRule({
 	config: [1],
 
 	accept: [
+		{
+			// As under `0`, one more empty line than the option allows, which stands in the string's text under either reading
+			description: `blank lines inside the text of a string, one more empty line than the option allows`,
+			code: `a { b: "x\n\n\ny", z; }`,
+		},
 		{
 			description: `one empty line spelled a line feed and then a Windows pair, which is the most the option allows`,
 			code: `a { padding: 10px\n\r\n10px 10px 10px }`,

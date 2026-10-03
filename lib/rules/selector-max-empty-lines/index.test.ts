@@ -692,6 +692,16 @@ testRule({
 			description: `the same comment written with carriage-return line breaks`,
 			code: `.foo /*com\r\n\r\n\r\nment*/, .bar { }`,
 		},
+		// A run of breaks inside a string is text of the string, and collapsing it would change the value the compilers read
+		{
+			description: `blank lines inside the text of a string in an attribute selector, which are no blank lines of the selector`,
+			code: `a[href="x\n\n\ny"] {\n\tb: c;\n}`,
+		},
+		// The compilers hand the text of a bare address on as it is as well, so a run of breaks there is the address's own
+		{
+			description: `blank lines inside the text of a bare address in an attribute selector`,
+			code: `a[href=url(x\n\n\ny)] {\n\tb: c;\n}`,
+		},
 	],
 
 	reject: [
@@ -725,6 +735,15 @@ testRule({
 			description: `a blank line of the selector behind a comment whose text holds blank lines of its own`,
 			code: `.foo /*com\n\n\nment*/\n\n.bar { }`,
 			fixed: `.foo /*com\n\n\nment*/\n.bar { }`,
+			line: 1,
+			column: 1,
+			message: messages.expected(0),
+		},
+		// The run inside the string stands where it was while the one behind it is collapsed
+		{
+			description: `a blank line of the selector behind an attribute selector whose string holds blank lines of its own`,
+			code: `.foo[href="x\n\n\ny"]\n\n\n.bar { }`,
+			fixed: `.foo[href="x\n\n\ny"]\n.bar { }`,
 			line: 1,
 			column: 1,
 			message: messages.expected(0),
