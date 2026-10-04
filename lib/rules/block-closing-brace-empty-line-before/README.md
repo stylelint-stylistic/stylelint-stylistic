@@ -13,6 +13,8 @@ a {
 
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix all of the problems reported by this rule.
 
+Over a block holding nothing but comments the run in front of the closing brace is the run behind the opening brace, so [`block-opening-brace-newline-after`](https://stylelint-stylistic.github.io/rules/block-opening-brace-newline-after) writes it too. Asked under `never-multi-line`, it takes both breaks of an empty line back out, and no file satisfies both: there the reversal behind `except: ["after-closing-brace"]` asks for nothing and that rule writes. A copy of it kept off reporting — by a disable comment standing on the line its warning falls on, which for a head written in several lines is the line the opening brace stands on, or by `ignore: ["rules"]`, which takes it off rules alone — is asked nothing, since a rule that reports nothing forbids nothing, and the empty line stands.
+
 ## Options
 
 `string`: `"always-multi-line"|"never"`

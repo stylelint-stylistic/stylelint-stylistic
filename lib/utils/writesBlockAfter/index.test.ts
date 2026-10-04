@@ -57,6 +57,13 @@ describe(`writesBlockAfter`, () => {
 		expect(ask(`never-multi-line`, { [CLOSING_EMPTY_LINE]: [`always-multi-line`, { except: `after-closing-brace` }] }, false)).toBe(true)
 	})
 
+	it(`a copy of the opening brace rule under ignore, which is asked nothing over a rule and stands over an at-rule`, () => {
+		let rules = { [OPENING_NEWLINE]: [`never-multi-line`, { ignore: [`rules`] }], [CLOSING_EMPTY_LINE]: [`never`, { except: [`after-closing-brace`] }] }
+
+		expect(ask(`never-multi-line`, rules, true, `a {/* c */}`)).toBe(false)
+		expect(ask(`never-multi-line`, rules, true, `@media print {/* c */}`)).toBe(true)
+	})
+
 	it(`a neighbor whose fix is turned off, which rewrites nothing and so gates nothing`, () => {
 		expect(ask(`always`, { [CLOSING_NEWLINE]: [`never-multi-line`, { disableFix: true }] })).toBe(true)
 		expect(ask(`always`, { [CLOSING_SPACE]: [`always`, { disableFix: true }] })).toBe(true)

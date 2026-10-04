@@ -1106,13 +1106,13 @@ describe(`${ruleName} beside the rules that write the same run`, () => {
 		expect(await race(ruleName, `a {/*c*/}`, `always`, closingEmptyLine, `always-multi-line`)).toEqual({ ours: `a {/*c*/\n\n}`, theirs: `a {/*c*/\n\n}`, left: [] })
 	})
 
-	it(`leaves it where that rule wants the empty line the never-multi-line write takes out`, async () => {
+	it(`leaves it where that rule asks for the empty line the never-multi-line takes straight back out, since no file satisfies both`, async () => {
 		let code = `a {/*a\nb*/\n}`
 
 		expect(await race(ruleName, code, `never-multi-line`, closingEmptyLine, [`never`, { except: [`after-closing-brace`] }])).toEqual({
-			ours: `a {/*a\nb*/\n\n}`,
-			theirs: `a {/*a\nb*/\n\n}`,
-			left: [messages.rejectedAfterMultiLine()],
+			ours: `a {/*a\nb*/}`,
+			theirs: `a {/*a\nb*/}`,
+			left: [],
 		})
 	})
 

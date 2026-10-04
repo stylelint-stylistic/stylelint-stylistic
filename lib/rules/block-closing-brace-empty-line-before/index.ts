@@ -12,13 +12,13 @@ import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
 import { hasEmptyLine } from "../../utils/hasEmptyLine/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
-import { optionsMatches } from "../../utils/optionsMatches/index.ts"
 import { braceIndex } from "../../utils/rawSpans/index.ts"
 import { removeEmptyLinesAfter } from "../../utils/removeEmptyLinesAfter/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { statementString } from "../../utils/statementString/index.ts"
 import { withoutTaken } from "../../utils/straySemicolonsTaken/index.ts"
+import { keepsAnEmptyLineBeforeBrace } from "../../utils/writesBlockAfter/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -93,14 +93,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// The print handed over is read through the brace, since the printed copy ends on a stray `raws.ownSemicolon`
 			let index = braceIndex(statement, statementString(statement, result))
 
-			let expectEmptyLineBefore = ((): boolean => {
-				let childNodeTypes = statement.nodes.map((item) => item.type)
-
-				// `after-closing-brace` reverses the option for a block with no declaration
-				if (optionsMatches(secondaryOptions, `except`, `after-closing-brace`) && !childNodeTypes.includes(`decl`)) return primary === `never`
-
-				return primary === `always-multi-line` && !isSingleLineString(blockString(statement, result))
-			})()
+			let expectEmptyLineBefore = keepsAnEmptyLineBeforeBrace(statement, result, primary, secondaryOptions ?? {}, isSingleLineString(blockString(statement, result)))
 
 			let hasEmptyLineBefore = hasEmptyLine(before)
 

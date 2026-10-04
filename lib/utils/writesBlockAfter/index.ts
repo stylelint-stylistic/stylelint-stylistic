@@ -1,10 +1,13 @@
 import type { Container, Node } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { LEADING_CSS_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
+import { EVERY_LINE_BREAK, LEADING_CSS_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
+import { beforeBlockString } from "../beforeBlockString/index.ts"
+import { fixDisabledOnLine } from "../fixDisabledOnLine/index.ts"
 import { neighborCopies, type NeighborRuleSetting, speaksOf } from "../neighborSettings/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
 import { straySemicolonsTaken, withoutTaken } from "../straySemicolonsTaken/index.ts"
+import { isComment, isRule } from "../typeGuards/index.ts"
 
 /** A spelling of the whitespace run in front of a closing brace. */
 type Run = `newline` | `emptyLine` | `space` | `none` | `other`
@@ -33,6 +36,12 @@ const CLOSING_EMPTY_LINE: NeighborRuleSetting = {
 	options: [`always-multi-line`, `never`],
 }
 
+/** The rule whose run in front of a closing brace is the run behind the opening brace, and the primaries it accepts. */
+const OPENING_NEWLINE: NeighborRuleSetting = {
+	name: `block-opening-brace-newline-after`,
+	options: [`always`, `always-multi-line`, `never-multi-line`],
+}
+
 /**
  * The runs a whitespace option accepts: `always` what its rule writes, `never` no whitespace at all.
  * @param option - The primary option, `always` or `never` with any line suffix.
@@ -46,20 +55,70 @@ function acceptedByWhitespace (option: string, writesABreak: boolean): Run[] {
 }
 
 /**
- * The runs `block-closing-brace-empty-line-before` accepts of a block holding nothing but comments.
+ * Finds the line the character behind a statement's opening brace stands on, which is where `block-opening-brace-newline-after` reports the run in front of a block's closing brace: a disable comment is asked about that line and not about the line a head standing above the brace opens on.
+ * @param node - The block's statement.
+ * @param result - The Stylelint result, which holds the file's syntax.
+ * @returns The line, or nothing where the file does not tell it.
+ */
+function openingBraceLine (node: Container, result: PostcssResult): number | undefined {
+	let start = node.source?.start?.line
+
+	if (start === undefined) return undefined
+
+	return start + (beforeBlockString(node, result, { noRawBefore: true }).match(EVERY_LINE_BREAK)?.length ?? 0)
+}
+
+/**
+ * Asks whether `block-opening-brace-newline-after` leaves a copy of `never-multi-line` no room for an empty line in front of this block's closing brace.
  *
- * The rule always judges, and only its expectation moves: `except: after-closing-brace` reverses the option for a block holding no declaration, which such a block is, and otherwise `always-multi-line` wants the line in a multi-line block alone.
- * @param option - Its primary option.
+ * The neighbor writes the run in front of the closing brace of a block holding one node or nothing but comments ([lib/rules/block-opening-brace-newline-after/index.ts](../../../lib/rules/block-opening-brace-newline-after/index.ts)), and only the second form is asked here: a block holding one node holds a declaration or a nested rule, and {@link keepsAnEmptyLineBeforeBrace} asks for no empty line in either. `never-multi-line` leaves no whitespace of a multi-line block there, and an empty line is two breaks of the run, so no file satisfies both.
+ *
+ * A turned-off fix changes nothing about the claim: the neighbor still reports a break standing there and takes none out, so its copy is asked with the others. `ignore: ["rules"]` takes it off the rules alone, its at-rule walk standing whatever the option says. A disable comment, on the other hand, takes the report away, and a rule that reports nothing forbids nothing.
+ * @param node - The block's statement.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns True where no copy of the neighbor leaves the empty line standing.
+ */
+function refusedByOpeningBrace (node: Container, result: PostcssResult): boolean {
+	// An empty block is out of both questions before either of them is asked, so the children stand for a block holding at least one
+	if (!(node.nodes ?? []).every((child) => isComment(child))) return false
+
+	let line = openingBraceLine(node, result)
+
+	return neighborCopies(node, result, OPENING_NEWLINE).some(({ option, secondary, name }) => option === `never-multi-line`
+		&& (!isRule(node) || !optionsMatches(secondary, `ignore`, `rules`))
+		&& (line === undefined || !fixDisabledOnLine(result, name, line)))
+}
+
+/**
+ * Asks whether `block-closing-brace-empty-line-before` leaves an empty line in the run in front of a block's closing brace.
+ *
+ * The rule always judges, and only its expectation moves: `except: after-closing-brace` reverses the option for a block holding no declaration, and otherwise `always-multi-line` wants the line in a multi-line block alone. The reversal asks for the line unconditionally, which it may not do where the run is the one `block-opening-brace-newline-after` writes: no file satisfies both, so the rule asks for nothing and the neighbor is free to write. The neighbor is asked with its turn not yet come and with it come, so the answer is one file either way.
+ *
+ * The rule and the gate below read this one answer, which is what keeps a promise made to the neighbor and a decision made by the rule from drifting apart.
+ * @param node - The block's statement.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @param option - The empty line rule's primary option.
  * @param secondary - Its secondary options.
- * @param isSingleLine - Whether the block is one line as the write leaves it.
+ * @param isSingleLine - Whether the block is one line as the asking side leaves it.
+ * @returns True where the empty line stands.
+ */
+export function keepsAnEmptyLineBeforeBrace (node: Container, result: PostcssResult, option: string, secondary: Record<string, unknown>, isSingleLine: boolean): boolean {
+	if (optionsMatches(secondary, `except`, `after-closing-brace`) && !(node.nodes ?? []).some((child) => child.type === `decl`)) return option === `never` && !refusedByOpeningBrace(node, result)
+
+	return option === `always-multi-line` && !isSingleLine
+}
+
+/**
+ * The runs {@link keepsAnEmptyLineBeforeBrace} accepts of the run in front of the closing brace.
+ * @param node - The block's statement.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @param option - The empty line rule's primary option.
+ * @param secondary - Its secondary options.
+ * @param isSingleLine - Whether the block is one line as the asking side leaves it.
  * @returns The accepted spellings.
  */
-function acceptedByEmptyLine (option: string, secondary: Record<string, unknown>, isSingleLine: boolean): Run[] {
-	let wantsTheLine = optionsMatches(secondary, `except`, `after-closing-brace`)
-		? option === `never`
-		: option === `always-multi-line` && !isSingleLine
-
-	return wantsTheLine ? [`emptyLine`] : WITHOUT_AN_EMPTY_LINE
+function acceptedByEmptyLine (node: Container, result: PostcssResult, option: string, secondary: Record<string, unknown>, isSingleLine: boolean): Run[] {
+	return keepsAnEmptyLineBeforeBrace(node, result, option, secondary, isSingleLine) ? [`emptyLine`] : WITHOUT_AN_EMPTY_LINE
 }
 
 /**
@@ -110,5 +169,5 @@ export function writesBlockAfter (node: Container, result: PostcssResult, primar
 
 	if (!holdsCode && writingCopies(node, result, CLOSING_SPACE).some(({ option }) => speaksOf(option, () => isSingleLine) && !agrees(acceptedByWhitespace(option, false)))) return false
 
-	return !writtenInFront || writingCopies(node, result, CLOSING_EMPTY_LINE).every(({ option, secondary }) => agrees(acceptedByEmptyLine(option, secondary, isSingleLine)))
+	return !writtenInFront || writingCopies(node, result, CLOSING_EMPTY_LINE).every(({ option, secondary }) => agrees(acceptedByEmptyLine(node, result, option, secondary, isSingleLine)))
 }
