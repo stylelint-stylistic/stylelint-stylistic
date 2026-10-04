@@ -2,9 +2,29 @@
 
 Add `@stylistic/stylelint-plugin` and `stylelint` itself to your project:
 
-```shell
+::: code-group
+
+```shell [pnpm]
+pnpm add -D stylelint @stylistic/stylelint-plugin
+```
+
+```shell [npm]
 npm add -D stylelint @stylistic/stylelint-plugin
 ```
+
+```shell [bun]
+bun add -D stylelint @stylistic/stylelint-plugin
+```
+
+```shell [deno]
+deno add -D stylelint @stylistic/stylelint-plugin
+```
+
+```shell [yarn]
+yarn add -D stylelint @stylistic/stylelint-plugin
+```
+
+:::
 
 The quickest way in is the recommended preset, which sets every rule of the plugin that has an answer the same for every project. Create `stylelint.config.mjs` (or open your existing configuration) and extend it by the package's `recommended` subpath, beside whatever else you extend:
 
@@ -36,14 +56,54 @@ The rules above read plain CSS. A stylesheet written in SCSS or Less, or em
 
 ## Run
 
-```shell
+::: code-group
+
+```shell [pnpm]
+pnpx stylelint "**/*.css"
+```
+
+```shell [npm]
 npx stylelint "**/*.css"
 ```
 
+```shell [bun]
+bun stylelint "**/*.css"
+```
+
+```shell [deno]
+deno run --allow-read npm:stylelint "**/*.css"
+```
+
+```shell [yarn]
+yarn stylelint "**/*.css"
+```
+
+:::
+
 Stylelint reports what the rules find, and `--fix` rewrites the files to match them:
 
-```shell
+::: code-group
+
+```shell [pnpm]
+pnpx stylelint "**/*.css" --fix
+```
+
+```shell [npm]
 npx stylelint "**/*.css" --fix
 ```
+
+```shell [bun]
+bun stylelint "**/*.css" --fix
+```
+
+```shell [deno]
+deno run --allow-read --allow-write npm:stylelint "**/*.css" --fix
+```
+
+```shell [yarn]
+yarn stylelint "**/*.css" --fix
+```
+
+:::
 
 Everything else the command takes is in [Stylelint's CLI reference](https://stylelint.io/user-guide/cli).
