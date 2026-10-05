@@ -1173,3 +1173,443 @@ testRule({
 		},
 	],
 })
+testRule({
+	ruleName,
+	config: [`never`, { except: [`last-nested`] }],
+
+	accept: [
+		{
+			description: `a single-line block, which this option passes over`,
+			code: `a { color: aquamarine; }`,
+		},
+		{
+			description: `a single break in front of the brace of a top-level block, which the reversed option does not reach`,
+			code: `
+				a {
+					color: aquamarine;
+				}
+			`,
+		},
+		{
+			description: `an empty line in front of the brace of a nested rule, which ends the chain of nesting and so stands where the reversed option asks one`,
+			code: `
+				a {
+					b {
+						color: aquamarine;
+
+					}
+				}
+			`,
+		},
+		{
+			description: `an empty line in front of the brace of a rule inside an at-rule, which ends the chain of nesting there too`,
+			code: `
+				@media print {
+					a {
+						color: aquamarine;
+
+					}
+				}
+			`,
+		},
+		{
+			description: `an empty line in front of the brace of a nested rule holding a nested rule of its own, and none in front of that rule's, where the chain of nesting ends deeper`,
+			code: `
+				a {
+					b {
+						c {
+							color: aquamarine;
+
+						}
+					}
+				}
+			`,
+		},
+		{
+			description: `an empty line in front of the brace of a nested block holding nothing but comments, which the reversed option asks one of as any other`,
+			code: `
+				a {
+					b {
+						/* c */
+
+					}
+				}
+			`,
+		},
+	],
+
+	reject: [
+		{
+			description: `a single break in front of the brace of a nested rule, which the reversed option asks an empty line of`,
+			code: `
+				a {
+					b {
+						color: aquamarine;
+					}
+				}
+			`,
+			fixed: `
+				a {
+					b {
+						color: aquamarine;
+
+					}
+				}
+			`,
+			line: 4,
+			column: 2,
+			message: messages.expected,
+		},
+		{
+			description: `an empty line in front of the brace of a top-level block, which the reversed option does not reach`,
+			code: `
+				a {
+					b {
+						color: aquamarine;
+
+					}
+
+				}
+			`,
+			fixed: `
+				a {
+					b {
+						color: aquamarine;
+
+					}
+				}
+			`,
+			line: 7,
+			column: 1,
+			message: messages.rejected,
+		},
+		{
+			description: `an empty line in front of the brace of a nested rule holding a nested rule of its own, which the reversed option does not reach there`,
+			code: `
+				a {
+					b {
+						c {
+							color: aquamarine;
+
+						}
+
+					}
+				}
+			`,
+			fixed: `
+				a {
+					b {
+						c {
+							color: aquamarine;
+
+						}
+					}
+				}
+			`,
+			line: 8,
+			column: 2,
+			message: messages.rejected,
+		},
+		{
+			description: `two nested rules one behind the other, each of which ends the chain of nesting at its depth, where this option asks an empty line of both braces and none of the block around them`,
+			code: `
+				a {
+					b {
+						color: aquamarine;
+					}
+
+					c {
+						color: aquamarine;
+					}
+				}
+			`,
+			fixed: `
+				a {
+					b {
+						color: aquamarine;
+
+					}
+
+					c {
+						color: aquamarine;
+
+					}
+				}
+			`,
+			warnings: [
+				{
+					line: 4,
+					column: 2,
+					message: messages.expected,
+				},
+				{
+					line: 8,
+					column: 2,
+					message: messages.expected,
+				},
+			],
+		},
+		{
+			description: `a single break in front of the brace of a nested block holding nothing but comments, which the reversed option asks an empty line of as any other`,
+			code: `
+				a {
+					b {
+						/* c */
+					}
+				}
+			`,
+			fixed: `
+				a {
+					b {
+						/* c */
+
+					}
+				}
+			`,
+			line: 4,
+			column: 2,
+			message: messages.expected,
+		},
+		{
+			description: `a stray semicolon behind the closing brace of a nested rule, which the reversed option asks an empty line behind as any other last block`,
+			code: `
+				a {
+					b {
+						color: aquamarine;
+					};
+				}
+			`,
+			fixed: `
+				a {
+					b {
+						color: aquamarine;
+
+					};
+				}
+			`,
+			line: 4,
+			column: 2,
+			message: messages.expected,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`always-multi-line`, { except: [`last-nested`] }],
+
+	accept: [
+		{
+			description: `a single-line block, which this option passes over`,
+			code: `a { color: aquamarine; }`,
+		},
+		{
+			description: `an empty line in front of the brace of the at-rule and of none of the rule inside it, which ends the chain of nesting`,
+			code: `
+				@media print {
+
+					a {
+						color: aquamarine;
+					}
+
+				}
+			`,
+		},
+		{
+			description: `an empty line in front of each of the two braces the chain of nesting does not end at, with none in front of the innermost rule's`,
+			code: `
+				a {
+					b {
+						c {
+							color: aquamarine;
+						}
+
+					}
+
+				}
+			`,
+		},
+	],
+
+	reject: [
+		{
+			description: `an empty line in front of the brace of a rule ending the chain of nesting, which the reversed option takes back`,
+			code: `
+				a {
+
+					b {
+						color: aquamarine;
+
+					}
+
+				}
+			`,
+			fixed: `
+				a {
+
+					b {
+						color: aquamarine;
+					}
+
+				}
+			`,
+			line: 6,
+			column: 2,
+			message: messages.rejected,
+		},
+		{
+			description: `a missing empty line in front of the brace of a nested rule holding a nested rule of its own, which the reversed option does not reach there`,
+			code: `
+				a {
+					b {
+						c {
+							color: aquamarine;
+						}
+					}
+				}
+			`,
+			fixed: `
+				a {
+					b {
+						c {
+							color: aquamarine;
+						}
+
+					}
+
+				}
+			`,
+			warnings: [
+				{
+					line: 7,
+					column: 1,
+					message: messages.expected,
+				},
+				{
+					line: 6,
+					column: 2,
+					message: messages.expected,
+				},
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never`, { except: [`after-closing-brace`, `last-nested`] }],
+
+	accept: [
+		{
+			description: `an empty line in front of the brace of a nested block holding nothing but comments, which both values turn the option over at once, so it stands once`,
+			code: `
+				a {
+					b {
+						/* c */
+
+					}
+
+				}
+			`,
+		},
+	],
+
+	reject: [
+		{
+			description: `a single break in front of the brace of a top-level block holding no declaration and of the nested rule inside it, which each of the two values turns the option over at and so both ask one of`,
+			code: `
+				a {
+					b {
+						color: aquamarine;
+					}
+				}
+			`,
+			fixed: `
+				a {
+					b {
+						color: aquamarine;
+
+					}
+
+				}
+			`,
+			warnings: [
+				{
+					line: 5,
+					column: 1,
+					message: messages.expected,
+				},
+				{
+					line: 4,
+					column: 2,
+					message: messages.expected,
+				},
+			],
+		},
+		{
+			description: `a single break in front of the brace of a nested rule declaring a property, where the second value turns the option over and the first asks for a block declaring nothing`,
+			code: `
+				a {
+					color: hotpink;
+
+					b {
+						color: aquamarine;
+					}
+				}
+			`,
+			fixed: `
+				a {
+					color: hotpink;
+
+					b {
+						color: aquamarine;
+
+					}
+				}
+			`,
+			line: 6,
+			column: 2,
+			message: messages.expected,
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`never`, { except: `last-nested` }],
+
+	accept: [
+		{
+			description: `a single break in front of the brace of a top-level block, the value named by a string where an array would do`,
+			code: `
+				a {
+					color: aquamarine;
+				}
+			`,
+		},
+	],
+
+	reject: [
+		{
+			description: `a single break in front of the brace of a nested rule, the value named by a string where an array would do`,
+			code: `
+				a {
+					b {
+						color: aquamarine;
+					}
+				}
+			`,
+			fixed: `
+				a {
+					b {
+						color: aquamarine;
+
+					}
+				}
+			`,
+			line: 4,
+			column: 2,
+			message: messages.expected,
+		},
+	],
+})

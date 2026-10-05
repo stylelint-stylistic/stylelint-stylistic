@@ -40,8 +40,8 @@ export type PrimaryOption = `always-multi-line` | `never`
 /** The secondary options. */
 export type SecondaryOptions = {
 
-	/** `after-closing-brace` reverses the primary option for the closing brace of a nested rule. */
-	except?: `after-closing-brace` | `after-closing-brace`[],
+	/** `after-closing-brace` reverses the primary option for a block holding no declaration, `last-nested` for the block a chain of nested blocks ends in. */
+	except?: (`after-closing-brace` | `last-nested`) | (`after-closing-brace` | `last-nested`)[],
 }
 
 /**
@@ -66,7 +66,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			{
 				actual: secondaryOptions,
 				possible: {
-					except: [`after-closing-brace`],
+					except: [`after-closing-brace`, `last-nested`],
 				},
 				optional: true,
 			},

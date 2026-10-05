@@ -4,10 +4,11 @@ import type { PostcssResult } from "stylelint"
 import { EVERY_LINE_BREAK, LEADING_CSS_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
 import { beforeBlockString } from "../beforeBlockString/index.ts"
 import { fixDisabledOnLine } from "../fixDisabledOnLine/index.ts"
+import { hasBlock } from "../hasBlock/index.ts"
 import { neighborCopies, type NeighborRuleSetting, speaksOf } from "../neighborSettings/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
 import { straySemicolonsTaken, withoutTaken } from "../straySemicolonsTaken/index.ts"
-import { isComment, isRule } from "../typeGuards/index.ts"
+import { isComment, isDocument, isRoot, isRule } from "../typeGuards/index.ts"
 
 /** A spelling of the whitespace run in front of a closing brace. */
 type Run = `newline` | `emptyLine` | `space` | `none` | `other`
@@ -90,9 +91,36 @@ function refusedByOpeningBrace (node: Container, result: PostcssResult): boolean
 }
 
 /**
+ * Asks whether a block is the last block inside nested blocks: a block standing in another one and holding no block of its own, where a chain of nesting ends. A root and a document stand around the blocks of a file rather than in one of them, so a statement at their top is nested in nothing.
+ * @param node - The block's statement.
+ * @returns True where the block ends its chain.
+ */
+function isLastNestedBlock (node: Container): boolean {
+	if (!hasBlock(node)) return false
+
+	let parent = node.parent
+
+	if (parent === undefined || isRoot(parent) || isDocument(parent) || !hasBlock(parent)) return false
+
+	return !node.nodes.some((child) => hasBlock(child))
+}
+
+/**
+ * Asks whether `except` turns the primary option over for this block: `after-closing-brace` where the block holds no declaration, `last-nested` where the block ends a chain of nested blocks. Both turn it the same way, so a configuration naming both turns it once.
+ * @param node - The block's statement.
+ * @param secondary - The empty line rule's secondary options.
+ * @returns True where the option is turned over.
+ */
+function reversedByExcept (node: Container, secondary: Record<string, unknown>): boolean {
+	if (optionsMatches(secondary, `except`, `last-nested`) && isLastNestedBlock(node)) return true
+
+	return optionsMatches(secondary, `except`, `after-closing-brace`) && !(node.nodes ?? []).some((child) => child.type === `decl`)
+}
+
+/**
  * Asks whether `block-closing-brace-empty-line-before` leaves an empty line in the run in front of a block's closing brace.
  *
- * The rule always judges, and only its expectation moves: `except: after-closing-brace` reverses the option for a block holding no declaration, and otherwise `always-multi-line` wants the line in a multi-line block alone. The reversal asks for the line unconditionally, which it may not do where the run is the one `block-opening-brace-newline-after` writes: no file satisfies both, so the rule asks for nothing and the neighbor is free to write. The neighbor is asked with its turn not yet come and with it come, so the answer is one file either way.
+ * The rule always judges, and only its expectation moves: `except` turns the option over, `after-closing-brace` for a block holding no declaration and `last-nested` for the block a chain of nested blocks ends in, and otherwise `always-multi-line` wants the line in a multi-line block alone. The reversal asks for the line unconditionally, which it may not do where the run is the one `block-opening-brace-newline-after` writes: no file satisfies both, so the rule asks for nothing and the neighbor is free to write. The neighbor is asked with its turn not yet come and with it come, so the answer is one file either way.
  *
  * The rule and the gate below read this one answer, which is what keeps a promise made to the neighbor and a decision made by the rule from drifting apart.
  * @param node - The block's statement.
@@ -103,13 +131,15 @@ function refusedByOpeningBrace (node: Container, result: PostcssResult): boolean
  * @returns True where the empty line stands.
  */
 export function keepsAnEmptyLineBeforeBrace (node: Container, result: PostcssResult, option: string, secondary: Record<string, unknown>, isSingleLine: boolean): boolean {
-	if (optionsMatches(secondary, `except`, `after-closing-brace`) && !(node.nodes ?? []).some((child) => child.type === `decl`)) return option === `never` && !refusedByOpeningBrace(node, result)
+	if (reversedByExcept(node, secondary)) return option === `never` && !refusedByOpeningBrace(node, result)
 
 	return option === `always-multi-line` && !isSingleLine
 }
 
 /**
  * The runs {@link keepsAnEmptyLineBeforeBrace} accepts of the run in front of the closing brace.
+ *
+ * A block nothing but comments that stands in another one ends a chain of nested blocks as any other would, so `last-nested` turns the option over here as it does in the rule, and the answer is the one {@link keepsAnEmptyLineBeforeBrace} gives.
  * @param node - The block's statement.
  * @param result - The Stylelint result, which holds the configuration.
  * @param option - The empty line rule's primary option.

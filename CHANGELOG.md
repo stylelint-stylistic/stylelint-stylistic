@@ -52,6 +52,7 @@ The plugin now refuses a configuration holding two settings that [conflict w
 
 #### New options
 
+- The [`block-closing-brace-empty-line-before`](https://stylelint-stylistic.github.io/rules/block-closing-brace-empty-line-before) rule now takes a `last-nested` value in its `except` option (see [#60](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/60)), which reverses the primary option where a chain of nested blocks ends — at a block nested in another one and holding no block of its own — so that under `"never"` the empty line before such a brace is asked for, and under `"always-multi-line"` it is not.
 - The [`max-line-length`](https://stylelint-stylistic.github.io/rules/max-line-length) rule now has an additional `tabSize` option (see [#10](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/10)), which measures a tab to the next tab stop of that width, so a file indented with tabs is as long as the editor's ruler shows.
 - The [`named-grid-areas-alignment`](https://stylelint-stylistic.github.io/rules/named-grid-areas-alignment) rule now has an additional `alignColumns` option (see [#45](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/45)), which lays the line names and the sizes of a `grid-template` or `grid` shorthand out as columns of a table.
 

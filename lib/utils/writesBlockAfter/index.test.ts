@@ -57,6 +57,16 @@ describe(`writesBlockAfter`, () => {
 		expect(ask(`never-multi-line`, { [CLOSING_EMPTY_LINE]: [`always-multi-line`, { except: `after-closing-brace` }] }, false)).toBe(true)
 	})
 
+	it(`that neighbor's last nested value under never, which asks an empty line of a nested block nothing but comments and no empty line of such a block at the top`, () => {
+		expect(ask(`never-multi-line`, { [CLOSING_EMPTY_LINE]: [`never`, { except: [`last-nested`] }] })).toBe(true)
+		expect(askNested(`never-multi-line`, { [CLOSING_EMPTY_LINE]: [`never`, { except: [`last-nested`] }] })).toBe(false)
+	})
+
+	it(`that same value under always-multi-line, which takes its own demand back over a nested block and leaves it standing at the top`, () => {
+		expect(ask(`never-multi-line`, { [CLOSING_EMPTY_LINE]: [`always-multi-line`, { except: [`last-nested`] }] })).toBe(false)
+		expect(askNested(`never-multi-line`, { [CLOSING_EMPTY_LINE]: [`always-multi-line`, { except: [`last-nested`] }] })).toBe(true)
+	})
+
 	it(`a copy of the opening brace rule under ignore, which is asked nothing over a rule and stands over an at-rule`, () => {
 		let rules = { [OPENING_NEWLINE]: [`never-multi-line`, { ignore: [`rules`] }], [CLOSING_EMPTY_LINE]: [`never`, { except: [`after-closing-brace`] }] }
 
@@ -118,8 +128,30 @@ describe(`writesBlockAfter`, () => {
  * @returns What the utility answers.
  */
 function ask (primary: string, rules: Record<string, unknown>, isSingleLine: boolean = false, code: string = `a {}`): boolean {
+	return askAbout(parse(code).first as Rule, primary, rules, isSingleLine)
+}
+
+/**
+ * Asks the same of a block nothing but comments standing in another one, which is where `last-nested` reaches where it asks nothing of the same block at the top.
+ * @param primary - The asking rule's primary option.
+ * @param rules - The rules the configuration lists.
+ * @param isSingleLine - Whether the block is one line as the write leaves it.
+ * @returns What the utility answers.
+ */
+function askNested (primary: string, rules: Record<string, unknown>, isSingleLine: boolean = false): boolean {
+	return askAbout((parse(`a { b {/* c */} }`).first as Rule).first as Rule, primary, rules, isSingleLine)
+}
+
+/**
+ * Asks of one block.
+ * @param block - The block's statement.
+ * @param primary - The asking rule's primary option.
+ * @param rules - The rules the configuration lists.
+ * @param isSingleLine - Whether the block is one line as the write leaves it.
+ * @returns What the utility answers.
+ */
+function askAbout (block: Rule, primary: string, rules: Record<string, unknown>, isSingleLine: boolean): boolean {
 	let result = { stylelint: { config: { rules } } } as unknown as PostcssResult
-	let block = parse(code).first as Rule
 
 	return writesBlockAfter(block, result, primary, isSingleLine, block.raws.after ?? ``)
 }

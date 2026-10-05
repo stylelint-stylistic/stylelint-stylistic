@@ -217,3 +217,135 @@ The following patterns are _not_ considered problems:
   }
 }
 ```
+
+### `except: ["last-nested"]`
+
+A block nested inside another block and holding no block of its own ends a chain of nesting, and `last-nested` reverses the primary option there: the block of a nested rule, of a rule inside an at-rule, or of a nested property of Sass. A block standing at the top of a file is nested in nothing, and a block holding a block of its own does not end the chain, so both keep the primary option.
+
+For example, with `"never"` and `except: ["last-nested"]`:
+
+The following patterns are considered problems:
+
+```css
+a {
+  b {
+    color: aquamarine;
+  }
+}
+```
+
+```css
+@media print {
+  a {
+    color: aquamarine;
+  }
+}
+```
+
+The following patterns are _not_ considered problems:
+
+```css
+a {
+  b {
+    color: aquamarine;
+
+  }
+}
+```
+
+```css
+@media print {
+  a {
+    color: aquamarine;
+
+  }
+}
+```
+
+```css
+a {
+  b {
+    c {
+      color: aquamarine;
+
+    }
+  }
+}
+```
+
+For example, with `"always-multi-line"` and `except: ["last-nested"]`:
+
+The following pattern is considered a problem:
+
+```css
+a {
+
+  b {
+    color: aquamarine;
+
+  }
+
+}
+```
+
+The following patterns are _not_ considered problems:
+
+```css
+@media print {
+
+  a {
+    color: aquamarine;
+  }
+
+}
+```
+
+```css
+a {
+  b {
+    c {
+      color: aquamarine;
+    }
+
+  }
+
+}
+```
+
+
+### `except: ["after-closing-brace", "last-nested"]`
+
+Both values reverse the primary option the same way, so naming both asks one reversal and not two: a block either of them reaches is turned over once.
+
+For example, with `"never"` and `except: ["after-closing-brace", "last-nested"]`:
+
+The following pattern is considered a problem:
+
+```css
+@media (width >= 1px) {
+  .foo {
+    color: red;
+
+    a {
+      color: blue;
+    }
+  }
+}
+```
+
+The following pattern is _not_ considered a problem:
+
+```css
+@media (width >= 1px) {
+
+  .foo {
+    color: red;
+
+    a {
+      color: blue;
+    }
+
+  }
+
+}
+```
