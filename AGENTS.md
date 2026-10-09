@@ -1,6 +1,7 @@
 # AGENTS.md
 
 This file provides guidance to coding agents when working with code in this repository.
+If [AGENTS.local.md](AGENTS.local.md) exists, read it; its instructions override this file.
 
 ## Commands
 
