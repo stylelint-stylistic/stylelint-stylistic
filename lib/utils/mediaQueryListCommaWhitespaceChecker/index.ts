@@ -11,6 +11,7 @@ import { findFunctionArgumentSpans } from "../findFunctionArgumentSpans/index.ts
 import { listLines, rawInFrontOfText } from "../rawInFrontOfText/index.ts"
 import { report } from "../report/index.ts"
 import { textBeforeAsLeft } from "../textEdge/index.ts"
+import type { AskedWrites } from "../twinWritesAtTheComma/index.ts"
 import { assertString } from "../validateTypes/index.ts"
 import type { WhitespaceChecker } from "../whitespaceChecker/index.ts"
 import { writesKeepingAddresses } from "../writesKeepingAddresses/index.ts"
@@ -34,8 +35,8 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 	fix?: ((atRule: AtRule, index: number, runString: string) => void),
 	isFixable?: ((params: string, index: number, atRule: AtRule, runString: string) => boolean),
 
-	/** The spans a fix would write, indexed in the params; the index the problem is reported at in the at-rule's string comes last. Every fix of an at-rule is asked along with the others whether the writes switch how the tokenizer reads an address's parentheses ({@link writesKeepingAddresses}), and one they refuse is reported without a fix. */
-	edits: ((params: string, index: number, atRule: AtRule, runString: string, problemIndex: number) => Edit[]),
+	/** The spans a fix would write, indexed in the params, and what a neighbor running behind it in the pass writes there; the index the problem is reported at in the at-rule's string comes last. Every fix of an at-rule is asked along with the others whether the writes switch how the tokenizer reads an address's parentheses ({@link writesKeepingAddresses}), and one they refuse is reported without a fix. */
+	edits: ((params: string, index: number, atRule: AtRule, runString: string, problemIndex: number) => AskedWrites),
 
 	/** A guard of the fix reading the text around the write, asked over the text the at-rule's other writes leave ({@link writesKeepingAddresses}), with the indices moved into it. */
 	holds?: ((params: string, index: number, atRule: AtRule, runString: string) => (edited: string, move: (index: number) => number) => boolean),
@@ -115,8 +116,8 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 	 * @param lineCheckStr - What the list's lineness is asked of.
 	 * @returns The problems found, each at its index in the at-rule's string, with the spans its fix would write, or none where a guard refuses the fix.
 	 */
-	function checkComma (source: string, runString: string, index: number, node: AtRule, textBefore: string, lineCheckStr: string): { message: string, index: number, edits: Edit[] | undefined, holds: ((edited: string, move: (index: number) => number) => boolean) | undefined }[] {
-		let problems: { message: string, index: number, edits: Edit[] | undefined, holds: ((edited: string, move: (index: number) => number) => boolean) | undefined }[] = []
+	function checkComma (source: string, runString: string, index: number, node: AtRule, textBefore: string, lineCheckStr: string): { message: string, index: number, edits: Edit[] | undefined, assumed: Edit[] | undefined, holds: ((edited: string, move: (index: number) => number) => boolean) | undefined }[] {
+		let problems: { message: string, index: number, edits: Edit[] | undefined, assumed: Edit[] | undefined, holds: ((edited: string, move: (index: number) => number) => boolean) | undefined }[] = []
 
 		opts.locationChecker({
 			source: runString,
@@ -126,8 +127,9 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 			err: (message) => {
 				// Asked here, not in front of the check, so parameters in order are not read once per comma
 				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, node, runString))
+				let writes = isFixable ? opts.edits(source, index, node, runString, index + atRuleParamIndex(node)) : undefined
 
-				problems.push({ message, index: index + atRuleParamIndex(node), edits: isFixable ? opts.edits(source, index, node, runString, index + atRuleParamIndex(node)) : undefined, holds: isFixable ? opts.holds?.(source, index, node, runString) : undefined })
+				problems.push({ message, index: index + atRuleParamIndex(node), edits: writes?.edits, assumed: writes?.assumed, holds: isFixable ? opts.holds?.(source, index, node, runString) : undefined })
 			},
 		})
 

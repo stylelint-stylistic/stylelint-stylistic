@@ -6,6 +6,7 @@ import type { Syntax } from "../../syntaxes/index.ts"
 import type { Edit } from "../applyEditsFromEnd/index.ts"
 import { declarationString } from "../declarationString/index.ts"
 import { report } from "../report/index.ts"
+import type { AskedWrites } from "../twinWritesAtTheComma/index.ts"
 import { writesKeepingAddresses } from "../writesKeepingAddresses/index.ts"
 
 export interface ValueListCommaWhitespaceCheckerOptions {
@@ -35,8 +36,8 @@ export interface ValueListCommaWhitespaceCheckerOptions {
 	/** Whether a problem can be fixed; the printed declaration, the index of every comma checked in it and the copy the runs are read over come along. */
 	isFixable?: ((node: Declaration, index: number, declString: string, runString: string) => boolean),
 
-	/** The spans a fix would write, indexed in the printed declaration, which is where the problem is reported too. Every fix of a declaration is asked along with the others whether the writes switch how the tokenizer reads an address's parentheses ({@link writesKeepingAddresses}), and one they refuse is reported without a fix. */
-	edits: ((node: Declaration, index: number, declString: string, runString: string) => Edit[]),
+	/** The spans a fix would write, indexed in the printed declaration, which is where the problem is reported too, and what a neighbor running behind it in the pass writes there. Every fix of a declaration is asked along with the others whether the writes switch how the tokenizer reads an address's parentheses ({@link writesKeepingAddresses}), and one they refuse is reported without a fix. */
+	edits: ((node: Declaration, index: number, declString: string, runString: string) => AskedWrites),
 
 	/** A guard of the fix reading the text around the write, asked over the text the declaration's other writes leave ({@link writesKeepingAddresses}), with the indices moved into it. */
 	holds?: ((node: Declaration, index: number, declString: string, runString: string) => (edited: string, move: (index: number) => number) => boolean),
@@ -100,8 +101,8 @@ export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceC
 	 * @param node - The declaration.
 	 * @returns The problems found, each with the spans its fix would write, or none where a guard refuses the fix.
 	 */
-	function checkComma (source: string, runString: string, index: number, node: Declaration): { message: string, index: number, edits: Edit[] | undefined, holds: ((edited: string, move: (index: number) => number) => boolean) | undefined }[] {
-		let problems: { message: string, index: number, edits: Edit[] | undefined, holds: ((edited: string, move: (index: number) => number) => boolean) | undefined }[] = []
+	function checkComma (source: string, runString: string, index: number, node: Declaration): { message: string, index: number, edits: Edit[] | undefined, assumed: Edit[] | undefined, holds: ((edited: string, move: (index: number) => number) => boolean) | undefined }[] {
+		let problems: { message: string, index: number, edits: Edit[] | undefined, assumed: Edit[] | undefined, holds: ((edited: string, move: (index: number) => number) => boolean) | undefined }[] = []
 
 		opts.locationChecker({
 			source: runString,
@@ -109,8 +110,9 @@ export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceC
 			err: (message) => {
 				// Asked here, not in front of the check, so a clean declaration is not read once per comma
 				let isFixable = fix && (!opts.isFixable || opts.isFixable(node, index, source, runString))
+				let writes = isFixable ? opts.edits(node, index, source, runString) : undefined
 
-				problems.push({ message, index, edits: isFixable ? opts.edits(node, index, source, runString) : undefined, holds: isFixable ? opts.holds?.(node, index, source, runString) : undefined })
+				problems.push({ message, index, edits: writes?.edits, assumed: writes?.assumed, holds: isFixable ? opts.holds?.(node, index, source, runString) : undefined })
 			},
 		})
 

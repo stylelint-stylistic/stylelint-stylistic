@@ -20,6 +20,16 @@ type Twin = `newlineAfter` | `newlineBefore` | `spaceAfter` | `spaceBefore`
 /** The lists whose commas four rules each write around. */
 const FAMILIES = [`value-list`, `media-query-list`, `selector-list`] as const
 
+/** The writes a `-list-comma-*-before` rule asks about at one comma: its own, and what the list's other comma rules running behind it write around the same comma, which the pass applies and the rule's own question is asked over rather than beside. */
+export type AskedWrites = {
+
+	/** The rule's own write, indexed in the text. */
+	edits: Edit[],
+
+	/** What the twins running behind the comma write there, indexed in the text, which the pass leaves standing before the rule's own write and the address question then reads. */
+	assumed: Edit[],
+}
+
 /**
  * Names the four comma rules of a list's kind, by what each writes.
  * @param family - The kind of list.
@@ -67,7 +77,7 @@ function spelledBy (run: string, twin: Twin, option: string, lineBreak: string):
 /**
  * Builds the writes a `-list-comma-*-before` rule asks about at one comma: its own, and what the list's other comma rules that run behind it in the pass write around the same comma, so that the question is asked of the text the pass leaves rather than of the one standing. A twin runs behind as `neighborSettings` orders the run: the configuration's order, the deferred copies behind every other in the plugin's order. One whose fix is off, or kept off the comma's line by a disable comment, writes nothing; one whose option turns on the list's lines is read against the list as the writes in front of it leave it; and one whose guards refuse its write over the text those leave, as they will be asked, writes nothing either. Of the twins' guards two are asked here, the address question and, for a break, the guard against a square bracket or a brace left open in parentheses the tokenizer holds as one token; the rest, which move a `-newline-after` check behind a block comment or refuse it in front of a `//` comment, are not, since with a solidus inside the parentheses the run behind the comma decides their reading under neither tier: an address's token takes them whole whatever they hold, and the other reading takes them as code on the solidus whether the break stays or goes.
  *
- * The run in front of the comma is spelled once for the rule and the twins writing it, and the run behind for the twins writing that; where the twins leave the run behind as it stands, no edit names it.
+ * The run in front of the comma is spelled once for the rule and the twins writing it, and the run behind for the twins writing that; where the twins leave the run behind as it stands, no edit names it. The run in front is the rule's own write with the twins writing in front of it, asked as one; the run behind, written by a twin alone, is asked as the text the rule's own write leaves ({@link AskedWrites}).
  * @param text - The text the commas are found in.
  * @param runString - The copy of it the runs are read over, with the escapes masked.
  * @param index - The comma.
@@ -77,13 +87,13 @@ function spelledBy (run: string, twin: Twin, option: string, lineBreak: string):
  * @param node - The node the text is read from.
  * @param result - The Stylelint result, which holds the configuration.
  * @param ruleName - The asking rule's registered name.
- * @returns The edits, indexed in the text.
+ * @returns The rule's own write and the twins' writes behind the comma, both indexed in the text.
  */
-export function editsAskedWithTheTwins (text: string, runString: string, index: number, problemIndex: number, own: Edit, reading: Pick<CommentReading, `tokenizes`>, node: AtRule | Declaration | Rule, result: PostcssResult, ruleName: string): Edit[] {
+export function editsAskedWithTheTwins (text: string, runString: string, index: number, problemIndex: number, own: Edit, reading: Pick<CommentReading, `tokenizes`>, node: AtRule | Declaration | Rule, result: PostcssResult, ruleName: string): AskedWrites {
 	let family = FAMILIES.find((name) => ruleName.includes(`${name}-comma-`))
 	let twins = family && TWINS.get(family)
 
-	if (!twins) return [own]
+	if (!twins) return { edits: [own], assumed: [] }
 
 	let settings = neighborSettings(node, result, twins)
 	let position = settings.findIndex(([, , , name]) => name === ruleName)
@@ -128,8 +138,9 @@ export function editsAskedWithTheTwins (text: string, runString: string, index: 
 	}
 
 	let edits: Edit[] = [{ start: frontStart, end: index, text: front }]
+	let assumed: Edit[] = []
 
-	if (back !== runBack) edits.push({ start: index + 1, end: index + 1 + runBack.length, text: back })
+	if (back !== runBack) assumed.push({ start: index + 1, end: index + 1 + runBack.length, text: back })
 
-	return edits
+	return { edits, assumed }
 }

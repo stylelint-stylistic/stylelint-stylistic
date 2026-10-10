@@ -59,7 +59,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			locationChecker: checker.after,
 			checkedRuleName: ruleName,
 			// The space written behind the comma or the run taken out from there can part the name of a bare address from the comma or join it to the comma, and a break taken out of parentheses PostCSS reads as code makes them one plain token again, which pushes nothing, so that a later `(` pops `url` where it popped a word of theirs; the writes of the list are asked together whether PostCSS then reads the parentheses of an address the other way
-			edits: (params, index) => [{ start: index + 1, end: index + 1 + runBehind(params, index).length, text: primary.startsWith(`always`) ? ` ` : `` }],
+			edits: (params, index) => ({ edits: [{ start: index + 1, end: index + 1 + runBehind(params, index).length, text: primary.startsWith(`always`) ? ` ` : `` }], assumed: [] }),
 			fix: (atRule, index) => {
 				let paramCommaIndex = index - atRuleParamIndex(atRule)
 

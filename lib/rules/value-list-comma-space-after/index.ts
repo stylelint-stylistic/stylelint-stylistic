@@ -61,7 +61,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Declined here, since Stylelint counts a fixer as applied whatever it does: a comma in the property name is out of reach, one opening the value is not
 			isFixable: (declNode, index) => index >= declarationValueIndex(declNode),
 			// The space written behind the comma or the run taken out from there can part the name of a bare address from the comma or join it to the comma, and a break taken out of parentheses PostCSS reads as code makes them one plain token again, which pushes nothing, so that a later `(` pops `url` where it popped a word of theirs; the writes of the list are asked together whether PostCSS then reads the parentheses of an address the other way
-			edits: (declNode, index, declString) => [{ start: index + 1, end: index + 1 + runBehind(declString, index).length, text: primary.startsWith(`always`) ? ` ` : `` }],
+			edits: (declNode, index, declString) => ({ edits: [{ start: index + 1, end: index + 1 + runBehind(declString, index).length, text: primary.startsWith(`always`) ? ` ` : `` }], assumed: [] }),
 			fix: (declNode, index) => {
 				fixData = fixData || (new Map())
 

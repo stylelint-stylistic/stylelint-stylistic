@@ -13,6 +13,9 @@ export type WriteCandidate = {
 	/** The spans the fix writes, indexed in the text, or nothing where another guard refuses it. */
 	edits: Edit[] | undefined,
 
+	/** What the neighbors running behind the fix in the same pass write around the same text, indexed in the text: they stand in that text before the fix's own address question is asked ({@link editsRereadAnAddress}), since a neighbor's write can switch a reading the fix's own write relies on. */
+	assumed?: Edit[] | undefined,
+
 	/** Whether the fix may be given over the text the writes given so far leave, its indices moved into that text: a guard reading the text around the write, which the other writes of the run can change. */
 	holds?: ((edited: string, move: (index: number) => number) => boolean) | undefined,
 
@@ -47,7 +50,7 @@ export function fixApplies (node: AtRule | Declaration | Rule, index: number, re
 /**
  * Says which of the fixes a rule would give over one text may be given, so that no address's parentheses are read another way ({@link editsRereadAnAddress}).
  *
- * A write into a call's parentheses, or into parentheses the tokenizer takes as one plain token, can switch which word a later `(` pops, and so whether it opens an address's token, and a run written or taken out right in front of `url(` or right behind its `(` switches the reading of those parentheses themselves; two writes can do together what neither does alone, so each is asked along with the writes given already. A write refused against those may be safe once a later one is given, since that one can put the word back, so the fixes are asked again until none more is given: whatever is refused is then refused against the very writes the run applies, and a second `--fix` finds nothing more to give. A guard of the fix's own is asked the same way, over the text the writes given leave rather than the one standing: a break refused into parentheses the tokenizer holds as one plain token is given once another write of the run makes them an address's token, which the parser reads nothing of. The guard is asked against the writes given before it and not again against those given after: the writes the rules hand in are breaks, and a break written later in the text changes no word an earlier `(` pops, so no later write takes an address's token the guard passed back; the other way round, a write that switches a reading, is what the address question asks with every write. A fix Stylelint drops is never counted among them.
+ * A write into a call's parentheses, or into parentheses the tokenizer takes as one plain token, can switch which word a later `(` pops, and so whether it opens an address's token, and a run written or taken out right in front of `url(` or right behind its `(` switches the reading of those parentheses themselves; two writes can do together what neither does alone, so each is asked along with the writes given already. A write refused against those may be safe once a later one is given, since that one can put the word back, so the fixes are asked again until none more is given: whatever is refused is then refused against the very writes the run applies, and a second `--fix` finds nothing more to give. A candidate's assumed writes are the neighbors' around the same text, which the pass leaves standing whatever this fix does, so the address question is asked over the text they leave rather than the one standing ({@link WriteCandidate}): a break inside an address's parentheses, which the run takes out, makes them code where the fix's own write alone would, and the neighbor's write is what keeps them a token. A guard of the fix's own is asked the same way, over the text the writes given leave rather than the one standing: a break refused into parentheses the tokenizer holds as one plain token is given once another write of the run makes them an address's token, which the parser reads nothing of. The guard is asked against the writes given before it and not again against those given after: the writes the rules hand in are breaks, and a break written later in the text changes no word an earlier `(` pops, so no later write takes an address's token the guard passed back; the other way round, a write that switches a reading, is what the address question asks with every write. A fix Stylelint drops is never counted among them.
  * @param text - The text the edits index in.
  * @param candidates - The fixes, in the order the rule reports them; where two writes conflict, the one reported first is given.
  * @param reading - Whether the parser reads by a tokenizer of its own.
@@ -58,8 +61,20 @@ export function fixApplies (node: AtRule | Declaration | Rule, index: number, re
  */
 export function writesKeepingAddresses (text: string, candidates: WriteCandidate[], reading: Pick<CommentReading, `tokenizes`>, node: AtRule | Declaration | Rule, result: PostcssResult, ruleName: string): boolean[] {
 	let applied = candidates.map(({ edits, index }) => edits !== undefined && fixApplies(node, index, result, ruleName))
+	// The neighbors' writes, standing in the text every address question below is asked over
+	let assumed: Edit[] = []
+
+	for (let [candidateIndex, { edits, assumed: neighborWrites }] of candidates.entries()) {
+		if (!edits || !applied[candidateIndex]) continue
+
+		for (let edit of neighborWrites ?? []) addEdit(assumed, edit)
+	}
+
+	let base = applyEditsFromEnd(text, assumed)
+	let moveIntoBase = moverOver(assumed)
 	let given = candidates.map(() => false)
 	let written: Edit[] = []
+	let writtenInBase: Edit[] = []
 	let isGrowing = true
 
 	while (isGrowing) {
@@ -68,15 +83,20 @@ export function writesKeepingAddresses (text: string, candidates: WriteCandidate
 		for (let [candidateIndex, { edits, holds }] of candidates.entries()) {
 			if (!edits || !applied[candidateIndex] || given[candidateIndex]) continue
 
+			let askedInBase = structuredClone(writtenInBase)
+
+			for (let edit of edits) addEdit(askedInBase, { start: moveIntoBase(edit.start), end: moveIntoBase(edit.end), text: edit.text })
+
+			if (editsRereadAnAddress(base, askedInBase, reading, node)) continue
+
 			let asked = structuredClone(written)
 
 			for (let edit of edits) addEdit(asked, edit)
 
-			if (editsRereadAnAddress(text, asked, reading, node)) continue
-
 			if (holds && !holds(applyEditsFromEnd(text, written), moverOver(written))) continue
 
 			written = asked
+			writtenInBase = askedInBase
 			given[candidateIndex] = true
 			isGrowing = true
 		}

@@ -637,3 +637,30 @@ testRule({
 		},
 	],
 })
+
+// The break the twin behind this rule takes out from behind the comma is what hands the parentheses to an address's token, so the space this rule takes out in front of the comma is asked over the text that write leaves rather than the one standing, where the parentheses are still code with a square bracket nothing closes
+testRule({
+	ruleName,
+	config: [`never`],
+	extraRules: { "@stylistic/media-query-list-comma-space-after": `always` },
+
+	reject: [
+		{
+			description: `a space in front of the comma of an address, with a break behind it that the twin behind this rule replaces in the same pass, in front of a square bracket nothing closes`,
+			code: `@media a url ( ,\nb[c) {}`,
+			fixed: `@media a url (, b[c) {}`,
+			warnings: [
+				{
+					line: 1,
+					column: 16,
+					message: messages.rejectedBefore(),
+				},
+				{
+					line: 1,
+					column: 16,
+					message: `Expected single space after "," (@stylistic/media-query-list-comma-space-after)`,
+				},
+			],
+		},
+	],
+})

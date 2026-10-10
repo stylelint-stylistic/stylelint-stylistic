@@ -35,23 +35,23 @@ describe(`editsAskedWithTheTwins`, () => {
 		let { decl, text, index } = declarationWithAComma(`1 url (,\nb[c) 2px`)
 		let own = { start: index, end: index, text: ` ` }
 
-		expect(editsAskedWithTheTwins(text, text, index, index, own, POSTCSS, decl, result({ [SPACE_BEFORE]: `always`, "@stylistic/value-list-comma-space-after": `never` }), SPACE_BEFORE)).toEqual([own, { start: index + 1, end: index + 2, text: `` }])
+		expect(editsAskedWithTheTwins(text, text, index, index, own, POSTCSS, decl, result({ [SPACE_BEFORE]: `always`, "@stylistic/value-list-comma-space-after": `never` }), SPACE_BEFORE)).toEqual({ edits: [own], assumed: [{ start: index + 1, end: index + 2, text: `` }] })
 	})
 
 	it(`the rule's write alone where the twin runs in front of it, where its fix is off, and where its option speaks of no multi-line list`, () => {
 		let { decl, text, index } = declarationWithAComma(`1 url (,\nb[c) 2px`)
 		let own = { start: index, end: index, text: ` ` }
 
-		expect(editsAskedWithTheTwins(text, text, index, index, own, POSTCSS, decl, result({ "@stylistic/value-list-comma-space-after": `never`, [SPACE_BEFORE]: `always` }), SPACE_BEFORE)).toEqual([own])
-		expect(editsAskedWithTheTwins(text, text, index, index, own, POSTCSS, decl, result({ [SPACE_BEFORE]: `always`, "@stylistic/value-list-comma-space-after": [`never`, { disableFix: true }] }), SPACE_BEFORE)).toEqual([own])
-		expect(editsAskedWithTheTwins(text, text, index, index, own, POSTCSS, decl, result({ [SPACE_BEFORE]: `always`, "@stylistic/value-list-comma-space-after": `never-single-line` }), SPACE_BEFORE)).toEqual([own])
+		expect(editsAskedWithTheTwins(text, text, index, index, own, POSTCSS, decl, result({ "@stylistic/value-list-comma-space-after": `never`, [SPACE_BEFORE]: `always` }), SPACE_BEFORE)).toEqual({ edits: [own], assumed: [] })
+		expect(editsAskedWithTheTwins(text, text, index, index, own, POSTCSS, decl, result({ [SPACE_BEFORE]: `always`, "@stylistic/value-list-comma-space-after": [`never`, { disableFix: true }] }), SPACE_BEFORE)).toEqual({ edits: [own], assumed: [] })
+		expect(editsAskedWithTheTwins(text, text, index, index, own, POSTCSS, decl, result({ [SPACE_BEFORE]: `always`, "@stylistic/value-list-comma-space-after": `never-single-line` }), SPACE_BEFORE)).toEqual({ edits: [own], assumed: [] })
 	})
 
 	it(`a twin deferred to the run's end, which runs behind whichever order the configuration lists`, () => {
 		let { decl, text, index } = declarationWithAComma(`1 url (,\nb[c) 2px`)
 		let own = { start: index, end: index, text: ` ` }
 
-		expect(editsAskedWithTheTwins(text, text, index, index, own, POSTCSS, decl, result({ "@stylistic/value-list-comma-newline-after": `never-multi-line`, [SPACE_BEFORE]: `always` }), SPACE_BEFORE)).toEqual([own, { start: index + 1, end: index + 2, text: `` }])
+		expect(editsAskedWithTheTwins(text, text, index, index, own, POSTCSS, decl, result({ "@stylistic/value-list-comma-newline-after": `never-multi-line`, [SPACE_BEFORE]: `always` }), SPACE_BEFORE)).toEqual({ edits: [own], assumed: [{ start: index + 1, end: index + 2, text: `` }] })
 	})
 
 	// Taking the break out hands the parentheses to an address's token closing inside the string, and the twin's space behind the `(` would keep them code, but the twin asks its own question over the text the break is taken out of and refuses there, so its write is not counted
@@ -59,7 +59,7 @@ describe(`editsAskedWithTheTwins`, () => {
 		let { decl, text, index } = declarationWithAComma(`1 url (\n,"b)c") 2px`)
 		let own = { start: index - 1, end: index, text: `` }
 
-		expect(editsAskedWithTheTwins(text, text, index, index, own, POSTCSS, decl, result({ [NEWLINE_BEFORE]: `never-multi-line`, [SPACE_BEFORE]: `always-single-line` }), NEWLINE_BEFORE)).toEqual([own])
+		expect(editsAskedWithTheTwins(text, text, index, index, own, POSTCSS, decl, result({ [NEWLINE_BEFORE]: `never-multi-line`, [SPACE_BEFORE]: `always-single-line` }), NEWLINE_BEFORE)).toEqual({ edits: [own], assumed: [] })
 	})
 
 	// Stylelint drops a fix on a line a disable comment covers for the twin, so the break stays and the space alone would leave the square bracket open
@@ -68,13 +68,13 @@ describe(`editsAskedWithTheTwins`, () => {
 		let own = { start: index, end: index, text: ` ` }
 		let disabled = { stylelint: { config: { rules: { [SPACE_BEFORE]: `always`, "@stylistic/value-list-comma-space-after": `never` } }, disabledRanges: { "@stylistic/value-list-comma-space-after": [{ start: 1, end: 1 }] } } } as unknown as PostcssResult
 
-		expect(editsAskedWithTheTwins(text, text, index, index, own, POSTCSS, decl, disabled, SPACE_BEFORE)).toEqual([own])
+		expect(editsAskedWithTheTwins(text, text, index, index, own, POSTCSS, decl, disabled, SPACE_BEFORE)).toEqual({ edits: [own], assumed: [] })
 	})
 
 	it(`the rule's write alone under a name of no list`, () => {
 		let { decl, text, index } = declarationWithAComma(`1 url (,\nb[c) 2px`)
 		let own = { start: index, end: index, text: ` ` }
 
-		expect(editsAskedWithTheTwins(text, text, index, index, own, POSTCSS, decl, result({ "@stylistic/value-list-comma-space-after": `never` }), `@stylistic/declaration-colon-space-before`)).toEqual([own])
+		expect(editsAskedWithTheTwins(text, text, index, index, own, POSTCSS, decl, result({ "@stylistic/value-list-comma-space-after": `never` }), `@stylistic/declaration-colon-space-before`)).toEqual({ edits: [own], assumed: [] })
 	})
 })
