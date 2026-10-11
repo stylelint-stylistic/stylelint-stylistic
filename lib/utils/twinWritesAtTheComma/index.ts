@@ -144,3 +144,40 @@ export function editsAskedWithTheTwins (text: string, runString: string, index: 
 
 	return { edits, assumed }
 }
+
+/**
+ * Asks whether the run behind a comma is the run in front of the next one, both standing between two adjacent commas, and that next comma's `-space-before` rule is live to write it there, so that the asking `-space-after` rule reports without writing.
+ *
+ * Where two commas stand next to each other the run behind the one is the run in front of the other, so `space-before: always` and `space-after: never` ask a run for opposite spellings and each `--fix` pass lets the rule running later write its own over the earlier's, the output turning on the configuration's order. The run is the `-space-before` rule's to write, the way any run in front of a comma is, and {@link writesSharedRun} answers for a shared run by the settings of the rules reading it, so the asking rule reads the twin's settings here rather than the two disputing the run: where the twin is configured, speaks of the list and its fix is on, the answer is one whichever rule the configuration lists first. Where the twin's fix is turned off, or a disable comment keeps it off the twin comma's line, it will write nothing, and deferring to it would leave the run unwritten with two warnings, so the asking rule writes it instead.
+ * @param ruleName - The asking rule's registered name.
+ * @param runString - The copy of the list's text the runs are read over, with the escapes masked.
+ * @param index - The comma.
+ * @param toNodeIndex - Moves an index of the copy into the node's string, where the twin reports and Stylelint reads the line a disable comment covers.
+ * @param node - The node the text is read from.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns True where the twin across the next comma writes the standing run and the asking rule leaves it to the twin.
+ */
+export function leavesTheSharedRunToTheTwin (ruleName: string, runString: string, index: number, toNodeIndex: (index: number) => number, node: AtRule | Declaration | Rule, result: PostcssResult): boolean {
+	// The run between two adjacent commas is the `-space-before` rule of the second comma's to write, so only the `-space-after` rule defer; the `-newline-after` twins' case is a separate one
+	if (!ruleName.includes(`-space-after`)) return false
+
+	let family = FAMILIES.find((name) => ruleName.includes(`${name}-comma-`))
+	let twins = family && TWINS.get(family)
+
+	if (!twins) return false
+
+	let run = runBehind(runString, index)
+	let twinComma = index + 1 + run.length
+
+	if (runString[twinComma] !== `,`) return false
+
+	let copy = neighborSettings(node, result, twins).find(([key]) => key === `spaceBefore`)
+
+	if (!copy) return false
+
+	let [, option, fixOff, name] = copy
+
+	if (fixOff || !fixApplies(node, toNodeIndex(twinComma), result, name)) return false
+
+	return speaksOf(option, () => isSingleLineString(runString))
+}

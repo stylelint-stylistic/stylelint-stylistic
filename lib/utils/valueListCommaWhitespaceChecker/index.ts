@@ -6,7 +6,7 @@ import type { Syntax } from "../../syntaxes/index.ts"
 import type { Edit } from "../applyEditsFromEnd/index.ts"
 import { declarationString } from "../declarationString/index.ts"
 import { report } from "../report/index.ts"
-import type { AskedWrites } from "../twinWritesAtTheComma/index.ts"
+import { type AskedWrites, leavesTheSharedRunToTheTwin } from "../twinWritesAtTheComma/index.ts"
 import { writesKeepingAddresses } from "../writesKeepingAddresses/index.ts"
 
 export interface ValueListCommaWhitespaceCheckerOptions {
@@ -109,7 +109,7 @@ export function valueListCommaWhitespaceChecker (opts: ValueListCommaWhitespaceC
 			index,
 			err: (message) => {
 				// Asked here, not in front of the check, so a clean declaration is not read once per comma
-				let isFixable = fix && (!opts.isFixable || opts.isFixable(node, index, source, runString))
+				let isFixable = fix && (!opts.isFixable || opts.isFixable(node, index, source, runString)) && !leavesTheSharedRunToTheTwin(opts.checkedRuleName, runString, index, (i) => i, node, opts.result)
 				let writes = isFixable ? opts.edits(node, index, source, runString) : undefined
 
 				problems.push({ message, index, edits: writes?.edits, assumed: writes?.assumed, holds: isFixable ? opts.holds?.(node, index, source, runString) : undefined })

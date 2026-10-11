@@ -9,7 +9,7 @@ import { listLines, rawInFrontOfText } from "../rawInFrontOfText/index.ts"
 import { report } from "../report/index.ts"
 import { selectorSearchCopy } from "../selectorSearchCopy/index.ts"
 import { textBeforeAsLeft } from "../textEdge/index.ts"
-import type { AskedWrites } from "../twinWritesAtTheComma/index.ts"
+import { type AskedWrites, leavesTheSharedRunToTheTwin } from "../twinWritesAtTheComma/index.ts"
 import type { WhitespaceChecker } from "../whitespaceChecker/index.ts"
 import { writesKeepingAddresses } from "../writesKeepingAddresses/index.ts"
 
@@ -110,7 +110,7 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 			lineCheckStr,
 			err: (message) => {
 				// Asked here, not in front of the check, so a clean selector is not read once per comma
-				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, copies.comments, node, runString))
+				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, copies.comments, node, runString)) && !leavesTheSharedRunToTheTwin(opts.checkedRuleName, runString, index, (i) => copies.toSourceIndex(i), node, opts.result)
 				let writes = isFixable ? opts.edits(source, index, node, runString, copies.toSourceIndex(index)) : undefined
 
 				problems.push({ message, index, sourceIndex: copies.toSourceIndex(index), edits: writes?.edits, assumed: writes?.assumed })

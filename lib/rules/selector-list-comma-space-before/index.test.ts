@@ -1,3 +1,7 @@
+import { describe, expect, it } from "vitest"
+
+import { race } from "../../../vitest.helpers.ts"
+
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
@@ -574,4 +578,17 @@ testRule({
 			],
 		},
 	],
+})
+
+// The run between two adjacent commas is the second comma's in front and the first's behind at once, so under `space-before: always` and `space-after: never` the two rules ask it for opposite spellings, and the pass lets the later rule write its own over the earlier's; the after-rule reads the twin's settings and leaves the run to it, so the fixed text and the left warning are the same whether the configuration lists `-before` or `-after` first
+describe(`${ruleName} beside the rule that writes the same run between two adjacent commas`, () => {
+	let after = `@stylistic/selector-list-comma-space-after`
+
+	it(`leaves the run between two adjacent commas to the second comma's before-rule twin, the space standing and the after-rule reporting`, async () => {
+		expect(await race(ruleName, `a,,b {}`, `always`, after, `never`)).toEqual({
+			ours: `a , ,b {}`,
+			theirs: `a , ,b {}`,
+			left: [`Unexpected whitespace after "," (@stylistic/selector-list-comma-space-after)`],
+		})
+	})
 })

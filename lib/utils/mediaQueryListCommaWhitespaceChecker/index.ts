@@ -11,7 +11,7 @@ import { findFunctionArgumentSpans } from "../findFunctionArgumentSpans/index.ts
 import { listLines, rawInFrontOfText } from "../rawInFrontOfText/index.ts"
 import { report } from "../report/index.ts"
 import { textBeforeAsLeft } from "../textEdge/index.ts"
-import type { AskedWrites } from "../twinWritesAtTheComma/index.ts"
+import { type AskedWrites, leavesTheSharedRunToTheTwin } from "../twinWritesAtTheComma/index.ts"
 import { assertString } from "../validateTypes/index.ts"
 import type { WhitespaceChecker } from "../whitespaceChecker/index.ts"
 import { writesKeepingAddresses } from "../writesKeepingAddresses/index.ts"
@@ -126,7 +126,7 @@ export function mediaQueryListCommaWhitespaceChecker (opts: {
 			lineCheckStr,
 			err: (message) => {
 				// Asked here, not in front of the check, so parameters in order are not read once per comma
-				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, node, runString))
+				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, node, runString)) && !leavesTheSharedRunToTheTwin(opts.checkedRuleName, runString, index, (i) => i + atRuleParamIndex(node), node, opts.result)
 				let writes = isFixable ? opts.edits(source, index, node, runString, index + atRuleParamIndex(node)) : undefined
 
 				problems.push({ message, index: index + atRuleParamIndex(node), edits: writes?.edits, assumed: writes?.assumed, holds: isFixable ? opts.holds?.(source, index, node, runString) : undefined })
