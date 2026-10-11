@@ -79,6 +79,7 @@ const URL_ADDRESSES: Record<string, string> = {
 	bareSlashStar: `a/*b.png`,
 	bareBlockComment: `a /* c */ `,
 	bareParenthesis: `a(b)c.png`,
+	bareParenthesisThenComma: `a(b)c,d`,
 	bareQuote: `a"b.png`,
 	bareOpenParenthesis: `a(b.png`,
 	quotedOpenParenthesis: `"a(b.png"`,
