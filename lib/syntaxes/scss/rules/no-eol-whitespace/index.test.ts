@@ -33,6 +33,10 @@ testRule({
 			description: `a space a backslash escapes at the end of a variable's value`,
 			code: `$x: a\\ \n`,
 		},
+		{
+			description: `a space closing a hexadecimal escape at the end of a variable's value`,
+			code: `$x: \\31 \n`,
+		},
 	],
 
 	reject: [

@@ -140,6 +140,24 @@ testRule({
 			description: `a space a backslash escapes at the end of a stylesheet`,
 			code: `a { color: red }\nb: a\\ `,
 		},
+		{
+			// The one whitespace closing a hexadecimal escape is a character of the escape, so the rule leaves it standing, as it leaves the space a backslash escapes; PostCSS files that space in the word, where the fix cannot reach it, and a brace rule writing a break behind such a space leaves this form
+			description: `a space closing a hexadecimal escape at the end of a value closing a block`,
+			code: `a { color: \\31 \n}`,
+		},
+		{
+			autoStripIndent: false,
+			description: `the same value written with a carriage-return line break`,
+			code: `a { color: \\31 \r\n}\r\n`,
+		},
+		{
+			description: `a tab closing a hexadecimal escape at the end of a value`,
+			code: `a { color: \\31\t\n}`,
+		},
+		{
+			description: `a space closing a hexadecimal escape at the end of a selector, of an at-rule's params and of a property`,
+			code: `a\\31 \n{}\n@media b\\31 \n{}\nc { color\\31 \n: red; }`,
+		},
 	],
 
 	reject: [
@@ -175,6 +193,14 @@ testRule({
 			fixed: `a { color: a\\\\\n}`,
 			line: 1,
 			column: 15,
+			message: messages.rejected,
+		},
+		{
+			description: `a space behind a space closing a hexadecimal escape, which the escape keeps`,
+			code: `a { color: \\31  \n}`,
+			fixed: `a { color: \\31 \n}`,
+			line: 1,
+			column: 16,
 			message: messages.rejected,
 		},
 		{

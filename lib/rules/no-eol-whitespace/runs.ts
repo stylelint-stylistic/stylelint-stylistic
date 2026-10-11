@@ -6,7 +6,9 @@ import { EVERY_LINE_BREAK, LINE_BREAK, SPACE_OR_TAB, SPACE_TAB_OR_CARRIAGE_RETUR
 import type { Syntax } from "../../syntaxes/index.ts"
 import { bareAddressSpans } from "../../utils/bareAddressSpans/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
+import { findEscapeSpans } from "../../utils/findCommentSpans/index.ts"
 import { isOnlyWhitespace } from "../../utils/isOnlyWhitespace/index.ts"
+import { escapeClosesOnWrittenSpace } from "../../utils/maskEscapes/index.ts"
 import { maskStrings } from "../../utils/maskStrings/index.ts"
 
 import { isEscaped } from "./escapes.ts"
@@ -39,10 +41,11 @@ export function lastLineBreakIndex (string: string, from: number = string.length
 	return -1
 }
 
-/** How a text reads backslashes: the ones the text in front ends on, and whether a place is inside a comment, whose backslashes are text. */
+/** How a text reads backslashes: the ones the text in front ends on, whether a place is inside a comment, whose backslashes are text, and whether the whitespace at a place closes a hexadecimal escape standing right in front of it. */
 type Escapes = {
 	lead: number,
 	inComment: (index: number) => boolean,
+	closesHexEscape: (index: number) => boolean,
 }
 
 /** A line's trailing whitespace: `index`, the last space or tab, where the problem is reported; `start`, where the run a fix takes opens. */
@@ -52,7 +55,7 @@ export type EolRun = {
 }
 
 /**
- * Finds a line's trailing whitespace. A space or tab a backslash escapes is a character of the word in front of it, so the run opens behind it, and a line ending on one alone ends on no whitespace.
+ * Finds a line's trailing whitespace. A space or tab a backslash escapes is a character of the word in front of it, and so is the whitespace closing a hexadecimal escape, which the grammar eats as it does an escaped one, so the run opens behind it, and a line ending on one alone ends on no whitespace.
  * @param lastEOLIndex - The line's end.
  * @param string - The source.
  * @param options - Whether empty lines are ignored, whether the line opens the root, and how the text reads backslashes, where it is code rather than prose.
@@ -84,7 +87,7 @@ function findErrorStartIndex (lastEOLIndex: number, string: string, options: {
 
 	while ((crossesReturns ? SPACE_TAB_OR_CARRIAGE_RETURN : SPACE_OR_TAB).test(string.charAt(start - 1)) || string.charAt(start - 1) === TAKEN_MARK) start -= 1
 
-	if (escapes && !escapes.inComment(start - 1) && isEscaped(string, start, escapes.lead)) start += 1
+	if (escapes && !escapes.inComment(start - 1) && (isEscaped(string, start, escapes.lead) || escapes.closesHexEscape(start))) start += 1
 
 	if (start > eolWhitespaceIndex) return undefined
 
@@ -178,7 +181,17 @@ export function eachEolWhitespace (scope: EolScope, string: string, callback: (r
 	let { isRootFirst = false, isPlainText = false, lead = 0, endsALine = false } = options
 	let commentSpans = isPlainText ? [] : syntax.commentSpans(string, root, result)
 	// Prose reads a backslash as a character like any other, and a text whose backslashes a host language cooks tells nothing of the stylesheet's
-	let escapes = isPlainText || !syntax.readsBackslashesAsWritten(root) ? undefined : { lead, inComment: (index: number): boolean => commentSpans.some(({ start, end }) => start <= index && index < end) }
+	let escapes: Escapes | undefined
+
+	if (!isPlainText && syntax.readsBackslashesAsWritten(root)) {
+		let spans = findEscapeSpans(string, syntax.inlineComments(root, result))
+
+		escapes = {
+			lead,
+			inComment: (index: number): boolean => commentSpans.some(({ start, end }) => start <= index && index < end),
+			closesHexEscape: (index: number): boolean => escapeClosesOnWrittenSpace(string, spans, index),
+		}
+	}
 	// What stands between the parentheses of a bare address is the address's text, which Less hands on as it is: a run ending a line there is no run of the stylesheet, and the check and the fix pass it over alike, reading the address as the compilers do, over the text with its comments blanked
 	let addresses = isPlainText ? [] : bareAddressSpans(blankComments(string, commentSpans))
 

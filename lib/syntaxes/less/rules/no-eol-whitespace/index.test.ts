@@ -13,6 +13,13 @@ testRule({
 	config: [true],
 	customSyntax: `postcss-less`,
 
+	accept: [
+		{
+			description: `a space closing a hexadecimal escape at the end of a value closing a block`,
+			code: `a { color: \\31 \n}`,
+		},
+	],
+
 	reject: [
 		{
 			description: `a space behind a backslash at the end of an end-of-line comment behind a value, where a backslash escapes nothing`,
