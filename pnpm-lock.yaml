@@ -202,7 +202,7 @@ importers:
         version: 5.3.0
       '@morev/stylelint-testing-library':
         specifier: ^1
-        version: 1.1.1(stylelint@https://codeload.github.com/stylelint/stylelint/tar.gz/12c034f5db042b474126b36231bd4ffe0ccc6e8d(supports-color@10.2.2))
+        version: 1.1.1(stylelint@https://codeload.github.com/stylelint/stylelint/tar.gz/c12bc7e41563cfe4a4b76bd7f8bc10e13e3a2401(supports-color@10.2.2))
       '@types/node':
         specifier: ^26
         version: 26.6.2
@@ -229,7 +229,7 @@ importers:
         version: 0.7.3(postcss@8.5.28)
       stylelint:
         specifier: github:stylelint/stylelint#v18
-        version: https://codeload.github.com/stylelint/stylelint/tar.gz/12c034f5db042b474126b36231bd4ffe0ccc6e8d(supports-color@10.2.2)
+        version: https://codeload.github.com/stylelint/stylelint/tar.gz/c12bc7e41563cfe4a4b76bd7f8bc10e13e3a2401(supports-color@10.2.2)
       typescript:
         specifier: next
         version: 7.1.0-dev.20260925.1
@@ -1719,8 +1719,8 @@ packages:
   style-search@0.1.0:
     resolution: {integrity: sha512-Dj1Okke1C3uKKwQcetra4jSuk0DqbzbYtXipzFlFMZtowbF1x7BKJwB9AayVMyFARvU8EDrZdcax4At/452cAg==}
 
-  stylelint@https://codeload.github.com/stylelint/stylelint/tar.gz/12c034f5db042b474126b36231bd4ffe0ccc6e8d:
-    resolution: {gitHosted: true, integrity: sha512-kWAVd1mTQkx+vED+V1dbVANwN1CPts+B+LMDr2mpX9dMJFwa6m/CxFpkfzWOtfQv66IvKjWxzsTaJGM8lERjug==, tarball: https://codeload.github.com/stylelint/stylelint/tar.gz/12c034f5db042b474126b36231bd4ffe0ccc6e8d}
+  stylelint@https://codeload.github.com/stylelint/stylelint/tar.gz/c12bc7e41563cfe4a4b76bd7f8bc10e13e3a2401:
+    resolution: {gitHosted: true, integrity: sha512-kWAVd1mTQkx+vED+V1dbVANwN1CPts+B+LMDr2mpX9dMJFwa6m/CxFpkfzWOtfQv66IvKjWxzsTaJGM8lERjug==, tarball: https://codeload.github.com/stylelint/stylelint/tar.gz/c12bc7e41563cfe4a4b76bd7f8bc10e13e3a2401}
     version: 17.15.0
     engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
     hasBin: true
@@ -2085,10 +2085,10 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@morev/stylelint-testing-library@1.1.1(stylelint@https://codeload.github.com/stylelint/stylelint/tar.gz/12c034f5db042b474126b36231bd4ffe0ccc6e8d(supports-color@10.2.2))':
+  '@morev/stylelint-testing-library@1.1.1(stylelint@https://codeload.github.com/stylelint/stylelint/tar.gz/c12bc7e41563cfe4a4b76bd7f8bc10e13e3a2401(supports-color@10.2.2))':
     dependencies:
       '@morev/utils': 3.15.0
-      stylelint: https://codeload.github.com/stylelint/stylelint/tar.gz/12c034f5db042b474126b36231bd4ffe0ccc6e8d(supports-color@10.2.2)
+      stylelint: https://codeload.github.com/stylelint/stylelint/tar.gz/c12bc7e41563cfe4a4b76bd7f8bc10e13e3a2401(supports-color@10.2.2)
 
   '@morev/utils@3.15.0':
     dependencies:
@@ -3117,7 +3117,7 @@ snapshots:
 
   style-search@0.1.0: {}
 
-  stylelint@https://codeload.github.com/stylelint/stylelint/tar.gz/12c034f5db042b474126b36231bd4ffe0ccc6e8d(supports-color@10.2.2):
+  stylelint@https://codeload.github.com/stylelint/stylelint/tar.gz/c12bc7e41563cfe4a4b76bd7f8bc10e13e3a2401(supports-color@10.2.2):
     dependencies:
       '@csstools/css-calc': 3.4.0(@csstools/css-parser-algorithms@4.0.0(@csstools/css-tokenizer@4.0.1))(@csstools/css-tokenizer@4.0.1)
       '@csstools/css-parser-algorithms': 4.0.0(@csstools/css-tokenizer@4.0.1)
