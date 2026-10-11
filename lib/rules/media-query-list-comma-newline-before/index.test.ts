@@ -433,6 +433,28 @@ testRule({
 			],
 		},
 		{
+			// The write at the edge of the list is read after the other writes of the node are refused, so a space that would be reported again is not written
+			description: `a break in front of the comma opening the parameters, where the write in front of an inner comma of the address is refused and the list stays multi-line`,
+			code: `@media
+, url a (y
+,z)(b"c)d") { b { c: "d" } }`,
+			fixed: `@media
+, url a (y
+,z)(b"c)d") { b { c: "d" } }`,
+			warnings: [
+				{
+					line: 2,
+					column: 1,
+					message: messages.rejectedBeforeMultiLine(),
+				},
+				{
+					line: 3,
+					column: 1,
+					message: messages.rejectedBeforeMultiLine(),
+				},
+			],
+		},
+		{
 			// Pins the refusal of a write behind a backslash delimiter
 			description: `a backslash ending the query in front of a line break and the comma, which the write would turn into an escaped comma, so the warning stands`,
 			code: `@media a,\nb\\\n,c {}`,

@@ -43,9 +43,6 @@ export const EVERY_COMMENT_DELIMITER = /(\*\/|\/\*)/gu
 /** Every character `max-empty-lines` writes a space or a tab of a kept line of spaces as while it collapses runs of empty lines: U+E000 and U+E001, from Unicode's private use area. */
 export const EVERY_KEPT_LINE_MASK = /[\uE000\uE001]/gu
 
-/** Every run of tokenizer whitespace standing in front of a comma. */
-export const EVERY_RUN_IN_FRONT_OF_A_COMMA = /[ \t\n\r\f]+(?=,)/gu
-
 /** Every space and every tab. */
 export const EVERY_SPACE_OR_TAB = /[ \t]/gu
 
