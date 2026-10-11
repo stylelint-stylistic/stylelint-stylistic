@@ -52,6 +52,20 @@ describe(`rereadsAnAddress`, () => {
 		expect(rereadsAnAddress(`f(1!url(a(b)c,d))`, { start: 4, end: 4, text: ` ` }, POSTCSS, DECLARATION)).toBe(true)
 	})
 
+	it(`the same comma under a parser whose own tokenizer closes the address by the count of parentheses instead, which the separated address's early parenthesis lets out of its token into the call the sign's space leaves the comma to`, () => {
+		expect(rereadsAnAddress(`f(1!url(a(b)c,d))`, { start: 4, end: 4, text: ` ` }, SCSS, DECLARATION)).toBe(true)
+		expect(rereadsAnAddress(`f(1!url(a(b)c))`, { start: 4, end: 4, text: ` ` }, SCSS, DECLARATION)).toBe(false)
+		expect(rereadsAnAddress(`f(1!url(1.0PX,#FFF,.5))`, { start: 4, end: 4, text: ` ` }, SCSS, DECLARATION)).toBe(false)
+		expect(rereadsAnAddress(`f(1!url(a,b))`, { start: 4, end: 4, text: ` ` }, SCSS, DECLARATION)).toBe(false)
+		expect(rereadsAnAddress(`1!url(a(b)c,d) 2px`, { start: 2, end: 2, text: ` ` }, SCSS, DECLARATION)).toBe(false)
+	})
+
+	it(`the same separation read conversely, which folds the split and leaves no comma read, and at-rule params a split parts, whose commas the media-query-list rule reads by paren depth under either word`, () => {
+		expect(rereadsAnAddress(`f(1! url(a(b)c,d))`, { start: 4, end: 5, text: `` }, SCSS, DECLARATION)).toBe(false)
+		expect(rereadsAnAddress(`( c: 1>=url(a(b)c,d) )`, { start: 8, end: 8, text: ` ` }, SCSS, MEDIA)).toBe(false)
+		expect(rereadsAnAddress(`( c: 1>= url(a(b)c,d) )`, { start: 8, end: 9, text: `` }, SCSS, MEDIA)).toBe(false)
+	})
+
 	it(`a colon of params under a parser whose own tokenizer reads the address, whose token the media rules read apart from the walk`, () => {
 		expect(rereadsAnAddress(`(c: [c\\]a>= url(a(b"c)d"e))) { a { b: 1px; } }`, { start: 11, end: 12, text: `` }, SCSS, MEDIA)).toBe(true)
 	})

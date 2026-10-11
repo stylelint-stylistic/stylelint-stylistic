@@ -40,11 +40,20 @@ testRule({
 		},
 		{
 			// Pins the reading of the url token `postcss-scss` closes by the count of parentheses: a group inside the address closes where code closes it, so the write is harmless
-			description: `a bang glued to the name of a bare address holding a parenthesised group, which the tokenizer and the code reading close at the same parenthesis`,
+			description: `a bang glued to the name of a bare address holding a parenthesized group, which the tokenizer and the code reading close at the same parenthesis`,
 			code: `a { b: 1!url(a(b)c) 2px; c: "d" }`,
 			fixed: `a { b: 1! url(a(b)c) 2px; c: "d" }`,
 			line: 1,
 			column: 9,
+			message: messages.expectedAfter(),
+		},
+		{
+			// Pins the refusal where the comma the token's count of parentheses leaves inside stands in a call, which the comma rules read as the call's once the space lets the value parser close the address token early
+			description: `a bang glued to the name of a bare address holding a parenthesized group and a comma behind it, inside a call whose arguments the comma rules read as the call's once the space parts the name`,
+			code: `a { b: f(1!url(a(b)c,d)) 2px; c: "d" }`,
+			fixed: `a { b: f(1!url(a(b)c,d)) 2px; c: "d" }`,
+			line: 1,
+			column: 11,
 			message: messages.expectedAfter(),
 		},
 		{

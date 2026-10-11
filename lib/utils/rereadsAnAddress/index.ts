@@ -1,4 +1,5 @@
 import type { AtRule, Declaration, Rule } from "postcss"
+import valueParser, { type Node as ValueParserNode } from "postcss-value-parser"
 
 import { MEDIA_QUERY_COMBINATORS } from "../../reference/mediaQueries.ts"
 import { ENDS_WITH_ASCII_LETTER, ENDS_WITH_ESCAPE, EVERY_COMMA, IDENTIFIER_CODE_POINT, INLINE_COMMENT_BREAK_OR_FORM_FEED, LEADING_WORDLESS_TOKEN, OPENS_NO_IDENTIFIER, OPENS_WITH_QUOTE_OR_CSS_WHITESPACE, PARENTHESES_READ_AS_CODE, PARENTHESIS_OR_SQUARE_BRACKET, POSTCSS_WORD_END, QUOTE_OR_SOLIDUS, SCSS_WORD_END, SEMICOLON_OR_BRACE, TRAILING_BACKSLASHES, TRAILING_IDENTIFIER_RUN, VALUE_PARSER_WORD_END } from "../../regexps.ts"
@@ -6,6 +7,8 @@ import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import type { CommentReading } from "../findCommentSpans/index.ts"
 import { isCustomProperty } from "../isCustomProperty/index.ts"
 import { joinsTheName } from "../joinsTheName/index.ts"
+import { opensAnAddress } from "../opensAnAddress/index.ts"
+import { quotesItsAddress } from "../quotesItsAddress/index.ts"
 import { skipScssInterpolation, skipScssString } from "../skipScssString/index.ts"
 import { skipString } from "../skipString/index.ts"
 
@@ -528,6 +531,48 @@ function cutsOutsideTokens (read: ParseReading, other: ParseReading, move: (inde
 }
 
 /**
+ * Asks whether a write in front of an address leaves the value parser holding more commas the `function-comma-*` rules read in the text it leaves than in the text it applies to.
+ *
+ * `postcss-scss`'s tokenizer reads the address as one token, closed by the count of parentheses, so a comma an inner `(` lets out to the value parser stays inside that token to the guard's walk and the two texts part in nothing the walk sees; the value parser, which the function-comma rules walk, closes a parted `url` at the first `)`, so a comma the tokenizer kept inside the address stands in the output inside the call around it, where the comma rules read it. Where the write instead closes the split—taking the space that kept the comma out—the count falls and the write is left, so only the direction that adds a read comma is refused.
+ * @param text - The text the edits apply to.
+ * @param edited - The text they leave.
+ * @returns True where the write leaves more commas read than it found.
+ */
+function commasReadDifferently (text: string, edited: string): boolean {
+	return commasRead(edited) > commasRead(text)
+}
+
+/**
+ * Counts the commas the `function-comma-*` rules read in a text, walking the value parser as they do: a comma of one call's arguments, but none the parser builds at the value's own top level, which the value-list comma rules read by style-search, and none inside a call a bare address names, whose arguments the check passes over whole.
+ * @param text - The text read.
+ * @returns The count.
+ */
+function commasRead (text: string): number {
+	return commasOfNodes(valueParser(text).nodes)
+}
+
+/**
+ * Counts the commas of one list of value-parser nodes, the value's own list or a call's arguments: every comma of the list itself, and those of every call in it, a call the address name keeps the check from stepping into.
+ * @param nodes - The list.
+ * @returns The count.
+ */
+function commasOfNodes (nodes: ValueParserNode[]): number {
+	let count = 0
+
+	for (let index = 0; index < nodes.length; index += 1) {
+		let node = nodes[index]
+
+		if (!node || node.type !== `function`) continue
+
+		if (opensAnAddress(node, index, nodes) && !quotesItsAddress(node)) continue
+
+		count += commasOfNodes(node.nodes) + node.nodes.filter((sibling) => sibling.type === `div` && sibling.value === `,`).length
+	}
+
+	return count
+}
+
+/**
  * Asks whether two readings read one cut alike. A semicolon and a brace are the parser's, read alike wherever both readings hold them.
  *
  * A comma and a colon of params are the media rules', which read one outside a call's arguments alone, so they are read alike where both readings stand them inside a call or both outside every one; under `postcss-scss` a comma is read alike where the count of groups around it holds and a colon where the count of parentheses in front of it holds. A comma elsewhere is read alike where the count of groups holds, or where a call stands around it in both readings and `postcss-value-parser`, which the call comma rules read by, reads the same calls in both: no list rule reads it then, whereas `style-search`, which the value and selector list rules read by, holds a call's arguments open to the end of the outermost parentheses around it, so parentheses no name opens tell nothing.
@@ -590,6 +635,8 @@ function parsesPart (text: string, edited: string, edits: Edit[], reading: Pick<
  * `postcss-scss`'s tokenizer ends a word on a comma outside an at-word, so such a comma's run switches nothing under it, and a comma, an interpolation or a `//` comment between the name and the `(` pushes no word under it either. Its token opens behind whitespace too, a quotation mark right behind the `(` alone keeping the parentheses code, and closes by the count of parentheses.
  *
  * Where the reading switches, both texts are walked whole ({@link parsesPart}), and the edit is refused only where the output reads otherwise: it stops parsing, a group is left open or closed, a `)` closing the token in front of the one code closes the parentheses at lets a `;` or a brace out of the group code holds it in, or a colon or a comma the parser or the rules then read otherwise ({@link readsTheCutAlike}), or a string or a comment is lost ({@link losesASpan}). A group code reads inside the parentheses costs nothing by itself, since the parser passes over the `)` the token leaves unpaired.
+ *
+ * The value parser reads a declaration the tokenizer reads by a tokenizer of its own with neither the probe's nor the tokenizer's parentheses: it closes a split `url` at the first `)`, so a comma the tokenizer kept inside the address stands in the output inside the call around it, and the `function-comma-*` rules read it where the input held none ({@link commasReadDifferently}); only the direction that adds a read comma is refused, and an at-rule's params are read by no such rule, the media-query-list comma rule reading its lists by paren depth, so a run written there or in a selector never moves a comma it reads.
  * @param text - The text the edit applies to.
  * @param edit - The edit, indexed in that text.
  * @param edit.start - Where the span it replaces opens.
@@ -626,7 +673,7 @@ export function rereadsAnAddress (text: string, { start, end, text: written }: E
 	// `postcss-value-parser` keeps a sign such as `!` in the word in front of the `(`, where a name so lengthened opens a call of its own rather than the address
 	let callsHold = VALUE_PARSER_WORD_END.test(text[end - 1] ?? ` `) && VALUE_PARSER_WORD_END.test(edited[editedEnd - 1] ?? ` `)
 
-	return parsesPart(text, edited, [{ end, start, text: written }], reading, placeOf(node), callsHold)
+	return parsesPart(text, edited, [{ end, start, text: written }], reading, placeOf(node), callsHold) || (reading.tokenizes && !callsHold && node.type === `decl` && commasReadDifferently(text, edited))
 }
 
 /**
