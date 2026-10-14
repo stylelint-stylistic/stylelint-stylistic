@@ -23,6 +23,8 @@ build: ## 📦 Build the package into dist/ and load what came out
 	node --input-type=module -e 'import("./dist/index.js").then(({ default: plugins }) => { if (plugins.length === 0) throw new Error("dist/index.js exports no plugin") })'
 .PHONY: build
 
+# A flag is passed as a variable rather than as an option:
+# `make lint LINT_FLAGS="--fix"`
 lint: ## 🧬 Check code by oxlint [LINT_FLAGS=] [FILE=]
 	oxlint $(LINT_FLAGS) $(FILE)
 .PHONY: lint
