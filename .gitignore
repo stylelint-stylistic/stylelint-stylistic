@@ -3,6 +3,7 @@ dist/
 node_modules/
 tmp/
 **/*.local.*
+.agents/local/
 *.log
 docs/.vitepress/cache/
 docs/.vitepress/dist/

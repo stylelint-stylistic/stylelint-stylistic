@@ -152,7 +152,7 @@ export default defineConfig({
 		`node_modules/**`,
 		`tmp/**`,
 		`dist/**`,
-		`.claude/**`,
+		`.agents/local/**`,
 		`lib/**/*.test.*`,
 		`scripts/**`,
 		`types/**`,
