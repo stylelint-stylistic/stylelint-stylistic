@@ -3,6 +3,7 @@ import type { PostcssResult } from "stylelint"
 
 import { isStandardPreprocessorComment } from "../../preprocessor/guards/index.ts"
 import { inlineCommentReading } from "../../preprocessor/readsInlineComments/index.ts"
+import { restoreRunsFoldedIntoTheText } from "../../preprocessor/restoreRunsFoldedIntoTheText/index.ts"
 import type { AddressAtRules } from "../../utils/findCommentSpans/index.ts"
 import { isAtRule } from "../../utils/typeGuards/index.ts"
 import { css } from "../css/index.ts"
@@ -31,6 +32,7 @@ export let less: Syntax = {
 	restore (root: Root, result: PostcssResult): void {
 		restoreMixinFlagRuns(root, result)
 		foldCommentTextNodes(root, result)
+		restoreRunsFoldedIntoTheText(root, less)
 	},
 	isStandardAtRule: isStandardLessAtRule,
 	isStandardRule: isStandardLessRule,

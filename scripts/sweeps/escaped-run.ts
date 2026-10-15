@@ -22,6 +22,8 @@
  * The three interpolation shapes were added when the escapes standing in the code of an interpolation's expression came to be recorded: only a parser whose own tokenizer reads a `//` comment reads an interpolation there at all, so the call shape, whose escape the walk meets itself, is the control that parts the two readings. The open shape leaves the expression unclosed, where its reader and the walk behind it both go over the same characters, so a span recorded twice shows up as a mask longer than the text.
  *
  * The controls: `value-list-comma-space-before`, which reads its run over the search copy already, and `declaration-bang-space-before`.
+ *
+ * The hexadecimal shapes past six digits came with the reading that a run a hexadecimal escape's six digits have closed is a run and not the escape's terminator: PostCSS's tokenizer reads the digits without counting them and swallows one space behind them into the same word, so the run in front of a brace stands in the head the parser printed the selector or the value from, and the raw the brace rules write is one run shorter than the file's. The corpus held `\2c ` and its neighbours, where the space closes the escape and closes nothing else, and no shape at all where it does not: `hexSixThenSpace` is the control the past-six shapes are read against, `hexPastSix` a run of none, and the tab and the break the shapes the tokenizer leaves to the raw, since it swallows one space and nothing else.
  */
 
 import { multiply, place } from "../harness/matrix.ts"
@@ -51,6 +53,13 @@ const ESCAPED: Record<string, string> = {
 	hexCommaThenThreeSpaces: `2c   `,
 	hexCommaThenBreak: `2c\n`,
 	hexCommaThenTwoBreaks: `2c\n\n`,
+	hexSixThenSpace: `000031 `,
+	hexPastSix: `0000311`,
+	hexPastSixThenSpace: `0000311 `,
+	hexPastSixThenTwoSpaces: `0000311  `,
+	hexPastSixThenThreeSpaces: `0000311   `,
+	hexPastSixThenTab: `0000311\t`,
+	hexPastSixThenBreak: `0000311\n`,
 	carriageReturnThenSpaces: `\r  `,
 	formFeedThenSpaces: `\f  `,
 }

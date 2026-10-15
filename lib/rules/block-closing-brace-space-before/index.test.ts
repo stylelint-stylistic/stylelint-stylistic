@@ -258,6 +258,10 @@ testRule({
 			code: `a { --b: \\31 }`,
 		},
 		{
+			description: `an escape of six digits and a seventh behind them, with no run behind the seventh`,
+			code: `a { b: \\0000311}`,
+		},
+		{
 			description: `a brace abutting the declaration`,
 			code: `a { color: pink;}`,
 		},
@@ -304,6 +308,23 @@ testRule({
 			fixed: `a { b: c\\ }`,
 			line: 1,
 			column: 11,
+			message: messages.rejectedBefore(),
+		},
+		{
+			// Pins the run behind a seventh digit, which the grammar reads as a name character closing the escape, over the space PostCSS swallows into the escape's word
+			description: `a hexadecimal escape of six digits and a seventh behind them, whose space PostCSS swallows into the word and the grammar reads as a run`,
+			code: `a { b: \\0000311 }`,
+			fixed: `a { b: \\0000311}`,
+			line: 1,
+			column: 16,
+			message: messages.rejectedBefore(),
+		},
+		{
+			description: `the same seventh digit with a run of the block's own behind the space PostCSS swallowed`,
+			code: `a { b: \\0000311  }`,
+			fixed: `a { b: \\0000311}`,
+			line: 1,
+			column: 17,
 			message: messages.rejectedBefore(),
 		},
 		{

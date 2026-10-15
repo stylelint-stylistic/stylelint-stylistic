@@ -1,6 +1,7 @@
 import type { Container, Declaration, Document, Node, Root } from "postcss"
 import type { PostcssResult } from "stylelint"
 
+import { restoreRunsFoldedIntoTheText } from "../../preprocessor/restoreRunsFoldedIntoTheText/index.ts"
 import { EVERY_JS_LINE_TERMINATOR, LEADING_SPACES_AND_TABS } from "../../regexps.ts"
 import { css } from "../css/index.ts"
 import type { Syntax } from "../index.ts"
@@ -11,6 +12,10 @@ import { hostCodeSpans } from "./hostCodeSpans/index.ts"
 export let styled: Syntax = {
 	...css,
 	namespace: `styled`,
+	// `postcss-styled-syntax` folds the run behind a seventh hexadecimal digit into the text behind it as PostCSS does, and prints the template's own copies back
+	restore (root: Root): void {
+		restoreRunsFoldedIntoTheText(root, styled)
+	},
 	// A styled root carries the parser's mark; plain CSS is a file opened with no custom syntax, which `opts.syntax` cannot tell
 	accepts: (root: Root, result: PostcssResult) => root.raws.styledSyntaxRangeStart !== undefined || result.stylelint?.config?.customSyntax === undefined,
 	embedding (node: Node): { indent: string, multiline: boolean } {

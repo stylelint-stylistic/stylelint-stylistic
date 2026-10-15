@@ -254,6 +254,10 @@ testRule({
 			code: `a{ color: pink; }`,
 		},
 		{
+			description: `an escape of six digits and a seventh behind them, with no run behind the seventh`,
+			code: `a\\0000311{ b: c }`,
+		},
+		{
 			description: `nested blocks, each abutting its selector`,
 			code: `@media print{ a{ color: pink; } }`,
 		},
@@ -284,6 +288,31 @@ testRule({
 			fixed: `a\\ { b: c }`,
 			line: 1,
 			column: 4,
+			message: messages.rejectedBefore(),
+		},
+		{
+			// Pins the run behind a seventh digit, which the grammar reads as a name character closing the escape, over the space PostCSS swallows into the escape's word
+			description: `a hexadecimal escape of six digits and a seventh behind them, whose space PostCSS swallows into the word and the grammar reads as a run`,
+			code: `a\\0000311 { b: c }`,
+			fixed: `a\\0000311{ b: c }`,
+			line: 1,
+			column: 10,
+			message: messages.rejectedBefore(),
+		},
+		{
+			description: `the same seventh digit with a run of the brace's own behind the space PostCSS swallowed`,
+			code: `a\\0000311  { b: c }`,
+			fixed: `a\\0000311{ b: c }`,
+			line: 1,
+			column: 11,
+			message: messages.rejectedBefore(),
+		},
+		{
+			description: `the same seventh digit in an at-rule's params`,
+			code: `@media x\\0000311 { a: b }`,
+			fixed: `@media x\\0000311{ a: b }`,
+			line: 1,
+			column: 17,
 			message: messages.rejectedBefore(),
 		},
 		{

@@ -364,6 +364,12 @@ export const LEADING_ESCAPED_LESS_THAN = /^\\3c /u
 /** A trailing hexadecimal escape, its closing whitespace aside, which `postcss-value-parser` returns as a divider. */
 export const TRAILING_HEX_ESCAPE = /\\[\da-f]{1,6}$/iu
 
+/** A trailing run of hexadecimal digits standing past six behind a backslash: the grammar reads an escape of six out of them and the seventh as a name character of its own, so the escape is closed by its digits and the whitespace behind them is a run and not the escape's terminator. */
+export const TRAILING_HEX_ESCAPE_PAST_SIX_DIGITS = /\\[\da-f]{7,}$/iu
+
+/** The same digits anywhere in a text, which a whole stylesheet is read with to tell whether it holds a run of that shape at all. */
+export const HEX_ESCAPE_PAST_SIX_DIGITS = /\\[\da-f]{7,}/iu
+
 /** The break a text ends in: against `a\r\n` the line feed alone, answering whether and never which. */
 export const TRAILING_LINE_BREAK = /\n$/u
 

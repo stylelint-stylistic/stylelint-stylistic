@@ -9,6 +9,7 @@ import { findSelectorInlineComments, type InlineComment } from "../../preprocess
 import { movesEndIntoInlineComment } from "../../preprocessor/movesEndIntoInlineComment/index.ts"
 import { printedText, rawsOf, writePrintedText } from "../../preprocessor/printedText/index.ts"
 import { inlineCommentReading, readsInlineComments, syntaxKeepsInlineComments } from "../../preprocessor/readsInlineComments/index.ts"
+import { restoreRunsFoldedIntoTheText } from "../../preprocessor/restoreRunsFoldedIntoTheText/index.ts"
 import { restoreSelectorInlineComments } from "../../preprocessor/restoreSelectorInlineComments/index.ts"
 import { searchCopy } from "../../preprocessor/searchCopy/index.ts"
 import { toSelectorSourceIndex } from "../../preprocessor/toSelectorSourceIndex/index.ts"
@@ -40,8 +41,9 @@ export let css: Syntax = {
 
 		return !reading.answered || !reading.spells
 	},
-	restore () {
-		// PostCSS merges no runs a rule would have to part
+	restore (root: Root): void {
+		// PostCSS merges the run behind a seventh hexadecimal digit into the text behind it, and that is the merge a rule would have had to part
+		restoreRunsFoldedIntoTheText(root, css)
 	},
 	embedding: () => ({ indent: ``, multiline: false }),
 	// A file stands on no host line, and `postcss-html` keeps the break behind a `<style>` tag out of the root's text

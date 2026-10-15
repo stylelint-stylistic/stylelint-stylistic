@@ -114,6 +114,14 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
+			description: `a hexadecimal escape of six digits and a seventh behind them, whose space PostCSS swallows into the word and the grammar reads as a run the break takes the place of`,
+			code: `a\\0000311 { b: c }`,
+			fixed: `a\\0000311\n { b: c }`,
+			line: 1,
+			column: 10,
+			message: messages.expectedBefore(),
+		},
+		{
 			description: `a space in front of the brace`,
 			code: `a { color: pink; }`,
 			fixed: `a\n { color: pink; }`,
@@ -434,6 +442,15 @@ testRule({
 			fixed: `a\\ { b: c }`,
 			line: 1,
 			column: 4,
+			message: messages.rejectedBeforeSingleLine(),
+		},
+		{
+			// Pins the run behind a seventh digit, which the grammar reads as a name character closing the escape, over the space PostCSS swallows into the escape's word
+			description: `a hexadecimal escape of six digits and a seventh behind them, whose space PostCSS swallows into the word and the grammar reads as a run`,
+			code: `a\\0000311 { b: c }`,
+			fixed: `a\\0000311{ b: c }`,
+			line: 1,
+			column: 10,
 			message: messages.rejectedBeforeSingleLine(),
 		},
 		{

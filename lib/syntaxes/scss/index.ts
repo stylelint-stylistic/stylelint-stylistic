@@ -3,6 +3,7 @@ import type { PostcssResult } from "stylelint"
 
 import { isStandardPreprocessorAtRule, isStandardPreprocessorComment, isStandardPreprocessorDeclaration, isStandardPreprocessorRule, isStandardPreprocessorSelector, isStandardPreprocessorValue } from "../../preprocessor/guards/index.ts"
 import { inlineCommentReading } from "../../preprocessor/readsInlineComments/index.ts"
+import { restoreRunsFoldedIntoTheText } from "../../preprocessor/restoreRunsFoldedIntoTheText/index.ts"
 import type { AddressAtRules } from "../../utils/findCommentSpans/index.ts"
 import { css } from "../css/index.ts"
 import type { Syntax } from "../index.ts"
@@ -17,6 +18,10 @@ const SCSS_ADDRESS_AT_RULES: AddressAtRules = { names: [{ name: `import`, anyCas
 export let scss: Syntax = {
 	...css,
 	namespace: `scss`,
+	// `postcss-scss` folds the run behind a seventh hexadecimal digit into the text behind it as PostCSS does, and prints back through a copy of its own
+	restore (root: Root): void {
+		restoreRunsFoldedIntoTheText(root, scss)
+	},
 	// A styled template is the styled namespace's, a file opened with no custom syntax plain CSS; the rest are told apart by a `//`: `postcss-scss` spells such a comment and keeps none in the text a rule reads, Less keeps it, a syntax spelling none reads the probe as plain CSS
 	accepts (root: Root, result: PostcssResult): boolean {
 		if (root.raws.styledSyntaxRangeStart !== undefined) return false
