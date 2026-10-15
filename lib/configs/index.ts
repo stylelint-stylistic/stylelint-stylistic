@@ -1,6 +1,6 @@
 import type { Config } from "stylelint"
 
-import { defineStylistic, defineStylisticOverride, type RuleName, type RulesInput } from "../defineStylistic/index.ts"
+import { defineStylistic, type RuleName, type RulesInput } from "../defineStylistic/index.ts"
 
 /** The package, as a configuration names it in `plugins`; a string rather than the plugin itself, since the plugin's entry exports this module and Stylelint resolves the name from the directory of the configuration, which is inside the package. */
 const PLUGIN = `@stylistic/stylelint-plugin`
@@ -102,7 +102,11 @@ const EXCLUDED_RULES: Record<Exclude<RuleName, keyof typeof RECOMMENDED_RULES>, 
 	"value-slash-newline-before": `the twin of \`value-slash-space-before\`, which the preset sets to \`always\`: every option of this rule would conflict with it`,
 }
 
-/** The preset: the table under the core's names for every file, and under each preprocessor's namespace over the files of its syntax, parsed with that syntax. An entry whose files a project has none of loads nothing, so the package of a syntax is installed only where the syntax is written. */
+/**
+ * The preset: the table under the core's names for every file, and under each preprocessor's namespace over the files of its syntax.
+ *
+ * No entry names the package its syntax is parsed with, so the preset asks of a project nothing it did not ask of itself before. A project that names `postcss-scss` over its SCSS files has them read by the `scss/` copies; one that names nothing has them read as CSS, by the core's copies, as they were before the namespaces — the copies of a namespace yield in silence wherever the family of the stylesheet reads it, so neither way is a rule refused. A project wanting its preprocessors parsed as themselves names the syntax and takes the package; the plugin asks for nothing either way.
+ */
 let recommended: Config = {
 	plugins: [PLUGIN],
 	rules: {
@@ -110,8 +114,8 @@ let recommended: Config = {
 		...defineStylistic({ rules: RECOMMENDED_RULES }),
 	},
 	overrides: [
-		defineStylisticOverride({ syntax: `scss`, files: `**/*.scss`, rules: RECOMMENDED_RULES }),
-		defineStylisticOverride({ syntax: `less`, files: `**/*.less`, rules: RECOMMENDED_RULES }),
+		{ files: `**/*.scss`, rules: defineStylistic({ syntax: `scss`, rules: RECOMMENDED_RULES }) },
+		{ files: `**/*.less`, rules: defineStylistic({ syntax: `less`, rules: RECOMMENDED_RULES }) },
 	],
 }
 

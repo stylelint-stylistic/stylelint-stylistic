@@ -447,23 +447,24 @@ const REJECTED: Record<keyof typeof configs.recommendedRules, { description: str
  * @param code - The stylesheet.
  * @param codeFilename - The file it stands in, whose extension picks the preset's `overrides` entry.
  * @param [rules] - The project's own settings over the preset's.
+ * @param [customSyntax] - The package the project parses the file with, which no entry of the preset names.
  * @returns The warnings by rule and text, the parse errors and the option warnings.
  */
-async function lintExtending (code: string, codeFilename: string, rules: Config[`rules`] = {}): Promise<{ warnings: { rule: string, text: string }[], parseErrors: unknown[], invalidOptionWarnings: unknown[] }> {
+async function lintExtending (code: string, codeFilename: string, rules: Config[`rules`] = {}, customSyntax?: string): Promise<{ warnings: { rule: string, text: string }[], parseErrors: unknown[], invalidOptionWarnings: unknown[] }> {
 	// An object in `extends` is what Stylelint accepts since 15.9, and what its type does not spell yet
-	let { results } = await stylelint.lint({ code, codeFilename, config: { "extends": [PRESET as unknown as string], rules } })
+	let { results } = await stylelint.lint({ code, codeFilename, config: { "extends": [PRESET as unknown as string], rules, ...(customSyntax === undefined ? {} : { customSyntax }) } })
 	let { warnings, parseErrors, invalidOptionWarnings } = pick(results)
 
 	return { warnings: warnings.map(({ rule, text }) => ({ rule, text })), parseErrors, invalidOptionWarnings }
 }
 
 describe(`the recommended preset`, () => {
-	it(`names the package in plugins, the table under the core's names in rules beside the charset rule, and one overrides entry per preprocessor with its syntax`, () => {
+	it(`names the package in plugins, the table under the core's names in rules beside the charset rule, and one overrides entry per preprocessor naming no package`, () => {
 		expect(configs.recommended.plugins).toEqual([`@stylistic/stylelint-plugin`])
 		expect(configs.recommended.rules).toEqual({ [CHARSET_RULE]: true, ...defineStylistic({ rules: configs.recommendedRules }) })
 		expect(configs.recommended.overrides).toEqual([
-			{ files: `**/*.scss`, customSyntax: `postcss-scss`, rules: defineStylistic({ syntax: `scss`, rules: configs.recommendedRules }) },
-			{ files: `**/*.less`, customSyntax: `postcss-less`, rules: defineStylistic({ syntax: `less`, rules: configs.recommendedRules }) },
+			{ files: `**/*.scss`, rules: defineStylistic({ syntax: `scss`, rules: configs.recommendedRules }) },
+			{ files: `**/*.less`, rules: defineStylistic({ syntax: `less`, rules: configs.recommendedRules }) },
 		])
 	})
 
@@ -536,10 +537,23 @@ describe(`the recommended preset`, () => {
 		}
 	})
 
-	describe(`reads a file of a preprocessor through the namespace's copies`, () => {
+	describe(`reads a file of a preprocessor no entry of the preset names a syntax for`, () => {
 		for (let [syntax, filename] of [[`scss`, FILE.scss], [`less`, FILE.less]] as const) {
-			it(`over a .${syntax} file, which no core name refuses`, async () => {
-				let { warnings, parseErrors, invalidOptionWarnings } = await lintExtending(`a {\n\tb: 1PX; // c\n}\n`, filename)
+			it(`through the core's copies over a .${syntax} file, which no namespace refuses`, async () => {
+				let { warnings, parseErrors, invalidOptionWarnings } = await lintExtending(`a {\n\tb: 1PX;\n}\n`, filename)
+
+				expect(parseErrors).toEqual([])
+				expect(invalidOptionWarnings).toEqual([])
+				expect(warnings.map(({ rule }) => rule)).toEqual([`@stylistic/unit-case`])
+				expect(warnings.filter(({ text }) => REFUSAL.test(text))).toEqual([])
+			})
+		}
+	})
+
+	describe(`reads a file of a preprocessor the project names a syntax for`, () => {
+		for (let [syntax, filename] of [[`scss`, FILE.scss], [`less`, FILE.less]] as const) {
+			it(`through the namespace's copies over a .${syntax} file, which no core name refuses`, async () => {
+				let { warnings, parseErrors, invalidOptionWarnings } = await lintExtending(`a {\n\tb: 1PX; // c\n}\n`, filename, {}, CUSTOM_SYNTAX[syntax])
 
 				expect(parseErrors).toEqual([])
 				expect(invalidOptionWarnings).toEqual([])
@@ -552,7 +566,7 @@ describe(`the recommended preset`, () => {
 	it(`yields to a setting the configuration extending it writes under a namespace's name, over the files of that syntax alone`, async () => {
 		let rules = { "@stylistic/scss/string-quotes": `single` }
 
-		expect((await lintExtending(`a {\n\tcontent: 'x';\n}\n`, FILE.scss, rules)).warnings).toEqual([])
+		expect((await lintExtending(`a {\n\tcontent: 'x';\n}\n`, FILE.scss, rules, CUSTOM_SYNTAX.scss)).warnings).toEqual([])
 		expect((await lintExtending(`a {\n\tcontent: 'x';\n}\n`, FILE.css, rules)).warnings.map(({ rule }) => rule)).toEqual([`@stylistic/string-quotes`])
 	})
 

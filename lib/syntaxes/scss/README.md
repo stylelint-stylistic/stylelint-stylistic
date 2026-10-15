@@ -1,6 +1,6 @@
 # The `scss` namespace
 
-The rules of the core under `@stylistic/scss/<rule>`, for stylesheets written in [SCSS](https://sass-lang.com) and parsed with [`postcss-scss`](https://github.com/postcss/postcss-scss). They are configured in the `overrides` block naming that syntax, as [Custom syntaxes](../../../docs/user-guide/custom-syntaxes.md) shows.
+The rules of the core under `@stylistic/scss/<rule>`, for stylesheets written in [SCSS](https://sass-lang.com) and parsed with [`postcss-scss`](https://github.com/postcss/postcss-scss). The [`recommended` preset](../../../docs/user-guide/configs.md) sets them under these names over `**/*.scss` and names no package, so a stylesheet is read by these rules as soon as the project tells Stylelint to parse its SCSS files as SCSS — which is what [Your own syntaxes](../../../docs/user-guide/configs.md#your-own-syntaxes) shows. A project that names no syntax has its `.scss` files read as CSS by the `@stylistic/` names, and nothing warns it about that.
 
 Every rule of the core is here, with the same options and the same documentation, and plain CSS is read exactly as the core reads it — a plain block of an HTML page beside a `lang="scss"` one included, so a mixed page is configured with these rules alone. What the namespace reads beyond the core:
 

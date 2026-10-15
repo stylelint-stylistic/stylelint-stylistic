@@ -1,6 +1,6 @@
 # The `less` namespace
 
-The rules of the core under `@stylistic/less/<rule>`, for stylesheets written in [Less](https://lesscss.org) and parsed with [`postcss-less`](https://github.com/shellscape/postcss-less). They are configured in the `overrides` block naming that syntax, as [Custom syntaxes](../../../docs/user-guide/custom-syntaxes.md) shows.
+The rules of the core under `@stylistic/less/<rule>`, for stylesheets written in [Less](https://lesscss.org) and parsed with [`postcss-less`](https://github.com/shellscape/postcss-less). The [`recommended` preset](../../../docs/user-guide/configs.md) sets them under these names over `**/*.less` and names no package, so a stylesheet is read by these rules as soon as the project tells Stylelint to parse its Less files as Less — which is what [Your own syntaxes](../../../docs/user-guide/configs.md#your-own-syntaxes) shows. A project that names no syntax has its `.less` files read as CSS by the `@stylistic/` names, and nothing warns it about that.
 
 Every rule of the core is here, with the same options, `upper` of `at-rule-name-case` aside, and the same documentation, and plain CSS is read exactly as the core reads it — a plain block of an HTML page beside a `lang="less"` one included, so a mixed page is configured with these rules alone, but for `upper` of `at-rule-name-case`, which its plain blocks take from the core's copy. What the namespace reads beyond the core:
 

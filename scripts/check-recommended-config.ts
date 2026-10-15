@@ -3,7 +3,7 @@
 /**
  * Checks that the recommended preset is reached from a project the way a configuration names it: by the package's `recommended` subpath in `extends`.
  *
- * The tests extend the preset as an object, with the plugin loaded from source, so what they cannot see is the way from the string to the built module: the `exports` entry of `package.json`, the module `dist/configs/recommended.js` and the package name the preset lists in `plugins`, resolved from inside the package. The built package is installed under `node_modules` of a project, and a stylesheet of each syntax is linted from there: plain CSS in a project holding none of the syntax packages, since an `overrides` entry whose files the project has none of loads nothing, then an SCSS and a Less file beside those packages, each read by the namespace's copies and refused by no core name.
+ * The tests extend the preset as an object, with the plugin loaded from source, so what they cannot see is the way from the string to the built module: the `exports` entry of `package.json`, the module `dist/configs/recommended.js` and the package name the preset lists in `plugins`, resolved from inside the package. The built package is installed under `node_modules` of a project, and a stylesheet is linted from there: plain CSS, and an SCSS and a Less file in a project holding none of the syntax packages, since no entry of the preset names one and a stylesheet read as CSS is read by the core's copies as it was before the namespaces. Then the same two files beside those packages and in a project naming each syntax for them, read by the namespace's copies and refused by no core name.
  */
 
 import { execFileSync } from "node:child_process"
@@ -33,13 +33,15 @@ type Read = {
  * Lints one stylesheet from a project, extending the preset by its subpath.
  * @param project - The project, where Stylelint runs and resolves the preset from.
  * @param file - The stylesheet's path.
+ * @param [customSyntax] - The package the project parses the file with, which no entry of the preset names.
  * @returns The rules that reported, their texts, the option warnings and the parse error count.
  */
-function lint (project: string, file: string): Read {
+function lint (project: string, file: string, customSyntax?: string): Read {
+	let named = customSyntax === undefined ? `` : `, customSyntax: ${JSON.stringify(customSyntax)}`
 	let script = `
 		import stylelint from "stylelint"
 
-		let { results } = await stylelint.lint({ files: ${JSON.stringify(file)}, config: { extends: [${JSON.stringify(PRESET)}] } })
+		let { results } = await stylelint.lint({ files: ${JSON.stringify(file)}, config: { extends: [${JSON.stringify(PRESET)}]${named} } })
 		let [result] = results
 
 		process.stdout.write(JSON.stringify({
@@ -111,15 +113,23 @@ try {
 
 	stdout.write(`\t🧩 the preset is reached by "${PRESET}"\n\t   and reads a CSS file in a project holding no syntax package\n`)
 
-	// Each preprocessor beside its package, read under its namespace
+	// The same preprocessors where no entry of the preset names a package, read as CSS by the core's copies
+	writeFileSync(path.join(plain, `a.scss`), `a {\n\tb: 1PX;\n}\n`)
+	writeFileSync(path.join(plain, `a.less`), `a {\n\tb: 1PX;\n}\n`)
+	expect(lint(plain, path.join(plain, `a.scss`)), [`@stylistic/unit-case`], `An SCSS file in a project naming no syntax`)
+	expect(lint(plain, path.join(plain, `a.less`)), [`@stylistic/unit-case`], `A Less file in a project naming no syntax`)
+
+	stdout.write(`\t🧩 an SCSS and a Less file in a project naming no syntax are read by the core's copies and refused by no namespace\n`)
+
+	// Each preprocessor beside its package, which the project names for them, read under its namespace
 	let preprocessed = layOut(path.join(sandbox, `preprocessed`), [`postcss-scss`, `postcss-less`])
 
 	writeFileSync(path.join(preprocessed, `a.scss`), `a {\n\tb: 1PX; // c\n}\n`)
 	writeFileSync(path.join(preprocessed, `a.less`), `a {\n\tb: 1PX; // c\n}\n`)
-	expect(lint(preprocessed, path.join(preprocessed, `a.scss`)), [`@stylistic/scss/unit-case`], `An SCSS file`)
-	expect(lint(preprocessed, path.join(preprocessed, `a.less`)), [`@stylistic/less/unit-case`], `A Less file`)
+	expect(lint(preprocessed, path.join(preprocessed, `a.scss`), `postcss-scss`), [`@stylistic/scss/unit-case`], `An SCSS file`)
+	expect(lint(preprocessed, path.join(preprocessed, `a.less`), `postcss-less`), [`@stylistic/less/unit-case`], `A Less file`)
 
-	stdout.write(`\t🧩 an SCSS and a Less file are read by the namespace's copies and refused by no core name\n`)
+	stdout.write(`\t🧩 an SCSS and a Less file in a project naming the syntax are read by the namespace's copies and refused by no core name\n`)
 }
 catch (error) {
 	stderr.write(`${(error as Error).message}\n`)

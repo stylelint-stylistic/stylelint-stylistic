@@ -1,6 +1,6 @@
 # The `styled` namespace
 
-The rules of the core under `@stylistic/styled/<rule>`, for stylesheets embedded in JavaScript as styled templates and parsed with [`postcss-styled-syntax`](https://github.com/hudochenkov/postcss-styled-syntax). They are configured in the `overrides` block naming that syntax, as [Custom syntaxes](../../../docs/user-guide/custom-syntaxes.md) shows.
+The rules of the core under `@stylistic/styled/<rule>`, for stylesheets embedded in JavaScript as styled templates and parsed with [`postcss-styled-syntax`](https://github.com/hudochenkov/postcss-styled-syntax). They live in `.js` and `.ts` files, and which of those hold a stylesheet is the project's to say, so the [`recommended` preset](../../../docs/user-guide/configs.md) leaves them out entirely: [Your own syntaxes](../../../docs/user-guide/configs.md#your-own-syntaxes) shows the entry naming the files, the syntax and the package.
 
 Every rule of the core is here, with the same options and the same documentation, and plain CSS is read exactly as the core reads it. Some rules answer a styled template differently:
 
