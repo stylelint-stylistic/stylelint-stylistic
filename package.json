@@ -47,7 +47,7 @@
 		"prepare": "./scripts/prepare.sh"
 	},
 	"devDependencies": {
-		"@firefoxic/beautypography": "^0.1",
+		"@firefoxic/beautypography": "^0.2",
 		"@firefoxic/oxlint-config": "^0.5",
 		"@fontsource-variable/geist": "^5",
 		"@fontsource-variable/geist-mono": "^5",

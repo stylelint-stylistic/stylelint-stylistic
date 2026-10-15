@@ -4,5 +4,9 @@ gitChecks: false
 allowBuilds:
   "stylelint@https://codeload.github.com/stylelint/stylelint/tar.gz/c12bc7e41563cfe4a4b76bd7f8bc10e13e3a2401": true
 
+minimumReleaseAgeExclude:
+  - "@firefoxic/*"
+  - "stylelint"
+
 registries:
   default: https://registry.npmjs.org/

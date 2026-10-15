@@ -189,8 +189,8 @@ importers:
         version: 0.1.0
     devDependencies:
       '@firefoxic/beautypography':
-        specifier: ^0.1
-        version: 0.1.1
+        specifier: ^0.2
+        version: 0.2.0
       '@firefoxic/oxlint-config':
         specifier: ^0.5
         version: 0.5.0(eslint@10.11.0(supports-color@10.2.2))(oxlint@1.85.0)
@@ -355,8 +355,8 @@ packages:
     resolution: {integrity: sha512-IkO+/KEUvwbVpiURZg+P7zF74z5Jxe0UgJxVni+RtoHQ6IZieXaO02kmadomap/q+l6bc/jdPGGqTjhuZnuz1Q==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
-  '@firefoxic/beautypography@0.1.1':
-    resolution: {integrity: sha512-snOSNc+LgOKKWvqm37Gy7fSFPF4rOLvSJcXAKOAgO2vqs3Kv4+18fZ790jBtszMJP11Gr2NGcyRDxxH3vgTe5Q==}
+  '@firefoxic/beautypography@0.2.0':
+    resolution: {integrity: sha512-OefjFVIEueb5L5XTHLs6ax5AnrRx/2GODAfs2SQ0h6YSii3tTfmETeS/RrjDcBCN+2wIJHsQKLWLOpkCAMHoMA==}
     engines: {node: '>=24.0'}
     hasBin: true
 
@@ -2032,7 +2032,7 @@ snapshots:
       '@eslint/core': 1.2.1
       levn: 0.4.1
 
-  '@firefoxic/beautypography@0.1.1': {}
+  '@firefoxic/beautypography@0.2.0': {}
 
   '@firefoxic/oxlint-config@0.5.0(eslint@10.11.0(supports-color@10.2.2))(oxlint@1.85.0)':
     dependencies:
