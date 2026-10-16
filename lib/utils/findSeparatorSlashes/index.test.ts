@@ -88,7 +88,7 @@ describe(`findSeparatorSlashes`, () => {
 		expect(slashesOf(`#{$a}(1/2)`)).toEqual([])
 	})
 
-	it(`reads into a parenthesised group only where told to, as the media rules are`, () => {
+	it(`reads into a parenthesized group only where told to, as the media rules are`, () => {
 		expect(slashesOf(`(1/2)`)).toEqual([])
 		expect(slashesOf(`(1/2)`, { readsGroups: true })).toEqual([2])
 		expect(slashesOf(`((aspect-ratio: 16/9))`, { readsGroups: true })).toEqual([18])

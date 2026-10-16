@@ -14,7 +14,7 @@ describe(`isStandardSyntaxFunction`, () => {
 		expect(isStandardSyntaxFunction(getFunction(`url('x.css')`))).toBe(true)
 	})
 
-	it(`a parenthesised group inside a call, which is no call of its own`, () => {
+	it(`a parenthesized group inside a call, which is no call of its own`, () => {
 		expect(isStandardSyntaxFunction(getFunction(`(1px + 2px) * 2`))).toBe(false)
 	})
 

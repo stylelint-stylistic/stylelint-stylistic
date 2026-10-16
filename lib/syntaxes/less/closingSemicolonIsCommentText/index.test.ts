@@ -51,7 +51,7 @@ describe(`closingSemicolonIsCommentText`, () => {
 		expect(closing(`--x: pink // note !important here ;`)).toBe(true)
 	})
 
-	it(`a custom property behind anything that loop cannot consume whole — an important flag, a bare parenthesised group, a bracketed group nesting another, an assignment, a division, a brace — a variable and an at-rule, which Less may read to the semicolon with a reader that knows no double slash`, () => {
+	it(`a custom property behind anything that loop cannot consume whole — an important flag, a bare parenthesized group, a bracketed group nesting another, an assignment, a division, a brace — a variable and an at-rule, which Less may read to the semicolon with a reader that knows no double slash`, () => {
 		expect(closing(`--x: pink !important // ;`)).toBe(false)
 		expect(closing(`--x: (a) // ;`)).toBe(false)
 		expect(closing(`--x: [[a]] // ;`)).toBe(false)

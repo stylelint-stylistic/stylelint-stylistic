@@ -183,7 +183,7 @@ testRule({
 		},
 		{
 			// Pins the write in front of a bare address whose parentheses hold a group: the parenthesis closing the token early leaves the parser the same nodes
-			description: `a comma glued to the name of a bare address holding a parenthesised group`,
+			description: `a comma glued to the name of a bare address holding a parenthesized group`,
 			code: `@media a,url(a(b)c) {}`,
 			fixed: `@media a, url(a(b)c) {}`,
 			line: 1,

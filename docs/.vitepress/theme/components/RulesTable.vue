@@ -212,7 +212,7 @@ tbody tr:nth-child(even) {
 	background: var(--vp-c-bg-soft);
 }
 
-/* The theme plates every header cell, which would colour the whole first column. */
+/* The theme plates every header cell, which would color the whole first column. */
 tbody th {
 	background: transparent;
 }

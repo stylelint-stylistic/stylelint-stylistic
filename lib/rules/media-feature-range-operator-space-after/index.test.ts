@@ -213,7 +213,7 @@ testRule({
 		},
 		{
 			// Pins the write in front of a bare address whose parentheses hold a group: the parenthesis closing the token early leaves the parser the same nodes
-			description: `a bare address glued to the operator whose parentheses hold a parenthesised group`,
+			description: `a bare address glued to the operator whose parentheses hold a parenthesized group`,
 			code: `@media (width>=url(a(b)c)) { a { b: c; } }`,
 			fixed: `@media (width>= url(a(b)c)) { a { b: c; } }`,
 			line: 1,

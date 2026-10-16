@@ -56,7 +56,7 @@ testRule({
 			code: `a { grid-area: 1 / /*c*/2; }`,
 		},
 		{
-			description: `a parenthesised group in a custom property, whose text the rule does not read`,
+			description: `a parenthesized group in a custom property, whose text the rule does not read`,
 			code: `a { --a: (1/2); }`,
 		},
 		{
@@ -238,7 +238,7 @@ testRule({
 		},
 		{
 			// Pins the write in front of a bare address whose parentheses hold a group: the parenthesis closing the token early leaves the parser the same nodes
-			description: `a solidus glued to the name of a bare address holding a parenthesised group`,
+			description: `a solidus glued to the name of a bare address holding a parenthesized group`,
 			code: `a { b: 1/url(a(b)c.png) 2px; c: "d" }`,
 			fixed: `a { b: 1/ url(a(b)c.png) 2px; c: "d" }`,
 			line: 1,

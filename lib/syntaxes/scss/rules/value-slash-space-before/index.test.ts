@@ -24,7 +24,7 @@ testRule({
 			code: `a { b: 2/math.div(4, 2); }`,
 		},
 		{
-			description: `a parenthesised group, which is Sass's arithmetic`,
+			description: `a parenthesized group, which is Sass's arithmetic`,
 			code: `a { b: (4/2); }`,
 		},
 		{

@@ -136,7 +136,7 @@ describe(`colonIndexInBetween`, () => {
 		expect(colonIndexInBetween(css, decl, RESULT)).toBe(5)
 	})
 
-	it(`a parenthesised group, which is one token to PostCSS with the colon inside it, unless a comment or a quote inside breaks it into tokens`, () => {
+	it(`a parenthesized group, which is one token to PostCSS with the colon inside it, unless a comment or a quote inside breaks it into tokens`, () => {
 		expect(colonOf(`a { b (x:y): x; }`)).toBe(6)
 		expect(colonOf(`a { b ("x":y): x; }`)).toBe(5)
 

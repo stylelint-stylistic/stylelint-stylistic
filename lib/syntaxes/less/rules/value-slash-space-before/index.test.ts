@@ -20,7 +20,7 @@ testRule({
 			code: `@a: 1/2;`,
 		},
 		{
-			description: `a parenthesised group, inside which Less divides`,
+			description: `a parenthesized group, inside which Less divides`,
 			code: `a { b: (4/2); }`,
 		},
 		{

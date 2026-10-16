@@ -3,7 +3,7 @@
  *
  * `unit-case` found a variable's value through the `variable` mark `postcss-less` sets only where the colon closes the name. The colon is spelled with none, one and two spaces, a tab and a line break on either side of it, which is what decides where the parser puts the value: in `params` behind the colon, in `params` alone, or — where no whitespace stands in front of the colon — with its first word welded into the at-rule's name.
  *
- * The values cross what the rule reads with what it must leave alone: a dimension, two of them, one already in the case asked for, a hex color beside one, a bang flag, an escape, a parenthesised sum, an escaped string and an address. A bare interpolation is not among them: `postcss-less` refuses `@v: @{a}10PX` outright, so no row could carry one. The controls are the at-rules that are no variable and the values holding no unit at all, expected not to move.
+ * The values cross what the rule reads with what it must leave alone: a dimension, two of them, one already in the case asked for, a hex color beside one, a bang flag, an escape, a parenthesized sum, an escaped string and an address. A bare interpolation is not among them: `postcss-less` refuses `@v: @{a}10PX` outright, so no row could carry one. The controls are the at-rules that are no variable and the values holding no unit at all, expected not to move.
  *
  * `color-hex-case` is swept over the same corpus, being the other rule that recases what it reads, and the four at-rule rules that read the same nodes are there to catch what the new answer costs them.
  */
@@ -27,7 +27,7 @@ const VALUES = {
 	flagged: `10PX !important`,
 	escapedString: `~"10PX"`,
 	address: `url(10PX)`,
-	parenthesised: `(10PX + 1px)`,
+	parenthesized: `(10PX + 1px)`,
 	escaped: `10PX\\#FFF`,
 	keyword: `pink`,
 	empty: ``,

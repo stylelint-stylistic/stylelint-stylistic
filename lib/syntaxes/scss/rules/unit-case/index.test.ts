@@ -135,7 +135,7 @@ testRule({
 			message: messages.expected(`PX`, `px`),
 		},
 		{
-			description: `an upper-case unit in a value written as a parenthesised list`,
+			description: `an upper-case unit in a value written as a parenthesized list`,
 			code: `a { font: (italic bold 10px/8PX) }`,
 			fixed: `a { font: (italic bold 10px/8px) }`,
 			line: 1,
@@ -466,7 +466,7 @@ testRule({
 			message: messages.expected(`px`, `PX`),
 		},
 		{
-			description: `a lower-case unit in a value written as a parenthesised list`,
+			description: `a lower-case unit in a value written as a parenthesized list`,
 			code: `a { font: (italic bold 10PX/8px) }`,
 			fixed: `a { font: (italic bold 10PX/8PX) }`,
 			line: 1,

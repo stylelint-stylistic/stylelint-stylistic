@@ -149,7 +149,7 @@ export type Syntax = {
 	inlineComments (node: Node, result: PostcssResult): InlineCommentReading,
 
 	/**
-	 * Finds the first colon token of a text; one inside a comment, a string, a parenthesised group, an at-word or an escape is none. The text in front is tokenized too, since a tokenizer carries state.
+	 * Finds the first colon token of a text; one inside a comment, a string, a parenthesized group, an at-word or an escape is none. The text in front is tokenized too, since a tokenizer carries state.
 	 * @param before - The text in front, tokenized but not answered for: the property.
 	 * @param text - The text searched for the colon, tokenized behind the text in front.
 	 * @param node - The node the text is from, whose syntax tokenizes it.

@@ -206,7 +206,7 @@ export function checkValueSlashes (opts: SlashSpaceCheckerOptions): void {
 }
 
 /**
- * Checks every `@media` query's separator solidi; a feature is a nameless parenthesised group, so the walk reads into every group, and an interpolation skips the parameters.
+ * Checks every `@media` query's separator solidi; a feature is a nameless parenthesized group, so the walk reads into every group, and an interpolation skips the parameters.
  * @param opts - The options.
  */
 export function checkMediaFeatureSlashes (opts: SlashSpaceCheckerOptions): void {

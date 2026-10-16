@@ -9,7 +9,7 @@ const PLAIN_CSS_CALLS: Set<string> = new Set([`env`, `var`])
 /**
  * Asks whether a node beside a solidus is one Sass computes with.
  *
- * A variable is, whatever sign is in front; a call is unless Sass hands it through, and so is a parenthesised group, a nameless call to the parser; a number, a dimension, a keyword and a string are not.
+ * A variable is, whatever sign is in front; a call is unless Sass hands it through, and so is a parenthesized group, a nameless call to the parser; a number, a dimension, a keyword and a string are not.
  * @param node - The node, none at the text's edge.
  * @returns True where Sass divides by it.
  */

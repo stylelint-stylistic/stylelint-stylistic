@@ -9,7 +9,7 @@
 	--vp-font-family-base: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
 	--vp-font-family-mono: "Geist Mono Variable", ui-monospace, monospace, monospace;
 
-	/* `brand-1` colours a link in running text, so it holds 4.5:1 on the page's ground; `brand-2` and `brand-3` sit on plates and in hover, where the threshold is lower. */
+	/* `brand-1` colors a link in running text, so it holds 4.5:1 on the page's ground; `brand-2` and `brand-3` sit on plates and in hover, where the threshold is lower. */
 	--vp-c-brand-1:
 		light-dark(
 			oklch(55% 0.124 237),
@@ -106,7 +106,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-	/* Shiki writes both themes onto every token and the default theme picks one by that class, so the dark one is picked here. The token carries its colour inline, which is why this takes `!important`. */
+	/* Shiki writes both themes onto every token and the default theme picks one by that class, so the dark one is picked here. The token carries its color inline, which is why this takes `!important`. */
 	.vp-doc [class*="language-"] code span {
 		color: var(--shiki-dark, inherit) !important;
 		font-style: var(--shiki-dark-font-style, inherit) !important;

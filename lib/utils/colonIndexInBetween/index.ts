@@ -6,7 +6,7 @@ import type { Syntax } from "../../syntaxes/index.ts"
 /**
  * Finds the declaration's own colon in `raws.between`.
  *
- * The raw holds everything between the property and the value, and a comment or a string in it may spell a colon. The syntax answers with its parser's tokenizer, to which a colon inside a comment, a string, a parenthesised group, an at-word or an escape is text. The property is tokenized in front, since a tokenizer reads a parenthesis against the nearest word before it, `url` holding an address.
+ * The raw holds everything between the property and the value, and a comment or a string in it may spell a colon. The syntax answers with its parser's tokenizer, to which a colon inside a comment, a string, a parenthesized group, an at-word or an escape is text. The property is tokenized in front, since a tokenizer reads a parenthesis against the nearest word before it, `url` holding an address.
  * @param syntax - The syntax whose tokenizer answers.
  * @param decl - The declaration.
  * @param result - The Stylelint result handed to the tokenizer.

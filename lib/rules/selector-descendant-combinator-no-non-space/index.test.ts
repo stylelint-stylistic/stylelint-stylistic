@@ -352,7 +352,7 @@ testRule({
 			message: messages.rejected(` ()`),
 		},
 		{
-			description: `a comment the parser files behind the parenthesised group in front of it, given back the place the file gives it`,
+			description: `a comment the parser files behind the parenthesized group in front of it, given back the place the file gives it`,
 			code: `.foo /*comment*/\t( )\t.bar {}`,
 			fixed: `.foo /*comment*/\t( ) .bar {}`,
 			warnings: [

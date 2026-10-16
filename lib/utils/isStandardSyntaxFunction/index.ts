@@ -2,11 +2,11 @@ import type { Node } from "postcss-value-parser"
 
 /**
  * Checks whether a function is standard, not a preprocessor construct.
- * @param node - The value-parser node asked about, a function or a parenthesised group.
+ * @param node - The value-parser node asked about, a function or a parenthesized group.
  * @returns True if standard.
  */
 export function isStandardSyntaxFunction (node: Node): boolean {
-	// A nameless node is a parenthesised group
+	// A nameless node is a parenthesized group
 	if (!node.value) return false
 
 	if (node.value.startsWith(`#{`)) return false

@@ -282,7 +282,7 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			description: `a parenthesised group standing in front of the colon, which the tokenizer takes whole, so the colon inside it opens no declaration`,
+			description: `a parenthesized group standing in front of the colon, which the tokenizer takes whole, so the colon inside it opens no declaration`,
 			code: `a { b (x:y):pink; }`,
 			fixed: `a { b (x:y):\npink; }`,
 			line: 1,

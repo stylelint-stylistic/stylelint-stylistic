@@ -27,7 +27,7 @@ testRule({
 
 	reject: [
 		{
-			description: `a parenthesised group the parser carries an inline comment across, the warning naming the selector the way the file spells it`,
+			description: `a parenthesized group the parser carries an inline comment across, the warning naming the selector the way the file spells it`,
 			code: `.foo // comment\n( )\n.bar {}`,
 			fixed: `.foo // comment\n( ) .bar {}`,
 			warnings: [

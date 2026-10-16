@@ -164,7 +164,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 /**
  * Tells whether a parsed selector prints the source back, after restoring the text the parser moved.
  *
- * A parenthesised group where a combinator belongs is read as a combinator whose value is the whitespace in front plus the group, a comment between the two moved into `raws.spaces.after`: `.foo /*c*\/\t( )\t.bar` prints as `.foo ( )/*c*\/\t\t.bar`. The node gets the three back where the file holds them at its index.
+ * A parenthesized group where a combinator belongs is read as a combinator whose value is the whitespace in front plus the group, a comment between the two moved into `raws.spaces.after`: `.foo /*c*\/\t( )\t.bar` prints as `.foo ( )/*c*\/\t\t.bar`. The node gets the three back where the file holds them at its index.
  * @param selectorTree - The parsed selector.
  * @param selector - The source.
  * @returns True if the tree prints the source.

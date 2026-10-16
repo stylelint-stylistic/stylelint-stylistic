@@ -890,7 +890,7 @@ testRule({
 		},
 		{
 			// Spelled with escapes because the fix leaves nothing but a trailing space behind the comment, which an indented block would leave to whatever trims the file.
-			description: `a semicolon in the text of an inline comment behind a custom property's bare parenthesised group, which is no call and no entity that loop consumes whole, so the flag is believed as it was before this option had a bare entity to tell it from`,
+			description: `a semicolon in the text of an inline comment behind a custom property's bare parenthesized group, which is no call and no entity that loop consumes whole, so the flag is believed as it was before this option had a bare entity to tell it from`,
 			code: `a {\n\t--x: (a) // ;\n}\n`,
 			fixed: `a {\n\t--x: (a) // \n}\n`,
 			line: 2,

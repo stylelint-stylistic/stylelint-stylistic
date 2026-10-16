@@ -28,7 +28,7 @@ testRule({
 			code: `$map: (Width: 100px);`,
 		},
 		{
-			description: `a value written as a parenthesised list`,
+			description: `a value written as a parenthesized list`,
 			code: `a { font: (italic bold 10px/8px) }`,
 		},
 		{
@@ -81,7 +81,7 @@ testRule({
 			message: messages.expected(`Border`, `border`),
 		},
 		{
-			description: `a property opening with a capital, its value a parenthesised list`,
+			description: `a property opening with a capital, its value a parenthesized list`,
 			code: `a { Font: (italic bold 10px/8px) }`,
 			fixed: `a { font: (italic bold 10px/8px) }`,
 			line: 1,
@@ -165,7 +165,7 @@ testRule({
 			code: `$map: (Width: 100px);`,
 		},
 		{
-			description: `a value written as a parenthesised list`,
+			description: `a value written as a parenthesized list`,
 			code: `a { FONT: (italic bold 10px/8px) }`,
 		},
 		{
@@ -218,7 +218,7 @@ testRule({
 			message: messages.expected(`Border`, `BORDER`),
 		},
 		{
-			description: `a property opening with a capital, its value a parenthesised list`,
+			description: `a property opening with a capital, its value a parenthesized list`,
 			code: `a { Font: (italic bold 10px/8px) }`,
 			fixed: `a { FONT: (italic bold 10px/8px) }`,
 			line: 1,

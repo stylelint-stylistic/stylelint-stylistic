@@ -26,7 +26,7 @@ describe(`readsSlashAsOperator`, () => {
 		expect(divides(`ns.$v/2`)).toBe(true)
 	})
 
-	it(`divides beside a call Sass may evaluate, and beside a parenthesised group`, () => {
+	it(`divides beside a call Sass may evaluate, and beside a parenthesized group`, () => {
 		expect(divides(`fn()/2`)).toBe(true)
 		expect(divides(`2/ns.fn()`)).toBe(true)
 		expect(divides(`abs(-4)/2`)).toBe(true)

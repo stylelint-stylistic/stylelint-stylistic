@@ -13,7 +13,7 @@ const CLOSE_PAREN: CSSToken = [TokenType.CloseParen, `)`, -1, -1, undefined]
 
 /**
  * Extracts a GeneralEnclosed node's top-level tokens.
- * @param node - The parenthesised group whose tokens are read.
+ * @param node - The parenthesized group whose tokens are read.
  * @returns The tokens.
  */
 function topLevelTokenNodes (node: GeneralEnclosed): Array<CSSToken> {
@@ -50,7 +50,7 @@ function topLevelTokenNodes (node: GeneralEnclosed): Array<CSSToken> {
 
 /**
  * Closes what a block left open: a nested node holding the parameters' end takes the end-of-file token, and the outer block's `tokens()` holds a nothing the media parser throws on.
- * @param block - The parenthesised block whose tokens are closed.
+ * @param block - The parenthesized block whose tokens are closed.
  * @returns Its tokens, with a closer for every open node.
  */
 function closedTokens (block: SimpleBlockNode): Array<CSSToken> {

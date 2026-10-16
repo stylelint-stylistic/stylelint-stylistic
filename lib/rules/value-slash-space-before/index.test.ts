@@ -64,7 +64,7 @@ testRule({
 			code: `a { grid-area: 1/*c*/ / 2; }`,
 		},
 		{
-			description: `a parenthesised group in a custom property, whose text the rule does not read`,
+			description: `a parenthesized group in a custom property, whose text the rule does not read`,
 			code: `a { --a: (1/2); }`,
 		},
 		{

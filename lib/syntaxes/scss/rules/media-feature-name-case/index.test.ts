@@ -40,7 +40,7 @@ testRule({
 			code: `@media (min-width: $var + 10px) { }`,
 		},
 		{
-			description: `a parenthesised SCSS sum as the value`,
+			description: `a parenthesized SCSS sum as the value`,
 			code: `@media (min-width: ($var + 10px)) { }`,
 		},
 		{
@@ -111,7 +111,7 @@ testRule({
 			message: messages.expected(`MIN-WIDTH`, `min-width`),
 		},
 		{
-			description: `an upper-case feature name with a parenthesised SCSS sum value`,
+			description: `an upper-case feature name with a parenthesized SCSS sum value`,
 			code: `@media (MIN-WIDTH: ($var + 10px)) { }`,
 			fixed: `@media (min-width: ($var + 10px)) { }`,
 			line: 1,
@@ -173,7 +173,7 @@ testRule({
 			code: `@media (MIN-WIDTH: $var + 10px) { }`,
 		},
 		{
-			description: `an upper-case feature name with a parenthesised SCSS sum value`,
+			description: `an upper-case feature name with a parenthesized SCSS sum value`,
 			code: `@media (MIN-WIDTH: ($var + 10px)) { }`,
 		},
 		{
@@ -240,7 +240,7 @@ testRule({
 			message: messages.expected(`min-width`, `MIN-WIDTH`),
 		},
 		{
-			description: `a lower-case feature name with a parenthesised SCSS sum value`,
+			description: `a lower-case feature name with a parenthesized SCSS sum value`,
 			code: `@media (min-width: ($var + 10px)) { }`,
 			fixed: `@media (MIN-WIDTH: ($var + 10px)) { }`,
 			line: 1,
