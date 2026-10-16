@@ -51,6 +51,10 @@ The pairs are: `at-rule-name-*-after`, `block-closing-brace-*-after`, `block-cl
 - `block-closing-brace-space-before` under `"always"`, `"never"`, `"always-multi-line"` and `"never-multi-line"`;
 - `max-empty-lines: 0`.
 
+So does `block-closing-brace-empty-line-before` turned over, that is `["never", { except: ["after-closing-brace"] }]` or `["never", { except: ["last-nested"] }]` or both reversals named together. The reversal asks for the empty line on the blocks it reaches, and the empty line makes the block multi-line, so there is no file left for these partners to agree with — the same answer `"always-multi-line"` gives.
+
+Three partners agree with it instead, each for its own reason. `block-closing-brace-newline-before: "always"` asks for a break in front of every closing brace, and an empty line ends in one. `block-closing-brace-space-before: "always-single-line"` asks for a single space in a single-line block alone, and the empty line makes the block multi-line. `max-empty-lines: 1` allows the one empty line the reversal asks for. None of the three is refused under any spelling of this rule.
+
 ### No whitespace behind a function
 
 [`function-whitespace-after: "never"`](../../lib/rules/function-whitespace-after/README.md) conflicts with every `always` option, `-single-line` and `-multi-line` ones included, of the rules asking for whitespace in front of what stands behind a closing parenthesis: `declaration-block-semicolon-*-before`, `function-comma-*-before`, `function-parentheses-*-inside`, `value-list-comma-*-before` and `value-slash-*-before`.

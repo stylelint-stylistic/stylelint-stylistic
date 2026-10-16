@@ -12,7 +12,7 @@ import { tmpdir } from "node:os"
 import path from "node:path"
 import { cwd, exit, stdout } from "node:process"
 
-import { conflictsAmong } from "../lib/utils/conflictingSettings/index.ts"
+import { configuredSetting, conflictsAmong } from "../lib/utils/conflictingSettings/index.ts"
 
 import { RULE_OPTIONS } from "./oracles/options.ts"
 
@@ -22,8 +22,17 @@ const PARTNERS_OF_EVERY_RULE = [`block-closing-brace-empty-line-before`, `block-
 /** The rules whose partners are every other rule, so that the two tables are compared over every setting they could name. */
 const RULES_AGAINST_EVERY_OTHER = new Set([`function-whitespace-after`, `block-closing-brace-empty-line-before`])
 
-/** The options `RULE_OPTIONS` leaves out that the table names. */
-const EXTRA_OPTIONS: Record<string, unknown[]> = { "max-empty-lines": [0] }
+/** The settings `RULE_OPTIONS` leaves out that the table names, whole settings included, the ones a secondary option of the empty line rule refuses behind its primary. */
+const EXTRA_OPTIONS: Record<string, unknown[]> = {
+	"max-empty-lines": [0],
+	"block-closing-brace-empty-line-before": [
+		[`never`, { except: [`after-closing-brace`] }],
+		[`never`, { except: [`last-nested`] }],
+		[`never`, { except: [`after-closing-brace`, `last-nested`] }],
+		[`never`, { except: `after-closing-brace` }],
+		[`never`, { except: [] }],
+	],
+}
 
 /** The compiler's options, the project's own spelled out, since the file stands outside the project; `--pretty false` keeps the `file(line,column): error` shape the count reads, which `tsc` gives up for the colored one wherever `FORCE_COLOR` is set, as CI sets it. */
 const COMPILER_OPTIONS = [`--noEmit`, `--pretty`, `false`, `--ignoreConfig`, `--module`, `esnext`, `--moduleResolution`, `bundler`, `--target`, `esnext`, `--strict`, `--exactOptionalPropertyTypes`, `--noUncheckedIndexedAccess`, `--allowImportingTsExtensions`, `--erasableSyntaxOnly`, `--skipLibCheck`]
@@ -47,7 +56,7 @@ function pairsOf (): [string, unknown, string, unknown][] {
 		for (let partner of partners) {
 			if (!rules.includes(partner)) continue
 
-			for (let one of RULE_OPTIONS[rule] ?? []) for (let other of [...RULE_OPTIONS[partner] ?? [], ...EXTRA_OPTIONS[partner] ?? []]) pairs.push([rule, one, partner, other])
+			for (let one of [...RULE_OPTIONS[rule] ?? [], ...EXTRA_OPTIONS[rule] ?? []]) for (let other of [...RULE_OPTIONS[partner] ?? [], ...EXTRA_OPTIONS[partner] ?? []]) pairs.push([rule, one, partner, other])
 		}
 	}
 
@@ -74,7 +83,7 @@ finally {
 	rmSync(directory, { recursive: true, force: true })
 }
 
-let refusedAtRun = new Set(pairs.flatMap(([rule, one, partner, other], at) => (conflictsAmong([{ name: rule, shortName: rule, primary: one }, { name: partner, shortName: partner, primary: other }]).length > 0 ? [at] : [])))
+let refusedAtRun = new Set(pairs.flatMap(([rule, one, partner, other], at) => (conflictsAmong([configuredSetting(rule, one), configuredSetting(partner, other)]).length > 0 ? [at] : [])))
 let onlyTypes = [...refusedByTypes].filter((at) => !refusedAtRun.has(at))
 let onlyRun = [...refusedAtRun].filter((at) => !refusedByTypes.has(at))
 

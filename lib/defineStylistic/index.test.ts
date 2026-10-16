@@ -256,6 +256,10 @@ describe(`the types of defineStylistic`, () => {
 		expect(() => defineStylistic({ rules: { "selector-list-comma-newline-after": `always`, "selector-list-comma-space-after": `always` } })).toThrow()
 		// @ts-expect-error the empty line the first asks for is one the second forbids
 		expect(() => defineStylistic({ rules: { "block-closing-brace-empty-line-before": `always-multi-line`, "max-empty-lines": 0 } })).toThrow()
+		// @ts-expect-error the empty line the reversal asks for is one the second forbids
+		expect(() => defineStylistic({ rules: { "block-closing-brace-empty-line-before": [`never`, { except: [`after-closing-brace`] }], "max-empty-lines": 0 } })).toThrow(`Conflicting settings:\n  "@stylistic/block-closing-brace-empty-line-before": "never"\n  "@stylistic/max-empty-lines": 0\nChange one of them, or turn one of them off.`)
+		expect(() => defineStylistic({ rules: { "block-closing-brace-empty-line-before": [`never`, { except: [`after-closing-brace`] }], "max-empty-lines": 1 } })).not.toThrow()
+		expect(() => defineStylistic({ rules: { "block-closing-brace-empty-line-before": [`never`, { except: [] }], "max-empty-lines": 0 } })).not.toThrow()
 		// @ts-expect-error the whitespace the second asks for in front of the solidus stands behind a call
 		expect(() => defineStylistic({ rules: { "function-whitespace-after": `never`, "value-slash-space-before": [`always`, { ignoreFunctions: [`f`] }] } })).toThrow()
 		expect(() => defineStylistic({ rules: { "selector-list-comma-newline-after": `always-multi-line`, "selector-list-comma-space-after": `always-single-line`, "block-closing-brace-empty-line-before": `always-multi-line`, "max-empty-lines": 1, "function-whitespace-after": `always`, "value-slash-space-before": `always` } })).not.toThrow()

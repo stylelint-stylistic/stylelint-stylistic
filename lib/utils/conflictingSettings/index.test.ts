@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 
@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest"
 
 import plugins from "../../index.ts"
 
-import { type ConfiguredSetting, conflictsAmong, conflictsError } from "./index.ts"
+import { type ConfiguredSetting, configuredSetting, conflictsAmong, conflictsError } from "./index.ts"
 
 /** The break options each family's space options conflict with, written out by hand from measurements rather than derived from the module's own reading of the suffixes. */
 const BEHIND_A_DELIMITER = {
@@ -63,11 +63,11 @@ const TWINS = { "@stylistic/selector-list-comma-newline-after": `always`, "@styl
 /**
  * Spells a setting as a configuration reading one stylesheet hands it over.
  * @param name - The rule as configured behind `@stylistic/`, its namespace included.
- * @param primary - The primary option.
+ * @param value - The configured value, a primary or a whole setting opening with one.
  * @returns The setting.
  */
-function setting (name: string, primary: unknown): ConfiguredSetting {
-	return { name: `@stylistic/${name}`, shortName: name.slice(name.lastIndexOf(`/`) + 1), primary }
+function setting (name: string, value: unknown): ConfiguredSetting {
+	return configuredSetting(`@stylistic/${name}`, value)
 }
 
 /**
@@ -155,6 +155,45 @@ describe(`conflictsAmong`, () => {
 		expect(conflictsAmong([emptyLine, setting(`block-closing-brace-newline-before`, `always`), setting(`block-closing-brace-space-before`, `always-single-line`), setting(`max-empty-lines`, 1)])).toEqual([])
 	})
 
+	// A reversal under `never` asks for the empty line on the blocks it reaches, and the empty line makes the block multi-line, so what leaves no room for one leaves no room for the reversal either
+	it.each([
+		[`after-closing-brace`, [`never`, { except: [`after-closing-brace`] }]],
+		[`last-nested`, [`never`, { except: [`last-nested`] }]],
+		[`both reversals named`, [`never`, { except: [`after-closing-brace`, `last-nested`] }]],
+		[`one reversal written as a bare string`, [`never`, { except: `after-closing-brace` }]],
+	])(`finds the empty line the reversal %s stands behind conflicting with every partner that leaves no room for one`, (_reversal, value) => {
+		for (let [rule, options] of [
+			[`block-closing-brace-newline-before`, [`never-multi-line`]],
+			[`block-closing-brace-space-before`, [`always`, `never`, `always-multi-line`, `never-multi-line`]],
+			[`max-empty-lines`, [0]],
+		] as [string, unknown[]][]) {
+			for (let option of options) expect(conflictsAmong([setting(`block-closing-brace-empty-line-before`, value), setting(rule, option)])).toHaveLength(1)
+		}
+	})
+
+	it(`names the primary alone in the message, the secondaries behind it being the rule's own`, () => {
+		let found = conflictsAmong([setting(`block-closing-brace-empty-line-before`, [`never`, { except: [`after-closing-brace`] }]), setting(`max-empty-lines`, 0)])
+
+		expect(conflictsError(found).message).toBe([
+			`Conflicting settings:`,
+			`  "@stylistic/block-closing-brace-empty-line-before": "never"`,
+			`  "@stylistic/max-empty-lines": 0`,
+			`Change one of them, or turn one of them off.`,
+		].join(`\n`))
+	})
+
+	// A break rule's `always` is met by the break an empty line ends in, a space rule's `always-single-line` asks nothing of a block the line made multi-line, and `max-empty-lines: 1` allows the one line asked for
+	it.each([
+		[`as never alone`, `never`],
+		[`as never turned over`, [`never`, { except: [`after-closing-brace`] }]],
+	])(`leaves the empty line %s beside the neighbors that meet it`, (_asked, value) => {
+		for (let [rule, option] of [
+			[`block-closing-brace-newline-before`, `always`],
+			[`block-closing-brace-space-before`, `always-single-line`],
+			[`max-empty-lines`, 1],
+		] as [string, unknown][]) expect(conflictsAmong([setting(`block-closing-brace-empty-line-before`, value), setting(rule, option)])).toEqual([])
+	})
+
 	it.each([`declaration-block-semicolon-newline-before`, `declaration-block-semicolon-space-before`, `function-comma-newline-before`, `function-comma-space-before`, `function-parentheses-newline-inside`, `function-parentheses-space-inside`, `value-list-comma-newline-before`, `value-list-comma-space-before`, `value-slash-newline-before`, `value-slash-space-before`])(`finds whitespace forbidden behind a call conflicting with every always of %s`, (rule) => {
 		let never = setting(`function-whitespace-after`, `never`)
 		let lines = rule.includes(`-newline-`) ? `multi` : `single`
@@ -215,6 +254,46 @@ describe(`a configuration holding conflicting settings`, () => {
 
 	it(`stops it over a stylesheet neither rule has anything to say about`, async () => {
 		expect((await refusal({ code: `a {}`, config: { plugins, rules: TWINS } }))?.code).toBe(78)
+	})
+
+	// The empty line a reversal under `never` stands behind has no file beside any refuser, and which of the two rules the configuration lists first used to decide what the file became
+	it.each([
+		[`block-closing-brace-newline-before`, `never-multi-line`],
+		[`block-closing-brace-space-before`, `always`],
+		[`max-empty-lines`, 0],
+	])(`stops the run over the empty line the reversal asks for, %s listed either way round`, async (refuser, option) => {
+		let emptyLine = { "@stylistic/block-closing-brace-empty-line-before": [`never`, { except: [`after-closing-brace`] }] }
+		let neighbor = { [`@stylistic/${refuser}`]: option }
+
+		let errors = await Promise.all([{ ...emptyLine, ...neighbor }, { ...neighbor, ...emptyLine }].flatMap((rules) => [false, true].map(async (fix) => await refusal({ code: `a {\n\nb { color: red }\n\n}\n`, config: { plugins, rules }, fix }))))
+
+		expect(errors.map((error) => error?.code)).toEqual([78, 78, 78, 78])
+		for (let error of errors) expect(error?.message).toContain(`"@stylistic/block-closing-brace-empty-line-before": "never"`)
+	})
+
+	it(`writes no file to fix under --fix, the run stopping before a rule reads it`, async () => {
+		let directory = mkdtempSync(path.join(tmpdir(), `conflicting-`))
+		let file = path.join(directory, `a.css`)
+		let rules = { "@stylistic/block-closing-brace-empty-line-before": [`never`, { except: [`after-closing-brace`] }], "@stylistic/max-empty-lines": 0 }
+		let before = `a {\n\nb { color: red }\n\n}\n`
+
+		writeFileSync(file, before)
+
+		try {
+			expect((await refusal({ files: file, config: { plugins, rules }, fix: true }))?.code).toBe(78)
+			expect(readFileSync(file, `utf8`)).toBe(before)
+		}
+		finally {
+			rmSync(directory, { recursive: true, force: true })
+		}
+	})
+
+	it(`passes the neighbors the empty line a reversal asks for has room beside`, async () => {
+		let emptyLine = { "@stylistic/block-closing-brace-empty-line-before": [`never`, { except: [`after-closing-brace`] }] }
+
+		let errors = await Promise.all([[`block-closing-brace-newline-before`, `always`], [`block-closing-brace-space-before`, `always-single-line`], [`max-empty-lines`, 1]].map(async ([refuser, option]) => await refusal({ code: `a { color: red }`, config: { plugins, rules: { ...emptyLine, [`@stylistic/${refuser}`]: option } } })))
+
+		expect(errors).toEqual([undefined, undefined, undefined])
 	})
 
 	it(`reads the settings a secondary option, a severity or a fix turned off stand beside`, async () => {

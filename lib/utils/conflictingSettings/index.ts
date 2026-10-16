@@ -5,6 +5,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import { namespaces } from "../../syntaxes/index.ts"
 import { type ConfigurationError, configurationError } from "../configurationError/index.ts"
 import { copyReadingTheRoot } from "../copyReadingTheRoot/index.ts"
+import { optionsMatches } from "../optionsMatches/index.ts"
 
 /** What every rule of the plugin is configured under. */
 const PREFIX = `@stylistic/`
@@ -58,9 +59,10 @@ const TWIN_OPTIONS: Record<string, string[]> = {
 /** The break rules whose run stands outside the text its lines are counted of — in front of a block, behind one, in front of a value — so a break written there leaves a single-line construct single-line. */
 const NEWLINE_RULES_OUTSIDE_THE_COUNTED_TEXT = [`block-opening-brace-newline-before`, `block-closing-brace-newline-after`, `declaration-colon-newline-after`] as const
 
-/** The rule asking for an empty line in front of a closing brace, and what no such line satisfies. */
+/** The rule asking for an empty line in front of a closing brace, what no such line satisfies, and the values of `except` that turn `never` over into asking for one: the line then lands in front of the brace on the blocks the reversal reaches, which makes them multi-line and leaves the refusers nothing to agree with. */
 const EMPTY_LINE_RULE = `block-closing-brace-empty-line-before`
 const EMPTY_LINE_OPTION = `always-multi-line`
+const EMPTY_LINE_REVERSALS = [`after-closing-brace`, `last-nested`] as const
 const EMPTY_LINE_REFUSERS = {
 	"block-closing-brace-newline-before": [`never-multi-line`],
 	"block-closing-brace-space-before": [`always`, `never`, `always-multi-line`, `never-multi-line`],
@@ -72,11 +74,12 @@ const FUNCTION_WHITESPACE_RULE = `function-whitespace-after`
 const FUNCTION_WHITESPACE_OPTION = `never`
 const RULES_BEHIND_A_FUNCTION = [`declaration-block-semicolon-newline-before`, `declaration-block-semicolon-space-before`, `function-comma-newline-before`, `function-comma-space-before`, `function-parentheses-newline-inside`, `function-parentheses-space-inside`, `value-list-comma-newline-before`, `value-list-comma-space-before`, `value-slash-newline-before`, `value-slash-space-before`] as const
 
-/** A rule of the plugin as a configuration sets it: the name it is configured under, the rule behind the namespace, and its primary option. */
+/** A rule of the plugin as a configuration sets it: the name it is configured under, the rule behind the namespace, its primary option and the secondary options beside it. */
 export type ConfiguredSetting = {
 	name: string,
 	shortName: string,
 	primary: unknown,
+	secondary: unknown,
 }
 
 /** Two settings no spelling of an ordinary construct satisfies together, in configuration order, with what to change. */
@@ -199,13 +202,25 @@ function areConflictingTwins (newline: ConfiguredSetting, space: ConfiguredSetti
 }
 
 /**
+ * Asks whether a setting asks for the empty line in front of a closing brace: its primary option says so outright, or it is `never` and a reversal in its secondary options turns that over for the blocks it reaches.
+ * @param setting - The setting that may ask for it.
+ * @returns True where the empty line stands.
+ */
+function asksForAnEmptyLine (setting: ConfiguredSetting): boolean {
+	if (setting.shortName !== EMPTY_LINE_RULE) return false
+
+	return setting.primary === EMPTY_LINE_OPTION
+		|| (setting.primary === `never` && EMPTY_LINE_REVERSALS.some((reversal) => optionsMatches(setting.secondary, `except`, reversal)))
+}
+
+/**
  * Asks whether one setting asks for whitespace the other leaves no room for: the empty line in front of a closing brace, or any whitespace behind a call's closing parenthesis.
  * @param asker - The setting that may forbid or demand the run.
  * @param refuser - The setting that may ask the opposite of it.
  * @returns True where they do.
  */
 function leaveNoRoom (asker: ConfiguredSetting, refuser: ConfiguredSetting): boolean {
-	if (asker.shortName === EMPTY_LINE_RULE && asker.primary === EMPTY_LINE_OPTION) return Boolean((EMPTY_LINE_REFUSERS as Record<string, readonly unknown[] | undefined>)[refuser.shortName]?.includes(refuser.primary))
+	if (asksForAnEmptyLine(asker)) return Boolean((EMPTY_LINE_REFUSERS as Record<string, readonly unknown[] | undefined>)[refuser.shortName]?.includes(refuser.primary))
 
 	if (asker.shortName === FUNCTION_WHITESPACE_RULE && asker.primary === FUNCTION_WHITESPACE_OPTION) return (RULES_BEHIND_A_FUNCTION as readonly string[]).includes(refuser.shortName) && typeof refuser.primary === `string` && refuser.primary.startsWith(`always`)
 
@@ -258,11 +273,11 @@ export function conflictsError (conflicts: Conflict[]): ConfigurationError {
 /**
  * Reads a rule as a configuration sets it.
  * @param name - The name it is configured under, namespace included.
- * @param value - The configured value: a primary, or an array opening with one.
- * @returns The setting, its primary `null` or `undefined` where the rule is off.
+ * @param value - The configured value: a primary, or an array opening with one and holding the secondary options.
+ * @returns The setting, its primary `null` or `undefined` where the rule is off, and the secondary options beside it where the configuration lists any.
  */
 export function configuredSetting (name: string, value: unknown): ConfiguredSetting {
-	return { name, shortName: name.slice(name.lastIndexOf(`/`) + 1), primary: Array.isArray(value) ? value[0] as unknown : value }
+	return { name, shortName: name.slice(name.lastIndexOf(`/`) + 1), primary: Array.isArray(value) ? value[0] as unknown : value, secondary: Array.isArray(value) ? value[1] as unknown : undefined }
 }
 
 /** The roots each configuration was read for already, by the namespaces accepting them. */
@@ -324,6 +339,18 @@ type TwinsConflict<NewlineRule extends string, N extends string, S extends strin
 /** The primary option a configured value holds: a keyword, or the first item of the array a configuration lists a rule's options in. */
 type PrimaryOfValue<V> = V extends readonly [infer P, ...unknown[]] ? P : V
 
+/** The secondary options a configured value lists beside its primary, the object a configuration writes them as. */
+type SecondaryOfValue<V> = V extends readonly [unknown, infer S, ...unknown[]] ? S : unknown
+
+/** A value of `except` that turns the empty line rule's primary option over, and so asks for the empty line where `never` forbids it. */
+type EmptyLineReversal = typeof EMPTY_LINE_REVERSALS[number]
+
+/**
+ * Whether a configured value asks for the empty line in front of a closing brace, as {@link asksForAnEmptyLine} answers it over the option's declared spelling: an empty list names no reversal, and it is the only spelling the two read apart, since a value the option's own type refuses is not one a typed configuration offers.
+ * @see {@link asksForAnEmptyLine}
+ */
+type AsksForAnEmptyLine<V> = PrimaryOfValue<V> extends typeof EMPTY_LINE_OPTION ? true : PrimaryOfValue<V> extends `never` ? SecondaryOfValue<V> extends { except?: infer Reversed } ? Reversed extends EmptyLineReversal ? true : Reversed extends readonly EmptyLineReversal[] ? Reversed[`length`] extends 0 ? false : true : false : false : false
+
 /** The message a conflicting setting is typed with, so that the editor names the other setting. */
 type ConflictMessage<Other extends string, Option> = { conflictsWith: `"${Other}": ${Option extends string ? `"${Option}"` : Option extends number ? `${Option}` : `…`}` }
 
@@ -340,11 +367,11 @@ type ConflictingTwin<K extends string & keyof R, R> = K extends `${infer Head}-n
 
 /** The setting leaving no room for the empty line in front of a closing brace that another asks for, or the reverse, or `never`. */
 type ConflictingEmptyLine<K extends string & keyof R, R> = K extends typeof EMPTY_LINE_RULE
-	? PrimaryOfValue<R[K]> extends typeof EMPTY_LINE_OPTION
+	? AsksForAnEmptyLine<R[K]> extends true
 		? { [Refuser in keyof typeof EMPTY_LINE_REFUSERS & keyof R]: PrimaryOfValue<R[Refuser]> extends typeof EMPTY_LINE_REFUSERS[Refuser][number] ? ConflictMessage<Refuser, PrimaryOfValue<R[Refuser]>> : never }[keyof typeof EMPTY_LINE_REFUSERS & keyof R]
 		: never
 	: K extends keyof typeof EMPTY_LINE_REFUSERS
-		? typeof EMPTY_LINE_RULE extends keyof R ? PrimaryOfValue<R[typeof EMPTY_LINE_RULE]> extends typeof EMPTY_LINE_OPTION ? PrimaryOfValue<R[K]> extends typeof EMPTY_LINE_REFUSERS[K][number] ? ConflictMessage<typeof EMPTY_LINE_RULE, typeof EMPTY_LINE_OPTION> : never : never : never
+		? typeof EMPTY_LINE_RULE extends keyof R ? AsksForAnEmptyLine<R[typeof EMPTY_LINE_RULE]> extends true ? PrimaryOfValue<R[K]> extends typeof EMPTY_LINE_REFUSERS[K][number] ? ConflictMessage<typeof EMPTY_LINE_RULE, PrimaryOfValue<R[typeof EMPTY_LINE_RULE]>> : never : never : never
 		: never
 
 /** The setting asking for whitespace behind a call that another forbids, or the reverse, or `never`. */
