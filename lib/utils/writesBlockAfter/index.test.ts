@@ -2,7 +2,7 @@ import { parse, type Rule } from "postcss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
-import { writesBlockAfter } from "./index.ts"
+import { heldByABreakBeforeTheBrace, writesBlockAfter } from "./index.ts"
 
 const OPENING_NEWLINE = `@stylistic/block-opening-brace-newline-after`
 const CLOSING_NEWLINE = `@stylistic/block-closing-brace-newline-before`
@@ -15,6 +15,27 @@ describe(`writesBlockAfter`, () => {
 		expect(ask(`never-multi-line`, {})).toBe(true)
 		expect(ask(`always`, { [CLOSING_NEWLINE]: `sometimes` })).toBe(true)
 		expect(ask(`always`, { "@stylistic/color-hex-case": `lower` })).toBe(true)
+	})
+
+	// The rule asks the same question beside the gate, so where a break holds the row it judges the run behind the opening brace and leaves the row to the neighbor
+	it(`holds the row wherever a break asks for one in front of the brace, under every option of the asking rule that writes no break of its own there`, () => {
+		expect(held(`never-multi-line`, { [CLOSING_NEWLINE]: `always` }, false)).toBe(true)
+		expect(held(`never-multi-line`, { [CLOSING_NEWLINE]: `always` }, true)).toBe(true)
+		expect(held(`never-multi-line`, { [CLOSING_NEWLINE]: `always-multi-line` }, false)).toBe(true)
+		expect(held(`always`, { [CLOSING_NEWLINE]: `never-multi-line` }, false)).toBe(true)
+		expect(held(`always-multi-line`, { [CLOSING_NEWLINE]: `never-multi-line` }, false, `a {/*c*/\n}`)).toBe(true)
+	})
+
+	it(`leaves the row to the rule writing it where no break asks for one, where a space asks for one instead, or where the asking rule writes the break the neighbor takes`, () => {
+		expect(held(`never-multi-line`, { [CLOSING_NEWLINE]: `never-multi-line` }, false)).toBe(false)
+		expect(held(`always`, { [CLOSING_NEWLINE]: `always` }, false)).toBe(false)
+		expect(held(`never-multi-line`, { [CLOSING_SPACE]: `always` }, false)).toBe(false)
+		expect(held(`never-multi-line`, {}, false)).toBe(false)
+	})
+
+	it(`leaves the row to the rule writing it where the break the neighbor takes stands behind the first code, which puts the row out of the neighbor's reach`, () => {
+		expect(held(`never-multi-line`, { [CLOSING_NEWLINE]: `always` }, true, `a {/* c */;\n}`)).toBe(false)
+		expect(held(`never-multi-line`, { [CLOSING_NEWLINE]: `always` }, false, `a {/* c */ ;\n}`)).toBe(false)
 	})
 
 	it(`a neighbor asking for the break the always options write`, () => {
@@ -140,6 +161,20 @@ function ask (primary: string, rules: Record<string, unknown>, isSingleLine: boo
  */
 function askNested (primary: string, rules: Record<string, unknown>, isSingleLine: boolean = false): boolean {
 	return askAbout((parse(`a { b {/* c */} }`).first as Rule).first as Rule, primary, rules, isSingleLine)
+}
+
+/**
+ * Asks the rule's own question, which it reads beside the gate's: whether a break holds the run in front of the closing brace.
+ * @param primary - The asking rule's primary option.
+ * @param rules - The rules the configuration lists.
+ * @param isSingleLine - Whether the block is one line as it stands or as the write leaves it.
+ * @param code - The stylesheet, whose first rule is the block.
+ * @returns What the utility answers.
+ */
+function held (primary: string, rules: Record<string, unknown>, isSingleLine: boolean = false, code: string = `a {}`): boolean {
+	let block = parse(code).first as Rule
+
+	return heldByABreakBeforeTheBrace(block, { stylelint: { config: { rules } } } as unknown as PostcssResult, primary, isSingleLine, block.raws.after ?? ``)
 }
 
 /**

@@ -6,6 +6,7 @@ import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { beforeBlockString } from "../../utils/beforeBlockString/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
+import type { RunWrites } from "../../utils/closingBraceRunWrites/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getBlockAfter } from "../../utils/getBlockAfter/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
@@ -23,7 +24,7 @@ import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { type LineEdit, releasesAKeptSemicolon, straySemicolonsTaken, straySemicolonsTakenBefore, withoutTaken, writtenAsLeft } from "../../utils/straySemicolonsTaken/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
-import { writesBlockAfter } from "../../utils/writesBlockAfter/index.ts"
+import { heldByABreakBeforeTheBrace, writesBlockAfter } from "../../utils/writesBlockAfter/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -223,11 +224,80 @@ function spellTheCarriedRun (carried: string, own: string | undefined): string {
  * @param takeTheBreaksOut - Whether the comments' whitespace loses its breaks too.
  */
 function writeTheTrailingRun (syntax: Syntax, statement: Rule | AtRule, nodes: ChildNode[], written: string, takeTheBreaksOut: boolean): void {
-	if (takeTheBreaksOut) {
-		for (let node of nodes) unbreakTheRunInFrontOf(node)
-	}
+	if (takeTheBreaksOut) unbreakTheCommentRuns(nodes)
 
 	setBlockAfter(syntax, statement, written)
+}
+
+/**
+ * Takes the breaks out of the whitespace in front of every comment of a block holding nothing but comments.
+ * @param nodes - The comments it holds.
+ */
+function unbreakTheCommentRuns (nodes: ChildNode[]): void {
+	for (let node of nodes) unbreakTheRunInFrontOf(node)
+}
+
+/**
+ * Writes the run behind the opening brace of a block holding nothing but comments, asked of the first comment the way a block holding a node asks that run of the first node it checks. Only that first comment's run is written, so a run of comments keeps the spaces standing between them and loses nothing else.
+ * @param checked - The comment the run behind the opening brace is read from.
+ * @param primary - The primary option.
+ * @param writes - The runs the options write.
+ * @param result - The Stylelint result.
+ */
+function writeTheRunBehindTheOpeningBrace (checked: ChildNode, primary: string, writes: RunWrites, result: PostcssResult): void {
+	checked.raws.before = writtenAsLeft((run) => writes.newline(primary, run), checked.raws.before ?? ``, straySemicolonsTakenBefore(checked, result))
+}
+
+/**
+ * Asks which comment of a block holding nothing but comments the rule reads the run behind the opening brace from.
+ *
+ * Such a block has the run before its closing brace standing where the run after its opening brace would be, so the rule reads that row, and `never-multi-line` means to take every break out of it. Where a neighbor holds the row asking for a break, no spelling of it satisfies both, and the rule judges the run behind the opening brace instead — the one its option names — and leaves the row to the neighbor: a comment sitting right behind the opening brace with a break before the closing one satisfies the pair, while the rule writing the row itself would leave the whole block on one line for the neighbor to break up again.
+ *
+ * No carry of a break along the comments writes over the first one's own run, so the comment handed back is the run's own reader. The block is asked as it stands and not as the write would leave it, since a run left standing is the one the neighbor puts a break in front of.
+ * @param syntax - The syntax the rule is built over, which the raw is read through.
+ * @param statement - The rule or at-rule whose block holds nothing but comments.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @param primary - The primary option.
+ * @param nodes - The comments the block holds.
+ * @returns The first comment of the block, or nothing where the row is this rule's to write.
+ */
+function judgedBehindTheOpeningBrace (syntax: Syntax, statement: Rule | AtRule, result: PostcssResult, primary: string, nodes: ChildNode[]): ChildNode | undefined {
+	let standing = getBlockAfter(syntax, statement)
+
+	if (typeof standing !== `string` || statement.first === undefined) return
+	if (!heldByABreakBeforeTheBrace(statement, result, primary, !LINE_BREAK.test(standing) && nodes.every((node) => isSingleLineString(nodeString(node, result))), standing)) return
+
+	return statement.first
+}
+
+/**
+ * Reads the run the rule judges in a block: the one in front of the first node that is not a comment, or, in a block holding nothing but comments, the one behind the opening brace where a neighbor holds the row before the closing brace, and the one before the closing brace otherwise.
+ * @param syntax - The syntax the rule is built over, which the raw is read through.
+ * @param statement - The rule or at-rule being checked.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @param nodeToCheck - The first non-comment node of the block, or nothing where it holds none.
+ * @param behindBrace - The comment the run behind the opening brace is read from, where a neighbor holds that row.
+ * @returns The run.
+ */
+function runJudgedIn (syntax: Syntax, statement: Rule | AtRule, result: PostcssResult, nodeToCheck: Node | null, behindBrace: ChildNode | undefined): string {
+	if (nodeToCheck) return runInFrontOf(nodeToCheck) + nodeString(nodeToCheck, result)
+	if (behindBrace) return runInFrontOf(behindBrace) + nodeString(behindBrace, result)
+
+	// A block closes on `}` in every syntax the plugin reads, and all the check asks of that character is that it is not whitespace
+	return `${runInFrontOfTheClosingBrace(syntax, statement, result)}}`
+}
+
+/**
+ * Reports a problem in front of the opening brace, at the character behind it, with the fix riding along where the run may be written.
+ * @param message - The message.
+ * @param ruleName - The configured name.
+ * @param statement - The rule or at-rule being checked.
+ * @param problemIndex - Where the run behind the opening brace starts.
+ * @param result - The Stylelint result.
+ * @param fix - The fix, where there is one.
+ */
+function reportAfterOpeningBrace (message: string, ruleName: string, statement: Rule | AtRule, problemIndex: number, result: PostcssResult, fix: (() => void) | undefined): void {
+	report({ message, ruleName, node: statement, index: problemIndex, endIndex: problemIndex, result, ...(fix && { fix }) })
 }
 
 /** `always` a newline after the opening brace; `always-multi-line` asks it, and `never-multi-line` refuses whitespace there, in a multi-line block only. */
@@ -321,36 +391,27 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// Allow an end-of-line comment
 			let nodeToCheck = nextNonCommentNode(statement.first, carryBreakPastComment)
 			let problemIndex = beforeBlockString(statement, result, { noRawBefore: true }).length + 1
+			let behindBrace = nodeToCheck === null ? judgedBehindTheOpeningBrace(syntax, statement, result, primary, nodes) : undefined
 			// Taking away the break closing an inline comment would put the rest of the block inside it, so the `never-multi-line` warning stands unfixed there. The `always` options never report such a block; the short-circuit mirrors `declaration-block-semicolon-newline-after`, where it is reached and pinned
 			let fix = primary.startsWith(`always`) || !fixWouldCommentOutTheBlock(syntax, statement, nodeToCheck, result)
-				? (nodeToCheck === null ? fixTheTrailingRun() : fixTheCheckedRun(nodeToCheck))
+				? (nodeToCheck === null ? fixTheTrailingRun(behindBrace) : fixTheCheckedRun(nodeToCheck))
 				: undefined
 
 			checker.afterOneOnly({
-				// A block closes on `}` in every syntax the plugin reads, and all the check asks of that character is that it is not whitespace
-				source: nodeToCheck ? runInFrontOf(nodeToCheck) + nodeString(nodeToCheck, result) : `${runInFrontOfTheClosingBrace(syntax, statement, result)}}`,
+				source: runJudgedIn(syntax, statement, result, nodeToCheck, behindBrace),
 				index: -1,
 				lineCheckStr: blockString(statement, result),
-				err: (m) => {
-					report({
-						message: m,
-						node: statement,
-						index: problemIndex,
-						endIndex: problemIndex,
-						result,
-						ruleName,
-						...(fix && { fix }),
-					})
-				},
+				err: (m) => reportAfterOpeningBrace(m, ruleName, statement, problemIndex, result, fix),
 			})
 
 			restoreCarriedBreaks()
 
 			/**
-			 * Builds the fix that spells the run in front of the closing brace of a block holding nothing but comments.
+ * Builds the fix that spells the run in front of the closing brace of a block holding nothing but comments, or, where a neighbor holds that row, only the run behind the opening brace.
+			 * @param judgedBehind - The comment the run behind the opening brace is read from, or nothing where the row is this rule's to write.
 			 * @returns The fix, or nothing where the run is not this rule's to write or the write would release a stray semicolon a disable comment keeps.
 			 */
-			function fixTheTrailingRun (): (() => void) | undefined {
+			function fixTheTrailingRun (judgedBehind: ChildNode | undefined): (() => void) | undefined {
 				let standing = getBlockAfter(syntax, statement)
 
 				if (typeof standing !== `string`) return
@@ -359,16 +420,19 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let written = writtenAsLeft((run) => writes.newline(primary, run), standing, taken)
 				// The `always` write opens the run with a break; the `never-multi-line` one takes every break out of the block's whitespace in front of what it keeps, so only a comment's own text or a break behind a stray semicolon can leave the block multi-line
 				let isSingleLine = primary === `never-multi-line` && !LINE_BREAK.test(written) && nodes.every((node) => isSingleLineString(nodeString(node, result)))
+				// A run left standing is the one the neighbor puts a break in front of, so the break count is the one standing there
+				let writtenBreaks = judgedBehind ? breaksOpening(standing) : breaksOpening(writes.newline(primary, withoutTaken(standing, taken)))
 
 				// A stray semicolon a disable comment keeps from `no-extra-semicolons` is the author's to keep; the block's end offset stands behind its brace
 				let end = statement.source?.end
 
-				if (!writesBlockAfter(statement, result, primary, isSingleLine, standing) || releasesAKeptSemicolonAnywhere(statement, backupCommentNextBefores, result, headEdits(statement, primary, backupCommentNextBefores, standing, breaksOpening(writes.newline(primary, withoutTaken(standing, taken))), taken, end && { offset: end.offset === undefined ? undefined : end.offset - 1, line: end.line }))) return
+				if ((!judgedBehind && !writesBlockAfter(statement, result, primary, isSingleLine, standing)) || releasesAKeptSemicolonAnywhere(statement, backupCommentNextBefores, result, headEdits(statement, primary, backupCommentNextBefores, standing, writtenBreaks, taken, end && { offset: end.offset === undefined ? undefined : end.offset - 1, line: end.line }))) return
 
 				return (): void => {
 					if (primary === `never-multi-line`) restoreCarriedBreaks()
 
-					writeTheTrailingRun(syntax, statement, nodes, written, primary === `never-multi-line`)
+					if (judgedBehind) writeTheRunBehindTheOpeningBrace(judgedBehind, primary, writes, result)
+					else writeTheTrailingRun(syntax, statement, nodes, written, primary === `never-multi-line`)
 				}
 			}
 

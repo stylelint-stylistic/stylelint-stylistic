@@ -164,6 +164,24 @@ function writingCopies (node: Node, result: PostcssResult, rule: NeighborRuleSet
 }
 
 /**
+ * Asks whether a rule asking for no whitespace in front of a closing brace is held off the run by one asking for a break there: the break stands in front of the brace whether the block stays multi-line or collapses into one line, and a run of no whitespace is not a break, so the two spellings they accept never meet.
+ *
+ * This is {@link writesBlockAfter}'s own first question, and it is asked of the asking rule beside it: a block holding nothing but comments has the run in front of its closing brace standing where the run after its opening brace would be, and where a neighbor holds the row, this rule judges the run behind the opening brace instead and leaves the row to the neighbor. Both answers are the gate's, so they cannot drift apart. The two readings are not the same verdict, and the rule needs only this one: held means the row before the closing brace is not this rule's to write, not that the block has no file at all.
+ * @param node - The block's statement, a node of the root the rules read.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @param primary - The asking rule's primary option.
+ * @param isSingleLine - Whether the block is one line as it stands or as the asking rule's write leaves it.
+ * @param standing - The run in front of the closing brace as it stands.
+ * @returns True where a break holds the run.
+ */
+export function heldByABreakBeforeTheBrace (node: Container, result: PostcssResult, primary: string, isSingleLine: boolean, standing: string): boolean {
+	let { writtenInFront } = runBeforeTheClosingBrace(node, result, standing)
+	let accepted = acceptedByWhitespace(primary, true)
+
+	return writingCopies(node, result, CLOSING_NEWLINE).some(({ option }) => (writtenInFront || option === `never-multi-line`) && speaksOf(option, () => isSingleLine) && !acceptedByWhitespace(option, true).some((run) => accepted.includes(run)))
+}
+
+/**
  * Asks whether `block-opening-brace-newline-after` is the one to write the run in front of the closing brace of a block holding nothing but comments, the run the three `block-closing-brace-*-before` rules write.
  *
  * It writes only where every one of the three that speaks of the block as the write leaves it accepts a spelling it accepts too; otherwise the run would be taken straight back out, and the two rules would take it in turns for as long as `--fix` ran. Sharing a spelling rather than accepting the written one is what lets `block-closing-brace-empty-line-before` double the break this rule writes.
@@ -179,12 +197,8 @@ function writingCopies (node: Node, result: PostcssResult, rule: NeighborRuleSet
  * @returns True where the asking rule writes the run.
  */
 export function writesBlockAfter (node: Container, result: PostcssResult, primary: string, isSingleLine: boolean, standing: string): boolean {
+	let { holdsCode, writtenInFront } = runBeforeTheClosingBrace(node, result, standing)
 	let accepted = acceptedByWhitespace(primary, true)
-	let left = withoutTaken(standing, straySemicolonsTaken(node, result))
-	let head = left.match(LEADING_CSS_WHITESPACE)?.[0] ?? ``
-	let holdsCode = head.length < left.length
-	// Where a break stands anywhere behind the first code, the neighbors putting theirs in front of the run find one
-	let writtenInFront = !holdsCode || !LINE_BREAK.test(left.slice(head.length))
 
 	/**
 	 * Asks whether a neighbor leaves the asking rule a spelling they both accept.
@@ -195,9 +209,24 @@ export function writesBlockAfter (node: Container, result: PostcssResult, primar
 		return neighborAccepts.some((run) => accepted.includes(run))
 	}
 
-	if (writingCopies(node, result, CLOSING_NEWLINE).some(({ option }) => (writtenInFront || option === `never-multi-line`) && speaksOf(option, () => isSingleLine) && !agrees(acceptedByWhitespace(option, true)))) return false
+	if (heldByABreakBeforeTheBrace(node, result, primary, isSingleLine, standing)) return false
 
 	if (!holdsCode && writingCopies(node, result, CLOSING_SPACE).some(({ option }) => speaksOf(option, () => isSingleLine) && !agrees(acceptedByWhitespace(option, false)))) return false
 
 	return !writtenInFront || writingCopies(node, result, CLOSING_EMPTY_LINE).every(({ option, secondary }) => agrees(acceptedByEmptyLine(node, result, option, secondary, isSingleLine)))
+}
+
+/**
+ * What the neighbors putting their run in front of the run before a closing brace find there: whether code stands in it, and whether a break stands behind that code.
+ * @param node - The block's statement, a node of the root the rules read.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @param standing - The run in front of the closing brace as it stands.
+ * @returns Whether any code stands in the run, and whether a break stands behind it.
+ */
+function runBeforeTheClosingBrace (node: Container, result: PostcssResult, standing: string): { holdsCode: boolean, writtenInFront: boolean } {
+	let left = withoutTaken(standing, straySemicolonsTaken(node, result))
+	let head = left.match(LEADING_CSS_WHITESPACE)?.[0] ?? ``
+
+	// Where a break stands anywhere behind the first code, the neighbors putting theirs in front of the run find one
+	return { holdsCode: head.length < left.length, writtenInFront: head.length === left.length || !LINE_BREAK.test(left.slice(head.length)) }
 }

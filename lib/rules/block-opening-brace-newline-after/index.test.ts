@@ -954,6 +954,51 @@ testRule({
 	],
 })
 
+// The pair has one file, a comment right behind the opening brace and a break before the closing one, and both rules reach it in a single run: this one writes the run behind the opening brace, which is the one its option names, and the other puts its own in front of the closing brace
+testRule({
+	ruleName,
+	config: [`never-multi-line`],
+	extraRules: { "@stylistic/block-closing-brace-newline-before": `always` },
+
+	accept: [
+		{
+			description: `a block holding nothing but a comment, nothing standing behind the opening brace and the neighbor's break in front of the closing one`,
+			code: `a {/*c*/\n}`,
+		},
+		{
+			description: `the same block with an empty line before the closing brace, which the row is left standing in`,
+			code: `a {/*c*/\n\n}`,
+		},
+	],
+
+	reject: [
+		{
+			description: `a block holding nothing but a comment, with an empty line behind the opening brace the neighbor's break cannot satisfy`,
+			code: `a {\n\n/*c*/\n}`,
+			fixed: `a {/*c*/\n}`,
+			line: 1,
+			column: 4,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		{
+			description: `the same block with a single break behind the opening brace`,
+			code: `a {\n/*c*/\n}`,
+			fixed: `a {/*c*/\n}`,
+			line: 1,
+			column: 4,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		{
+			description: `a block holding two comments, the run of the first one behind the opening brace and the second one's left as the separator between them`,
+			code: `a {\t/*c*/\n\t/*d*/\n}`,
+			fixed: `a {/*c*/\n\t/*d*/\n}`,
+			line: 1,
+			column: 4,
+			message: messages.rejectedAfterMultiLine(),
+		},
+	],
+})
+
 testRule({
 	ruleName,
 	config: [`always`, { ignore: [`rules`] }],
@@ -1166,8 +1211,15 @@ describe(`${ruleName} beside the rules that write the same run`, () => {
 		expect(await race(ruleName, `a {/* c */ ; }`, `always`, closingSpace, `always`)).toEqual({ ours: `a {/* c */\n ; }`, theirs: `a {/* c */\n ; }`, left: [] })
 	})
 
-	it(`leaves it where no break stands behind the semicolon and the rule about a break in front of the brace puts its own in front of the run`, async () => {
-		expect(await race(ruleName, `a {/* c */ ; }`, `never-multi-line`, closingNewline, `always`)).toEqual({ ours: `a {/* c */\n ; }`, theirs: `a {/* c */\n ; }`, left: [messages.rejectedAfterMultiLine()] })
+	it(`says nothing of the row where no break stands behind the semicolon and the rule about a break in front of the brace puts its own in front of the run, since nothing stands behind the opening brace`, async () => {
+		expect(await race(ruleName, `a {/* c */ ; }`, `never-multi-line`, closingNewline, `always`)).toEqual({ ours: `a {/* c */\n ; }`, theirs: `a {/* c */\n ; }`, left: [] })
+	})
+
+	it(`judges the run behind the opening brace of a comment-only block where the rule about a break in front of the brace holds that row`, async () => {
+		expect(await race(ruleName, `a {\n\n/*c*/\n}`, `never-multi-line`, closingNewline, `always`)).toEqual({ ours: `a {/*c*/\n}`, theirs: `a {/*c*/\n}`, left: [] })
+		expect(await race(ruleName, `a {\n/*c*/}`, `never-multi-line`, closingNewline, `always`)).toEqual({ ours: `a {/*c*/\n}`, theirs: `a {/*c*/\n}`, left: [] })
+		expect(await race(ruleName, `a {\t/*c*/\n\t/*d*/\n}`, `never-multi-line`, closingNewline, `always`)).toEqual({ ours: `a {/*c*/\n\t/*d*/\n}`, theirs: `a {/*c*/\n\t/*d*/\n}`, left: [] })
+		expect(await race(ruleName, `a {/*c*/}`, `never-multi-line`, closingNewline, `always`)).toEqual({ ours: `a {/*c*/\n}`, theirs: `a {/*c*/\n}`, left: [] })
 	})
 
 	// The run is read and written as `no-extra-semicolons` leaves it, and the semicolon it takes stays in the write for it to take
