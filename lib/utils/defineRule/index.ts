@@ -7,7 +7,8 @@ import { asksForTheCharsetRule, CHARSET_RULE_MESSAGE } from "../asksForTheCharse
 import { refuseConflictingSettings } from "../conflictingSettings/index.ts"
 import { copyReadingTheRoot } from "../copyReadingTheRoot/index.ts"
 import { deferCheck, deferFinalCheck, deferHeadCheck, defersToRunEnd, flushDeferredChecks, lastConfiguredPluginRule, linenessRank, registerPluginRule } from "../defersToRunEnd/index.ts"
-import { pinInventedRaws, unpinEmptyBlocks } from "../pinInventedRaws/index.ts"
+import { pinInventedRaws, unpinUnwritten } from "../pinInventedRaws/index.ts"
+import { notePinReads } from "../readsPinnedRaws/index.ts"
 import { report } from "../report/index.ts"
 import type { RuleCheck } from "../ruleCheck/index.ts"
 
@@ -96,7 +97,8 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 					syntax.restore(root, result)
 					// A node another plugin's rule built carries none of the raws the rules read and write, and PostCSS invents them in print out of its neighbors
 					pinInventedRaws(root)
-					check(root, result)
+					// What the rule reads of those raws is the rule's answer, and the plugin stands by it where a rule of another plugin changes the tree behind it
+					notePinReads(root, () => check(root, result))
 
 					return
 				}
@@ -130,7 +132,7 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 
 				flushDeferredChecks(root)
 				// Every rule of the plugin has read the root, and a rule of another plugin listed behind may yet fill a block
-				unpinEmptyBlocks(root as Root)
+				unpinUnwritten(root as Root)
 			}
 		}
 
