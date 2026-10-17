@@ -10,6 +10,14 @@ testRule({
 	config: [`never-multi-line`],
 	customSyntax: `postcss-scss`,
 
+	accept: [
+		{
+			description: `an inline comment alone in a block, which swallows the whitespace behind the brace and leaves the row the option names empty`,
+			code: `a {// c
+			}`,
+		},
+	],
+
 	reject: [
 		{
 			description: `an inline comment abutting the brace, whose line break is what closes it, so the declaration behind it cannot join its line`,
@@ -77,16 +85,6 @@ testRule({
 				a {/* b */color: pink;
 				}
 			`,
-			line: 1,
-			column: 4,
-			message: messages.rejectedAfterMultiLine(),
-		},
-		{
-			description: `an inline comment alone in a block, which the fix would have to reach inside to spell the head as the option asks`,
-			code: `a {// c
-			}`,
-			fixed: `a {// c
-			}`,
 			line: 1,
 			column: 4,
 			message: messages.rejectedAfterMultiLine(),

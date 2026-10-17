@@ -251,7 +251,9 @@ function writeTheRunBehindTheOpeningBrace (checked: ChildNode, primary: string, 
 /**
  * Asks which comment of a block holding nothing but comments the rule reads the run behind the opening brace from.
  *
- * Such a block has the run before its closing brace standing where the run after its opening brace would be, so the rule reads that row, and `never-multi-line` means to take every break out of it. Where a neighbor holds the row asking for a break, no spelling of it satisfies both, and the rule judges the run behind the opening brace instead — the one its option names — and leaves the row to the neighbor: a comment sitting right behind the opening brace with a break before the closing one satisfies the pair, while the rule writing the row itself would leave the whole block on one line for the neighbor to break up again.
+ * `never-multi-line` names the run right behind the opening brace and reads it always: the run before the closing brace of a block holding nothing but comments is the last comment's own run, so reading that row reports a whitespace the block does not carry and takes away a break the block does carry — a block whose only comment abuts the opening brace and a break stands before the closing one carries no whitespace after `{` and was reported, while the same block with a space before the closing brace carries one and passed over only because the block came out on one line. It also leaves the pair with a neighbor writing a space into that row standing, since the rule cannot write a row the neighbor holds.
+ *
+ * The `always` options carry a comment's break onto the node behind it, and a block holding nothing but comments has no such node, so they read the row before the closing brace: that is where the carry would have put the break. Where a neighbor holds that row asking for a break, no spelling of it satisfies both, and the rule judges the run behind the opening brace instead and leaves the row to the neighbor — a comment sitting right behind the opening brace with a break before the closing one satisfies the pair, while the rule writing the row itself would leave the whole block on one line for the neighbor to break up again.
  *
  * No carry of a break along the comments writes over the first one's own run, so the comment handed back is the run's own reader. The block is asked as it stands and not as the write would leave it, since a run left standing is the one the neighbor puts a break in front of.
  * @param syntax - The syntax the rule is built over, which the raw is read through.
@@ -262,9 +264,12 @@ function writeTheRunBehindTheOpeningBrace (checked: ChildNode, primary: string, 
  * @returns The first comment of the block, or nothing where the row is this rule's to write.
  */
 function judgedBehindTheOpeningBrace (syntax: Syntax, statement: Rule | AtRule, result: PostcssResult, primary: string, nodes: ChildNode[]): ChildNode | undefined {
+	if (statement.first === undefined) return
+	if (primary === `never-multi-line`) return statement.first
+
 	let standing = getBlockAfter(syntax, statement)
 
-	if (typeof standing !== `string` || statement.first === undefined) return
+	if (typeof standing !== `string`) return
 	if (!heldByABreakBeforeTheBrace(statement, result, primary, !LINE_BREAK.test(standing) && nodes.every((node) => isSingleLineString(nodeString(node, result))), standing)) return
 
 	return statement.first
@@ -407,7 +412,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			restoreCarriedBreaks()
 
 			/**
- * Builds the fix that spells the run in front of the closing brace of a block holding nothing but comments, or, where a neighbor holds that row, only the run behind the opening brace.
+			 * Builds the fix that spells the run in front of the closing brace of a block holding nothing but comments, or, where the option names the row behind the opening brace or a neighbor holds the one before the closing brace, only that row.
 			 * @param judgedBehind - The comment the run behind the opening brace is read from, or nothing where the row is this rule's to write.
 			 * @returns The fix, or nothing where the run is not this rule's to write or the write would release a stray semicolon a disable comment keeps.
 			 */
@@ -420,13 +425,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				let written = writtenAsLeft((run) => writes.newline(primary, run), standing, taken)
 				// The `always` write opens the run with a break; the `never-multi-line` one takes every break out of the block's whitespace in front of what it keeps, so only a comment's own text or a break behind a stray semicolon can leave the block multi-line
 				let isSingleLine = primary === `never-multi-line` && !LINE_BREAK.test(written) && nodes.every((node) => isSingleLineString(nodeString(node, result)))
+				// The run the fix spells is the one the check read, so a write takes the row out and leaves the other alone
+				let own = judgedBehind ? runInFrontOf(judgedBehind) : standing
 				// A run left standing is the one the neighbor puts a break in front of, so the break count is the one standing there
-				let writtenBreaks = judgedBehind ? breaksOpening(standing) : breaksOpening(writes.newline(primary, withoutTaken(standing, taken)))
+				let writtenBreaks = judgedBehind ? breaksOpening(own) : breaksOpening(writes.newline(primary, withoutTaken(standing, taken)))
+				// Where the run stands in front of a comment it ends where that comment starts; a stray semicolon a disable comment keeps from `no-extra-semicolons` is the author's to keep, and where the run stands in front of the closing brace the block's end offset stands behind its brace
+				let end = judgedBehind ? judgedBehind.source?.start : statement.source?.end && { offset: statement.source.end.offset === undefined ? undefined : statement.source.end.offset - 1, line: statement.source.end.line }
 
-				// A stray semicolon a disable comment keeps from `no-extra-semicolons` is the author's to keep; the block's end offset stands behind its brace
-				let end = statement.source?.end
-
-				if ((!judgedBehind && !writesBlockAfter(statement, result, primary, isSingleLine, standing)) || releasesAKeptSemicolonAnywhere(statement, backupCommentNextBefores, result, headEdits(statement, primary, backupCommentNextBefores, standing, writtenBreaks, taken, end && { offset: end.offset === undefined ? undefined : end.offset - 1, line: end.line }))) return
+				if ((!judgedBehind && !writesBlockAfter(statement, result, primary, isSingleLine, standing)) || releasesAKeptSemicolonAnywhere(statement, backupCommentNextBefores, result, headEdits(statement, primary, backupCommentNextBefores, own, writtenBreaks, taken, end, judgedBehind))) return
 
 				return (): void => {
 					if (primary === `never-multi-line`) restoreCarriedBreaks()

@@ -51,22 +51,22 @@ describe(`the empty line this rule writes beside a rule that writes the same run
 })
 
 describe(`the empty line this rule would write into the run behind an opening brace, beside the rule writing that run and refusing every break in it`, () => {
-	// The run in front of the closing brace of a block holding nothing but comments is the run behind the opening brace, so `never-multi-line` there takes both breaks of an empty line back out and no file satisfies both; the reversal asks for nothing there, and the pair settles in one pass in either order
+	// `never-multi-line` reads and writes the row behind the opening brace and leaves the one in front of the closing brace to this rule, so the two no longer share a row and the pair settles in one pass in either order
 	it(`leaves a block holding nothing but a comment on one line in both orders of block-opening-brace-newline-after under never-multi-line`, async () => {
 		await expectBothOrders(`a {/*c*/ }\n`, { "@stylistic/block-opening-brace-newline-after": `never-multi-line` }, `a {/*c*/ }\n`)
 	})
 
-	// The same block written in several lines, which that option reads as one no break may stand in
-	it(`leaves the same block written in several lines on that rule's own spelling in both orders under never-multi-line`, async () => {
-		await expectBothOrders(`a {\n\t/*c*/\n}\n`, { "@stylistic/block-opening-brace-newline-after": `never-multi-line` }, `a {\t/*c*/}\n`)
+	// The same block written in several lines: that option takes the row behind the opening brace and this one writes the empty line in front of the closing brace, which is a row of its own
+	it(`leaves the same block written in several lines with the empty line in front of the closing brace in both orders under never-multi-line`, async () => {
+		await expectBothOrders(`a {\n\t/*c*/\n}\n`, { "@stylistic/block-opening-brace-newline-after": `never-multi-line` }, `a {/*c*/\n}\n`)
 	})
 
-	it(`leaves a block holding nothing but two comments on the same spelling in both orders under never-multi-line`, async () => {
-		await expectBothOrders(`a {\n\t/*c1*/\n\t/*c2*/\n}\n`, { "@stylistic/block-opening-brace-newline-after": `never-multi-line` }, `a {\t/*c1*/\t/*c2*/}\n`)
+	it(`leaves a block holding nothing but two comments with the empty line in front of the closing brace in both orders under never-multi-line`, async () => {
+		await expectBothOrders(`a {\n\t/*c1*/\n\t/*c2*/\n}\n`, { "@stylistic/block-opening-brace-newline-after": `never-multi-line` }, `a {/*c1*/\n\t/*c2*/\n}\n`)
 	})
 
-	it(`leaves an at-rule holding nothing but a comment on the same spelling in both orders under never-multi-line`, async () => {
-		await expectBothOrders(`@media print {\n\t/*c*/\n}\n`, { "@stylistic/block-opening-brace-newline-after": `never-multi-line` }, `@media print {\t/*c*/}\n`)
+	it(`leaves an at-rule holding nothing but a comment with the empty line in front of the closing brace in both orders under never-multi-line`, async () => {
+		await expectBothOrders(`@media print {\n\t/*c*/\n}\n`, { "@stylistic/block-opening-brace-newline-after": `never-multi-line` }, `@media print {/*c*/\n}\n`)
 	})
 
 	// A turned-off fix leaves the claim standing: that rule still reports a break there and takes none out
@@ -84,7 +84,7 @@ describe(`the empty line this rule would write into the run behind an opening br
 
 	// A stray semicolon standing in the block is no node of it, so the block holds nothing but the comment and the reversal asks the rule about the run in front of the brace
 	it(`leaves a block holding nothing but a comment with a stray semicolon behind it on one line in both orders under never-multi-line`, async () => {
-		await expectBothOrders(`a {\n\t/*c*/;\n}\n`, { "@stylistic/block-opening-brace-newline-after": `never-multi-line` }, `a {\t/*c*/;\n}\n`)
+		await expectBothOrders(`a {\n\t/*c*/;\n}\n`, { "@stylistic/block-opening-brace-newline-after": `never-multi-line` }, `a {/*c*/;\n}\n`)
 	})
 
 	// The rule reports the run in front of the closing brace on the line the opening brace stands on, which a head written in several lines leaves below the line a disable comment may stand on
@@ -98,7 +98,7 @@ describe(`the empty line this rule would write into the run behind an opening br
 	})
 
 	it(`writes no empty line over an at-rule whose head of two lines a disable comment keeps that rule off of, both orders under never-multi-line`, async () => {
-		await expectBothOrders(`@media print and /* stylelint-disable-line @stylistic/block-opening-brace-newline-after */\n\t(min-width: 1px) {\n\t/*c*/\n}\n`, { "@stylistic/block-opening-brace-newline-after": `never-multi-line` }, `@media print and /* stylelint-disable-line @stylistic/block-opening-brace-newline-after */\n\t(min-width: 1px) {\t/*c*/}\n`)
+		await expectBothOrders(`@media print and /* stylelint-disable-line @stylistic/block-opening-brace-newline-after */\n\t(min-width: 1px) {\n\t/*c*/\n}\n`, { "@stylistic/block-opening-brace-newline-after": `never-multi-line` }, `@media print and /* stylelint-disable-line @stylistic/block-opening-brace-newline-after */\n\t(min-width: 1px) {/*c*/\n}\n`)
 	})
 
 	// A disable comment takes the report away, and a rule that reports nothing forbids nothing, so the empty line the reversal asks for stands

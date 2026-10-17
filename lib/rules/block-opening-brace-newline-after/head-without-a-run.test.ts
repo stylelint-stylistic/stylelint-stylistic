@@ -52,17 +52,6 @@ testRule({
 			column: 4,
 			message: messages.rejectedAfterMultiLine(),
 		},
-		{
-			description: `a block of two comments, the head one of which the file spells no run in front of`,
-			code: `
-				a {/*1*/
-				/*2*/ }
-			`,
-			fixed: `a {/*1*//*2*/}`,
-			line: 1,
-			column: 4,
-			message: messages.rejectedAfterMultiLine(),
-		},
 	],
 })
 
@@ -132,7 +121,15 @@ describe(`the run PostCSS prints in front of a head node the file spells none in
 	it(`is the whitespace never-multi-line refuses over a block holding one comment, and the fix takes its break out`, async () => {
 		expect(await fixAndRead(`a {/*1*/\n}`, `never-multi-line`)).toEqual({
 			warnings: [`1:4 ${messages.rejectedAfterMultiLine()}`],
-			fixed: `a {    /*1*/}`,
+			fixed: `a {/*1*/\n}`,
+			left: 0,
+		})
+	})
+
+	it(`is the whitespace never-multi-line refuses over a block of two comments the file spells no run in front of the first of, and the fix takes that break out`, async () => {
+		expect(await fixAndRead(`a {/*1*/\n/*2*/ }`, `never-multi-line`)).toEqual({
+			warnings: [`1:4 ${messages.rejectedAfterMultiLine()}`],
+			fixed: `a {/*1*/\n/*2*/ }`,
 			left: 0,
 		})
 	})
@@ -140,7 +137,7 @@ describe(`the run PostCSS prints in front of a head node the file spells none in
 	it(`is the whitespace never-multi-line refuses over a block whose one comment the file spells no run in front of, and the fix takes its break out`, async () => {
 		expect(await fixAndRead(`a {/*c*/}`, `never-multi-line`)).toEqual({
 			warnings: [`1:4 ${messages.rejectedAfterMultiLine()}`],
-			fixed: `a {    /*c*/}`,
+			fixed: `a {/*c*/}`,
 			left: 0,
 		})
 	})
