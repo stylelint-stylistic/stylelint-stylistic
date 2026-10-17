@@ -21,6 +21,9 @@ type Pin = { node: AnyNode, key: string, value: unknown, empty: boolean, writes:
 /** The raws pinned, by the root pinned. */
 let pinsOf = new WeakMap<Root, Pin[]>()
 
+/** The nodes the last pass walked, by the root: a node it did not is one a rule of another plugin put into the tree since, and a raw of such a node standing a value a pin stands is that pin copied. */
+let seenOf = new WeakMap<Root, Set<AnyNode>>()
+
 /**
  * Asks whether a node holds nothing.
  * @param node - The node.
@@ -73,13 +76,15 @@ function askAfresh (root: Root): void {
  *
  * Every raw is asked first and pinned after, since PostCSS invents a raw out of the first node carrying one of its kind, and a raw pinned on the way would stand in for the file's own when the next is invented; the cache PostCSS keeps on the root is dropped before any of them is asked, since a rule of another plugin may have built nodes since it was filled. So the print stays what it was, but a raw is then a string the rules read and write: a fix writing a raw such a node lacks finds it, rather than passing the node over, and a write into one node's raw no longer changes what PostCSS invents for the next. The run behind a bodiless at-rule is left, which PostCSS prints as nothing and would take for the style of a block's opening.
  *
- * A block filled or emptied since its run was pinned is asked afresh before anything is pinned, and the raws of every node are watched, so that a rule reading a pinned one is known while the run lasts and a rule writing one is counted.
+ * A block filled or emptied since its run was pinned is asked afresh before anything is pinned, a raw standing a pin's value on a node the last pass did not walk is taken off as the copy it is, and the raws of every node are watched, so that a rule reading a pinned one is known while the run lasts and a rule writing one is counted.
  * @param root - The root.
  */
 export function pinInventedRaws (root: Root): void {
 	askAfresh(root)
 
 	let asked: Pin[] = []
+	let seen = seenOf.get(root) ?? new Set<AnyNode>()
+	let pins = pinsOf.get(root) ?? []
 
 	/**
 	 * Asks one raw where the node carries none.
@@ -92,11 +97,27 @@ export function pinInventedRaws (root: Root): void {
 		asked.push({ node, key, value: invent(node, key), empty: key === `after` && holdsNothing(node), writes: writesByRules(root, key) })
 	}
 
+	/**
+	 * Takes off the run in front of a node the last pass did not walk, where it stands the value a pin stands. A rule of another plugin puts such a node into the tree with that run copied off the neighbor it landed beside — PostCSS files one raw under a node it puts in, and it is this one — so the run is the plugin's invention standing where no pin named it, out of a tree that has since changed. No other raw is taken: whatever else such a rule wrote on a node it built is its own, and a raw a copy of a pin stands under where the pin pass asks it again is the pin's own business.
+	 * @param node - The node the last pass did not walk.
+	 */
+	function takeCopy (node: AnyNode): void {
+		let copied = (node.raws as Record<string, unknown>)[`before`]
+
+		if (typeof copied !== `string`) return
+
+		for (let { key, value } of pins) if (key === `before` && value === copied) Reflect.deleteProperty(node.raws, key)
+	}
+
 	delete (root as Root & { rawCache?: unknown }).rawCache
 
 	root.walk((node) => {
 		// A stylesheet a document holds is parsed, and carries its own raws
 		if ((node as { type: string }).type === `root`) return
+
+		if (seen.has(node) === false) takeCopy(node)
+
+		seen.add(node)
 
 		noteRaws(root, node)
 
@@ -114,6 +135,8 @@ export function pinInventedRaws (root: Root): void {
 		if (!holdsNothing(node)) ask(node, `semicolon`)
 	})
 
+	seenOf.set(root, seen)
+
 	for (let { node, key, value } of asked) (node.raws as Record<string, unknown>)[key] = value
 	for (let { node, key } of asked) notePin(root, node, key)
 
@@ -124,6 +147,8 @@ export function pinInventedRaws (root: Root): void {
  * Takes the pins no rule stands by off, once every rule of the plugin has read the root, so that what a rule of another plugin listed behind the plugin's changes is printed as PostCSS invents it then, as it is where no rule of the plugin is configured: a node put into an empty block, or a block filled that PostCSS invents another block's runs out of.
  *
  * A pin goes where a rule of the plugin read it or wrote over it, since the rule judged the tree as the pin stands and the plugin's own answer is then the one that stands; where a rule of the plugin has written a raw of that kind since the pin was taken, since PostCSS invents a run of one kind out of the runs of that kind around it and the plugin has moved them; and a pin on the run in front of a closing brace goes as well where the block was filled or emptied since, whichever of them reads it: the run behind the brace of an empty block and the run behind the brace behind nodes are two runs, and a rule that read one of them has not read the other.
+ *
+ * The copies of a pin go in the beginning of the pass, and not with the pin at the end of the run: a node a rule of another plugin put into the tree takes the run in front of itself off the neighbor it landed beside, so the value stands on a node no pin ever named — and a copy made before the neighbor's run was pinned is the file's own and indistinguishable from one made after, which only the pass that did not walk the node can tell.
  * @param root - The root pinned.
  */
 export function unpinUnwritten (root: Root): void {
@@ -132,6 +157,7 @@ export function unpinUnwritten (root: Root): void {
 	if (!pins) return
 
 	pinsOf.delete(root)
+	seenOf.delete(root)
 
 	let taken = pins.filter(({ node, key, value, empty, writes: written }) => (node.raws as Record<string, unknown>)[key] === value && node.root() === root && writesByRules(root, key) === written && ((key === `after` && holdsNothing(node) !== empty) || !readByRules(root, node, key)))
 

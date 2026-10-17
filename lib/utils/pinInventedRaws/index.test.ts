@@ -136,6 +136,27 @@ let fillerAll = stylelint.createPlugin(`test/filler-all`, Object.assign(() => (r
 }, { ruleName: `test/filler-all`, messages: {} }) as unknown as stylelint.Rule)
 
 /**
+ * Builds a comment behind the file's last node in front of the plugin's rules, whose run in front of itself no rule of the plugin has read.
+ * @param root - The root.
+ */
+function trailing (root: Root): void {
+	root.append(new Comment({ text: `generated` }))
+}
+
+/**
+ * Builds a rule between two of the plugin's rules, taking the run in front of itself off the comment it lands beside.
+ * @param root - The root.
+ */
+function copied (root: Root): void {
+	root.append(new Rule({ selector: `.z` }))
+}
+
+/** A rule of another plugin, listed between two of the plugin's, which builds a rule beside the comment. */
+let between = stylelint.createPlugin(`test/between`, Object.assign(() => (root: Root): void => {
+	copied(root)
+}, { ruleName: `test/between`, messages: {} }) as unknown as stylelint.Rule)
+
+/**
  * Builds an at-rule holding an empty rule in front of the plugin's rules.
  * @param root - The root.
  */
@@ -176,9 +197,9 @@ describe(`the run in front of the closing brace of an empty block another plugin
 	])(`the brace of a block filled between the plugin's rules, placed as with no rule of the plugin configured, in %j`, async (code) => {
 		let plugged = [builder(empty), filler]
 		let alone = await stylelint.lint({ code, config: { plugins: plugged, rules: { "test/builder": true, "test/filler": true } }, fix: true })
-		let between = await stylelint.lint({ code, config: { plugins: [...plugged, ...plugins], rules: { "test/builder": true, "@stylistic/color-hex-case": `lower`, "test/filler": true, "@stylistic/unit-case": `lower` } }, fix: true })
+		let middle = await stylelint.lint({ code, config: { plugins: [...plugged, ...plugins], rules: { "test/builder": true, "@stylistic/color-hex-case": `lower`, "test/filler": true, "@stylistic/unit-case": `lower` } }, fix: true })
 
-		expect(between.code).toBe(alone.code)
+		expect(middle.code).toBe(alone.code)
 	})
 
 	// A pin taken off with others is asked afresh, and so is the run PostCSS invents the next block's out of: here the run written in front of the other block's brace is what the last block is closed with
@@ -228,5 +249,15 @@ describe(`the run in front of the closing brace of an empty block another plugin
 		let overTree = await fixBuilt(code, beside, [`@stylistic/at-rule-semicolon-space-before`, `always`])
 
 		expect(overTree.code).toBe(overText.code)
+	})
+
+	// A rule of another plugin putting a node into the tree between two of the plugin's rules takes the run in front of it off the node it lands beside, so the pin's value stands where no pin named it: the rule built between the plugin's reads the run as PostCSS invents it now, and the block is opened as with no rule of the plugin configured
+	it(`the run in front of a block a rule of another plugin built between the plugin's rules`, async () => {
+		let code = `a { color: red }\n`
+		let plugged = [builder(trailing), between]
+		let alone = await stylelint.lint({ code, config: { plugins: plugged, rules: { "test/builder": true, "test/between": true } }, fix: true })
+		let around = await stylelint.lint({ code, config: { plugins: [...plugged, ...plugins], rules: { "test/builder": true, "@stylistic/color-hex-case": `lower`, "test/between": true, "@stylistic/unit-case": `lower` } }, fix: true })
+
+		expect(around.code).toBe(alone.code)
 	})
 })
