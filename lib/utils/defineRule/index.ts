@@ -130,9 +130,13 @@ export function defineRule<P, S, M extends RuleMessages> (definition: RuleDefini
 
 				if (ruleName !== last) return
 
-				flushDeferredChecks(root)
-				// Every rule of the plugin has read the root, and a rule of another plugin listed behind may yet fill a block
-				unpinUnwritten(root as Root)
+				try {
+					flushDeferredChecks(root)
+				}
+				finally {
+					// Every rule of the plugin has read the root, and a rule of another plugin listed behind may yet fill a block; a run a deferred check of the plugin's own cut short has no other place to unpin in, and the tree it still holds is the wrapper's
+					unpinUnwritten(root as Root)
+				}
 			}
 		}
 

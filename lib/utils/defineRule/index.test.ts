@@ -1,4 +1,4 @@
-import { parse } from "postcss"
+import { type Declaration, parse, type Rule } from "postcss"
 import stylelint, { type Config, type PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
@@ -141,5 +141,27 @@ describe(`a stylesheet holding a charset`, () => {
 
 	it(`gets none in a block of a page, whose root is not the file's`, async () => {
 		await expect(lint([createRule(core)], `<style>@charset "utf-8";\na { color: red; }</style>`, {}, `postcss-html`)).resolves.toEqual([{ rule: `@stylistic/property-found`, text: `Found "color" (@stylistic/property-found)` }])
+	})
+})
+
+describe(`a run a check of the plugin's own cut short`, () => {
+	// The tail is the one place where every rule of the plugin is known to have read the root, so an unwinding tail is what unwraps the raws of whoever holds the tree a run cut short leaves behind; the rules are driven here rather than through the linter, which never hands a tree back
+	it(`leaves every node with the raws it was parsed with, where a deferred check throws`, () => {
+		let throwing = defineRule({ shortName: `property-throws`, meta: { url: `https://example.test/property-throws` }, messages: MESSAGES, defersToRunEnd: true, rule: (): RuleCheck => (): void => { throw new Error(`the check throws`) } })
+		let standing = defineRule({ shortName: `property-found-behind`, meta: { url: `https://example.test/property-found-behind` }, messages: MESSAGES, rule })
+		let defers = throwing(core)
+		let last = standing(core)
+		let root = parse(`a { color: red; }`)
+		let block = root.first as Rule
+		let declaration = block.first as Declaration
+		let plain = block.raws
+		let plainOfDeclaration = declaration.raws
+		let result = { stylelint: { config: { rules: { "@stylistic/property-throws": `color`, "@stylistic/property-found-behind": true } } } } as unknown as PostcssResult
+
+		defers(`color`, undefined, {})(root, result)
+
+		expect(() => last(`never`, undefined, {})(root, result)).toThrow(`the check throws`)
+		expect(block.raws).toBe(plain)
+		expect(declaration.raws).toBe(plainOfDeclaration)
 	})
 })
