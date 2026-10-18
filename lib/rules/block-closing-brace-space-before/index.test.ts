@@ -278,6 +278,10 @@ testRule({
 			code: `a { @extend .b}`,
 		},
 		{
+			description: `a blockless at-rule whose params end on an escape of six digits, the space being a character of it and no run`,
+			code: `a { @include \\000031 }`,
+		},
+		{
 			description: `a block with no whitespace in front of its brace and a space in front of the stray semicolon behind it`,
 			code: `a {color: pink} ;`,
 		},
@@ -325,6 +329,23 @@ testRule({
 			fixed: `a { b: \\0000311}`,
 			line: 1,
 			column: 17,
+			message: messages.rejectedBefore(),
+		},
+		{
+			// Pins the run a blockless at-rule's params swallowed over the escape, read and written in the at-rule's own `raws.between`, where the file spells it in front of the brace
+			description: `a blockless at-rule whose params end on a seventh hexadecimal digit, whose space PostCSS swallows into the word and the grammar reads as a run`,
+			code: `a { @include \\0000311 }`,
+			fixed: `a { @include \\0000311}`,
+			line: 1,
+			column: 22,
+			message: messages.rejectedBefore(),
+		},
+		{
+			description: `the same seventh digit in a blockless at-rule with a run of the block's own behind the swallowed space`,
+			code: `a { @include \\0000311  }`,
+			fixed: `a { @include \\0000311}`,
+			line: 1,
+			column: 23,
 			message: messages.rejectedBefore(),
 		},
 		{

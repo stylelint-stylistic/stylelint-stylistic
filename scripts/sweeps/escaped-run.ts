@@ -24,6 +24,8 @@
  * The controls: `value-list-comma-space-before`, which reads its run over the search copy already, and `declaration-bang-space-before`.
  *
  * The hexadecimal shapes past six digits came with the reading that a run a hexadecimal escape's six digits have closed is a run and not the escape's terminator: PostCSS's tokenizer reads the digits without counting them and swallows one space behind them into the same word, so the run in front of a brace stands in the head the parser printed the selector or the value from, and the raw the brace rules write is one run shorter than the file's. The corpus held `\2c ` and its neighbors, where the space closes the escape and closes nothing else, and no shape at all where it does not: `hexSixThenSpace` is the control the past-six shapes are read against, `hexPastSix` a run of none, and the tab and the break the shapes the tokenizer leaves to the raw, since it swallows one space and nothing else.
+ *
+ * `closingBraceAtRule` came with the third spelling of that run: a blockless at-rule closing its block files the folded space in its params, where the brace rules read none, so the corpus gained a shape none of the three had carried.
  */
 
 import { multiply, place } from "../harness/matrix.ts"
@@ -89,6 +91,7 @@ const corpus: Sweep[`corpus`] = place(
 		openingBrace: (text) => `a${text}{ b: c }`,
 		closingBrace: (text) => `a { b: c${text}}`,
 		closingBraceBlock: (text) => `a {\n\tb: c${text}}`,
+		closingBraceAtRule: (text) => `a { @include c${text}}`,
 		semicolon: (text) => `a { b: 1${text}; c: d }`,
 		lastSemicolon: (text) => `a { b: 1${text}; }`,
 		flagSemicolon: (text) => `a { b: 1${text} !important; c: d }`,

@@ -25,6 +25,58 @@ describe(`restoreRunsFoldedIntoTheText`, () => {
 		expect(value(root)).toEqual(`\\0000311`)
 	})
 
+	it(`puts the run of a blockless at-rule's params into its own \`raws.between\`, which the rules read before the brace`, () => {
+		let root = parse(`a { @include \\0000311 }`)
+
+		restoreRunsFoldedIntoTheText(root, css)
+
+		let atRule = ((root.first as Rule).last as AtRule)
+
+		expect(atRule.params).toEqual(`\\0000311`)
+		expect(atRule.raws.between).toEqual(` `)
+		expect(print(root)).toEqual(`a { @include \\0000311 }`)
+	})
+
+	it(`puts it in front of the between it already holds, the two runs making one`, () => {
+		let root = parse(`a { @include \\0000311  }`)
+
+		restoreRunsFoldedIntoTheText(root, css)
+
+		let atRule = ((root.first as Rule).last as AtRule)
+
+		expect(atRule.params).toEqual(`\\0000311`)
+		expect(atRule.raws.between).toEqual(`  `)
+		expect(print(root)).toEqual(`a { @include \\0000311  }`)
+	})
+
+	it(`leaves the run of a blockless at-rule standing behind its own semicolon, which the block's final raw already holds`, () => {
+		let root = parse(`a { @include \\0000311; }`)
+
+		restoreRunsFoldedIntoTheText(root, css)
+
+		expect(((root.first as Rule).last as AtRule).params).toEqual(`\\0000311`)
+		expect(after(root)).toEqual(` `)
+		expect(print(root)).toEqual(`a { @include \\0000311; }`)
+	})
+
+	it(`leaves the params of a blockless at-rule that does not close its block, the space standing behind its own node`, () => {
+		let root = parse(`a { @include \\0000311 \n\tb: c }`)
+
+		restoreRunsFoldedIntoTheText(root, css)
+
+		expect(((root.first as Rule).first as AtRule).params).toEqual(`\\0000311 \n\tb: c`)
+		expect(print(root)).toEqual(`a { @include \\0000311 \n\tb: c }`)
+	})
+
+	it(`leaves the space closing an escape of six digits or fewer in the params of a blockless at-rule too`, () => {
+		let root = parse(`a { @include \\000031 }`)
+
+		restoreRunsFoldedIntoTheText(root, css)
+
+		expect(((root.first as Rule).last as AtRule).params).toEqual(`\\000031 `)
+		expect(print(root)).toEqual(`a { @include \\000031 }`)
+	})
+
 	it(`puts the run of a selector into its brace's own raw`, () => {
 		let root = parse(`a\\0000311 { b: c }`)
 

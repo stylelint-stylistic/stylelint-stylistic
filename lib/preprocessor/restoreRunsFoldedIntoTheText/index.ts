@@ -4,6 +4,7 @@ import { HEX_ESCAPE_PAST_SIX_DIGITS, TRAILING_CSS_WHITESPACE, TRAILING_HEX_ESCAP
 import type { Syntax } from "../../syntaxes/index.ts"
 import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { isCustomProperty } from "../../utils/isCustomProperty/index.ts"
+import { lastNodeHoldsTheBlockAfter } from "../../utils/lastNodeHoldsTheBlockAfter/index.ts"
 import { isDeclaration } from "../../utils/typeGuards/index.ts"
 
 /**
@@ -28,8 +29,34 @@ export function restoreRunsFoldedIntoTheText (root: Root, syntax: Syntax): void 
 			return
 		}
 
-		if (isDeclaration(node) && node.parent) restoreValue(syntax, node, node.parent)
+		if (isDeclaration(node)) {
+			if (node.parent) restoreValue(syntax, node, node.parent)
+
+			return
+		}
+
+		if (node.parent) restoreParams(syntax, node as AtRule, node.parent)
 	})
+}
+
+/**
+ * Puts the run in front of a block's closing brace back out of a blockless at-rule's params, into its own `raws.between` where the file spells it.
+ *
+ * An at-rule that closes its block with neither a block nor a semicolon of its own holds the run, `lastNodeHoldsTheBlockAfter` answers so where the block's final raw stands empty, and `getBlockAfter` and `setBlockAfter` read and write it in the at-rule's `raws.between`. The tokenizer filed it in the params instead, leaving `raws.between` empty, so the reader looks where there is none and the writer writes into the void. Every condition of that answer is asked of the container, which is where `lastNodeHoldsTheBlockAfter` asks it.
+ * @param syntax - The syntax printing the at-rule back.
+ * @param statement - The blockless at-rule holding the run.
+ * @param container - The block the at-rule closes.
+ */
+function restoreParams (syntax: Syntax, statement: AtRule, container: Container): void {
+	if (container.last !== statement || !lastNodeHoldsTheBlockAfter(container)) return
+
+	let text = syntax.read(statement)
+	let run = foldedRunAtEnd(text)
+
+	if (run === ``) return
+
+	syntax.write(statement, text.slice(0, text.length - run.length))
+	statement.raws.between = `${run}${statement.raws.between ?? ``}`
 }
 
 /**
