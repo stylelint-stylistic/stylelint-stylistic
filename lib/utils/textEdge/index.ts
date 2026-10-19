@@ -1,15 +1,16 @@
 import type { AtRule, Container, Declaration, Node } from "postcss"
 import type { PostcssResult } from "stylelint"
 
-import { COLON_AND_WHITESPACE, TRAILING_CSS_WHITESPACE, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
+import { COLON_AND_WHITESPACE, EVERY_LINE_BREAK, TRAILING_CSS_WHITESPACE, TRAILING_SPACES_AND_TABS } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
+import { applyEditsFromEnd, type Edit } from "../applyEditsFromEnd/index.ts"
 import { blockString } from "../blockString/index.ts"
-import { declarationValueAsSpelled } from "../declarationValueAsSpelled/index.ts"
+import { declarationValueSpelled } from "../declarationValueAsSpelled/index.ts"
 import { fixDisabledOnLine } from "../fixDisabledOnLine/index.ts"
 import { isSingleLineString } from "../isSingleLineString/index.ts"
 import { neighborCopies, type NeighborCopy, type NeighborRuleSetting } from "../neighborSettings/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
-import { isAtRule, isComment, isDeclaration } from "../typeGuards/index.ts"
+import { isAtRule, isComment, isDeclaration, isRule } from "../typeGuards/index.ts"
 
 /** What a rule asks of the run in front of a delimiter opening a node's text: a break, one space, nothing; or, at the stylesheet's head, no empty line and no indentation. */
 export type EdgeRun = `newline` | `space` | `none` | `noEmptyLine` | `noIndentation`
@@ -17,18 +18,27 @@ export type EdgeRun = `newline` | `space` | `none` | `noEmptyLine` | `noIndentat
 /** What a delimiter's rule writes there. */
 export type EdgeWrite = `newline` | `space` | `none`
 
+/** A delimiter's rule's whole fix over the node's text: what it writes in the raw in front of the text, and what it writes in the text the node's own rule reads, in front of the rule's other delimiters. */
+export type EdgeFix = {
+
+	/** What the rule writes in the raw in front of the text, where the delimiter stands. A declaration's value is spelled by the run behind its colon, which no owner reads in place, so only a rule fixing in front of a delimiter names a write there. */
+	written: EdgeWrite,
+
+	/** What the rule writes in the text the node's own rule reads, indexed in that text: the writes it is given over its other delimiters, where its own guards accept them and Stylelint will apply them. */
+	edits: Edit[],
+}
+
 /** The break a neighbor asking one leaves in front of the text, as the checks read it. */
 const LINE_FEED = `\n`
 
 /** Every option a whitespace rule takes. */
 const EVERY_OPTION = [`always`, `never`, `always-single-line`, `never-single-line`, `always-multi-line`, `never-multi-line`]
 
-/** A neighbor writing the raw in front of a node's text: the rule, what it writes, the text whose lineness its option asks and whether that text holds the raw, whether a secondary option passes the node over, and the line it reports on. */
+/** A neighbor writing the raw in front of a node's text: the rule, what it writes, whether the text whose lineness its option asks stands on one line as the delimiter's rule's fix leaves it, whether a secondary option passes the node over, and the line it reports on. */
 type Owner = {
 	rule: NeighborRuleSetting,
 	writes: `newline` | `space` | `head`,
-	lines?: (node: Node, syntax: Syntax, result: PostcssResult) => string,
-	linesHoldTheRun?: boolean,
+	singleLine?: (node: Node, syntax: Syntax, result: PostcssResult, fix: EdgeFix | undefined) => boolean,
 	ignores?: (node: Node, secondary: Record<string, unknown>) => boolean,
 	line: (node: Node) => number | undefined,
 }
@@ -55,27 +65,103 @@ function linesOfBlock (container: Node | undefined, result: PostcssResult): stri
 }
 
 /**
- * Reads an at-rule's head, whose lineness the rules behind its name ask: the name, the run behind it and the parameters.
+ * Reads the text a node's own rule reads out of it: the parsed copy of a rule's selector, and, as a guard for a node the block owners never see, what the syntax reads of anything else.
+ * @param node - The node.
+ * @param syntax - The syntax, which opens the selector.
+ * @returns The text.
+ */
+function ownTextOf (node: Node, syntax: Syntax): string {
+	return isRule(node) ? syntax.selectorCopies(node).selector : syntax.read(node as AtRule | Declaration)
+}
+
+/**
+ * Counts the breaks of a text, {@link EVERY_LINE_BREAK} being the break {@link isSingleLineString} reads.
+ * @param text - The text.
+ * @returns The count.
+ */
+function breaksOf (text: string): number {
+	return (text.match(EVERY_LINE_BREAK) ?? []).length
+}
+
+/** What an edge write leaves in the raw in front of a node's text, as `isSingleLineAfter` reads it. */
+const SPELLED: Record<EdgeWrite, string> = { newline: LINE_FEED, space: ` `, none: `` }
+
+/**
+ * Asks whether a block holding a node stands on one line, as the delimiter's rule's fix leaves it. The node's own text is a span of the block and the run in front of the node another, so what the fix writes in either is counted out of the block and counted back in; the rest of the block stands as it is. Counting rather than moving an index into the block is what keeps the block's own spelling of the text — which under `postcss-scss` is the file's copy of the selector — from having to be the one the fix's edits are indexed in.
+ *
+ * A block holding no break outside those two spans is read as the node's own text however many breaks it holds, which covers the copies disagreeing about what is inside it.
+ * @param container - The block the node stands in.
+ * @param node - The node in it.
+ * @param syntax - The syntax, which reads the node's own text.
+ * @param result - The Stylelint result.
+ * @param fix - The delimiter's rule's fix, where there is one.
+ * @returns True where the block stands on one line.
+ */
+function blockSingleLine (container: Node | undefined, node: Node, syntax: Syntax, result: PostcssResult, fix: EdgeFix | undefined): boolean {
+	let text = linesOfBlock(container, result)
+	let run = runOf(node)
+
+	if (!fix) return isSingleLineString(text)
+
+	let own = ownTextOf(node, syntax)
+	let beside = Math.max(0, breaksOf(text) - breaksOf(run) - breaksOf(own)) + breaksOf(SPELLED[fix.written]) + breaksOf(applyEditsFromEnd(own, fix.edits))
+
+	return beside === 0
+}
+
+/**
+ * Reads an at-rule's head, whose lineness the rules behind its name ask: the name, the run behind it and the parameters, as the delimiter's rule's fix leaves the parameters.
  * @param node - The at-rule.
  * @param syntax - The syntax, which reads the parameters.
+ * @param fix - The delimiter's rule's fix, where there is one.
  * @returns The head.
  */
-function atRuleHead (node: Node, syntax: Syntax): string {
+function atRuleHead (node: Node, syntax: Syntax, fix: EdgeFix | undefined): string {
 	let atRule = node as AtRule
+	let params = syntax.read(atRule)
 
-	return `@${atRule.name}${atRule.raws.afterName ?? ``}${syntax.read(atRule)}`
+	return `@${atRule.name}${atRule.raws.afterName ?? ``}${fix ? applyEditsFromEnd(params, fix.edits) : params}`
+}
+
+/**
+ * Asks whether a text is on one line once the write a delimiter's rule makes at the edge replaces the run it holds there: the breaks of the run go, and a break written comes in.
+ * @param text - The text.
+ * @param run - The run it holds, empty where it holds none.
+ * @param fix - What the rule writes there, if a fix is asked about.
+ * @returns True where it is.
+ */
+function isSingleLineAfter (text: string, run: string, fix?: EdgeFix): boolean {
+	if (!fix || (!run && fix.written !== `newline`)) return isSingleLineString(text)
+
+	if (fix.written === `newline`) return false
+
+	return isSingleLineString(text.replace(run, ` `))
 }
 
 /** The rules behind an at-rule's name, asking the lineness of its head. */
 const BEHIND_THE_NAME: Owner[] = [
-	owner(`at-rule-name-newline-after`, `newline`, { lines: atRuleHead, linesHoldTheRun: true, line: (node) => node.source?.start?.line }),
-	owner(`at-rule-name-space-after`, `space`, { lines: atRuleHead, linesHoldTheRun: true, line: (node) => node.source?.start?.line }),
+	owner(`at-rule-name-newline-after`, `newline`, { singleLine: (node, syntax, _result, fix) => isSingleLineAfter(atRuleHead(node, syntax, fix), runOf(node), fix), line: (node) => node.source?.start?.line }),
+	owner(`at-rule-name-space-after`, `space`, { singleLine: (node, syntax, _result, fix) => isSingleLineAfter(atRuleHead(node, syntax, fix), runOf(node), fix), line: (node) => node.source?.start?.line }),
 ]
+
+/**
+ * Asks whether a declaration's value stands on one line, as the delimiter's rule's fix leaves it: the value as the file spells it, with the run behind the colon up to it, the rule's own writes applied to the value where they are indexed in it.
+ * @param node - The declaration.
+ * @param syntax - The syntax, which reads the value.
+ * @param result - The Stylelint result.
+ * @param fix - The delimiter's rule's fix, where there is one.
+ * @returns True where the value stands on one line.
+ */
+function declarationValueSingleLine (node: Node, syntax: Syntax, result: PostcssResult, fix: EdgeFix | undefined): boolean {
+	let { head, value } = declarationValueSpelled(syntax, node as Declaration, result)
+
+	return isSingleLineString(head + (fix ? applyEditsFromEnd(value, fix.edits) : value))
+}
 
 /** The rules behind a declaration's colon, asking the lineness of the value; the space rule writes the run the colon opens, the break rule the run in front of the value. */
 const BEHIND_THE_COLON: Owner[] = [
-	owner(`declaration-colon-newline-after`, `newline`, { lines: (node, syntax, result) => declarationValueAsSpelled(syntax, node as Declaration, result), line: (node) => node.source?.start?.line }),
-	owner(`declaration-colon-space-after`, `space`, { lines: (node, syntax, result) => declarationValueAsSpelled(syntax, node as Declaration, result), line: (node) => node.source?.start?.line }),
+	owner(`declaration-colon-newline-after`, `newline`, { singleLine: declarationValueSingleLine, line: (node) => node.source?.start?.line }),
+	owner(`declaration-colon-space-after`, `space`, { singleLine: declarationValueSingleLine, line: (node) => node.source?.start?.line }),
 ]
 
 /**
@@ -90,22 +176,22 @@ function ignoresTheAtRuleInFront (node: Node, secondary: Record<string, unknown>
 	return Boolean(prev && isAtRule(prev) && optionsMatches(secondary, `ignoreAtRules`, prev.name))
 }
 
-/** The rules behind a closing brace, asking the lineness of the block closed, which pass over the at-rules named. */
+/** The rules behind a closing brace, asking the lineness of the block closed, which pass over the at-rules named. That block is the one before the node, so it holds none of the node's own text and the delimiter's rule writes nothing into it. */
 const BEHIND_A_BRACE: Owner[] = [
-	owner(`block-closing-brace-newline-after`, `newline`, { lines: (node, _syntax, result) => linesOfBlock(node.prev(), result), ignores: ignoresTheAtRuleInFront, line: (node) => node.prev()?.source?.end?.line }),
-	owner(`block-closing-brace-space-after`, `space`, { lines: (node, _syntax, result) => linesOfBlock(node.prev(), result), ignores: ignoresTheAtRuleInFront, line: (node) => node.prev()?.source?.end?.line }),
+	owner(`block-closing-brace-newline-after`, `newline`, { singleLine: (node, _syntax, result) => isSingleLineString(linesOfBlock(node.prev(), result)), ignores: ignoresTheAtRuleInFront, line: (node) => node.prev()?.source?.end?.line }),
+	owner(`block-closing-brace-space-after`, `space`, { singleLine: (node, _syntax, result) => isSingleLineString(linesOfBlock(node.prev(), result)), ignores: ignoresTheAtRuleInFront, line: (node) => node.prev()?.source?.end?.line }),
 ]
 
 /** The rules behind an opening brace, asking the lineness of the block opened; the break rule may pass over rules, the space rule at-rules. */
 const BEHIND_AN_OPENING_BRACE: Owner[] = [
-	owner(`block-opening-brace-newline-after`, `newline`, { lines: (node, _syntax, result) => linesOfBlock(node.parent, result), linesHoldTheRun: true, ignores: (node, secondary) => node.parent?.type === `rule` && optionsMatches(secondary, `ignore`, `rules`), line: (node) => node.parent?.source?.start?.line }),
-	owner(`block-opening-brace-space-after`, `space`, { lines: (node, _syntax, result) => linesOfBlock(node.parent, result), linesHoldTheRun: true, ignores: (node, secondary) => node.parent?.type === `atrule` && optionsMatches(secondary, `ignore`, `at-rules`), line: (node) => node.parent?.source?.start?.line }),
+	owner(`block-opening-brace-newline-after`, `newline`, { singleLine: (node, syntax, result, fix) => blockSingleLine(node.parent, node, syntax, result, fix), ignores: (node, secondary) => node.parent?.type === `rule` && optionsMatches(secondary, `ignore`, `rules`), line: (node) => node.parent?.source?.start?.line }),
+	owner(`block-opening-brace-space-after`, `space`, { singleLine: (node, syntax, result, fix) => blockSingleLine(node.parent, node, syntax, result, fix), ignores: (node, secondary) => node.parent?.type === `atrule` && optionsMatches(secondary, `ignore`, `at-rules`), line: (node) => node.parent?.source?.start?.line }),
 ]
 
 /** The rules behind a declaration's semicolon, asking the lineness of the block it stands in. */
 const BEHIND_A_DECLARATION: Owner[] = [
-	owner(`declaration-block-semicolon-newline-after`, `newline`, { lines: (node, _syntax, result) => linesOfBlock(node.parent, result), linesHoldTheRun: true, line: (node) => node.prev()?.source?.end?.line }),
-	owner(`declaration-block-semicolon-space-after`, `space`, { lines: (node, _syntax, result) => linesOfBlock(node.parent, result), linesHoldTheRun: true, line: (node) => node.prev()?.source?.end?.line }),
+	owner(`declaration-block-semicolon-newline-after`, `newline`, { singleLine: (node, syntax, result, fix) => blockSingleLine(node.parent, node, syntax, result, fix), line: (node) => node.prev()?.source?.end?.line }),
+	owner(`declaration-block-semicolon-space-after`, `space`, { singleLine: (node, syntax, result, fix) => blockSingleLine(node.parent, node, syntax, result, fix), line: (node) => node.prev()?.source?.end?.line }),
 ]
 
 /** The rule behind a bodiless at-rule's semicolon. */
@@ -144,22 +230,22 @@ function ownersOf (node: Node): Owner[] {
 }
 
 /**
- * Reads what one copy of a neighbor asks of the run, where it speaks of it: a break or a space under `always`, nothing under `never`, a lineness option only where the text it asks is of that lineness. At the head: no empty line where `no-empty-first-line` lives or `max-empty-lines` allows none, which the copies listed say, and no indentation where `indentation` lives.
+ * Reads what one copy of a neighbor asks of the run, where it speaks of it: a break or a space under `always`, nothing under `never`, a lineness option only where the text it asks is of that lineness as the delimiter's rule's fix leaves it. At the head: no empty line where `no-empty-first-line` lives or `max-empty-lines` allows none, which the copies listed say, and no indentation where `indentation` lives.
  * @param own - The neighbor.
  * @param copy - Its copy.
  * @param node - The node whose text it is.
  * @param result - The Stylelint result.
- * @param written - What the delimiter's rule would write, where the lineness the neighbor asks is read as that write leaves the text holding the run.
+ * @param fix - The delimiter's rule's whole fix, where there is one, which the neighbors' lineness is read against.
  * @returns What it asks, or nothing where it passes the run over.
  */
-function askedBy (own: Owner, copy: NeighborCopy, node: Node, result: PostcssResult, written?: EdgeWrite): EdgeRun | undefined {
+function askedBy (own: Owner, copy: NeighborCopy, node: Node, result: PostcssResult, fix?: EdgeFix): EdgeRun | undefined {
 	if (own.writes === `head`) {
 		return own.rule.name === `indentation` ? `noIndentation` : `noEmptyLine`
 	}
 
 	let option = String(copy.option)
 
-	if ((option.endsWith(`-single-line`) || option.endsWith(`-multi-line`)) && own.lines && option.endsWith(`-single-line`) !== (own.linesHoldTheRun ? isSingleLineAfter(own.lines(node, copy.syntax, result), runOf(node), written) : isSingleLineString(own.lines(node, copy.syntax, result)))) return undefined
+	if ((option.endsWith(`-single-line`) || option.endsWith(`-multi-line`)) && own.singleLine && option.endsWith(`-single-line`) !== own.singleLine(node, copy.syntax, result, fix)) return undefined
 
 	return option.startsWith(`always`) ? own.writes : `none`
 }
@@ -174,28 +260,13 @@ function runOf (node: Node): string {
 }
 
 /**
- * Asks whether a text is on one line once a write replaces a run it holds: the breaks of the run go, and a break written comes in.
- * @param text - The text.
- * @param run - The run it holds, empty where it holds none.
- * @param written - What the write leaves there, if one is asked about.
- * @returns True where it is.
- */
-function isSingleLineAfter (text: string, run: string, written?: EdgeWrite): boolean {
-	if (written === undefined || (!run && written !== `newline`)) return isSingleLineString(text)
-
-	if (written === `newline`) return false
-
-	return isSingleLineString(text.replace(run, ` `))
-}
-
-/**
  * Reads what the live neighbors writing the raw in front of a node's text ask of it: each copy whose fix is on, which no secondary option or disable comment keeps off this node, and whose option speaks of it.
  * @param node - The node whose text it is.
  * @param result - The Stylelint result, which holds the configuration.
- * @param written - What a delimiter's rule would write there, where the neighbors' lineness is read as it leaves the text.
+ * @param fix - The delimiter's rule's whole fix, where there is one, which the neighbors' lineness is read against.
  * @returns What each asks.
  */
-export function edgeRunAsked (node: Node, result: PostcssResult, written?: EdgeWrite): EdgeRun[] {
+export function edgeRunAsked (node: Node, result: PostcssResult, fix?: EdgeFix): EdgeRun[] {
 	let asked: EdgeRun[] = []
 
 	for (let own of ownersOf(node)) {
@@ -204,7 +275,7 @@ export function edgeRunAsked (node: Node, result: PostcssResult, written?: EdgeW
 		for (let copy of neighborCopies(node, result, own.rule)) {
 			if (copy.fixDisabled || own.ignores?.(node, copy.secondary) || (line !== undefined && fixDisabledOnLine(result, copy.name, line))) continue
 
-			let run = askedBy(own, copy, node, result, written)
+			let run = askedBy(own, copy, node, result, fix)
 
 			if (run) asked.push(run)
 		}
@@ -217,11 +288,13 @@ export function edgeRunAsked (node: Node, result: PostcssResult, written?: EdgeW
  * Asks whether the run a delimiter's rule would write is at odds with what a live neighbor writing that raw asks, so that the delimiter's rule leaves the raw to it, whichever side of it the rule is listed. A neighbor asking the same run is none: both write it. At the head a break opens the file with an empty line, and a space indents its first line.
  * @param node - The node whose text it is.
  * @param result - The Stylelint result, which holds the configuration.
- * @param written - What the delimiter's rule writes.
+ * @param fix - The delimiter's rule's whole fix: what it writes at the edge, and what it writes in the text the neighbors read the lineness of.
  * @returns True where a neighbor asks otherwise.
  */
-export function edgeRunOwned (node: Node, result: PostcssResult, written: EdgeWrite): boolean {
-	return edgeRunAsked(node, result, written).some((asked) => {
+export function edgeRunOwned (node: Node, result: PostcssResult, fix: EdgeFix): boolean {
+	let { written } = fix
+
+	return edgeRunAsked(node, result, fix).some((asked) => {
 		if (asked === `noEmptyLine`) return written === `newline`
 
 		if (asked === `noIndentation`) return written === `space`
@@ -235,10 +308,11 @@ export function edgeRunOwned (node: Node, result: PostcssResult, written: EdgeWr
  * @param node - The node whose text it is.
  * @param raw - What the file holds in front of the text.
  * @param result - The Stylelint result, which holds the configuration.
+ * @param fix - The delimiter's rule's whole fix, where there is one, which the neighbors' lineness is read against.
  * @returns What is read in front of the text.
  */
-export function textBeforeAsLeft (node: Node, raw: string, result: PostcssResult): string {
-	let asked = new Set(edgeRunAsked(node, result).filter((spelling) => spelling === `newline` || spelling === `space` || spelling === `none`))
+export function textBeforeAsLeft (node: Node, raw: string, result: PostcssResult, fix?: EdgeFix): string {
+	let asked = new Set(edgeRunAsked(node, result, fix).filter((spelling) => spelling === `newline` || spelling === `space` || spelling === `none`))
 	let [spelling] = asked
 
 	if (asked.size !== 1 || spelling === undefined) return raw

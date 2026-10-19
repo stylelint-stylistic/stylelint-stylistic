@@ -9,7 +9,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFront } from "../../utils/runInFront/index.ts"
 import { selectorListCommaWhitespaceChecker } from "../../utils/selectorListCommaWhitespaceChecker/index.ts"
-import { edgeRunOutOfReach, edgeRunOwned, type EdgeWrite, writeEdgeRun } from "../../utils/textEdge/index.ts"
+import { edgeRunOutOfReach, edgeRunOwned, writeEdgeRun } from "../../utils/textEdge/index.ts"
 import { editsAskedWithTheTwins } from "../../utils/twinWritesAtTheComma/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
@@ -72,14 +72,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
+			writtenAtTheEdge: () => (primary.includes(`always`) ? `space` : `none`),
 			// The run in front of the comma may hold the break closing an inline comment, which no fix may write over
-			isFixable: (selector, index, inlineComments, ruleNode, runString) => {
-				// The run in front of a comma opening the selector is at the end of `raws.before`, written there where it is the stylesheet's and no live neighbor writing that raw asks otherwise
-				if (index === 0) {
-					let written: EdgeWrite = primary.includes(`always`) ? `space` : `none`
-
-					return !edgeRunOutOfReach(ruleNode, syntax, result, written) && !edgeRunOwned(ruleNode, result, written)
-				}
+			isFixable: (selector, index, inlineComments, ruleNode, runString, fix) => {
+				// The run in front of a comma opening the selector is at the end of `raws.before`, written there where it is the stylesheet's and no live neighbor writing that raw asks otherwise. The neighbor's lineness is read over the whole fix, so the check comes after the writes the other commas are given
+				if (index === 0) return fix !== undefined && !edgeRunOutOfReach(ruleNode, syntax, result, fix.written) && !edgeRunOwned(ruleNode, result, fix)
 
 				let runStart = selector.slice(0, index).trimEnd().length
 

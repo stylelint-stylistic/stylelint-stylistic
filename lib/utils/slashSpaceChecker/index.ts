@@ -16,9 +16,10 @@ import { matchesStringOrRegExp } from "../matchesStringOrRegExp/index.ts"
 import { rawInFrontOfText } from "../rawInFrontOfText/index.ts"
 import { report } from "../report/index.ts"
 import { rereadsAnAddress } from "../rereadsAnAddress/index.ts"
-import { edgeRunOutOfReach, edgeRunOwned, type EdgeWrite, textBeforeAsLeft, writeEdgeRun } from "../textEdge/index.ts"
+import { type EdgeFix, edgeRunOutOfReach, edgeRunOwned, type EdgeWrite, textBeforeAsLeft, writeEdgeRun } from "../textEdge/index.ts"
 import { isAtRule } from "../typeGuards/index.ts"
 import type { WhitespaceChecker } from "../whitespaceChecker/index.ts"
+import { fixApplies } from "../writesKeepingAddresses/index.ts"
 
 /** The solidus rules' options. */
 export type SlashSpaceCheckerOptions = {
@@ -123,8 +124,6 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 
 	return (node, text, textIndex, lineCheckStr, readsGroups) => {
 		let reading = syntax.inlineComments(node, result)
-		// A solidus opening the text has its run in the raw in front of it, `raws.between` of a declaration or `raws.afterName` of an at-rule
-		let textBefore = textBeforeAsLeft(node, rawInFrontOfText(node), result)
 		// The run beside the solidus is read over the copy with its escapes masked, where an escaped space is a character of a word and no run; the guards read the text the write lands in
 		let runText = maskEscapes(text, findEscapeSpans(text, reading), true)
 		let written = writes ? (whitespace === `newline` ? getLineBreak(node, result) : ` `) : ``
@@ -140,14 +139,84 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 			if (checkIndex !== undefined) checks.push({ slash, checkIndex })
 		}
 
-		for (let { slash, checkIndex } of checks) {
-			let span = spanAt(runText, checkIndex, position, whitespace, writes)
-			// The run in front of a solidus opening the text is at the end of the raw in front of it, written there where no live neighbor writes that raw; emptied behind an at-rule's name, it would join the name to the parameters
-			let opensTheText = position === `before` && slash.index === 0
-			// Refused before the report, since a fixer cannot decline
-			let edgeWritten: EdgeWrite = writes ? (whitespace === `newline` ? `newline` : `space`) : `none`
-			let isFixable = opensTheText ? (writes || !isAtRule(node)) && !edgeRunOutOfReach(node, syntax, result, edgeWritten) && !edgeRunOwned(node, result, edgeWritten) : writesTheSpan(syntax, reading, text, span, written, position, node)
+		// A solidus opening the text has its run in the raw in front of it, so whether the rule may write it there is asked over the rule's whole fix: what the other solidi would write, each of them where its own check reports a problem the guard reading the text its write lands in accepts and Stylelint will apply the fix to. The solidus at the head is therefore checked last and its problem reported first, it being the first in the text.
+		let head = position === `before` ? checks.find(({ slash }) => slash.index === 0) : undefined
 
+		/**
+		 * Checks one solidus that does not open the text, its message and whether its fix would be given.
+		 * @param check - The solidus and the index it is checked at.
+		 * @returns The solidus, its span and whether the fix writes.
+		 */
+		function checked (check: { slash: SeparatorSlash, checkIndex: number }): { slash: SeparatorSlash, checkIndex: number, span: { start: number, end: number }, isWritten: boolean } {
+			let { slash, checkIndex } = check
+			let span = spanAt(runText, checkIndex, position, whitespace, writes)
+			let message: string | undefined
+
+			opts.locationChecker({
+				source: runText,
+				index: checkIndex,
+				lineCheckStr,
+				err: (m) => {
+					message = m
+				},
+			})
+
+			// Refused before the report, since a fixer cannot decline
+			return { slash, checkIndex, span, isWritten: message !== undefined && writesTheSpan(syntax, reading, text, span, written, position, node) && fixApplies(node, textIndex + slash.index, result, opts.checkedRuleName) }
+		}
+
+		let others = checks.filter((check) => check !== head).map((check) => checked(check))
+		// Only a solidus opening the text has its run in a raw, so the descriptor is built where the rule reads in front of a solidus at all; a rule reading behind one asks nothing of that run
+		let wholeFix: EdgeFix | undefined = head ? { written: writes ? (whitespace === `newline` ? `newline` : `space`) : `none`, edits: others.filter(({ isWritten }) => isWritten).map(({ span }) => ({ start: span.start, end: span.end, text: written })) } : undefined
+		// The run in front of the text is read as the live neighbors writing it leave it, over the whole fix
+		let textBefore = textBeforeAsLeft(node, rawInFrontOfText(node), result, wholeFix)
+
+		/**
+		 * Checks the solidus opening the text, its message and whether the rule may write the run in front of it, over the whole fix.
+		 * @param fix - The rule's whole fix.
+		 * @param before - What the file holds in front of the text, as the neighbors leave it.
+		 * @returns The problem at the solidus, and whether its fix writes.
+		 */
+		function problemAtTheHead (fix: EdgeFix | undefined, before: string): { message: string, index: number, isWritten: boolean } | undefined {
+			if (!head) return undefined
+
+			// Refused before the report, since a fixer cannot decline; emptied behind an at-rule's name, the run would join the name to the parameters, so a `never` leaves it
+			let edgeWritten: EdgeWrite = writes ? (whitespace === `newline` ? `newline` : `space`) : `none`
+			let isWritten = (writes || !isAtRule(node)) && !edgeRunOutOfReach(node, syntax, result, edgeWritten) && fix !== undefined && !edgeRunOwned(node, result, fix)
+			let problem: { message: string, index: number, isWritten: boolean } | undefined
+
+			opts.locationChecker({
+				source: runText,
+				index: head.checkIndex,
+				lineCheckStr,
+				textBefore: before,
+				err: (message) => {
+					problem = { message, index: textIndex + head.slash.index, isWritten }
+				},
+			})
+
+			return problem
+		}
+
+		let headProblem = problemAtTheHead(wholeFix, textBefore)
+
+		if (headProblem) {
+			report({
+				message: headProblem.message,
+				node,
+				index: headProblem.index,
+				endIndex: headProblem.index,
+				result,
+				ruleName: opts.checkedRuleName,
+				...(headProblem.isWritten && {
+					fix: (): void => {
+						edge.written = written
+					},
+				}),
+			})
+		}
+
+		for (let { slash, checkIndex, span, isWritten } of others) {
 			opts.locationChecker({
 				source: runText,
 				index: checkIndex,
@@ -162,10 +231,9 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 						endIndex: index,
 						result,
 						ruleName: opts.checkedRuleName,
-						...(isFixable && {
+						...(isWritten && {
 							fix: (): void => {
-								if (opensTheText) edge.written = written
-								else edits.push({ ...span, text: written })
+								edits.push({ start: span.start, end: span.end, text: written })
 							},
 						}),
 					})

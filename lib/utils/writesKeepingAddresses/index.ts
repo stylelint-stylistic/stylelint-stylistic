@@ -47,8 +47,18 @@ export function fixApplies (node: AtRule | Declaration | Rule, index: number, re
 	return line !== undefined && !fixDisabledOnLine(result, ruleName, line)
 }
 
+/** What a rule would write over one text: which of its fixes may be given, and the writes given together, indexed in the text. */
+export type GivenWrites = {
+
+	/** For each fix, whether it may be given. */
+	given: boolean[],
+
+	/** The writes given, indexed in the text. The question a rule asks about the run in front of a delimiter opening its text is asked over these, not over what it asked to write. */
+	edits: Edit[],
+}
+
 /**
- * Says which of the fixes a rule would give over one text may be given, so that no address's parentheses are read another way ({@link editsRereadAnAddress}).
+ * Says which of the fixes a rule would give over one text may be given, and what they write there together, so that no address's parentheses are read another way ({@link editsRereadAnAddress}). {@link writesKeepingAddresses} is that answer alone, for a caller that asks no question of the writes themselves.
  *
  * A write into a call's parentheses, or into parentheses the tokenizer takes as one plain token, can switch which word a later `(` pops, and so whether it opens an address's token, and a run written or taken out right in front of `url(` or right behind its `(` switches the reading of those parentheses themselves; two writes can do together what neither does alone, so each is asked along with the writes given already. A write refused against those may be safe once a later one is given, since that one can put the word back, so the fixes are asked again until none more is given: whatever is refused is then refused against the very writes the run applies, and a second `--fix` finds nothing more to give. A candidate's assumed writes are the neighbors' around the same text, which the pass leaves standing whatever this fix does, so the address question is asked over the text they leave rather than the one standing ({@link WriteCandidate}): a break inside an address's parentheses, which the run takes out, makes them code where the fix's own write alone would, and the neighbor's write is what keeps them a token. A guard of the fix's own is asked the same way, over the text the writes given leave rather than the one standing: a break refused into parentheses the tokenizer holds as one plain token is given once another write of the run makes them an address's token, which the parser reads nothing of. The guard is asked against the writes given before it and not again against those given after: the writes the rules hand in are breaks, and a break written later in the text changes no word an earlier `(` pops, so no later write takes an address's token the guard passed back; the other way round, a write that switches a reading, is what the address question asks with every write. A fix Stylelint drops is never counted among them.
  * @param text - The text the edits index in.
@@ -57,9 +67,9 @@ export function fixApplies (node: AtRule | Declaration | Rule, index: number, re
  * @param node - The node the text is read from and the problems are reported on.
  * @param result - The Stylelint result.
  * @param ruleName - The registered name.
- * @returns For each fix, whether it may be given.
+ * @returns For each fix, whether it may be given, and the writes given together.
  */
-export function writesKeepingAddresses (text: string, candidates: WriteCandidate[], reading: Pick<CommentReading, `tokenizes`>, node: AtRule | Declaration | Rule, result: PostcssResult, ruleName: string): boolean[] {
+export function writesGiven (text: string, candidates: WriteCandidate[], reading: Pick<CommentReading, `tokenizes`>, node: AtRule | Declaration | Rule, result: PostcssResult, ruleName: string): GivenWrites {
 	let applied = candidates.map(({ edits, index }) => edits !== undefined && fixApplies(node, index, result, ruleName))
 	// The neighbors' writes, standing in the text every address question below is asked over
 	let assumed: Edit[] = []
@@ -102,5 +112,19 @@ export function writesKeepingAddresses (text: string, candidates: WriteCandidate
 		}
 	}
 
-	return given
+	return { given, edits: written }
+}
+
+/**
+ * Says which of the fixes a rule would give over one text may be given ({@link writesGiven}).
+ * @param text - The text the edits index in.
+ * @param candidates - The fixes, in the order the rule reports them; where two writes conflict, the one reported first is given.
+ * @param reading - Whether the parser reads by a tokenizer of its own.
+ * @param node - The node the text is read from and the problems are reported on.
+ * @param result - The Stylelint result.
+ * @param ruleName - The registered name.
+ * @returns For each fix, whether it may be given.
+ */
+export function writesKeepingAddresses (text: string, candidates: WriteCandidate[], reading: Pick<CommentReading, `tokenizes`>, node: AtRule | Declaration | Rule, result: PostcssResult, ruleName: string): boolean[] {
+	return writesGiven(text, candidates, reading, node, result, ruleName).given
 }

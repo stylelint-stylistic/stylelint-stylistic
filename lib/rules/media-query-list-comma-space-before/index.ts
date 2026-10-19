@@ -73,10 +73,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.before,
 			checkedRuleName: ruleName,
+			writtenAtTheEdge: () => (primary.includes(`always`) ? `space` : undefined),
 			// The fix's whitespace ends this text, and its break would close an inline comment standing there, taking the comma into the comment: leave the parameters alone
-			isFixable: (params, index, atRule, runString) => {
-				// The run in front of a comma opening the parameters is `raws.afterName`, written there where it is the stylesheet's and no live neighbor writing that raw asks otherwise; emptied, it would join the name to the parameters, so `never` is left unfixed
-				if (index === 0) return primary.includes(`always`) && !edgeRunOutOfReach(atRule, syntax, result, `space`) && !edgeRunOwned(atRule, result, `space`)
+			isFixable: (params, index, atRule, runString, fix) => {
+				// The run in front of a comma opening the parameters is `raws.afterName`, written there where it is the stylesheet's and no live neighbor writing that raw asks otherwise; emptied, it would join the name to the parameters, so `never` is left unfixed. The neighbor's lineness is read over the whole fix, so the check comes after the writes the other commas are given
+				if (index === 0) return fix !== undefined && !edgeRunOutOfReach(atRule, syntax, result, fix.written) && !edgeRunOwned(atRule, result, fix)
 
 				if (syntax.endsWithInlineComment(params.slice(0, index), syntax.inlineComments(atRule, result))) return false
 

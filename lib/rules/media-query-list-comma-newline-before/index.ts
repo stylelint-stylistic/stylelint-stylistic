@@ -14,7 +14,7 @@ import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { mediaQueryListCommaWhitespaceChecker } from "../../utils/mediaQueryListCommaWhitespaceChecker/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFront } from "../../utils/runInFront/index.ts"
-import { edgeRunOutOfReach, edgeRunOwned, type EdgeWrite, writeEdgeRun } from "../../utils/textEdge/index.ts"
+import { edgeRunOutOfReach, edgeRunOwned, writeEdgeRun } from "../../utils/textEdge/index.ts"
 import { editsAskedWithTheTwins } from "../../utils/twinWritesAtTheComma/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
@@ -77,14 +77,11 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			syntax,
 			locationChecker: checker.beforeAllowingIndentation,
 			checkedRuleName: ruleName,
+			writtenAtTheEdge: () => (primary.startsWith(`always`) ? `newline` : `space`),
 			// `never-multi-line` may take away the break closing a `//` comment and put the comma into it; report and leave the parameters. `always` only adds a break.
-			isFixable: (params, index, atRule, runString) => {
-				// The run in front of a comma opening the parameters is `raws.afterName`, written there where it is the stylesheet's and no live neighbor writing that raw asks otherwise; emptied, it would join the name to the parameters, so `never-multi-line` writes one space there
-				if (index === 0) {
-					let written: EdgeWrite = primary.startsWith(`always`) ? `newline` : `space`
-
-					return !edgeRunOutOfReach(atRule, syntax, result, written) && !edgeRunOwned(atRule, result, written)
-				}
+			isFixable: (params, index, atRule, runString, fix) => {
+				// The run in front of a comma opening the parameters is `raws.afterName`, written there where it is the stylesheet's and no live neighbor writing that raw asks otherwise; emptied, it would join the name to the parameters, so `never-multi-line` writes one space there. The neighbor's lineness is read over the whole fix, so the check comes after the writes the other commas are given
+				if (index === 0) return fix !== undefined && !edgeRunOutOfReach(atRule, syntax, result, fix.written) && !edgeRunOwned(atRule, result, fix)
 
 				let closesInlineComment = syntax.endsWithInlineComment(params.slice(0, index), syntax.inlineComments(atRule, result))
 
@@ -96,7 +93,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎,b` would come out as `a\,b`, one identifier, so the warning stands; `always` leaves the break the backslash stands in front of where it is
 				return primary !== `never-multi-line` || editKeepsEscapedCharacter(params, editAt(runString, index))
 			},
-			// The space written at the edge of the list is nothing a multi-line list refuses only while the list is on one line once the runs in front of its other commas are taken out; which of them a fix may take is asked together ({@link writesKeepingAddresses}), so the edge reads the parameters as the writes given leave them, and where one is refused the list stays multi-line and the space would be reported again — the write is left out and the warning stands
+			// The space written at the edge of the list is nothing a multi-line list refuses only while the list is on one line once the runs in front of its other commas are taken out; which of them a fix may take is asked together ({@link writesGiven}), so the edge reads the parameters as the writes given leave them, and where one is refused the list stays multi-line and the space would be reported again — the write is left out and the warning stands
 			holds: (_params, index) => (edited): boolean => index !== 0 || primary !== `never-multi-line` || isSingleLineString(edited),
 			// Whitespace right behind the `(` of an address decides under PostCSS whether its parentheses are one token or code, and a run written into or taken out of parentheses held as one plain token can make them code or a token again, so that a later `(` pops another word; the writes of the node are asked together whether the parser then reads the file otherwise, along with what the list's other comma rules write around the same comma behind this one in the pass, since the run behind the comma, which a twin writes in the same pass, decides what the parentheses then hold
 			edits: (params, index, atRule, runString, problemIndex) => editsAskedWithTheTwins(params, runString, index, problemIndex, editAt(runString, index), syntax.inlineComments(atRule, result), atRule, result, ruleName),

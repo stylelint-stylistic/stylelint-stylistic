@@ -8,6 +8,22 @@ import { closedBySemicolon, valueAsClosed } from "../closedBySemicolon/index.ts"
 import { isCustomProperty } from "../isCustomProperty/index.ts"
 
 /**
+ * Reads a declaration's value as the file spells it, in the two parts the text is made of: the run behind the colon up to the value, and the value. {@link declarationValueAsSpelled} is the two joined, for the readers that ask about the whole; a rule rewriting the value asks for the parts, since the edits it holds are indexed in the value alone.
+ * @param syntax - The syntax the rule is built over.
+ * @param decl - The declaration.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns The run behind the colon up to the value, and the value.
+ */
+export function declarationValueSpelled (syntax: Syntax, decl: Declaration, result: PostcssResult): { head: string, value: string } {
+	let head = betweenTailAfterColon(syntax, decl, result).replace(LEADING_CSS_WHITESPACE, ``)
+
+	// Behind a flag the run in front of the brace is `raws.important`'s, and the value's trailing run stands inside the declaration
+	if (isCustomProperty(decl.prop) && (decl.important || closedBySemicolon(decl, result))) return { head, value: valueAsClosed(syntax, decl, result) }
+
+	return { head, value: syntax.read(decl).replace(TRAILING_CSS_WHITESPACE, ``) }
+}
+
+/**
  * Reads a declaration's value as the file spells it: the text `decl.value` stands for, with the comments the parser took out put back.
  *
  * PostCSS drops every comment from `decl.value`, the ones in front of the first word into `raws.between`, so a break in or beside a comment is nowhere in it and a rule counting lines missed one. The `-single-line` and `-multi-line` options of the two `declaration-colon-*-after` rules count the lines a reader sees, so this is their text.
@@ -19,10 +35,7 @@ import { isCustomProperty } from "../isCustomProperty/index.ts"
  * @returns The value as the file spells it, comments and all.
  */
 export function declarationValueAsSpelled (syntax: Syntax, decl: Declaration, result: PostcssResult): string {
-	let head = betweenTailAfterColon(syntax, decl, result).replace(LEADING_CSS_WHITESPACE, ``)
+	let { head, value } = declarationValueSpelled(syntax, decl, result)
 
-	// Behind a flag the run in front of the brace is `raws.important`'s, and the value's trailing run stands inside the declaration
-	if (isCustomProperty(decl.prop) && (decl.important || closedBySemicolon(decl, result))) return head + valueAsClosed(syntax, decl, result)
-
-	return head + syntax.read(decl).replace(TRAILING_CSS_WHITESPACE, ``)
+	return head + value
 }

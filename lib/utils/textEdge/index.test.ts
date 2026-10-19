@@ -71,4 +71,31 @@ describe(`the run in front of a delimiter opening a node's text`, () => {
 	])(`is left in %j under %s %s`, async (code, rule, option, customSyntax) => {
 		expect(await fixInBothOrders(code, [[rule, option]], customSyntax)).toEqual([{ code, warnings: 1 }, { code, warnings: 1 }])
 	})
+
+	// A neighbor asking the lineness of a text the delimiter's rule rewrites elsewhere in it is read as the rule's whole fix leaves it, so the file is written in one pass and the pass leaves as many warnings as a lint of its output has
+	it.each([
+		[`a{b:/c\n/d}`, [`@stylistic/value-slash-newline-before`, `never-multi-line`], [`@stylistic/declaration-colon-newline-after`, `always-multi-line`], `a{b:/c/d}`, 0],
+		[`@media\n,a\n,b{}`, [`@stylistic/media-query-list-comma-newline-before`, `never-multi-line`], [`@stylistic/at-rule-name-newline-after`, `always-multi-line`], `@media ,a,b{}`, 0],
+		[`a{b:/c /d}`, [`@stylistic/value-slash-newline-before`, `always`], [`@stylistic/declaration-colon-space-after`, `always-single-line`], `a{b:\n/c\n/d}`, 0],
+		[`@media\n  ,a\n,b{}`, [`@stylistic/media-query-list-comma-space-before`, `always`], [`@stylistic/at-rule-name-newline-after`, `always-multi-line`], `@media ,a ,b{}`, 0],
+		// The pair asks two runs of the same declaration for spellings no file holds together: the rule takes the break away and the colon's space stays, so the warning stands
+		[`a{b: /c\n/d}`, [`@stylistic/value-slash-space-before`, `never`], [`@stylistic/declaration-colon-space-after`, `always-single-line`], `a{b: /c/d}`, 1],
+		[`a{color:red; ,b\n,c{}}`, [`@stylistic/selector-list-comma-newline-before`, `never-multi-line`], [`@stylistic/declaration-block-semicolon-newline-after`, `always-multi-line`], `a{color:red;,b,c{}}`, 0],
+		[`a{ ,b\n,c{color:red}}`, [`@stylistic/selector-list-comma-newline-before`, `never-multi-line`], [`@stylistic/block-opening-brace-newline-after`, `always-multi-line`], `a{,b,c{color:red}}`, 0],
+		// A break standing elsewhere in the block is none of the rule's writes, so the block stays multi-line however the selector is spelled
+		[`a{\n\t,b\n,c{}}`, [`@stylistic/selector-list-comma-newline-before`, `never-multi-line`], [`@stylistic/block-opening-brace-newline-after`, `always-multi-line`], `a{,b,c{}}`, 0],
+		[`a{\n\tcolor:red; ,b\n,c{}}`, [`@stylistic/selector-list-comma-newline-before`, `never-multi-line`], [`@stylistic/declaration-block-semicolon-newline-after`, `always-multi-line`], `a{\n\tcolor:red;\n ,b,c{}}`, 1],
+	] as [string, [string, unknown], [string, unknown], string, number][])(`is written in one pass in %j`, async (code, delimiterRule, neighbor, output, warnings) => {
+		for (let order of [[delimiterRule, neighbor], [neighbor, delimiterRule]]) {
+			let config = { plugins, rules: Object.fromEntries(order) }
+			// eslint-disable-next-line no-await-in-loop -- the orders are read one after another
+			let fixed = await stylelint.lint({ code, config, fix: true })
+			// eslint-disable-next-line no-await-in-loop -- the fixed text is read back in turn
+			let read = await stylelint.lint({ code: output, config })
+
+			expect(fixed.code).toBe(output)
+			expect(fixed.results[0]?.warnings.length).toBe(warnings)
+			expect(read.results[0]?.warnings.length).toBe(warnings)
+		}
+	})
 })
