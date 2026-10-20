@@ -22,7 +22,8 @@ jobs:
           fetch-depth: 0
       - uses: pnpm/action-setup@v6
       - run: pnpm ci
-      - run: make release
+      # `make verify` is triggered by the pre-push hook
+      - run: pnpm dlx @firefoxic/release-it
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

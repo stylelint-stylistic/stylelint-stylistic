@@ -93,10 +93,6 @@ verify: ## ✅ Run every check the CI runs
 	./scripts/verified.ts record $$tree
 .PHONY: verify
 
-release: verify build ## 🚀 Release a new version
-	pnx @firefoxic/release-it
-.PHONY: release
-
 define print_help
 	grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
 	| awk -F ':|##' '\
