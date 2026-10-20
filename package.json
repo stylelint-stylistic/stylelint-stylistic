@@ -44,7 +44,7 @@
 	},
 	"scripts": {
 		"help": "make help",
-		"prepare": "./scripts/prepare.sh"
+		"prepare": "git config --local core.hooksPath .githooks || true"
 	},
 	"devDependencies": {
 		"@firefoxic/beautypography": "^0.2",
