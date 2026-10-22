@@ -238,7 +238,7 @@ async function lintDirect ({ code, rules, registry, syntax, fix = false, stripNa
 		if (warning.stylelintType) continue
 
 		warnings.push(stripNamespaces
-			? { rule: warning.rule?.replace(EVERY_NAMESPACE_SEGMENT, ``), text: warning.text.replace(EVERY_NAMESPACE_SEGMENT, ``), line: warning.line, column: warning.column, endLine: warning.endLine, endColumn: warning.endColumn }
+			? { rule: warning.rule?.replaceAll(EVERY_NAMESPACE_SEGMENT, ``), text: warning.text.replaceAll(EVERY_NAMESPACE_SEGMENT, ``), line: warning.line, column: warning.column, endLine: warning.endLine, endColumn: warning.endColumn }
 			: { rule: warning.rule, text: warning.text, line: warning.line, column: warning.column, endLine: warning.endLine, endColumn: warning.endColumn })
 	}
 
