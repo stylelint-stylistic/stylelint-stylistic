@@ -53,27 +53,27 @@
 		"@fontsource-variable/geist-mono": "^5",
 		"@morev/stylelint-testing-library": "^1",
 		"@types/node": "^26",
-		"@vitest/coverage-v8": "4",
+		"@vitest/coverage-v8": "^5",
 		"oxlint": "^1",
 		"postcss-html": "^2",
 		"postcss-less": "^6",
 		"postcss-scss": "^4",
-		"postcss-styled-syntax": "^0.7.3",
+		"postcss-styled-syntax": "^0",
 		"stylelint": "^18.0.0-next.0",
 		"typescript": "^7",
 		"vitepress": "next",
-		"vitest": "^4",
+		"vitest": "^5",
 		"vue": "^3"
 	},
 	"devEngines": {
 		"runtime": {
 			"name": "node",
-			"version": ">=26.10",
+			"version": ">=26.12",
 			"onFail": "download"
 		},
 		"packageManager": {
 			"name": "pnpm",
-			"version": ">=12.6",
+			"version": ">=12.15",
 			"onFail": "download"
 		}
 	},

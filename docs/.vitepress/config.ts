@@ -138,9 +138,9 @@ export default defineConfig({
 		let content = html
 		for (let tag of first) content = content.replace(`\n    ${tag}`, ``)
 		let fonts = content.match(FONT_PRELOAD)?.join(``) ?? ``
-		content = content.replace(FONT_PRELOAD, ``)
+		content = content.replaceAll(FONT_PRELOAD, ``)
 		content = content.replace(/\n {4}<link rel="preload stylesheet"/u, `${fonts}$&`)
-		content = content.replace(STYLESHEET_PRELOAD, `<link rel="stylesheet"$1`)
+		content = content.replaceAll(STYLESHEET_PRELOAD, `<link rel="stylesheet"$1`)
 		return content.replace(`<meta charset="utf-8">`, `$&\n    ${first.join(`\n    `)}`)
 	},
 
