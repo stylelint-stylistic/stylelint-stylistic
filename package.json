@@ -31,13 +31,13 @@
 		"dist"
 	],
 	"peerDependencies": {
-		"stylelint": "^17.15.0"
+		"stylelint": "^18.0.0-next.0"
 	},
 	"dependencies": {
 		"@csstools/css-parser-algorithms": "^4.0.0",
 		"@csstools/css-tokenizer": "^4.0.1",
 		"@csstools/media-query-list-parser": "^5.0.0",
-		"postcss": "^8.5.28",
+		"postcss": "^8.5.31",
 		"postcss-selector-parser": "^7.1.6",
 		"postcss-value-parser": "^4.2.0",
 		"style-search": "^0.1.0"
@@ -59,7 +59,7 @@
 		"postcss-less": "^6",
 		"postcss-scss": "^4",
 		"postcss-styled-syntax": "^0.7.3",
-		"stylelint": "github:stylelint/stylelint#v18",
+		"stylelint": "^18.0.0-next.0",
 		"typescript": "^7",
 		"vitepress": "next",
 		"vitest": "^4",
