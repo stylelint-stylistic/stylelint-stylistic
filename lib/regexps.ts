@@ -447,3 +447,6 @@ export const QUOTE_OR_SOLIDUS = /^["'/]$/u
 
 /** Every comma. */
 export const EVERY_COMMA = /,/gu
+
+/** A selector carrying an empty pseudo-class argument whose whitespace the parser now keeps but used to drop, so the rule skips it rather than warning. */
+export const UNSTABLE_PSEUDO_ARGUMENT = /\(\s+\)|\(\s+,|,\s+\)|,\s+,|\)\s+,\s+,|\([^)]*,,[^)]*\)/u
