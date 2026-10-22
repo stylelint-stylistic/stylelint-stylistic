@@ -1,7 +1,7 @@
 import type { Container, Node, Root, Spaces } from "postcss-selector-parser"
 import stylelint from "stylelint"
 
-import { LEADING_CSS_WHITESPACE, LEADING_WHITESPACE_OR_BLOCK_COMMENT, LEADING_WHITESPACE_RUN, LINE_BREAK, TRAILING_WHITESPACE_RUN, WHITESPACE } from "../../regexps.ts"
+import { LEADING_CSS_WHITESPACE, LEADING_WHITESPACE_OR_BLOCK_COMMENT, LEADING_WHITESPACE_RUN, LINE_BREAK, TRAILING_WHITESPACE_RUN, UNSTABLE_PSEUDO_ARGUMENT, WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { applyEditsFromEnd, type Edit } from "../../utils/applyEditsFromEnd/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
@@ -70,6 +70,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let copies = syntax.selectorCopies(ruleNode)
 
 			let { selector } = copies
+
+			// The parser now keeps whitespace the old one dropped in empty arguments, which the rule cannot fix up and used to skip
+			if (UNSTABLE_PSEUDO_ARGUMENT.test(selector)) return
 
 			let selectorTree = parseSelector(selector, result, ruleNode)
 
