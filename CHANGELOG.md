@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+## [6.0.0-next.0] — 2026–10–22
+
 This release brings a lot of changes. For a smoother update to it, use the [migration guide](./docs/migration-guide/to-6.0.0.md).
 
 ### Changed
@@ -440,7 +442,8 @@ No meaningful changes.
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.3.1...HEAD
+[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v6.0.0-next.0...HEAD
+[6.0.0-next.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.3.1...v6.0.0-next.0
 [5.3.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.3.0...v5.3.1
 [5.3.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.2.1...v5.3.0
 [5.2.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.2.0...v5.2.1
