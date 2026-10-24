@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+This release brings a lot of changes. For a smoother update to it, use the [migration guide](./docs/migration-guide/to-6.0.0.md).
+
 ### Changed
 
 The plugin now requires `stylelint` version `18.0.0` or higher.
