@@ -90,6 +90,8 @@ let userGuide: DefaultTheme.SidebarItem[] = [
 	{ text: `Conflicting settings`, link: `/user-guide/conflicting-settings` },
 ]
 
+let migrationGuide: DefaultTheme.SidebarItem[] = [{ text: `Migrating to 6.0.0`, link: `/migration-guide/to-6.0.0` }]
+
 let contribute: DefaultTheme.SidebarItem[] = [{ text: `Contributing`, link: `/contributing` }]
 
 let developerGuide: DefaultTheme.SidebarItem[] = [{ text: `Writing rules`, link: `/developer-guide/rules` }]
@@ -103,6 +105,7 @@ let maintainerGuide: DefaultTheme.SidebarItem[] = [
 /** The guides by the reader they are written for: whoever uses the plugin, whoever wants to help, whoever writes a rule, and whoever maintains the repository. */
 let guides: DefaultTheme.SidebarItem[] = [
 	{ text: `User guide`, items: userGuide },
+	{ text: `Migration guide`, items: migrationGuide },
 	{ text: `Contribute`, items: contribute },
 	{ text: `Developer guide`, items: developerGuide },
 	{ text: `Maintainer guide`, items: maintainerGuide },
