@@ -4,5 +4,9 @@ minimumReleaseAgeExclude:
   - "@firefoxic/*"
   - "stylelint"
 
+# `postcss-selector-parser` spells `Selector` as `type Selector = _Selector<Selector>` over `Diff<Node, S>`, a generic instantiation that never bottoms out; the patch writes it as the self-referential interface it means, since the native TypeScript refuses to check a type whose instantiations appear infinitely circular, and every rule reading a selector meets it
+patchedDependencies:
+  postcss-selector-parser: patches/postcss-selector-parser.patch
+
 registries:
   default: https://registry.npmjs.org/
