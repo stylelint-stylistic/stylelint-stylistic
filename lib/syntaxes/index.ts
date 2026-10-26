@@ -1,5 +1,5 @@
 import type { AtRule, Comment, Declaration, Node, Root, Rule as PostcssRule } from "postcss"
-import type { Node as SelectorNode } from "postcss-selector-parser"
+import type { Combinator } from "postcss-selector-parser"
 import type { FunctionNode, Node as ValueParserNode } from "postcss-value-parser"
 import type { PostcssResult } from "stylelint"
 
@@ -124,7 +124,7 @@ export type Syntax = {
 	 * @param combinator - The combinator node.
 	 * @returns True where it is.
 	 */
-	isStandardCombinator (combinator: SelectorNode): boolean,
+	isStandardCombinator (combinator: Combinator): boolean,
 
 	/**
 	 * Reads a node's value, selector or params as the file writes it.
