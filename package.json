@@ -60,7 +60,7 @@
 		"postcss-scss": "^4",
 		"postcss-styled-syntax": "^0",
 		"stylelint": "^18.0.0-next.0",
-		"typescript": "^7",
+		"tsrs": "~0.20.0-ts7",
 		"vitepress": "next",
 		"vitest": "^5",
 		"vue": "^3"

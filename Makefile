@@ -14,12 +14,12 @@ help: ## 🧾 Print this message
 .PHONY: help
 
 check: ## ✅ Check types with TypeScript
-	tsc --noEmit
+	tsrs
 .PHONY: check
 
 build: ## 📦 Build the package into dist/ and load what came out
 	rm -rf dist
-	tsc -p tsconfig.build.json
+	tsrs -p tsconfig.build.json
 	node --input-type=module -e 'import("./dist/index.js").then(({ default: plugins }) => { if (plugins.length === 0) throw new Error("dist/index.js exports no plugin") })'
 .PHONY: build
 
