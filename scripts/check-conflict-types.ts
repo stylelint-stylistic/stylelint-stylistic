@@ -3,7 +3,7 @@
 /**
  * Holds the type refusing a conflicting pair in the editor in step with the table refusing it at the run.
  *
- * Every pair of a rule and a partner under every option each takes is written out as a call of `defineStylistic`, one per line, and `tsc` is asked which lines it refuses; the run's table is asked the same, and a line either alone refuses is printed. The compiler is driven as a process because TypeScript 7 ships no API to ask it a type question of; once one is back, the pairs can be checked in a program held in memory, without a file or a process, and this script can move into the module's own test file.
+ * Every pair of a rule and a partner under every option each takes is written out as a call of `defineStylistic`, one per line, and `tsrs` is asked which lines it refuses; the run's table is asked the same, and a line either alone refuses is printed. The compiler is driven as a process because TypeScript 7 ships no API to ask it a type question of; once one is back, the pairs can be checked in a program held in memory, without a file or a process, and this script can move into the module's own test file.
  */
 
 import { spawnSync } from "node:child_process"
@@ -34,7 +34,7 @@ const EXTRA_OPTIONS: Record<string, unknown[]> = {
 	],
 }
 
-/** The compiler's options, the project's own spelled out, since the file stands outside the project; `--pretty false` keeps the `file(line,column): error` shape the count reads, which `tsc` gives up for the colored one wherever `FORCE_COLOR` is set, as CI sets it. */
+/** The compiler's options, the project's own spelled out, since the file stands outside the project; `--pretty false` keeps the `file(line,column): error` shape the count reads. */
 const COMPILER_OPTIONS = [`--noEmit`, `--pretty`, `false`, `--ignoreConfig`, `--module`, `esnext`, `--moduleResolution`, `bundler`, `--target`, `esnext`, `--strict`, `--exactOptionalPropertyTypes`, `--noUncheckedIndexedAccess`, `--allowImportingTsExtensions`, `--erasableSyntaxOnly`, `--skipLibCheck`]
 
 /**
@@ -75,9 +75,13 @@ writeFileSync(file, [...head, ...lines, ``].join(`\n`))
 let refusedByTypes: Set<number>
 
 try {
-	let tsc = spawnSync(path.join(cwd(), `node_modules`, `.bin`, `tsc`), [...COMPILER_OPTIONS, file], { encoding: `utf8` })
+	let tsrs = spawnSync(path.join(cwd(), `node_modules`, `.bin`, `tsrs`), [...COMPILER_OPTIONS, file], { encoding: `utf8` })
 
-	refusedByTypes = new Set([...tsc.stdout.matchAll(/probe\.ts\((\d+),\d+\): error/gu)].map((match) => Number(match[1]) - head.length - 1).filter((at) => at >= 0))
+	if (tsrs.error) throw tsrs.error
+	if (typeof tsrs.stdout !== `string`) throw new Error(`tsrs produced no output`)
+	if (tsrs.status !== 0 && tsrs.stdout.length === 0) throw new Error(`tsrs failed: ${tsrs.stderr}`)
+
+	refusedByTypes = new Set([...tsrs.stdout.matchAll(/probe\.ts\((\d+),\d+\): error/gu)].map((match) => Number(match[1]) - head.length - 1).filter((at) => at >= 0))
 }
 finally {
 	rmSync(directory, { recursive: true, force: true })
