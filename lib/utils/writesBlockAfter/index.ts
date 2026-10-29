@@ -182,6 +182,22 @@ export function heldByABreakBeforeTheBrace (node: Container, result: PostcssResu
 }
 
 /**
+ * Asks whether a space rule requires a run the opening-brace rule cannot write in front of this block's closing brace.
+ * @param node - The block's statement.
+ * @param result - The PostCSS result, which holds the configuration.
+ * @param primary - The asking rule's primary option.
+ * @param isSingleLine - Whether the block is one line as the write leaves it.
+ * @param standing - The run in front of the closing brace as it stands.
+ * @returns True where the space rule and the asking rule accept no common run.
+ */
+export function closingBraceSpacePreventsWritingBlockAfter (node: Container, result: PostcssResult, primary: string, isSingleLine: boolean, standing: string): boolean {
+	let { holdsCode } = runBeforeTheClosingBrace(node, result, standing)
+	let accepted = acceptedByWhitespace(primary, true)
+
+	return !holdsCode && writingCopies(node, result, CLOSING_SPACE).some(({ option }) => speaksOf(option, () => isSingleLine) && !acceptedByWhitespace(option, false).some((run) => accepted.includes(run)))
+}
+
+/**
  * Asks whether `block-opening-brace-newline-after` is the one to write the run in front of the closing brace of a block holding nothing but comments, the run the three `block-closing-brace-*-before` rules write.
  *
  * It writes only where every one of the three that speaks of the block as the write leaves it accepts a spelling it accepts too; otherwise the run would be taken straight back out, and the two rules would take it in turns for as long as `--fix` ran. Sharing a spelling rather than accepting the written one is what lets `block-closing-brace-empty-line-before` double the break this rule writes.
@@ -197,7 +213,7 @@ export function heldByABreakBeforeTheBrace (node: Container, result: PostcssResu
  * @returns True where the asking rule writes the run.
  */
 export function writesBlockAfter (node: Container, result: PostcssResult, primary: string, isSingleLine: boolean, standing: string): boolean {
-	let { holdsCode, writtenInFront } = runBeforeTheClosingBrace(node, result, standing)
+	let { writtenInFront } = runBeforeTheClosingBrace(node, result, standing)
 	let accepted = acceptedByWhitespace(primary, true)
 
 	/**
@@ -211,7 +227,7 @@ export function writesBlockAfter (node: Container, result: PostcssResult, primar
 
 	if (heldByABreakBeforeTheBrace(node, result, primary, isSingleLine, standing)) return false
 
-	if (!holdsCode && writingCopies(node, result, CLOSING_SPACE).some(({ option }) => speaksOf(option, () => isSingleLine) && !agrees(acceptedByWhitespace(option, false)))) return false
+	if (closingBraceSpacePreventsWritingBlockAfter(node, result, primary, isSingleLine, standing)) return false
 
 	return !writtenInFront || writingCopies(node, result, CLOSING_EMPTY_LINE).every(({ option, secondary }) => agrees(acceptedByEmptyLine(node, result, option, secondary, isSingleLine)))
 }

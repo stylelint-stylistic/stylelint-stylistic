@@ -19,6 +19,8 @@ a { /* end-of-line comment */
 
 The [`fix` option](https://stylelint.io/user-guide/options#fix) can automatically fix most of the problems reported by this rule. Over a block holding nothing but comments it writes only where the `block-closing-brace-newline-before`, `block-closing-brace-space-before` and `block-closing-brace-empty-line-before` rules, which write the same run, accept the result; otherwise the warning stands. Where a `block-closing-brace-newline-before` rule asks for a break in that run, the run is not written here at all: this rule judges the run behind the opening brace, which is the one its option names, and the neighbor writes its own break in front of the closing brace. A stray semicolon in that run stays where it is.
 
+When a block contains only one comment on the opening-brace line and the closing-brace space rule requires a conflicting run, the warning explains that the rules cannot both be satisfied and advises moving the comment to a new line after `{`.
+
 ## Options
 
 `string`: `"always"|"always-multi-line"|"never-multi-line"`

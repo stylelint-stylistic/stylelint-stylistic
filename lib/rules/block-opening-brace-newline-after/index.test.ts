@@ -1116,6 +1116,7 @@ describe(`${ruleName} beside the rules that write the same run`, () => {
 	let closingNewline = `@stylistic/block-closing-brace-newline-before`
 	let closingSpace = `@stylistic/block-closing-brace-space-before`
 	let closingEmptyLine = `@stylistic/block-closing-brace-empty-line-before`
+	let unresolvableAfter = `No whitespace can satisfy both rules here; put the comment on a new line after "{" (${ruleName})`
 
 	it(`writes the run where the rule about the closing brace asks for the same break`, async () => {
 		expect(await race(ruleName, `a {/*c*/}`, `always`, closingNewline, `always`)).toEqual({ ours: `a {/*c*/\n}`, theirs: `a {/*c*/\n}`, left: [] })
@@ -1126,7 +1127,60 @@ describe(`${ruleName} beside the rules that write the same run`, () => {
 	})
 
 	it(`leaves it where the rule about a space in front of that brace asks for one`, async () => {
-		expect(await race(ruleName, `a {/*c*/}`, `always`, closingSpace, `always`)).toEqual({ ours: `a {/*c*/ }`, theirs: `a {/*c*/ }`, left: [messages.expectedAfter()] })
+		expect(await race(ruleName, `a {/*c*/}`, `always`, closingSpace, `always`)).toEqual({ ours: `a {/*c*/ }`, theirs: `a {/*c*/ }`, left: [unresolvableAfter] })
+	})
+
+	it(`advises how to separate the rows under each closing-space option that conflicts with always`, async () => {
+		let cases: [string, string][] = [
+			[`never`, `a {/*c*/}`],
+			[`always-multi-line`, `a {/*c*/ }`],
+			[`never-multi-line`, `a {/*c*/}`],
+		]
+
+		await Promise.all(cases.map(async ([option, fixed]) => {
+			expect(await race(ruleName, `a {/*c*/\n}`, `always`, closingSpace, option)).toEqual({
+				ours: fixed,
+				theirs: fixed,
+				left: [unresolvableAfter],
+			})
+		}))
+	})
+
+	it(`advises how to separate the rows for every unsatisfiable comment-only block form`, async () => {
+		let cases: [string, string][] = [
+			[`a {/*c*/\n}`, `a {/*c*/ }`],
+			[`a { /*c*/\n}`, `a { /*c*/ }`],
+			[`a {/*c*/\n\n}`, `a {/*c*/ }`],
+			[`a {/*a\nb*/\n}`, `a {/*a\nb*/ }`],
+			[`@media print {/*c*/\n}`, `@media print {/*c*/ }`],
+			[`a {\nb {/*c*/\n}\n}`, `a {\nb {/*c*/ } }`],
+		]
+
+		await Promise.all(cases.map(async ([code, fixed]) => {
+			expect(await race(ruleName, code, `always`, closingSpace, `always`)).toEqual({
+				ours: fixed,
+				theirs: fixed,
+				left: [unresolvableAfter],
+			})
+		}))
+	})
+
+	// This is the settled form left by each stuck fix, where the space rule accepts its run and this rule can name the unresolved requirement
+	testRule({
+		ruleName,
+		config: [`always`],
+		extraRules: { "@stylistic/block-closing-brace-space-before": `always` },
+
+		reject: [
+			{
+				description: `a block whose only comment shares the opening-brace line and whose closing brace has the neighbor's space`,
+				code: `a {/*c*/ }`,
+				fixed: `a {/*c*/ }`,
+				line: 1,
+				column: 4,
+				message: unresolvableAfter,
+			},
+		],
 	})
 
 	it(`writes it where that rule says nothing of the block the write leaves, which is multi-line`, async () => {

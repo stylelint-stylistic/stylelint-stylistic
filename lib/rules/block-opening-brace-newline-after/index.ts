@@ -24,7 +24,7 @@ import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { type LineEdit, releasesAKeptSemicolon, straySemicolonsTaken, straySemicolonsTakenBefore, withoutTaken, writtenAsLeft } from "../../utils/straySemicolonsTaken/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
-import { heldByABreakBeforeTheBrace, writesBlockAfter } from "../../utils/writesBlockAfter/index.ts"
+import { closingBraceSpacePreventsWritingBlockAfter, heldByABreakBeforeTheBrace, writesBlockAfter } from "../../utils/writesBlockAfter/index.ts"
 
 let { utils: { validateOptions } } = stylelint
 
@@ -34,6 +34,7 @@ const MESSAGES = defineMessages({
 	expectedAfter: () => `Expected newline after "{"`,
 	expectedAfterMultiLine: () => `Expected newline after "{" of a multi-line block`,
 	rejectedAfterMultiLine: () => `Unexpected whitespace after "{" of a multi-line block`,
+	unresolvableAfter: () => `No whitespace can satisfy both rules here; put the comment on a new line after "{"`,
 })
 
 export let meta = {
@@ -361,6 +362,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 
 			let { nodes } = statement
+			let [first] = nodes
 			let backupCommentNextBefores = (new Map())
 
 			/**
@@ -397,6 +399,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let nodeToCheck = nextNonCommentNode(statement.first, carryBreakPastComment)
 			let problemIndex = beforeBlockString(statement, result, { noRawBefore: true }).length + 1
 			let behindBrace = nodeToCheck === null ? judgedBehindTheOpeningBrace(syntax, statement, result, primary, nodes) : undefined
+			let unresolvableAfter = false
+
+			if (primary === `always` && nodeToCheck === null && nodes.length === 1 && first !== undefined && !LINE_BREAK.test(runInFrontOf(first))) {
+				let standing = getBlockAfter(syntax, statement)
+
+				unresolvableAfter = typeof standing === `string` && closingBraceSpacePreventsWritingBlockAfter(statement, result, primary, false, standing)
+			}
+
 			// Taking away the break closing an inline comment would put the rest of the block inside it, so the `never-multi-line` warning stands unfixed there. The `always` options never report such a block; the short-circuit mirrors `declaration-block-semicolon-newline-after`, where it is reached and pinned
 			let fix = primary.startsWith(`always`) || !fixWouldCommentOutTheBlock(syntax, statement, nodeToCheck, result)
 				? (nodeToCheck === null ? fixTheTrailingRun(behindBrace) : fixTheCheckedRun(nodeToCheck))
@@ -406,7 +416,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				source: runJudgedIn(syntax, statement, result, nodeToCheck, behindBrace),
 				index: -1,
 				lineCheckStr: blockString(statement, result),
-				err: (m) => reportAfterOpeningBrace(m, ruleName, statement, problemIndex, result, fix),
+				err: (m) => reportAfterOpeningBrace(unresolvableAfter ? messages.unresolvableAfter() : m, ruleName, statement, problemIndex, result, fix),
 			})
 
 			restoreCarriedBreaks()

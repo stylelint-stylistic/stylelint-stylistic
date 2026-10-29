@@ -2,7 +2,7 @@ import { parse, type Rule } from "postcss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
-import { heldByABreakBeforeTheBrace, writesBlockAfter } from "./index.ts"
+import { closingBraceSpacePreventsWritingBlockAfter, heldByABreakBeforeTheBrace, writesBlockAfter } from "./index.ts"
 
 const OPENING_NEWLINE = `@stylistic/block-opening-brace-newline-after`
 const CLOSING_NEWLINE = `@stylistic/block-closing-brace-newline-before`
@@ -31,6 +31,13 @@ describe(`writesBlockAfter`, () => {
 		expect(held(`always`, { [CLOSING_NEWLINE]: `always` }, false)).toBe(false)
 		expect(held(`never-multi-line`, { [CLOSING_SPACE]: `always` }, false)).toBe(false)
 		expect(held(`never-multi-line`, {}, false)).toBe(false)
+	})
+
+	it(`identifies a closing-space rule that accepts no run the opening-brace rule writes`, () => {
+		expect(spacePrevents(`a {/*c*/ }`, `always`, { [CLOSING_SPACE]: `always` })).toBe(true)
+		expect(spacePrevents(`a {/*c*/ }`, `always`, { [CLOSING_SPACE]: [`always`, { disableFix: true }] })).toBe(false)
+		expect(spacePrevents(`a {/*c*/ }`, `always`, { [CLOSING_SPACE]: `always-single-line` }, false)).toBe(false)
+		expect(spacePrevents(`a {/*c*/; }`, `always`, { [CLOSING_SPACE]: `always` })).toBe(false)
 	})
 
 	it(`leaves the row to the rule writing it where the break the neighbor takes stands behind the first code, which puts the row out of the neighbor's reach`, () => {
@@ -189,4 +196,19 @@ function askAbout (block: Rule, primary: string, rules: Record<string, unknown>,
 	let result = { stylelint: { config: { rules } } } as unknown as PostcssResult
 
 	return writesBlockAfter(block, result, primary, isSingleLine, block.raws.after ?? ``)
+}
+
+/**
+ * Asks whether a closing-space rule prevents the opening-brace rule's write.
+ * @param code - The stylesheet.
+ * @param primary - The opening-brace rule's primary option.
+ * @param rules - The rules the configuration lists.
+ * @param isSingleLine - Whether the block is one line as the write leaves it.
+ * @returns True where the two rules accept no common run.
+ */
+function spacePrevents (code: string, primary: string, rules: Record<string, unknown>, isSingleLine: boolean = false): boolean {
+	let block = parse(code).first as Rule
+	let result = { stylelint: { config: { rules } } } as unknown as PostcssResult
+
+	return closingBraceSpacePreventsWritingBlockAfter(block, result, primary, isSingleLine, block.raws.after ?? ``)
 }
