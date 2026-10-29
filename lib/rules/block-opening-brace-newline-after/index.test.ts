@@ -757,6 +757,10 @@ testRule({
 				b*/}
 			`,
 		},
+		{
+			description: `a comment abutting the brace with the break in front of the declaration, where there is no whitespace after the brace`,
+			code: `a {/*c*/\ncolor: pink;\n}`,
+		},
 	],
 
 	reject: [
@@ -880,7 +884,7 @@ testRule({
 				background: orange; }
 			`,
 			fixed: `
-				a {/*comment*/color: pink;
+				a {/*comment*/ color: pink;
 				background: orange; }
 			`,
 			line: 1,
@@ -888,9 +892,33 @@ testRule({
 			message: messages.rejectedAfterMultiLine(),
 		},
 		{
+			description: `a space behind the brace before a comment abutting the declaration`,
+			code: `a { /*c*/color: pink;\n}`,
+			fixed: `a {/*c*/color: pink;\n}`,
+			line: 1,
+			column: 4,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		{
+			description: `a space behind the brace before a comment with the break in front of the declaration`,
+			code: `a { /*c*/ \ncolor: pink;\n}`,
+			fixed: `a {/*c*/ \ncolor: pink;\n}`,
+			line: 1,
+			column: 4,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		{
+			description: `a space behind the brace before a comment and a stray semicolon`,
+			code: `a { /*c*/;\ncolor: pink;\n}`,
+			fixed: `a {/*c*/;\ncolor: pink;\n}`,
+			line: 1,
+			column: 4,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		{
 			description: `several comments on the lines behind the brace, with an empty line among them`,
 			code: `a {\n /*c1*/ /*c2*/ \n\n /*c3*/ color: pink;\nbackground: orange; }`,
-			fixed: `a { /*c1*/ /*c2*/  /*c3*/color: pink;\nbackground: orange; }`,
+			fixed: `a {/*c1*/ /*c2*/ \n\n /*c3*/ color: pink;\nbackground: orange; }`,
 			line: 1,
 			column: 4,
 			message: messages.rejectedAfterMultiLine(),
@@ -1291,10 +1319,11 @@ describe(`${ruleName} beside the rules that write the same run`, () => {
 		expect(await race(ruleName, code, `never-multi-line`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: fixed, theirs: fixed, left: [] })
 	})
 
-	it(`leaves it under never-multi-line where a semicolon a disable comment keeps stands in front of another comment and would move off the line the disable comment covers`, async () => {
+	it(`takes the opening break out without moving the semicolon off the disable comment's next line`, async () => {
 		let code = `a {\n/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\n;/* d */ b: c;\n}`
+		let fixed = `a {/* stylelint-disable-next-line @stylistic/no-extra-semicolons */\n;/* d */ b: c;\n}`
 
-		expect(await race(ruleName, code, `never-multi-line`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: code, theirs: code, left: [messages.rejectedAfterMultiLine()] })
+		expect(await race(ruleName, code, `never-multi-line`, `@stylistic/no-extra-semicolons`, true)).toEqual({ ours: fixed, theirs: fixed, left: [] })
 	})
 
 	it(`leaves the semicolon a disable comment for another rule's range closes on its line out of the reckoning`, async () => {

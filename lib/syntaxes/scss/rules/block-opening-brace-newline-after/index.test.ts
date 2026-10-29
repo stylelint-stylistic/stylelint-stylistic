@@ -82,7 +82,8 @@ testRule({
 				}
 			`,
 			fixed: `
-				a {/* b */color: pink;
+				a {/* b */
+				color: pink;
 				}
 			`,
 			line: 1,

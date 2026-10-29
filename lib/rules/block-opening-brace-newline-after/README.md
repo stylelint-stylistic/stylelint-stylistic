@@ -92,10 +92,17 @@ color: pink; }
 
 There _must never_ be whitespace after the opening brace in multi-line blocks.
 
+With a standard comment there that has a saved raw and a later non-comment node, the rule checks only the whitespace immediately after `{`: whitespace in front of the comment is checked and fixed, while whitespace after it is left alone. Inline comments and comments without a saved raw stay on the rule's other reading path.
+
 The following patterns are considered problems:
 
 ```css
 a { color: pink;
+}
+```
+
+```css
+a { /* comment */color: pink;
 }
 ```
 
@@ -107,6 +114,12 @@ a { color: pink; }
 
 ```css
 a {color: pink;
+}
+```
+
+```css
+a {/* comment */
+color: pink;
 }
 ```
 

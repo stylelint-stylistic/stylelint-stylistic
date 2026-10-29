@@ -23,6 +23,7 @@ import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { setBlockAfter } from "../../utils/setBlockAfter/index.ts"
 import { type LineEdit, releasesAKeptSemicolon, straySemicolonsTaken, straySemicolonsTakenBefore, withoutTaken, writtenAsLeft } from "../../utils/straySemicolonsTaken/index.ts"
+import { isComment } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 import { closingBraceSpacePreventsWritingBlockAfter, heldByABreakBeforeTheBrace, writesBlockAfter } from "../../utils/writesBlockAfter/index.ts"
 
@@ -309,6 +310,20 @@ function reportAfterOpeningBrace (message: string, ruleName: string, statement: 
 /** `always` a newline after the opening brace; `always-multi-line` asks it, and `never-multi-line` refuses whitespace there, in a multi-line block only. */
 export type PrimaryOption = `always` | `always-multi-line` | `never-multi-line`
 
+/**
+ * Gets the node whose leading run is checked.
+ * @param first - The block's first child.
+ * @param primary - The primary option.
+ * @param syntax - The syntax that reads the block.
+ * @param onComment - The function that carries a comment's break to the next node.
+ * @returns The first standard comment under `never-multi-line` when it has a saved raw and a non-comment node follows it, or the next non-comment node otherwise.
+ */
+function firstNodeToCheck (first: Node | undefined, primary: PrimaryOption, syntax: Syntax, onComment: Parameters<typeof nextNonCommentNode>[1]): Node | null {
+	if (primary === `never-multi-line` && first && isComment(first) && typeof first.raws.before === `string` && syntax.isStandardComment(first) && nextNonCommentNode(first) !== null) return first
+
+	return nextNonCommentNode(first, onComment)
+}
+
 /** The secondary options. */
 export type SecondaryOptions = {
 
@@ -362,7 +377,6 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			if (!hasBlock(statement) || hasEmptyBlock(statement)) return
 
 			let { nodes } = statement
-			let [first] = nodes
 			let backupCommentNextBefores = (new Map())
 
 			/**
@@ -395,13 +409,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				backupCommentNextBefores.clear()
 			}
 
-			// Allow an end-of-line comment
-			let nodeToCheck = nextNonCommentNode(statement.first, carryBreakPastComment)
+			let nodeToCheck = firstNodeToCheck(statement.first, primary, syntax, carryBreakPastComment)
 			let problemIndex = beforeBlockString(statement, result, { noRawBefore: true }).length + 1
 			let behindBrace = nodeToCheck === null ? judgedBehindTheOpeningBrace(syntax, statement, result, primary, nodes) : undefined
 			let unresolvableAfter = false
 
-			if (primary === `always` && nodeToCheck === null && nodes.length === 1 && first !== undefined && !LINE_BREAK.test(runInFrontOf(first))) {
+			if (primary === `always` && nodeToCheck === null && nodes.length === 1 && nodes[0] !== undefined && !LINE_BREAK.test(runInFrontOf(nodes[0]))) {
 				let standing = getBlockAfter(syntax, statement)
 
 				unresolvableAfter = typeof standing === `string` && closingBraceSpacePreventsWritingBlockAfter(statement, result, primary, false, standing)

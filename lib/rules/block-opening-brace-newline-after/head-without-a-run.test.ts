@@ -40,19 +40,6 @@ testRule({
 		},
 	],
 
-	reject: [
-		{
-			description: `a break in front of the declaration standing behind a head comment the file spells no run in front of`,
-			code: `
-				a {/*c*/
-				color: pink; }
-			`,
-			fixed: `a {/*c*/color: pink; }`,
-			line: 1,
-			column: 4,
-			message: messages.rejectedAfterMultiLine(),
-		},
-	],
 })
 
 testRule({
@@ -118,6 +105,14 @@ testRule({
 
 describe(`the run PostCSS prints in front of a head node the file spells none in front of`, () => {
 	// The run is pinned to what PostCSS prints, a break and its indentation, and the fix writes it as it writes the same run the file spells
+	it(`keeps the warning on a head comment with no raw when the fix leaves the source unchanged`, async () => {
+		expect(await fixAndRead(`a {/*c*/\ncolor: pink; }`, `never-multi-line`)).toEqual({
+			warnings: [`1:4 ${messages.rejectedAfterMultiLine()}`],
+			fixed: `a {/*c*/\ncolor: pink; }`,
+			left: 0,
+		})
+	})
+
 	it(`is the whitespace never-multi-line refuses over a block holding one comment, and the fix takes its break out`, async () => {
 		expect(await fixAndRead(`a {/*1*/\n}`, `never-multi-line`)).toEqual({
 			warnings: [`1:4 ${messages.rejectedAfterMultiLine()}`],
