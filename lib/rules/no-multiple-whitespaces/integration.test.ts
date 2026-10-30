@@ -1,4 +1,5 @@
 import { messages as trailingSemicolonMessages, ruleName as trailingSemicolonRuleName } from "../declaration-block-trailing-semicolon/index.ts"
+import { messages as colonMessages } from "../declaration-colon-newline-after/index.ts"
 import { messages as namedGridAreasAlignmentMessages } from "../named-grid-areas-alignment/index.ts"
 
 import { messages, ruleName } from "./index.ts"
@@ -81,6 +82,26 @@ testTrailingSemicolonListedFirst({
 			line: 1,
 			column: 12,
 			message: trailingSemicolonMessages.expected,
+		},
+	],
+})
+
+// This rule listed first over `declaration-colon-newline-after: always`: the run behind the comment on the colon's line is left for the colon rule, so it does not collapse to one space before the break lands.
+testRule({
+	ruleName,
+	config: [true],
+	extraRules: { "@stylistic/declaration-colon-newline-after": `always` },
+
+	reject: [
+		{
+			description: `a custom property whose value is a comment followed by two spaces, with the colon newline rule live`,
+			code: `a { --b: /*c*/  ; }`,
+			fixed: `a { --b: /*c*/\n  ; }`,
+			line: 1,
+			column: 14,
+			endLine: 1,
+			endColumn: 15,
+			message: colonMessages.expectedAfter(),
 		},
 	],
 })

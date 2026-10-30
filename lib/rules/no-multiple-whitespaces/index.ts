@@ -1,7 +1,7 @@
 import valueParser from "postcss-value-parser"
 import stylelint from "stylelint"
 
-import { CRLF, CSS_LINE_BREAK, GRID_AREAS_PROPERTY, LEADING_LINE_BREAK } from "../../regexps.ts"
+import { CRLF, CSS_LINE_BREAK, GRID_AREAS_PROPERTY, LEADING_LINE_BREAK, LEADING_WHITESPACE_WITHOUT_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { bareAddressSpans } from "../../utils/bareAddressSpans/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
@@ -13,7 +13,7 @@ import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
 import { gridTableLines, type Span } from "../../utils/gridTableLines/index.ts"
 import { isWhitespace } from "../../utils/isWhitespace/index.ts"
 import { maskEscapes } from "../../utils/maskEscapes/index.ts"
-import { neighborCopies } from "../../utils/neighborSettings/index.ts"
+import { neighborCopies, type NeighborRuleSetting, speaksOf } from "../../utils/neighborSettings/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runHeldInTheValue } from "../../utils/runHeldForTheBlock/index.ts"
@@ -253,6 +253,9 @@ function fixWhitespaceErrors (value: string, errors: Run[]): string {
 	return newValue
 }
 
+/** The neighbor whose break behind a comment on the colon's line makes a run behind that comment an indent. */
+const COLON_NEWLINE: NeighborRuleSetting = { name: `declaration-colon-newline-after`, options: [`always`, `always-multi-line`] }
+
 /** `true`; the rule has no other setting. */
 export type PrimaryOption = true
 
@@ -282,6 +285,8 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let held = runHeldInTheValue(syntax, decl, result)
 			let value = written.slice(0, written.length - held.length)
 			let valueIndex = declarationValueIndex(decl)
+			// Where `declaration-colon-newline-after` is live and will write a break in front of a run standing behind a block comment, that run becomes the indentation of the line holding the semicolon, which `indentation` owns rather than this rule
+			let colonNewlineLive = neighborCopies(decl, result, COLON_NEWLINE).some(({ option, fixDisabled }) => !fixDisabled && typeof option === `string` && speaksOf(option, () => !CSS_LINE_BREAK.test(value)))
 			// A comment opens on a solidus, so a value spelling none holds none, and the scan is worth nothing there
 			let comments = value.includes(`/`) ? syntax.commentSpans(value, decl, result) : []
 			let owned: Span[] = laysTablesOut && GRID_AREAS_PROPERTY.test(decl.prop)
@@ -301,7 +306,22 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let commentBreaks = new Set(comments.filter(({ isInline }) => isInline).map(({ end }) => end))
 			let errors = findRuns(walked, owned, commentBreaks)
 
-			for (let error of errors) {
+			// Only a block comment opening the text behind the colon gets a break in front of it from `declaration-colon-newline-after`; a run behind such a comment becomes the indentation of the line holding the semicolon, which `indentation` owns, so it is left alone where that neighbor is live
+			let leadingWhitespace = value.match(LEADING_WHITESPACE_WITHOUT_BREAK)?.[0].length ?? 0
+			let headBlockCommentEnds = new Set<number>()
+			if (colonNewlineLive) {
+				for (let comment of comments) {
+					if (comment.isInline) continue
+					if (comment.start !== leadingWhitespace) continue
+					headBlockCommentEnds.add(comment.end)
+					// Consecutive head comments all open the text; the run behind the last of them is the one that becomes indentation
+					leadingWhitespace = comment.end
+				}
+			}
+			let blockCommentEnds = colonNewlineLive ? headBlockCommentEnds : new Set<number>()
+			let reportedErrors = colonNewlineLive ? errors.filter((error) => !blockCommentEnds.has(error.start)) : errors
+
+			for (let error of reportedErrors) {
 				report({
 					message: messages.rejected,
 					node: decl,
@@ -310,7 +330,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					result,
 					ruleName,
 					fix () {
-						syntax.write(decl, fixWhitespaceErrors(value, errors) + held)
+						syntax.write(decl, fixWhitespaceErrors(value, reportedErrors) + held)
 					},
 				})
 			}
