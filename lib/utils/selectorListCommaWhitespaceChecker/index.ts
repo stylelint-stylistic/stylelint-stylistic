@@ -36,6 +36,9 @@ export interface SelectorListCommaWhitespaceCheckerOptions {
 	/** Whether a problem can be fixed, since Stylelint counts a fixer as applied whatever it does; the rule, the comma's index in its source, every comma of the list and the copy the runs are read over come along. */
 	isFixable?: ((selector: string, index: number, inlineComments: InlineComment[], rule: Rule, runString: string, fix: EdgeFix | undefined) => boolean),
 
+	/** A guard of the fix reading the text around the write, asked over the text the selector's other writes leave ({@link writesGiven}), with the indices moved into it. */
+	holds?: ((selector: string, index: number, rule: Rule, runString: string) => (edited: string, move: (index: number) => number) => boolean),
+
 	/** What the rule writes in the raw in front of the selector, where the comma opening it stands, and nothing where it writes no fix there; the run in front of that comma lies there and nowhere else, so the rule is asked whether it may write it only once every write the other commas are given stands known ({@link EdgeFix}). */
 	writtenAtTheEdge?: (rule: Rule) => EdgeWrite | undefined,
 
@@ -80,12 +83,12 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 		let others = commaIndices.slice(opensWithComma ? 1 : 0).flatMap((index) => checkDelimiter(selector, runString, index, rule, copies, raw, lineCheckStr))
 		// The writes the other commas are given, which the question at the edge is asked over; which fixes may be given is settled below, once the edge has been checked
 		// The problems are placed at their index in the rule's source, where Stylelint reads the line a disable comment covers
-		let { edits: givenEdits } = writesGiven(selector, others.map(({ edits, assumed, sourceIndex }) => ({ edits, assumed, index: sourceIndex })), opts.syntax.inlineComments(rule, opts.result), rule, opts.result, opts.checkedRuleName)
+		let { edits: givenEdits } = writesGiven(selector, others.map(({ edits, assumed, holds, sourceIndex }) => ({ edits, assumed, holds, index: sourceIndex })), opts.syntax.inlineComments(rule, opts.result), rule, opts.result, opts.checkedRuleName)
 		let edgeWritten = opts.writtenAtTheEdge?.(rule)
 		let edgeFix = fix && edgeWritten ? { written: edgeWritten, edits: givenEdits } : undefined
 		let edgeProblems = opensWithComma && edge !== undefined ? checkDelimiter(selector, runString, edge, rule, copies, textBeforeAsLeft(rule, raw, opts.result, edgeFix), lineCheckStr, edgeFix) : []
 		// Stylelint counts a fixer as applied whatever it does, so which fixes are given is settled before the reports, and together, since the writes of one rule are asked about as one run. The comma opening the selector comes last among them, so that a guard of its fix reads the writes the other commas were given
-		let { given } = writesGiven(selector, [...others, ...edgeProblems].map(({ edits, assumed, sourceIndex }) => ({ edits, assumed, index: sourceIndex })), opts.syntax.inlineComments(rule, opts.result), rule, opts.result, opts.checkedRuleName)
+		let { given } = writesGiven(selector, [...others, ...edgeProblems].map(({ edits, assumed, holds, sourceIndex }) => ({ edits, assumed, holds, index: sourceIndex })), opts.syntax.inlineComments(rule, opts.result), rule, opts.result, opts.checkedRuleName)
 
 		for (let [problemIndex, { message, index, sourceIndex }] of edgeProblems.entries()) {
 			report({
@@ -124,8 +127,8 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 	 * @param wholeFix - The rule's whole fix, where the comma opens the selector and the rule may fix there.
 	 * @returns The problems found, each at the delimiter's index in the selector and in the rule's source, with the spans its fix would write, or none where a guard refuses the fix.
 	 */
-	function checkDelimiter (source: string, runString: string, index: number, node: Rule, copies: SelectorCopies, textBefore: string, lineCheckStr: string, wholeFix?: EdgeFix): { message: string, index: number, sourceIndex: number, edits: Edit[] | undefined, assumed: Edit[] | undefined }[] {
-		let problems: { message: string, index: number, sourceIndex: number, edits: Edit[] | undefined, assumed: Edit[] | undefined }[] = []
+	function checkDelimiter (source: string, runString: string, index: number, node: Rule, copies: SelectorCopies, textBefore: string, lineCheckStr: string, wholeFix?: EdgeFix): { message: string, index: number, sourceIndex: number, edits: Edit[] | undefined, assumed: Edit[] | undefined, holds: ((edited: string, move: (index: number) => number) => boolean) | undefined }[] {
+		let problems: { message: string, index: number, sourceIndex: number, edits: Edit[] | undefined, assumed: Edit[] | undefined, holds: ((edited: string, move: (index: number) => number) => boolean) | undefined }[] = []
 
 		opts.locationChecker({
 			source: runString,
@@ -137,7 +140,7 @@ export function selectorListCommaWhitespaceChecker (opts: SelectorListCommaWhite
 				let isFixable = fix && (!opts.isFixable || opts.isFixable(source, index, copies.comments, node, runString, wholeFix)) && !leavesTheSharedRunToTheTwin(opts.checkedRuleName, runString, index, (i) => copies.toSourceIndex(i), node, opts.result)
 				let writes = isFixable ? opts.edits(source, index, node, runString, copies.toSourceIndex(index)) : undefined
 
-				problems.push({ message, index, sourceIndex: copies.toSourceIndex(index), edits: writes?.edits, assumed: writes?.assumed })
+				problems.push({ message, index, sourceIndex: copies.toSourceIndex(index), edits: writes?.edits, assumed: writes?.assumed, holds: isFixable ? opts.holds?.(source, index, node, runString) : undefined })
 			},
 		})
 

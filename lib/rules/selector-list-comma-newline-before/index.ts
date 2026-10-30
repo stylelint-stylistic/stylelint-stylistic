@@ -86,11 +86,16 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (primary === `never-multi-line` && closesInlineComment) return false
 
-				// A break written into parentheses PostCSS holds as one token other than an address's makes them code, and a `[` nothing closes inside is then a group the parser finds open and the file stops parsing: the break is refused there and the warning stands
-				if (primary.startsWith(`always`) && breakAtRereadsParentheses(selector, index, false, syntax.inlineComments(ruleNode, result))) return false
-
 				// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎,b` would come out as `a\,b`, one identifier, so the warning stands; `always` leaves the break the backslash stands in front of where it is
 				return primary !== `never-multi-line` || editKeepsEscapedCharacter(selector, editAt(runString, index))
+			},
+			holds: (selector, index, ruleNode, _runString) => (edited, move): boolean => {
+				if (!primary.startsWith(`always`)) return true
+
+				// A break written into parentheses PostCSS holds as one token other than an address's makes them code, and a `[` nothing closes inside is then a group the parser finds open and the file stops parsing: the break is refused there and the warning stands. Asked over the text the list's other writes leave, including a neighbor gluing the run behind the comma, so the guard sees the parentheses as the parser will
+				if (breakAtRereadsParentheses(edited, move(index), false, syntax.inlineComments(ruleNode, result))) return false
+
+				return true
 			},
 			// Whitespace right behind the `(` of an address decides under PostCSS whether its parentheses are one token or code, and a run written into or taken out of parentheses held as one plain token can make them code or a token again, so that a later `(` pops another word; the writes of the node are asked together whether the parser then reads the file otherwise, along with what the list's other comma rules write around the same comma behind this one in the pass, since the run behind the comma, which a twin writes in the same pass, decides what the parentheses then hold
 			edits: (selector, index, ruleNode, runString, sourceIndex) => editsAskedWithTheTwins(selector, runString, index, sourceIndex, editAt(runString, index), syntax.inlineComments(ruleNode, result), ruleNode, result, ruleName),

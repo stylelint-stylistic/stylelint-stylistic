@@ -87,14 +87,12 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 				if (primary === `never-multi-line` && closesInlineComment) return false
 
-				// A break written into parentheses PostCSS holds as one token other than an address's makes them code, and a `[` or a `{` nothing closes inside is then a group the parser finds open, so the at-rule gets no block and its params run to the end of the file, or the rule holding it is left unclosed: the break is refused there and the warning stands. In an at-rule's params a `{` opens a group whatever the at-rule, as it does in a custom property's value
-				if (primary.startsWith(`always`) && breakAtRereadsParentheses(params, index, true, syntax.inlineComments(atRule, result))) return false
-
 				// A backslash in front of a line break is a delimiter, and what is written behind it is read as its escape: `a\⏎,b` would come out as `a\,b`, one identifier, so the warning stands; `always` leaves the break the backslash stands in front of where it is
 				return primary !== `never-multi-line` || editKeepsEscapedCharacter(params, editAt(runString, index))
 			},
 			// The space written at the edge of the list is nothing a multi-line list refuses only while the list is on one line once the runs in front of its other commas are taken out; which of them a fix may take is asked together ({@link writesGiven}), so the edge reads the parameters as the writes given leave them, and where one is refused the list stays multi-line and the space would be reported again — the write is left out and the warning stands
-			holds: (_params, index) => (edited): boolean => index !== 0 || primary !== `never-multi-line` || isSingleLineString(edited),
+			// Asked over the text the list's other writes leave, including a neighbor gluing the run behind the comma, so the guard sees the parentheses as the parser will
+			holds: (params, index, atRule, _runString) => (edited, move): boolean => (index !== 0 || primary !== `never-multi-line` || isSingleLineString(edited)) && (!primary.startsWith(`always`) || !breakAtRereadsParentheses(edited, move(index), true, syntax.inlineComments(atRule, result))),
 			// Whitespace right behind the `(` of an address decides under PostCSS whether its parentheses are one token or code, and a run written into or taken out of parentheses held as one plain token can make them code or a token again, so that a later `(` pops another word; the writes of the node are asked together whether the parser then reads the file otherwise, along with what the list's other comma rules write around the same comma behind this one in the pass, since the run behind the comma, which a twin writes in the same pass, decides what the parentheses then hold
 			edits: (params, index, atRule, runString, problemIndex) => editsAskedWithTheTwins(params, runString, index, problemIndex, editAt(runString, index), syntax.inlineComments(atRule, result), atRule, result, ruleName),
 			// The run is the check's, read over the copy with its escapes masked, so the space of `a\ ,b` is not cut and no break parts it from its backslash

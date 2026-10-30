@@ -33,6 +33,16 @@ function moverOver (edits: Edit[]): (index: number) => number {
 }
 
 /**
+ * Builds the mover a guard uses over the text the assumed and the given writes leave, from the mover over the given writes and the mover over the assumed ones.
+ * @param writtenInBase - The given writes, indexed in the text the assumed writes leave.
+ * @param moveIntoBase - Moves an index of the original text into that text.
+ * @returns The mover.
+ */
+function makeHoldsMove (writtenInBase: Edit[], moveIntoBase: (index: number) => number): (index: number) => number {
+	return (index) => moverOver(writtenInBase)(moveIntoBase(index))
+}
+
+/**
  * Asks whether a problem's fix is applied: Stylelint drops it on a line a disable comment covers for the rule, and the plugin's `report` drops a problem no node holds a place for.
  * @param node - The node the problem is reported on.
  * @param index - Where the problem stands in the node's string.
@@ -103,7 +113,10 @@ export function writesGiven (text: string, candidates: WriteCandidate[], reading
 
 			for (let edit of edits) addEdit(asked, edit)
 
-			if (holds && !holds(applyEditsFromEnd(text, written), moverOver(written))) continue
+			// The guard is asked over the text the assumed and the given writes leave, where a neighbor's write can glue the run behind the comma into the name or part it from it, and so change whether the parentheses the break stands in are an address's token, which the parser reads nothing of
+			let holdsText = applyEditsFromEnd(base, writtenInBase)
+			let holdsMove = makeHoldsMove(writtenInBase, moveIntoBase)
+			if (holds && !holds(holdsText, holdsMove)) continue
 
 			written = asked
 			writtenInBase = askedInBase
