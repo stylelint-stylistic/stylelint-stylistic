@@ -486,5 +486,45 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 		return aheadAccepts.includes(writes)
 	})
 
+	let owned = colonOwnsWordlessRun(asking, option, decl, runIsTheText, settings, readers)
+	if (owned !== undefined) return owned
+
 	return restsBehind && restsAhead
+}
+
+/**
+ * Decides ownership of a wordless custom property's run between a colon rule and an incompatible semicolon rule: the colon rule owns it in every order.
+ * @param asking - The asking participant.
+ * @param option - Its primary option.
+ * @param decl - The declaration.
+ * @param runIsTheText - Whether the run is the whole text behind the colon.
+ * @param settings - The configured settings in configuration order.
+ * @param readers - The readers of the run.
+ * @returns True where the colon writes, false where the semicolon warns, or nothing where this rule does not apply.
+ */
+function colonOwnsWordlessRun (asking: Participant | undefined, option: string, decl: Declaration, runIsTheText: boolean, settings: [Participant, string, boolean, string][], readers: Set<Participant>): boolean | undefined {
+	if (!runIsTheText || !isCustomProperty(decl.prop) || asking === undefined) return undefined
+
+	let colonParticipant = asking === `colonSpace` || asking === `colonNewline`
+	let outerParticipant = asking === `semicolonSpace` || asking === `semicolonNewline`
+
+	if (colonParticipant && option === `always`) {
+		let askingFixDisabled = settings.some(([p, , disabled]) => p === asking && disabled)
+		if (!askingFixDisabled) {
+			let incompatible = settings.some(([behind, behindOption, behindDisabled]) => (behind === `semicolonSpace` || behind === `semicolonNewline`) && !behindDisabled && readers.has(behind) && accepts(asking, option, decl, runIsTheText).every((candidate) => !accepts(behind, behindOption, decl, runIsTheText).includes(candidate)))
+
+			if (incompatible) return true
+		}
+	}
+
+	if (outerParticipant) {
+		let incompatibleColon = settings.some(([other, otherOption, otherDisabled]) => (other === `colonSpace` || other === `colonNewline`) && otherOption === `always` && !otherDisabled && readers.has(other) && accepts(other, otherOption, decl, runIsTheText).every((candidate) => !accepts(asking, option, decl, runIsTheText).includes(candidate)))
+
+		if (incompatibleColon) {
+			let askingFixDisabled = settings.some(([p, , disabled]) => p === asking && disabled)
+			if (!askingFixDisabled) return false
+		}
+	}
+
+	return undefined
 }

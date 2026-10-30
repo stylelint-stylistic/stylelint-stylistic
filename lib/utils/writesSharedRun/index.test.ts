@@ -127,7 +127,7 @@ describe(`writesSharedRun`, () => {
 	it(`a never option of the semicolon space rule on a custom property, which leaves a single space alone and so accepts the space rule of the colon`, () => {
 		expect(ask(`a { --b:; }`, { [COLON_SPACE]: `always`, [SEMICOLON_SPACE]: `never` }, COLON_SPACE)).toBe(true)
 		expect(ask(`a { b:; }`, { [COLON_SPACE]: `always`, [SEMICOLON_SPACE]: `never` }, COLON_SPACE)).toBe(false)
-		expect(ask(`a { --b:; }`, { [COLON_NEWLINE]: `always`, [SEMICOLON_SPACE]: `never` }, COLON_NEWLINE)).toBe(false)
+		expect(ask(`a { --b:; }`, { [COLON_NEWLINE]: `always`, [SEMICOLON_SPACE]: `never` }, COLON_NEWLINE)).toBe(true)
 		expect(ask(`a { --b:  ; }`, { [SEMICOLON_SPACE]: `never`, [COLON_SPACE]: `always` }, SEMICOLON_SPACE)).toBe(true)
 	})
 
