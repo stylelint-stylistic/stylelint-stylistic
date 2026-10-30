@@ -493,7 +493,7 @@ export function writesSharedRun (syntax: Syntax, decl: Declaration, result: Post
 }
 
 /**
- * Decides ownership of a wordless custom property's run between a colon rule and an incompatible semicolon rule: the colon rule owns it in every order.
+ * Decides ownership of a wordless custom property's run between a colon rule and an incompatible semicolon or brace rule: the colon rule owns it in every order.
  * @param asking - The asking participant.
  * @param option - Its primary option.
  * @param decl - The declaration.
@@ -506,12 +506,12 @@ function colonOwnsWordlessRun (asking: Participant | undefined, option: string, 
 	if (!runIsTheText || !isCustomProperty(decl.prop) || asking === undefined) return undefined
 
 	let colonParticipant = asking === `colonSpace` || asking === `colonNewline`
-	let outerParticipant = asking === `semicolonSpace` || asking === `semicolonNewline`
+	let outerParticipant = asking === `semicolonSpace` || asking === `semicolonNewline` || asking === `braceSpace` || asking === `braceNewline`
 
 	if (colonParticipant && option === `always`) {
 		let askingFixDisabled = settings.some(([p, , disabled]) => p === asking && disabled)
 		if (!askingFixDisabled) {
-			let incompatible = settings.some(([behind, behindOption, behindDisabled]) => (behind === `semicolonSpace` || behind === `semicolonNewline`) && !behindDisabled && readers.has(behind) && accepts(asking, option, decl, runIsTheText).every((candidate) => !accepts(behind, behindOption, decl, runIsTheText).includes(candidate)))
+			let incompatible = settings.some(([behind, behindOption, behindDisabled]) => (behind === `semicolonSpace` || behind === `semicolonNewline` || behind === `braceSpace` || behind === `braceNewline`) && !behindDisabled && readers.has(behind) && accepts(asking, option, decl, runIsTheText).every((candidate) => !accepts(behind, behindOption, decl, runIsTheText).includes(candidate)))
 
 			if (incompatible) return true
 		}

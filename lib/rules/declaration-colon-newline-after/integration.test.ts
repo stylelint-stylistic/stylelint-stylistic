@@ -1,3 +1,7 @@
+import stylelint from "stylelint"
+import { expect, it } from "vitest"
+
+import plugins from "../../index.ts"
 import { messages as braceNewlineBeforeMessages } from "../block-closing-brace-newline-before/index.ts"
 import { messages as braceSpaceBeforeMessages } from "../block-closing-brace-space-before/index.ts"
 import { messages as semicolonNewlineBeforeMessages } from "../declaration-block-semicolon-newline-before/index.ts"
@@ -197,6 +201,43 @@ testRule({
 			],
 		},
 	],
+})
+
+it(`gives a wordless custom property's trailing run to the colon-newline rule over a conflicting brace-space rule in either order and syntax`, async () => {
+	let code = `a { --x:  }`
+	let syntaxes: { colonRule: string, braceRule: string, customSyntax?: string }[] = [
+		{ colonRule: ruleName, braceRule: `@stylistic/block-closing-brace-space-before` },
+		{ colonRule: `@stylistic/scss/declaration-colon-newline-after`, braceRule: `@stylistic/scss/block-closing-brace-space-before`, customSyntax: `postcss-scss` },
+		{ colonRule: `@stylistic/less/declaration-colon-newline-after`, braceRule: `@stylistic/less/block-closing-brace-space-before`, customSyntax: `postcss-less` },
+	]
+
+	let outcomes = await Promise.all(syntaxes.map(async ({ colonRule, braceRule, customSyntax }) => {
+		let configurations: Record<string, unknown>[] = [
+			{ [colonRule]: `always`, [braceRule]: `always` },
+			{ [braceRule]: `always`, [colonRule]: `always` },
+			{ [colonRule]: `always`, [braceRule]: `never` },
+			{ [braceRule]: `never`, [colonRule]: `always` },
+		]
+		let runs = await Promise.all(configurations.map(async (rules) => {
+			let config = { plugins, rules, ...(customSyntax && { customSyntax }) }
+			let fixed = await stylelint.lint({ code, config, fix: true })
+			let read = await stylelint.lint({ code: fixed.code ?? code, config })
+
+			return {
+				output: fixed.code,
+				writtenWarnings: fixed.results.flatMap(({ warnings }) => warnings.map(({ rule }) => rule)),
+				remainingWarnings: read.results.flatMap(({ warnings }) => warnings.map(({ rule }) => rule)),
+			}
+		}))
+
+		return { braceRule, runs }
+	}))
+
+	for (let { braceRule, runs } of outcomes) {
+		expect(runs.map(({ output }) => output)).toEqual([`a { --x:\n  }`, `a { --x:\n  }`, `a { --x:\n  }`, `a { --x:\n  }`])
+		expect(runs.map(({ writtenWarnings }) => writtenWarnings)).toEqual([[braceRule], [braceRule], [braceRule], [braceRule]])
+		expect(runs.map(({ remainingWarnings }) => remainingWarnings)).toEqual([[braceRule], [braceRule], [braceRule], [braceRule]])
+	}
 })
 
 testRule({

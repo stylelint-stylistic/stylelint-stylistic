@@ -15,8 +15,13 @@ const COMMA_SPACE = `@stylistic/value-list-comma-space-before`
 const SCSS_COLON_SPACE = `@stylistic/scss/declaration-colon-space-after`
 const SCSS_COMMA_SPACE = `@stylistic/scss/value-list-comma-space-before`
 const SCSS_COLON_NEWLINE = `@stylistic/scss/declaration-colon-newline-after`
+const SCSS_BRACE_SPACE = `@stylistic/scss/block-closing-brace-space-before`
+const SCSS_BRACE_NEWLINE = `@stylistic/scss/block-closing-brace-newline-before`
 const LESS_COLON_SPACE = `@stylistic/less/declaration-colon-space-after`
+const LESS_COLON_NEWLINE = `@stylistic/less/declaration-colon-newline-after`
 const LESS_COMMA_SPACE = `@stylistic/less/value-list-comma-space-before`
+const LESS_BRACE_SPACE = `@stylistic/less/block-closing-brace-space-before`
+const LESS_BRACE_NEWLINE = `@stylistic/less/block-closing-brace-newline-before`
 
 // The core imports no namespace's syntax; the two are read off the list the plugin builds
 const scssSyntax = namespaces.find((syntax) => syntax.namespace === `scss`) as Syntax
@@ -273,26 +278,63 @@ describe(`writesSharedRun`, () => {
 	})
 
 	it(`a wordless declaration the brace alone closes, whose run behind the colon is the run in front of the brace, which the earlier-listed rule of a conflicting pair never writes`, () => {
-		for (let code of [`a {\n\tx:\n}`, `a {\n\t--x:\n}`, `a { x: }`, `a { --x:}`]) {
+		for (let code of [`a {\n\tx:\n}`, `a { x: }`]) {
 			expect(ask(code, { [COLON_SPACE]: `always`, [BRACE_NEWLINE]: `always` }, COLON_SPACE)).toBe(false)
 			expect(ask(code, { [BRACE_NEWLINE]: `always`, [COLON_SPACE]: `always` }, BRACE_NEWLINE)).toBe(false)
 			expect(ask(code, { [COLON_NEWLINE]: `always`, [BRACE_SPACE]: `never` }, COLON_NEWLINE)).toBe(false)
 		}
+
+		for (let code of [`a {\n\t--x:\n}`, `a { --x:}`, `a { --x:  }`]) {
+			expect(ask(code, { [COLON_SPACE]: `always`, [BRACE_NEWLINE]: `always` }, COLON_SPACE)).toBe(true)
+			expect(ask(code, { [BRACE_NEWLINE]: `always`, [COLON_SPACE]: `always` }, BRACE_NEWLINE)).toBe(false)
+			expect(ask(code, { [COLON_NEWLINE]: `always`, [BRACE_SPACE]: `never` }, COLON_NEWLINE)).toBe(true)
+		}
+
+		expect(ask(`a { --x:  }`, { [COLON_NEWLINE]: `always`, [BRACE_SPACE]: `always` }, COLON_NEWLINE)).toBe(true)
+		expect(ask(`a { --x:  }`, { [BRACE_SPACE]: `always`, [COLON_NEWLINE]: `always` }, BRACE_SPACE)).toBe(false)
+
+		let syntaxRules: [Syntax, string, string, string, string][] = [
+			[scssSyntax, SCSS_COLON_SPACE, SCSS_COLON_NEWLINE, SCSS_BRACE_SPACE, SCSS_BRACE_NEWLINE],
+			[lessSyntax, LESS_COLON_SPACE, LESS_COLON_NEWLINE, LESS_BRACE_SPACE, LESS_BRACE_NEWLINE],
+		]
+
+		for (let [syntax, colonSpace, colonNewline, braceSpace, braceNewline] of syntaxRules) {
+			let pairs: [string, string][] = [[colonNewline, braceSpace], [colonSpace, braceNewline]]
+
+			for (let [colonRule, braceRule] of pairs) {
+				expect(ask(`a { --x:  }`, { [colonRule]: `always`, [braceRule]: `always` }, colonRule, syntax)).toBe(true)
+				expect(ask(`a { --x:  }`, { [braceRule]: `always`, [colonRule]: `always` }, colonRule, syntax)).toBe(true)
+				expect(ask(`a { --x:  }`, { [colonRule]: `always`, [braceRule]: `always` }, braceRule, syntax)).toBe(false)
+				expect(ask(`a { --x:  }`, { [braceRule]: `always`, [colonRule]: `always` }, braceRule, syntax)).toBe(false)
+			}
+
+			expect(ask(`a { --x:  }`, { [colonNewline]: `always`, [braceSpace]: `never` }, colonNewline, syntax)).toBe(true)
+			expect(ask(`a { --x:  }`, { [braceSpace]: `never`, [colonNewline]: `always` }, colonNewline, syntax)).toBe(true)
+		}
 	})
 
 	it(`the later-listed rule of such a pair, which writes only over a run the rule ahead has warned about and never over one it accepts`, () => {
-		for (let code of [`a {\n\tx:\n}`, `a {\n\t--x:\n}`]) {
+		for (let code of [`a {\n\tx:\n}`]) {
 			expect(ask(code, { [COLON_SPACE]: `always`, [BRACE_NEWLINE]: `always` }, BRACE_NEWLINE)).toBe(true)
 			expect(ask(code, { [BRACE_NEWLINE]: `always`, [COLON_SPACE]: `always` }, COLON_SPACE)).toBe(false)
 			expect(ask(code, { [COLON_NEWLINE]: `always`, [BRACE_SPACE]: `never` }, BRACE_SPACE)).toBe(false)
 		}
 
+		for (let code of [`a {\n\t--x:\n}`, `a { --x:  }`]) {
+			expect(ask(code, { [COLON_SPACE]: `always`, [BRACE_NEWLINE]: `always` }, BRACE_NEWLINE)).toBe(false)
+			expect(ask(code, { [BRACE_NEWLINE]: `always`, [COLON_SPACE]: `always` }, COLON_SPACE)).toBe(true)
+			expect(ask(code, { [COLON_NEWLINE]: `always`, [BRACE_SPACE]: `never` }, BRACE_SPACE)).toBe(false)
+		}
+
+		expect(ask(`a { --x:  }`, { [COLON_NEWLINE]: `always`, [BRACE_SPACE]: `always` }, BRACE_SPACE)).toBe(false)
+		expect(ask(`a { --x:  }`, { [BRACE_SPACE]: `always`, [COLON_NEWLINE]: `always` }, COLON_NEWLINE)).toBe(true)
+
 		expect(ask(`a { x: }`, { [COLON_SPACE]: `always`, [BRACE_NEWLINE]: `always` }, BRACE_NEWLINE)).toBe(false)
 		expect(ask(`a { x: }`, { [BRACE_NEWLINE]: `always`, [COLON_SPACE]: `always` }, COLON_SPACE)).toBe(true)
 		expect(ask(`a { x: }`, { [COLON_NEWLINE]: `always`, [BRACE_SPACE]: `never` }, BRACE_SPACE)).toBe(true)
-		expect(ask(`a { --x:}`, { [COLON_SPACE]: `always`, [BRACE_NEWLINE]: `always` }, BRACE_NEWLINE)).toBe(true)
+		expect(ask(`a { --x:}`, { [COLON_SPACE]: `always`, [BRACE_NEWLINE]: `always` }, BRACE_NEWLINE)).toBe(false)
 		expect(ask(`a { --x:}`, { [BRACE_NEWLINE]: `always`, [COLON_SPACE]: `always` }, COLON_SPACE)).toBe(true)
-		expect(ask(`a { --x:}`, { [COLON_NEWLINE]: `always`, [BRACE_SPACE]: `never` }, BRACE_SPACE)).toBe(true)
+		expect(ask(`a { --x:}`, { [COLON_NEWLINE]: `always`, [BRACE_SPACE]: `never` }, BRACE_SPACE)).toBe(false)
 	})
 
 	it(`the same declaration where the two ask for the same thing, so both write`, () => {

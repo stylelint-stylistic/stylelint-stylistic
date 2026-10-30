@@ -430,7 +430,8 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			description: `the same run kept in the value of a custom property`,
+			// The colon owns the wordless run of a custom property against an incompatible brace rule in any order.
+			description: `the same run kept in the value of a custom property, where the colon now owns it`,
 			code: `
 				a {
 					--x:
@@ -438,8 +439,7 @@ testRule({
 			`,
 			fixed: `
 				a {
-					--x:
-				}
+					--x: }
 			`,
 			line: 2,
 			column: 6,
