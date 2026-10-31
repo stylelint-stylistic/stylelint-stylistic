@@ -14,6 +14,7 @@ import { restoreSelectorInlineComments } from "../../preprocessor/restoreSelecto
 import { searchCopy } from "../../preprocessor/searchCopy/index.ts"
 import { toSelectorSourceIndex } from "../../preprocessor/toSelectorSourceIndex/index.ts"
 import { writesIntoInlineComment } from "../../preprocessor/writesIntoInlineComment/index.ts"
+import { CSS_LINE_BREAK } from "../../regexps.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
 import { type CommentSpan, CSS_ADDRESS_AT_RULES, findCommentSpans } from "../../utils/findCommentSpans/index.ts"
 import { findInterpolationSpans } from "../../utils/findInterpolationSpans/index.ts"
@@ -26,7 +27,7 @@ import { isStandardSyntaxRule } from "../../utils/isStandardSyntaxRule/index.ts"
 import { isStandardSyntaxSelector } from "../../utils/isStandardSyntaxSelector/index.ts"
 import { isStandardSyntaxValue } from "../../utils/isStandardSyntaxValue/index.ts"
 import { nodeSyntax } from "../../utils/nodeSyntax/index.ts"
-import type { SyntaxRaw } from "../../utils/typeGuards/index.ts"
+import type { EmbeddedSource, SyntaxRaw } from "../../utils/typeGuards/index.ts"
 import type { SelectorCopies, Syntax } from "../index.ts"
 
 /** The core syntax, plain CSS, which every rule is written for. A root a namespace's syntax reads is refused; every other root is accepted, custom syntaxes without a namespace included. */
@@ -46,8 +47,21 @@ export let css: Syntax = {
 		restoreRunsFoldedIntoTheText(root, css)
 	},
 	embedding: () => ({ indent: ``, multiline: false }),
-	// A file stands on no host line, and `postcss-html` keeps the break behind a `<style>` tag out of the root's text
-	hostLineEdges: () => ({ opens: false, closes: false }),
+	// A file on its own stands on no host line, and `postcss-html` keeps the break behind a `<style>` tag out of the root's text. A `<style>` element's root carries its delimiters in `raws.codeBefore` and `raws.codeAfter`; where its content is one line, the closing tag stands on that line and the text closes on the host's, so `no-missing-end-of-source-newline` asks for no break and `no-eol-whitespace` reads its end as the host's
+	hostLineEdges (root: Root): { opens: boolean, closes: boolean } {
+		// An inline `style` attribute's root is parsed like a `<style>` element's but its trailing run is the root's own, trimmed as a file's
+		if ((root.source as EmbeddedSource | undefined)?.inline) return { opens: false, closes: false }
+
+		// `postcss-html` puts the opening delimiter (and any break behind it) in `raws.codeBefore` for every embedded root, so its presence marks a `<style>` element; `codeAfter` is only set on the last element of the page, which is not a reason to treat the others as files
+		if (typeof root.raws.codeBefore !== `string`) return { opens: false, closes: false }
+
+		if ((root.source as EmbeddedSource | undefined)?.inline) return { opens: false, closes: false }
+
+		let inputCss = root.source?.input.css
+		if (typeof inputCss !== `string`) return { opens: false, closes: false }
+
+		return { opens: false, closes: !CSS_LINE_BREAK.test(inputCss) }
+	},
 	valueEmbedsHostCode: () => false,
 	hostCodeSpans: () => [],
 	isStandardAtRule: isStandardSyntaxAtRule,

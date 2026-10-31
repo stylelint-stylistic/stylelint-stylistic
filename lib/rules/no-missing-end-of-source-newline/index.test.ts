@@ -146,6 +146,20 @@ a {
 			description: `a style attribute, which carries no source of its own to close`,
 			code: `<a style="color: red;"></a>`,
 		},
+		{
+			description: `an embedded stylesheet on one line, whose closing tag stands on its line`,
+			code: `<style>a {}  </style>`,
+		},
+		{
+			description: `an embedded stylesheet on one line with no spaces before its closing tag`,
+			code: `<style>a {}</style>`,
+		},
+		{
+			description: `an embedded stylesheet closed by a newline, whose closing tag stands on its own line`,
+			code: `<style>
+\ta {}
+</style>`,
+		},
 	],
 
 	reject: [
