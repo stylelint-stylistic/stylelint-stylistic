@@ -353,6 +353,9 @@ export const TPL_INTERPOLATION = /\{.+?\}/su
 export const TRAILING_BACKSLASHES = /\\*$/u
 
 /** The trailing whitespace as the tokenizer reads it; the narrowing of {@link TRAILING_WHITESPACE}. */
+/** A run of `}` at the end of a text, with only whitespace, commas, semicolons, closing parentheses or brackets behind them: a brace closed at a line's end lowers the lines behind it, as one opened at a line's end raises them. */
+export const TRAILING_CLOSING_BRACE = /\}+(?:[ \t\f\r,;)\]]*)$/u
+
 export const TRAILING_CSS_WHITESPACE = /[ \t\n\r\f]*$/u
 
 /** A semicolon ending a text. */

@@ -50,7 +50,10 @@ const DEBT: Record<string, string[]> = {
 		`if (nextChar === \`\\n\`) return`,
 		`if (source.slice(index, index + 2) === \`\\r\\n\`) return`,
 	],
-	"lib/rules/indentation/lines.ts": [`target: \`\\n\`,`],
+	"lib/rules/indentation/lines.ts": [
+		`target: \`\\n\`,`,
+		`let lastSourceLine = sourceText.slice(sourceText.lastIndexOf(\`\\n\`) + 1)`,
+	],
 	"lib/rules/max-empty-lines/index.ts": [`target: \`\\n\`,`],
 	"lib/rules/max-line-length/index.ts": [
 		`styleSearch({ source: maskStrings(rootString, syntax.commentSpans(rootString, root, result)), target: [\`\\n\`], comments: \`check\` }, (match) => checkNewline(match))`,

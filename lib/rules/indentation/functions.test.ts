@@ -695,3 +695,22 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [2],
+
+	accept: [],
+
+	reject: [
+		{
+			// a brace closed at the end of a line lowers the following line, so the call's closing parenthesis is not indented for it
+			description: `a closing brace at the end of a value line, whose following line is not indented for it`,
+			code: `a {\n  b: map(\n    c: #{\n    d}\n  );\n}`,
+			fixed: `a {\n  b: map(\n    c: #{\n      d}\n  );\n}`,
+			line: 4,
+			column: 5,
+			message: messages.expected(`6 spaces`),
+		},
+	],
+})

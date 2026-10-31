@@ -99,7 +99,7 @@ testRule({
 				    c: #{
 				      d
 				      /* x */}
-				    );
+				  );
 				}
 			`,
 		},
@@ -107,7 +107,7 @@ testRule({
 
 	reject: [
 		{
-			// The brace opening an interpolation at its line's end opens a level as a bare one does, whether or not a comment stands behind it, since the brace is read over the copy with the comments blanked; the brace closing the interpolation inside the line lowers no later line of the value, which asks the closing parenthesis a level past where it belongs
+			// The brace opening an interpolation at its line's end opens a level as a bare one does, whether or not a comment stands behind it, since the brace is read over the copy with the comments blanked; a brace closed at the end of a line lowers the lines behind it, so the closing parenthesis is not indented for it
 			description: `a block comment behind the brace that opens an interpolation, whose next line stands a level short of what a bare brace asks`,
 			code: `
 				@a {
@@ -122,7 +122,7 @@ testRule({
 				  b: map(
 				    c: #{ /* x */
 				      d}
-				    );
+				  );
 				}
 			`,
 			warnings: [
@@ -130,11 +130,6 @@ testRule({
 					line: 4,
 					column: 5,
 					message: messages.expected(`6 spaces`),
-				},
-				{
-					line: 5,
-					column: 3,
-					message: messages.expected(`4 spaces`),
 				},
 			],
 		},

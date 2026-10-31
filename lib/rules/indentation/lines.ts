@@ -1,7 +1,7 @@
 import type { AtRule, Declaration, Node, Rule } from "postcss"
 import styleSearch from "style-search"
 
-import { CRLF, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_INDENT_AND_CONTENT, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
+import { CRLF, LEADING_CLOSING_BRACE, LEADING_CLOSING_PARENTHESIS, LEADING_INDENT_AND_CONTENT, LINE_BREAK, OPENING_BRACE_AT_END, OPENING_PARENTHESIS_AT_END, TRAILING_CLOSING_BRACE, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { atRuleHead } from "../../utils/atRuleHead/index.ts"
 import { bareAddressSpans } from "../../utils/bareAddressSpans/index.ts"
@@ -120,6 +120,25 @@ type OpenBrackets = {
 }
 
 /**
+ * Counts the closing braces at the end of a line, not counting a brace that opens the line, which `startingClosingBrace` already unwinds.
+ * @param searchText - The line, its comments blanked.
+ * @param sourceText - The same line as the source spells it, for the guard.
+ * @returns The number of closing braces.
+ */
+function trailingClosingBraceCount (searchText: string, sourceText: string): number {
+	// The guard concerns the line that ends at the break in the source, not its comment-blanked copy, so a comment in front of the brace does not make the line look like one that opens with a brace
+	let lastSourceLine = sourceText.slice(sourceText.lastIndexOf(`\n`) + 1)
+
+	if ((/^\s*\}/u).test(lastSourceLine)) return 0
+
+	let match = searchText.match(TRAILING_CLOSING_BRACE)
+
+	if (!match) return 0
+
+	return (match[0].match(/\}/gu) || []).length
+}
+
+/**
  * The levels a line inside parentheses stands deeper than the text's own, and the counts it leaves for the next line.
  * @param scope - The run.
  * @param opened - The brackets opened so far, updated for the next line.
@@ -159,6 +178,11 @@ function levelsInsideParens (scope: IndentationScope, opened: OpenBrackets, { so
 	let followsOpeningBrace = OPENING_BRACE_AT_END.test(searchString.slice(0, lineEndIndex))
 
 	if (followsOpeningBrace) opened.braces += 1
+
+	// A brace closed at a line's end lowers the lines behind it, as one opened at a line's end raises them; a close standing in the middle of a line leaves them raised. A close that opens its own line is unwound below, so it is not counted again here
+	let closingBraceCount = trailingClosingBraceCount(searchString.slice(0, lineEndIndex), source.slice(0, lineEndIndex))
+
+	if (closingBraceCount > 0 && opened.braces > 0) opened.braces = Math.max(0, opened.braces - closingBraceCount)
 
 	let startingClosingBrace = LEADING_CLOSING_BRACE.test(source.slice(startIndex + 1))
 
