@@ -38,7 +38,7 @@
 		"@csstools/css-parser-algorithms": "^4.0.2",
 		"@csstools/css-tokenizer": "^4.0.2",
 		"@csstools/media-query-list-parser": "^5.0.2",
-		"postcss": "^8.5.31",
+		"postcss": "^8.5.32",
 		"postcss-selector-parser": "^7.1.7",
 		"postcss-value-parser": "^4.2.0",
 		"style-search": "^0.1.0"
@@ -48,8 +48,8 @@
 		"prepare": "git config --local core.hooksPath .githooks || true"
 	},
 	"devDependencies": {
-		"@firefoxic/beautypography": "^0.2",
-		"@firefoxic/oxlint-config": "^0.5",
+		"@firefoxic/beautypography": "~0.2",
+		"@firefoxic/oxlint-config": "~0.5",
 		"@fontsource-variable/geist": "^5",
 		"@fontsource-variable/geist-mono": "^5",
 		"@morev/stylelint-testing-library": "^1",
@@ -59,9 +59,9 @@
 		"postcss-html": "^2",
 		"postcss-less": "^6",
 		"postcss-scss": "^4",
-		"postcss-styled-syntax": "^0",
+		"postcss-styled-syntax": "~0.7",
 		"stylelint": "^18.0.0-next.0",
-		"tsrs": "~0.20.0-ts7",
+		"tsrs": "~0.20.1-ts7",
 		"vitepress": "next",
 		"vitest": "^5",
 		"vue": "^3"
@@ -69,12 +69,12 @@
 	"devEngines": {
 		"runtime": {
 			"name": "node",
-			"version": ">=26.12",
+			"version": "^26.13",
 			"onFail": "download"
 		},
 		"packageManager": {
 			"name": "pnpm",
-			"version": ">=12.15",
+			"version": "^12.17",
 			"onFail": "download"
 		}
 	},
