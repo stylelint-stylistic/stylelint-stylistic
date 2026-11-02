@@ -1,5 +1,5 @@
 import { type AtRule, type Container, type Document, parse, type Parser, type ProcessOptions, type Root, type Rule } from "postcss"
-import less from "postcss-less"
+import less, { parse as parseLess } from "postcss-less"
 import scss from "postcss-scss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
@@ -63,7 +63,7 @@ describe(`requiresTrailingSemicolon`, () => {
 		})
 
 		it(`the syntax of the node's own stylesheet, which is asked ahead of the one the file was opened with`, () => {
-			let root = less.parse(`a { @extend .b; }`, { from: undefined })
+			let root = parseLess(`a { @extend .b; }`, { from: undefined })
 			let source = root.source as EmbeddedSource
 			let rule = root.first as Rule
 
@@ -85,7 +85,7 @@ describe(`requiresTrailingSemicolon`, () => {
 				parse (code: string, options?: ProcessOptions): Root | Document {
 					parses += 1
 
-					return less.parse(code, options)
+					return parseLess(code, options)
 				},
 			}
 

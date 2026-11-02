@@ -1,5 +1,5 @@
 import type { AtRule } from "postcss"
-import postcssLess from "postcss-less"
+import { parse as parseLess } from "postcss-less"
 import { describe, expect, it } from "vitest"
 
 import { pick } from "../../../../vitest.helpers.ts"
@@ -86,7 +86,7 @@ describe(`isLessVariableDeclaration`, () => {
 function lessAtRule (code: string, index: number = 0): AtRule {
 	let atRules: AtRule[] = []
 
-	postcssLess.parse(code).walkAtRules((atRule) => {
+	parseLess(code).walkAtRules((atRule) => {
 		atRules.push(atRule)
 	})
 

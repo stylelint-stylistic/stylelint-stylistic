@@ -1,5 +1,5 @@
 import { type ChildNode, type Container, type Declaration, parse, type Rule } from "postcss"
-import less from "postcss-less"
+import less, { parse as parseLess } from "postcss-less"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
@@ -235,7 +235,7 @@ function disabled (rules: Record<string, unknown>, disabledRanges: Record<string
  * @returns What `closesADeclarationBlock` answers.
  */
 function closes (code: string, index: number, syntax: Syntax = CARRIAGE_RETURN_READER): boolean {
-	let rule = less.parse(`a {\n\t${code}\n}`, { from: undefined }).first as Container
+	let rule = parseLess(`a {\n\t${code}\n}`, { from: undefined }).first as Container
 
 	return closesADeclarationBlock(syntax, rule.nodes?.[index] as ChildNode)
 }
@@ -246,7 +246,7 @@ function closes (code: string, index: number, syntax: Syntax = CARRIAGE_RETURN_R
  * @returns What `trailingSemicolonAsked` answers.
  */
 function askedUnderLess (code: string): boolean | undefined {
-	let root = less.parse(code, { from: undefined })
+	let root = parseLess(code, { from: undefined })
 	let decl = (root.first as Container).nodes?.[0] as Declaration
 	let rules = { "@stylistic/less/declaration-block-trailing-semicolon": `never` }
 

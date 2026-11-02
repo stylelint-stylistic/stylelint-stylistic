@@ -1,5 +1,5 @@
 import { type AtRule, type Declaration, parse, type Rule } from "postcss"
-import postcssLess from "postcss-less"
+import { parse as parseLess } from "postcss-less"
 import postcssScss, { parse as parseScss } from "postcss-scss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
@@ -166,7 +166,7 @@ describe(`writeWhitespaceBeforeSemicolon`, () => {
 	})
 
 	it(`into the raw of a Less mixin call's flag, which that syntax prints behind the at-rule's own raw`, () => {
-		let call = (postcssLess.parse(`a { .m() !important\t; }`).first as Rule).last as AtRule
+		let call = (parseLess(`a { .m() !important\t; }`).first as Rule).last as AtRule
 
 		call.raws.between = ` `
 		call.raws.important = `!important\t`

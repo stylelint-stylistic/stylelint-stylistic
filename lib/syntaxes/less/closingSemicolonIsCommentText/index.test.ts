@@ -1,5 +1,5 @@
 import type { ChildNode, Container, Parser } from "postcss"
-import less from "postcss-less"
+import less, { parse as parseLess } from "postcss-less"
 import scss from "postcss-scss"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
@@ -27,7 +27,7 @@ function closing (code: string, syntax: { parse: Parser } = less): boolean {
  * @returns What the reading makes of that node.
  */
 function mayBe (code: string): boolean {
-	let block = less.parse(`a {\n\t${code}\n}`, { from: undefined }).first as Container
+	let block = parseLess(`a {\n\t${code}\n}`, { from: undefined }).first as Container
 
 	return closingSemicolonMayBeCommentText(block.last as ChildNode, { opts: { syntax: less } } as unknown as PostcssResult)
 }
@@ -71,7 +71,7 @@ describe(`closingSemicolonIsCommentText`, () => {
 	})
 
 	it(`a node a declaration follows, which the semicolon closes whatever the block's flag says, and the last node of a block the semicolon leaves unclosed with a comment behind it`, () => {
-		let block = less.parse(`a {\n\tcolor: pink // ;\n\t;\n\ttop: 0\n}`, { from: undefined }).first as Container
+		let block = parseLess(`a {\n\tcolor: pink // ;\n\t;\n\ttop: 0\n}`, { from: undefined }).first as Container
 		let result = { opts: { syntax: less } } as unknown as PostcssResult
 
 		expect(closingSemicolonIsCommentText(block.first as ChildNode, result)).toBe(true)

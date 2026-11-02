@@ -1,5 +1,5 @@
 import type { AtRule } from "postcss"
-import less from "postcss-less"
+import { parse as parseLess } from "postcss-less"
 import { describe, expect, it } from "vitest"
 
 import { readsWhitespaceBehindAtRuleName } from "./index.ts"
@@ -10,7 +10,7 @@ import { readsWhitespaceBehindAtRuleName } from "./index.ts"
  * @returns What the util makes of that at-rule.
  */
 function reads (code: string): boolean {
-	let atRule = less.parse(code, { from: undefined }).first as AtRule
+	let atRule = parseLess(code, { from: undefined }).first as AtRule
 
 	return readsWhitespaceBehindAtRuleName(atRule)
 }

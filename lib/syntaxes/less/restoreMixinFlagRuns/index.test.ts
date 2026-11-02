@@ -1,6 +1,6 @@
 import type { AtRule, Document, Parser, Root, Syntax } from "postcss"
 import postcssHtml from "postcss-html"
-import less from "postcss-less"
+import less, { parse as parseLess } from "postcss-less"
 import type { PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
@@ -14,7 +14,7 @@ let html = postcssHtml as Syntax & { parse: Parser<Document> }
  * @returns The restored root.
  */
 function restored (code: string): Root {
-	let root = less.parse(code, { from: undefined }) as Root
+	let root = parseLess(code, { from: undefined }) as Root
 
 	restoreMixinFlagRuns(root, resultOf(less))
 
