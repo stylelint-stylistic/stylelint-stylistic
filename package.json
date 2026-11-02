@@ -7,6 +7,7 @@
 		"name": "Sergey Artemov",
 		"email": "firefoxic.dev@gmail.com"
 	},
+	"funding": "https://pay.payora.money/l/stylelint-stylistic",
 	"homepage": "https://stylelint-stylistic.github.io/",
 	"bugs": {
 		"url": "https://github.com/stylelint-stylistic/stylelint-stylistic/issues"

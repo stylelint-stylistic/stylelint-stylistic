@@ -92,7 +92,10 @@ let userGuide: DefaultTheme.SidebarItem[] = [
 
 let migrationGuide: DefaultTheme.SidebarItem[] = [{ text: `Migrating to 6.0.0`, link: `/migration-guide/to-6.0.0` }]
 
-let contribute: DefaultTheme.SidebarItem[] = [{ text: `Contributing`, link: `/contributing` }]
+let contribute: DefaultTheme.SidebarItem[] = [
+	{ text: `sponsorship`, link: `https://pay.payora.money/l/stylelint-stylistic` },
+	{ text: `Contributing`, link: `/contributing` },
+]
 
 let developerGuide: DefaultTheme.SidebarItem[] = [{ text: `Writing rules`, link: `/developer-guide/rules` }]
 

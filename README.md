@@ -3,6 +3,7 @@
 [![License: MIT][license-image]][license-url]
 [![Changelog][changelog-image]][changelog-url]
 [![Test Status][test-image]][test-url]
+[![Support the project][support-image]][support-url]
 
 An updatable collection of stylistic rules for [Stylelint](https://github.com/stylelint/stylelint) (in plugin form).
 
@@ -70,3 +71,6 @@ ESLint deprecates stylistic rules, too. But you can continue to use them thank
 
 [test-url]: https://github.com/stylelint-stylistic/stylelint-stylistic/actions
 [test-image]: https://github.com/stylelint-stylistic/stylelint-stylistic/actions/workflows/test.yaml/badge.svg?branch=main
+
+[support-url]: https://pay.payora.money/l/stylelint-stylistic
+[support-image]: https://img.shields.io/badge/Support%20the%20project-❤️-pink
