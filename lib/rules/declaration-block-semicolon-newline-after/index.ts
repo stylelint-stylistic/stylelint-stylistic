@@ -4,6 +4,7 @@ import stylelint from "stylelint"
 import { LEADING_CSS_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
+import { commentEmptyLineBeforeAsked } from "../../utils/commentEmptyLineBeforeAsked/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -16,6 +17,7 @@ import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { straySemicolonsTakenBefore, withoutTaken, writtenAsLeftBefore } from "../../utils/straySemicolonsTaken/index.ts"
+import { isComment } from "../../utils/typeGuards/index.ts"
 import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
@@ -109,7 +111,14 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 										// Trim up to the break already there, and add one only where none is; a node carrying no raw is written the run PostCSS would have printed in front of it, trimmed or opened as the option asks
 										let index = run.search(LINE_BREAK)
 
-										return (index >= 0 ? run.slice(index) : getLineBreak(root, result) + run) + rest
+										let base = (index >= 0 ? run.slice(index) : getLineBreak(root, result) + run) + rest
+
+										if (isComment(nodeToCheck) && primary.startsWith(`always`) && commentEmptyLineBeforeAsked(nodeToCheck, result)) {
+											let lineBreak = getLineBreak(root, result)
+											base = LINE_BREAK.test(base) ? base.replace(LINE_BREAK, (match) => lineBreak + match) : lineBreak.repeat(2) + base
+										}
+
+										return base
 									}
 
 									return rest

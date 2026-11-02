@@ -1,7 +1,8 @@
 import stylelint from "stylelint"
 
-import { CHARSET_AT_RULE_NAME, LEADING_WHITESPACE_WITHOUT_BREAK, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE } from "../../regexps.ts"
+import { CHARSET_AT_RULE_NAME, LEADING_WHITESPACE_WITHOUT_BREAK, LINE_BREAK, OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
+import { commentEmptyLineBeforeAsked } from "../../utils/commentEmptyLineBeforeAsked/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { getLineBreak } from "../../utils/getLineBreak/index.ts"
 import { getRuleDocUrl } from "../../utils/getRuleDocUrl/index.ts"
@@ -12,6 +13,7 @@ import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
 import { straySemicolonsTakenBefore, withoutTaken, writtenAsLeftBefore } from "../../utils/straySemicolonsTaken/index.ts"
+import { isComment } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
 
 let { utils: { validateOptions } } = stylelint
@@ -82,7 +84,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						ruleName,
 						fix () {
 							// Trim to the break already there, adding one only where none stands; a free semicolon the neighbor takes out stays for it to take, the run written as it leaves it
-							nodeToCheck.raws.before = writtenAsLeftBefore(nodeToCheck, (standing) => (OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(standing) ? standing.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : getLineBreak(root, result) + standing), result)
+							let writeEmptyLine = isComment(nodeToCheck) && commentEmptyLineBeforeAsked(nodeToCheck, result)
+							nodeToCheck.raws.before = writtenAsLeftBefore(nodeToCheck, (standing) => {
+								let base = OPENS_WITH_LINE_BREAK_PAST_CSS_WHITESPACE.test(standing) ? standing.replace(LEADING_WHITESPACE_WITHOUT_BREAK, ``) : getLineBreak(root, result) + standing
+								if (writeEmptyLine) {
+									let lineBreak = getLineBreak(root, result)
+									base = LINE_BREAK.test(base) ? base.replace(LINE_BREAK, (match) => lineBreak + match) : lineBreak.repeat(2) + base
+								}
+								return base
+							}, result)
 						},
 					})
 				},

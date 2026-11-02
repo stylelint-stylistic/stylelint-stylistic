@@ -1,10 +1,28 @@
+import stylelint from "stylelint"
 import { describe, expect, it } from "vitest"
 
 import { race } from "../../../vitest.helpers.ts"
+import plugins from "../../index.ts"
 
 import { messages, ruleName } from "./index.ts"
 
 let testRule = createTestRule({ ruleName })
+let coreCommentCase = {
+	// The moved comment must satisfy the core rule in the same fix run
+	description: `a free semicolon moved before an end-of-line comment`,
+	code: `a { color: pink;;/* comment */\n top: 0; }`,
+	fixed: `a { color: pink;\n\n;/* comment */\n top: 0; }`,
+}
+
+it(`${ruleName} leaves the core rule's empty line for ${coreCommentCase.description} in both rule orders`, async () => {
+	let configurations = [
+		{ [ruleName]: `always`, "comment-empty-line-before": `always` },
+		{ "comment-empty-line-before": `always`, [ruleName]: `always` },
+	]
+	let results = await Promise.all(configurations.map((rules) => stylelint.lint({ code: coreCommentCase.code, config: { plugins, rules }, fix: true })))
+
+	expect(results.map(({ code }) => code)).toEqual([coreCommentCase.fixed, coreCommentCase.fixed])
+})
 
 testRule({
 	ruleName,
