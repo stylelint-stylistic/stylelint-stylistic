@@ -32,7 +32,7 @@
 		"dist"
 	],
 	"peerDependencies": {
-		"stylelint": "^18.0.0-next.0"
+		"stylelint": "^18.0.0"
 	},
 	"dependencies": {
 		"@csstools/css-parser-algorithms": "^4.0.2",
@@ -59,7 +59,7 @@
 		"postcss-less": "^7",
 		"postcss-scss": "^4",
 		"postcss-styled-syntax": "~0.7",
-		"stylelint": "^18.0.0-next.0",
+		"stylelint": "^18",
 		"tsrs": "~0.20.1-ts7",
 		"vitepress": "next",
 		"vitest": "^5",
