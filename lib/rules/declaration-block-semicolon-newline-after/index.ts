@@ -1,7 +1,7 @@
 import type { ChildNode } from "postcss"
 import stylelint from "stylelint"
 
-import { LEADING_CSS_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
+import { EVERY_LINE_BREAK, LEADING_CSS_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { commentEmptyLineBeforeAsked } from "../../utils/commentEmptyLineBeforeAsked/index.ts"
@@ -16,7 +16,7 @@ import { nodeString } from "../../utils/nodeString/index.ts"
 import { report } from "../../utils/report/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { runInFrontOf } from "../../utils/runInFrontOf/index.ts"
-import { straySemicolonsTakenBefore, withoutTaken, writtenAsLeftBefore } from "../../utils/straySemicolonsTaken/index.ts"
+import { releasesAKeptSemicolon, straySemicolonsTakenBefore, withoutTaken, writtenAsLeftBefore } from "../../utils/straySemicolonsTaken/index.ts"
 import { isComment } from "../../utils/typeGuards/index.ts"
 import { isAtRule, isRule } from "../../utils/typeGuards/index.ts"
 import { whitespaceChecker } from "../../utils/whitespaceChecker/index.ts"
@@ -88,6 +88,56 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// A free semicolon of the checked node's run `no-extra-semicolons` takes out in the same run is read as gone, so that the run is judged as it will stand whichever side of that rule this one is listed
 			let taken = straySemicolonsTakenBefore(nodeToCheck, result)
 
+			let standing = runInFrontOf(nodeToCheck)
+
+			/**
+			 * Writes the run as the rule leaves it.
+			 * @param run - The run.
+			 * @returns The written run.
+			 */
+			function writeRun (run: string): string {
+				let leading = (run.match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0]
+				let rest = run.slice(leading.length)
+
+				if (primary.startsWith(`always`)) {
+					// Trim up to the break already there, and add one only where none is; a node carrying no raw is written the run PostCSS would have printed in front of it, trimmed or opened as the option asks
+					let index = leading.search(LINE_BREAK)
+
+					let base = (index >= 0 ? leading.slice(index) : getLineBreak(root, result) + leading) + rest
+
+					if (isComment(nodeToCheck as never) && primary.startsWith(`always`) && commentEmptyLineBeforeAsked(nodeToCheck as never, result)) {
+						let lineBreak = getLineBreak(root, result)
+						base = LINE_BREAK.test(base) ? base.replace(LINE_BREAK, (match) => lineBreak + match) : lineBreak.repeat(2) + base
+					}
+
+					return base
+				}
+
+				return rest
+			}
+
+			/**
+			 * Asks whether the write would release a kept semicolon.
+			 * @returns True where it would.
+			 */
+			function checkReleases (): boolean {
+				if (!nodeToCheck) return false
+
+				let originalWithoutTaken = withoutTaken(standing, taken)
+				let writtenWithoutTaken = writeRun(originalWithoutTaken)
+				let originalBreaks = (originalWithoutTaken.match(LEADING_CSS_WHITESPACE)?.[0].match(EVERY_LINE_BREAK) ?? []).length
+				let writtenBreaks = (writtenWithoutTaken.match(LEADING_CSS_WHITESPACE)?.[0].match(EVERY_LINE_BREAK) ?? []).length
+				let delta = writtenBreaks - originalBreaks
+
+				if (delta === 0) return false
+
+				let edits = [{ offset: nodeToCheck.source?.start?.offset === undefined ? 0 : nodeToCheck.source.start.offset - standing.length, line: (nodeToCheck.source?.start?.line ?? 1) - (standing.match(EVERY_LINE_BREAK) ?? []).length, delta }]
+
+				return releasesAKeptSemicolon(root, result, edits)
+			}
+
+			let releases = checkReleases()
+
 			checker.afterOneOnly({
 				source: withoutTaken(runInFrontOf(nodeToCheck), taken) + nodeString(nodeToCheck, result),
 				index: -1,
@@ -100,29 +150,10 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						endIndex: problemIndex,
 						result,
 						ruleName,
-						...(isFixable && {
+						...(isFixable && !releases && {
 							fix: (): void => {
 								// A free semicolon may stand in this raw with the whitespace around it, and the check reads one it keeps as the character behind the run, so the write spells the leading run alone; one the neighbor takes out stays for it to take, the run written as it leaves it where it still takes it
-								nodeToCheck.raws.before = writtenAsLeftBefore(nodeToCheck, (standing) => {
-									let run = (standing.match(LEADING_CSS_WHITESPACE) as RegExpMatchArray)[0]
-									let rest = standing.slice(run.length)
-
-									if (primary.startsWith(`always`)) {
-										// Trim up to the break already there, and add one only where none is; a node carrying no raw is written the run PostCSS would have printed in front of it, trimmed or opened as the option asks
-										let index = run.search(LINE_BREAK)
-
-										let base = (index >= 0 ? run.slice(index) : getLineBreak(root, result) + run) + rest
-
-										if (isComment(nodeToCheck) && primary.startsWith(`always`) && commentEmptyLineBeforeAsked(nodeToCheck, result)) {
-											let lineBreak = getLineBreak(root, result)
-											base = LINE_BREAK.test(base) ? base.replace(LINE_BREAK, (match) => lineBreak + match) : lineBreak.repeat(2) + base
-										}
-
-										return base
-									}
-
-									return rest
-								}, result)
+								nodeToCheck.raws.before = writtenAsLeftBefore(nodeToCheck, writeRun, result)
 							},
 						}),
 					})

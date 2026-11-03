@@ -831,4 +831,10 @@ describe(`${ruleName} beside the rules that write the run in front of a comment`
 	it(`trims the space in front of the break once beside the rule about whitespace at the end of a line, one file in both orders`, async () => {
 		expect(await race(ruleName, `a {\n  color: pink; \n  /* 1 */\n  top: 0\n}`, `always`, noEolWhitespace, true)).toEqual({ ours: `a {\n  color: pink;\n  /* 1 */\n  top: 0\n}`, theirs: `a {\n  color: pink;\n  /* 1 */\n  top: 0\n}`, left: [] })
 	})
+
+	it(`leaves the run where a break at its head would move a semicolon a disable comment keeps off its line`, async () => {
+		let code = `a {\n  /* stylelint-disable-next-line @stylistic/no-extra-semicolons */\n  b: c;;\n  d: e\n}`
+
+		expect(await race(ruleName, code, `always`, noExtraSemicolons, true)).toEqual({ ours: code, theirs: code, left: [messages.expectedAfter()] })
+	})
 })
