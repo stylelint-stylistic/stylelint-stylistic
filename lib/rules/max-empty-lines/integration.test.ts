@@ -273,4 +273,29 @@ describe(`the end of a stylesheet a custom property closes without a semicolon`,
 		expect(await fixBesideNoMissingNewline(code, maximum, true)).toEqual({ code: output, left: 0 })
 		expect(await fixBesideNoMissingNewline(code, maximum, false)).toEqual({ code: output, left: 0 })
 	})
+
+	// With the rule about the whitespace ending a line live beside the rule about the file's last break, all three write the same tail in one run: the spaces line is emptied and the trailing break is supplied, whichever order the three are listed in
+	it(`is written in one run beside both neighbors in every order`, async () => {
+		let code = `--x: a\n\n\n  `
+		let output = `--x: a\n`
+		let orders = [
+			[ruleName, `@stylistic/no-eol-whitespace`, `@stylistic/no-missing-end-of-source-newline`],
+			[ruleName, `@stylistic/no-missing-end-of-source-newline`, `@stylistic/no-eol-whitespace`],
+			[`@stylistic/no-eol-whitespace`, ruleName, `@stylistic/no-missing-end-of-source-newline`],
+			[`@stylistic/no-missing-end-of-source-newline`, ruleName, `@stylistic/no-eol-whitespace`],
+			[`@stylistic/no-eol-whitespace`, `@stylistic/no-missing-end-of-source-newline`, ruleName],
+			[`@stylistic/no-missing-end-of-source-newline`, `@stylistic/no-eol-whitespace`, ruleName],
+		]
+
+		for (let order of orders) {
+			let config = { plugins, rules: Object.fromEntries(order.map((name) => [name, name === ruleName ? 1 : true])) }
+			// eslint-disable-next-line no-await-in-loop -- the orders are read one after another
+			let fixed = await stylelint.lint({ code, config, fix: true })
+			expect(fixed.code).toBe(output)
+
+			// eslint-disable-next-line no-await-in-loop -- the orders are read one after another
+			let read = await stylelint.lint({ code: fixed.code ?? code, config })
+			expect(read.results[0]?.warnings.length ?? 0).toBe(0)
+		}
+	})
 })
