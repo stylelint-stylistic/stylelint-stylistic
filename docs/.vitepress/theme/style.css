@@ -8,6 +8,7 @@
 	color-scheme: light dark;
 	--vp-font-family-base: medeo sans, ui-sans-serif, system-ui, sans-serif;
 	--vp-font-family-mono: medeo mono, ui-monospace, monospace, monospace;
+	--vp-code-font-size: 1em;
 
 	/* `brand-1` colors a link in running text, so it holds 4.5:1 on the page's ground; `brand-2` and `brand-3` sit on plates and in hover, where the threshold is lower. */
 	--vp-c-brand-1:
