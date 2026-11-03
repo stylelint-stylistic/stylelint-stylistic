@@ -50,11 +50,10 @@
 	"devDependencies": {
 		"@firefoxic/beautypography": "~0.2",
 		"@firefoxic/oxlint-config": "~0.5",
-		"@fontsource-variable/geist": "^5",
-		"@fontsource-variable/geist-mono": "^5",
 		"@morev/stylelint-testing-library": "^1",
 		"@types/node": "^26",
 		"@vitest/coverage-v8": "^5",
+		"medeo-font": "^1",
 		"oxlint": "^1",
 		"postcss-html": "^2",
 		"postcss-less": "^7",

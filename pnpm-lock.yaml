@@ -197,12 +197,6 @@ importers:
       '@firefoxic/oxlint-config':
         specifier: ~0.5
         version: 0.5.0(eslint@10.14.0)(oxlint@1.90.0)
-      '@fontsource-variable/geist':
-        specifier: ^5
-        version: 5.3.0
-      '@fontsource-variable/geist-mono':
-        specifier: ^5
-        version: 5.3.0
       '@morev/stylelint-testing-library':
         specifier: ^1
         version: 1.1.1(stylelint@18.0.0-next.0)
@@ -212,6 +206,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^5
         version: 5.0.5(vitest@5.0.5)
+      medeo-font:
+        specifier: ^1
+        version: 1.0.0
       node:
         specifier: runtime:^26.13
         version: runtime:26.13.0
@@ -368,12 +365,6 @@ packages:
     engines: {node: '>=22.18'}
     peerDependencies:
       oxlint: ^1.83
-
-  '@fontsource-variable/geist-mono@5.3.0':
-    resolution: {integrity: sha512-vBbuwDEo9AkrqADMXOrlAR3DFcJi4/JxeuU43FoiQERnNwsfXNnvxvReZG02cQKmyk4DZkZdBZX3oTDvy2zBAw==}
-
-  '@fontsource-variable/geist@5.3.0':
-    resolution: {integrity: sha512-j0m+vLQuG5XAYoHtGCVu0spvlGreR3EzpECUVzkFmI1mTVnAO38l/NEPDCFgZ177JxzYJCLSmTQibIiYPilGrA==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -1336,6 +1327,14 @@ packages:
   mdn-data@2.27.1:
     resolution: {integrity: sha512-9Yubnt3e8A0OKwxYSXyhLymGW4sCufcLG6VdiDdUGVkPhpqLxlvP5vl1983gQjJl3tqbrM731mjaZaP68AgosQ==}
 
+  medeo-font@1.0.0:
+    resolution: {integrity: sha512-6U9w+lv63itA9EHnOXxhu6RFHeNIr9ZOApxqwfq2YG+hUAM7qSTmNX1NINNpdmzKq2W0Kx8eGuNLl8SNFmd25Q==}
+    peerDependencies:
+      next: '>=13.2.0'
+    peerDependenciesMeta:
+      next:
+        optional: true
+
   micromark-util-character@2.1.1:
     resolution: {integrity: sha512-wv8tdUTJ3thSFFFJKtpYKOYiGP2+v96Hvk4Tu8KpCAsTMs6yi+nVmGh1syvSCsaxz45J6Jbw+9DD6g97+NV67Q==}
 
@@ -1965,10 +1964,6 @@ snapshots:
       oxlint: 1.90.0
     transitivePeerDependencies:
       - eslint
-
-  '@fontsource-variable/geist-mono@5.3.0': {}
-
-  '@fontsource-variable/geist@5.3.0': {}
 
   '@humanfs/core@0.19.2':
     dependencies:
@@ -2763,6 +2758,8 @@ snapshots:
       vfile: 6.0.3
 
   mdn-data@2.27.1: {}
+
+  medeo-font@1.0.0: {}
 
   micromark-util-character@2.1.1:
     dependencies:
