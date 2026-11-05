@@ -246,3 +246,27 @@ testRule({
 		},
 	],
 })
+
+testRule({
+	ruleName,
+	config: [`tab`],
+	extraRules: { "@stylistic/declaration-colon-newline-after": `always` },
+
+	// The flag's line behind a colon gets its indent in the same run, with no space left before the flag
+	reject: [
+		{
+			description: `an important flag's line behind a colon, whose value keeps a space before the flag until the next run`,
+			code: `a {\n\t--b: !important ;\n}\n`,
+			fixed: `a {\n\t--b:\n\t\t!important ;\n}\n`,
+			warnings: [
+				{
+					line: 2,
+					column: 5,
+					endLine: 2,
+					endColumn: 6,
+					message: colonNewlineAfterMessages.expectedAfter(),
+				},
+			],
+		},
+	],
+})

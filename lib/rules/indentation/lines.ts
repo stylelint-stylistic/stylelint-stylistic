@@ -49,7 +49,17 @@ function writeDeclarationIndentation (decl: Declaration, fixPositions: FixPositi
 			decl.prop = replaceIndentation(decl.prop, fixPosition.currentIndentation, fixPosition.expectedIndentation, fixPosition.startIndex)
 		}
 		else if (fixPosition.startIndex < valueStartIndex) {
-			decl.raws.between = replaceIndentation(decl.raws.between || ``, fixPosition.currentIndentation, fixPosition.expectedIndentation, fixPosition.startIndex - propEndIndex)
+			let betweenOffset = fixPosition.startIndex - propEndIndex
+			if (decl.important && typeof decl.raws.important === `string`) {
+				// The break the colon rule stood in `between` behind the colon; indentation must write it into the value, together with the indentation, and drop the value's trailing run before the flag, so PostCSS prints the flag directly after the indentation with no space between
+				let between = decl.raws.between || ``
+				decl.raws.between = between.slice(0, betweenOffset)
+				declValue = between.slice(betweenOffset) + fixPosition.expectedIndentation + declValue.replace(/\s+$/u, ``)
+				syntax.write(decl, declValue)
+			}
+			else {
+				decl.raws.between = replaceIndentation(decl.raws.between || ``, fixPosition.currentIndentation, fixPosition.expectedIndentation, betweenOffset)
+			}
 		}
 		else if (fixPosition.startIndex < valueEndIndex) {
 			declValue = replaceIndentation(declValue, fixPosition.currentIndentation, fixPosition.expectedIndentation, fixPosition.startIndex - valueStartIndex)
