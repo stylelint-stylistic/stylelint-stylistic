@@ -13,9 +13,9 @@ pnpm ci
 Every task goes through the `Makefile`; `make help` lists the targets with their flags. The ones a rule needs:
 
 ```shell
-make test FILE=lib/rules/color-hex-case/index.test.ts  # one rule's tests
-make lint LINT_FLAGS=--fix                             # lint and format the code
-make verify                                            # everything CI runs
+pnpm vitest lib/rules/color-hex-case/index.test.ts  # one rule's tests
+pnpm oxlint --fix                                   # lint and format the code
+make verify                                         # everything CI runs
 ```
 
 `make verify` is what CI runs, and the `pre-push` hook runs it too.

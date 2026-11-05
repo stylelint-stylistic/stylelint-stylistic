@@ -23,14 +23,12 @@ build: ## 📦 Build the package into dist/ and check that it loads
 	./scripts/check-built-plugin.ts
 .PHONY: build
 
-# A flag is passed as a variable rather than as an option:
-# `make lint LINT_FLAGS="--fix"`
-lint: ## 🧬 Check code by oxlint [LINT_FLAGS=] [FILE=]
-	oxlint $(LINT_FLAGS) $(FILE)
+lint: ## 🧬 Check code by oxlint
+	oxlint
 .PHONY: lint
 
-test: ## 🧪 Run tests [TEST_FLAGS=] [FILE=]
-	vitest $(TEST_FLAGS) $(FILE)
+test: ## 🧪 Run tests
+	vitest
 .PHONY: test
 
 prose: ## ✍️  Bind function words in markdown with non-breaking spaces
@@ -87,8 +85,7 @@ config-check: build ## 🧩 Check that the recommended preset is reached from a 
 .PHONY: config-check
 
 verify: ## ✅ Run every check the CI runs
-	@test -z "$(FILE)$(LINT_FLAGS)$(TEST_FLAGS)" || { printf "\t❌ $(ANSI_BOLD)verify runs every check over the whole tree, and takes no FILE, LINT_FLAGS or TEST_FLAGS$(ANSI_RESET)\n\n"; exit 2; }
-	tree=$$(./scripts/verified.ts tree)
+	@tree=$$(./scripts/verified.ts tree)
 	$(MAKE) --no-print-directory check lint test prose-check breaks-check types-check build packages-check config-check docs-build
 	./scripts/verified.ts record $$tree
 .PHONY: verify
