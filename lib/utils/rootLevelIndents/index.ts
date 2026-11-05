@@ -5,7 +5,7 @@ import type { Syntax } from "../../syntaxes/index.ts"
 import { getBlockAfter } from "../getBlockAfter/index.ts"
 import { hasBlock } from "../hasBlock/index.ts"
 import { lastLineIndentation, lastLineStart } from "../lineIndentation/index.ts"
-import { isAtRule, isRule } from "../typeGuards/index.ts"
+import { isAtRule, isComment, isRule } from "../typeGuards/index.ts"
 
 /**
  * Reads the indentation of the lines at the root's own level: where each child opens, where its block closes, and where a comment the parser filed in the root's `raws.after` opens. Continuation and nested lines are left out, or a level read off one would rise with every run of the fix.
@@ -23,7 +23,14 @@ export function rootLevelIndents (syntax: Syntax, root: Root, closingBraceIndent
 	for (let child of root.nodes) {
 		let before = child.raws.before ?? ``
 
-		if (lastLineStart(before) >= 0) own.push(lastLineIndentation(before))
+		if (lastLineStart(before) >= 0) {
+			let indent = lastLineIndentation(before)
+
+			// A comment's `raws.before` is the line break behind the previous node. An empty indentation there means the comment stands at the left margin and must not drag the root's base level down to it; a comment with an indentation still reads that indentation as its own line. The comment itself is measured by `checkNodeLine`.
+			if (isComment(child) && indent === ``) continue
+
+			own.push(indent)
+		}
 		else if (child === root.first) {
 			// The tail of `codeBefore` and the run behind it
 			let lineBefore = `${(root.raws.codeBefore ?? ``).split(EVERY_LINE_BREAK).at(-1) ?? ``}${before}`
@@ -40,7 +47,17 @@ export function rootLevelIndents (syntax: Syntax, root: Root, closingBraceIndent
 		if (lastLineStart(blockAfter) >= 0) own.push(lastLineIndentation(blockAfter))
 	}
 
-	// A comment behind a bodiless at-rule with params that closes the root without a semicolon stands in the root's `raws.after` rather than as a node, and the line it opens on is the root's as a comment node's is; the raw's first line is the at-rule's, a line of whitespace alone, the closing tag's among them, is no line of the root, and a line inside a comment opened above is a continuation line
+	readAfterRaw(root, own)
+
+	return { own, tagLine }
+}
+
+/**
+ * Reads the comments the parser filed in the root's `raws.after` — behind a bodiless at-rule with params that closes the root without a semicolon — and pushes the indentation of each line they open on. The raw's first line is the at-rule's own line and is left out, as is a line of whitespace alone and any line inside a comment opened above.
+ * @param root - The root whose `raws.after` holds the comments.
+ * @param own - The root's own lines, pushed into.
+ */
+function readAfterRaw (root: Root, own: string[]): void {
 	let [first = ``, ...afterLines] = (root.raws.after ?? ``).split(EVERY_LINE_BREAK)
 	let insideComment = opensACommentLeftOpen(first, false)
 
@@ -49,8 +66,6 @@ export function rootLevelIndents (syntax: Syntax, root: Root, closingBraceIndent
 
 		insideComment = opensACommentLeftOpen(line, insideComment)
 	}
-
-	return { own, tagLine }
 }
 
 /**

@@ -828,12 +828,12 @@ testRule({
 			message: messages.expected(`0 tabs`),
 		},
 		{
-			description: `the same with a semicolon behind the at-rule, whose comment is a node`,
+			description: `a comment behind a bodiless at-rule closed by a semicolon, standing at the left margin while the at-rule stands a level deeper`,
 			code: `<style>\n\t@import 'x';\n/* c */\n</style>`,
-			fixed: `<style>\n@import 'x';\n/* c */\n</style>`,
-			line: 2,
-			column: 2,
-			message: messages.expected(`0 tabs`),
+			fixed: `<style>\n\t@import 'x';\n\t/* c */\n</style>`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`1 tab`),
 		},
 		{
 			// The braces carry the break into the property, so the core rule meets one outside Sass too
@@ -903,6 +903,36 @@ testRule({
 					message: messages.expected(`12 spaces`),
 				},
 			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`tab`],
+	customSyntax: `postcss-html`,
+
+	accept: [],
+
+	reject: [
+		{
+			// A comment behind a bodiless at-rule without parameters, closed by a semicolon, is a line of the root and is asked for the at-rule's own level, not for the left margin
+			description: `a comment behind a bodiless at-rule without parameters closed by a semicolon, asked for the at-rule's level`,
+			code: `
+				<style>
+					@foo;
+				/* c */
+				</style>
+			`,
+			fixed: `
+				<style>
+					@foo;
+					/* c */
+				</style>
+			`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`1 tab`),
 		},
 	],
 })
@@ -1040,6 +1070,36 @@ testRule({
 					message: messages.expected(`12 spaces`),
 				},
 			],
+		},
+	],
+})
+
+testRule({
+	ruleName,
+	config: [`tab`],
+	customSyntax: `postcss-html`,
+
+	accept: [],
+
+	reject: [
+		{
+			// A comment behind a bodiless at-rule without parameters, closed by a semicolon, is a line of the root and is asked for the at-rule's own level, not for the left margin
+			description: `a comment behind a bodiless at-rule without parameters closed by a semicolon, asked for the at-rule's level`,
+			code: `
+				<style>
+					@foo;
+				/* c */
+				</style>
+			`,
+			fixed: `
+				<style>
+					@foo;
+					/* c */
+				</style>
+			`,
+			line: 3,
+			column: 1,
+			message: messages.expected(`1 tab`),
 		},
 	],
 })
