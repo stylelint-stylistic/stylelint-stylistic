@@ -71,6 +71,15 @@ testRule({
 	],
 
 	reject: [
+		// Under always a block comment behind the line break after the comma still leaves the next item without the newline after the comma, so the break is written behind the comment
+		{
+			description: `a block comment pressed to the line break after the comma, with no break behind the comment, under always`,
+			code: `a { b: c,\n/* d */e }`,
+			fixed: `a { b: c,\n/* d */\ne }`,
+			line: 2,
+			column: 7,
+			message: messages.expectedAfter(),
+		},
 		{
 			description: `spaces and a tab between the comma and a break the file spells, which go rather than stand as a line of their own`,
 			code: `a { background-size: 0, \t\n0; }`,
@@ -419,6 +428,33 @@ testRule({
 	],
 
 	reject: [
+		// A block comment pressed to the break after the comma, with another break behind the comment: the fix reads past the comment and takes out the break behind it in one pass, so no second run is needed
+		{
+			description: `a block comment pressed to the line break after the comma, with a break behind the comment`,
+			code: `a { b: c,\n/* d */\ne,f }`,
+			fixed: `a { b: c,\n/* d */e,f }`,
+			line: 2,
+			column: 7,
+			message: messages.rejectedAfterMultiLine(),
+		},
+		// A multi-line block comment pressed to the break after the comma, with a break behind it: the same reading past the comment takes out the break behind it, and the break behind the second comma too, in one pass
+		{
+			description: `a multi-line block comment pressed to the line break after the comma, with a break behind the comment`,
+			code: `a { b: c,\n/* d\n*/ e,\nf }`,
+			fixed: `a { b: c,\n/* d\n*/e,f }`,
+			warnings: [
+				{
+					line: 3,
+					column: 2,
+					message: messages.rejectedAfterMultiLine(),
+				},
+				{
+					line: 3,
+					column: 5,
+					message: messages.rejectedAfterMultiLine(),
+				},
+			],
+		},
 		{
 			// Taking the last break out of parentheses the tokenizer read as code makes them one plain token again, which pushes nothing, so the next parenthesis pops the word url and the string inside is read as characters of the address up to its first closing parenthesis, and the quotation mark behind opens a string nothing closes: the run is left and the warning stands
 			description: `a comma in parentheses a word over the name of a bare address pops, with a break behind it, in front of parentheses holding a string and a quotation mark`,
