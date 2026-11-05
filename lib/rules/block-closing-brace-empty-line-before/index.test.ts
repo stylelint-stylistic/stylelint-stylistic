@@ -792,6 +792,19 @@ testRule({
 				}
 			`,
 		},
+		{
+			description: `a block whose declaration stands before a nested block, with the empty line the reversed option asks for in front of the outer brace`,
+			code: `
+				a {
+					color: aquamarine;
+
+					@media print {
+						color: hotpink;
+					}
+
+				}
+			`,
+		},
 	],
 
 	reject: [
@@ -958,6 +971,31 @@ testRule({
 				}
 			`,
 			line: 3,
+			column: 1,
+			message: messages.expected,
+		},
+		{
+			description: `a block whose declaration stands before a nested block, with no empty line in front of the outer brace, which the reversed option requires`,
+			code: `
+				a {
+					color: aquamarine;
+
+					@media print {
+						color: hotpink;
+					}
+				}
+			`,
+			fixed: `
+				a {
+					color: aquamarine;
+
+					@media print {
+						color: hotpink;
+					}
+
+				}
+			`,
+			line: 7,
 			column: 1,
 			message: messages.expected,
 		},
@@ -1565,11 +1603,21 @@ testRule({
 						color: aquamarine;
 
 					}
+
 				}
 			`,
-			line: 6,
-			column: 2,
-			message: messages.expected,
+			warnings: [
+				{
+					line: 7,
+					column: 1,
+					message: messages.expected,
+				},
+				{
+					line: 6,
+					column: 2,
+					message: messages.expected,
+				},
+			],
 		},
 	],
 })

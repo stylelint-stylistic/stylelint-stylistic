@@ -114,7 +114,7 @@ function isLastNestedBlock (node: Container): boolean {
 function reversedByExcept (node: Container, secondary: Record<string, unknown>): boolean {
 	if (optionsMatches(secondary, `except`, `last-nested`) && isLastNestedBlock(node)) return true
 
-	return optionsMatches(secondary, `except`, `after-closing-brace`) && !(node.nodes ?? []).some((child) => child.type === `decl`)
+	return optionsMatches(secondary, `except`, `after-closing-brace`) && (node.last === undefined || node.last.type !== `decl`)
 }
 
 /**

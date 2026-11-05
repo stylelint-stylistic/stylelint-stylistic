@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+### Fixed
+
+- The `block-closing-brace-empty-line-before` rule, with the values `never` and `except: ["after-closing-brace"]`, now requires an empty line before the closing brace of a block if that block ends with a nested block, even if there is a declaration earlier in that block. Previously, this setting incorrectly required the removal of the empty line (see [#750](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/750)).
+
 ## [6.0.0] — 2026–11–03
 
 This release brings a lot of changes. For a smoother update to it, use the [migration guide](./docs/migration-guide/to-6.0.0.md).
