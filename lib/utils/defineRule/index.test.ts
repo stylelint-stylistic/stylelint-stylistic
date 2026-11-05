@@ -1,4 +1,5 @@
-import { type Declaration, parse, type Rule } from "postcss"
+import postcss, { type Declaration, parse, type Rule } from "postcss"
+import postcssHtml from "postcss-html"
 import stylelint, { type Config, type PostcssResult } from "stylelint"
 import { describe, expect, it } from "vitest"
 
@@ -163,5 +164,64 @@ describe(`a run a check of the plugin's own cut short`, () => {
 		expect(() => last(`never`, undefined, {})(root, result)).toThrow(`the check throws`)
 		expect(block.raws).toBe(plain)
 		expect(declaration.raws).toBe(plainOfDeclaration)
+	})
+
+	it(`unwraps every root of a document when a deferred check throws on one of them`, () => {
+		// A document holds several roots; the last configured rule's deferred check throws on the first root, so the run ends before it reaches the second. Every root the run pinned must be unwound, not only the one whose check threw.
+		let throwing = defineRule({ shortName: `property-throws`, meta: { url: `https://example.test/property-throws` }, messages: MESSAGES, defersToRunEnd: true, rule: (): RuleCheck => (): void => { throw new Error(`the check throws`) } })
+		let standing = defineRule({ shortName: `property-found-behind`, meta: { url: `https://example.test/property-found-behind` }, messages: MESSAGES, rule })
+		let builtThrowing = throwing(core)
+		let builtStanding = standing(core)
+
+		let result = postcss().process(`<style>a { color: red; }</style>\n<style>b { color: blue; }</style>\n`, { from: undefined, syntax: postcssHtml as unknown as never }).sync() as PostcssResult
+
+		type RawNode = { raws: Record<string, unknown>, nodes?: RawNode[] }
+
+		let doc = result.root as unknown as { type: string, nodes: RawNode[] }
+		let roots = doc.type === `document` ? doc.nodes : [doc as unknown as RawNode]
+
+		let originals = new WeakMap<RawNode, Record<string, unknown>>()
+		let allNodes: RawNode[] = []
+
+		function collect (node: RawNode): void {
+			originals.set(node, node.raws)
+			allNodes.push(node)
+			for (let child of node.nodes ?? []) collect(child)
+		}
+
+		for (let root of roots) collect(root)
+
+		result.stylelint = {
+			ruleSeverities: {},
+			customMessages: {},
+			customUrls: {},
+			ruleMetadata: {},
+			fixersData: {},
+			rangesOfComputedEditInfos: [],
+			disabledRanges: {},
+			config: { rules: { [builtStanding.ruleName]: true, [builtThrowing.ruleName]: `color` } },
+		} as unknown as PostcssResult[`stylelint`]
+
+		let context = { configurationComment: `stylelint`, newline: `\n` }
+		let rules = [builtStanding, builtThrowing]
+		let threw = false
+		for (let built of rules) {
+			let check = built(`color`, undefined, context)
+			for (let root of roots) {
+				try {
+					(check as (root: RawNode, result: PostcssResult) => void)(root, result)
+				}
+				catch {
+					threw = true
+					break
+				}
+			}
+			if (threw) break
+		}
+
+		expect(threw).toBe(true)
+		let wrapped = 0
+		for (let node of allNodes) if (node.raws !== originals.get(node)) wrapped += 1
+		expect(wrapped).toBe(0)
 	})
 })

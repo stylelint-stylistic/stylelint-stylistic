@@ -21,6 +21,9 @@ type Pin = { node: AnyNode, key: string, value: unknown, empty: boolean, writes:
 /** The raws pinned, by the root pinned. */
 let pinsOf = new WeakMap<Root, Pin[]>()
 
+/** Every root a run pinned, so that when a check of the plugin's own throws and ends the run before the last rule reaches every root, all of them can be unwound at once. */
+let pinnedRoots = new Set<Root>()
+
 /** The nodes the last pass walked, by the root: a node it did not is one a rule of another plugin put into the tree since, and a raw of such a node standing a value a pin stands is that pin copied. */
 let seenOf = new WeakMap<Root, Set<AnyNode>>()
 
@@ -141,6 +144,8 @@ export function pinInventedRaws (root: Root): void {
 	for (let { node, key } of asked) notePin(root, node, key)
 
 	pinsOf.set(root, [...pinsOf.get(root) ?? [], ...asked])
+
+	pinnedRoots.add(root)
 }
 
 /**
@@ -158,6 +163,7 @@ export function unpinUnwritten (root: Root): void {
 
 	pinsOf.delete(root)
 	seenOf.delete(root)
+	pinnedRoots.delete(root)
 
 	let taken = pins.filter(({ node, key, value, empty, writes: written }) => (node.raws as Record<string, unknown>)[key] === value && node.root() === root && writesByRules(root, key) === written && ((key === `after` && holdsNothing(node) !== empty) || !readByRules(root, node, key)))
 
@@ -166,4 +172,9 @@ export function unpinUnwritten (root: Root): void {
 	delete (root as Root & { rawCache?: unknown }).rawCache
 
 	forgetPinnedRaws(root)
+}
+
+/** Unwinds every root the run pinned: used where a check of the plugin's own throws and ends the run before the last rule reaches every root, so no root stays wrapped in the accounting. */
+export function unpinAllPinnedRoots (): void {
+	for (let root of pinnedRoots) unpinUnwritten(root)
 }
