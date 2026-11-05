@@ -17,10 +17,10 @@ check: ## ✅ Check types with TypeScript
 	tsrs
 .PHONY: check
 
-build: ## 📦 Build the package into dist/ and load what came out
+build: ## 📦 Build the package into dist/ and check that it loads
 	rm -rf dist
 	tsrs -p tsconfig.build.json
-	node --input-type=module -e 'import("./dist/index.js").then(({ default: plugins }) => { if (plugins.length === 0) throw new Error("dist/index.js exports no plugin") })'
+	./scripts/check-built-plugin.ts
 .PHONY: build
 
 # A flag is passed as a variable rather than as an option:
