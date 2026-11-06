@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+## [6.0.1] — 2026–11–06
+
 ### Fixed
 
 - The `block-closing-brace-empty-line-before` rule, with the values `never` and `except: ["after-closing-brace"]`, now requires an empty line before the closing brace of a block if that block ends with a nested block, even if there is a declaration earlier in that block. Previously, this setting incorrectly required the removal of the empty line (see [#750](https://github.com/stylelint-stylistic/stylelint-stylistic/issues/750)).
@@ -446,7 +448,8 @@ No meaningful changes.
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v6.0.0...HEAD
+[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v6.0.1...HEAD
+[6.0.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v6.0.0...v6.0.1
 [6.0.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.3.1...v6.0.0
 [5.3.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.3.0...v5.3.1
 [5.3.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.2.1...v5.3.0
