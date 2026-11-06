@@ -60,7 +60,7 @@
 		"postcss-scss": "^4",
 		"postcss-styled-syntax": "~0.7",
 		"stylelint": "^18",
-		"tsrs": "~0.20.1-ts7",
+		"tsrs": "~0.22.0-ts7",
 		"vitepress": "next",
 		"vitest": "^5",
 		"vue": "^3"
@@ -73,7 +73,7 @@
 		},
 		"packageManager": {
 			"name": "pnpm",
-			"version": "^12.17",
+			"version": "^12.18",
 			"onFail": "download"
 		}
 	},
