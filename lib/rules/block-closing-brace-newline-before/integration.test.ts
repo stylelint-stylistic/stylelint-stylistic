@@ -2,6 +2,7 @@ import stylelint from "stylelint"
 import { describe, expect, it } from "vitest"
 
 import plugins from "../../index.ts"
+import { messages as trailingSemicolonMessages, ruleName as trailingSemicolonRuleName } from "../declaration-block-trailing-semicolon/index.ts"
 import { messages as colonSpaceAfterMessages } from "../declaration-colon-space-after/index.ts"
 
 import { messages, ruleName } from "./index.ts"
@@ -90,6 +91,49 @@ testRule({
 					column: 8,
 					message: `Expected a trailing semicolon (@stylistic/declaration-block-trailing-semicolon)`,
 				},
+			],
+		},
+	],
+})
+
+// declaration-block-trailing-semicolon: always will write `;` before `}`, so any line break at the end of the run lands behind it, not before `}`, and fails `always`; both orders converge to one file in one pass
+testRule({
+	ruleName,
+	config: [`always`],
+	extraRules: { "@stylistic/declaration-block-trailing-semicolon": `always` },
+
+	reject: [
+		{
+			description: `a custom property closing a block without a semicolon, a comment at the end of its value, both orders converge`,
+			code: `a { --b: red /* c */ }`,
+			fixed: `a { --b: red /* c */;\n }`,
+			line: 1,
+			column: 21,
+			message: messages.expectedBefore,
+			warnings: [
+				{ line: 1, column: 21, message: messages.expectedBefore },
+				{ line: 1, column: 20, message: trailingSemicolonMessages.expected },
+			],
+		},
+	],
+})
+
+testRule({
+	ruleName: trailingSemicolonRuleName,
+	config: [`always`],
+	extraRules: { [ruleName]: `always` },
+
+	reject: [
+		{
+			description: `a custom property closing a block without a semicolon, a comment at the end of its value, both orders converge`,
+			code: `a { --b: red /* c */ }`,
+			fixed: `a { --b: red /* c */;\n }`,
+			line: 1,
+			column: 20,
+			message: trailingSemicolonMessages.expected,
+			warnings: [
+				{ line: 1, column: 20, message: trailingSemicolonMessages.expected },
+				{ line: 1, column: 21, message: messages.expectedBefore },
 			],
 		},
 	],

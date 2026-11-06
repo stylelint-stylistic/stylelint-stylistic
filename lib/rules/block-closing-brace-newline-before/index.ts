@@ -1,12 +1,13 @@
 import type { ChildNode, Container } from "postcss"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { EVERY_WHITESPACE, INLINE_COMMENT_BREAK, LEADING_LINE_BREAK, SEMICOLON_RUN } from "../../regexps.ts"
+import { EVERY_WHITESPACE, INLINE_COMMENT_BREAK, LEADING_LINE_BREAK, SEMICOLON_RUN, TRAILING_LINE_BREAK_AND_INDENTATION } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blockString } from "../../utils/blockString/index.ts"
 import { blockTextAsClosed, getBlockTailAsClosed, setBlockTailAsClosed } from "../../utils/blockTail/index.ts"
 import { carriesABlock } from "../../utils/carriesABlock/index.ts"
+import { closedBySemicolon } from "../../utils/closedBySemicolon/index.ts"
 import { closingBraceRunWrites } from "../../utils/closingBraceRunWrites/index.ts"
 import { defineMessages, defineRule, type RuleScope } from "../../utils/defineRule/index.ts"
 import { editKeepsEscapedCharacter } from "../../utils/editKeepsEscapedCharacter/index.ts"
@@ -17,6 +18,7 @@ import { hasBlock } from "../../utils/hasBlock/index.ts"
 import { hasEmptyBlock } from "../../utils/hasEmptyBlock/index.ts"
 import { isSingleLineString } from "../../utils/isSingleLineString/index.ts"
 import { lastNodeHoldsTheBlockAfter } from "../../utils/lastNodeHoldsTheBlockAfter/index.ts"
+import { lastNonCommentNode } from "../../utils/lastNonCommentNode/index.ts"
 import { escapeHeadLength, hexadecimalTerminatorAtHead } from "../../utils/maskEscapes/index.ts"
 import { indexInFrontOfTheBrace } from "../../utils/rawSpans/index.ts"
 import { report } from "../../utils/report/index.ts"
@@ -75,6 +77,34 @@ function writesTheRun (text: string, raw: string, written: string): boolean {
  */
 function writesTheRunInFrontOfTheBrace (syntax: Syntax, result: PostcssResult, ruleName: string, last: ChildNode): boolean {
 	return !isDeclaration(last) || writesSharedRun(syntax, last, result, ruleName)
+}
+
+/**
+ * Asks whether `declaration-block-trailing-semicolon: always` will write `;` before `}`, so that the run
+ * before `}` should be read as if that semicolon is already there — any line break at the end of the run
+ * ends up behind the semicolon, not before `}`, and does not satisfy `always`.
+ * @param statement - The block whose last non-comment node closes it.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns True where `trailing-semicolon: always` will write a semicolon before the closing brace.
+ */
+function trailingSemicolonWritesBeforeBrace (statement: ChildNode & Container, result: PostcssResult): boolean {
+	let decl = lastNonCommentNode(statement)
+
+	if (!decl || !isDeclaration(decl)) return false
+
+	return closedBySemicolon(decl, result) && !statement.raws.semicolon
+}
+
+/**
+ * Strips a trailing line break from the run in front of `}` where `declaration-block-trailing-semicolon: always`
+ * will write `;` before `}`, so any line break at the end of the run lands behind it, not before `}`, and fails `always`.
+ * @param after - The run in front of the closing brace, with extra semicolons already ignored.
+ * @param statement - The block whose last non-comment node closes it.
+ * @param result - The Stylelint result, which holds the configuration.
+ * @returns The run with the trailing break removed where `trailing-semicolon: always` will write a semicolon before the brace.
+ */
+function stripTrailingBreakForTrailingSemicolon (after: string, statement: ChildNode & Container, result: PostcssResult): string {
+	return trailingSemicolonWritesBeforeBrace(statement, result) ? after.replace(TRAILING_LINE_BREAK_AND_INDENTATION, ``) : after
 }
 
 /** `always` a newline before the closing brace; `always-multi-line` asks it, and `never-multi-line` refuses whitespace there, in a multi-line block only. */
@@ -139,7 +169,9 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			if (!last) throw new Error(`The block must hold a node`)
 
-			let isFixable = primary.startsWith(`always`) || !syntax.writesIntoInlineComment(last, result, lastNodeHoldsTheBlockAfter(statement) ? undefined : `${escapedHead}${run.replaceAll(EVERY_WHITESPACE, ``)}`)
+			after = stripTrailingBreakForTrailingSemicolon(after, statement, result)
+
+			let isFixable = primary.startsWith(`always`) ? true : !syntax.writesIntoInlineComment(last, result, lastNodeHoldsTheBlockAfter(statement) ? undefined : `${escapedHead}${run.replaceAll(EVERY_WHITESPACE, ``)}`)
 
 			// Behind a wordless declaration the colon rules read this run too, and the two settle who writes
 			if (isFixable) isFixable = writesTheRunInFrontOfTheBrace(syntax, result, ruleName, last)
@@ -155,7 +187,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			// The question is whether a break *starts* the final run (`LEADING_LINE_BREAK`); the whitespace behind it is `indentation`'s.
 			if (!LEADING_LINE_BREAK.test(after)) {
 				if (primary === `always`) complain(messages.expectedBefore)
-				else if (blockIsMultiLine && primary === `always-multi-line`) complain(messages.expectedBeforeMultiLine)
+				if (blockIsMultiLine && primary === `always-multi-line`) complain(messages.expectedBeforeMultiLine)
 			}
 
 			if (after !== `` && blockIsMultiLine && primary === `never-multi-line`) complain(messages.rejectedBeforeMultiLine)
