@@ -3,21 +3,38 @@ name: Test
 on:
   push:
     branches:
-    - main
+      - main
   pull_request:
     branches:
-    - '*'
+      - '**'
 
 env:
   FORCE_COLOR: 2
 
 jobs:
-  test:
+  discover:
     runs-on: ubuntu-latest
+    outputs:
+      node_versions: ${{ steps.matrix.outputs.node_versions }}
     steps:
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/setup@v3
         with:
           cache: true
-      - run: pnpm ci
+      - id: matrix
+        run: node .github/scripts/get-node-matrix.ts
+  test:
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ${{ fromJSON(needs.discover.outputs.node_versions) }}
+    name: Node.js ${{ matrix.node }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/setup@v3
+        with:
+          cache: true
+          runtime: node@${{ matrix.node }}
       - run: make verify

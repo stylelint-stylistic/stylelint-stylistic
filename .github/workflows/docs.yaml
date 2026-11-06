@@ -27,10 +27,9 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.ref_name }}
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/setup@v3
         with:
           cache: true
-      - run: pnpm ci
       - run: make docs-build
       # The site is served by the organization's own repository, so the built site is pushed there over a deploy key of that repository, into the branch its Pages reads. The branch is left holding one commit, since nothing reads its history.
       - uses: peaceiris/actions-gh-pages@v4
