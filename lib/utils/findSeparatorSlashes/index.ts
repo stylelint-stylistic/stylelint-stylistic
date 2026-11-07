@@ -9,6 +9,7 @@ import { hideParenthesesInUrlStrings } from "../hideParenthesesInUrlStrings/inde
 import { matchesStringOrRegExp } from "../matchesStringOrRegExp/index.ts"
 import { opensAnAddress } from "../opensAnAddress/index.ts"
 import { quotesItsAddress } from "../quotesItsAddress/index.ts"
+import { readCallName } from "../readCallName/index.ts"
 
 /** Options of the walk. */
 export type SlashOptions = {
@@ -103,9 +104,9 @@ export function findSeparatorSlashes (text: string, syntax: Syntax, node: AtRule
 				continue
 			}
 
-			if (!syntax.isStandardFunction(valueNode) || isMathFunction(valueNode.value)) continue
+			if (!syntax.isStandardFunction(valueNode, at, nodes) || isMathFunction(valueNode.value)) continue
 
-			if (options.ignoreFunctions !== undefined && matchesStringOrRegExp(valueNode.value, options.ignoreFunctions)) continue
+			if (options.ignoreFunctions !== undefined && matchesStringOrRegExp(readCallName(valueNode, at, nodes).name, options.ignoreFunctions)) continue
 
 			walk(valueNode.nodes)
 		}

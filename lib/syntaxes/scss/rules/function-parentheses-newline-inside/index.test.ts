@@ -188,6 +188,10 @@ testRule({
 			description: `the same two comments with a space in front of the first one's break, which puts the start of the second one's node inside the first one's text: the node is placed by that start, and the run behind the comment it reaches past is the value's`,
 			code: `a { b: f(//c \n //d\n 2\n); }`,
 		},
+		{
+			description: `a call whose name opens under an SCSS interpolation and is spelled with hexadecimal escapes the parser reads as separate words`,
+			code: `a { b: #{$c}\\61 \\62 rl(a,b); }`,
+		},
 	],
 
 	reject: [

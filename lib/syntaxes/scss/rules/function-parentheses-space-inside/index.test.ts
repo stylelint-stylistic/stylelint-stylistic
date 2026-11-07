@@ -136,6 +136,10 @@ testRule({
 			description: `a call the parser closed on a parenthesis standing in the text of an inline comment, and the call it read out of the code behind that comment: Sass compiles the value to one call reaching over the break, and neither parenthesis the parser hands back is one the file writes`,
 			code: `a { b: f(1px // c) h(2px\n2px); }`,
 		},
+		{
+			description: `a call whose name opens under an SCSS interpolation and is spelled with hexadecimal escapes the parser reads as separate words`,
+			code: `a { b: #{$c}\\61 \\62 rl(a,b); }`,
+		},
 	],
 
 	reject: [

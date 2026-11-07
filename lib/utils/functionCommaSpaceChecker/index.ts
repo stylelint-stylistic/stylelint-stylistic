@@ -16,6 +16,7 @@ import { maskEscapes } from "../maskEscapes/index.ts"
 import { opensAnAddress } from "../opensAnAddress/index.ts"
 import { optionsMatches } from "../optionsMatches/index.ts"
 import { quotesItsAddress } from "../quotesItsAddress/index.ts"
+import { readCallName } from "../readCallName/index.ts"
 import { report } from "../report/index.ts"
 import { rereadsAnAddress } from "../rereadsAnAddress/index.ts"
 import { isValueFunction } from "../typeGuards/index.ts"
@@ -124,13 +125,13 @@ export function functionCommaSpaceChecker (opts: {
 			// The narrowing does not reach into the functions below
 			let functionNode = valueNode
 
-			if (!opts.syntax.isStandardFunction(valueNode)) return
+			if (!opts.syntax.isStandardFunction(valueNode, at, siblings)) return
 
 			// A comma in a bare address separates no arguments, while one behind a quoted address does; the name is read, not matched, so `u\rl(` and `URL(` are `url(` here as to the comment scan
 			if (opensAnAddress(valueNode, at, siblings) && !quotesItsAddress(valueNode)) return
 
 			// `ignoreFunctions` covers everything nested inside too
-			if (optionsMatches(opts, `ignoreFunctions`, valueNode.value)) return false
+			if (optionsMatches(opts, `ignoreFunctions`, readCallName(valueNode, at, siblings).name)) return false
 
 			let { runArguments, commentedArguments, commaDataList } = commasOf(valueNode, reading, valueCommentSpans)
 

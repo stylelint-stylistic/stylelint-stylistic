@@ -1,4 +1,4 @@
-import valueParser, { type FunctionNode } from "postcss-value-parser"
+import valueParser, { type FunctionNode, type Node } from "postcss-value-parser"
 import stylelint from "stylelint"
 
 import { css } from "../../syntaxes/css/index.ts"
@@ -45,11 +45,13 @@ export let meta = {
  * No for a preprocessor construct, an unclosed function, or one closed on a `)` inside a `//` comment, which the parser cannot see: a `/*` in one swallows every `)` behind it, a `)` in one closes the call early, and the fix guards see neither. The whole node is refused: the closing `)` is one the parser never returns.
  * @param syntax - The syntax the rule is built over.
  * @param valueNode - The function.
+ * @param index - Its index among its siblings, needed to read the call's name as the file spells it.
+ * @param siblings - The nodes of the value the call stands among.
  * @param comments - The value's comment spans.
  * @returns True where the parentheses may be written.
  */
-function isFunctionParsedAsWritten (syntax: Syntax, valueNode: FunctionNode, comments: CommentSpan[]): boolean {
-	if (!syntax.isStandardFunction(valueNode)) return false
+function isFunctionParsedAsWritten (syntax: Syntax, valueNode: FunctionNode, index: number, siblings: Node[], comments: CommentSpan[]): boolean {
+	if (!syntax.isStandardFunction(valueNode, index, siblings)) return false
 
 	if (valueNode.unclosed) return false
 
@@ -185,7 +187,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A call in a comment is none; one nested in it is still walked, since one opened in a `//` comment reaches past its closing break
 				if (findCommentSpanHolding(valueNode, comments)) return
 
-				if (!isFunctionParsedAsWritten(syntax, valueNode, comments)) return
+				if (!isFunctionParsedAsWritten(syntax, valueNode, at, siblings, comments)) return
 
 				// Ignore function without parameters
 				if (valueNode.nodes.length === 0) return
