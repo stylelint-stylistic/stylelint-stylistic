@@ -19,6 +19,10 @@ testRule({
 			description: `an SCSS list, whose parentheses open no call either`,
 			code: `$list: (value,value2)`,
 		},
+		{
+			description: `a call whose name opens under an SCSS interpolation and is spelled with hexadecimal escapes the parser reads as separate words`,
+			code: `a { b: #{$c}\\61 \\62 rl(a,b); }`,
+		},
 	],
 })
 testRule({

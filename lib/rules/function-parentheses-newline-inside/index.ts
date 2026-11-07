@@ -1,4 +1,4 @@
-import valueParser, { type FunctionNode } from "postcss-value-parser"
+import valueParser, { type FunctionNode, type Node } from "postcss-value-parser"
 import stylelint from "stylelint"
 
 import { LEADING_CSS_WHITESPACE, LINE_BREAK } from "../../regexps.ts"
@@ -48,11 +48,13 @@ export let meta = {
  * No for a preprocessor construct, for an unclosed function, and for one closed on a `)` inside a `//` comment. The parser knows nothing of `//` comments: a `/*` inside one swallows every `)` behind it, and the fix grows the value by a character a run; a `)` inside one closes the call early, and the fix writes into the comment. The guards in front of the fixes miss this, since the parenthesis is inside a comment on both sides of the fix. The whole node is turned away, since the closing `)` is one the parser never returns. PostCSS throws on a bracket the file leaves open, so only a comment unclosed a function here.
  * @param syntax - The syntax the rule is built over.
  * @param valueNode - The function the walk has reached.
+ * @param index - Its index among its siblings, needed to read the call's name as the file spells it.
+ * @param siblings - The nodes of the value the call stands among.
  * @param comments - The comment spans of the value, both kinds.
  * @returns True where the rule may read and write the parentheses.
  */
-function isFunctionParsedAsWritten (syntax: Syntax, valueNode: FunctionNode, comments: CommentSpan[]): boolean {
-	if (!syntax.isStandardFunction(valueNode)) return false
+function isFunctionParsedAsWritten (syntax: Syntax, valueNode: FunctionNode, index: number, siblings: Node[], comments: CommentSpan[]): boolean {
+	if (!syntax.isStandardFunction(valueNode, index, siblings)) return false
 
 	if (valueNode.unclosed) return false
 
@@ -216,7 +218,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 				// A call in a comment's text is skipped, but its nested calls are walked: a call opened inside a comment reaches past its close
 				if (findCommentSpanHolding(valueNode, comments)) return
 
-				if (!isFunctionParsedAsWritten(syntax, valueNode, comments)) return
+				if (!isFunctionParsedAsWritten(syntax, valueNode, at, siblings, comments)) return
 
 				let functionString = valueParser.stringify(valueNode)
 				let isMultiLine = !isSingleLineString(functionString)

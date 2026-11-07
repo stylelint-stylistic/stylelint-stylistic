@@ -108,9 +108,11 @@ export type Syntax = {
 	/**
 	 * Asks whether a value function is standard CSS, not a Sass list or an interpolation.
 	 * @param fn - The function node.
+	 * @param index - Its index among its siblings, needed to read the call's name as the file spells it across hexadecimal escapes.
+	 * @param siblings - The nodes of the value the call stands among.
 	 * @returns True where it is.
 	 */
-	isStandardFunction (fn: FunctionNode): boolean,
+	isStandardFunction (fn: FunctionNode, index?: number, siblings?: ValueParserNode[]): boolean,
 
 	/**
 	 * Asks whether a comment is a CSS one, not a preprocessor's inline comment.
