@@ -1,5 +1,6 @@
 import stylelint from "stylelint"
 
+import { EVERY_LINE_BREAK } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import { bareAddressSpans } from "../../utils/bareAddressSpans/index.ts"
 import { blankComments } from "../../utils/blankComments/index.ts"
@@ -56,6 +57,15 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 
 			// Both kinds, since a `/*` written inside a `//` comment opens no comment under a syntax that spells one
 			let comments = syntax.commentSpans(value, decl, result)
+			// A `//` comment closing the value ends at a break; every break behind that break stands in front of the brace — the block's run, not the value's
+			let lastComment = comments.at(-1)
+			if (lastComment && lastComment.isInline) {
+				let afterComment = value.slice(lastComment.end)
+				if (afterComment.length > 0 && [...afterComment.matchAll(EVERY_LINE_BREAK)].join(``) === afterComment) {
+					value = value.slice(0, lastComment.end)
+					held = afterComment + held
+				}
+			}
 
 			// Read in a copy of the same length with every comment blanked, so a run inside a comment is reported by no warning and collapsed by no fix
 			let blankedValue = blankComments(value, comments)
