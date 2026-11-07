@@ -61,6 +61,33 @@ testRule({
 
 	reject: [
 		{
+			description: `a bare address holding a pair of parentheses closed on the first by the tokenizer and the grammar, the second the call's, whatever follows`,
+			code: `@media (a: fn(url(a(b)) x)) { c { d: e } }`,
+			fixed: `@media ( a: fn( url(a(b) ) x )) { c { d: e } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 25,
+					message: messages.expectedClosing,
+				},
+				{
+					line: 1,
+					column: 15,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 22,
+					message: messages.expectedClosing,
+				},
+			],
+		},
+		{
 			// A feature's parentheses are a call with an empty name to the value parser, so a count landing behind the feature's parenthesis landed inside a call's name
 			description: `a call in a feature's value with no space behind its parenthesis, reported behind the parenthesis`,
 			code: `@media (a: foo(b)) { d { e: f } }`,
@@ -451,6 +478,14 @@ testRule({
 	],
 
 	reject: [
+		{
+			description: `a bare address holding a pair of parentheses closed on the first by the tokenizer and the grammar, the second the call's, whatever follows`,
+			code: `@media ( a: fn(url(a(b)) x) ) { c { d: e } }`,
+			fixed: `@media (a: fn(url(a(b)) x) ) { c { d: e } }`,
+			line: 1,
+			column: 9,
+			message: messages.rejectedOpening,
+		},
 		{
 			description: `a call in a feature's value with a space behind its parenthesis, reported on that space`,
 			code: `@media (a: f( b )) { d { e: f } }`,
