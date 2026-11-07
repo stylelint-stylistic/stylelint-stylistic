@@ -102,7 +102,7 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 			let edits: Edit[] = []
 
 			// Quotes in comments are masked
-			let parsedParams = valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(params, comments), comments))
+			let parsedParams = valueParser(hideParenthesesInUrlStrings(hideQuotesInComments(params, comments), comments, reading))
 
 			// The value parser calls a control character such as a vertical tab whitespace where the tokenizer calls it a word, and both fixes rewrite a whole side
 			splitSpaceNodesAtWords(parsedParams.nodes)
