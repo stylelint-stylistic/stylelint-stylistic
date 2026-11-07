@@ -107,6 +107,26 @@ testRule({
 			column: 6,
 			message: messages.expectedBefore(),
 		},
+		{
+			description: `a non-breaking space behind a line break that closes an inline comment, before the brace of a block a blockless at-rule closes`,
+			code: `a { @include x // c\n\u00A0}`,
+			fixed: `a { @include x // c\n\u00A0 }`,
+			line: 2,
+			column: 1,
+			endLine: 2,
+			endColumn: 2,
+			message: messages.expectedBefore(),
+		},
+		{
+			description: `a vertical tab behind a line break that closes an inline comment, before the brace of a block a blockless at-rule closes`,
+			code: `a { @include x // c\n\u000B}`,
+			fixed: `a { @include x // c\n\u000B }`,
+			line: 2,
+			column: 1,
+			endLine: 2,
+			endColumn: 2,
+			message: messages.expectedBefore(),
+		},
 	],
 })
 testRule({

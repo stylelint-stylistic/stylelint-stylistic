@@ -1,4 +1,4 @@
-import { IDENTIFIER_CODE_POINT, INLINE_COMMENT_BREAK, INLINE_COMMENT_BREAK_OR_FORM_FEED } from "../../regexps.ts"
+import { IDENTIFIER_CODE_POINT, INLINE_COMMENT_BREAK, INLINE_COMMENT_BREAK_OR_FORM_FEED, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import { escapeReading, findUrlTokenEnd } from "../../utils/findUrlTokenEnd/index.ts"
 import { lengthensTheName } from "../../utils/lengthensTheName/index.ts"
 import { namesAnAddress } from "../../utils/namesAnAddress/index.ts"
@@ -159,8 +159,13 @@ function scanEndsInsideInlineComment (text: string, reading: InlineCommentReadin
 export function endsWithInlineComment (source: string, reading: InlineCommentReading = NOTHING_SAID): boolean {
 	if (!reading.spells) return false
 
-	// The trailing whitespace is where a fixer writes, so it closes nothing
-	let text = source.trimEnd()
+	// The trailing whitespace is where a fixer writes, so it closes nothing.
+	// `trimEnd` counts NBSP, vertical tab and other characters the tokenizer reads
+	// as a word as whitespace, and carries them off with the line break before them;
+	// the text then ends on `// c`, and the comment reads as open. Trim only the
+	// tokenizer's whitespace — word characters stay in the text, the break before
+	// them closes the comment, and the guard answers right.
+	let text = source.replace(TRAILING_CSS_WHITESPACE, ``)
 
 	return scanEndsInsideInlineComment(text, reading)
 }
