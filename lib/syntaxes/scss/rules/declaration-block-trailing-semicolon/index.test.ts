@@ -607,5 +607,22 @@ testRule({
 			endColumn: 2,
 			message: messages.rejected,
 		},
+		{
+			description: `a semicolon standing on a line of its own behind a declaration whose value ends on an inline comment closed by a break, where the two breaks would collapse into an empty line before the closing brace`,
+			code: `
+				a {
+					b: c // x;
+					;
+				}
+			`,
+			fixed: `
+				a {
+					b: c // x;
+				}
+			`,
+			line: 3,
+			column: 2,
+			message: messages.rejected,
+		},
 	],
 })

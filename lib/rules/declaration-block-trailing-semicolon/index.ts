@@ -2,7 +2,7 @@ import { type AtRule, type ChildNode, type Container, type Declaration, Input, t
 import tokenize from "postcss/lib/tokenize"
 import stylelint, { type PostcssResult } from "stylelint"
 
-import { EVERY_SEMICOLON, INLINE_COMMENT_BREAK, LEADING_CSS_WHITESPACE, TRAILING_CSS_WHITESPACE, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
+import { CSS_LINE_BREAK, EVERY_SEMICOLON, INLINE_COMMENT_BREAK, LEADING_CSS_WHITESPACE, TRAILING_CSS_WHITESPACE, WHITESPACE_OR_NOTHING } from "../../regexps.ts"
 import { css } from "../../syntaxes/css/index.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { betweenTailAfterColon } from "../../utils/betweenTailAfterColon/index.ts"
@@ -243,7 +243,16 @@ function takeTheTrailingSemicolonsAway (syntax: Syntax, node: AtRule | Declarati
 
 	if (!parent) throw new Error(`The node must stand in a block`)
 
-	if (parent.raws.semicolon && !syntax.writesIntoInlineComment(node, result)) writeWhitespaceBeforeSemicolon(syntax, node, result, ``)
+	if (parent.raws.semicolon) {
+		if (syntax.writesIntoInlineComment(node, result)) {
+			// The value ends inside a `//` comment closed by a line break; taking the semicolon away must not leave that break right before the block tail's break, which would make an empty line before the closing brace. Take the value's trailing break where the text behind the node opens with a break, so the comment stays closed on it and the block tail's break is the one readers such as the brace rules see — the result is one whatever rule order. A trailing space is left alone: it is not a break and keeps the comment's layout.
+			let run = readWhitespaceBeforeSemicolon(syntax, node, result)
+			let after = String(parent.raws.after ?? ``)
+
+			if (run !== `` && CSS_LINE_BREAK.test(run.charAt(0)) && CSS_LINE_BREAK.test(after.charAt(0))) writeWhitespaceBeforeSemicolon(syntax, node, result, ``)
+		}
+		else writeWhitespaceBeforeSemicolon(syntax, node, result, ``)
+	}
 
 	if (!flagIsCommentText) parent.raws.semicolon = false
 
