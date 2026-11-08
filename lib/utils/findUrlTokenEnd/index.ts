@@ -24,7 +24,7 @@ function endsToken (text: string, step: number): boolean {
  * @param index - Where the word would open.
  * @param previousStep - Where the walk's step in front of it opened, or less than zero at the text's start: `\61 url(` and `#{$p}url(` hold the word, `aurl(` and `/url(` do not.
  * @param reading - What the syntax makes of a `//` comment; only a parser whose own tokenizer reads one takes such a token here.
- * @returns Behind the balancing `)`, the text's length where none balances, or `index` where no such token opens: another parser, a word that is not `url(` standing on its own, a quotation mark against the `(`, or a brace inside them.
+ * @returns Behind the balancing `)`, the text's length where none balances, or `index` where no such token opens: another parser, a word that is not `url(` standing on its own, a quotation mark against the `(`, or a brace inside unclosed parentheses. Parentheses holding an interpolation still close on their balancing `)`, because the tokenizer counts them and takes the whole `url(#{…})` as one token; a `url(` standing inside an already open interpolation does not open one.
  */
 export function findUrlTokenEnd (text: string, index: number, previousStep: number, reading: CommentReading): number {
 	let openIndex = index + 3
@@ -44,7 +44,34 @@ export function findUrlTokenEnd (text: string, index: number, previousStep: numb
 
 	let end = Math.min(position + 1, text.length)
 
-	return text.slice(openIndex, end).includes(`{`) || text.slice(openIndex, end).includes(`}`) ? index : end
+	let holdsBrace = text.slice(openIndex, end).includes(`{`) || text.slice(openIndex, end).includes(`}`)
+
+	let result: number
+	if (holdsBrace && depth === 0 && !hasOpenInterpolationBefore(text, index)) result = end
+	else if (holdsBrace) result = index
+	else result = end
+
+	return result
+}
+
+/**
+ * Tells whether a not-yet-closed interpolation `#{…}` opens in front of `index` and remains open at it: walking back from `index`, a closing brace deepens the count and an opening brace behind a solidus shallows it, and the first opening brace found at count zero marks an interpolation `url(` stands inside.
+ * @param text - The text walked.
+ * @param index - Where `url(` opens.
+ * @returns True where an interpolation opened in front of `index` has not been closed by it.
+ */
+function hasOpenInterpolationBefore (text: string, index: number): boolean {
+	let depth = 0
+
+	for (let at = index - 1; at >= 0; at -= 1) {
+		if (text[at] === `}`) depth += 1
+		else if (text[at] === `{` && at > 0 && text[at - 1] === `#`) {
+			if (depth === 0) return true
+			depth -= 1
+		}
+	}
+
+	return false
 }
 
 /**

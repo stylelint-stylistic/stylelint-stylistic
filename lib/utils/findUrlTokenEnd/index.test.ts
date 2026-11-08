@@ -14,6 +14,12 @@ describe(`findUrlTokenEnd`, () => {
 		expect(findUrlTokenEnd(`url( a( b ) \\//c ) 1px`, 0, -1, SCSS)).toBe(18)
 	})
 
+	it(`parentheses holding an interpolation, which the tokenizer counts alike and closes on the balancing parenthesis`, () => {
+		expect(findUrlTokenEnd(String.raw`fn(url(a(#{$x})) y)`, 3, 2, SCSS)).toBe(16)
+		expect(findUrlTokenEnd(String.raw`fn(url(a(b)#{$c}) x)`, 3, 2, SCSS)).toBe(17)
+		expect(findUrlTokenEnd(String.raw`fn(url(#{$a}(b)) x)`, 3, 2, SCSS)).toBe(16)
+	})
+
 	it(`a parenthesis behind a backslash and one inside a comment or a string, which the tokenizer counts all the same`, () => {
 		expect(findUrlTokenEnd(`url( a\\) \\//c )`, 0, -1, SCSS)).toBe(8)
 		expect(findUrlTokenEnd(`url( /* ) */ \\//c )`, 0, -1, SCSS)).toBe(9)
