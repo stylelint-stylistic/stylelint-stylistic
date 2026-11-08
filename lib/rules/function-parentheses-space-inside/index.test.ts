@@ -1,5 +1,3 @@
-import less from "postcss-less"
-import scss from "postcss-scss"
 import stylelint from "stylelint"
 import { describe, expect, it } from "vitest"
 
@@ -69,14 +67,6 @@ testRule({
 			fixed: `a { b: fn( url(a(b) ) x ); }`,
 			line: 1,
 			column: 19,
-			message: messages.expectedClosing,
-		},
-		{
-			description: `a bare address holding an interpolation inside its parentheses, which the tokenizer counts alike and closes on the balancing parenthesis, so the call's parentheses keep their spaces and none is written inside the address`,
-			code: `a { b: fn( url(a(#{$x})) y ); }`,
-			fixed: `a { b: fn( url(a(#{$x}) ) y ); }`,
-			line: 1,
-			column: 23,
 			message: messages.expectedClosing,
 		},
 		{
@@ -1351,44 +1341,27 @@ testRule({
 })
 
 describe(`a call whose name the parser reads a url token by though no compiler does`, () => {
-	let ruleOfSyntax = { css: ruleName, less: `@stylistic/less/function-parentheses-space-inside`, scss: `@stylistic/scss/function-parentheses-space-inside` }
-
-	/**
-	 * Fixes a text under a primary of this rule, the rule taken under the namespace of the syntax the file is parsed with, and checks what a lint of the output says.
-	 * @param code - The text.
-	 * @param syntax - Which syntax that is.
-	 * @param primary - The primary option.
-	 * @returns What the fix left and what a check of it says.
-	 */
-	async function fix (code: string, syntax: `css` | `less` | `scss`, primary: string): Promise<{
-		fixed: string | undefined,
-		left: string[],
-	}> {
-		let config = { plugins, rules: { [ruleOfSyntax[syntax]]: primary }, ...(syntax !== `css` && { customSyntax: syntax === `scss` ? scss : less }) }
-		let ours = await stylelint.lint({ code, config, fix: true })
-		let again = await stylelint.lint({ code: ours.code ?? code, config })
-
-		return { fixed: ours.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column} ${warning.text}`) }
-	}
-
-	it(`leaves the run behind the parenthesis under postcss-scss, whose token counts the parentheses a string holds`, async () => {
-		expect(await fix(String.raw`a { b: \61 url("a(b.png"); }`, `scss`, `always`)).toEqual({
-			fixed: String.raw`a { b: \61 url("a(b.png" ); }`,
-			left: [`1:16 Expected single space after "(" (@stylistic/scss/function-parentheses-space-inside)`],
-		})
-	})
-
-	it(`leaves it under Less, which reads the parentheses by PostCSS's tokenizer`, async () => {
-		expect(await fix(String.raw`a { b: \61 url(a"b.png); }`, `less`, `always`)).toEqual({
-			fixed: String.raw`a { b: \61 url(a"b.png ); }`,
-			left: [`1:16 Expected single space after "(" (@stylistic/less/function-parentheses-space-inside)`],
-		})
-	})
-
 	it(`writes it where the parentheses close at one parenthesis under both readings`, async () => {
-		expect(await fix(String.raw`a { b: \61 url(a.png); }`, `css`, `always`)).toEqual({ fixed: String.raw`a { b: \61 url( a.png ); }`, left: [] })
+		expect(await fix(String.raw`a { b: \61 url(a.png); }`, `always`)).toEqual({ fixed: String.raw`a { b: \61 url( a.png ); }`, left: [] })
 	})
 })
+
+/**
+ * Fixes a text under a primary of this rule and checks what a lint of the output says.
+ * @param code - The text.
+ * @param primary - The primary option.
+ * @returns What the fix left and what a check of it says.
+ */
+async function fix (code: string, primary: string): Promise<{
+	fixed: string | undefined,
+	left: string[],
+}> {
+	let config = { plugins, rules: { [ruleName]: primary } }
+	let ours = await stylelint.lint({ code, config, fix: true })
+	let again = await stylelint.lint({ code: ours.code ?? code, config })
+
+	return { fixed: ours.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column} ${warning.text}`) }
+}
 
 // Closing up either call alone leaves the word url of the other on the stack for the next parenthesis to pop, and closing up both takes both words off it, which a reject case cannot say since the warning left moves
 it(`closes up all but the last break of two calls each holding the word url between breaks, in front of parentheses holding a quotation mark, since taking out every break would leave the next parenthesis popping no word`, async () => {

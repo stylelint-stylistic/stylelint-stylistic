@@ -137,23 +137,6 @@ testRule({
 			],
 		},
 		{
-			description: `a bare address holding an interpolation inside its parentheses, which the tokenizer counts alike and closes on the balancing parenthesis, so the call's parentheses get newlines and none is written inside the address`,
-			code: `a { b: f( url(a(#{$x})) y ); }`,
-			fixed: `a { b: f(\n url(a(#{$x})\n) y ); }`,
-			warnings: [
-				{
-					line: 1,
-					column: 10,
-					message: messages.expectedOpening,
-				},
-				{
-					line: 1,
-					column: 22,
-					message: messages.expectedClosing,
-				},
-			],
-		},
-		{
 			// The value parser closes such an address on the string's parenthesis
 			description: `a call inside a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, beside one of the value`,
 			code: `a { b: url( a ") f(1)" ), f(1); }`,

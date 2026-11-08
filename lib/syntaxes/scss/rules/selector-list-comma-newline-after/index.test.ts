@@ -1,3 +1,8 @@
+import stylelint from "stylelint"
+import { expect, it } from "vitest"
+
+import { pick } from "../../../../../vitest.helpers.ts"
+import plugins from "../../../../index.ts"
 import { createRule } from "../../../../rules/selector-list-comma-newline-after/index.ts"
 import { scss } from "../../index.ts"
 
@@ -81,4 +86,12 @@ testRule({
 			message: messages.rejectedAfterMultiLine(),
 		},
 	],
+})
+
+// `postcss-scss` spells a `//` comment of a selector as a block comment in the raw the rule reads, so one pressed to the comma is looked past as one standing behind a space is, and the break closing it is the one asked for
+it(`accepts a \`//\` comment pressed to the comma under postcss-scss, where the break closing the comment is the one asked for`, async () => {
+	let config = { plugins, rules: { [`@stylistic/scss/selector-list-comma-newline-after`]: `always` } }
+	let fixed = await stylelint.lint({ code: `a,// c\nb {}\n`, config, fix: true, customSyntax: `postcss-scss` })
+
+	expect({ fixed: fixed.code, warnings: pick(fixed.results).warnings.length }).toEqual({ fixed: `a,// c\nb {}\n`, warnings: 0 })
 })

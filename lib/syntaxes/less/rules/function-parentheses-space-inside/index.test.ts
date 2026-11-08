@@ -1,3 +1,9 @@
+import lessParser from "postcss-less"
+import stylelint from "stylelint"
+import { describe, expect, it } from "vitest"
+
+import { pick } from "../../../../../vitest.helpers.ts"
+import plugins from "../../../../index.ts"
 import { createRule } from "../../../../rules/function-parentheses-space-inside/index.ts"
 import { less } from "../../index.ts"
 
@@ -304,3 +310,29 @@ testRule({
 		},
 	],
 })
+
+describe(`a call whose name the parser reads a url token by though no compiler does`, () => {
+	it(`leaves it under Less, which reads the parentheses by PostCSS's tokenizer`, async () => {
+		expect(await fix(String.raw`a { b: \61 url(a"b.png); }`, `always`)).toEqual({
+			fixed: String.raw`a { b: \61 url(a"b.png ); }`,
+			left: [`1:16 Expected single space after "(" (@stylistic/less/function-parentheses-space-inside)`],
+		})
+	})
+})
+
+/**
+ * Fixes a Less text under a primary of this rule and checks what a lint of the output says.
+ * @param code - The text.
+ * @param primary - The primary option.
+ * @returns What the fix left and what a check of it says.
+ */
+async function fix (code: string, primary: string): Promise<{
+	fixed: string | undefined,
+	left: string[],
+}> {
+	let config = { plugins, rules: { [`@stylistic/less/function-parentheses-space-inside`]: primary }, customSyntax: lessParser }
+	let ours = await stylelint.lint({ code, config, fix: true })
+	let again = await stylelint.lint({ code: ours.code ?? code, config })
+
+	return { fixed: ours.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column} ${warning.text}`) }
+}

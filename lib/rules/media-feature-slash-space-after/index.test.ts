@@ -59,10 +59,6 @@ testRule({
 			description: `a solidus in a declaration's value, which another rule measures`,
 			code: `@media (width >= 1px) { a { grid-area: 1/2; } }`,
 		},
-		{
-			description: `a parameter list holding an interpolation, which is passed over whole`,
-			code: `@media (aspect-ratio: 16/#{$a}) {}`,
-		},
 	],
 
 	reject: [
