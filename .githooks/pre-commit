@@ -4,7 +4,6 @@ set -e
 
 root=$(git rev-parse --show-toplevel)
 
-# The checks run from a copy of the commit parked elsewhere on disk, so the path has to be absolute. What it points at is this worktree's own packages: the shims pnpm writes into `.bin` carry absolute paths of their own, the pinned Node among them.
 export PATH="$root/node_modules/.bin:$PATH"
 
 # A rebase, a merge, a cherry-pick or a revert owns the index while it runs, and an unmerged entry is nothing to write out. What such a commit carries has been checked once already, on its way in, and the branch is checked again when the work lands.
@@ -29,26 +28,34 @@ fi
 # Git looks for renames of its own accord, so a renamed file arrives under `R` and would otherwise be neither linted nor tested. `core.quotePath` would spell a name outside ASCII escaped and in quotes, which is no path any more.
 changed_files=$(git -c core.quotePath=false diff --cached --name-only --diff-filter=ACMR | grep -E '\.ts$') || true
 
-# Nothing to check, and no copy to pay for.
+# Nothing to check.
 if [ -z "$changed_files" ]
 then exit 0
 fi
 
-# The checks read the commit rather than the working tree, and they read it from a copy of their own. So the working tree is never moved: whatever becomes of this hook, a session's uncommitted work is out of its reach, and nothing at all is shared with the commit running in the next worktree. `git stash` used to do that job, and its stack is one per repository — two commits at once took each other's entries, which is #518.
-work=$(mktemp -d)
+# Unstaged changes are put aside so the checks read the commit rather than the working tree. They are brought back whether the checks pass or fail.
+stashed=0
 
-trap 'rm -rf "$work"' EXIT
+if [ -n "$(git diff --name-only)" ] || [ -n "$(git ls-files --others --exclude-standard)" ]
+then
+    git stash push --keep-index -u -m "pre-commit check" >/dev/null 2>&1
+    stashed=1
+fi
 
-# Git hands a hook the very index the commit is being made from — `GIT_INDEX_FILE` names a temporary one where `git commit -a` or a commit over paths builds it — so what is written out is exactly what is about to be committed, and `-u`, which would write that index back, must never be passed. Tracked files alone: no untracked file, no `dist/`, nothing the commit does not carry. A test reading a document off disk therefore reads the committed edition of it.
-git checkout-index -a -f --ignore-skip-worktree-bits --prefix="$work/"
+restore_stash() {
+    if [ "$stashed" = 1 ]
+    then
+        if ! git stash pop >/dev/null 2>&1
+        then
+            printf '\n\t❌ Could not restore stashed changes. Run `git stash pop` manually.\n\n'
+            return 1
+        fi
+    fi
+    return 0
+}
 
-# `oxlint.config.ts` imports its shared configuration as a package, and a package is resolved from the directory of the file importing it, so the packages have to stand beside the copy. And the copy stands outside the repository because oxlint reads `.gitignore` and passes over every path under an ignored directory, `tmp/` among them, however explicitly the path is named.
-ln -s "$root/node_modules" "$work/node_modules"
+trap 'restore_stash || true' EXIT
 
-# The `overrides` of `oxlint.config.ts` name their files from the root of the repository, and the copy is that root.
-cd "$work"
-
-# What git prints is a path and never a pattern, and a path holding a space is one path all the same. Split it into pieces and neither check says a word: oxlint passes over a path that does not exist as long as one of the paths it was given does, and `vitest related` answers a list it cannot match with a run of no files, which is a pass. So a file would be committed unchecked while the hook reported success.
 set -f
 IFS='
 '
