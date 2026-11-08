@@ -35,19 +35,42 @@ if [ "$refs_to_check" = 0 ]
 then exit 0
 fi
 
-# What answers for the push is the working tree, which is what `make verify` is about and where it is meant to run: the commits being pushed are on disk already, and there is nothing here to keep out of the way. Where the tree carries anything those commits do not, that is worth a word whichever way the hook goes — what came back green is then the tree rather than the branch CI will be asked about.
+# The checks answer about the working tree, not about the commits being pushed. Where the tree carries uncommitted changes, stash them so the check runs on the branch itself, and restore them afterwards whether the check passed or not.
+stashed=0
+
 if [ -n "$(git status --porcelain)" ]
-then printf '\n\t⚠️  The working tree carries what the commits being pushed do not, so what is answered for below is the tree rather than the branch.\n\n'
+then
+    printf '\n\t🗄️  Working tree carries uncommitted changes — stashing for the check.\n\n'
+    git stash push -u -m "pre-push check" >/dev/null 2>&1
+    stashed=1
 fi
+
+restore_stash() {
+    if [ "$stashed" = 1 ]
+    then
+        if ! git stash pop >/dev/null 2>&1
+        then
+            printf '\n\t❌ Could not restore stashed changes. Run `git stash pop` manually.\n\n'
+            return 1
+        fi
+    fi
+    return 0
+}
 
 # `make verify` answers about the tree and about nothing else, so a state of the tree it has already come back green over is not asked about twice: a run made by hand a moment before the push is the run this finds.
 if ./scripts/verified.ts check
-then exit 0
+then
+    restore_stash || exit 1
+    exit 0
 fi
 
 if make verify
-then exit 0
+then
+    restore_stash || exit 1
+    exit 0
 fi
+
+restore_stash || exit 1
 
 printf '\n\t❌ `make verify` did not pass, so the push is refused. Push all the same with `git push --no-verify` — spelled in full, since `-n` at a push is `--dry-run`.\n\n'
 
