@@ -16,6 +16,18 @@ describe(`hideParenthesesInUrlStrings`, () => {
 		expect(hideParenthesesInUrlStrings(`fn(url(a(b)) x)`, [], COUNTING_READING)).toBe(`fn(url(a(b?) x)`)
 	})
 
+	it(`the same address holding an interpolation, whose inner parentheses the tokenizer counts alike and a parser closes on the first, both masked to the balancing parenthesis`, () => {
+		expect(hideParenthesesInUrlStrings(String.raw`fn(url(a(#{$x})) y)`, [], COUNTING_READING)).toBe(String.raw`fn(url(a(#{$x}?) y)`)
+		expect(hideParenthesesInUrlStrings(String.raw`fn(url(a(b)#{$c}) x)`, [], COUNTING_READING)).toBe(String.raw`fn(url(a(b?#{$c}) x)`)
+		expect(hideParenthesesInUrlStrings(String.raw`fn(url(#{$a}(b)) x)`, [], COUNTING_READING)).toBe(String.raw`fn(url(#{$a}(b?) x)`)
+	})
+
+	it(`an address holding an interpolation under the parser's own reading, which closes it on the first parenthesis and takes none`, () => {
+		expect(hideParenthesesInUrlStrings(String.raw`fn(url(a(#{$x})) y)`, [])).toBe(String.raw`fn(url(a(#{$x})) y)`)
+		expect(hideParenthesesInUrlStrings(String.raw`fn(url(a(b)#{$c}) x)`, [])).toBe(String.raw`fn(url(a(b)#{$c}) x)`)
+		expect(hideParenthesesInUrlStrings(String.raw`fn(url(#{$a}(b)) x)`, [])).toBe(String.raw`fn(url(#{$a}(b)) x)`)
+	})
+
 	it(`the same address under the parser's own reading, which closes it on the first parenthesis`, () => {
 		expect(hideParenthesesInUrlStrings(`fn(url(a(b)) x)`, [])).toBe(`fn(url(a(b)) x)`)
 	})

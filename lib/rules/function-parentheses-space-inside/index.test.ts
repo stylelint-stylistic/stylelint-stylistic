@@ -72,6 +72,14 @@ testRule({
 			message: messages.expectedClosing,
 		},
 		{
+			description: `a bare address holding an interpolation inside its parentheses, which the tokenizer counts alike and closes on the balancing parenthesis, so the call's parentheses keep their spaces and none is written inside the address`,
+			code: `a { b: fn( url(a(#{$x})) y ); }`,
+			fixed: `a { b: fn( url(a(#{$x}) ) y ); }`,
+			line: 1,
+			column: 23,
+			message: messages.expectedClosing,
+		},
+		{
 			// The value parser closes the address on the comment's parenthesis, and the whitespace behind the opening one makes the comment a comment to the tokenizer
 			description: `a call holding an address with a comment with a closing parenthesis, whose closing parenthesis stands against the address's`,
 			code: `a { b: f(url( $a /* ) */)); }`,
