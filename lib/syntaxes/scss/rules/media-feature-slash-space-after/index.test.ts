@@ -10,6 +10,13 @@ testRule({
 	config: [`always`],
 	customSyntax: `postcss-scss`,
 
+	accept: [
+		{
+			description: `a parameter list holding an interpolation, which is passed over whole`,
+			code: `@media (aspect-ratio: 16/#{$a}) {}`,
+		},
+	],
+
 	reject: [
 		{
 			// Pins the reading of the url token `postcss-scss` opens behind whitespace and closes by the count of parentheses, through a string

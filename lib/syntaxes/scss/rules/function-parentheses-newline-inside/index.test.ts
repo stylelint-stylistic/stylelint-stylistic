@@ -261,6 +261,23 @@ testRule({
 			column: 2,
 			message: messages.expectedClosing,
 		},
+		{
+			description: `a bare address holding an interpolation inside its parentheses, which the tokenizer counts alike and closes on the balancing parenthesis, so the call's parentheses get newlines and none is written inside the address`,
+			code: `a { b: f( url(a(#{$x})) y ); }`,
+			fixed: `a { b: f(\n url(a(#{$x})) y\n ); }`,
+			warnings: [
+				{
+					line: 1,
+					column: 10,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 26,
+					message: messages.expectedClosing,
+				},
+			],
+		},
 	],
 })
 testRule({

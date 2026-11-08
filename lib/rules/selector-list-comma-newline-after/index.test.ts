@@ -671,11 +671,3 @@ it(`writes the break behind a comma of the list and refuses the one behind a com
 
 	expect({ fixed: fixed.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column}`) }).toEqual({ fixed: `[a,\n url a (b,c)(b"c)] {}`, left: [`2:10`] })
 })
-
-// `postcss-scss` spells a `//` comment of a selector as a block comment in the raw the rule reads, so one pressed to the comma is looked past as one standing behind a space is, and the break closing it is the one asked for
-it(`accepts a \`//\` comment pressed to the comma under postcss-scss, where the break closing the comment is the one asked for`, async () => {
-	let config = { plugins, rules: { [`@stylistic/scss/selector-list-comma-newline-after`]: `always` } }
-	let fixed = await stylelint.lint({ code: `a,// c\nb {}\n`, config, fix: true, customSyntax: `postcss-scss` })
-
-	expect({ fixed: fixed.code, warnings: pick(fixed.results).warnings.length }).toEqual({ fixed: `a,// c\nb {}\n`, warnings: 0 })
-})

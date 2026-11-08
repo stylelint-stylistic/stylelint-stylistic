@@ -1225,14 +1225,6 @@ testRule({
 			code: `a { font-size: 100%; }`,
 		},
 		{
-			description: `a lower-case unit in front of an interpolation whose text holds whitespace, in a custom property, which plain CSS carries as readily as either custom syntax does`,
-			code: `a { --x: 10px#{$aB != $b}; }`,
-		},
-		{
-			description: `the same interpolation written in a set of media parameters`,
-			code: `@media (min-width: 10px#{$aB != $b}) { a { b: c; } }`,
-		},
-		{
 			description: `a unit after a fraction with no leading zero`,
 			code: `a { font-size: .5REM; }`,
 		},

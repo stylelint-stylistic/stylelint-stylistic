@@ -355,6 +355,10 @@ testRule({
 					; }
 			`,
 		},
+		{
+			description: `a lower-case unit in front of an interpolation whose text holds whitespace, in a custom property`,
+			code: `a { --x: 10px#{$aB != $b}; }`,
+		},
 	],
 
 	reject: [
