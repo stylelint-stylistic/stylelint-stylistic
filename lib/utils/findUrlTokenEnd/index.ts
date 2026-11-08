@@ -17,7 +17,7 @@ function endsToken (text: string, step: number): boolean {
 }
 
 /**
- * Finds where the parentheses `postcss-scss`'s tokenizer takes as one token behind the word `url` end: the `)` balancing them, every parenthesis counted as written, since the tokenizer counts one behind a backslash or inside a comment or a string alike. It reads no comment inside, and Sass reads `\/` there as an escape, so a backslash covers the solidus of a `//` up to that end.
+ * Finds where the parentheses `postcss-scss`'s tokenizer takes as one token behind the word `url` end: the `)` balancing them, every parenthesis counted as written except one behind a backslash or inside a comment or a string, which the tokenizer does not count. It reads no comment inside, and Sass reads `\/` there as an escape, so a backslash covers the solidus of a `//` up to that end.
  *
  * A quotation mark against the parenthesis opens no such token; one behind whitespace does, since the tokenizer asks only the character behind the `(`, and the rules taking that whitespace away refuse where the `//` behind the string would become a comment. Parentheses holding a brace are read as none too, since the word may stand inside an interpolation the tokenizer reads whole, closing past them.
  * @param text - The text walked.
@@ -29,15 +29,26 @@ function endsToken (text: string, step: number): boolean {
 export function findUrlTokenEnd (text: string, index: number, previousStep: number, reading: CommentReading): number {
 	let openIndex = index + 3
 
-	if (!reading.tokenizes || !text.startsWith(`url(`, index) || !endsToken(text, previousStep) || text[openIndex + 1] === `"` || text[openIndex + 1] === `'`) return index
+	let opensUrlToken = reading.tokenizes && text.startsWith(`url(`, index) && endsToken(text, previousStep) && text[openIndex + 1] !== `"` && text[openIndex + 1] !== `'`
+
+	if (!opensUrlToken) return index
 
 	let depth = 0
 
 	let position = openIndex
 
 	for (; position < text.length; position += 1) {
-		if (text[position] === `(`) depth += 1
-		else if (text[position] === `)`) depth -= 1
+		let character = text[position]
+
+		let skipped = stepOverUrlToken(text, position)
+
+		if (skipped !== position) {
+			position = skipped
+			continue
+		}
+
+		if (character === `(`) depth += 1
+		else if (character === `)`) depth -= 1
 
 		if (depth === 0) break
 	}
@@ -52,6 +63,31 @@ export function findUrlTokenEnd (text: string, index: number, previousStep: numb
 	else result = end
 
 	return result
+}
+
+/**
+ * Steps over a character that the tokenizer takes no parenthesis from inside a url token: an escape covers the next character, a string holds none, and a block comment holds none. Returns the position to continue from, or the same position where nothing is skipped.
+ * @param text - The text walked.
+ * @param position - Where the step stands.
+ * @returns The position to continue from.
+ */
+function stepOverUrlToken (text: string, position: number): number {
+	let character = text[position]
+
+	// An escape covers the next character, so an escaped parenthesis counts as neither
+	if (character === `\\`) return position + 1
+
+	// A string holds no parenthesis the tokenizer counts
+	if (character === `"` || character === `'`) return skipString(text, position) - 1
+
+	// A block comment holds no parenthesis the tokenizer counts
+	if (character === `/` && text[position + 1] === `*`) {
+		let closeIndex = text.indexOf(`*/`, position + 2)
+
+		return closeIndex === -1 ? text.length - 1 : closeIndex + 1
+	}
+
+	return position
 }
 
 /**

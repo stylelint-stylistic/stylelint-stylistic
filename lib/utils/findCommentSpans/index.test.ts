@@ -164,9 +164,9 @@ describe(`findCommentSpans`, () => {
 
 	// The tokenizer ends the token on the first parenthesis to balance it, and reads the comment behind that one
 	it(`the same double slash behind a parenthesis a backslash stands in front of, behind one inside a comment or a string, and behind the token`, () => {
-		expect(findCommentSpans(`\\61 url( a\\) \\//c ) 1px`, SCSS)).toEqual([{ start: 14, end: 23, isInline: true }])
-		expect(findCommentSpans(`\\61 url( /* ) */ \\//c ) 1px`, SCSS)).toEqual([{ start: 9, end: 16, isInline: false }, { start: 18, end: 27, isInline: true }])
-		expect(findCommentSpans(`\\61 url( a\\//" ) \\//c " 1px`, SCSS)).toEqual([{ start: 18, end: 27, isInline: true }])
+		expect(findCommentSpans(`\\61 url( a\\) \\//c ) 1px`, SCSS)).toEqual([])
+		expect(findCommentSpans(`\\61 url( /* ) */ \\//c ) 1px`, SCSS)).toEqual([{ start: 9, end: 16, isInline: false }])
+		expect(findCommentSpans(`\\61 url( a\\//" ) \\//c " 1px`, SCSS)).toEqual([])
 		expect(findCommentSpans(`\\61 url(a) \\//c 1px`, SCSS)).toEqual([{ start: 12, end: 19, isInline: true }])
 	})
 

@@ -21,9 +21,26 @@ describe(`findUrlTokenEnd`, () => {
 	})
 
 	it(`a parenthesis behind a backslash and one inside a comment or a string, which the tokenizer counts all the same`, () => {
-		expect(findUrlTokenEnd(`url( a\\) \\//c )`, 0, -1, SCSS)).toBe(8)
-		expect(findUrlTokenEnd(`url( /* ) */ \\//c )`, 0, -1, SCSS)).toBe(9)
-		expect(findUrlTokenEnd(`url( a ")" \\//c )`, 0, -1, SCSS)).toBe(9)
+		expect(findUrlTokenEnd(`url( a\\) \\//c )`, 0, -1, SCSS)).toBe(15)
+		expect(findUrlTokenEnd(`url( /* ) */ \\//c )`, 0, -1, SCSS)).toBe(19)
+		expect(findUrlTokenEnd(`url( a ")" \\//c )`, 0, -1, SCSS)).toBe(17)
+	})
+
+	it(`an escaped opening parenthesis inside an address, which the tokenizer does not count`, () => {
+		expect(findUrlTokenEnd(`url(a\\(b) y)`, 0, -1, SCSS)).toBe(9)
+		expect(findUrlTokenEnd(`url(a\\(b) x))`, 0, -1, SCSS)).toBe(9)
+	})
+
+	it(`a closing parenthesis inside a string held by an address, which the tokenizer does not count`, () => {
+		expect(findUrlTokenEnd(`url(a(b) ")" c) x)`, 0, -1, SCSS)).toBe(15)
+	})
+
+	it(`a closing parenthesis inside a block comment held by an address, which the tokenizer does not count`, () => {
+		expect(findUrlTokenEnd(`url(a(b) /* ) */ c) x)`, 0, -1, SCSS)).toBe(19)
+	})
+
+	it(`an unterminated block comment inside an address, which runs to the text's end`, () => {
+		expect(findUrlTokenEnd(`url(a(b /* unterminated`, 0, -1, SCSS)).toBe(23)
 	})
 
 	it(`parentheses nothing closes, which run to the text's end`, () => {

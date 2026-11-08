@@ -186,12 +186,12 @@ describe(`endsWithInlineComment`, () => {
 	// The tokenizer reads a word of its own in `aurl` and ends the token on the parenthesis behind a backslash
 	it(`the same double slash where the tokenizer takes no such token, and behind the parenthesis ending one`, () => {
 		expect(endsWithInlineComment(`b: aurl(a\\//c) 1px`, SCSS)).toBe(true)
-		expect(endsWithInlineComment(`b: \\61 url( a\\) \\//c ) 1px`, SCSS)).toBe(true)
+		expect(endsWithInlineComment(`b: \\61 url( a\\) \\//c ) 1px`, SCSS)).toBe(false)
 	})
 
 	// The tokenizer reads no string inside the token, so the parenthesis closing the token closes the string, and the comment behind is its own
 	it(`the same double slash behind the parenthesis ending such a token inside a string, one behind a backslash included`, () => {
-		expect(endsWithInlineComment(`b: \\61 url( a\\//" ) \\//c " 1px`, SCSS)).toBe(true)
+		expect(endsWithInlineComment(`b: \\61 url( a\\//" ) \\//c " 1px`, SCSS)).toBe(false)
 		expect(endsWithInlineComment(`b: url( a\\") \\//c 1px`, SCSS)).toBe(true)
 	})
 
