@@ -278,6 +278,27 @@ testRule({
 				},
 			],
 		},
+		{
+			description: `a closing parenthesis inside a string held by an address, which the tokenizer does not count`,
+			code: `a { b: fn(url("a(b)") c); }`,
+			fixed: `a { b: fn(\nurl(\n"a(b)"\n) c\n); }`,
+			warnings: [
+				{ line: 1, column: 11, message: messages.expectedOpening },
+				{ line: 1, column: 23, message: messages.expectedClosing },
+				{ line: 1, column: 15, message: messages.expectedOpening },
+				{ line: 1, column: 20, message: messages.expectedClosing },
+			],
+		},
+		{
+			description: `a closing parenthesis inside a block comment held by an address, which the tokenizer does not count`,
+			code: `a { b: fn(url(a(b) /* ) */ c) x); }`,
+			fixed: `a { b: fn(\nurl(a(b) /* ) */ c) x\n); }`,
+			warnings: [
+				{ line: 1, column: 11, message: messages.expectedOpening },
+				{ line: 1, column: 31, message: messages.expectedClosing },
+			],
+		},
+
 	],
 })
 testRule({
