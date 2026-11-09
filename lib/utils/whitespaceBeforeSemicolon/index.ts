@@ -2,7 +2,7 @@ import type { AtRule, Container, Declaration } from "postcss"
 import styleSearch from "style-search"
 import type { PostcssResult } from "stylelint"
 
-import { CSS_LINE_BREAK, TRAILING_BACKSLASHES, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
+import { CSS_LINE_BREAK, LINE_BREAK, TRAILING_BACKSLASHES, TRAILING_CSS_WHITESPACE } from "../../regexps.ts"
 import type { Syntax } from "../../syntaxes/index.ts"
 import { blockString } from "../blockString/index.ts"
 import { declarationString } from "../declarationString/index.ts"
@@ -142,7 +142,19 @@ export function whitespaceBeforeSemicolon (syntax: Syntax, node: AtRule | Declar
 		return singleLine
 	}
 
-	return whitespaceAsked(node, result, RULES_OF_WHITESPACE[node.type], isSingleLine)
+	let asked = whitespaceAsked(node, result, RULES_OF_WHITESPACE[node.type], isSingleLine)
+
+	// A space written where a line break closes a `//` comment would pull the semicolon into the comment: refuse the space and leave the break in place
+	if (asked === ` `) {
+		let reading = syntax.inlineComments(node, result)
+		if (reading.spells) {
+			let spans = syntax.commentSpans(syntax.read(node), node, result)
+			let lastInline = spans.findLast((span) => span.isInline)
+			if (lastInline && LINE_BREAK.test(syntax.read(node).slice(lastInline.end))) return ``
+		}
+	}
+
+	return asked
 }
 
 /**
