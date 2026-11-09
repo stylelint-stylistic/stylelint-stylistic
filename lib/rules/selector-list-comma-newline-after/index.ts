@@ -78,7 +78,16 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 					if (WHITESPACE_THEN_INLINE_COMMENT.test(nextChars)) return
 
 					// Behind a block comment, with whitespace in front of it or pressed to the comma, look after the comment: the rule asks the break there, so a break written behind the comma would only move the reading past the comment
-					checks.push({ commaIndex: match.startIndex, checkIndex: WHITESPACE_THEN_BLOCK_COMMENT.test(nextChars) ? selector.indexOf(`*/`, match.endIndex) + 1 : match.startIndex })
+					// Behind a block comment, with whitespace in front of it or pressed to the comma, look after the comment: the rule asks the break there, so a break written behind the comma would only move the reading past the comment. Under postcss-scss, a // comment is rewritten as block comments in the raw; look past the whole comment, not just the first */
+					let checkIndex: number
+					if (WHITESPACE_THEN_BLOCK_COMMENT.test(nextChars)) {
+						let comment = copies.comments.find((c) => c.startIndex >= match.endIndex && c.firstOrdinal !== c.lastOrdinal)
+						checkIndex = comment ? comment.endIndex - 1 : selector.indexOf(`*/`, match.endIndex) + 1
+					}
+					else {
+						checkIndex = match.startIndex
+					}
+					checks.push({ commaIndex: match.startIndex, checkIndex })
 				},
 			)
 
