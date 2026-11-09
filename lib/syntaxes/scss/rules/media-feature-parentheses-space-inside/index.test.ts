@@ -39,6 +39,24 @@ testRule({
 				},
 			],
 		},
+		{
+			// Writing a space behind the `(` of a bare address right before a quotation mark switches how the `postcss-scss` tokenizer reads the address token and leaves the file unparsable, so the opening space is refused and only the closing one is reported
+			description: `an opening parenthesis of a bare address holding a string, whose space the rule refuses to write because it would switch how the tokenizer reads the address`,
+			code: `@media (a: url ("x" "),b" )) { b { c: d } }`,
+			fixed: `@media ( a: url ("x" "),b" ) ) { b { c: d } }`,
+			warnings: [
+				{
+					line: 1,
+					column: 9,
+					message: messages.expectedOpening,
+				},
+				{
+					line: 1,
+					column: 27,
+					message: messages.expectedClosing,
+				},
+			],
+		},
 	],
 })
 testRule({
