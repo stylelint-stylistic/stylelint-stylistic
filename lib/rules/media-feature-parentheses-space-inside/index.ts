@@ -13,6 +13,7 @@ import { hideQuotesInComments } from "../../utils/hideQuotesInComments/index.ts"
 import { opensAnAddress } from "../../utils/opensAnAddress/index.ts"
 import { quotesItsAddress } from "../../utils/quotesItsAddress/index.ts"
 import { report } from "../../utils/report/index.ts"
+import { editsRereadAnAddress } from "../../utils/rereadsAnAddress/index.ts"
 import type { RuleCheck } from "../../utils/ruleCheck/index.ts"
 import { splitSpaceNodesAtWords } from "../../utils/splitSpaceNodesAtWords/index.ts"
 import { type WriteCandidate, writesKeepingAddresses } from "../../utils/writesKeepingAddresses/index.ts"
@@ -134,7 +135,18 @@ function rule ({ ruleName, messages, syntax }: RuleScope<typeof MESSAGES>, prima
 						if (SPACE_OR_TAB.test(node.after)) problems.push({ message: messages.rejectedClosing, index: closingIndex + indexBoost, edits: syntax.endsWithInlineComment(params.slice(0, node.sourceEndIndex - 1 - node.after.length), reading) ? undefined : [closingEdit(node, ``)] })
 					}
 					else if (primary === `always`) {
-						if (node.before === ``) problems.push({ message: messages.expectedOpening, index: openingIndex + indexBoost, edits: [openingEdit(node, ` `)] })
+						let opening = openingEdit(node, ` `)
+						// Writing a space behind `(` right before a quotation mark switches how the `postcss-scss` tokenizer reads the address token and can leave the file unparsable; the write is refused when `editsRereadAnAddress` says so
+						if (
+							node.before === ``
+							&& (!(
+								params[openingIndex] === `"`
+								|| params[openingIndex] === `'`
+							)
+							|| !editsRereadAnAddress(params, [opening], reading, atRule))
+						) {
+							problems.push({ message: messages.expectedOpening, index: openingIndex + indexBoost, edits: [opening] })
+						}
 
 						if (node.after === `` && !enclosesOneRun) problems.push({ message: messages.expectedClosing, index: closingIndex + indexBoost, edits: [closingEdit(node, ` `)] })
 					}
