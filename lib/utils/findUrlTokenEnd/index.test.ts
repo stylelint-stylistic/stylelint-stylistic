@@ -85,4 +85,9 @@ describe(`findUrlTokenEnd`, () => {
 		expect(findUrlTokenEnd(`aurl(a\\//c)`, 1, 0, SCSS)).toBe(1)
 		expect(findUrlTokenEnd(`\\/url(a\\//c)`, 2, 0, SCSS)).toBe(2)
 	})
+
+	it(`a square bracket before url, which ends the word and lets url open an address token`, () => {
+		expect(findUrlTokenEnd(`[url(a(b) \\//c) 1px]`, 1, 0, SCSS)).toBe(15)
+		expect(findUrlTokenEnd(`[a]url(a(b) \\//c) 1px;`, 3, 2, SCSS)).toBe(17)
+	})
 })

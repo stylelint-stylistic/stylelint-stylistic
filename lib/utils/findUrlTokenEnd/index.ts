@@ -13,7 +13,7 @@ function endsToken (text: string, step: number): boolean {
 
 	let character = text.charAt(step)
 
-	return isWhitespace(character) || `,()}"'`.includes(character) || (character === `/` && text[step + 1] === `*`) || (character === `\\` && text[step + 1] !== `/`)
+	return isWhitespace(character) || `,()[]}"'`.includes(character) || (character === `/` && text[step + 1] === `*`) || (character === `\\` && text[step + 1] !== `/`)
 }
 
 /**
