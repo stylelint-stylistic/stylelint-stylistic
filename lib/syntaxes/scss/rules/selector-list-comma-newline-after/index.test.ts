@@ -36,6 +36,21 @@ testRule({
 			description: `the same behind tabs and spaces`,
 			code: `a, \t \t // comment\nb {}`,
 		},
+		{
+			// A `//` comment holding a `*/` is rewritten as two block comments under postcss-scss; the break after the whole comment is the one asked for
+			description: `an inline comment holding a closing star, with the break after the whole comment`,
+			code: `a, // c */ d\nb {}`,
+		},
+		{
+			// The same comment holding an opening star instead
+			description: `an inline comment holding an opening star, with the break after the whole comment`,
+			code: `a, // c /* d\nb {}`,
+		},
+		{
+			// The comment ends on the `*/` itself, with the break right after
+			description: `an inline comment ending on the closing star, with the break right after`,
+			code: `a, // c */\nb {}`,
+		},
 	],
 })
 testRule({
