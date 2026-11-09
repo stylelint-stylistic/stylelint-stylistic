@@ -209,6 +209,15 @@ testRule({
 			],
 		},
 		{
+			description: `a bare address whose name is glued to a preceding word, so the tokenizer reads the parentheses as code and the parser closes the address on the first parenthesis`,
+			code: `a { b: fn(a/url(a(b)) x); }`,
+			fixed: `a { b: fn(\na/url(a(b)) x\n); }`,
+			warnings: [
+				{ message: messages.expectedOpening },
+				{ message: messages.expectedClosing },
+			],
+		},
+		{
 			description: `a closed call standing inside such a function, which is read and fixed where it stands`,
 			code: `
 				a {

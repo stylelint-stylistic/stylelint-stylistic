@@ -48,6 +48,10 @@ describe(`hideParenthesesInUrlStrings`, () => {
 		expect(hideParenthesesInUrlStrings(`fn(1url(a(b)) x)`, [], COUNTING_READING)).toBe(`fn(1url(a(b)) x)`)
 	})
 
+	it(`a bare address whose name is glued to a preceding word, so the tokenizer reads the parentheses as code and the parser closes the address on the first parenthesis, whose parser-closed parenthesis is masked up to the balancing one`, () => {
+		expect(hideParenthesesInUrlStrings(`fn(a/url(a(b)) x)`, [])).toBe(`fn(a/url(a(b?) x)`)
+	})
+
 	it(`a pair in a bare address behind a comment, which ends the word in front of the name`, () => {
 		let text = `fn(/* c */url(a(b)) x)`
 

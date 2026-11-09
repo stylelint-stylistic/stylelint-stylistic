@@ -334,6 +334,15 @@ describe(`a call whose name the parser reads a url token by though no compiler d
 	})
 })
 
+describe(`a bare address whose name is glued to a preceding word`, () => {
+	it(`does not warn on the parser's parenthesis inside the address`, async () => {
+		let { fixed, left } = await fix(`a { b: fn(a/url(a(b)) x); }`, `always`)
+
+		expect(fixed).toBe(`a { b: fn( a/url(a(b)) x ); }`)
+		expect(left).toEqual([])
+	})
+})
+
 /**
  * Fixes a Sass text under a primary of this rule and checks what a lint of the output says.
  * @param code - The text.

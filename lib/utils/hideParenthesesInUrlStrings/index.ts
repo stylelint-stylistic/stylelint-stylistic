@@ -68,52 +68,174 @@ function standsAloneAsWord (text: string, nameIndex: number, spans: (CommentSpan
 
 /**
  * Finds every `)` inside a string or a comment that holds the `)` the parser closes the parentheses of a `url( ` on, in walk order.
- * @param text - The value parsed.
+ * @param masked - The value parsed, with the masks written so far.
+ * @param source - The value as spelled, unmasked, used to find where the parser closed the address and where it balances so an earlier mask does not shift what is masked next.
  * @param spans - The comment spans found in the value, both kinds.
  * @returns The indices.
  */
-function findHeldParentheses (text: string, spans: (CommentSpan | InlineCommentSpan)[]): number[] {
+function findHeldParentheses (masked: string, source: string, spans: (CommentSpan | InlineCommentSpan)[]): number[] {
 	let held: number[] = []
 
-	valueParser(text).walk((node) => {
+	valueParser(masked).walk((node) => {
 		if (node.type !== `function` || node.value !== `url` || node.unclosed) return
 
 		let openIndex = node.sourceIndex + node.value.length + 1
 		let closeIndex = node.sourceEndIndex - 1
 
 		// A comment behind the `(` may stand blanked to spaces, and the tokenizer reads none of it as whitespace
-		let spaceBehindParenthesis = isWhitespace(text.charAt(openIndex)) && !findCommentSpanAt(openIndex, spans)
+		let spaceBehindParenthesis = isWhitespace(masked.charAt(openIndex)) && !findCommentSpanAt(openIndex, spans)
 
 		// The tokenizer reads a bare address behind a `url` of its own word, where no whitespace of its follows the `(`
-		if (!spaceBehindParenthesis && standsAloneAsWord(text, node.sourceIndex, spans)) return
+		let alone = standsAloneAsWord(masked, node.sourceIndex, spans)
 
-		let index = openIndex
+		if (!spaceBehindParenthesis && alone) return
 
-		while (index < closeIndex) {
-			let comment = findCommentSpanAt(index, spans)
+		held.push(...findHeldInStringsAndComments(masked, openIndex, closeIndex, spans))
 
-			// A comment running to the end of the text leaves no `)` behind it to close the address on
-			if (comment && comment.end >= text.length) break
-
-			let end = index + 1
-
-			if (comment) end = comment.end
-			else if (text[index] === `\\`) end = index + 2
-			else if (text[index] === `"` || text[index] === `'`) end = skipString(text, index)
-			// A comment the spans handed in do not hold
-			else if (text[index] === `/` && text[index + 1] === `*`) end = skipBlockComment(text, index)
-
-			if (end > closeIndex) {
-				for (let at = index; at < end; at += 1) {
-					if (text[at] === `)`) held.push(at)
-				}
-			}
-
-			index = end
-		}
+		// Where the tokenizer reads the parentheses behind `url(` as code, balanced, because the name is glued to a preceding word (`alone` is false and nothing ends the word in front of it), the parser closes the address on the first `)`: every `)` it reads inside the address short of the balancing one is the call's closing `)` to the rules unless masked, just as under a tokenizer that counts them. The source is unmasked so that a mask written in an earlier pass does not shift what is masked next.
+		if (!alone && isGluedToPrecedingWord(masked, node.sourceIndex)) held.push(...findMaskedAddressParentheses(masked, source, openIndex, spans))
 	})
 
 	return held
+}
+
+/**
+ * Tells whether the name of a `url` call is glued to the word in front of it, so that the tokenizer reads no word boundary there and the parentheses behind `url(` count as code rather than as an address's own. A whitespace, a comma, a semicolon, a parenthesis, a bracket, a brace, a colon, an at-sign, a backslash or a quotation mark in front of the name ends the preceding word, so the name stands on its own.
+ * @param text - The value spelled.
+ * @param nameIndex - Where the name begins.
+ * @returns True where nothing ends the word in front of the name.
+ */
+function isGluedToPrecedingWord (text: string, nameIndex: number): boolean {
+	if (nameIndex === 0) return false
+
+	let before = text.charAt(nameIndex - 1)
+
+	return !isWhitespace(before) && !` ,;()[]{}:@\\"'`.includes(before)
+}
+
+/**
+ * Finds the first `)` at or behind where the address behind `url(` begins.
+ * @param text - The value spelled, unmasked.
+ * @param openIndex - Where the address behind `url(` begins.
+ * @returns The index of the first `)`, or the text's length where none.
+ */
+function findFirstClose (text: string, openIndex: number): number {
+	for (let at = openIndex; at < text.length; at += 1) {
+		if (text[at] === `)`) return at
+	}
+
+	return text.length
+}
+
+/**
+ * Finds every `)` inside a string or a comment that holds the `)` the parser closes the parentheses of a `url(` on, in walk order.
+ * @param masked - The value parsed, with the masks written so far.
+ * @param openIndex - Where the address behind `url(` begins.
+ * @param closeIndex - Where the parser closes the address.
+ * @param spans - The comment spans found in the value, both kinds.
+ * @returns The indices.
+ */
+function findHeldInStringsAndComments (masked: string, openIndex: number, closeIndex: number, spans: (CommentSpan | InlineCommentSpan)[]): number[] {
+	let held: number[] = []
+
+	let index = openIndex
+
+	while (index < closeIndex) {
+		let comment = findCommentSpanAt(index, spans)
+
+		// A comment running to the end of the text leaves no `)` behind it to close the address on
+		if (comment && comment.end >= masked.length) break
+
+		let end = index + 1
+
+		if (comment) end = comment.end
+		else if (masked[index] === `\\`) end = index + 2
+		else if (masked[index] === `"` || masked[index] === `'`) end = skipString(masked, index)
+		// A comment the spans handed in do not hold
+		else if (masked[index] === `/` && masked[index + 1] === `*`) end = skipBlockComment(masked, index)
+
+		if (end > closeIndex) {
+			for (let at = index; at < end; at += 1) {
+				if (masked[at] === `)`) held.push(at)
+			}
+		}
+
+		index = end
+	}
+
+	return held
+}
+
+/**
+ * Finds the `)` the parser closes a bare address on, short of the one balancing its parentheses, where the tokenizer reads the parentheses as code: every `)` between the parser's close and the balancing one, that an earlier mask did not already take.
+ * @param masked - The value parsed, with the masks written so far.
+ * @param source - The value as spelled, unmasked.
+ * @param openIndex - Where the address behind `url(` begins.
+ * @param spans - The comment spans found in the value, both kinds.
+ * @returns The indices.
+ */
+function findMaskedAddressParentheses (masked: string, source: string, openIndex: number, spans: (CommentSpan | InlineCommentSpan)[]): number[] {
+	let held: number[] = []
+
+	let sourceClose = findFirstClose(source, openIndex)
+	let balancing = findBalancedClose(source, openIndex, spans)
+
+	for (let at = sourceClose; at < balancing; at += 1) {
+		if (source[at] === `)` && masked[at] !== MASK) held.push(at)
+	}
+
+	return held
+}
+
+/**
+ * Finds the `)` that balances the `(` behind `url` where the tokenizer reads the parentheses as code, balanced: every `(` and `)` counts except one behind a backslash or inside a comment or a string. The `(` behind `url` is already open, so the count starts at one.
+ * @param text - The text walked.
+ * @param openIndex - Where the address behind `url(` begins.
+ * @param spans - The comment spans found in the value, both kinds.
+ * @returns The index of the balancing `)`, or the text's length where none balances.
+ */
+function findBalancedClose (text: string, openIndex: number, spans: (CommentSpan | InlineCommentSpan)[]): number {
+	let depth = 1
+
+	let index = openIndex
+
+	while (index < text.length) {
+		let comment = findCommentSpanAt(index, spans)
+
+		if (comment) {
+			index = comment.end
+			continue
+		}
+
+		let character = text[index]
+
+		if (character === `\\`) {
+			index += 2
+			continue
+		}
+
+		if (character === `"` || character === `'`) {
+			index = skipString(text, index)
+			continue
+		}
+
+		// A comment the spans handed in do not hold
+		if (character === `/` && text[index + 1] === `*`) {
+			index = skipBlockComment(text, index)
+			continue
+		}
+
+		if (character === `(`) depth += 1
+		else if (character === `)`) {
+			depth -= 1
+
+			if (depth === 0) return index
+		}
+
+		index += 1
+	}
+
+	return text.length
 }
 
 /**
@@ -277,8 +399,7 @@ export function hideParenthesesInUrlStrings (text: string, spans: (CommentSpan |
 
 		masked = maskAt(masked, welds)
 
-		let held = [...findHeldParentheses(masked, spans), ...findNestedParenthesesInAddresses(masked, text, spans, reading)]
-
+		let held = [...findHeldParentheses(masked, text, spans), ...findNestedParenthesesInAddresses(masked, text, spans, reading)]
 		masked = maskAt(masked, held.map((index) => ({ index, text: MASK })))
 		found = dividers.length > 0 || welds.length > 0 || held.length > 0
 	}
