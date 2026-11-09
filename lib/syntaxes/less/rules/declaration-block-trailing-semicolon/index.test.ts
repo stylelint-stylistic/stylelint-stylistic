@@ -479,6 +479,15 @@ testRule({
 			column: 16,
 			message: messages.expected,
 		},
+		{
+			// A space written before the semicolon would replace the line break that closes a // comment, pulling the semicolon into the comment and leaving the file unparsable; the space is refused and the break stays
+			description: `a custom property whose value ends in a line break closing a // comment, where the semicolon is added without a space so the break keeps closing the comment`,
+			code: `a { --b: red // c\n}`,
+			fixed: `a { --b: red // c\n;}`,
+			line: 1,
+			column: 17,
+			message: messages.expected,
+		},
 	],
 })
 testRule({
