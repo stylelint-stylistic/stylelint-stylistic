@@ -33,6 +33,8 @@ export function selectorAttributeOperatorSpaceChecker (options: {
 
 		let copies = options.syntax.selectorCopies(rule)
 		let { selector } = copies
+		// Under postcss-scss and postcss-less, a `//` comment in a selector is spelled as inline comment text the parser cannot read. Blank it before parsing so attribute nodes are found; the length is unchanged so indexes stay valid.
+		selector = selector.replaceAll(`//`, `  `)
 
 		if (!selector.includes(`[`) || !selector.includes(`=`)) return
 
