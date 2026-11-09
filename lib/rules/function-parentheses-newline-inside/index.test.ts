@@ -119,6 +119,15 @@ testRule({
 			],
 		},
 		{
+			description: `a bare address whose name is glued to a preceding word, so the tokenizer reads the parentheses as code and the parser closes the address on the first parenthesis`,
+			code: `a { b: fn(a/url(a(b)) x); }`,
+			fixed: `a { b: fn(\na/url(a(b)) x\n); }`,
+			warnings: [
+				{ line: 1, column: 11, message: messages.expectedOpening },
+				{ line: 1, column: 23, message: messages.expectedClosing },
+			],
+		},
+		{
 			// The value parser closes the address on the comment's parenthesis, and the whitespace behind the opening one makes the comment a comment to the tokenizer
 			description: `a call holding an address with a comment with a closing parenthesis, whose closing parenthesis stands against the address's`,
 			code: `a { b: f(url( $a /* ) */)); }`,
