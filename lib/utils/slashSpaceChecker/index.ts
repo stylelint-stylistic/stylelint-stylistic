@@ -11,13 +11,14 @@ import { editKeepsEscapedCharacter } from "../editKeepsEscapedCharacter/index.ts
 import { findEscapeSpans } from "../findCommentSpans/index.ts"
 import { findSeparatorSlashes, type SeparatorSlash } from "../findSeparatorSlashes/index.ts"
 import { getLineBreak } from "../getLineBreak/index.ts"
+import { isCustomProperty } from "../isCustomProperty/index.ts"
 import { maskEscapes } from "../maskEscapes/index.ts"
 import { matchesStringOrRegExp } from "../matchesStringOrRegExp/index.ts"
 import { rawInFrontOfText } from "../rawInFrontOfText/index.ts"
 import { report } from "../report/index.ts"
 import { rereadsAnAddress } from "../rereadsAnAddress/index.ts"
 import { type EdgeFix, edgeRunOutOfReach, edgeRunOwned, type EdgeWrite, textBeforeAsLeft, writeEdgeRun } from "../textEdge/index.ts"
-import { isAtRule } from "../typeGuards/index.ts"
+import { isAtRule, isDeclaration } from "../typeGuards/index.ts"
 import type { WhitespaceChecker } from "../whitespaceChecker/index.ts"
 import { fixApplies } from "../writesKeepingAddresses/index.ts"
 
@@ -124,6 +125,10 @@ function textChecker (opts: SlashSpaceCheckerOptions): (node: AtRule | Declarati
 
 	return (node, text, textIndex, lineCheckStr, readsGroups) => {
 		let reading = syntax.inlineComments(node, result)
+		// A custom property under `postcss-scss` holds its value as raw text: `//` there opens no comment, so a write beside a solidus must not be refused as if it opened one. Under Less it still does, so only the syntax that drops the comment from the text (`!keeps`) gets `spells` taken away.
+		if (isDeclaration(node) && isCustomProperty(node.prop) && !reading.keeps) {
+			reading = { ...reading, spells: false, tokenizes: false }
+		}
 		// The run beside the solidus is read over the copy with its escapes masked, where an escaped space is a character of a word and no run; the guards read the text the write lands in
 		let runText = maskEscapes(text, findEscapeSpans(text, reading), true)
 		let written = writes ? (whitespace === `newline` ? getLineBreak(node, result) : ` `) : ``

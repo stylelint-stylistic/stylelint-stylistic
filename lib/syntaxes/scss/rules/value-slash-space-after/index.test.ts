@@ -83,6 +83,10 @@ testRule({
 			description: `a solidus beside a variable, which Sass divides at`,
 			code: `a { b: 4 / $a; }`,
 		},
+		{
+			description: `a custom property whose value already holds two solidi beside each other, which Sass divides at and which needs no fix`,
+			code: `a { --b: 1//2; }`,
+		},
 	],
 
 	reject: [
@@ -100,6 +104,15 @@ testRule({
 			fixed: `a { b: 1 / /*c*/ 2; }`,
 			line: 1,
 			column: 10,
+			message: messages.rejectedAfter(),
+		},
+		{
+			// A custom property's value is raw text to Sass: `//` there opens no comment, so the space after the solidus may be taken away
+			description: `a custom property whose value holds two solidi with a space between them, which Sass divides at and which the fixer closes up`,
+			code: `a { --b: 1/ /2; }`,
+			fixed: `a { --b: 1//2; }`,
+			line: 1,
+			column: 11,
 			message: messages.rejectedAfter(),
 		},
 		{

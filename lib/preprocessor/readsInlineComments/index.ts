@@ -106,6 +106,8 @@ function probeSyntax (syntax?: unknown): InlineCommentReading {
  * Asks whether a `//` in a node's text opens a comment.
  *
  * The text cannot answer: in plain CSS a `//` is code, most often an address such as `myurl(//a)`, and reading it as a comment silences the rest of the line. The probe is parsed once per syntax object. A caller in front of a fix asks {@link inlineCommentReading} for the whole reading.
+ *
+ * A custom property under `postcss-scss` holds its value as raw text: `//` there opens no comment, and the guard must not refuse a write inside it. Under Less it still does, so only the syntax that drops the comment from the text (`!keeps`) has `spells` taken away.
  * @param node - The node whose syntax is asked.
  * @param result - The Stylelint result naming the syntax where the root does not.
  * @returns True where it does.
@@ -116,6 +118,8 @@ export function readsInlineComments (node: Node, result: PostcssResult): boolean
 
 /**
  * What the syntax that parsed a node makes of a `//` comment.
+ *
+ * A custom property under `postcss-scss` holds its value as raw text: `//` there opens no comment, and the guard must not refuse a write inside it. Under Less it still does, so only the syntax that drops the comment from the text (`!keeps`) has `spells` taken away.
  * @param node - The node whose syntax is asked.
  * @param result - The Stylelint result naming the syntax where the root does not.
  * @returns The reading.
