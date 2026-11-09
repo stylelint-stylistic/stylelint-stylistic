@@ -109,13 +109,17 @@ function skipInterpolation (text: string, openIndex: number, reading: CommentRea
  * @param reading - What the syntax makes of a `//` comment.
  * @param comments - Where the comments inside an interpolation are recorded.
  * @param escapes - Where an escape met here is recorded; one spelling nothing is a delimiter and none.
+ * @param isSassCode - True where the parentheses hold Sass code rather than an address, so an escaped closing parenthesis ends the address there.
  * @returns Behind the piece, or `index` where none opens.
  */
-function skipWhole (text: string, index: number, reading: CommentReading, comments: InterpolationComments, escapes: EscapeSpan[]): number {
+function skipWhole (text: string, index: number, reading: CommentReading, comments: InterpolationComments, escapes: EscapeSpan[], isSassCode: boolean): number {
 	if (text[index] === `\\`) {
 		let escaped = readEscapedCharacter(text, index)
 
 		if (escaped.character !== undefined) escapes.push({ start: index, end: escaped.end })
+
+		// `postcss-scss` closes the url token on the first `)`, escape or not: where the parentheses hold Sass code rather than an address, an escaped `)` closes it there
+		if (isSassCode && text[index + 1] === `)`) return index + 1
 
 		return escaped.end
 	}
@@ -216,7 +220,7 @@ export function readAddress (text: string, openIndex: number, name: string, read
 	let index = openIndex
 
 	while (index < text.length && text[index] !== `)`) {
-		let behindWhole = skipWhole(text, index, reading, interpolationComments, escapes)
+		let behindWhole = skipWhole(text, index, reading, interpolationComments, escapes, isSassCode)
 
 		if (behindWhole !== index) {
 			index = behindWhole

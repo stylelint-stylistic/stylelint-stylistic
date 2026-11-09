@@ -124,6 +124,13 @@ testRule({
 	config: [`never`],
 	customSyntax: `postcss-scss`,
 
+	accept: [
+		{
+			description: `an address the parser closes on the first parenthesis with no double slash behind it, so the space goes and no warning stands`,
+			code: `a { b: url(a\\) x; }`,
+		},
+	],
+
 	reject: [
 		{
 			description: `a comment behind an address whose name is written in upper case and which holds the opening delimiter of a block comment, where Sass reads an address and the double slash behind it`,
@@ -172,6 +179,24 @@ testRule({
 			fixed: `
 				a {
 					color: red \\// keep me
+					;
+				}
+			`,
+			line: 3,
+			column: 1,
+			message: messages.rejectedBefore(),
+		},
+		{
+			description: `a double slash comment behind an address the parser closes on the first parenthesis, which the fix would join to the semicolon's line`,
+			code: `
+				a {
+					b: url(a\\) //x
+					;
+				}
+			`,
+			fixed: `
+				a {
+					b: url(a\\) //x
 					;
 				}
 			`,
@@ -271,6 +296,31 @@ testRule({
 		{
 			description: `a Sass nested property with a declaration behind it, whose own text ends where its value does rather than where its block does`,
 			code: `a { font: 12px { family: serif; } ; top: 0 ; }`,
+		},
+		{
+			description: `an address the parser closes on the first parenthesis with no double slash behind it, so the space is written and no warning stands`,
+			code: `a { b: url(a\\) x ; }`,
+		},
+	],
+
+	reject: [
+		{
+			description: `a double slash comment behind an address the parser closes on the first parenthesis, which the fix would join to the semicolon's line`,
+			code: `
+				a {
+					b: url(a\\) //x
+					;
+				}
+			`,
+			fixed: `
+				a {
+					b: url(a\\) //x
+					;
+				}
+			`,
+			line: 3,
+			column: 1,
+			message: messages.expectedBefore(),
 		},
 	],
 })

@@ -105,6 +105,10 @@ describe(`readAddress`, () => {
 		expect(readAddress(`url(#{$a}//b\\)c) 1px`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 15, comments: [], strings: [], escapes: [{ start: 12, end: 14 }] })
 	})
 
+	it(`an escaped closing parenthesis where postcss-scss closes the url token on it, which ends the address there`, () => {
+		expect(readAddress(`url(a\\) //x`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 6, comments: [], strings: [], escapes: [{ start: 5, end: 7 }] })
+	})
+
 	it(`an interpolation holding a closing brace in a string or a comment, which Sass reads to the brace closing the expression`, () => {
 		expect(readAddress(`url(#{"}"}a/*) 1px // c */`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 13, comments: [], strings: [], escapes: [] })
 		expect(readAddress(`url(#{a /* } */}/*) 1px`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 18, comments: [], strings: [], escapes: [] })
