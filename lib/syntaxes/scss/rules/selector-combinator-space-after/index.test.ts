@@ -42,6 +42,15 @@ testRule({
 			column: 4,
 			message: messages.expectedAfter(`>`),
 		},
+		{
+			// `postcss-scss` does not capture a `//` comment that sits directly behind the combinator, so the rule used to skip the selector as non-standard
+			description: `a combinator directly followed by an inline comment, which the rule now reads`,
+			code: `a>// c\nb { c: d }`,
+			fixed: `a> // c\nb { c: d }`,
+			line: 1,
+			column: 2,
+			message: messages.expectedAfter(`>`),
+		},
 	],
 })
 testRule({
