@@ -354,6 +354,24 @@ testRule({
 			column: 17,
 			message: messages.expected(`double`),
 		},
+		{
+			// A double slash inside a Sass interpolation is no comment to the tokenizer, so a string standing behind it in the value is still read
+			description: `a single-quoted string behind a Sass interpolation, which a double slash in that interpolation no longer hides`,
+			code: `a { b: #{a // b} 'x' // c\n'e'; }`,
+			fixed: `a { b: #{a // b} "x" // c\n"e"; }`,
+			warnings: [
+				{
+					line: 1,
+					column: 18,
+					message: messages.expected(`double`),
+				},
+				{
+					line: 2,
+					column: 1,
+					message: messages.expected(`double`),
+				},
+			],
+		},
 	],
 })
 
