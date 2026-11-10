@@ -291,6 +291,16 @@ testRule({
 				{ line: 1, column: 31, message: messages.expectedClosing },
 			],
 		},
+		{
+			// Writing the space behind the `(` of `url(` makes postcss-scss read the parentheses as one token through the double slash comment the code held, so the comment stays in the value and the write is refused
+			description: `a space written behind the opening parenthesis of a url holding a double slash comment, which postcss-scss reads as a token and keeps the comment in the value`,
+			code: `a { b: url("a" // c\n); }`,
+			fixed: `a { b: url("a" // c\n); }`,
+			warnings: [
+				{ line: 1, column: 12, message: messages.expectedOpening },
+				{ line: 1, column: 20, message: messages.expectedClosing },
+			],
+		},
 
 	],
 })

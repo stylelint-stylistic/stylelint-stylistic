@@ -389,6 +389,11 @@ describe(`editsRereadAnAddress`, () => {
 	it(`two runs taken away around a comment, the cuts behind both moved by the two`, () => {
 		expect(editsRereadAnAddress(String.raw`\61 url( /* c */ a.png); d`, [{ start: 8, end: 9, text: `` }, { start: 16, end: 17, text: `` }], POSTCSS, DECLARATION)).toBe(false)
 	})
+
+	it(`a space written behind the opening parenthesis of a url under postcss-scss, which reads the parentheses as a token through the double slash comment the code held, so the comment stays in the value`, () => {
+		// The quotation mark behind the `(` keeps the parentheses code under scss's tokenizer: the double slash is a comment there
+		expect(editsRereadAnAddress(`url("a" // c\n)`, [{ start: 4, end: 4, text: ` ` }], SCSS, DECLARATION)).toBe(true)
+	})
 })
 
 describe(`addressHolding`, () => {
