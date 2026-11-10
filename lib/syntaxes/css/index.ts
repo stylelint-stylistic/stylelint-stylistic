@@ -92,7 +92,13 @@ export let css: Syntax = {
 		let { endsOnFormFeed, tokenizes } = inlineCommentReading(node, result)
 
 		// Block comments are found with the inline ones blanked, and a `/*` inside an inline comment opens nothing; a double slash left there is code unless the tokenizer reads such comments, since it leaves some in the text, as inside the parentheses of an address
-		if (inline) return [...inline, ...findCommentSpans(blankComments(text, inline), { spells: tokenizes, tokenizes, endsOnFormFeed })].toSorted((one, other) => one.start - other.start)
+		// The pair has handed over the genuine `//` comments, and the scan still has to read the `//` comments the pair did not capture, such as one inside an address. A `//` inside a Sass interpolation is code rather than a comment, though, and would otherwise be read to the end of the line, swallowing the code behind it; the interpolation spans are blanked first so the scan never sees it.
+		if (inline) {
+			let blanked = blankComments(text, inline)
+			let masked = blankComments(blanked, findInterpolationSpans(blanked))
+
+			return [...inline, ...findCommentSpans(masked, { spells: tokenizes, tokenizes, endsOnFormFeed })].toSorted((one, other) => one.start - other.start)
+		}
 
 		// A double slash is code only to a syntax that neither keeps inline comments in the text nor reads them with its tokenizer, as plain CSS, unless a pair out of step says it rewrote one
 		let spellsInlineComments = text.includes(`//`) && (pair !== undefined || tokenizes || syntaxKeepsInlineComments(nodeSyntax(node, result)))
