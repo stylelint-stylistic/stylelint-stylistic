@@ -123,6 +123,11 @@ describe(`readAddress`, () => {
 		expect(readAddress(`url($a #{c // )\n}) , 1px`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 17, comments: [{ start: 11, end: 15, isInline: true }], strings: [], escapes: [] })
 	})
 
+	it(`a comment inside an interpolation the text never closes, which is recorded once`, () => {
+		expect(readAddress(`url($a #{b /* c */ d) 1px`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 20, comments: [{ start: 11, end: 18, isInline: false }], strings: [], escapes: [] })
+		expect(readAddress(`url($a #{b // c\n d) 1px`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 18, comments: [{ start: 11, end: 15, isInline: true }], strings: [], escapes: [] })
+	})
+
 	// The expression is Sass code, so a backslash there covers what stands behind it: Sass reads `url(a#{b\\}c}d)` as the address `ab\\}cd`
 	it(`an escape standing in the code of an interpolation, which is recorded and whose brace closes the expression no more than its parenthesis closes the parentheses`, () => {
 		expect(readAddress(`url(a#{b\\\t  c}d)`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 15, comments: [], strings: [], escapes: [{ start: 8, end: 10 }] })
