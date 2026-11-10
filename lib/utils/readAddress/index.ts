@@ -64,6 +64,8 @@ function skipInterpolation (text: string, openIndex: number, reading: CommentRea
 	let depth = 0
 	let index = openIndex + 1
 	let found: EscapeSpan[] = []
+	let foundComments: CommentSpan[] = []
+	let localComments = comments ? { block: comments.block, inline: comments.inline, spans: foundComments } : undefined
 
 	while (index < text.length) {
 		let character = text.charAt(index)
@@ -81,7 +83,7 @@ function skipInterpolation (text: string, openIndex: number, reading: CommentRea
 			while (index < text.length && text[index] !== character) index += text[index] === `\\` ? 2 : 1
 		}
 		else if (character === `/` && (text[index + 1] === `*` || text[index + 1] === `/`)) {
-			index = readInterpolationComment(text, index, reading, comments) - 1
+			index = readInterpolationComment(text, index, reading, localComments) - 1
 		}
 		else if (character === `{`) {
 			depth += 1
@@ -90,6 +92,8 @@ function skipInterpolation (text: string, openIndex: number, reading: CommentRea
 			depth -= 1
 
 			if (depth === 0) {
+				if (comments) comments.spans.push(...foundComments)
+
 				escapes?.push(...found)
 
 				return index + 1
