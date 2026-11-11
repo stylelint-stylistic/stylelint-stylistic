@@ -1,10 +1,8 @@
-import { appendFileSync, readFileSync } from "node:fs"
+import { appendFileSync } from "node:fs"
 
-let stylelint: { engines?: { node?: string } } = JSON.parse(
-	readFileSync(new URL(`../../node_modules/stylelint/package.json`, import.meta.url), `utf8`),
-)
+import stylelintPackageJson from "stylelint/package.json" with { type: "json" }
 
-let range = stylelint.engines?.node
+let range = stylelintPackageJson.engines?.node
 
 if (!range) throw new Error(`Stylelint does not specify engines.node`)
 
