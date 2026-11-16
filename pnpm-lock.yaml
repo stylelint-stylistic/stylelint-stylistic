@@ -162,9 +162,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-patchedDependencies:
-  postcss-selector-parser: 0596b62c6d02424c6f3d1105173a6c43f5677a5882f2fc0f6e46e88b0beeb085
-
 importers:
 
   .:
@@ -182,8 +179,8 @@ importers:
         specifier: ^8.5.33
         version: 8.5.33
       postcss-selector-parser:
-        specifier: ^7.1.7
-        version: 7.1.7(patch_hash=0596b62c6d02424c6f3d1105173a6c43f5677a5882f2fc0f6e46e88b0beeb085)
+        specifier: ^7.2.1
+        version: 7.2.1
       postcss-value-parser:
         specifier: ^4.2.0
         version: 4.2.0
@@ -1025,11 +1022,6 @@ packages:
     resolution: {integrity: sha512-X7sjQzceUhu1u7Y/ylrRZFU2FS6LRiFVp6rKLPg23y3x3c3DOKAwuXGDp+PAGjh6CSnCjYeAul8pcT8bAl+lSA==}
     engines: {node: ^10 || ^12.20.0 || ^14.13.0 || >=15.0.0}
 
-  cssesc@3.0.0:
-    resolution: {integrity: sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==}
-    engines: {node: '>=4'}
-    hasBin: true
-
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
 
@@ -1630,8 +1622,8 @@ packages:
     peerDependencies:
       postcss: ^8.4.29
 
-  postcss-selector-parser@7.1.7:
-    resolution: {integrity: sha512-wWBro/7hJ40ye6TPiXkUQoXKCw23xSsjriUvqd7Uls9Sso3oLiON1flc18cCdnjgCRXw4fBVqUJJeOdDTh3P3g==}
+  postcss-selector-parser@7.2.1:
+    resolution: {integrity: sha512-GwxlMgTTXwIom+ebC7an3k6RaJDwklRQQnfiXsLPGicu8FYV/k/+1/9YY2OU2+r938H2t4X0TDxoif+HP2rjzQ==}
     engines: {node: '>=4'}
 
   postcss-styled-syntax@0.7.4:
@@ -1972,13 +1964,13 @@ snapshots:
       '@csstools/css-parser-algorithms': 4.0.2(@csstools/css-tokenizer@4.0.2)
       '@csstools/css-tokenizer': 4.0.2
 
-  '@csstools/selector-resolve-nested@4.0.2(postcss-selector-parser@7.1.7(patch_hash=0596b62c6d02424c6f3d1105173a6c43f5677a5882f2fc0f6e46e88b0beeb085))':
+  '@csstools/selector-resolve-nested@4.0.2(postcss-selector-parser@7.2.1)':
     dependencies:
-      postcss-selector-parser: 7.1.7(patch_hash=0596b62c6d02424c6f3d1105173a6c43f5677a5882f2fc0f6e46e88b0beeb085)
+      postcss-selector-parser: 7.2.1
 
-  '@csstools/selector-specificity@6.0.1(postcss-selector-parser@7.1.7(patch_hash=0596b62c6d02424c6f3d1105173a6c43f5677a5882f2fc0f6e46e88b0beeb085))':
+  '@csstools/selector-specificity@6.0.1(postcss-selector-parser@7.2.1)':
     dependencies:
-      postcss-selector-parser: 7.1.7(patch_hash=0596b62c6d02424c6f3d1105173a6c43f5677a5882f2fc0f6e46e88b0beeb085)
+      postcss-selector-parser: 7.2.1
 
   '@docsearch/css@4.7.1': {}
 
@@ -2547,8 +2539,6 @@ snapshots:
       mdn-data: 2.27.1
       source-map-js: 1.2.2
 
-  cssesc@3.0.0: {}
-
   csstype@3.2.3: {}
 
   debug@4.4.3:
@@ -2996,9 +2986,8 @@ snapshots:
     dependencies:
       postcss: 8.5.33
 
-  postcss-selector-parser@7.1.7(patch_hash=0596b62c6d02424c6f3d1105173a6c43f5677a5882f2fc0f6e46e88b0beeb085):
+  postcss-selector-parser@7.2.1:
     dependencies:
-      cssesc: 3.0.0
       util-deprecate: 1.0.2
 
   postcss-styled-syntax@0.7.4(postcss@8.5.33):
@@ -3096,8 +3085,8 @@ snapshots:
       '@csstools/css-syntax-patches-for-csstree': 1.1.16(css-tree@3.2.1)
       '@csstools/css-tokenizer': 4.0.2
       '@csstools/media-query-list-parser': 5.0.2(@csstools/css-parser-algorithms@4.0.2(@csstools/css-tokenizer@4.0.2))(@csstools/css-tokenizer@4.0.2)
-      '@csstools/selector-resolve-nested': 4.0.2(postcss-selector-parser@7.1.7(patch_hash=0596b62c6d02424c6f3d1105173a6c43f5677a5882f2fc0f6e46e88b0beeb085))
-      '@csstools/selector-specificity': 6.0.1(postcss-selector-parser@7.1.7(patch_hash=0596b62c6d02424c6f3d1105173a6c43f5677a5882f2fc0f6e46e88b0beeb085))
+      '@csstools/selector-resolve-nested': 4.0.2(postcss-selector-parser@7.2.1)
+      '@csstools/selector-specificity': 6.0.1(postcss-selector-parser@7.2.1)
       colord: 2.10.0
       cosmiconfig: 10.0.1
       css-tree: 3.2.1
@@ -3106,7 +3095,7 @@ snapshots:
       picomatch: 4.0.7
       postcss: 8.5.33
       postcss-safe-parser: 7.1.0(postcss@8.5.33)
-      postcss-selector-parser: 7.1.7(patch_hash=0596b62c6d02424c6f3d1105173a6c43f5677a5882f2fc0f6e46e88b0beeb085)
+      postcss-selector-parser: 7.2.1
       postcss-value-parser: 4.2.0
       tinyglobby: 0.2.17
       write-file-atomic: 8.0.0
