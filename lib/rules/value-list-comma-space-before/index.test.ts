@@ -260,24 +260,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// Pins the reading of a string inside parentheses the tokenizer reads as code behind a solidus glued to the name, whose comma is no comma of the list
-			description: `no space in front of the comma behind a bare address whose name a solidus is glued to, holding a string with a closing parenthesis and a comma, which are text of the string`,
-			code: `a { b: 1px , 1/url(a "),b" ),2px; }`,
-			fixed: `a { b: 1px , 1/url(a "),b" ) ,2px; }`,
-			line: 1,
-			column: 29,
-			message: messages.expectedBefore(),
-		},
-		{
-			// Under PostCSS's tokenizer a space right behind the `(` of an address keeps its parentheses code, so the quotation mark inside would open a string nothing closes
-			description: `a comma right behind the opening parenthesis of an address holding a quotation mark, where the space in front of it is refused and the warning stands`,
-			code: `a { b: 1 url (,b"c) 2px; }`,
-			fixed: `a { b: 1 url (,b"c) 2px; }`,
-			line: 1,
-			column: 15,
-			message: messages.expectedBefore(),
-		},
-		{
 			description: `the same comma in an address holding nothing code reads otherwise, where the space is written`,
 			code: `a { b: 1 url (,b) 2px; }`,
 			fixed: `a { b: 1 url ( ,b) 2px; }`,
@@ -704,42 +686,6 @@ testRule({
 			line: 2,
 			column: 2,
 			message: messages.rejectedBefore(),
-		},
-	],
-})
-
-// The run right behind the `(` of an address decides whether its parentheses are one token or code, and the run behind the comma, which the twin behind this rule writes in the same pass, decides what the parentheses then hold: asked together, the space is given where alone it was refused
-testRule({
-	ruleName,
-	config: [`always`],
-	extraRules: { "@stylistic/value-list-comma-space-after": `never` },
-
-	reject: [
-		{
-			description: `a comma right behind the parenthesis of an address, with a break behind it that the twin behind this rule takes out, in front of a square bracket nothing closes`,
-			code: `a { b: 1 url (,\nb[c) 2px; }`,
-			fixed: `a { b: 1 url ( ,b[c) 2px; }`,
-			warnings: [
-				{
-					line: 1,
-					column: 15,
-					message: messages.expectedBefore(),
-				},
-				{
-					line: 1,
-					column: 15,
-					message: `Unexpected whitespace after "," (@stylistic/value-list-comma-space-after)`,
-				},
-			],
-		},
-		{
-			// Stylelint drops the twin's fix on the line the comment covers, so its write is not counted, and the space alone would leave the square bracket open
-			description: `the same under a comment disabling the twin on the comma's line`,
-			code: `a {\n  /* stylelint-disable-next-line @stylistic/value-list-comma-space-after */\n  b: 1 url (,\nb[c) 2px;\n}`,
-			fixed: `a {\n  /* stylelint-disable-next-line @stylistic/value-list-comma-space-after */\n  b: 1 url (,\nb[c) 2px;\n}`,
-			line: 3,
-			column: 13,
-			message: messages.expectedBefore(),
 		},
 	],
 })

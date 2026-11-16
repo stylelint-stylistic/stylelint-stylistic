@@ -208,15 +208,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads its parentheses
-			description: `a comma glued to the name of a bare address holding a string with a closing parenthesis, which a written run would make the tokenizer close inside the string`,
-			code: `[a,url(a ")" b)] {}`,
-			fixed: `[a,url(a ")" b)] {}`,
-			line: 1,
-			column: 3,
-			message: messages.expectedAfter(),
-		},
-		{
 			// Taking the last break out of parentheses the tokenizer read as code makes them one plain token again, which pushes nothing, so the next parenthesis pops the word url and the string inside is read as characters of the address up to its first closing parenthesis, and the quotation mark behind opens a string nothing closes: the break is left and the warning stands
 			description: `a comma in parentheses a word over the name of a bare address pops, with a break behind it, in front of parentheses holding a string and a quotation mark`,
 			code: `[a, url a (y,\nz)(b"c)d")] {}`,

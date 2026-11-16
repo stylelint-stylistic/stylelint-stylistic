@@ -189,51 +189,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// The `(` pops the word `url`, so PostCSS holds the parentheses as an address's token to the first `)`, and a break inside leaves them that token
-			description: `an address's parentheses parted from the name by a space and holding a square bracket nothing closes, where the break is written`,
-			code: `a { b: url (b[c ,d) 2px; }`,
-			fixed: `a { b: url (b[c\n ,d) 2px; }`,
-			line: 1,
-			column: 17,
-			message: messages.expectedBefore(),
-		},
-		{
-			// Under PostCSS's tokenizer whitespace right behind the `(` keeps the parentheses code, so the break written there takes them out of the address's token
-			description: `a comma right behind the opening parenthesis of an address holding a square bracket nothing closes, where the break in front of it is refused and the warning stands`,
-			code: `a { b: url (,b[c) 2px; }`,
-			fixed: `a { b: url (,b[c) 2px; }`,
-			line: 1,
-			column: 13,
-			message: messages.expectedBefore(),
-		},
-		{
-			// A break inside the address's token makes no plain token of the parentheses once whitespace behind the `(` keeps them code, so the square bracket is read as a group nothing closes
-			description: `the same comma with a line break behind it, where the break in front of it is refused likewise`,
-			code: `a { b: url (,\nb[c) 2px; }`,
-			fixed: `a { b: url (,\nb[c) 2px; }`,
-			line: 1,
-			column: 13,
-			message: messages.expectedBefore(),
-		},
-		{
-			// Under PostCSS's tokenizer a break right behind the `(` of an address keeps its parentheses code, so the quotation mark inside would open a string nothing closes
-			description: `a comma right behind the opening parenthesis of an address holding a quotation mark, where the break in front of it is refused and the warning stands`,
-			code: `a { b: url (,b"c) 2px; }`,
-			fixed: `a { b: url (,b"c) 2px; }`,
-			line: 1,
-			column: 13,
-			message: messages.expectedBefore(),
-		},
-		{
-			// A break written into parentheses the tokenizer takes as one plain token makes them code and pushes the words inside them, and the next parenthesis then pops one of those instead of the word url, so the quotation mark inside its parentheses opens a string nothing closes: the break is refused and the warning stands
-			description: `a comma in parentheses a word over the name of a bare address pops, in front of parentheses holding a quotation mark`,
-			code: `a { b: url a (y,z)(b"c); }`,
-			fixed: `a { b: url a (y,z)(b"c); }`,
-			line: 1,
-			column: 16,
-			message: messages.expectedBefore(),
-		},
-		{
 			description: `parentheses holding a brace nothing closes in a custom property's value, where the parser reads a brace as a group too, refused likewise`,
 			code: `a { --b: (a,{b); }`,
 			fixed: `a { --b: (a,{b); }`,

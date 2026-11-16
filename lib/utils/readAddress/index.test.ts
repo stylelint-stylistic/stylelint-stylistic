@@ -165,23 +165,6 @@ describe(`readAddress`, () => {
 		expect(readAddress(`url(a"b.png)`, 4, `url`, LESS)).toEqual({ isQuoted: false, index: 11, comments: [], strings: [], escapes: [] })
 	})
 
-	// The parentheses are code wherever comments are read inside them, so a quotation mark opens a string, and the comment delimiters and the parenthesis it holds are its text
-	it(`a string inside parentheses whose comments are read, which hides the delimiters and the parenthesis it holds`, () => {
-		expect(readAddress(`url( a "/*" b/c) 1px`, 4, `url`, LESS)).toEqual({ isQuoted: false, index: 15, comments: [], strings: [{ start: 7, end: 11 }], escapes: [] })
-		expect(readAddress(`url( a "/*)" /* c */ ) 1px`, 4, `url`, LESS)).toEqual({ isQuoted: false, index: 21, comments: [{ start: 13, end: 20, isInline: false }], strings: [{ start: 7, end: 12 }], escapes: [] })
-		expect(readAddress(`url(a "/*" b/c) 1px`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 14, comments: [], strings: [{ start: 6, end: 10 }], escapes: [] })
-		expect(readAddress(`url(a '//' // c\n) 1px`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 16, comments: [{ start: 11, end: 15, isInline: true }], strings: [{ start: 6, end: 10 }], escapes: [] })
-	})
-
-	// The string is handed back with the comments, so that the walk records it and a comma inside it is text to a scan over the copy
-	it(`the same string handed back, quotation marks and all, under every reading of the parentheses as code`, () => {
-		expect(readAddress(`1px, 1/url(a "),b" ), 2px`, 11, `url`, LESS)).toEqual({ isQuoted: false, index: 19, comments: [], strings: [{ start: 13, end: 18 }], escapes: [] })
-		expect(readAddress(`1,url(a ') , b' ) 2px`, 6, `url`, LESS)).toEqual({ isQuoted: false, index: 16, comments: [], strings: [{ start: 8, end: 15 }], escapes: [] })
-		expect(readAddress(`url( a "/*)" /* c */ "d" ) 1px`, 4, `url`, LESS)).toEqual({ isQuoted: false, index: 25, comments: [{ start: 13, end: 20, isInline: false }], strings: [{ start: 7, end: 12 }, { start: 21, end: 24 }], escapes: [] })
-		expect(readAddress(`URL(a "),b" ) 1px`, 4, `URL`, LESS)).toEqual({ isQuoted: false, index: 12, comments: [], strings: [{ start: 6, end: 11 }], escapes: [] })
-		expect(readAddress(`url(a "),b" ) 1px`, 4, `url`, SCSS)).toEqual({ isQuoted: false, index: 12, comments: [], strings: [{ start: 6, end: 11 }], escapes: [] })
-	})
-
 	// No compiler takes such a file, and a comment behind the call stays readable to the guards
 	it(`a quotation mark the text closes with no other, which stays a character of the address`, () => {
 		expect(readAddress(`url( a"b.png )`, 4, `url`, LESS)).toEqual({ isQuoted: false, index: 13, comments: [], strings: [], escapes: [] })

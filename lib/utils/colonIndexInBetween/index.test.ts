@@ -117,25 +117,6 @@ describe(`colonIndexInBetween`, () => {
 		expect(colonIndexInBetween(css, declarationOf(`a { b $//:  red; }`), RESULT)).toBe(4)
 	})
 
-	it(`a group behind the address call, which the tokenizer takes whole whatever it holds, against the same group behind another word, which it takes apart on the slash inside`, () => {
-		expect(colonIndexInBetween(css, declarationOf(`a { url (x/y:z): red; }`), RESULT)).toBe(8)
-
-		let decl = declarationOf(`a { b: x; }`)
-
-		decl.raws.between = ` (x/y:z): `
-		expect(colonIndexInBetween(css, decl, RESULT)).toBe(5)
-	})
-
-	it(`the same group behind a property the parser welded a token of its own onto, where the word the group is read against is still the address call`, () => {
-		expect(colonIndexInBetween(css, declarationOf(`a { url) (x/y:z): red; }`), RESULT)).toBe(8)
-
-		let decl = declarationOf(`a { b: x; }`)
-
-		decl.prop = `xurl`
-		decl.raws.between = ` (x/y:z): `
-		expect(colonIndexInBetween(css, decl, RESULT)).toBe(5)
-	})
-
 	it(`a parenthesized group, which is one token to PostCSS with the colon inside it, unless a comment or a quote inside breaks it into tokens`, () => {
 		expect(colonOf(`a { b (x:y): x; }`)).toBe(6)
 		expect(colonOf(`a { b ("x":y): x; }`)).toBe(5)

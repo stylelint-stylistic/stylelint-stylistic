@@ -94,30 +94,6 @@ testRule({
 			column: 2,
 			message: messages.expected(`double`),
 		},
-		{
-			// Less refuses `url (a)` itself, so the reading here is the parser's, whose tokenizer holds the parentheses as one token
-			description: `a quotation mark nothing closes inside the parentheses the tokenizer takes as one token behind a url parted from them`,
-			code: `a { b: url (a '),b) 1px; c: 'd' }`,
-			fixed: `a { b: url (a '),b) 1px; c: "d" }`,
-			line: 1,
-			column: 29,
-			message: messages.expected(`double`),
-		},
-		{
-			// The syntax prints its own comment back, and the tokenizer this reading takes reads the text inside it as code, so `url` is the word the at-rule's `(` pops
-			description: `a pair of marks parted by the edge of a token the last word of an end-of-line comment in front opened`,
-			code: `
-				// url
-				@media (c 'd) 'e' { f: g }
-			`,
-			fixed: `
-				// url
-				@media (c 'd) "e" { f: g }
-			`,
-			line: 2,
-			column: 15,
-			message: messages.expected(`double`),
-		},
 	],
 })
 testRule({

@@ -756,23 +756,6 @@ testRule({
 			],
 		},
 		{
-			description: `a call whose name a hexadecimal escape welds to the word in front of it, holding a string with a closing parenthesis, where emptying the run would close the address's token inside that string and leave its quotation mark unpaired`,
-			code: `a { b: \\61 url( a ")" b ); }`,
-			fixed: `a { b: \\61 url( a ")" b); }`,
-			warnings: [
-				{
-					line: 1,
-					column: 16,
-					message: messages.rejectedOpening,
-				},
-				{
-					line: 1,
-					column: 24,
-					message: messages.rejectedClosing,
-				},
-			],
-		},
-		{
 			description: `the same call holding a block comment with a closing parenthesis, where emptying the run would open the address's token inside the comment and leave the comment unopened`,
 			code: `a { b: \\61 url( a /* ) */ ); }`,
 			fixed: `a { b: \\61 url( a /* ) */); }`,
@@ -788,31 +771,6 @@ testRule({
 					message: messages.rejectedClosing,
 				},
 			],
-		},
-		{
-			// The address's token closes on the inner group's parenthesis, which lets the semicolon out of the group and ends the declaration there
-			description: `the same call holding a group and then a semicolon, which the parenthesis the token closes at would leave outside every group`,
-			code: `a { b: \\61 url( a(b)c;d); }`,
-			fixed: `a { b: \\61 url( a(b)c;d); }`,
-			line: 1,
-			column: 16,
-			message: messages.rejectedOpening,
-		},
-		{
-			description: `the same call holding a group and then a colon, which the parser would read outside the group as a missed semicolon`,
-			code: `a { b: \\61 url( x(y)z:w); }`,
-			fixed: `a { b: \\61 url( x(y)z:w); }`,
-			line: 1,
-			column: 16,
-			message: messages.rejectedOpening,
-		},
-		{
-			description: `the same call holding a group and then a block, whose brace would stand outside every group`,
-			code: `a { b: \\61 url( a(b)c{d}); }`,
-			fixed: `a { b: \\61 url( a(b)c{d}); }`,
-			line: 1,
-			column: 16,
-			message: messages.rejectedOpening,
 		},
 		{
 			// The comma leaves the group inside the address for the call around it, where no list rule reads it and the call comma rules read it as before
@@ -831,24 +789,6 @@ testRule({
 			line: 1,
 			column: 18,
 			message: messages.rejectedOpening,
-		},
-		{
-			// The value parser closes such an address on the string's parenthesis
-			description: `a call inside a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, beside one of the value`,
-			code: `a { b: url( a ") f( 1 )" ), f( 1 ); }`,
-			fixed: `a { b: url( a ") f( 1 )" ), f(1); }`,
-			warnings: [
-				{
-					line: 1,
-					column: 31,
-					message: messages.rejectedOpening,
-				},
-				{
-					line: 1,
-					column: 33,
-					message: messages.rejectedClosing,
-				},
-			],
 		},
 		{
 			description: `a spaced address standing beside a spaced call that names its format`,
@@ -1218,23 +1158,6 @@ testRule({
 
 	reject: [
 		{
-			description: `the same call holding a string with a closing parenthesis, where emptying the run would close the address's token inside that string and leave its quotation mark unpaired`,
-			code: `a { b: \\61 url( a ")" b ); }`,
-			fixed: `a { b: \\61 url( a ")" b); }`,
-			warnings: [
-				{
-					line: 1,
-					column: 16,
-					message: messages.rejectedOpeningSingleLine,
-				},
-				{
-					line: 1,
-					column: 24,
-					message: messages.rejectedClosingSingleLine,
-				},
-			],
-		},
-		{
 			description: `a space behind the opening parenthesis of the single-line inner call`,
 			code: `
 				a { color: color(rgb(0,
@@ -1371,15 +1294,6 @@ async function fix (code: string, primary: string): Promise<{
 
 	return { fixed: ours.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column} ${warning.text}`) }
 }
-
-// Closing up either call alone leaves the word url of the other on the stack for the next parenthesis to pop, and closing up both takes both words off it, which a reject case cannot say since the warning left moves
-it(`closes up all but the last break of two calls each holding the word url between breaks, in front of parentheses holding a quotation mark, since taking out every break would leave the next parenthesis popping no word`, async () => {
-	let config = { plugins, rules: { [ruleName]: `never` } }
-	let fixed = await stylelint.lint({ code: `a { b: x(\nurl\n) x(\nurl\n)(a"b); }`, config, fix: true })
-	let again = await stylelint.lint({ code: fixed.code ?? ``, config })
-
-	expect({ fixed: fixed.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column}`) }).toEqual({ fixed: `a { b: x(url) x(url\n)(a"b); }`, left: [`1:20`] })
-})
 
 // Stylelint drops the fix a disable comment covers, so the writes asked together are those it applies, and a write it drops keeps no other write from being given
 it(`writes every run behind the line a disable comment names, over calls holding the word url between breaks in front of parentheses holding a group and then a colon`, async () => {

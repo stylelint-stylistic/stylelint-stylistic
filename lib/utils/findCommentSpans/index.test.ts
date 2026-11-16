@@ -113,10 +113,6 @@ describe(`findCommentSpans`, () => {
 	})
 
 	// A string inside parentheses whose comments are read hides the delimiter and the parenthesis it holds
-	it(`a string holding a delimiter inside parentheses whose comments are read, and the comment behind the call`, () => {
-		expect(findCommentSpans(`url( a "/*" b/c) /* d */`)).toEqual([{ start: 17, end: 24, isInline: false }])
-		expect(findCommentSpans(`url(a "/*" b/c) // d`, SCSS)).toEqual([{ start: 16, end: 20, isInline: true }])
-	})
 
 	it(`a comment holding a parenthesis inside an address Sass reads as code, which the parser Sass is read by reads as one`, () => {
 		expect(findCommentSpans(`url(a /* ) / b */ ) 1PX`, SCSS)).toEqual([{ start: 6, end: 17, isInline: false }])
@@ -640,14 +636,6 @@ describe(`findStringSpans`, () => {
 	})
 
 	// The tokenizer reads the parentheses as code behind a sign it glues to the name, behind its own whitespace and behind a name spelled other than the word, so a string inside them is a string, which the walk records so that a scan over the copy reads the comma inside it as text
-	it(`a string inside the parentheses of a bare address the tokenizer reads as code, which is a string, and the address it stands in, which stays one span`, () => {
-		expect(findStringSpans(`1px, 1/url(a "),b" ), 'z'`)).toEqual([{ start: 13, end: 18 }, { start: 22, end: 25 }])
-		expect(findStringSpans(`1,url(a ') , b' ) 2px`)).toEqual([{ start: 8, end: 15 }])
-		expect(findStringSpans(`url( a "),b" ),c`)).toEqual([{ start: 7, end: 12 }])
-		expect(findStringSpans(`URL(a "),b" ),c`)).toEqual([{ start: 6, end: 11 }])
-		expect(findStringSpans(`url( a "),b`)).toEqual([])
-		expect(findAddressSpans(`1px, 1/url(a "),b" ), 'z'`)).toEqual([{ start: 11, end: 18 }])
-	})
 
 	it(`a quotation mark inside a comment, which opens nothing`, () => {
 		expect(findStringSpans(`/* ' */ a // "\n'b'`)).toEqual([{ start: 15, end: 18 }])

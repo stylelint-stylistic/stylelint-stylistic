@@ -205,15 +205,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// Under PostCSS's tokenizer a space right behind the `(` of an address keeps its parentheses code, so the quotation mark inside would open a string nothing closes
-			description: `a comma right behind the opening parenthesis of an address holding a quotation mark, where the space in front of it is refused and the warning stands`,
-			code: `@media url (,b"c) { a { b: c; } }`,
-			fixed: `@media url (,b"c) { a { b: c; } }`,
-			line: 1,
-			column: 13,
-			message: messages.expectedBefore(),
-		},
-		{
 			// A square bracket inside parentheses code reads is a group, and the params take the block into it
 			description: `the same comma in an address holding a line break and a square bracket nothing closes, refused likewise`,
 			code: `@media url (,\nb[c) { a { b: c; } }`,

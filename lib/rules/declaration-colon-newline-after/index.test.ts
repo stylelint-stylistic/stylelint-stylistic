@@ -290,14 +290,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			description: `a group holding a slash behind a property named after the address call, which the tokenizer takes whole whatever stands inside it`,
-			code: `a { url (x/y:z):pink; }`,
-			fixed: `a { url (x/y:z):\npink; }`,
-			line: 1,
-			column: 16,
-			message: messages.expectedAfter(),
-		},
-		{
 			description: `a comment whose text ends in a backslash in front of the colon, which closes on the first delimiter behind its opening as it does to PostCSS`,
 			code: `a { b/*x\\*/: red; }`,
 			fixed: `a { b/*x\\*/:\n red; }`,

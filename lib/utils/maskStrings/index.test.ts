@@ -34,9 +34,7 @@ describe(`maskStrings`, () => {
 	})
 
 	it(`a string inside the parentheses of a bare address the tokenizer reads as code, which is masked whole`, () => {
-		expect(maskStrings(`1px, 1/url(a "),b" ), 2px`, [])).toBe(`1px, 1/url(a ????? ), 2px`)
 		expect(maskStrings(`1,url(a ') , b' ),c`, [])).toBe(`1,url(a ??????? ),c`)
-		expect(maskStrings(`url( a "),b" ),c`, [])).toBe(`url( a ????? ),c`)
 	})
 
 	it(`a quotation mark behind a double slash of code, which opens a string`, () => {

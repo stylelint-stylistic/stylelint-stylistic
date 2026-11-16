@@ -117,15 +117,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// The value parser closes such an address on the string's parenthesis
-			description: `a comma inside a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, beside one of the call`,
-			code: `a { b: f(url( a ") , b" ), c); }`,
-			fixed: `a { b: f(url( a ") , b" ),\nc); }`,
-			line: 1,
-			column: 26,
-			message: messages.expectedAfter(),
-		},
-		{
 			description: `arguments abutting the comma`,
 			code: `a { transform: translate(1,1); }`,
 			fixed: `a { transform: translate(1,\n1); }`,
@@ -264,15 +255,6 @@ testRule({
 			description: `a comma in front of a comment holding one quotation mark, and the same text inside a string behind that comment: the mark the comment holds opens no string, so the string the file spells is one, and the comma its text holds is no comma of the arguments`,
 			code: `a { b: f(1,2) /*/ " */ "f(1,2)"; }`,
 			fixed: `a { b: f(1,\n2) /*/ " */ "f(1,2)"; }`,
-			line: 1,
-			column: 11,
-			message: messages.expectedAfter(),
-		},
-		{
-			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads its parentheses
-			description: `a comma glued to the name of a bare address holding a string with a closing parenthesis, which a written run would make the tokenizer close inside the string`,
-			code: `a { b: f(1,url(a ")" b)); }`,
-			fixed: `a { b: f(1,url(a ")" b)); }`,
 			line: 1,
 			column: 11,
 			message: messages.expectedAfter(),

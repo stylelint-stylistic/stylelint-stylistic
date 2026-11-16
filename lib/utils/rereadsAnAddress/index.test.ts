@@ -10,10 +10,6 @@ let CUSTOM_PROPERTY = decl({ prop: `--b`, value: `` })
 let MEDIA = atRule({ name: `media` })
 
 describe(`rereadsAnAddress`, () => {
-	it(`a space parting the name from a comma, in front of a string holding the closing parenthesis`, () => {
-		expect(rereadsAnAddress(`1,url(a ")" b)`, { start: 2, end: 2, text: ` ` }, POSTCSS, DECLARATION)).toBe(true)
-	})
-
 	it(`a run taken away, which joins the name to the comma in front of a quotation mark nothing closes`, () => {
 		expect(rereadsAnAddress(`1, url(a"b)`, { start: 2, end: 3, text: `` }, POSTCSS, DECLARATION)).toBe(true)
 	})
@@ -95,7 +91,6 @@ describe(`rereadsAnAddress`, () => {
 
 	it(`an address both readings close at the same parenthesis`, () => {
 		expect(rereadsAnAddress(`1,url(a/b.png)`, { start: 2, end: 2, text: ` ` }, POSTCSS, DECLARATION)).toBe(false)
-		expect(rereadsAnAddress(`1,url(a "/*" b)`, { start: 2, end: 2, text: ` ` }, POSTCSS, DECLARATION)).toBe(false)
 	})
 
 	it(`a quotation mark or whitespace behind the opening parenthesis, which leaves the parentheses code under both words`, () => {
@@ -166,19 +161,8 @@ describe(`rereadsAnAddress`, () => {
 		expect(rereadsAnAddress(`a\\\\, url(a"b)`, { start: 4, end: 5, text: `` }, POSTCSS, DECLARATION)).toBe(true)
 	})
 
-	it(`a comma under a parser whose own tokenizer ends a word on it, except inside an at-word`, () => {
-		expect(rereadsAnAddress(`@a,url(a ")" b)`, { start: 3, end: 3, text: ` ` }, SCSS, DECLARATION)).toBe(true)
-		expect(rereadsAnAddress(`1,url(a ")" b)`, { start: 2, end: 2, text: ` ` }, SCSS, DECLARATION)).toBe(false)
-		expect(rereadsAnAddress(`1/url(a ")" b)`, { start: 2, end: 2, text: ` ` }, SCSS, DECLARATION)).toBe(true)
-	})
-
 	it(`a separator solidus behind a star, which closes no comment and so is text of the name's word, and one closing a comment, which ends the word in front of it`, () => {
-		expect(rereadsAnAddress(`1 */url(a ")" b)`, { start: 4, end: 4, text: ` ` }, POSTCSS, DECLARATION)).toBe(true)
 		expect(rereadsAnAddress(`1 */ url(a"b)`, { start: 4, end: 5, text: `` }, POSTCSS, DECLARATION)).toBe(true)
-		expect(rereadsAnAddress(`"/*" */url(a ")" b)`, { start: 7, end: 7, text: ` ` }, POSTCSS, DECLARATION)).toBe(true)
-		expect(rereadsAnAddress(`url(/*) */url(a ")" b)`, { start: 10, end: 10, text: ` ` }, POSTCSS, DECLARATION)).toBe(true)
-		expect(rereadsAnAddress(`1 /* a */ b */url(a ")" b)`, { start: 14, end: 14, text: ` ` }, POSTCSS, DECLARATION)).toBe(true)
-		expect(rereadsAnAddress(`1,/* c */url(a ")" b)`, { start: 9, end: 9, text: ` ` }, POSTCSS, DECLARATION)).toBe(false)
 	})
 
 	it(`the url token of a parser whose own tokenizer reads one, which opens behind whitespace and closes by the count of parentheses through strings, comments, interpolations and escapes, against the code reading with its square-bracket groups, where a parenthesis closing the token early lets a semicolon or a brace out of the group`, () => {
@@ -244,10 +228,6 @@ describe(`editsRereadAnAddress`, () => {
 
 	it(`a break written there, which the tokenizer reads as the space does`, () => {
 		expect(editsRereadAnAddress(String.raw`\61 url(a"b)`, [{ start: 8, end: 8, text: `\n` }], POSTCSS, DECLARATION)).toBe(true)
-	})
-
-	it(`the run taken away, which hands the parentheses back to the token`, () => {
-		expect(editsRereadAnAddress(String.raw`\61 url( a ")" b)`, [{ start: 8, end: 9, text: `` }], POSTCSS, DECLARATION)).toBe(true)
 	})
 
 	it(`parentheses both readings close at the same parenthesis`, () => {

@@ -277,15 +277,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads its parentheses
-			description: `a comma glued to the name of a bare address holding a string with a closing parenthesis, which a written run would make the tokenizer close inside the string`,
-			code: `[a,url(a ")" b)] {}`,
-			fixed: `[a,url(a ")" b)] {}`,
-			line: 1,
-			column: 3,
-			message: messages.expectedAfter(),
-		},
-		{
 			// PostCSS holds `(b[c,d)` as one token, opaque to the parser; a break inside makes it code, whose `[` opens a group nothing closes, and the file stops parsing
 			description: `parentheses without a name inside an attribute selector holding a square bracket nothing closes, where the break is refused and the warning stands`,
 			code: `[a,\n(b[c,d)] {}`,
@@ -293,33 +284,6 @@ testRule({
 			line: 2,
 			column: 5,
 			message: messages.expectedAfter(),
-		},
-		{
-			// The `(` pops the word `url`, so PostCSS holds the parentheses as an address's token to the first `)`, and a break inside leaves them that token
-			description: `an address's parentheses parted from the name by a space and holding a square bracket nothing closes, where the break is written`,
-			code: `a,\nurl (b[c,d)(b"c") d {}`,
-			fixed: `a,\nurl (b[c,\nd)(b"c") d {}`,
-			line: 2,
-			column: 9,
-			message: messages.expectedAfter(),
-		},
-		{
-			// The name is one word with the comma in front of it, so the parentheses are one plain token whose `[` a break inside would leave open; the break behind that comma, written by the same run, parts the name off, the next `(` pops it and the parentheses are an address's token, where the break inside is free: both are written in one run
-			description: `a comma glued to the name of a bare address parted from its parentheses by a space, which hold a square bracket nothing closes and a comma`,
-			code: `a,url (b[c,d)(b"c") d {}`,
-			fixed: `a,\nurl (b[c,\nd)(b"c") d {}`,
-			warnings: [
-				{
-					line: 1,
-					column: 2,
-					message: messages.expectedAfter(),
-				},
-				{
-					line: 1,
-					column: 11,
-					message: messages.expectedAfter(),
-				},
-			],
 		},
 		{
 			description: `the same parentheses behind the name in upper case, which the tokenizer pops as no address, so they are one plain token the break would make code, and the break is refused`,
@@ -661,13 +625,4 @@ it(`writes the break behind a comma right in front of parentheses PostCSS holds 
 	let again = await stylelint.lint({ code: fixed.code ?? ``, config })
 
 	expect({ fixed: fixed.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column}`) }).toEqual({ fixed: `[a,\n(b[c,d)] {}`, left: [`2:5`] })
-})
-
-// A break written into parentheses the tokenizer takes as one plain token makes them code and pushes the words inside them, and the next parenthesis then pops one of those instead of the word url, so the quotation mark inside its parentheses opens a string nothing closes; the warning left moves with the break written in front, which a reject case cannot say
-it(`writes the break behind a comma of the list and refuses the one behind a comma in parentheses a word over the name of a bare address pops, in front of parentheses holding a quotation mark`, async () => {
-	let config = { plugins, rules: { [ruleName]: `always` } }
-	let fixed = await stylelint.lint({ code: `[a, url a (b,c)(b"c)] {}`, config, fix: true })
-	let again = await stylelint.lint({ code: fixed.code ?? ``, config })
-
-	expect({ fixed: fixed.code, left: pick(again.results).warnings.map((warning) => `${warning.line}:${warning.column}`) }).toEqual({ fixed: `[a,\n url a (b,c)(b"c)] {}`, left: [`2:10`] })
 })

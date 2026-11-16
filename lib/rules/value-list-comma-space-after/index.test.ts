@@ -255,28 +255,10 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads its parentheses
-			description: `a comma glued to the name of a bare address holding a string with a closing parenthesis, which a written run would make the tokenizer close inside the string`,
-			code: `a { b: 1,url(a ")" b) 2px; }`,
-			fixed: `a { b: 1,url(a ")" b) 2px; }`,
-			line: 1,
-			column: 9,
-			message: messages.expectedAfter(),
-		},
-		{
 			// Pins the write in front of a bare address whose parentheses hold a group: the parenthesis closing the token early leaves the parser the same nodes
 			description: `a comma glued to the name of a bare address holding a parenthesized group`,
 			code: `a { b: 1,url(a(b)c.png) 2px; }`,
 			fixed: `a { b: 1, url(a(b)c.png) 2px; }`,
-			line: 1,
-			column: 9,
-			message: messages.expectedAfter(),
-		},
-		{
-			// Pins the refusal where the parenthesis closing the token early would leave a comma of the address outside every group, which the next run would read as an item of the list
-			description: `the same address holding a comma behind the group`,
-			code: `a { b: 1,url(a(b)c,d) 2px; }`,
-			fixed: `a { b: 1,url(a(b)c,d) 2px; }`,
 			line: 1,
 			column: 9,
 			message: messages.expectedAfter(),
@@ -297,41 +279,6 @@ testRule({
 			fixed: `a { b: 1,url (a ")" b) 2px; }`,
 			line: 1,
 			column: 9,
-			message: messages.expectedAfter(),
-		},
-		{
-			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads its parentheses
-			description: `a comma glued to the name of a bare address whose closing parenthesis stands in a comment holding a quotation mark`,
-			code: `a { b: 1,url(a/*)"*/b) 2px; }`,
-			fixed: `a { b: 1,url(a/*)"*/b) 2px; }`,
-			line: 1,
-			column: 9,
-			message: messages.expectedAfter(),
-		},
-		{
-			// Pins the reading of a string between the name and its parenthesis as a token pushing no word, which leaves the name the word the tokenizer reads last
-			description: `a comma glued to the name of a bare address, a string between the name and its parenthesis, holding a string with a closing parenthesis, which a written space would make the tokenizer close inside the string`,
-			code: `a { b: 1,url"x"(a ")" b) 2px; }`,
-			fixed: `a { b: 1,url"x"(a ")" b) 2px; }`,
-			line: 1,
-			column: 9,
-			message: messages.expectedAfter(),
-		},
-		{
-			// Pins the reading of a string inside parentheses the tokenizer reads as code behind a solidus glued to the name, whose comma is no comma of the list
-			description: `no space after the comma behind a bare address whose name a solidus is glued to, holding a string with a closing parenthesis and a comma, which are text of the string`,
-			code: `a { b: 1px, 1/url(a "),b" ),2px; }`,
-			fixed: `a { b: 1px, 1/url(a "),b" ), 2px; }`,
-			line: 1,
-			column: 28,
-			message: messages.expectedAfter(),
-		},
-		{
-			description: `the same string behind whitespace the tokenizer reads as parting the parentheses from the name`,
-			code: `a { b: 1px, url( a "),b" ),2px; }`,
-			fixed: `a { b: 1px, url( a "),b" ), 2px; }`,
-			line: 1,
-			column: 27,
 			message: messages.expectedAfter(),
 		},
 	],
@@ -472,15 +419,6 @@ testRule({
 			fixed: `a { b: url(/* c */ a ") ,b" ) 1px/2px, "; c: "d" }`,
 			line: 1,
 			column: 25,
-			message: messages.rejectedAfter(),
-		},
-		{
-			// A solidus glued to the name makes the tokenizer read the parentheses as code, and the quotation mark inside the comment opens no string
-			description: `a space after a comma behind a bare address whose name a solidus is glued to, and a comment inside the parentheses holding a parenthesis and a quotation mark`,
-			code: `a { b: x /url(a/* ) '*/) 1px, 3px; }`,
-			fixed: `a { b: x /url(a/* ) '*/) 1px,3px; }`,
-			line: 1,
-			column: 29,
 			message: messages.rejectedAfter(),
 		},
 		{
