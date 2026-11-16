@@ -179,8 +179,8 @@ importers:
         specifier: ^5.0.2
         version: 5.0.2(@csstools/css-parser-algorithms@4.0.2(@csstools/css-tokenizer@4.0.2))(@csstools/css-tokenizer@4.0.2)
       postcss:
-        specifier: ^8.5.32
-        version: 8.5.32
+        specifier: ^8.5.33
+        version: 8.5.33
       postcss-selector-parser:
         specifier: ^7.1.7
         version: 7.1.7(patch_hash=0596b62c6d02424c6f3d1105173a6c43f5677a5882f2fc0f6e46e88b0beeb085)
@@ -217,16 +217,16 @@ importers:
         version: 1.93.0
       postcss-html:
         specifier: ^2
-        version: 2.0.0(postcss@8.5.32)
+        version: 2.0.0(postcss@8.5.33)
       postcss-less:
         specifier: ^7
-        version: 7.0.1(postcss@8.5.32)
+        version: 7.0.1(postcss@8.5.33)
       postcss-scss:
         specifier: ^4
-        version: 4.0.9(postcss@8.5.32)
+        version: 4.0.9(postcss@8.5.33)
       postcss-styled-syntax:
         specifier: ~0.7
-        version: 0.7.4(postcss@8.5.32)
+        version: 0.7.4(postcss@8.5.33)
       stylelint:
         specifier: ^18
         version: 18.0.0
@@ -235,7 +235,7 @@ importers:
         version: 0.22.0-ts7.1.0-beta
       vitepress:
         specifier: next
-        version: 2.0.0-alpha.21(@types/node@26.6.6)(postcss@8.5.32)(typescript@6.0.3)
+        version: 2.0.0-alpha.21(@types/node@26.6.6)(postcss@8.5.33)(typescript@6.0.3)
       vitest:
         specifier: ^5
         version: 5.1.0(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(vite@8.3.6(@types/node@26.6.6))
@@ -1636,8 +1636,8 @@ packages:
   postcss-value-parser@4.2.0:
     resolution: {integrity: sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ==}
 
-  postcss@8.5.32:
-    resolution: {integrity: sha512-LJlKCCAUFKOuZxipUdYw1NzIITEsPcgyOG9LkvRJvuKj/bRzbuRY0ARXvL0pWGpsZvn8jku+LMep2eU0seHp8g==}
+  postcss@8.5.33:
+    resolution: {integrity: sha512-RVHEU9/Pp1Fnjr/MpAJsZoADukCKhfIi15OunEYiGktIkYLkPVvC1sioWolGDS7XByMTx9m/IGbro0Js13zhnQ==}
     engines: {node: ^10 || ^12 || >=14}
 
   prelude-ls@1.2.1:
@@ -2405,7 +2405,7 @@ snapshots:
       '@vue/shared': 3.5.45
       estree-walker: 2.0.2
       magic-string: 0.30.21
-      postcss: 8.5.32
+      postcss: 8.5.33
       source-map-js: 1.2.2
 
   '@vue/compiler-ssr@3.5.45':
@@ -2962,38 +2962,38 @@ snapshots:
 
   picomatch@4.0.7: {}
 
-  postcss-html@2.0.0(postcss@8.5.32):
+  postcss-html@2.0.0(postcss@8.5.33):
     dependencies:
       htmlparser2: 9.1.0
       js-tokens: 9.0.1
-      postcss: 8.5.32
-      postcss-safe-parser: 7.1.0(postcss@8.5.32)
+      postcss: 8.5.33
+      postcss-safe-parser: 7.1.0(postcss@8.5.33)
 
-  postcss-less@7.0.1(postcss@8.5.32):
+  postcss-less@7.0.1(postcss@8.5.33):
     dependencies:
-      postcss: 8.5.32
+      postcss: 8.5.33
 
-  postcss-safe-parser@7.1.0(postcss@8.5.32):
+  postcss-safe-parser@7.1.0(postcss@8.5.33):
     dependencies:
-      postcss: 8.5.32
+      postcss: 8.5.33
 
-  postcss-scss@4.0.9(postcss@8.5.32):
+  postcss-scss@4.0.9(postcss@8.5.33):
     dependencies:
-      postcss: 8.5.32
+      postcss: 8.5.33
 
   postcss-selector-parser@7.1.7(patch_hash=0596b62c6d02424c6f3d1105173a6c43f5677a5882f2fc0f6e46e88b0beeb085):
     dependencies:
       cssesc: 3.0.0
       util-deprecate: 1.0.2
 
-  postcss-styled-syntax@0.7.4(postcss@8.5.32):
+  postcss-styled-syntax@0.7.4(postcss@8.5.33):
     dependencies:
-      postcss: 8.5.32
+      postcss: 8.5.33
       typescript: 6.0.3
 
   postcss-value-parser@4.2.0: {}
 
-  postcss@8.5.32:
+  postcss@8.5.33:
     dependencies:
       nanoid: 3.3.20
       picocolors: 1.1.1
@@ -3089,8 +3089,8 @@ snapshots:
       ignore: 7.0.14
       import-meta-resolve: 4.2.0
       picomatch: 4.0.7
-      postcss: 8.5.32
-      postcss-safe-parser: 7.1.0(postcss@8.5.32)
+      postcss: 8.5.33
+      postcss-safe-parser: 7.1.0(postcss@8.5.33)
       postcss-selector-parser: 7.1.7(patch_hash=0596b62c6d02424c6f3d1105173a6c43f5677a5882f2fc0f6e46e88b0beeb085)
       postcss-value-parser: 4.2.0
       tinyglobby: 0.2.17
@@ -3178,14 +3178,14 @@ snapshots:
     dependencies:
       lightningcss: 1.33.0
       picomatch: 4.0.7
-      postcss: 8.5.32
+      postcss: 8.5.33
       rolldown: 1.2.16
       tinyglobby: 0.2.17
     optionalDependencies:
       '@types/node': 26.6.6
       fsevents: 2.3.3
 
-  vitepress@2.0.0-alpha.21(@types/node@26.6.6)(postcss@8.5.32)(typescript@6.0.3):
+  vitepress@2.0.0-alpha.21(@types/node@26.6.6)(postcss@8.5.33)(typescript@6.0.3):
     dependencies:
       '@docsearch/css': 4.7.1
       '@docsearch/js': 4.7.1
@@ -3205,7 +3205,7 @@ snapshots:
       vite: 8.3.6(@types/node@26.6.6)
       vue: 3.5.45(typescript@6.0.3)
     optionalDependencies:
-      postcss: 8.5.32
+      postcss: 8.5.33
     transitivePeerDependencies:
       - '@types/node'
       - '@vitejs/devtools'

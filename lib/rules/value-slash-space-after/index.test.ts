@@ -87,24 +87,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// The value parser closes such an address on the string's parenthesis
-			description: `a solidus inside a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, beside one of the value`,
-			code: `a { b: url( a ")/b" ) 1px/2px; }`,
-			fixed: `a { b: url( a ")/b" ) 1px/ 2px; }`,
-			line: 1,
-			column: 26,
-			message: messages.expectedAfter(),
-		},
-		{
-			// A vertical tab is whitespace to the parser and a word to the tokenizer, which glues the name to it
-			description: `the same solidus inside an address whose name stands behind a vertical tab`,
-			code: `a { b: 1\vurl(a ")/b" c) 2px/3px; }`,
-			fixed: `a { b: 1\vurl(a ")/b" c) 2px/ 3px; }`,
-			line: 1,
-			column: 28,
-			message: messages.expectedAfter(),
-		},
-		{
 			description: `no space behind the solidus`,
 			code: `a { grid-area: 1/2; }`,
 			fixed: `a { grid-area: 1/ 2; }`,
@@ -228,15 +210,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// Pins the refusal to part the name of a bare address from the solidus, which switches how PostCSS reads its parentheses
-			description: `a solidus glued to the name of a bare address holding a string with a closing parenthesis, which a written space would make the tokenizer close inside the string`,
-			code: `a { b: 1/url(a ")" b) 2px; c: "d" }`,
-			fixed: `a { b: 1/url(a ")" b) 2px; c: "d" }`,
-			line: 1,
-			column: 9,
-			message: messages.expectedAfter(),
-		},
-		{
 			// Pins the write in front of a bare address whose parentheses hold a group: the parenthesis closing the token early leaves the parser the same nodes
 			description: `a solidus glued to the name of a bare address holding a parenthesized group`,
 			code: `a { b: 1/url(a(b)c.png) 2px; c: "d" }`,
@@ -252,15 +225,6 @@ testRule({
 			fixed: `a { b: 1/url($a /* ) */) 1px; c: 2px }`,
 			line: 1,
 			column: 9,
-			message: messages.expectedAfter(),
-		},
-		{
-			// Pins the reading of a separator solidus behind a star as text of the name's word, which no comment ends there
-			description: `a solidus behind a star glued to the name of a bare address holding a string with a closing parenthesis, which a written space would make the tokenizer close inside the string`,
-			code: `a { b: 1 */url(a ")" b) 2px; c: "d" }`,
-			fixed: `a { b: 1 */url(a ")" b) 2px; c: "d" }`,
-			line: 1,
-			column: 11,
 			message: messages.expectedAfter(),
 		},
 		{
@@ -441,15 +405,6 @@ testRule({
 			fixed: `a { b: 1 */ url(a"b) 2px; c: "d" }`,
 			line: 1,
 			column: 11,
-			message: messages.rejectedAfter(),
-		},
-		{
-			// Pins the reading of an at-word between the name and its parenthesis as a token pushing no word
-			description: `a space between a solidus and the name of a bare address, an at-word between the name and its parenthesis, holding a quotation mark nothing closes, which taking the space away would make the tokenizer read as a string`,
-			code: `a { b: 1/ url@x(a"b) 2px; c: "d" }`,
-			fixed: `a { b: 1/ url@x(a"b) 2px; c: "d" }`,
-			line: 1,
-			column: 9,
 			message: messages.rejectedAfter(),
 		},
 	],

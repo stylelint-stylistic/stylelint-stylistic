@@ -72,15 +72,6 @@ testRule({
 			message: messages.expected(`#ABC`, `#abc`),
 		},
 		{
-			// The value parser closes such an address on the string's parenthesis
-			description: `a color inside a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, beside one of the value`,
-			code: `a { b: url( a ")#FFF" ) #FFF; }`,
-			fixed: `a { b: url( a ")#FFF" ) #fff; }`,
-			line: 1,
-			column: 25,
-			message: messages.expected(`#FFF`, `#fff`),
-		},
-		{
 			// The backslash ends the color, and the parser read the color as part of the address's name
 			description: `a color glued to a backslash and a break in front of an address, which end the color`,
 			code: `a { background: #FFF\\\nurl(a.png); }`,

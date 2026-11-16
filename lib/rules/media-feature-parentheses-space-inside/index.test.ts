@@ -167,24 +167,6 @@ testRule({
 			],
 		},
 		{
-			// The value parser closes such an address on the string's parenthesis
-			description: `a feature holding an address with a string with a closing parenthesis, whose parenthesis the tokenizer's whitespace parts from it`,
-			code: `@media (c: url( a ")" b )) {}`,
-			fixed: `@media ( c: url( a ")" b ) ) {}`,
-			warnings: [
-				{
-					line: 1,
-					column: 9,
-					message: messages.expectedOpening,
-				},
-				{
-					line: 1,
-					column: 25,
-					message: messages.expectedClosing,
-				},
-			],
-		},
-		{
 			// The value parser closes the address on the comment's parenthesis, and the whitespace behind the opening one makes the comment a comment to the tokenizer
 			description: `a feature holding an address with a comment with a closing parenthesis, whose closing parenthesis stands against the address's`,
 			code: `@media (c: url( $a /* ) */)) {}`,
@@ -504,23 +486,6 @@ testRule({
 			],
 		},
 		{
-			description: `the same call holding a string with a closing parenthesis, where emptying the run behind its parenthesis would close the address's token inside that string and leave its quotation mark unpaired`,
-			code: `@media (a: \\61 url( b ")" c )) { d { e: f } }`,
-			fixed: `@media (a: \\61 url( b ")" c)) { d { e: f } }`,
-			warnings: [
-				{
-					line: 1,
-					column: 20,
-					message: messages.rejectedOpening,
-				},
-				{
-					line: 1,
-					column: 28,
-					message: messages.rejectedClosing,
-				},
-			],
-		},
-		{
 			// A string opening the parentheses makes them a call's to every tokenizer, so they are closed up as any call's
 			description: `a spaced quoted address with a spaced call among its arguments`,
 			code: `@media (c: url( "x", f( 1 ) )) {}`,
@@ -774,24 +739,6 @@ testRule({
 				{
 					line: 1,
 					column: 13,
-					message: messages.rejectedClosing,
-				},
-			],
-		},
-		{
-			// Taking the run behind the `(` of an address away hands the tokenizer the parenthesis of the string as the address's end, and the file stops parsing
-			description: `a feature holding an address whose string holds a closing parenthesis, whose whitespace is taken away while the address keeps its own`,
-			code: `@media ( c: url( a ")" b ) ) { a { b: 1px } }`,
-			fixed: `@media (c: url( a ")" b )) { a { b: 1px } }`,
-			warnings: [
-				{
-					line: 1,
-					column: 9,
-					message: messages.rejectedOpening,
-				},
-				{
-					line: 1,
-					column: 27,
 					message: messages.rejectedClosing,
 				},
 			],

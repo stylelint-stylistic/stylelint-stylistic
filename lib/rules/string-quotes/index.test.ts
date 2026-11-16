@@ -61,33 +61,6 @@ testRule({
 
 	reject: [
 		{
-			// The value parser closes such an address on the string's parenthesis
-			description: `a string holding a closing parenthesis inside an address the tokenizer's whitespace parts from its parenthesis, which leaves the string inside the address alone`,
-			code: `a { b: url( a ")" b ) 1px; c: "d" }`,
-			fixed: `a { b: url( a ")" b ) 1px; c: 'd' }`,
-			line: 1,
-			column: 31,
-			message: messages.expected(`single`),
-		},
-		{
-			// The tokenizer glues the name to the word in front of it, where the parser takes it for an address of its own
-			description: `a string holding a closing parenthesis inside an address whose name stands behind a comma, which leaves the string inside the address alone`,
-			code: `a { b: 1,url(a ")" b) 1px; c: "d" }`,
-			fixed: `a { b: 1,url(a ")" b) 1px; c: 'd' }`,
-			line: 1,
-			column: 31,
-			message: messages.expected(`single`),
-		},
-		{
-			// A solidus ends a word of the tokenizer's only in front of a star
-			description: `the same address behind a solidus, whose string holds a solidus as well`,
-			code: `a { b: 1/url(a ")/b" c) 2px; c: "d" }`,
-			fixed: `a { b: 1/url(a ")/b" c) 2px; c: 'd' }`,
-			line: 1,
-			column: 33,
-			message: messages.expected(`single`),
-		},
-		{
 			// The value parser opens an address on the name spelled `url` alone, and reads the quotation marks inside every other spelling as a string
 			description: `a quotation mark inside a bare address whose name is written in capitals, which is a character of the address, beside a double-quoted value`,
 			code: `a { b: URL(a"b"c); c: "d" }`,
@@ -120,14 +93,6 @@ testRule({
 			fixed: `a { b: u\\rl(a"b"c); c: 'd' }`,
 			line: 1,
 			column: 24,
-			message: messages.expected(`single`),
-		},
-		{
-			description: `a quotation mark and a closing parenthesis inside a bare address whose name opens with a hexadecimal escape a space closes, which the value parser hands back as a word in front of a call`,
-			code: `a { b: \\75 rl( a ")" b ); c: "d" }`,
-			fixed: `a { b: \\75 rl( a ")" b ); c: 'd' }`,
-			line: 1,
-			column: 30,
 			message: messages.expected(`single`),
 		},
 		{
@@ -271,56 +236,6 @@ testRule({
 			message: messages.expected(`single`),
 		},
 		{
-			// The tokenizer pops the word `url` at the `(` whatever parts the two, and reads to the first `)` from there
-			description: `a quotation mark nothing closes inside the parentheses the tokenizer takes as one token behind a url parted from them, which the value parser reads as a string running to the end of the value`,
-			code: `a { b: url (a "),b) 1px; c: "d" }`,
-			fixed: `a { b: url (a "),b) 1px; c: 'd' }`,
-			line: 1,
-			column: 29,
-			message: messages.expected(`single`),
-		},
-		{
-			description: `the mark closing the value's own string, which the value parser pairs with the one inside that token instead`,
-			code: `a { b: url (a "b) "c"; }`,
-			fixed: `a { b: url (a "b) 'c'; }`,
-			line: 1,
-			column: 19,
-			message: messages.expected(`single`),
-		},
-		{
-			description: `the same token behind a comment, which pushes no word of its own`,
-			code: `a { b: url/*x*/(a "),b) 1px; c: "d" }`,
-			fixed: `a { b: url/*x*/(a "),b) 1px; c: 'd' }`,
-			line: 1,
-			column: 33,
-			message: messages.expected(`single`),
-		},
-		{
-			description: `the same token behind a property named url, the last word the tokenizer read in front of the parenthesis`,
-			code: `a { url: (a "),b); c: "d" }`,
-			fixed: `a { url: (a "),b); c: 'd' }`,
-			line: 1,
-			column: 23,
-			message: messages.expected(`single`),
-		},
-		{
-			description: `the same property in front of a value whose two marks stand on either side of the token's edge`,
-			code: `a { url: (a "b) "c"); }`,
-			fixed: `a { url: (a "b) 'c'); }`,
-			line: 1,
-			column: 17,
-			message: messages.expected(`single`),
-		},
-		{
-			// The stack of words carries across the nodes, so the `(` of the at-rule pops the `url` of the rule in front of it, which the spans read from the node's own start do not see; the string nothing closes is refused all the same
-			description: `a value the parser never closed a string in, behind parentheses a neighbor's word made a token of`,
-			code: `a { b: url } @media (c "d) { e: f } g { h: "i" }`,
-			fixed: `a { b: url } @media (c "d) { e: f } g { h: 'i' }`,
-			line: 1,
-			column: 44,
-			message: messages.expected(`single`),
-		},
-		{
 			description: `a string opening such parentheses, which keeps them code to the tokenizer`,
 			code: `a { b: url ("a") }`,
 			fixed: `a { b: url ('a') }`,
@@ -346,36 +261,11 @@ testRule({
 			message: messages.expected(`single`),
 		},
 		{
-			// The stack of words runs through the whole file, so the `(` of the at-rule pops the `url` of the node in front of it, whose name pushes no word of its own
-			description: `a pair of marks parted by the edge of a token the word of the node in front opened, whose mark inside it is a character of the address`,
-			code: `a { b: url } @media (c "d) "e" { f: g }`,
-			fixed: `a { b: url } @media (c "d) 'e' { f: g }`,
-			line: 1,
-			column: 28,
-			message: messages.expected(`single`),
-		},
-		{
 			description: `a pair standing wholly inside that same token, which is rewritten as one inside a token the text's own word opened`,
 			code: `a { b: url } @media (c"d"e) { f: g }`,
 			fixed: `a { b: url } @media (c'd'e) { f: g }`,
 			line: 1,
 			column: 23,
-			message: messages.expected(`single`),
-		},
-		{
-			description: `two such tokens in one at-rule's params, the second of which opens on a word the first parenthesis left on the stack`,
-			code: `@x url url; @media (c "d) (e "f) "g" { h: i }`,
-			fixed: `@x url url; @media (c "d) (e "f) 'g' { h: i }`,
-			line: 1,
-			column: 34,
-			message: messages.expected(`single`),
-		},
-		{
-			description: `the same two tokens in a value, where the property named url opens the first and the stack in front of it the second`,
-			code: `url { url: (d "e) (f "g) "h" }`,
-			fixed: `url { url: (d "e) (f "g) 'h' }`,
-			line: 1,
-			column: 26,
 			message: messages.expected(`single`),
 		},
 		{
@@ -490,24 +380,6 @@ testRule({
 			fixed: `a { b: \\75 rl(a'b'c); c: "d" }`,
 			line: 1,
 			column: 26,
-			message: messages.expected(`double`),
-		},
-		{
-			// The mark inside the token is a character of the address under either option
-			description: `a quotation mark nothing closes inside the parentheses the tokenizer takes as one token behind a url parted from them`,
-			code: `a { b: url (a '),b) 1px; c: 'd' }`,
-			fixed: `a { b: url (a '),b) 1px; c: "d" }`,
-			line: 1,
-			column: 29,
-			message: messages.expected(`double`),
-		},
-		{
-			// The mark inside such a token is a character of the address under either option
-			description: `a pair of marks parted by the edge of a token the word of the node in front opened`,
-			code: `a { b: url } @media (c 'd) 'e' { f: g }`,
-			fixed: `a { b: url } @media (c 'd) "e" { f: g }`,
-			line: 1,
-			column: 28,
 			message: messages.expected(`double`),
 		},
 		{

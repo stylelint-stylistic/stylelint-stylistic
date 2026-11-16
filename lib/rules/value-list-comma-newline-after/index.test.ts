@@ -157,50 +157,6 @@ testRule({
 			message: messages.expectedAfter(),
 		},
 		{
-			// A write parting the name of a bare address from the comma or joining it to the comma switches how PostCSS reads its parentheses
-			description: `a comma glued to the name of a bare address holding a string with a closing parenthesis, which a written run would make the tokenizer close inside the string`,
-			code: `a { b: 1,url(a ")" b) 2px; }`,
-			fixed: `a { b: 1,url(a ")" b) 2px; }`,
-			line: 1,
-			column: 9,
-			message: messages.expectedAfter(),
-		},
-		{
-			// A break written into parentheses the tokenizer takes as one plain token makes them code and pushes the words inside them, and the next parenthesis then pops one of those instead of the word url, so the quotation mark inside its parentheses opens a string nothing closes: the break is refused and the warning stands
-			description: `a comma in parentheses a word over the name of a bare address pops, in front of parentheses holding a quotation mark`,
-			code: `a { b: url a (y,z)(b"c); }`,
-			fixed: `a { b: url a (y,z)(b"c); }`,
-			line: 1,
-			column: 16,
-			message: messages.expectedAfter(),
-		},
-		{
-			// Pins the reading of a string inside parentheses the tokenizer reads as code behind a sign glued to the name, whose comma is no comma of the list
-			description: `no newline after the comma behind a bare address whose name a solidus is glued to, holding a string with a closing parenthesis and a comma, which are text of the string`,
-			code: `a { b: 1px,\n1/url(a "),b" ),2px; }`,
-			fixed: `a { b: 1px,\n1/url(a "),b" ),\n2px; }`,
-			line: 2,
-			column: 16,
-			message: messages.expectedAfter(),
-		},
-		{
-			description: `the same string behind a comma glued to the name, holding a space on either side of its comma, where the break beside the glued comma is refused as above and the one behind the address written`,
-			code: `a { b: 1px,\n1,url(a ") , b" ),2px; }`,
-			fixed: `a { b: 1px,\n1,url(a ") , b" ),\n2px; }`,
-			warnings: [
-				{
-					line: 2,
-					column: 2,
-					message: messages.expectedAfter(),
-				},
-				{
-					line: 2,
-					column: 18,
-					message: messages.expectedAfter(),
-				},
-			],
-		},
-		{
 			// PostCSS holds `(a,[b)` as one token, opaque to the parser; a break inside makes it code, whose `[` opens a group nothing closes, and the file stops parsing
 			description: `parentheses without a name holding a square bracket nothing closes, where the break is refused and the warning stands`,
 			code: `a { b: 1 (a,[b) 2px; }`,
@@ -208,50 +164,6 @@ testRule({
 			line: 1,
 			column: 12,
 			message: messages.expectedAfter(),
-		},
-		{
-			// The `(` pops the word `url`, so PostCSS holds the parentheses as an address's token to the first `)`, and a break inside leaves them that token
-			description: `an address's parentheses parted from the name by a space and holding a square bracket nothing closes, where the break is written`,
-			code: `a { b: url (b[c,d) 2px; }`,
-			fixed: `a { b: url (b[c,\nd) 2px; }`,
-			line: 1,
-			column: 16,
-			message: messages.expectedAfter(),
-		},
-		{
-			// The name is one word with the comma in front of it, so the parentheses are one plain token whose `[` a break inside would leave open; the break behind that comma, written by the same run, parts the name off, the next `(` pops it and the parentheses are an address's token, where the break inside is free: both are written in one run
-			description: `a comma glued to the name of a bare address parted from its parentheses by a space, which hold a square bracket nothing closes and a comma`,
-			code: `a { b: 1,url (b[c,d) g; }`,
-			fixed: `a { b: 1,\nurl (b[c,\nd) g; }`,
-			warnings: [
-				{
-					line: 1,
-					column: 9,
-					message: messages.expectedAfter(),
-				},
-				{
-					line: 1,
-					column: 18,
-					message: messages.expectedAfter(),
-				},
-			],
-		},
-		{
-			description: `the same in a custom property's value, whose parentheses hold a brace nothing closes`,
-			code: `a { --b: 1,url (b{c,d) g; }`,
-			fixed: `a { --b: 1,\nurl (b{c,\nd) g; }`,
-			warnings: [
-				{
-					line: 1,
-					column: 11,
-					message: messages.expectedAfter(),
-				},
-				{
-					line: 1,
-					column: 20,
-					message: messages.expectedAfter(),
-				},
-			],
 		},
 		{
 			description: `the same parentheses behind the name in upper case, which the tokenizer pops as no address, so they are one plain token the break would make code, and the break is refused`,

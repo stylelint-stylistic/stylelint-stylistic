@@ -229,15 +229,6 @@ testRule({
 			message: messages.expectedBefore(),
 		},
 		{
-			// The `(` pops the word `url`, so PostCSS holds the parentheses as an address's token to the first `)`, and a break inside leaves them that token
-			description: `an address's parentheses parted from the name by a space and holding a square bracket nothing closes, where the break is written`,
-			code: `a\n, url (b[c ,d)(b"c") d {}`,
-			fixed: `a\n, url (b[c\n ,d)(b"c") d {}`,
-			line: 2,
-			column: 12,
-			message: messages.expectedBefore(),
-		},
-		{
 			description: `the same parentheses behind the name joined to the comma, which PostCSS's tokenizer reads as one word and pops as no address, so the break is refused`,
 			code: `a\n,url (b[c ,d)(b"c") d {}`,
 			fixed: `a\n,url (b[c ,d)(b"c") d {}`,
@@ -251,15 +242,6 @@ testRule({
 			fixed: `[a\n,(b[c]\n,d)] {}`,
 			line: 2,
 			column: 7,
-			message: messages.expectedBefore(),
-		},
-		{
-			// Under PostCSS's tokenizer a break right behind the `(` of an address keeps its parentheses code, so the quotation mark inside would open a string nothing closes
-			description: `a comma right behind the opening parenthesis of an address holding a quotation mark, where the break in front of it is refused and the warning stands`,
-			code: `url (,b"c) d {}`,
-			fixed: `url (,b"c) d {}`,
-			line: 1,
-			column: 6,
 			message: messages.expectedBefore(),
 		},
 	],

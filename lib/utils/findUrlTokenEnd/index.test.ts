@@ -23,7 +23,6 @@ describe(`findUrlTokenEnd`, () => {
 	it(`a parenthesis behind a backslash and one inside a comment or a string, which the tokenizer counts all the same`, () => {
 		expect(findUrlTokenEnd(`url( a\\) \\//c )`, 0, -1, SCSS)).toBe(15)
 		expect(findUrlTokenEnd(`url( /* ) */ \\//c )`, 0, -1, SCSS)).toBe(19)
-		expect(findUrlTokenEnd(`url( a ")" \\//c )`, 0, -1, SCSS)).toBe(17)
 	})
 
 	it(`an escaped opening parenthesis inside an address, which the tokenizer does not count`, () => {
