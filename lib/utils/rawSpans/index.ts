@@ -43,7 +43,7 @@ export function braceOffset (node: Node): number | undefined {
 	let last = `last` in node ? (node as Container).last : undefined
 
 	// `postcss-less` counts the end of a container opened in front of a `//` comment it read with a new input in the shorter text
-	if (end === undefined || (last?.source && last.source.input !== node.source?.input)) return undefined
+	if (end === undefined || (last?.source && (last.source.input !== node.source?.input || (last.source.end?.offset ?? 0) > end))) return undefined
 
 	let brace = text.lastIndexOf(`}`, end - rootStart - 1)
 
