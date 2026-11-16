@@ -78,7 +78,7 @@ try {
 	let tsrs = spawnSync(path.join(cwd(), `node_modules`, `.bin`, `tsrs`), [...COMPILER_OPTIONS, file], { encoding: `utf8` })
 
 	if (tsrs.error) throw tsrs.error
-	if (typeof tsrs.stdout !== `string`) throw new Error(`tsrs produced no output`)
+	if (typeof tsrs.stdout !== `string`) throw new TypeError(`tsrs produced no output`)
 	if (tsrs.status !== 0 && tsrs.stdout.length === 0) throw new Error(`tsrs failed: ${tsrs.stderr}`)
 
 	refusedByTypes = new Set([...tsrs.stdout.matchAll(/probe\.ts\((\d+),\d+\): error/gu)].map((match) => Number(match[1]) - head.length - 1).filter((at) => at >= 0))

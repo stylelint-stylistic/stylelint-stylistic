@@ -49,7 +49,7 @@
 	},
 	"devDependencies": {
 		"@firefoxic/beautypography": "~0.2",
-		"@firefoxic/oxlint-config": "~0.5",
+		"@firefoxic/oxlint-config": "~0.7",
 		"@morev/stylelint-testing-library": "^1",
 		"@types/node": "^26",
 		"@vitest/coverage-v8": "^5",

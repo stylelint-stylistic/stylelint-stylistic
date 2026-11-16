@@ -333,8 +333,8 @@ type ForbidsOption<O extends string> = O extends `never${string}` ? true : false
 /** Whether a break rule under one option and its space twin under another conflict with each other, as {@link twinsConflict} answers. */
 type TwinsConflict<NewlineRule extends string, N extends string, S extends string> = [ForbidsOption<N>, ForbidsOption<S>] extends [true, true] ? false
 	: LinesOfOption<N> extends `any` ? (LinesOfOption<S> extends `single` ? (NewlineRule extends typeof NEWLINE_RULES_OUTSIDE_THE_COUNTED_TEXT[number] ? true : false) : true)
-		: LinesOfOption<S> extends `any` ? true
-			: LinesOfOption<N> extends LinesOfOption<S> ? true : false
+	: LinesOfOption<S> extends `any` ? true
+	: LinesOfOption<N> extends LinesOfOption<S> ? true : false
 
 /** The primary option a configured value holds: a keyword, or the first item of the array a configuration lists a rule's options in. */
 type PrimaryOfValue<V> = V extends readonly [infer P, ...unknown[]] ? P : V
