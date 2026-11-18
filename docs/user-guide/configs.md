@@ -41,10 +41,10 @@ A JavaScript configuration names the same settings through [`defineStylistic`
 A JavaScript configuration can use `configs.customize()` to change settings throughout the preset at once. It returns a Stylelint configuration object, so put the result directly in `extends`:
 
 ```js
-import stylistic from "@stylistic/stylelint-plugin"
+import { configs } from "@stylistic/stylelint-plugin"
 
 export default {
-	extends: ["stylelint-config-standard", stylistic.configs.customize({ indent: 2, quotes: "single" })],
+	extends: ["stylelint-config-standard", configs.customize({ indent: 2, quotes: "single" })],
 }
 ```
 

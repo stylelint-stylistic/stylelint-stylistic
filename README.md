@@ -33,12 +33,12 @@ A setting of your own in `rules` wins over the preset's. What the preset s
 For a JavaScript configuration, `configs.customize()` builds the same preset as an object, with project-wide choices such as indentation:
 
 ```js
-import stylistic from "@stylistic/stylelint-plugin"
+import { configs } from "@stylistic/stylelint-plugin"
 
 export default {
 	extends: [
 		"stylelint-config-standard",
-		stylistic.configs.customize({ indent: 2 }),
+		configs.customize({ indent: 2 }),
 	],
 }
 ```

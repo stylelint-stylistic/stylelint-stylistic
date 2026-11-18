@@ -140,7 +140,7 @@ function customize<const O extends CustomizeOptions = Record<never, never>> (opt
 		...(settings.linebreaks !== undefined && { linebreaks: settings.linebreaks }),
 	} satisfies RulesInput
 	let globals: GlobalOptions = {
-		...(settings.severity !== undefined && { severity: settings.severity }),
+		severity: settings.severity ?? `error`,
 		...(settings.disableFix !== undefined && { disableFix: settings.disableFix }),
 	}
 	let syntaxes = { ...DEFAULT_SYNTAXES, ...settings.syntaxes }
