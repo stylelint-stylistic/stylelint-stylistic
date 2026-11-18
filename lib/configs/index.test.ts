@@ -663,13 +663,13 @@ describe(`the types of the presets`, () => {
 		expectTypeOf(configs.recommendedRules).toExtend<RulesInput>()
 	})
 
-	it.skip(`reject unknown options and values at compile time`, () => {
+	it(`rejects unknown options and values at compile time`, () => {
 		// @ts-expect-error An option the factory does not define is refused
 		configs.customize({ unknown: true })
 		// @ts-expect-error Indentation is a tab or a number of spaces
 		configs.customize({ indent: `spaces` })
 		// @ts-expect-error Only registered syntaxes can be configured
-		configs.customize({ syntaxes: { styled: `**/*.tsx`, custom: `**/*.css` } })
+		configs.customize({ syntaxes: { custom: false } })
 	})
 
 	it(`let the table be projected under another namespace, and changed under every name at once`, () => {
