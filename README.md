@@ -30,6 +30,19 @@ export default {
 
 A setting of your own in `rules` wins over the preset's. What the preset sets, how it reads SCSS and Less, and which rules it leaves to you is in [Configs](https://stylelint-stylistic.github.io/user-guide/configs).
 
+For a JavaScript configuration, `configs.customize()` builds the same preset as an object, with project-wide choices such as indentation:
+
+```js
+import { configs } from "@stylistic/stylelint-plugin"
+
+export default {
+	extends: [
+		"stylelint-config-standard",
+		configs.customize({ indent: 2 }),
+	],
+}
+```
+
 To choose every setting yourself instead, add `@stylistic/stylelint-plugin` to the plugins array and the rules you need to the rules list. [All rules from `@stylistic/stylelint-plugin`](https://stylelint-stylistic.github.io/user-guide/rules) need to be namespaced with `@stylistic/`. That prefix is the whole difference — an unprefixed name in the rules list is a rule of Stylelint's own, a prefixed one is a rule of this plugin:
 
 ```js

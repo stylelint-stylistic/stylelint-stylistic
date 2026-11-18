@@ -9,13 +9,29 @@ import { defineStylistic, defineStylisticOverride, type Namespace, type RulesInp
 import factories from "../rules/index.ts"
 import { namespaces } from "../syntaxes/index.ts"
 
-import { CHARSET_RULE, configs, EXCLUDED_RULES } from "./index.ts"
+import { CHARSET_RULE, configs, EXCLUDED_RULES, type CustomizeOptions } from "./index.ts"
 
 /** The plugin loaded from source in place of the package the preset names, which resolves to the built package. */
 const PLUGIN = new URL(`../index.ts`, import.meta.url).pathname
 
 /** The preset with the plugin loaded from source, as every lint below extends it. */
 const PRESET = { ...configs.recommended, plugins: [PLUGIN] }
+
+/** Option sets whose combinations must not make the preset's rules conflict. */
+const CUSTOMIZE_VARIANTS: CustomizeOptions[] = [
+	{},
+	{ indent: 2 },
+	{ quotes: `single` },
+	{ maxEmptyLines: 0 },
+	{ maxEmptyLines: 3 },
+	{ singleLineBlocks: true },
+	{ linebreaks: `windows` },
+	{ severity: `warning` },
+	{ disableFix: true },
+	{ syntaxes: { scss: false, less: false } },
+	{ syntaxes: { styled: `**/*.tsx` } },
+	{ indent: 2, quotes: `single`, maxEmptyLines: 0, singleLineBlocks: true, linebreaks: `windows`, severity: `warning`, disableFix: true, syntaxes: { scss: `src/**/*.scss`, less: [`src/**/*.less`, `styles/**/*.less`], styled: `**/*.tsx` } },
+]
 
 /** A space no editor trims from the end of a line. */
 const S = ` `
@@ -451,20 +467,83 @@ const REJECTED: Record<keyof typeof configs.recommendedRules, { description: str
  * @returns The warnings by rule and text, the parse errors and the option warnings.
  */
 async function lintExtending (code: string, codeFilename: string, rules: Config[`rules`] = {}, customSyntax?: string): Promise<{ warnings: { rule: string, text: string }[], parseErrors: unknown[], invalidOptionWarnings: unknown[] }> {
-	// An object in `extends` is what Stylelint accepts since 15.9, and what its type does not spell yet
-	let { results } = await stylelint.lint({ code, codeFilename, config: { "extends": [PRESET as unknown as string], rules, ...(customSyntax === undefined ? {} : { customSyntax }) } })
+	let { results } = await stylelint.lint({ code, codeFilename, config: { "extends": [PRESET], rules, ...(customSyntax === undefined ? {} : { customSyntax }) } })
 	let { warnings, parseErrors, invalidOptionWarnings } = pick(results)
 
 	return { warnings: warnings.map(({ rule, text }) => ({ rule, text })), parseErrors, invalidOptionWarnings }
 }
 
 describe(`the recommended preset`, () => {
+	it(`builds the recommended settings by default`, () => {
+		expect(configs.customize()).toEqual(configs.recommended)
+		expect(configs.recommended.rules?.[`@stylistic/linebreaks`]).toEqual([`unix`, { severity: `error` }])
+	})
+
+	it(`keeps the default severity at error when Stylelint defaults to warning`, async () => {
+		let { results } = await stylelint.lint({ code: `a { color: #FFF; }`, config: { ...configs.customize(), plugins: [PLUGIN], defaultSeverity: `warning` } })
+
+		expect(new Set(results[0]?.warnings.map(({ severity }) => severity))).toEqual(new Set([`error`]))
+	})
+
+	it(`lints an empty file with each option variant and syntax without a conflict`, async () => {
+		let syntaxes = [
+			{ filename: FILE.css },
+			{ filename: FILE.scss, syntax: `scss` as const, customSyntax: CUSTOM_SYNTAX.scss },
+			{ filename: FILE.less, syntax: `less` as const, customSyntax: CUSTOM_SYNTAX.less },
+			{ filename: FILE.styled, syntax: `styled` as const, customSyntax: CUSTOM_SYNTAX.styled },
+		]
+
+		let outcomes = await Promise.all(CUSTOMIZE_VARIANTS.flatMap((options) => syntaxes
+			.filter(({ syntax }) => syntax === undefined || options.syntaxes?.[syntax] !== false)
+			.map(async ({ filename, customSyntax }) => {
+				let { results } = await stylelint.lint({
+					code: ``,
+					codeFilename: filename,
+					config: { ...configs.customize(options), plugins: [PLUGIN], ...(customSyntax === undefined ? {} : { customSyntax }) },
+				})
+
+				return pick(results)
+			})))
+
+		for (let result of outcomes) {
+			expect(result.parseErrors).toEqual([])
+			expect(result.invalidOptionWarnings).toEqual([])
+		}
+	})
+
+	it(`changes each requested setting under the core and configured syntax names`, () => {
+		let config = configs.customize({
+			indent: 2,
+			quotes: `single`,
+			maxEmptyLines: 1,
+			singleLineBlocks: true,
+			linebreaks: `windows`,
+			severity: `warning`,
+			disableFix: true,
+			syntaxes: { scss: `src/**/*.scss`, less: false, styled: `src/**/*.tsx` },
+		})
+
+		expect(config.rules?.[`@stylistic/indentation`]).toEqual([2, { severity: `warning`, disableFix: true }])
+		expect(config.rules?.[`@stylistic/string-quotes`]).toEqual([`single`, { severity: `warning`, disableFix: true }])
+		expect(config.rules?.[`@stylistic/max-empty-lines`]).toEqual([1, { severity: `warning`, disableFix: true }])
+		expect(config.rules?.[`@stylistic/declaration-block-single-line-max-declarations`]).toEqual([1, { severity: `warning`, disableFix: true }])
+		expect(config.rules?.[`@stylistic/linebreaks`]).toEqual([`windows`, { severity: `warning`, disableFix: true }])
+		expect(config.overrides?.map(({ files, rules }) => ({ files, rules }))).toEqual([
+			{ files: `src/**/*.scss`, rules: defineStylistic({ syntax: `scss`, rules: { ...configs.recommendedRules, "indentation": 2, "string-quotes": `single`, "max-empty-lines": 1, "declaration-block-single-line-max-declarations": 1, "linebreaks": `windows` } }, { severity: `warning`, disableFix: true }) },
+			{ files: `src/**/*.tsx`, rules: defineStylistic({ syntax: `styled`, rules: { ...configs.recommendedRules, "indentation": 2, "string-quotes": `single`, "max-empty-lines": 1, "declaration-block-single-line-max-declarations": 1, "linebreaks": `windows` } }, { severity: `warning`, disableFix: true }) },
+		])
+	})
+
+	it(`can omit every custom syntax`, () => {
+		expect(configs.customize({ syntaxes: { scss: false, less: false } })).not.toHaveProperty(`overrides`)
+	})
+
 	it(`names the package in plugins, the table under the core's names in rules beside the charset rule, and one overrides entry per preprocessor naming no package`, () => {
 		expect(configs.recommended.plugins).toEqual([`@stylistic/stylelint-plugin`])
-		expect(configs.recommended.rules).toEqual({ [CHARSET_RULE]: true, ...defineStylistic({ rules: configs.recommendedRules }) })
+		expect(configs.recommended.rules).toEqual({ [CHARSET_RULE]: true, ...defineStylistic({ rules: configs.recommendedRules }, { severity: `error` }) })
 		expect(configs.recommended.overrides).toEqual([
-			{ files: `**/*.scss`, rules: defineStylistic({ syntax: `scss`, rules: configs.recommendedRules }) },
-			{ files: `**/*.less`, rules: defineStylistic({ syntax: `less`, rules: configs.recommendedRules }) },
+			{ files: `**/*.scss`, rules: defineStylistic({ syntax: `scss`, rules: configs.recommendedRules }, { severity: `error` }) },
+			{ files: `**/*.less`, rules: defineStylistic({ syntax: `less`, rules: configs.recommendedRules }, { severity: `error` }) },
 		])
 	})
 
@@ -580,7 +659,17 @@ describe(`the recommended preset`, () => {
 describe(`the types of the presets`, () => {
 	it(`stand in a Stylelint configuration`, () => {
 		expectTypeOf(configs.recommended).toExtend<Config>()
+		expectTypeOf(configs.customize({ indent: 2 })).toExtend<Config>()
 		expectTypeOf(configs.recommendedRules).toExtend<RulesInput>()
+	})
+
+	it(`rejects unknown options and values at compile time`, () => {
+		// @ts-expect-error An option the factory does not define is refused
+		configs.customize({ unknown: true })
+		// @ts-expect-error Indentation is a tab or a number of spaces
+		configs.customize({ indent: `spaces` })
+		// @ts-expect-error Only registered syntaxes can be configured
+		configs.customize({ syntaxes: { custom: false } })
 	})
 
 	it(`let the table be projected under another namespace, and changed under every name at once`, () => {

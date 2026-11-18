@@ -1,6 +1,6 @@
 import type { Config } from "stylelint"
 
-import { defineStylistic, type RuleName, type RulesInput } from "../defineStylistic/index.ts"
+import { defineStylistic, type GlobalOptions, type RuleName, type RulesInput, type SyntaxName } from "../defineStylistic/index.ts"
 
 /** The package, as a configuration names it in `plugins`; a string rather than the plugin itself, since the plugin's entry exports this module and Stylelint resolves the name from the directory of the configuration, which is inside the package. */
 const PLUGIN = `@stylistic/stylelint-plugin`
@@ -102,24 +102,69 @@ const EXCLUDED_RULES: Record<Exclude<RuleName, keyof typeof RECOMMENDED_RULES>, 
 	"value-slash-newline-before": `the twin of \`value-slash-space-before\`, which the preset sets to \`always\`: every option of this rule would conflict with it`,
 }
 
-/**
- * The preset: the table under the core's names for every file, and under each preprocessor's namespace over the files of its syntax.
- *
- * No entry names the package its syntax is parsed with, so the preset asks of a project nothing it did not ask of itself before. A project that names `postcss-scss` over its SCSS files has them read by the `scss/` copies; one that names nothing has them read as CSS, by the core's copies, as they were before the namespaces — the copies of a namespace yield in silence wherever the family of the stylesheet reads it, so neither way is a rule refused. A project wanting its preprocessors parsed as themselves names the syntax and takes the package; the plugin asks for nothing either way.
- */
-let recommended: Config = {
-	plugins: [PLUGIN],
-	rules: {
-		[CHARSET_RULE]: true,
-		...defineStylistic({ rules: RECOMMENDED_RULES }),
-	},
-	overrides: [
-		{ files: `**/*.scss`, rules: defineStylistic({ syntax: `scss`, rules: RECOMMENDED_RULES }) },
-		{ files: `**/*.less`, rules: defineStylistic({ syntax: `less`, rules: RECOMMENDED_RULES }) },
-	],
+/** Files to read with a custom syntax; `false` leaves that syntax out. */
+type SyntaxFiles = string | readonly string[] | false
+
+/** Values that vary between projects while keeping the recommended table's other settings. */
+export type CustomizeOptions = {
+	indent?: `tab` | number,
+	quotes?: `single` | `double`,
+	maxEmptyLines?: number,
+	singleLineBlocks?: boolean,
+	linebreaks?: `unix` | `windows`,
+	severity?: GlobalOptions[`severity`],
+	disableFix?: boolean,
+	syntaxes?: { scss?: SyntaxFiles, less?: SyntaxFiles, styled?: SyntaxFiles },
 }
 
+/** The options with unknown keys refused at both levels. */
+type ExactOptions<O extends CustomizeOptions> = O & Record<Exclude<keyof O, keyof CustomizeOptions>, never> & (O extends { syntaxes: infer S }
+	? { syntaxes: S & Record<Exclude<keyof S, keyof NonNullable<CustomizeOptions[`syntaxes`]>>, never> }
+	: unknown)
+
+const DEFAULT_SYNTAXES = { scss: `**/*.scss`, less: `**/*.less` } as const
+
+/**
+ * Builds the recommended preset with project-wide choices and optional syntax entries.
+ * @param options - The settings to change from the recommended preset.
+ * @returns The Stylelint configuration object.
+ */
+function customize<const O extends CustomizeOptions = Record<never, never>> (options?: ExactOptions<O>): Config {
+	let settings = options ?? {} as O
+	let rules = {
+		...RECOMMENDED_RULES,
+		...(settings.indent !== undefined && { indentation: settings.indent }),
+		...(settings.quotes !== undefined && { "string-quotes": settings.quotes }),
+		...(settings.maxEmptyLines !== undefined && { "max-empty-lines": settings.maxEmptyLines }),
+		...(settings.singleLineBlocks !== undefined && { "declaration-block-single-line-max-declarations": settings.singleLineBlocks ? 1 : 0 }),
+		...(settings.linebreaks !== undefined && { linebreaks: settings.linebreaks }),
+	} satisfies RulesInput
+	let globals: GlobalOptions = {
+		severity: settings.severity ?? `error`,
+		...(settings.disableFix !== undefined && { disableFix: settings.disableFix }),
+	}
+	let syntaxes = { ...DEFAULT_SYNTAXES, ...settings.syntaxes }
+	let overrides = Object.entries(syntaxes).flatMap(([syntax, files]) => {
+		if (files === false) return []
+
+		let normalizedFiles: string | string[] = typeof files === `string` ? files : [...files]
+
+		return [{ files: normalizedFiles, rules: defineStylistic({ syntax: syntax as SyntaxName, rules }, globals) }]
+	})
+
+	return {
+		plugins: [PLUGIN],
+		rules: {
+			[CHARSET_RULE]: true,
+			...defineStylistic({ rules }, globals),
+		},
+		...(overrides.length > 0 && { overrides }),
+	}
+}
+
+let recommended = customize()
+
 /** The presets of the plugin, and the table the recommended one is built out of, for a configuration that projects it under another namespace or changes a setting under every name at once. */
-export let configs = { recommended, recommendedRules: RECOMMENDED_RULES }
+export let configs = { recommended, recommendedRules: RECOMMENDED_RULES, customize }
 
 export { CHARSET_RULE, EXCLUDED_RULES }
