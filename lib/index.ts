@@ -26,5 +26,5 @@ Object.defineProperty(rulesPlugins, `extends`, {
 
 export default rulesPlugins
 
-export { configs } from "./configs/index.ts"
+export { configs, type CustomizeOptions } from "./configs/index.ts"
 export { type CommonSecondary, defineStylistic, defineStylisticOverride, type GlobalOptions, type Namespace, type RuleName, type RulesInput, type StylisticOverride, type StylisticRules, type SyntaxName } from "./defineStylistic/index.ts"

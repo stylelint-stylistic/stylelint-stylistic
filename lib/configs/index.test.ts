@@ -459,6 +459,37 @@ async function lintExtending (code: string, codeFilename: string, rules: Config[
 }
 
 describe(`the recommended preset`, () => {
+	it(`builds the recommended settings by default`, () => {
+		expect(configs.customize()).toEqual(configs.recommended)
+	})
+
+	it(`changes each requested setting under the core and configured syntax names`, () => {
+		let config = configs.customize({
+			indent: 2,
+			quotes: `single`,
+			maxEmptyLines: 1,
+			singleLineBlocks: true,
+			linebreaks: `windows`,
+			severity: `warning`,
+			disableFix: true,
+			syntaxes: { scss: `src/**/*.scss`, less: false, styled: `src/**/*.tsx` },
+		})
+
+		expect(config.rules?.[`@stylistic/indentation`]).toEqual([2, { severity: `warning`, disableFix: true }])
+		expect(config.rules?.[`@stylistic/string-quotes`]).toEqual([`single`, { severity: `warning`, disableFix: true }])
+		expect(config.rules?.[`@stylistic/max-empty-lines`]).toEqual([1, { severity: `warning`, disableFix: true }])
+		expect(config.rules?.[`@stylistic/declaration-block-single-line-max-declarations`]).toEqual([1, { severity: `warning`, disableFix: true }])
+		expect(config.rules?.[`@stylistic/linebreaks`]).toEqual([`windows`, { severity: `warning`, disableFix: true }])
+		expect(config.overrides?.map(({ files, rules }) => ({ files, rules }))).toEqual([
+			{ files: `src/**/*.scss`, rules: defineStylistic({ syntax: `scss`, rules: { ...configs.recommendedRules, "indentation": 2, "string-quotes": `single`, "max-empty-lines": 1, "declaration-block-single-line-max-declarations": 1, "linebreaks": `windows` } }, { severity: `warning`, disableFix: true }) },
+			{ files: `src/**/*.tsx`, rules: defineStylistic({ syntax: `styled`, rules: { ...configs.recommendedRules, "indentation": 2, "string-quotes": `single`, "max-empty-lines": 1, "declaration-block-single-line-max-declarations": 1, "linebreaks": `windows` } }, { severity: `warning`, disableFix: true }) },
+		])
+	})
+
+	it(`can omit every custom syntax`, () => {
+		expect(configs.customize({ syntaxes: { scss: false, less: false } })).not.toHaveProperty(`overrides`)
+	})
+
 	it(`names the package in plugins, the table under the core's names in rules beside the charset rule, and one overrides entry per preprocessor naming no package`, () => {
 		expect(configs.recommended.plugins).toEqual([`@stylistic/stylelint-plugin`])
 		expect(configs.recommended.rules).toEqual({ [CHARSET_RULE]: true, ...defineStylistic({ rules: configs.recommendedRules }) })
@@ -580,7 +611,17 @@ describe(`the recommended preset`, () => {
 describe(`the types of the presets`, () => {
 	it(`stand in a Stylelint configuration`, () => {
 		expectTypeOf(configs.recommended).toExtend<Config>()
+		expectTypeOf(configs.customize({ indent: 2 })).toExtend<Config>()
 		expectTypeOf(configs.recommendedRules).toExtend<RulesInput>()
+	})
+
+	it.skip(`reject unknown options and values at compile time`, () => {
+		// @ts-expect-error An option the factory does not define is refused
+		configs.customize({ unknown: true })
+		// @ts-expect-error Indentation is a tab or a number of spaces
+		configs.customize({ indent: `spaces` })
+		// @ts-expect-error Only registered syntaxes can be configured
+		configs.customize({ syntaxes: { styled: `**/*.tsx`, custom: `**/*.css` } })
 	})
 
 	it(`let the table be projected under another namespace, and changed under every name at once`, () => {
