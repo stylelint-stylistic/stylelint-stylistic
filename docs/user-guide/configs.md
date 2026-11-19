@@ -36,6 +36,33 @@ export default {
 
 A JavaScript configuration names the same settings through [`defineStylistic`](typed-configuration.md), with the editor completing and checking them.
 
+## Building a preset for your project
+
+A JavaScript configuration can use `configs.customize()` to change settings throughout the preset at once. It returns a Stylelint configuration object, so put the result directly in `extends`:
+
+```js
+import { configs } from "@stylistic/stylelint-plugin"
+
+export default {
+	extends: ["stylelint-config-standard", configs.customize({ indent: 2, quotes: "single" })],
+}
+```
+
+With no options, `configs.customize()` returns the same settings as `configs.recommended`. Every option defaults to the value in that preset.
+
+| Option             | Default                             | What it changes                                                                 |
+| ------------------ | ----------------------------------- | ------------------------------------------------------------------------------- |
+| `indent`           | `"tab"`                             | `indentation`; a number requests that many spaces                               |
+| `quotes`           | `"double"`                          | `string-quotes`                                                                 |
+| `maxEmptyLines`    | `2`                                 | `max-empty-lines`                                                               |
+| `singleLineBlocks` | `false`                             | `declaration-block-single-line-max-declarations`; `true` allows one declaration |
+| `linebreaks`       | `"unix"`                            | `linebreaks`, either `"unix"` or `"windows"`                                    |
+| `severity`         | `"error"`                           | Severity of each enabled rule in the preset                                     |
+| `disableFix`       | `false`                             | Whether enabled rules may fix their warnings                                    |
+| `syntaxes`         | `scss` and `less` by file extension | Syntax overrides; set a glob or glob list, or `false` to omit one               |
+
+The `syntaxes` option accepts `scss`, `less` and `styled`. SCSS and Less use `**/*.scss` and `**/*.less` by default; `styled` is omitted until you provide its file globs. The returned overrides name the rules under that syntax's namespace, but leave parser selection to your Stylelint configuration, just like `configs.recommended`.
+
 ## Your own syntaxes
 
 The preset names no syntax, so a project that writes SCSS or Less has to name the one its files are written in for the rules to read them as themselves rather than as CSS — and the package that parses them is yours to install. `defineStylisticOverride` writes the whole entry at once: the files, the package, and the same table under that namespace's names. Since the preset already sets those names over `**/*.scss` and `**/*.less`, an entry of your own only has to name the syntax:

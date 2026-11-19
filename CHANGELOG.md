@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+### Added
+
+- `configs.customize()` builds a recommended preset with project-wide choices for indentation, quotes, empty lines, single-line blocks, line endings, severity, fixing and syntax globs. See [Configs](https://stylelint-stylistic.github.io/user-guide/configs#building-a-preset-for-your-project).
+
 ## [6.0.1] — 2026–11–06
 
 ### Fixed
