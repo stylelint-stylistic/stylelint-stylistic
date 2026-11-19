@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and 
 
 ## [Unreleased]
 
+## [6.1.0-next.0] — 2026–11–19
+
 ### Added
 
 - `configs.customize()` builds a recommended preset with project-wide choices for indentation, quotes, empty lines, single-line blocks, line endings, severity, fixing and syntax globs. See [Configs](https://stylelint-stylistic.github.io/user-guide/configs#building-a-preset-for-your-project).
@@ -452,7 +454,8 @@ No meaningful changes.
 - `value-list-comma-space-before` rule.
 - `value-list-max-empty-lines` rule.
 
-[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v6.0.1...HEAD
+[Unreleased]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v6.1.0-next.0...HEAD
+[6.1.0-next.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v6.0.1...v6.1.0-next.0
 [6.0.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v6.0.0...v6.0.1
 [6.0.0]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.3.1...v6.0.0
 [5.3.1]: https://github.com/stylelint-stylistic/stylelint-stylistic/compare/v5.3.0...v5.3.1
