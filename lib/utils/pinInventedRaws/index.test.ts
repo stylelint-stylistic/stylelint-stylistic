@@ -50,9 +50,18 @@ function fill (root: Root): void {
 describe(`the raws PostCSS invents for a node another plugin's rule built`, () => {
 	// The fix finds the raw the node prints, pinned, and writes it in the pass that reports it
 	it.each([
-		[`@stylistic/at-rule-name-newline-after`, `always`, (root: Root): void => { root.append(new AtRule({ name: `media`, params: `print` })) }, `a {\n}\n@media\n print`],
-		[`@stylistic/block-closing-brace-space-before`, `always`, (root: Root): void => { root.append(new Rule({ selector: `.b` }).append({ prop: `color`, value: `red` })) }, `a {\n}\n.b {\n    color: red }`],
-		[`@stylistic/block-closing-brace-space-after`, `always`, (root: Root): void => { root.prepend(new Rule({ selector: `.d` }).append({ prop: `top`, value: `0` })) }, `.d {\n    top: 0\n} a {\n}`],
+		[`@stylistic/at-rule-name-newline-after`, `always`, (root: Root): void => {
+			if (root.nodes.some((node) => node.type === `atrule` && node.params === `print`)) return
+			root.append(new AtRule({ name: `media`, params: `print` }))
+		}, `a {\n}\n@media\n print`],
+		[`@stylistic/block-closing-brace-space-before`, `always`, (root: Root): void => {
+			if (root.nodes.some((node) => node.type === `rule` && node.selector === `.b`)) return
+			root.append(new Rule({ selector: `.b` }).append({ prop: `color`, value: `red` }))
+		}, `a {\n}\n.b {\n    color: red }`],
+		[`@stylistic/block-closing-brace-space-after`, `always`, (root: Root): void => {
+			if (root.nodes.some((node) => node.type === `rule` && node.selector === `.d`)) return
+			root.prepend(new Rule({ selector: `.d` }).append({ prop: `top`, value: `0` }))
+		}, `.d {\n    top: 0\n} a {\n}`],
 	] as [string, string, (root: Root) => void, string][])(`are written by %s %s in the pass that reports`, async (name, option, build, output) => {
 		expect(await fixBuilt(`a {\n}`, build, [name, option])).toEqual({ code: output, left: 0 })
 	})
@@ -169,6 +178,7 @@ function atRule (root: Root): void {
  * @param root - The root.
  */
 function beside (root: Root): void {
+	if (root.nodes.some((node) => node.type === `rule` && node.selector === `.b`)) return
 	root.append(new Rule({ selector: `.b` }).append({ prop: `color`, value: `red` }))
 }
 
@@ -218,7 +228,10 @@ describe(`the run in front of the closing brace of an empty block another plugin
 
 	// The pin stays where a rule wrote another run
 	it(`the brace a rule indents`, async () => {
-		expect(await fixBuilt(`a {\n}`, (root) => { root.append(new AtRule({ name: `media`, params: `print` }).append(new Rule({ selector: `.c` }))) }, [`@stylistic/indentation`, `tab`])).toEqual({ code: `a {\n}\n@media print {\n\t.c {\n\t}\n}`, left: 0 })
+		expect(await fixBuilt(`a {\n}`, (root) => {
+			if (root.nodes.some((node) => node.type === `atrule` && node.params === `print`)) return
+			root.append(new AtRule({ name: `media`, params: `print` }).append(new Rule({ selector: `.c` })))
+		}, [`@stylistic/indentation`, `tab`])).toEqual({ code: `a {\n}\n@media print {\n\t.c {\n\t}\n}`, left: 0 })
 	})
 
 	// PostCSS invents the run in front of a closing brace out of the first block of the file that holds a node, so a block parsed empty and filled behind the plugin's rules gives a built block beside it a run of its own, which a pin standing in for the file's empty run would take away

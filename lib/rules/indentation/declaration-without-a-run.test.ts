@@ -3,7 +3,6 @@ import stylelint from "stylelint"
 import { describe, expect, it } from "vitest"
 
 import { pick } from "../../../vitest.helpers.ts"
-import plugins from "../../index.ts"
 
 import { messages, ruleName } from "./index.ts"
 
@@ -72,7 +71,8 @@ describe(`the run PostCSS prints in front of a declaration the file spells none 
  * @returns What the check said, the file the fix left, and how much the rule has to say about that file.
  */
 async function fixAndRead (code: string, primary: string | number): Promise<{ warnings: string[], fixed: string, left: number }> {
-	let config = { plugins, rules: { [ruleName]: primary } }
+	let plugin = new URL(`../../index.ts`, import.meta.url).pathname
+	let config = { plugins: [plugin], rules: { [ruleName]: primary } }
 	let read = await stylelint.lint({ code, customSyntax: declarationsWithoutARun, config })
 	let run = await stylelint.lint({ code, customSyntax: declarationsWithoutARun, config, fix: true })
 	let fixed = run.code ?? code

@@ -35,6 +35,7 @@ function fill (root: Root): void {
  * @param root - The root.
  */
 function nest (root: Root): void {
+	if (root.nodes.some((node) => node.type === `atrule` && node.params === `screen`)) return
 	root.append(new AtRule({ name: `media`, params: `screen` }).append(new Rule({ selector: `.x, .y` }).append({ prop: `margin`, value: `0 auto` }, { prop: `color`, value: `#FFF` })))
 }
 

@@ -196,7 +196,7 @@ importers:
         version: 0.7.1(eslint@10.14.0)(oxlint@1.94.0)(typescript@6.0.3)
       '@morev/stylelint-testing-library':
         specifier: ^1
-        version: 1.1.1(stylelint@18.0.0)
+        version: 1.1.1(stylelint@18.1.0)
       '@types/node':
         specifier: ^26
         version: 26.6.6
@@ -226,7 +226,7 @@ importers:
         version: 0.7.4(postcss@8.5.33)
       stylelint:
         specifier: ^18
-        version: 18.0.0
+        version: 18.1.0
       tsrs:
         specifier: ~0.20.1-ts7
         version: 0.20.1-ts7.1.0-beta
@@ -1004,8 +1004,8 @@ packages:
   character-entities-legacy@3.0.0:
     resolution: {integrity: sha512-RpPp0asT/6ufRm//AJVwpViZbGM/MkjQFxJccQRHmISF/22NBtsHqAWmL+/pmkPWoIUJdWyeVleTl1wydHATVQ==}
 
-  colord@2.10.0:
-    resolution: {integrity: sha512-AidJptpBJmjTclAp9BkLwJi0T93fo5epJnbaZslpg6QVzpHjAiveF55mE9AcUJiGMqRHgMDY8soMsQtuNYMHfw==}
+  colord@2.14.0:
+    resolution: {integrity: sha512-eSdMel9EBvdFxnchObp7gljRoqYQLr+zXhaxjkym7syVphw1FIhfQwgsA5Bv3jArflZPJEa1rmQtGpa7NRc7Rw==}
 
   comma-separated-tokens@2.0.3:
     resolution: {integrity: sha512-Fu4hJdvzeylCfQPp9SGWidpzrMs7tTrlu6Vb8XGaRGck8QSNZJJp538Wrb60Lax4fPwR64ViY468OIUTbRlGZg==}
@@ -1705,8 +1705,8 @@ packages:
   style-search@0.1.0:
     resolution: {integrity: sha512-Dj1Okke1C3uKKwQcetra4jSuk0DqbzbYtXipzFlFMZtowbF1x7BKJwB9AayVMyFARvU8EDrZdcax4At/452cAg==}
 
-  stylelint@18.0.0:
-    resolution: {integrity: sha512-kI10GsHXQvsH/AcklVZdQgwDuxtHi+A+h1Ujzd7h9LDf3e5jQiLQkWFlPtpynX3E6oVWHG1wo9v6dL0Mr+nnSA==}
+  stylelint@18.1.0:
+    resolution: {integrity: sha512-QbF/IY7KY6lZRhYU/vmPU1KYxc71wgkXdgeptqzTh3lbnZps6WHaskfPjpL6Fh4JaCzwkKKitVcMrpfQTSwwPA==}
     engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
     hasBin: true
 
@@ -2062,10 +2062,10 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@morev/stylelint-testing-library@1.1.1(stylelint@18.0.0)':
+  '@morev/stylelint-testing-library@1.1.1(stylelint@18.1.0)':
     dependencies:
       '@morev/utils': 3.15.0
-      stylelint: 18.0.0
+      stylelint: 18.1.0
 
   '@morev/utils@3.15.0':
     dependencies:
@@ -2519,7 +2519,7 @@ snapshots:
 
   character-entities-legacy@3.0.0: {}
 
-  colord@2.10.0: {}
+  colord@2.14.0: {}
 
   comma-separated-tokens@2.0.3: {}
 
@@ -3078,7 +3078,7 @@ snapshots:
 
   style-search@0.1.0: {}
 
-  stylelint@18.0.0:
+  stylelint@18.1.0:
     dependencies:
       '@csstools/css-calc': 3.4.3(@csstools/css-parser-algorithms@4.0.3(@csstools/css-tokenizer@4.0.3))(@csstools/css-tokenizer@4.0.3)
       '@csstools/css-parser-algorithms': 4.0.3(@csstools/css-tokenizer@4.0.3)
@@ -3087,7 +3087,7 @@ snapshots:
       '@csstools/media-query-list-parser': 5.0.3(@csstools/css-parser-algorithms@4.0.3(@csstools/css-tokenizer@4.0.3))(@csstools/css-tokenizer@4.0.3)
       '@csstools/selector-resolve-nested': 4.0.2(postcss-selector-parser@7.2.1)
       '@csstools/selector-specificity': 6.0.1(postcss-selector-parser@7.2.1)
-      colord: 2.10.0
+      colord: 2.14.0
       cosmiconfig: 10.0.1
       css-tree: 3.2.1
       ignore: 7.0.14
