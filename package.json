@@ -35,9 +35,9 @@
 		"stylelint": "^18.0.0"
 	},
 	"dependencies": {
-		"@csstools/css-parser-algorithms": "^4.0.2",
-		"@csstools/css-tokenizer": "^4.0.2",
-		"@csstools/media-query-list-parser": "^5.0.2",
+		"@csstools/css-parser-algorithms": "^4.0.3",
+		"@csstools/css-tokenizer": "^4.0.3",
+		"@csstools/media-query-list-parser": "^5.0.3",
 		"postcss": "^8.5.33",
 		"postcss-selector-parser": "^7.2.1",
 		"postcss-value-parser": "^4.2.0",
