@@ -15,7 +15,7 @@ export function closingOffset (node: Node): number | undefined {
 
 	let last = `last` in node ? (node as { last?: Node }).last : undefined
 
-	if (last?.source && last.source.input !== node.source?.input) return undefined
+	if (last?.source && (last.source.input !== node.source?.input || (last.source.end?.offset ?? 0) > end)) return undefined
 
 	let own = node.raws.ownSemicolon
 	let rootStart = node.root().source?.start?.offset ?? 0
