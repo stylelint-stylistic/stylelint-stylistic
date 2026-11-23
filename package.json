@@ -60,7 +60,7 @@
 		"postcss-scss": "^4",
 		"postcss-styled-syntax": "~0.7",
 		"stylelint": "^18",
-		"tsrs": "~0.20.1-ts7",
+		"tsrs": "latest",
 		"vitepress": "next",
 		"vitest": "^5",
 		"vue": "^3"
@@ -68,12 +68,12 @@
 	"devEngines": {
 		"runtime": {
 			"name": "node",
-			"version": "^26.13",
+			"version": ">=26.13",
 			"onFail": "download"
 		},
 		"packageManager": {
 			"name": "pnpm",
-			"version": "^12.17",
+			"version": ">=12.17",
 			"onFail": "download"
 		}
 	},
