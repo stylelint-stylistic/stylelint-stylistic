@@ -17,6 +17,7 @@
 		"url": "git+https://github.com/stylelint-stylistic/stylelint-stylistic.git"
 	},
 	"type": "module",
+	"types": "./dist/index.d.ts",
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
